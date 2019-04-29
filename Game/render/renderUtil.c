@@ -666,6 +666,9 @@ char *rdrGetSystemSpecCSVString( void )
 	static char buf[2048];	// @todo this should be allocated by caller since it is temporary
 	buf[0] = 0;
 
+/*
+	todo: make this a config option -diss
+	
 	sprintf( buf+strlen(buf), "CPU,%0.0f, ", systemSpecs.CPUSpeed / 1000000.0 );
 	sprintf( buf+strlen(buf), "NumCPUs,%d, ", systemSpecs.numVirtualCPUs );
 	sprintf( buf+strlen(buf), "Memory,%u, ",  systemSpecs.maxPhysicalMemory / (1024*1024) );
@@ -711,6 +714,8 @@ char *rdrGetSystemSpecCSVString( void )
 
 	// TEMPORARY NCsoft Launcher status bit
 	sprintf( buf+strlen(buf), "Launcher,%d, ",  game_state.usedLauncher );
+*/
+	sprintf( buf+strlen(buf), "Disabled" );
 	return buf;
 }
 
