@@ -262,7 +262,7 @@ void uiTabControlRename(uiTabControl * tc, const char * text, uiTabData data)
 		}
 	}
 
-	assert(!"Did not find tab!");
+	assert("Did not find tab!");
 }
 
 void uiTabControlRemove(uiTabControl * tc, uiTabData data)
