@@ -6,7 +6,7 @@
 
 
 // 2003-11-25 darkangel
-// Wanted ServiceÂÊÀ¸·Î »ç¿ëÀÚ Á¤º¸¸¦ º¸³¾¶§ »ç¿ëÇÑ´Ù. 
+// Wanted Service˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜?˜. 
 bool SendWantedServerLogout( char *name, int uid, ServerId gameserver )
 {
 _BEFORE
@@ -62,7 +62,7 @@ bool AccountDB::FindAccount( int uid, char *account, ServerId & lastServer, int 
 	if ( it != usermap.end()) {
 		strncpy( account, it->second.account, MAX_ACCOUNT_LEN+1 );
 		// 2003-11-25 darkangel
-		// ÀÌ¹Ì CriticalSection¾È¿¡ µé¾î¿Í ÀÖ´Âµ¥ InterlockedExchange°°Àº ¹Ùº¸ÁþÀº ÇÏÁö ¸»¾Æ¶ó. 
+		// ˜?˜ CriticalSection˜?˜ ˜˜˜˜ ˜?µ˜ InterlockedExchange˜˜˜˜ ˜?˜˜˜˜˜ ˜˜˜˜ ˜˜˜?˜. 
 		hTimer = it->second.timerHandle;
 		it->second.timerHandle = NULL;
 		lastServer = it->second.lastworld;
@@ -111,9 +111,9 @@ bool  AccountDB::FindAccount( int uid, char *account, int *loginflag, int *warnf
 }
 
 // 2003-07-06 darkangel
-// UpdateSocket Àº ÇöÀç ¿¬°áµÈ ¼ÒÄÏÀ» MAP¿¡ ¹Ý¿µÇÏ±â À§ÇÑ °ÍÀÌ´Ù. 
-// °¢ ¿ø Time md5key°¡ °íÀ¯·Î °°ÀÌ µû¶ó ´Ù´Ïµµ·Ï µÇ¾î ÀÖ°í ÇöÀç °ÔÀÓ ÁßÀÌ¶ó¸é
-// UpdateÇÏÁö ¾Ê´Â´Ù. ¿Ö³ÄÇÏ¸é ÇöÀç ¿ùµå¼­¹ö¿Í Á¢¼Ó ÁßÀÌ¶ó¸é ¼ÒÄÏÀÌ ³Ñ¾î¿Ã¸® ¾ø±â ¶§¹®ÀÌ´Ù.
+// UpdateSocket ˜˜ ˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜ MAP˜˜ ˜?˜˜?˜ ˜˜˜˜ ˜˜˜?˜. 
+// ˜˜ ˜˜ Time md5key˜˜ ˜˜˜˜˜˜ ˜˜˜˜ ˜˜˜˜ ˜??˜˜˜ ˜?˜ ˜?˜ ˜˜˜˜ ˜˜˜˜ ˜˜˜?˜˜
+// Update˜˜˜˜ ˜??˜. ˜?˜˜?˜ ˜˜˜˜ ˜˜˜?˜˜˜˜ ˜˜˜˜ ˜˜˜?˜˜ ˜˜˜˜˜˜ ˜?˜?˜ ˜˜˜˜ ˜˜˜˜˜?˜.
 int AccountDB::UpdateSocket( int uid, SOCKET s, int md5key, ServerId serverid  )
 {
 _BEFORE
@@ -147,8 +147,8 @@ _AFTER_FIN
 }
 
 // 2003-07-06 darkangel
-// Map¿¡ Account¸¦ µî·ÏÇÒ¶§ »ç¿ëµÈ´Ù. 
-// ¸¸ÀÏ ÀÌ¹Ì µî·ÏµÇ¾î ÀÖÀ» °æ¿ì¿¡´Â ÀÌÁß ·Î±×ÀÎÀ¸·Î °£ÁÖÇÏ°í µÎ °èÁ¤À» ¸ðµÎ Kick½ÃÅ°°Ô µÈ´Ù. 
+// Map˜˜ Account˜˜ ˜˜˜˜?˜ ˜˜˜?˜. 
+// ˜˜˜˜ ˜?˜ ˜˜??˜ ˜˜˜˜ ˜˜?˜˜ ˜˜˜˜ ˜?˜˜˜˜˜˜˜ ˜˜˜˜˜?˜ ˜˜ ˜˜˜˜˜˜ ˜˜˜ Kick˜˜?˜˜ ˜?˜. 
 bool AccountDB::RegAccount( LoginUser *loginuser, int uid, CSocketServerEx *sEx, int remainTime, int quotaTime )
 {
 	bool result=false;
@@ -159,8 +159,8 @@ bool AccountDB::RegAccount( LoginUser *loginuser, int uid, CSocketServerEx *sEx,
 	m_lock.Leave();
 	
 	if ( result == false ){
-		// kick account¸¦ ÇÒ°æ¿ì ¸Þ¼¼Áö¸¦ º¸³¾Áö´Â »ç½Ç °áÁ¤ ¾ÈÇØµµ µÈ´Ù. 
-		// ´Ù½Ã ·Î±×ÀÎ ÇÏ¶ó°í ÇÏ´Ï±î.
+		// kick account˜˜ ˜?˜˜ ˜?˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜ ˜˜˜?˜ ˜?˜. 
+		// ˜?˜ ˜?˜˜˜ ˜?˜˜ ˜??˜.
 		KickAccount( uid,S_ALREADY_LOGIN, true );
 		sEx->Send( "cc", AC_LOGIN_FAIL, S_ALREADY_LOGIN );
 	}  else {
@@ -247,8 +247,8 @@ void AccountDB::FinishedQueue( int uid )
     m_lock.Leave();
 }
 
-// IA_IP_KICK¿¡ ÀÇÇÑ KickÀÏ °æ¿ì¿¡´Â IPServerÂÊÀ¸·Î ºÒÇÊ¿äÇÑ ReleaseSessionÀ» ¿äÃ»ÇÏ°Ô µÈ´Ù. 
-// reasoncode·Î ±¸ºÐÇÒ¼ö ÀÖÀ¸³ª ½Ã°£ÀÌ µÈ´Ù¸é KickAccount ¸¦ ÇÏ³ª ´õ ¸¸µå´Â°ÍÀÌ ¸ÂÀ»°Í °°´Ù. 
+// IA_IP_KICK˜˜ ˜˜˜˜ Kick˜˜ ˜˜?˜˜ IPServer˜˜˜˜˜˜ ˜˜˜?˜˜˜ ReleaseSession˜˜ ˜˜?˜?˜ ˜?˜. 
+// reasoncode˜˜ ˜˜˜˜˜?˜ ˜˜˜˜˜˜ ˜?˜˜˜ ˜??˜ KickAccount ˜˜ ˜?˜ ˜˜ ˜˜˜˜°˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜. 
 bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 {
 	bool result = false;
@@ -296,7 +296,7 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 		m_lock.Leave();
 	
 
-	// Map¿¡ ¾ø´Ù¸é Kick½ÃÅ³ ÇÊ¿ä°¡ ¾ø´Ù. 
+	// Map˜˜ ˜˜˜?˜ Kick˜˜? ˜?? ˜˜˜˜. 
 	if ( result == true ) {
 		if ( config.UseWantedSystem ){
 			if ( (warn_flag & 4) == 4 )
@@ -398,7 +398,7 @@ _BEFORE
 	m_lock.Leave();
 
 	account[MAX_ACCOUNT_LEN] = 0;
-	// ·Î±×ÀÎÇØ ÀÖ°í eraseµÇ¾úÀ¸¸é IP°ü·ÃµÈ Ã³¸®¸¦ ÇÑ´Ù. 
+	// ˜?˜˜˜˜˜ ˜?˜ erase˜?˜˜˜˜˜ IP˜˜˜?˜ ?˜˜˜˜ ˜?˜. 
 	if (result){ 
 		if ( config.UseWantedSystem ){
 			if ( ( warn_flag & 4 ) == 4 )	
@@ -479,9 +479,9 @@ SOCKET AccountDB::FindSocket( int uid, bool SetTimer )
 }
 
 // 2003-07-06 darkangel
-// ¼­¹ö¸¦ ¼±ÅÃÇßÀ»¶§ ¼ÒÄÏÀ» Ã£´Â °ÍÀÌ´Ù. 
-// ¸¸ÀÏ setTimer°¡ TrueÀÌ¸é 5ºÐ³»·Î ¿ùµå¼­¹ö¿¡¼­ ·Î±×ÀÎ ¸Þ¼¼Áö¸¦ º¸³»ÁÖ¾î¾ß ÇÑ´Ù. 
-// º¸³»Áö ¾ÊÀ¸¸é ÀÚµ¿À¸·Î ·Î±×¾Æ¿ô ½ÃÄÑ ¹ö¸°´Ù.
+// ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜˜˜ ˜˜˜˜˜˜ ?˜˜ ˜˜˜?˜. 
+// ˜˜˜˜ setTimer˜˜ True˜?˜ 5˜ã˜˜˜ ˜˜˜?˜˜˜˜˜˜ ˜?˜˜˜ ˜?˜˜˜˜˜ ˜˜˜˜˜?˜˜ ˜?˜. 
+// ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜?˜˜˜˜˜ ˜???˜ ˜˜˜˜ ˜˜˜˜˜˜.
 SOCKET AccountDB::FindSocket( int uid, ServerId serverid, bool SetTimer, ServerId *preserverid, char *account )
 {
 	SOCKET s=NULL;
@@ -520,9 +520,9 @@ _AFTER_FIN
 }
 
 // 2003-07-06 darkangel
-// »ç¿ëÀÚ Á¤º¸¸¦ MAP¿¡¼­ »èÁ¦ÇÑ´Ù. 
-// logout°ú Æ²¸°Á¡Àº »ç¿ë½Ã°£À» ±â·ÏÇÏÁö ¾Ê°í ¼ø¼öÇÏ°Ô µ¥ÀÌÅ¸¸¸ »èÁ¦ÇÑ´Ù. 
-// ÇÏÁö¸¸ PC¹æÀÌ¸é ±Û½ê.. ±â·ÏÇØ¾ß ÇÏÁö ¾ÊÀ»±î?
+// ˜˜˜˜˜ ˜˜˜˜˜˜ MAP˜˜˜˜ ˜˜˜˜˜?˜. 
+// logout˜˜ ?˜˜˜˜˜˜ ˜˜˜?˜˜˜ ˜˜˜˜˜˜˜ ˜?˜ ˜˜˜˜˜?˜ ˜˜˜˜?˜˜ ˜˜˜˜˜?˜. 
+// ˜˜˜˜˜˜ PC˜˜˜?˜ ˜?˜.. ˜˜˜˜?˜ ˜˜˜˜ ˜˜˜˜˜˜?
 bool AccountDB::removeAccount( int uid, char *account )
 {
 	bool result=false;
@@ -549,7 +549,7 @@ bool AccountDB::removeAccount( int uid, char *account )
 		}
 		if (stat<1000) {
 			int sessionid = ipsessionDB.DelSessionID( uid );
-			//sessionid°¡ Á¸ÀçÇØ¾ß ÀÇ¹Ì°¡ ÀÖ´Ù.
+			//sessionid˜˜ ˜˜˜˜˜?˜ ˜??˜ ˜?˜.
 			if ( sessionid )
 				ipsessionDB.ReleaseSessionRequest( sessionid,  ip, stat );
 		}
@@ -586,10 +586,10 @@ _BEFORE
 	}
 	m_lock.Leave();
 	account[14]=0;
-	// ·Î±×ÀÎ Á¤º¸°¡ Á¸ÀçÇÏ¸é.
+	// ˜?˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜?˜.
 	if ((stat<1000) && result ){
 		int sessionid = ipsessionDB.DelSessionID( uid );
-		//sessionid°¡ Á¸ÀçÇØ¾ß ÀÇ¹Ì°¡ ÀÖ´Ù.
+		//sessionid˜˜ ˜˜˜˜˜?˜ ˜??˜ ˜?˜.
 		if ( sessionid ){
 			ipsessionDB.ReleaseSessionRequest( sessionid,  ip, stat );
 		}
@@ -608,7 +608,7 @@ _AFTER_FIN
 	return true;
 }
 
-// 2003-12-18 serverid ÆÄ¶ó¹ÌÅÍ Ãß°¡
+// 2003-12-18 serverid ˜?˜˜˜˜ ˜?˜
 bool AccountDB::logoutAccount( int uid, int md5key )
 {
 	bool result=false;
@@ -647,7 +647,7 @@ _BEFORE
 		}
 	}
 	m_lock.Leave();
-	// ·Î±×ÀÎ Á¤º¸°¡ Á¸ÀçÇÏ¸é
+	// ˜?˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜?˜
 	account[MAX_ACCOUNT_LEN] = 0;
 	if ( result ) {
 		if ( config.UseWantedSystem ){
@@ -714,8 +714,8 @@ bool AccountDB::logoutAccount( int uid )
 
 
 // 2003-07-20 darkangel
-// Game½ÃÀÛÀ» ¾Ë·ÁÁØ´Ù. ½ÇÁ¦ ¿ùµå¼­¹ö¿¡ Á¢¼ÓÇÑ ¶§¸¦ ¾Ë·ÁÁÖ´Â °ÍÀÌ°í
-// ÀÌ ·çÆ¾À» »ç¿ëÀÚ°¡ ByPassÇÏ°Ô µÇ¸é »ç¿ë½Ã°£ÀÌ ³²Áö ¾Ê´Â´Ù. ( ¼³¸¶ ±×·±ÀÏÀÌ ¹ß»ýÇÒ±î? )
+// Game˜˜˜˜˜˜ ˜?˜˜?˜. ˜˜˜˜ ˜˜˜?˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜ ˜?˜˜?˜ ˜˜˜?˜
+// ˜˜ ˜˜?˜˜ ˜˜˜˜?˜ ByPass˜?˜ ˜?˜ ˜˜˜?˜˜˜ ˜˜˜˜ ˜??˜. ( ˜˜˜˜ ˜?˜˜˜˜˜ ˜?˜˜?˜? )
 
 bool AccountDB::recordGamePlayTime( int uid , ServerId serverid)
 {
@@ -750,7 +750,7 @@ _BEFORE
 	}
 	m_lock.Leave();
 
-	// IPServerÂÊ¿¡ ½ÃÀÛÀ» ¾Ë·ÁÁÖµµ·Ï ÇÑ´Ù.
+	// IPServer˜?˜ ˜˜˜˜˜˜ ˜?˜˜?˜˜˜ ˜?˜.
 	if ( (stat < 1000) && ( stat > 0) && result ){
 		ipsessionDB.ConfirmIPCharge( uid, loginip.S_un.S_addr, stat, serverid );
 	}
@@ -767,7 +767,7 @@ _BEFORE
 
 		char sndmsg[28];
 		memset(sndmsg,0, 28);
-	// wanted socketÀÌ±â ¶§¹®¿¡ È®ÀÎÇØ¾ß ÇÑ´Ù. 
+	// wanted socket˜?˜ ˜˜˜˜˜˜ ?˜˜˜?˜ ˜?˜. 
 		if ( config.gameId == 8 )
 			sndmsg[0]=2;
 		memcpy( sndmsg+1, &uid, 4 );
@@ -824,7 +824,8 @@ _BEFORE
 			SendWantedServerLogout( lu.account, uid, lu.serverid );
 		if ( lu.serverid.IsValid() )
 		{
-			AS_LOG_DEBUG( "quitgame, account:%s, ip:%d.%d.%d.%d, uid:%d", lu.account, lu.loginIp.S_un.S_un_b.s_b1,lu.loginIp.S_un.S_un_b.s_b2,lu.loginIp.S_un.S_un_b.s_b3,lu.loginIp.S_un.S_un_b.s_b4, uid );
+			//AS_LOG_DEBUG( "quitgame, account:%s, ip:%d.%d.%d.%d, uid:%d", lu.account, lu.loginIp.S_un.S_un_b.s_b1,lu.loginIp.S_un.S_un_b.s_b2,lu.loginIp.S_un.S_un_b.s_b3,lu.loginIp.S_un.S_un_b.s_b4, uid );
+			AS_LOG_DEBUG( "quitgame, account:%s, ip:0.0.0.0, uid:%d", lu.account, uid );
 			RecordLogout( 'L', uid, lu.logintime, lu.queuetime, lu.serverid, lu.loginIp, config.gameId, lu.account, lu.stat, lu.ssn, lu.ssn2, lu.gender, lu.age, lu.cdkind );
 		}
 	}
@@ -880,12 +881,14 @@ bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t
 	struct tm queueloginTM;
 	char szIP[16];
 	unsigned long lastWorld = lastWorldId.GetValueChar();
-
+/*
 	sprintf( szIP, "%d.%d.%d.%d", LastIP.S_un.S_un_b.s_b1,
 								  LastIP.S_un.S_un_b.s_b2,
 								  LastIP.S_un.S_un_b.s_b3,
 								  LastIP.S_un.S_un_b.s_b4);
-	
+*/	
+	sprintf( szIP, "0.0.0.0");
+
 	TIMESTAMP_STRUCT dblogout, 
 					 dblogin,
 					 dbqueuelogin;
@@ -1078,8 +1081,8 @@ bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t
 	return true;
 }
 
-// Á¤·® °áÁ¦¸¦ Ã¼Å©ÇÑ´Ù. 
-// ³²Àº ½Ã°£ÀÌ ÀÖ´ÂÁö¸¦ °Ë»çÇØ¼­ ÀÖÀ¸¸é µî·ÏÇÏ°í ¾øÀ¸¸é ³²Àº ½Ã°£ ¾øÀ½À» Ç¥½ÃÇÑ´Ù. 
+// ˜˜˜˜ ˜˜˜˜˜˜ ??˜?˜. 
+// ˜˜˜˜ ˜?˜˜˜ ˜?˜˜˜˜˜ ˜?˜˜?˜ ˜˜˜˜˜˜ ˜˜˜˜?˜ ˜˜˜˜˜˜ ˜˜˜˜ ˜?˜ ˜˜˜˜˜˜ ?˜˜˜?˜. 
 
 char AccountDB::UserTimeLogin( int uid, LoginUser *lu, int *RemainTime )
 {
@@ -1094,7 +1097,7 @@ char AccountDB::UserTimeLogin( int uid, LoginUser *lu, int *RemainTime )
 	return ErrorCode;
 }
 
-// °³ÀÎ Á¤¾×¹× Á¤·® °áÁ¦¸¦ Ã¼Å© ÇÑ´Ù. 
+// ˜˜˜˜ ˜˜˜?˜ ˜˜˜˜ ˜˜˜˜˜˜ ?? ˜?˜. 
 char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, int Uid)
 {
 	char result=S_ALL_OK;
@@ -1102,24 +1105,24 @@ char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, in
 	int OperationCode = (int)(( lu->stat% 1000 ) / 100 );
 	int RemainTime=0;
 
-//  °áÁ¦ statÀÌ  0ÀÌ¸é ´õÀÌ»ó Ã¼Å©ÇÒ ÇÊ¿ä°¡ ¾ø´Ù. 
+//  ˜˜˜˜ stat˜˜  0˜?˜ ˜˜˜?˜ ??˜˜ ˜?? ˜˜˜˜. 
 	if ( lu->stat == 0 ) {
 		result = S_NOT_PAID;
 	} else if ( OperationCode == PERSONAL_SPECIFIC ) {
-		// Á¤·® °áÁ¦¸¦ Ã¼Å©ÇØ¼­ ¼º°øÀÌ¸é ¹ØÀ¸·Î ÁøÇà. ½ÇÆÐÀÌ¸é »ç¿ëÀÚ¿¡°Ô °á°ú Åëº¸ÇÏ°í ³¡
+		// ˜˜˜˜ ˜˜˜˜˜˜ ??˜?˜ ˜˜˜˜˜?˜ ˜˜˜˜˜˜ ˜˜˜˜. ˜˜˜˜˜?˜ ˜˜˜˜?˜˜˜ ˜˜˜ ˜?˜?˜ ˜˜
 		result=UserTimeLogin( Uid, lu, &RemainTime );
 	} else if ( OperationCode == PERSONAL_POINT ) {
 		CDBConn dbconn(g_linDB);
 		
 	}
 
-	// Á¤¾×°ú Á¤·®°áÁ¦ ¸ðµÎ ½ÇÆÐÀÎ °æ¿ì
+	// ˜˜˜?˜ ˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜ ˜˜˜
 	if ( result != S_ALL_OK ) {
 		pSocket->Send( "cc", AC_LOGIN_FAIL, result );
-		return result; // ·Î±×ÀÎ Fail ÀÌ¹Ç·Î ´õÀÌ»ó ÁøÇàÇÒ ÇÊ¿ä ¾ø´Ù. 
+		return result; // ˜?˜˜˜ Fail ˜??˜ ˜˜˜?˜ ˜˜˜˜˜˜ ˜?˜ ˜˜˜˜. 
 	}
 	
-	// Á¤¾×°ú Á¤·® µÑÁß¿¡ ÇÏ³ª¶óµµ Åë°úÇÏ¸é  »ç¿ë °¡´ÉÇÑ °èÁ¤À¸·Î µî·ÏÇÑ´Ù. µî·Ï¿¡ ½ÇÆÐÇÏ¸é  ÀÌÁß ·Î±×ÀÎÀÌ µÈ´Ù. 
+	// ˜˜˜?˜ ˜˜˜˜ ˜˜˜?˜ ˜?˜˜˜ ˜˜˜˜?˜  ˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜˜?˜. ˜˜?˜ ˜˜˜˜˜?˜  ˜˜˜˜ ˜?˜˜˜˜˜ ˜?˜. 
 	if ( accountdb.RegAccount( lu, Uid, pSocket, RemainTime, 0 ) ){
 
 	    log.AddLog( LOG_VERBOSE, "SND: AC_LOGIN_OK,uid:%d,account:%s", Uid, lu->account);
@@ -1129,7 +1132,8 @@ char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, in
 		WriteLogD( LOG_ACCOUNT_AUTHED, lu->account, lu->loginIp, lu->stat, lu->age, lu->gender, 0, reporter.m_UserCount, Uid );
 	} else{
 		
-        log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
+        //log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
+        log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:0.0.0.0,%x", Uid, lu->account, pSocket->GetSocket() );
 	}
 
 	return result;
@@ -1137,8 +1141,8 @@ char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, in
 
 char AccountDB::CheckUserTime(int Uid, int *RemainTime)
 {
-	// UserTimeLoginÀ» CheckÇÒ °æ¿ì¿¡´Â user_time Å×ÀÌºíÀÌ Á¸ÀçÇÑ´Ù.
-	// Logic : user_time Table¿¡¼­ total_timeÀ» SelectÇØ¿Â´Ù. 
+	// UserTimeLogin˜˜ Check˜˜ ˜˜?˜˜ user_time ˜˜˜?˜˜˜ ˜˜˜˜˜?˜.
+	// Logic : user_time Table˜˜˜˜ total_time˜˜ Select˜??˜. 
 	char ErrorCode=S_ALL_OK;
 
 	CDBConn conn(g_linDB);
@@ -1169,7 +1173,7 @@ char AccountDB::CheckUserTime(int Uid, int *RemainTime)
 }
 
 // 2003-07-06 darkangel
-// ¼­¹ö ¼±ÅÃÈÄ¿¡ ¼±ÅÃµÈ ¼­¹ö·Î »ç¿ëÀÚ Á¤º¸¸¦ º¸³»ÁÖµµ·Ï ÇÑ´Ù. 
+// ˜˜˜˜ ˜˜˜˜˜?˜ ˜˜˜?˜ ˜˜˜˜˜˜ ˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜?˜˜˜ ˜?˜. 
 
 char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag, int warnflag, int md5key, CSocketServerEx *pSocket, ServerId serverid, int stat, int queueLevel, int loyalty, int loyaltyLegacy)
 {
@@ -1183,7 +1187,7 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 		log.AddLog(LOG_WARN, "PayStatOverride is set to %d!", config.payStatOverride);
 	}
 
-	// user data°¡ ÇÊ¿äÇÑ °æ¿ì¿¡ user_data¸¦ ÀÐ¾î ¿Àµµ·Ï ÇÑ´Ù. 
+	// user data˜˜ ˜?˜˜˜ ˜˜? user_data˜˜ ˜î˜ ˜˜˜˜˜˜ ˜?˜. 
 	if ( config.UserData ){
 		unsigned char userdata[MAX_USERDATA];
 		
@@ -1258,12 +1262,12 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
 #endif
 		}else{
-			// server¿¡ Á¦´ë·Î µ¥ÀÌÅ¸¸¦ º¸³»¸é.
+			// server˜˜ ˜˜˜˜˜ ˜˜˜˜?˜˜ ˜˜˜˜˜˜.
 			result = SendSocket( g_ServerList.GetInternalAddress(serverid), "cdsdddd", SQ_ABOUT_TO_PLAY, uid, account, time_left, loginflag, warnflag, stat, queueLevel );
 		}
 	}
 
-	// pSocketÀÌ NULLÀÌ ¾Æ´Ò¶§¿¡¸¸ µ¿ÀÛÇØ¾ß ÇÑ´Ù....
+	// pSocket˜˜ NULL˜˜ ˜??˜˜˜˜˜ ˜˜˜˜˜?˜ ˜?˜....
 	if ( pSocket ) {
 		if ( result == FALSE ){
 			AS_LOG_VERBOSE( "SND: AC_PLAY_FAIL,server down", S_SERVER_DOWN );
@@ -1273,7 +1277,7 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 
 			AS_LOG_VERBOSE( "SND: SQ_ABOUT_TO_PLAY,account:%s", account );
 		
-			// ¼ÒÄÏÀ» ¾÷µ¥ÀÌÆ® ÇÑ´Ù. 
+			// ˜˜˜˜˜˜ ˜˜˜˜˜˜? ˜?˜. 
 			if( (error=UpdateSocket( uid, pSocket->GetSocket(), md5key, serverid )) != S_ALL_OK){
 				AS_LOG_VERBOSE( "SND: AC_PLAY_FAIL,error:%d", error);
 				pSocket->Send( "cc", AC_PLAY_FAIL, error );		
@@ -1286,8 +1290,8 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 
 
 // 2003-07-06 darkangel
-// »ç¿ëÀÚ Á¤º¸¸¦ ÀúÀåµÈ userMap¿¡¼­ °¡Á®¿Â´Ù. 
-// StartIPCharge¿¡¼­ ºÎ¸£¸ç ±×¶§´Â ÀÌ¹Ì ·Î±×ÀÎµµ µÇ°í °ÔÀÓµµ µÈ´Ù´Â °ÍÀÌ±â ¶§¹®¿¡ Timer¸¦ Áö¿ö¾ß ÇÑ´Ù.
+// ˜˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜ userMap˜˜˜˜ ˜˜˜˜˜?˜. 
+// StartIPCharge˜˜˜˜ ˜?˜˜˜ ˜?˜˜˜ ˜?˜ ˜?˜˜?˜ ˜?˜ ˜˜˜?˜ ˜??˜ ˜˜˜?˜ ˜˜˜˜˜˜ Timer˜˜ ˜˜˜˜˜˜ ˜?˜.
 
 bool AccountDB::GetAccountInfo( int uid, char *account, int *loginflag, int *warnflag, int *md5key, SOCKET *s )
 {
@@ -1315,7 +1319,7 @@ bool AccountDB::GetAccountInfo( int uid, char *account, int *loginflag, int *war
 	return result;
 }
 
-// IP °ú±ÝÀ» Á¤Áö ½ÃÅ°±â À§ÇÑ Á¤º¸¸¦ º¹»çÇØ ¿Ã¶§ »ç¿ëÇÑ´Ù. 
+// IP ˜˜˜˜˜˜ ˜˜˜˜ ˜˜?˜˜ ˜˜˜˜ ˜˜˜˜˜˜ ˜˜˜˜˜˜ ˜?˜ ˜˜˜˜?˜. 
 bool AccountDB::GetAccountInfoForIPStop( int uid, char *account, int *stat, in_addr *loginip, time_t *loginTime )
 {
 	bool result = false;
@@ -1345,11 +1349,11 @@ bool AccountDB::RegAccountByServer( LoginUser *loginuser, int uid, CSocketServer
 	m_lock.Leave();
 	
 	if ( result == false ){
-		// kick account¸¦ ÇÒ°æ¿ì ¸Þ¼¼Áö¸¦ º¸³¾Áö´Â »ç½Ç °áÁ¤ ¾ÈÇØµµ µÈ´Ù. 
-		// ´Ù½Ã ·Î±×ÀÎ ÇÏ¶ó°í ÇÏ´Ï±î.
+		// kick account˜˜ ˜?˜˜ ˜?˜˜˜˜˜ ˜˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜ ˜˜˜?˜ ˜?˜. 
+		// ˜?˜ ˜?˜˜˜ ˜?˜˜ ˜??˜.
 		KickAccount( uid,S_ALREADY_LOGIN, true );
 	}  else {
-		// ±×³É Àß ·Î±×ÀÎ µÈ°Å´Ù. ¹¹ 
+		// ˜?˜ ˜˜ ˜?˜˜˜ ˜??˜. ˜˜ 
 	}
 	return result;
 }	

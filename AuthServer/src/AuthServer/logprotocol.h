@@ -166,7 +166,7 @@ enum
 #define LOG_WEB_SEIZEITEM			625
 
 //	Character Category
-#define	LOG_ACCOUNT_AUTHED			801 // 처음 인증
+#define	LOG_ACCOUNT_AUTHED			801 // ?? ??
 #define	LOG_ACCOUNT_LOGIN			802 // World IN
 #define	LOG_CHAR_ENTER_WORLD		803 
 #define	LOG_ACCOUNT_LOGOUT			804 // Account logout
@@ -276,13 +276,13 @@ enum
 
 
 // character category
-#define	LOG_F_ACCOUNT_AUTHED		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGIN			L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGOUT		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGOUT2		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,,,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_AUTHED		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGIN			L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGOUT		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGOUT2		L"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,,,,,,,,,%s,,,\r\n"
 
 
-#define	LOG_F_ACCOUNT_AUTHED_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGIN_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGOUT_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
-#define	LOG_F_ACCOUNT_LOGOUT2_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,%d.%d.%d.%d,,,%d,%d,%d,,,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_AUTHED_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGIN_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGOUT_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,%d,%d,,,,,,,%s,,,\r\n"
+#define	LOG_F_ACCOUNT_LOGOUT2_1		"%02d/%02d/%04d %02d:%02d:%02d.%03d ,%d,,%d,,,,,,0.0.0.0,,,%d,%d,%d,,,,,,,,,%s,,,\r\n"

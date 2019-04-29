@@ -5483,8 +5483,8 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
 				conPrintf(client,clientPrintf(client,"AccessLevelInGame"));
 				if (client->link)
 					LOG_ENT(client->entity, LOG_ENTITY, LOG_LEVEL_IMPORTANT, 0, 
-							"Security:Accesslevel External used /accesslevel: Auth:%s IP:%s (command ignored)",
-							client->entity->auth_name, makeIpStr(client->link->addr.sin_addr.S_un.S_addr));
+							"Security:Accesslevel External used /accesslevel: Auth:%s IP:0.0.0.0 (command ignored)",
+							client->entity->auth_name);
 			}
 		}
 

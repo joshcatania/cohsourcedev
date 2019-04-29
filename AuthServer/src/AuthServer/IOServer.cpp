@@ -154,7 +154,7 @@ CIOSocket *CServer::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 	if (!config.gameServerSpecifiesId)
 	{
 		serverid = g_ServerList.SetServerSocketByAddress( pAddress->sin_addr, mysocket );
-		// µî·ÏµÇÁö ¾ÊÀº ¼­¹öÀÓ. 
+		// ?  . 
 		if ( !serverid.IsValid() ){		
 			log.AddLog(LOG_ERROR, "Non-registered world server %d.%d.%d.%d", 
 							pAddress->sin_addr.S_un.S_un_b.s_b1,
@@ -214,8 +214,8 @@ CSocketServer *CServer::FindSocket( in_addr s )
 }
 
 // 2003-07-08 darkangel
-// Socket ¿¬°áÀÌ µÇ¾î ÀÖ´ÂÁö È®ÀÎÇØ¼­ ¼­¹ö°¡ »ì¾ÆÀÖ´ÂÁö Ã¼Å©ÇÑ´Ù. 
-// Socket ¿¬°áÀÌ µÇ¾î ÀÖÀ¸¸é ÇöÀç ±× ¿ùµå¼­¹ö°¡ »ì¾Æ ÀÖ´Ù°í °£ÁÖÇÑ´Ù. 
+// Socket  ? ? ??  ? ü??. 
+// Socket  ?    ?  ?? ?. 
 bool CServer::GetServerStatus( in_addr s )
 {
 	bool result=false;
@@ -355,7 +355,7 @@ void OverlappedPool::FreeAll()
 
 CIOServerEx::CIOServerEx()
 {
-	// ÃÊ±âÈ­.
+	// ??.
 	
 	m_hSocket		= INVALID_SOCKET;
 	m_acceptEvent	= WSA_INVALID_EVENT;
@@ -598,9 +598,9 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 	}
 
 	g_AcceptExThread = config.AcceptCallNum;
-//  AutomaticÀ¸·Î ´Ã¾î³ª°Ô ÇØº»°á°ú ÀÏ´Ü ¹«Á¶°Ç ´Ã¾î³­´Ù. T.T
-//  Connection¿ä±¸°¡ ÀÏ´Ü ÁÙ¾îµé¸é ±×¶§¼­ ´Ù¸¥ JobÀ» Ã³¸®ÇÏ±â ¶§¹®¿¡ ÀÌÂÊÀÌ Bottle NeckÀÌ µÇ¾î¹ö¸®´Â °á°ú°¡ ³ª¿Â´Ù.
-//  AutomaticÀº º°·Î ÁÁÁö ¸øÇÏ´Ù.
+//  Automatic ş? ? ?  ş?. T.T
+//  Connection? ? ? ? ? Job ó?   Bottle Neck ?  ´.
+//  Automatic   ?.
 //	m_acceptEvent = WSACreateEvent();
 //	WSAEventSelect(m_hSocket, m_acceptEvent, FD_ACCEPT);
 //	if (!RegisterEvent(m_acceptEvent)) {
@@ -621,8 +621,8 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 
 CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 {
-	// ÁöÁ¤µÈ ¼ÒÄÏ °¹¼ö¸¦ ÃÊ°úÇÒ °æ¿ì¿¡´Â 
-	// ±×·¯ÇÑ °æ¿ì¿¡´Â ¼ÒÄÏ »ı¼ºÀ» Ãß°¡·Î ¹ŞÁö ¾Ê´Â´Ù. 
+	//    ? ? 
+	// ? ?   ?  ?´. 
 	if ( reporter.m_SocketCount >= config.SocketLimit ){
 		return NULL;
 	} 
@@ -631,7 +631,7 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	cip.S_un.S_addr = pAddress->sin_addr.S_un.S_addr;
 
 	if( !IPaccessLimit.SetAccessIP( cip )){
-		log.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
+		//log.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
 		return NULL;
 	}
 
@@ -643,11 +643,11 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	LeaveCriticalSection(&sockSect);
 
 #ifdef _DEBUG
-	log.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
+	/*log.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
 			pAddress->sin_addr.S_un.S_un_b.s_b1,
 			pAddress->sin_addr.S_un.S_un_b.s_b2,
 			pAddress->sin_addr.S_un.S_un_b.s_b3,
-			pAddress->sin_addr.S_un.S_un_b.s_b4, mysocket->GetSocket());
+			pAddress->sin_addr.S_un.S_un_b.s_b4, mysocket->GetSocket());*/
 #endif 
 	return mysocket;
 }

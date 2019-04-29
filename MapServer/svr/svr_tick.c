@@ -235,7 +235,7 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
 
 		xcase CLIENT_CONNECT:
 #define CLIENT_CONNECT_ERROR(msg)	\
-	LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_IMPORTANT, 0, "Refused connection from %s:%d: %s", makeIpStr(link->addr.sin_addr.S_un.S_addr), link->addr.sin_port, msg); \
+	LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_IMPORTANT, 0, "Refused connection from 0.0.0.0:%d: %s", link->addr.sin_port, msg); \
 	pktSendBitsPack(pak_out,1,0);	\
 	pktSendString(pak_out,msg);		\
 	pktSend(&pak_out,client->link);	\
@@ -304,8 +304,8 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
 
 			autoCommand_run(client, client->entity, 0);
 
-			LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_VERBOSE, 0, "Connected client %s From %s:%d",
-				character_IsInitialized(client->entity->pchar)?"and resuming character":"and creating character", makeIpStr(link->addr.sin_addr.S_un.S_addr), link->addr.sin_port);
+			LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_VERBOSE, 0, "Connected client %s From 0.0.0.0:%d",
+				character_IsInitialized(client->entity->pchar)?"and resuming character":"and creating character", link->addr.sin_port);
 
 		xcase CLIENT_REQSCENE:
 			{
@@ -326,7 +326,7 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
 				}
 				if (dummy!=0) 
 				{
-					LOG( LOG_CHEATING, LOG_LEVEL_VERBOSE, 0, "Missing stealth bit on CLIENT_REQSCENE packet, AuthName: %s, IP: %s", client->entity?client->entity->auth_name:"NoEntity", makeIpStr(client->link->addr.sin_addr.S_un.S_addr));
+					LOG( LOG_CHEATING, LOG_LEVEL_VERBOSE, 0, "Missing stealth bit on CLIENT_REQSCENE packet, AuthName: %s, IP: 0.0.0.0", client->entity?client->entity->auth_name:"NoEntity");
 				}
 
 				if (!client->entity || !character_IsInitialized(client->entity->pchar))
@@ -448,7 +448,7 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
 						return 0;
 					}
 				}
-				LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_IMPORTANT, 0, "Connection:ResumeCharacter from %s:%d AuthName \"%s\"",makeIpStr(client->link->addr.sin_addr.S_un.S_addr),client->link->addr.sin_port, client->entity->auth_name);
+				LOG_ENT( client->entity, LOG_ENTITY, LOG_LEVEL_IMPORTANT, 0, "Connection:ResumeCharacter from 0.0.0.0:%d AuthName \"%s\"",client->link->addr.sin_port, client->entity->auth_name);
 
 				for (i = 0; i < eaSize(&g_SalvageTrackedList.ppTrackedSalvage); ++i)
 				{
@@ -1509,7 +1509,7 @@ static int svrTickCheckDisconnect(NetLink* link, ClientLink* client, int max_buf
 		{
 			char	buf[1000];
 
-			sprintf(buf,"Waiting for client %s(%s) to accept packets",makeIpStr(link->addr.sin_addr.s_addr),client->entity->name);
+			sprintf(buf,"Waiting for client 0.0.0.0(%s) to accept packets",client->entity->name);
 			setConsoleTitle(buf);
 			ret = netLinkMonitor(client->link,0,0);
 			if (ret == LINK_DISCONNECTED)

@@ -536,7 +536,7 @@ void handleDbNewMap(Packet *pak)
 	sendClientNewMap(link,map_id,ip_list[0],udp_port,tcp_port,login_cookie);
 
 	e = entFromDbIdEvenSleeping(link_id);
-	LOG_OLD( "Sending map %d, %s:%d, cookie: %x to client",map_id,makeIpStr(ip_list[0]),udp_port, login_cookie);
+	LOG_OLD( "Sending map %d, 0.0.0.0:%d, cookie: %x to client",map_id,udp_port, login_cookie);
 	if (e->dbcomm_state.map_xfer_step == MAPXFER_WAIT_NEW_MAPSERVER_READY)
 		e->dbcomm_state.map_xfer_step = MAPXFER_DONE;
 }

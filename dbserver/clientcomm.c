@@ -2274,7 +2274,8 @@ bool deletePlayer(int db_id, bool log, char *player_name, char *ipstr, char *acc
 		// date, ip, account, character name, character data
 		logbuflen = 5 + strlen(datestr) + strlen(ipstr) + strlen(accountname) + strlen(eff_player_name) + strlen(chardata);
 		logbuf = malloc(logbuflen+1);
-		sprintf(logbuf, "%s\t%s\t%s\t%s\t%s\n", datestr, ipstr?ipstr:"0.0.0.0", accountname?accountname:"", eff_player_name, chardata);
+		//sprintf(logbuf, "%s\t%s\t%s\t%s\t%s\n", datestr, ipstr?ipstr:"0.0.0.0", accountname?accountname:"", eff_player_name, chardata);
+		sprintf(logbuf, "%s\t%s\t%s\t%s\t%s\n", datestr, "0.0.0.0", accountname?accountname:"", eff_player_name, chardata);
 		logPutMsgSub(logbuf, logbuflen+1, "deletion.log", 1, 0, 0, NULL);
 		free(logbuf);
 		free(chardata);
