@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{099AA8A8-CC04-47B2-B890-B7604632CA36}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
   </PropertyGroup>
@@ -105,6 +106,70 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
+    <ClCompile>
+      <AdditionalIncludeDirectories>..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|x64'">
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|x64'">
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
+    <Link>
+      <AdditionalDependencies>cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <OutputFile>$(TargetPath)</OutputFile>
+    </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\persist\persist_sql.c" />

@@ -67,7 +67,7 @@ void CIOSocket::Initialize( HANDLE hIOCompletionPort )
 	setsockopt(m_hSocket, SOL_SOCKET, SO_SNDBUF, (char *)&zero, sizeof(zero));
 	AddRef();
 	if (CreateIoCompletionPort((HANDLE) m_hSocket, hIOCompletionPort, (DWORD)PtrToUint(this), 0) == NULL) {
-		log.AddLog( LOG_ERROR, "Initilize CompletionPort Error CloseSocket" );
+		logger.AddLog(LOG_ERROR, "Initilize CompletionPort Error CloseSocket" );
 		CloseSocket();
 		return;
 	}
@@ -77,7 +77,6 @@ void CIOSocket::Initialize( HANDLE hIOCompletionPort )
 
 void CIOSocket::OnCreate( void )
 {
-	// IntSocket과 ServerSocket의 Read부분이 여기서 틀려지게 된다. 
 	OnRead();
 }
 
@@ -105,7 +104,7 @@ void CIOSocket::OnReadCallback( DWORD dwTransferred )
 		return;
 	}
 	if (this->GetRef() <= 0){
-		log.AddLog(LOG_ERROR, "Invalid Socket!");
+		logger.AddLog(LOG_ERROR, "Invalid Socket!");
 		return;
 	}
 
@@ -117,7 +116,7 @@ void CIOSocket::OnWriteCallback( DWORD dwTransferred )
 {
 	EnterCriticalSection( &m_cs );
 	if (dwTransferred != m_pFirstBuf->m_size) {
-		log.AddLog(LOG_ERROR,  "different write count %x(%x) %d != %d", m_hSocket, this, dwTransferred, m_pFirstBuf->m_size);
+		logger.AddLog(LOG_ERROR,  "different write count %x(%x) %d != %d", m_hSocket, this, dwTransferred, m_pFirstBuf->m_size);
 		LeaveCriticalSection(&m_cs);
 		ReleaseRef();
 		return;	
@@ -134,7 +133,7 @@ void CIOSocket::OnWriteCallback( DWORD dwTransferred )
 		if (WSASend(m_hSocket, &wsabuf, 1, &dwSent, 0, &m_overlappedWrite, NULL) && GetLastError( ) != ERROR_IO_PENDING) {
 			int nErr = GetLastError();
 			if (nErr != WSAENOTSOCK && nErr != WSAECONNRESET && nErr != WSAECONNABORTED)
-				log.AddLog(LOG_ERROR, "CIOSocket::WriteCallback %x(%x) err=%d", m_hSocket, this, nErr);
+				logger.AddLog(LOG_ERROR, "CIOSocket::WriteCallback %x(%x) err=%d", m_hSocket, this, nErr);
 			ReleaseRef();
 		}
 	}
@@ -168,7 +167,7 @@ void CIOSocket::Read(DWORD dwLeft)
 	if (WSARecv(m_hSocket, &wsabuf, 1, &dwRecv, &dwFlag, &m_overlappedRead, NULL) && GetLastError() != ERROR_IO_PENDING) {
 		int nErr = GetLastError();
 		if (nErr != WSAENOTSOCK && nErr != WSAECONNRESET && nErr != WSAECONNABORTED)
-			log.AddLog(LOG_ERROR, "CIOSocket::Read %x(%x) err = %d", m_hSocket, this, nErr);
+			logger.AddLog(LOG_ERROR, "CIOSocket::Read %x(%x) err = %d", m_hSocket, this, nErr);
 		CloseSocket();
 		ReleaseRef();
 	}
@@ -176,7 +175,6 @@ void CIOSocket::Read(DWORD dwLeft)
 
 void CIOSocket::Write(CIOBuffer *pBuffer)
 {
-	// 보내는 Size가 0이면 필요 없음...
 	if (pBuffer->m_size == 0) {
 		pBuffer->Free();
 		return;
@@ -196,7 +194,7 @@ void CIOSocket::Write(CIOBuffer *pBuffer)
 			&& GetLastError() != ERROR_IO_PENDING) {
 			int nErr = GetLastError();
 			if (nErr != WSAENOTSOCK && nErr != WSAECONNRESET && nErr != WSAECONNABORTED)
-				log.AddLog(LOG_ERROR, "CIOSocket::Write %x(%x) err=%d", m_hSocket, this, nErr);
+				logger.AddLog(LOG_ERROR, "CIOSocket::Write %x(%x) err=%d", m_hSocket, this, nErr);
 			ReleaseRef(); 
 		}
 	}
@@ -297,7 +295,7 @@ void CPacketServer::OnIOCallback(BOOL bSuccess, DWORD dwTransferred, LPOVERLAPPE
 
 	if ((*m_pFunc)(m_pSocket, packet + 1)) {
 		m_pSocket->CIOSocket::CloseSocket();
-		log.AddLog( LOG_ERROR,"ServerClose:PacketServerClose" );
+		logger.AddLog(LOG_ERROR,"ServerClose:PacketServerClose" );
 	}
 
 	m_pSocket->ReleaseRef();

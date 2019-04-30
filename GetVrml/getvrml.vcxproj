@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{1F47D2CA-05A3-46F1-AD58-4756C1E928E6}</ProjectGuid>
     <RootNamespace>getvrml</RootNamespace>
     <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>

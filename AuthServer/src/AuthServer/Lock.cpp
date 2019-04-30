@@ -114,7 +114,7 @@ void CRWLock::ReadLock()
 	EnterCriticalSection(&mutex);
 	if (++readerCount == 1) {
 		if (WaitForSingleObject(dataLock, INFINITE) != WAIT_OBJECT_0) {
-			log.AddLog(LOG_ERROR, "ReadLock failed on dataLock");
+			logger.AddLog(LOG_ERROR, "ReadLock failed on dataLock");
 		}
 	}
 	LeaveCriticalSection(&mutex);
@@ -145,6 +145,6 @@ void CRWLock::WriteUnlock()
 	LONG prevCount;
 	ReleaseSemaphore(dataLock, 1, &prevCount);
 	if (prevCount != 0) {
-		log.AddLog(LOG_ERROR, "WriteUnlock semaphore was not locked");
+		logger.AddLog(LOG_ERROR, "WriteUnlock semaphore was not locked");
 	}
 }

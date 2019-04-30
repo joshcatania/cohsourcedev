@@ -22,16 +22,10 @@ VOID CALLBACK WantedSocketTimerRoutine(PVOID lpParam, BYTE TimerOrWaitFired)
 
 	if ( WantedServerReconnect == true ) {
 		SOCKET WantedSock = socket(AF_INET, SOCK_STREAM, 0);
-		// 2. 소켓 Connection에 사용할 Destination Setting을 한다.
 		sockaddr_in Destination;
 		Destination.sin_family = AF_INET;
 		Destination.sin_addr   = config.WantedIP;
 		Destination.sin_port   = htons( (u_short)config.WantedPort );
-		// 3. Connection을 맺는다. 
-		
-		// 4. 맺어진 Connection을 이용하여 LOGSocket을 생성한다. 
-		//    Connection Error가 생겼더라도 관계 없다. 
-		//    그렇게 되면 자동적으로 Timer가 작동하여 10초에 한번씩 Reconnection을 시도하게 된다. 
 
 		int ErrorCode = connect( WantedSock, ( sockaddr *)&Destination, sizeof( sockaddr ));
 		
@@ -137,7 +131,7 @@ _AFTER_FIN
 
 static bool DummyPacket( CWantedSocket *s, const unsigned char *packet )
 {
-	log.AddLog( LOG_WARN, "Call DummyPacket What What What" );
+	logger.AddLog(LOG_WARN, "Call DummyPacket What What What" );
 	return false;
 }
 static bool GetVersion( CWantedSocket *s, const unsigned char *packet )
@@ -183,7 +177,7 @@ CWantedSocket::CWantedSocket( SOCKET aSoc )
 }
 CWantedSocket::~CWantedSocket()
 {
-	log.AddLog( LOG_ERROR, "WantedSocket Deleted" );
+	logger.AddLog(LOG_ERROR, "WantedSocket Deleted" );
 }
 
 void CWantedSocket::OnClose(SOCKET closedSocket)
@@ -196,7 +190,7 @@ void CWantedSocket::OnClose(SOCKET closedSocket)
 	WantedServerReconnect = true;
 	config.UseWantedSystem = false;
 
-	log.AddLog(LOG_ERROR, "*close connection WantedSocket from %s, %x(%x)", IP(), closedSocket, this);
+	logger.AddLog(LOG_ERROR, "*close connection WantedSocket from %s, %x(%x)", IP(), closedSocket, this);
 	AddRef();
 	CreateTimerQueueTimer( &g_hWantedServerTimer, NULL, WantedSocketTimerRoutine, this, config.WantedReconnectInterval, 0, 0 );
 }
@@ -237,7 +231,7 @@ void CWantedSocket::OnRead()
 			if (pi + 3 <= ri) {
 				packetLen = inBuf[pi] + (inBuf[pi + 1] << 8) + 1;
 				if (packetLen <= 0 || packetLen > BUFFER_SIZE) {
-					log.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
+					logger.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
 					break;
 				} else {
 					pi += 2;
@@ -251,7 +245,7 @@ void CWantedSocket::OnRead()
 			if (pi + packetLen <= ri) {
 
 				if (inBuf[pi] >= WA_MAX) {
-					log.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
+					logger.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
 					break;
 				} else {
 					CWantedPacketServer *pPacket = CWantedPacketServer::Alloc();
@@ -292,7 +286,7 @@ bool CWantedSocket::Send(const char* format, ...)
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
 		len -= 1;
 		len = len;

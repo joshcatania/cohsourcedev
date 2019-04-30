@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{63678ADE-8025-4E76-BCC9-A4F869A5937D}</ProjectGuid>
     <RootNamespace>server</RootNamespace>
   </PropertyGroup>
@@ -70,10 +71,10 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup>
     <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">$(PlatformName)\$(Configuration).DbQuery\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(PlatformName)\$(Configuration).DbQuery\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">$(PlatformName)\$(Configuration).DbQuery\</OutDir>
-    <OutDir Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">$(PlatformName)\$(Configuration).DbQuery\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">$(PlatformName)\$(Configuration)\</OutDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">$(PlatformName)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -83,7 +84,7 @@
     <Link>
       <AssemblyDebug>true</AssemblyDebug>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Release\;..\3rdparty\p4api\bin\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -97,10 +98,11 @@
     <ClCompile>
       <PreprocessorDefinitions>BEACONIZER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>.\script\LuaLibs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Release\;..\3rdparty\p4api\bin\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -117,7 +119,7 @@
     </ClCompile>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Release\;..\3rdparty\p4api\bin\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -130,7 +132,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Debug\;..\3rdparty\p4api\bin\$(Platform)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
@@ -176,7 +178,10 @@
     <ClCompile Include="..\3rdparty\lua-5.1.5\src\lvm.c" />
     <ClCompile Include="..\3rdparty\lua-5.1.5\src\lzio.c" />
     <ClCompile Include="..\3rdparty\lua-5.1.5\src\print.c" />
-    <ClCompile Include="..\Common\account\AccountTypes.cpp" />
+    <ClCompile Include="..\Common\account\AccountTypes.cpp">
+      <RuntimeLibrary Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">
+      </RuntimeLibrary>
+    </ClCompile>
     <ClCompile Include="..\Common\LWC_common.c" />
     <ClCompile Include="..\Common\TurnstileCommon.c" />
     <ClCompile Include="..\Common\TurnstileServerCommon.c" />

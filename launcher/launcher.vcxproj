@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{BBD9F1CB-7144-4AEB-8BBF-5C7F0A280208}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -109,7 +110,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib;</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -119,7 +120,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
@@ -129,7 +130,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib;</AdditionalDependencies>
     </Link>
     <PostBuildEvent>

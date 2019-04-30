@@ -28,16 +28,11 @@ VOID CALLBACK LOGDTimerRoutine(PVOID lpParam, BYTE TimerOrWaitFired)
 
 	if ( LogDReconnect == true ) {
 		SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
-		// 2. 소켓 Connection에 사용할 Destination Setting을 한다.
 		sockaddr_in Destination;
 		Destination.sin_family = AF_INET;
 		Destination.sin_addr   = config.LogDIP;
 		Destination.sin_port   = htons( (u_short)config.LogDPort );
-		// 3. Connection을 맺는다. 
-		
-		// 4. 맺어진 Connection을 이용하여 LOGSocket을 생성한다. 
-		//    Connection Error가 생겼더라도 관계 없다. 
-		//    그렇게 되면 자동적으로 Timer가 작동하여 10초에 한번씩 Reconnection을 시도하게 된다. 
+
 		int ErrorCode = connect( LOGSock, ( sockaddr *)&Destination, sizeof( sockaddr ));
 		CLogSocket *tempLogSocket = CLogSocket::Allocate(LOGSock);
 		tempLogSocket->SetAddress( config.LogDIP );
@@ -140,7 +135,7 @@ _AFTER_FIN
 
 static bool LOGDummyPacket( CLogSocket *s, const unsigned char *packet )
 {
-	log.AddLog( LOG_WARN, "Call DummyPacket What What What" );
+	logger.AddLog(LOG_WARN, "Call DummyPacket What What What" );
 	return false;
 }
 
@@ -191,7 +186,7 @@ void CLogSocket::OnRead( void ) {
 				packetLen = inBuf[pi] + (inBuf[pi + 1] << 8) + 1 - config.PacketSizeType;
 				if (packetLen <= 0 || packetLen > BUFFER_SIZE) {
 					errorNum = 1;
-					log.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
+					logger.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
 					break;
 				} else {
 					pi += 2;
@@ -205,7 +200,7 @@ void CLogSocket::OnRead( void ) {
 			if (pi + packetLen <= ri) {
 
 				if (inBuf[pi] >= 0) {
-					log.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
+					logger.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
 					errorNum = 2;
 					break;
 				} else {
@@ -232,7 +227,7 @@ void CLogSocket::OnRead( void ) {
 	}
 	
 
-	errlog.AddLog( LOG_NORMAL, "logd server connection close. invalid status and protocol %s, errorNum :%d", IP(), errorNum);
+	errlog.AddLog(LOG_NORMAL, "logd server connection close. invalid status and protocol %s, errorNum :%d", IP(), errorNum);
 	CIOSocket::CloseSocket();
 }
 
@@ -264,7 +259,7 @@ _BEFORE
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
 		len -= 1;
 		len = len + 3;
@@ -273,7 +268,6 @@ _BEFORE
 		buffer[1] = len >> 8;
 
 	}
-//  logd는 패킷을 다시 계산할 필요가 없다. L2로그디만 존재하기 때문이다. 
 	pBuffer->m_size = len;
 	Write(pBuffer);
 	ReleaseRef();
@@ -298,10 +292,10 @@ _BEFORE
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
 		len -= 1;
-		len = len + 3; // L2 전용이기 때문이다.
+		len = len + 3;
 		// len= len + config.PacketSizeType
 		buffer[0] = len;
 		buffer[1] = len >> 8;
@@ -323,7 +317,7 @@ const char *CLogSocket::IP()
 void CLogSocket::OnTimerCallback( void )
 {
 /*
-	log.AddLog( LOG_WARN, "Timer Callback Reconnect LOGDTimer Timer Called" );
+	logger.AddLog(LOG_WARN, "Timer Callback Reconnect LOGDTimer Timer Called" );
 _BEFORE
 	if ( g_bTerminating )
 	{
@@ -342,7 +336,7 @@ _BEFORE
 	}
 	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_hSocket == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "log socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "log socket error %d", WSAGetLastError());
 		RegisterTimer( config.LogDReconnectInterval, true );
 		LeaveCriticalSection( &m_cs );
 		ReleaseRef();
@@ -365,7 +359,7 @@ _BEFORE
 		mode = SM_READ_LEN;
 		Initialize( g_hIOCompletionPortInt );
 		ReleaseRef();
-		log.AddLog( LOG_WARN, "LOGD Socket Connected" );
+		logger.AddLog(LOG_WARN, "LOGD Socket Connected" );
 		return ;
 	}
 _AFTER_FIN
@@ -387,8 +381,8 @@ void CLogSocket::OnClose(SOCKET closedSocket)
 	ActionTime = time(0);
 	ActionTm = *localtime(&ActionTime);
 
-	log.AddLog(LOG_ERROR, "*close logd connection from %s, %x(%x)", IP(), closedSocket, this);
-	errlog.AddLog( LOG_NORMAL, "%d-%d-%d %d:%d:%d,main server connection close from %s, 0x%x\r\n",		
+	logger.AddLog(LOG_ERROR, "*close logd connection from %s, %x(%x)", IP(), closedSocket, this);
+	errlog.AddLog(LOG_NORMAL, "%d-%d-%d %d:%d:%d,main server connection close from %s, 0x%x\r\n",		
 				ActionTm.tm_year + 1900, ActionTm.tm_mon + 1, ActionTm.tm_mday,
 				ActionTm.tm_hour, ActionTm.tm_min, ActionTm.tm_sec, IP(), closedSocket );	
 	

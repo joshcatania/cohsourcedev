@@ -19,6 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{2D4D004D-275A-4D4F-B700-51F74606ECAC}</ProjectGuid>
     <RootNamespace>game</RootNamespace>
   </PropertyGroup>
@@ -86,7 +87,7 @@
       <AdditionalDependencies>IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;HeroBrowser.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPD.lib;LIBCD.lib;MSVCRTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalLibraryDirectories>..\libs\HeroBrowser\$(PlatformName)\$(Configuration)\;..\3rdparty\bin\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\libs\HeroBrowser\$(PlatformName)\$(Configuration)\;..\3rdparty\IJGWin32\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <PreBuildEvent>
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -136,12 +137,13 @@
     <Link>
       <AdditionalDependencies>IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;HeroBrowser.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPMTD.lib;MSVCRTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-      <AdditionalLibraryDirectories>..\libs\HeroBrowser\$(PlatformName)\$(Configuration)\;..\3rdparty\bin\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\libs\HeroBrowser\$(PlatformName)\$(Configuration)\;..\3rdparty\IJGWin32\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(TargetPath)</OutputFile>
     </Link>
     <ClCompile>
       <AdditionalIncludeDirectories>UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>

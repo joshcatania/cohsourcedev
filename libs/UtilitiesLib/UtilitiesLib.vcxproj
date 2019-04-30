@@ -35,6 +35,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{A6741F6E-5476-4F9F-9D65-62B54AAF1D08}</ProjectGuid>
     <RootNamespace>UtilitiesLib</RootNamespace>
     <Keyword>Win32Proj</Keyword>

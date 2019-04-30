@@ -62,7 +62,7 @@ void CServerList::Load()
 
 			newServerList.insert(std::make_pair(worldserver.serverid, worldserver ));
 			
-			log.AddLog( LOG_NORMAL, "Server %d loaded, innerip:%s,outerip:%s,port:%d,agelimit:%d,pk:%d",  
+			logger.AddLog(LOG_NORMAL, "Server %d loaded, innerip:%s,outerip:%s,port:%d,agelimit:%d,pk:%d",  
 				static_cast<int>(worldserver.serverid.GetValueChar()),
 				worldserver.inner_ip,
 				worldserver.ip,
@@ -113,7 +113,7 @@ ServerId CServerList::SetServerSocketByAddress(in_addr address, CSocketServer *s
 			if (i->second.s)
 			{
 				// Two connections from the same server.  Drop the old connection
-				log.AddLog( LOG_ERROR, "Got second connection from Server %d.  Dropping first connection.", static_cast<int>(id.GetValueChar()));
+				logger.AddLog(LOG_ERROR, "Got second connection from Server %d.  Dropping first connection.", static_cast<int>(id.GetValueChar()));
 				CSocketServer *oldSocket = i->second.s;
 				i->second.s=NULL;
 
@@ -143,7 +143,7 @@ ServerId CServerList::SetServerSocketByAddress(in_addr address, CSocketServer *s
 		
 		m_serverList.insert(std::make_pair(id,newServer));
 
-		log.AddLog( LOG_NORMAL, "Added Server %d which was not in the database (allowUnkownServers is enabled)",
+		logger.AddLog(LOG_NORMAL, "Added Server %d which was not in the database (allowUnkownServers is enabled)",
 				static_cast<int>(id.GetValueChar()));
 	}
 	mylock.WriteUnlock();
@@ -176,7 +176,7 @@ bool CServerList::SetServerSocketById(ServerId id, CSocketServer * socket, in_ad
 		if (i->second.s)
 		{
 			// Two connections from the same server.  Drop the old connection
-			log.AddLog( LOG_ERROR, "Got second connection from Server %d.  Dropping first connection.", static_cast<int>(id.GetValueChar()));
+			logger.AddLog(LOG_ERROR, "Got second connection from Server %d.  Dropping first connection.", static_cast<int>(id.GetValueChar()));
 			CSocketServer *oldSocket = i->second.s;
 			i->second.s=NULL;
 
@@ -208,7 +208,7 @@ bool CServerList::SetServerSocketById(ServerId id, CSocketServer * socket, in_ad
 		
 		m_serverList.insert(std::make_pair(id,newServer));
 
-		log.AddLog( LOG_NORMAL, "Added Server %d which was not in the database (allowUnkownServers is enabled)",
+		logger.AddLog(LOG_NORMAL, "Added Server %d which was not in the database (allowUnkownServers is enabled)",
 				static_cast<int>(id.GetValueChar()));
 
 		found = true;

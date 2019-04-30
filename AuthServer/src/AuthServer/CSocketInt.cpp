@@ -121,12 +121,12 @@ static void SetGMOnlyMode ( CSocketInt *mysocket, const char *packet )
 
 	if ( buffer[0] == '0' ){
 		config.GMCheckMode = false;
-		log.AddLog( LOG_WARN, "GM ONLY MODE OFF" );
+		logger.AddLog(LOG_WARN, "GM ONLY MODE OFF" );
 		mysocket->Send( "1" );
 	}
 	else{
 		config.GMCheckMode = true;
-		log.AddLog( LOG_WARN, "GM ONLY MODE ON" );
+		logger.AddLog( LOG_WARN, "GM ONLY MODE ON" );
 		mysocket->Send( "1" );
 	}
 
@@ -143,7 +143,7 @@ static void ChangeLimitUser( CSocketInt *mysocket, const char *packet )
 		limituser = atoi( buffer );
 		if ((limituser>0)&&(limituser<12000)){
 			config.SocketLimit = limituser;
-			log.AddLog( LOG_WARN, "Change socketlimit, %d", config.SocketLimit );
+			logger.AddLog( LOG_WARN, "Change socketlimit, %d", config.SocketLimit );
 			mysocket->Send("1");
 		}
 	}
@@ -170,7 +170,7 @@ static void SetGMIP( CSocketInt *mysocket, const char *packet )
 	ip.S_un.S_addr = inet_addr( buffer );
 	if ( ip.S_un.S_addr != INADDR_NONE ){
 		config.GMIP = ip;
-		log.AddLog( LOG_WARN, "Change GMIP, %d.%d.%d.%d", ip.S_un.S_un_b.s_b1, ip.S_un.S_un_b.s_b2, ip.S_un.S_un_b.s_b3, ip.S_un.S_un_b.s_b4 );
+		logger.AddLog( LOG_WARN, "Change GMIP, %d.%d.%d.%d", ip.S_un.S_un_b.s_b1, ip.S_un.S_un_b.s_b2, ip.S_un.S_un_b.s_b3, ip.S_un.S_un_b.s_b4 );
 		mysocket->Send("1" );
 		return;
 	}
@@ -194,12 +194,12 @@ static void SetFreeServer( CSocketInt *mysocket, const char *packet )
 		packet = getToken( buffer, packet );
 		if ( buffer[0] == '0' ){
 			config.FreeServer = false;
-			log.AddLog( LOG_WARN, "Config FreeServer is chaged to false" );
+			logger.AddLog( LOG_WARN, "Config FreeServer is chaged to false" );
 			mysocket->Send("1");
 			return;
 		} else if ( buffer[0] == '1' ){
 			config.FreeServer = true;
-			log.AddLog( LOG_WARN, "Config FreeServer is changed to true" );
+			logger.AddLog( LOG_WARN, "Config FreeServer is changed to true" );
 			mysocket->Send("1" );
 			return;
 		}
@@ -346,7 +346,7 @@ void CSocketInt::OnClose(SOCKET closedSocket)
  	// this function!  Instead, use the socket argument
  	// passed into the function.
 	mode = ISM_CLOSE;
-	log.AddLog(LOG_NORMAL, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
+	logger.AddLog(LOG_NORMAL, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
 }
 
 void CSocketInt::OnRead()

@@ -15,9 +15,7 @@
 class CIPSessionDB  
 {
 private:
-	// IPSession Value와 account Mapping DB ( 로그인 되었을때 )
-	SESSIONMAP IPSessionMap; // uid로 세션을 담아 둔다. 
-	// 로그인전에 LoingUser Info를 담아둘 DB가 필요하다.
+	SESSIONMAP IPSessionMap;
 	UserPointerMap    WaitingUser;
 	CLock WaitUserLock;
 	CLock IPSessionLock;

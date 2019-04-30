@@ -69,6 +69,7 @@
     <ClInclude Include="serverMonitorListener.h" />
     <ClInclude Include="serverMonitorNet.h" />
     <ClInclude Include="shardMonitorComm.h" />
+    <ClInclude Include="serverMonitorOverload.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\CmdRelay\relay_util.c">
@@ -115,6 +116,7 @@
     <ClCompile Include="serverMonitorListener.c" />
     <ClCompile Include="serverMonitorNet.c" />
     <ClCompile Include="shardMonitorComm.c" />
+    <ClCompile Include="serverMonitorOverload.c" />
   </ItemGroup>
   <ItemGroup>
     <None Include="CrypticPrc1.ico" />

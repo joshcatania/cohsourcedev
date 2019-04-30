@@ -39,11 +39,10 @@ unsigned __stdcall TimerThread(void *)
 {
 
 	job.RunTimer();
-	log.AddLog( LOG_DEBUG, "Timer thread terminated");
+	logger.AddLog(LOG_DEBUG, "Timer thread terminated");
 
 	return 0;
 }
-// 클라이언트와 서버의 요구사항을 처리한다. 
 
 unsigned __stdcall IOThreadServer( void *)
 {
@@ -52,7 +51,7 @@ _BEFORE
 	for ( ; ; ) {
 		
 		if (g_bTerminating) {
-			log.AddLog( LOG_DEBUG, "terminate IOThreadServer");
+			logger.AddLog(LOG_DEBUG, "terminate IOThreadServer");
 			break;
 		}
 
@@ -68,11 +67,11 @@ _BEFORE
 		}
 	}
 
-	log.AddLog( LOG_DEBUG, "IOThread Server Exit");
+	logger.AddLog(LOG_DEBUG, "IOThread Server Exit");
 _AFTER_FIN
 	return 0;
 }
-// 로그와 InteractivePort의 제어 사항을 처리한다. 
+
 unsigned __stdcall IOThreadInt( void * )
 {
 _BEFORE
@@ -80,7 +79,7 @@ _BEFORE
 	for ( ; ; ) {
 
 		if (g_bTerminating) {
-			log.AddLog( LOG_DEBUG, "terminate IOThreadInt");
+			logger.AddLog(LOG_DEBUG, "terminate IOThreadInt");
 			break;
 		}
 

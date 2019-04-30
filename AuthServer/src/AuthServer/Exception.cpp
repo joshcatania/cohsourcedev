@@ -411,7 +411,7 @@ static BOOL sendMail(const char *host, const char *from, const char *to, const c
 			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
 			sockname.sin_addr.S_un.S_un_b.s_b3, sockname.sin_addr.S_un.S_un_b.s_b4,
 			ctime(&currentTime));
-		log.Add(LOG_ERROR, "Server crashed at %s", ctime(&currentTime));
+		logger.Add(LOG_ERROR, "Server crashed at %s", ctime(&currentTime));
 #elif defined(CACHED)
 		sprintf(subjectStr, "Subject: CacheD [%d](%d.%d.%d.%d) crashed at %s\r\n", serverId,
 			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
@@ -631,7 +631,7 @@ static void GenerateExceptionReport(PEXCEPTION_POINTERS data)
 		OutputDebugString("Error creating exception report");
 		return;
 	}
-	// Append to the error log.
+	// Append to the error logger.
 	SetFilePointer(LogFile, 0, 0, FILE_END);
 	// Print out some blank lines to separate this error log from any previous ones.
 	SYSTEMTIME st = {0};
@@ -709,7 +709,7 @@ static void GenerateExceptionReport(PEXCEPTION_POINTERS data)
 		}
 	}
 
-	// Time to print part or all of the stack to the error log. This allows
+	// Time to print part or all of the stack to the error logger. This allows
 	// us to figure out the call stack, parameters, local variables, etc.
 	hprintf(LogFile, "\r\n"
 		"Stack dump:\r\n");
@@ -977,7 +977,7 @@ void ImageHelpStackWalk(HANDLE LogFile, HANDLE hThread)
 	context.ContextFlags = CONTEXT_FULL;
 	GetThreadContext(hThread, &context);
 
-	// Time to print part or all of the stack to the error log. This allows
+	// Time to print part or all of the stack to the error logger. This allows
 	// us to figure out the call stack, parameters, local variables, etc.
 	hprintf(LogFile, "\r\nRegisters:\r\n");
 	hprintf(LogFile, "EAX=%08x CS=%04x EIP=%08x EFLGS=%08x\r\n",
@@ -1124,7 +1124,7 @@ void	DumpStack()
 		OutputDebugString("Error creating exception report");
 		return;
 	}
-	// Append to the error log.
+	// Append to the error logger.
 	SetFilePointer(LogFile, 0, 0, FILE_END);
 	// Print out some blank lines to separate this error log from any previous ones.
 	SYSTEMTIME st = {0};

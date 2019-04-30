@@ -2,20 +2,6 @@
 
 #include "utils/SuperAssert.h"
 
-#ifdef _DEBUG
-	#ifdef _M_AMD64
-		#pragma comment(lib,"../3rdparty/yajl/x64/yajl-2.0.3/lib/debug/yajl_s.lib")
-	#else
-		#pragma comment(lib,"../3rdparty/yajl/win32/yajl-2.0.3/lib/debug/yajl_s.lib")
-	#endif	
-#else
-	#ifdef _M_AMD64
-		#pragma comment(lib,"../3rdparty/yajl/x64/yajl-2.0.3/lib/relwithdebinfo/yajl_s.lib")
-	#else
-		#pragma comment(lib,"../3rdparty/yajl/win32/yajl-2.0.3/lib/relwithdebinfo/yajl_s.lib")
-	#endif	
-#endif
-
 bool yajl_get_string(yajl_val parent, const char ** path, const char ** value) {
 	yajl_val val = yajl_tree_get(parent, path, yajl_t_string);
 

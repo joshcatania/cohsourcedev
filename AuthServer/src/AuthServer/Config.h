@@ -80,18 +80,14 @@ public:
 	int  WaitingUserLimit;
 
 
-	// 2003-07-15 logd 관련 config 추가
 	bool UseLogD;
-	in_addr LogDIP;             // LOGD서버 IP
-	int  LogDPort;				// LOGD서버 포트
-	int  LogDReconnectInterval; // 연결이 끊겼을 경우 재 연결 시도 시간.
+	in_addr LogDIP;
+	int  LogDPort;
+	int  LogDReconnectInterval;
 
-
-	// 2003-07-27 GM 로그인 관련 Flag 
 	bool RestrictGMIP;
 	in_addr GMIP;
 
-	// 2003-08-22 Wanted System 관련 항목 추가
 	bool UseWantedSystem;
 	in_addr WantedIP;
 	int WantedPort;
@@ -106,11 +102,8 @@ public:
 	bool FreeServer;
 	bool HybridServer;
 
-	// 2003-11-25 forbidden Ip list 옵션 추가
 	bool useForbiddenIPList;
-
-	// 2004-01-28 reconnect 관련 config 추가
-	bool supportReconnect; // default = false로  세팅한다.
+	bool supportReconnect;
 
 	bool gameServerSpecifiesId;
 	bool allowUnknownServers;

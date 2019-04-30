@@ -19,8 +19,6 @@
 #define AUTH_LOG_TYPE		 6
 #define SERVER_TYPE          1
 
-// LOG Socket은 IOCP와 연동할 필요도 없고 패킷도 한가지 종류만 존재한다. 그리고 받지도 않기 때문에
-// 가장 간단한 형태의 WSASend와 연결이 끊결을 시의 Reconnect만 존재하면 된다. 
 class CLogSocket;
 
 typedef CLogSocket* (*LOGSocketAllocator)(SOCKET s);

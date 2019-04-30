@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{EC92BF1A-398D-4F43-839B-90AA746066E6}</ProjectGuid>
     <RootNamespace>gettex</RootNamespace>
     <SccProvider>MSSCCI:Microsoft Visual SourceSafe</SccProvider>

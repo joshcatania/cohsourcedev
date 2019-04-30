@@ -29,7 +29,7 @@ _BEFORE
 	memcpy( sndmsg+20, &stime, 4 );
 
 	if (pWantedSocket && config.UseWantedSystem && (!WantedServerReconnect)) {
-		log.AddLog( LOG_WARN, "Wanted User LogOut, %s", name );
+		logger.AddLog( LOG_WARN, "Wanted User LogOut, %s", name );
 		gWantedLock.ReadLock();
 		pWantedSocket->AddRef();
 		pWantedSocket->Send("cb", AW_QUIT, 24, sndmsg );
@@ -279,7 +279,6 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 	} else
 		m_lock.Leave();
 	
-
 	if ( result == true ) {
 		if ( config.UseWantedSystem ){
 			if ( (warn_flag & 4) == 4 )
@@ -300,7 +299,7 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 			if ( !g_ServerList.IsServerUp(serverid) )
 			{
 	#ifdef _DEBUG
-				log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
+				logger.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
 	#endif
 				if ( (stat < 1000) && ( stat > 0)){
 					int sessionid = ipsessionDB.DelSessionID( uid );
@@ -403,7 +402,7 @@ _BEFORE
 		if ( !g_ServerList.IsServerUp(preserverid))
 		{
 #ifdef _DEBUG
-			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
+			logger.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
 #endif 
 		} else {
 			SendSocket( g_ServerList.GetInternalAddress(serverid), "cdcs", SQ_KICK_ACCOUNT, uid ,reasoncode, account );
@@ -1079,15 +1078,15 @@ char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, in
 	
 	if ( accountdb.RegAccount( lu, Uid, pSocket, RemainTime, 0 ) ){
 
-	    log.AddLog( LOG_VERBOSE, "SND: AC_LOGIN_OK,uid:%d,account:%s", Uid, lu->account);
+	    logger.AddLog( LOG_VERBOSE, "SND: AC_LOGIN_OK,uid:%d,account:%s", Uid, lu->account);
 
 		pSocket->m_lastIO = GetTickCount();
 //		WriteAction( "login", lu->account, lu->loginIp, lu->ssn, lu->gender, 0, lu->stat );
 		WriteLogD( LOG_ACCOUNT_AUTHED, lu->account, lu->loginIp, lu->stat, lu->age, lu->gender, 0, reporter.m_UserCount, Uid );
 	} else{
 		
-        //log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
-        log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:0.0.0.0,%x", Uid, lu->account, pSocket->GetSocket() );
+        //logger.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
+        logger.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:0.0.0.0,%x", Uid, lu->account, pSocket->GetSocket() );
 	}
 
 	return result;
@@ -1133,7 +1132,7 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 	if (config.payStatOverride != -1)
 	{
 		stat = config.payStatOverride;
-		log.AddLog(LOG_WARN, "PayStatOverride is set to %d!", config.payStatOverride);
+		logger.AddLog(LOG_WARN, "PayStatOverride is set to %d!", config.payStatOverride);
 	}
 
 	if ( config.UserData ){
@@ -1164,7 +1163,7 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 		if ( !g_ServerList.IsServerUp(serverid) )
 		{
 #ifdef _DEBUG
-			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
+			logger.AddLog(LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
 #endif 
 		} else {
 			AS_LOG_VERBOSE( "User data from SQL for uid %d: %02x%02x%02x%02x-%02x%02x%02x%02x-%02x%02x%02x%02x-%02x%02x%02x%02x",
@@ -1207,7 +1206,7 @@ char AccountDB::AboutToPlay(int uid, char *account, int time_left, int loginflag
 		if ( !g_ServerList.IsServerUp(serverid) )
 		{
 #ifdef _DEBUG
-			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
+			logger.AddLog(LOG_ERROR, "Invalid Serverid :%d, %s", serverid, account );
 #endif
 		}else{
 			result = SendSocket( g_ServerList.GetInternalAddress(serverid), "cdsdddd", SQ_ABOUT_TO_PLAY, uid, account, time_left, loginflag, warnflag, stat, queueLevel );
@@ -1289,8 +1288,6 @@ bool AccountDB::RegAccountByServer( LoginUser *loginuser, int uid, CSocketServer
 	
 	if ( result == false ){
 		KickAccount( uid,S_ALREADY_LOGIN, true );
-	}  else {
-		
 	}
 	return result;
 }	

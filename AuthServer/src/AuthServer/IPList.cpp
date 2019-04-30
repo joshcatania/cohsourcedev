@@ -146,7 +146,7 @@ BOOL CIPList::Load(char *fileName)
 		}
 
 		if (record.begin >= record.end) {
-			log.AddLog(LOG_ERROR, "IPList: start address address is greater than end address at line %d", line);
+			logger.AddLog(LOG_ERROR, "IPList: start address address is greater than end address at line %d", line);
 			continue;
 		}
 
@@ -154,7 +154,7 @@ BOOL CIPList::Load(char *fileName)
 		it = std::upper_bound(table.begin(), table.end(), record.begin-1);
 		if (it != table.end() && it->begin <= record.begin-1) {
 			if (it->end != record.begin)
-				log.AddLog(LOG_ERROR, "IPList: address is merged with %d.%d.%d.%d-%d.%d.%d.%d at line %d",
+				logger.AddLog(LOG_ERROR, "IPList: address is merged with %d.%d.%d.%d-%d.%d.%d.%d at line %d",
 					(it->begin>>24)&255, (it->begin>>16)&255, (it->begin>>8)&255, it->begin&255,
 					((it->end-1)>>24)&255, ((it->end-1)>>16)&255, ((it->end-1)>>8)&255, (it->end-1)&255,
 					line);
@@ -165,7 +165,7 @@ BOOL CIPList::Load(char *fileName)
 		}
 		while (it != table.end() && it->begin <= record.end) {
 			if (it->begin != record.end)
-				log.AddLog(LOG_ERROR, "IPList: address is merged with %d.%d.%d.%d-%d.%d.%d.%d at line %d",
+				logger.AddLog(LOG_ERROR, "IPList: address is merged with %d.%d.%d.%d-%d.%d.%d.%d at line %d",
 					(it->begin>>24)&255, (it->begin>>16)&255, (it->begin>>8)&255, it->begin&255,
 					((it->end-1)>>24)&255, ((it->end-1)>>16)&255, ((it->end-1)>>8)&255, (it->end-1)&255,
 					line);
@@ -176,7 +176,7 @@ BOOL CIPList::Load(char *fileName)
 		table.insert(it, record);	    
 	}
 	lock.WriteUnlock();
-	log.AddLog(LOG_NORMAL, "IPList loaded from %s", fileName);
+	logger.AddLog(LOG_NORMAL, "IPList loaded from %s", fileName);
 	return TRUE;
 }
 

@@ -116,13 +116,13 @@ Token GetToken(std::istream& stream, char* value, bool strOnly)
 			if (!stream.eof()) {
 				stream.putback(c);
 				if (stream.bad()) {
-					log.AddLog(LOG_ERROR, "putback");
+					logger.AddLog(LOG_ERROR, "putback");
 				}
 			}
 			*valPtr = 0;
 			return eWord;
 		} else {
-			log.AddLog(LOG_ERROR, "unexpected char '%c'", c);
+			logger.AddLog(LOG_ERROR, "unexpected char '%c'", c);
 			return eEOF;
 		}
 	}

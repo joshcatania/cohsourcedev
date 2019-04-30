@@ -166,7 +166,7 @@ enum
 #define LOG_WEB_SEIZEITEM			625
 
 //	Character Category
-#define	LOG_ACCOUNT_AUTHED			801 // ?? ??
+#define	LOG_ACCOUNT_AUTHED			801
 #define	LOG_ACCOUNT_LOGIN			802 // World IN
 #define	LOG_CHAR_ENTER_WORLD		803 
 #define	LOG_ACCOUNT_LOGOUT			804 // Account logout

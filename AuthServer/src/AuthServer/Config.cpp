@@ -83,13 +83,13 @@ bool Config::Load(const char *filename)
 						result = map.insert(StringMap::value_type(key, value));
 						if (result.second) {
 						} else {
-							log.AddLog(LOG_ERROR, "Insert twice %s at line %d in %s", key, line, filename);
+							logger.AddLog(LOG_ERROR, "Insert twice %s at line %d in %s", key, line, filename);
 						}
 						break;
 					case eInComment:
 						break;
 					default:
-						log.AddLog(LOG_ERROR, "Invalid state at line %d in %s", line, 
+						logger.AddLog(LOG_ERROR, "Invalid state at line %d in %s", line, 
                           filename);
 					}
 					break;
@@ -105,7 +105,7 @@ bool Config::Load(const char *filename)
 					break;
 				default:
 					if (state != eInComment) {
-						log.AddLog(LOG_ERROR, "Invalid token %s at line %d in %s", value, 
+						logger.AddLog(LOG_ERROR, "Invalid token %s at line %d in %s", value, 
                           line, filename);
 					}
 					break;
@@ -114,30 +114,23 @@ bool Config::Load(const char *filename)
 		}
 		delete pBuf;
 	} else {
-		log.AddLog(LOG_ERROR, "Can't load %s", filename);
+		logger.AddLog(LOG_ERROR, "Can't load %s", filename);
 		configFileLoaded = false;
 	}
 	
 	if ( configFileLoaded )
 	{
-		
-		// 각종 Port 관련
 		serverPort			= GetInt( "serverPort" );
 		serverExPort		= GetInt( "serverExPort" );
 		serverIntPort		= GetInt( "serverIntPort" );
 		worldPort			= GetInt("WorldPort");
 		
-		// 각 Thread 처리 루틴
 		numDBConn			= GetInt("DBConnectionNum");
 		numServerThread		= GetInt("numServerThread");
 		numServerIntThread	= GetInt("numServerIntThread");
-		
-		
-		// IOCompletion Port관련.
-
+				
 		gameId				= GetInt("GameID");
 		
-		// socket 관련
 		SocketTimeOut		= GetInt("SocketTimeOut") * 1000;
 		SocketLimit			= GetInt("SocketLimit" );
 		AcceptCallNum		= GetInt("AcceptCallNum");
@@ -173,9 +166,9 @@ bool Config::Load(const char *filename)
 
 		// LOGDServer
 		UseLogD = GetBool("uselogd", false);
-		LogDIP  = GetInetAddr( "logdip");             // LOGD서버 IP
-		LogDPort= GetInt( "logdport", 0 );				// LOGD서버 포트
-		LogDReconnectInterval = GetInt( "logdconnectinterval", 60 ) * 1000; // 연결이 끊겼을 경우 재 연결 시도 시간.
+		LogDIP  = GetInetAddr( "logdip");
+		LogDPort= GetInt( "logdport", 0 );
+		LogDReconnectInterval = GetInt( "logdconnectinterval", 60 ) * 1000;
 
 		// GMIP
 		RestrictGMIP = GetBool( "RestrictGMIP", false );

@@ -1,5 +1,3 @@
-// 2003-07-06 darkangel
-// 처음 로드시에 BuildNumber출력하도록 추가함.
 #include "config.h"
 #include "Thread.h"
 #include "GlobalAuth.h"
@@ -37,21 +35,21 @@ EncPwdType EncPwd;
 
 static void ShowLoggingLevel( void )
 {
-	bool bVerboseON	= log.GetMsgAllowed( LOG_VERBOSE );
-	bool bDebugON	= log.GetMsgAllowed( LOG_DEBUG );
+	bool bVerboseON	= logger.GetMsgAllowed( LOG_VERBOSE );
+	bool bDebugON	= logger.GetMsgAllowed( LOG_DEBUG );
 	
 	// Show the message in the text color of the related message type.
 	// Helps the user know what the colors represent.
-	log.SetMsgAllowed( LOG_VERBOSE, true );
-	log.SetMsgAllowed( LOG_DEBUG, true );
+	logger.SetMsgAllowed(LOG_VERBOSE, true);
+	logger.SetMsgAllowed(LOG_DEBUG, true);
 	
-	log.AddLog( LOG_NORMAL,  "----------------------------------------" );
-	log.AddLog( LOG_VERBOSE, "Verbose logging... %s", ( bVerboseON ) ? "ON" : "OFF" );
-	log.AddLog( LOG_DEBUG,   "Debug logging..... %s", ( bDebugON )   ? "ON" : "OFF" );
-	log.AddLog( LOG_NORMAL,  "----------------------------------------" );
+	logger.AddLog(LOG_NORMAL,  "----------------------------------------" );
+	logger.AddLog(LOG_VERBOSE, "Verbose logging... %s", ( bVerboseON ) ? "ON" : "OFF" );
+	logger.AddLog(LOG_DEBUG,   "Debug logging..... %s", ( bDebugON )   ? "ON" : "OFF" );
+	logger.AddLog(LOG_NORMAL,  "----------------------------------------" );
 
-	log.SetMsgAllowed( LOG_VERBOSE, bVerboseON );
-	log.SetMsgAllowed( LOG_DEBUG, bDebugON );
+	logger.SetMsgAllowed(LOG_VERBOSE, bVerboseON);
+	logger.SetMsgAllowed(LOG_DEBUG, bDebugON);
 }
 
 static void OnChangeLoggingLevel( void )
@@ -78,8 +76,8 @@ static void OnChangeLoggingLevel( void )
 		sCurrState = 1;
 		sIncr = 1;
 	}
-	log.SetMsgAllowed( LOG_VERBOSE, stateList[sCurrState].bVerboseEnabled );
-	log.SetMsgAllowed( LOG_DEBUG, stateList[sCurrState].bDebugEnabled );
+	logger.SetMsgAllowed(LOG_VERBOSE, stateList[sCurrState].bVerboseEnabled);
+	logger.SetMsgAllowed(LOG_DEBUG, stateList[sCurrState].bDebugEnabled);
 	ShowLoggingLevel();
 }
 
@@ -129,7 +127,7 @@ _BEFORE
 			MoveWindow(verboseLoggingButtonWnd, BUTTON_WIDTH, 0, BUTTON_WIDTH, 20, TRUE);
 		}
 		else if (hwnd == logWnd) {
-			log.Resize(LOWORD(lParam), HIWORD(lParam));
+			logger.Resize(LOWORD(lParam), HIWORD(lParam));
 		}
 		else if (hwnd = reporterWnd) {
 			reporter.Resize(LOWORD(lParam), HIWORD(lParam));
@@ -137,7 +135,7 @@ _BEFORE
 		break;
 	case WM_PAINT:
 		if (hwnd == logWnd) {
-			log.Redraw();
+			logger.Redraw();
 		} else if ( hwnd == reporterWnd ) {
 			reporter.Redraw();
 		}
@@ -150,7 +148,7 @@ _BEFORE
 	case WM_DESTROY:
 		if (hwnd == mainWnd) {
 			g_bTerminating = true;
-			log.Enable( false );
+			logger.Enable( false );
 			job.SetTerminate();
 			Sleep(2000);
 			PostQuitMessage(0);
@@ -204,7 +202,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 #endif
 	HWND prevHwnd = FindWindow( NULL, "AuthServer" );
 	if ( prevHwnd != NULL ){
-		//MessageBox( NULL, "이미 인증서버가 실행되어 있습니다. ", "경고", MB_ICONERROR | MB_OK );
 		MessageBox( NULL, "An instance of Authserver is already running.", "Error", MB_ICONERROR | MB_OK );
 		exit(0);
 	}
@@ -241,7 +238,7 @@ exception_init();
 	int err = WSAStartup(0x0202, &wsaData);
 
 	if (err) {
-		log.AddLog(LOG_ERROR, "WSAStartup error 0x%x", err);
+		logger.AddLog(LOG_ERROR, "WSAStartup error 0x%x", err);
 		return 0;
 	}
 
@@ -260,7 +257,7 @@ exception_init();
 	verboseLoggingButtonWnd = CreateWindowEx(0, "BUTTON", "Logging Level", WS_CHILD|BS_PUSHBUTTON, 600, 0, 40, 30, mainWnd,
 		(HMENU)LOGLEVEL_BUTTON_ID, hInstance, NULL);
 		
-	log.SetWnd( logWnd );
+	logger.SetWnd( logWnd );
 	reporter.SetWnd( reporterWnd );
 	SetProcessPriorityBoost(GetCurrentProcess(), TRUE);
 
@@ -290,25 +287,25 @@ exception_init();
 	unsigned listenThreadId;
 	HANDLE listenThread=NULL;
 
-	log.SetMsgAllowed( LOG_VERBOSE, config.enableVerboseLogging );
-	log.SetMsgAllowed( LOG_DEBUG, config.enableDebugLogging );
+	logger.SetMsgAllowed(LOG_VERBOSE, config.enableVerboseLogging );
+	logger.SetMsgAllowed(LOG_DEBUG, config.enableDebugLogging );
 	
 	if (strlen(config.logDirectory) <= 0 )
 	{
-		log.SetDirectory( "log" );
-		log.Enable(true );
+		logger.SetDirectory("log");
+		logger.Enable(true );
 		filelog.SetDirectory( config.logDirectory);
 		actionlog.SetDirectory( config.logDirectory );
 		logdfilelog.SetDirectory( config.logDirectory );
-		log.AddLog( LOG_ERROR, "Error load config.txt" );
+		logger.AddLog(LOG_ERROR, "Error load config.txt" );
 		logdfilelog.SetDirectory( config.logDirectory );
 	} else {
-		if ( ! log.SetDirectory( config.logDirectory ) )
+		if ( ! logger.SetDirectory( config.logDirectory ) )
 		{
 			ShowLogDirectoryError();
 			exit(0);		
 		}
-		log.Enable( true );	
+		logger.Enable( true );	
 		filelog.SetDirectory( config.logDirectory);
 		actionlog.SetDirectory( config.logDirectory );
 		errlog.SetDirectory( config.logDirectory );
@@ -332,63 +329,59 @@ exception_init();
 			break;
 		}
 		// write the major loaded config environment
-		log.AddLog( LOG_VERBOSE,   "LOADED Config");
+		logger.AddLog(LOG_VERBOSE,   "LOADED Config");
 		ShowLoggingLevel();
-		log.AddLog( LOG_DEBUG, "WorldPort:%d",		config.worldPort );
-		log.AddLog( LOG_DEBUG, "ServerPort:%d",	config.serverPort );
-		log.AddLog( LOG_DEBUG, "ServerIntPort:%d", config.serverIntPort );
-		log.AddLog( LOG_DEBUG, "ServerExPort:%d",	config.serverExPort );
-		log.AddLog( LOG_DEBUG, "Protocol Version:%d", config.ProtocolVer );
-		log.AddLog( LOG_DEBUG, "Log Directory:%s", config.logDirectory );
-		log.AddLog( LOG_DEBUG, "DBConnectionNum:%d,GameID:%d", config.numDBConn, config.gameId );
-		log.AddLog( LOG_DEBUG, "ServerThread:%d", config.numServerThread );
+		logger.AddLog(LOG_DEBUG, "WorldPort:%d",		config.worldPort );
+		logger.AddLog(LOG_DEBUG, "ServerPort:%d",	config.serverPort );
+		logger.AddLog(LOG_DEBUG, "ServerIntPort:%d", config.serverIntPort );
+		logger.AddLog(LOG_DEBUG, "ServerExPort:%d",	config.serverExPort );
+		logger.AddLog(LOG_DEBUG, "Protocol Version:%d", config.ProtocolVer );
+		logger.AddLog(LOG_DEBUG, "Log Directory:%s", config.logDirectory );
+		logger.AddLog(LOG_DEBUG, "DBConnectionNum:%d,GameID:%d", config.numDBConn, config.gameId );
+		logger.AddLog(LOG_DEBUG, "ServerThread:%d", config.numServerThread );
 
 		if ( config.encrypt )
-			log.AddLog( LOG_DEBUG, "Encrypt:True" );
+			logger.AddLog(LOG_DEBUG, "Encrypt:True" );
 		else
-			log.AddLog( LOG_DEBUG, "Encrypt:False" );
+			logger.AddLog(LOG_DEBUG, "Encrypt:False" );
 
 		if ( config.DesApply )
-			log.AddLog( LOG_DEBUG, "DesApply:True" );
+			logger.AddLog(LOG_DEBUG, "DesApply:True" );
 		else
-			log.AddLog( LOG_DEBUG, "DesApply:False" );
+			logger.AddLog(LOG_DEBUG, "DesApply:False" );
 
 		if ( config.OneTimeLogOut )
-			log.AddLog( LOG_DEBUG, "OneTimeLogOut:True" );
+			logger.AddLog(LOG_DEBUG, "OneTimeLogOut:True" );
 		else
-			log.AddLog( LOG_DEBUG, "OneTimeLogOut:False" );
+			logger.AddLog(LOG_DEBUG, "OneTimeLogOut:False" );
 		if ( config.RestrictGMIP )
-			log.AddLog( LOG_DEBUG, "RestrictGMIP:True" );
+			logger.AddLog(LOG_DEBUG, "RestrictGMIP:True" );
 		else
-			log.AddLog( LOG_DEBUG, "RestrictGMIP:False" );
+			logger.AddLog(LOG_DEBUG, "RestrictGMIP:False" );
 
-		log.AddLog( LOG_DEBUG, "GMIP:%d.%d.%d.%d", 
+		logger.AddLog(LOG_DEBUG, "GMIP:%d.%d.%d.%d", 
 								config.GMIP.S_un.S_un_b.s_b1, 
 								config.GMIP.S_un.S_un_b.s_b2, 
 								config.GMIP.S_un.S_un_b.s_b3, 
 								config.GMIP.S_un.S_un_b.s_b4 );
-		log.AddLog( LOG_DEBUG, "logdPort:%d, logdReconnectInterval:%d", config.LogDPort, config.LogDReconnectInterval );
-		log.AddLog( LOG_NORMAL, "BuildNumber : %d", buildNumber );
+		logger.AddLog(LOG_DEBUG, "logdPort:%d, logdReconnectInterval:%d", config.LogDPort, config.LogDReconnectInterval );
+		logger.AddLog(LOG_NORMAL, "BuildNumber : %d", buildNumber );
 		if ( config.AcceptCallNum == 0 ){
-			log.AddLog( LOG_ERROR, "AcceptCallNull 이 0 이면 어떤 클라이언트도 접속이 안됩니다. 1 로 자동세팅합니다." );
+			logger.AddLog(LOG_ERROR, "AcceptCallNull" );
 			config.AcceptCallNum = 1;
 		}
 		if ( config.SocketTimeOut == 0 ){
-			log.AddLog( LOG_ERROR, "SocketTimeOut이 0이면 Connection이 바로 끊기게 됩니다. 180으로 자동세팅합니다. " );
+			logger.AddLog(LOG_ERROR, "SocketTimeOut" );
 			config.SocketTimeOut = 180;
 		}
 
 		if ( config.WaitingUserLimit == 0 ){
-			log.AddLog( LOG_ERROR, "WaitingUserLimit가 0이면 Connection이 이루어지지 않습니다. 100으로 자동세팅합니다." );
+			logger.AddLog(LOG_ERROR, "WaitingUserLimit" );
 			config.WaitingUserLimit = 100;
 		}
 
 		if ( config.useForbiddenIPList ) {
-			if ( config.Country == CC_KOREA ) {
-				log.AddLog( LOG_NORMAL, "접근 금지 IP목록을 읽어 들입니다. " );
-			} else {
-				log.AddLog( LOG_NORMAL, "LOAD FORBIDDEN IP LIST" );
-			}
+			logger.AddLog(LOG_NORMAL, "LOAD FORBIDDEN IP LIST" );
 			forbiddenIPList.Load( "etc\\BlockIPs.txt" );
 		}
 
@@ -403,21 +396,14 @@ exception_init();
 		CreateIOThread( );
 		if ( config.UseLogD ) {
 
-			// LOGD Server에 관련된 내용이 들어간다. 
-			// 1. Socket을 생성한다. 
 			SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
-			// 2. 소켓 Connection에 사용할 Destination Setting을 한다.
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.LogDIP;
 			Destination.sin_port   = htons( (u_short)config.LogDPort );
-			// 3. Connection을 맺는다. 
+
 			int ErrorCode = connect( LOGSock, ( sockaddr *)&Destination, sizeof( sockaddr ));
 
-			
-			// 4. 맺어진 Connection을 이용하여 LOGSocket을 생성한다. 
-			//    Connection Error가 생겼더라도 관계 없다. 
-			//    그렇게 되면 자동적으로 Timer가 작동하여 10초에 한번씩 Reconnection을 시도하게 된다. 
 			pLogSocket = CLogSocket::Allocate(LOGSock);
 			pLogSocket->SetAddress( config.LogDIP );
 			if ( ErrorCode == SOCKET_ERROR ){
@@ -429,21 +415,14 @@ exception_init();
 
 		if ( config.UseIPServer ) {
 
-			// IP Server에 관련된 내용이 들어간다. 
-			// 1. Socket을 생성한다. 
 			SOCKET IPSock = socket(AF_INET, SOCK_STREAM, 0);
-			// 2. 소켓 Connection에 사용할 Destination Setting을 한다.
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.IPServer;
 			Destination.sin_port   = htons( (u_short)config.IPPort );
-			// 3. Connection을 맺는다. 
+
 			int ErrorCode = connect( IPSock, ( sockaddr *)&Destination, sizeof( sockaddr ));
 
-			
-			// 4. 맺어진 Connection을 이용하여 IPSocket을 생성한다. 
-			//    Connection Error가 생겼더라도 관계 없다. 
-			//    그렇게 되면 자동적으로 Timer가 작동하여 10초에 한번씩 Reconnection을 시도하게 된다. 
 			pIPSocket = new CIPSocket(IPSock);
 			pIPSocket->SetAddress( config.IPServer );
 			if ( ErrorCode == SOCKET_ERROR ){
@@ -452,7 +431,6 @@ exception_init();
 				pIPSocket->Initialize( g_hIOCompletionPort );
 		}
 
-		// Wanted 시스템과 연동 부분
 		if ( config.UseWantedSystem ) {
 			SOCKET WantedSocket = socket( AF_INET, SOCK_STREAM, 0 );
 			sockaddr_in WantedAddr;

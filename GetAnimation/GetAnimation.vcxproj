@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{57E19F61-4D16-4D65-92C8-15127663DE4C}</ProjectGuid>
     <RootNamespace>GetAnimation</RootNamespace>
     <Keyword>Win32Proj</Keyword>

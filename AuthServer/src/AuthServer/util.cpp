@@ -250,8 +250,8 @@ void WriteAction( char *action, char *account, in_addr ip, int ssn, char gender,
 
 	ActionTime = time(0);
 	ActionTm = *localtime(&ActionTime);
-// occurTime, Action, account, server, ip, stat, ssn, gender
-	actionlog.AddLog( LOG_NORMAL, "%d-%d-%d %d:%d:%d,%s,%s,%d,%d.%d.%d.%d,%d,%06d,%d\r\n", 
+	// occurTime, Action, account, server, ip, stat, ssn, gender
+	actionlog.AddLog(LOG_NORMAL, "%d-%d-%d %d:%d:%d,%s,%s,%d,%d.%d.%d.%d,%d,%06d,%d\r\n", 
 		ActionTm.tm_year + 1900, ActionTm.tm_mon + 1, ActionTm.tm_mday,
 		ActionTm.tm_hour, ActionTm.tm_min, ActionTm.tm_sec,		
 		action, account, worldid,
@@ -297,7 +297,7 @@ void DumpPacket( const unsigned char *packet, int packetlen )
 			strcat( buffer, tmpbuf );
 		}
 		buffer[1024]=0;
-		log.AddLog( LOG_WARN, "%s", buffer );
+		logger.AddLog(LOG_WARN, "%s", buffer );
 	}
 #endif
 }
@@ -398,7 +398,7 @@ _BEFORE
 						account );
 
 		msgpacket[1023]=0;
-		logdfilelog.AddLog( LOG_NORMAL, "%s", msgpacket );
+		filelog.AddLog(LOG_NORMAL, "%s", msgpacket );
 	}
 _AFTER_FIN
 }

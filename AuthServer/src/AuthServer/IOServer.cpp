@@ -55,7 +55,7 @@ BOOL CIOServer::Create( int nPort )
 {
 	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_hSocket == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		return FALSE;
 	}
 
@@ -65,18 +65,18 @@ BOOL CIOServer::Create( int nPort )
 	sin.sin_port = htons(nPort);
 
 	if (bind(m_hSocket, (struct sockaddr*)&sin, sizeof(sin))) {
-		log.AddLog(LOG_ERROR, "bind error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "bind error %d", WSAGetLastError());
 		goto fail;
 	}
 	if (listen(m_hSocket, LISTEN_BACKLOG)) {
-		log.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
 		goto fail;
 	}
 
 	m_hAcceptEvent = WSACreateEvent();
 	WSAEventSelect(m_hSocket, m_hAcceptEvent, FD_ACCEPT);
 	if (!RegisterEvent(m_hAcceptEvent)) {
-		log.AddLog(LOG_ERROR, "RegisterWait error on port %d", nPort);
+		logger.AddLog(LOG_ERROR, "RegisterWait error on port %d", nPort);
 		goto fail;
 	}
 	
@@ -99,14 +99,14 @@ _BEFORE
 		}
 		else {
 			if (m_hSocket != INVALID_SOCKET)
-				log.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
+				logger.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
 			return;
 		}
 	}
 	InterlockedIncrement( &g_Accepts );
 	CIOSocket *pSocket = CreateSocket(newSocket, &clientAddress);
 	if (pSocket == NULL) {
-		log.AddLog( LOG_ERROR, "ServerClose:CreateSocket Fail" );
+		logger.AddLog(LOG_ERROR, "ServerClose:CreateSocket Fail" );
 		closesocket(newSocket);
 		return;
 	}
@@ -138,7 +138,7 @@ CServer::~CServer()
 CIOSocket *CServer::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 {
 
-	log.AddLog(LOG_NORMAL, "*new world server connection from %d.%d.%d.%d", 			
+	logger.AddLog(LOG_NORMAL, "*new world server connection from %d.%d.%d.%d", 			
 			pAddress->sin_addr.S_un.S_un_b.s_b1,
 			pAddress->sin_addr.S_un.S_un_b.s_b2,
 			pAddress->sin_addr.S_un.S_un_b.s_b3,
@@ -155,7 +155,7 @@ CIOSocket *CServer::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 	{
 		serverid = g_ServerList.SetServerSocketByAddress( pAddress->sin_addr, mysocket );
 		if ( !serverid.IsValid() ){		
-			log.AddLog(LOG_ERROR, "Non-registered world server %d.%d.%d.%d", 
+			logger.AddLog(LOG_ERROR, "Non-registered world server %d.%d.%d.%d", 
 							pAddress->sin_addr.S_un.S_un_b.s_b1,
 							pAddress->sin_addr.S_un.S_un_b.s_b2,
 							pAddress->sin_addr.S_un.S_un_b.s_b3,
@@ -166,7 +166,7 @@ CIOSocket *CServer::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 		else
 		{
 			//TBROWN
-			log.AddLog(LOG_ERROR, "Registered world server: ServerId: %d   IP: %d.%d.%d.%d", 
+			logger.AddLog(LOG_ERROR, "Registered world server: ServerId: %d   IP: %d.%d.%d.%d", 
 							serverid,
 							pAddress->sin_addr.S_un.S_un_b.s_b1,
 							pAddress->sin_addr.S_un.S_un_b.s_b2,
@@ -195,7 +195,7 @@ void CServer::Run(int port, CSocketServer* (*anAllocator)(SOCKET s), bool aRestr
 	allocator = anAllocator;
 	restrict = aRestrict;
 	if (Create(port))
-		log.AddLog(LOG_NORMAL, "server ready on port %d", port);
+		logger.AddLog(LOG_NORMAL, "server ready on port %d", port);
 	listener = m_hSocket;
 }
 
@@ -258,7 +258,7 @@ void CServerInt::OnIOCallback(BOOL bSuccess, DWORD dwTransferred, LPOVERLAPPED l
 		}
 		else {
 			if (m_hSocket != INVALID_SOCKET)
-				log.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
+				logger.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
 			return;
 		}
 	}
@@ -277,7 +277,7 @@ CIOSocket *CServerInt::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 {
 	CSocketInt* mysocket = (*allocator)(newSocket);
 	mysocket->SetAddress(pAddress->sin_addr);
-	log.AddLog(LOG_NORMAL, "*new interactive socket connection from %d.%d.%d.%d", 			
+	logger.AddLog(LOG_NORMAL, "*new interactive socket connection from %d.%d.%d.%d", 			
 			pAddress->sin_addr.S_un.S_un_b.s_b1,
 			pAddress->sin_addr.S_un.S_un_b.s_b2,
 			pAddress->sin_addr.S_un.S_un_b.s_b3,
@@ -295,7 +295,7 @@ void CServerInt::Run(int port, CSocketInt* (*anAllocator)(SOCKET s))
 {
 	allocator = anAllocator;
 	if (Create(port))
-		log.AddLog(LOG_NORMAL, "interactive server ready on port %d", port);
+		logger.AddLog(LOG_NORMAL, "interactive server ready on port %d", port);
 	listener = m_hSocket;
 }
 
@@ -357,7 +357,7 @@ CIOServerEx::CIOServerEx()
 	g_hSocketTimer	= CreateTimerQueue();
 	
 	if ( g_hSocketTimer == NULL )
-		log.AddLog( LOG_ERROR, "CIOServerEx Constructor create socket timer fails" );
+		logger.AddLog(LOG_ERROR, "CIOServerEx Constructor create socket timer fails" );
 
 	InitializeCriticalSectionAndSpinCount(&sockSect, 4000);
 }
@@ -386,19 +386,19 @@ _BEFORE
 		}
 		else {
 			if (m_hSocket != INVALID_SOCKET)
-				log.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
+				logger.AddLog(LOG_ERROR, "accept error: %d", WSAGetLastError());
 			return;
 		}
 	}
 	InterlockedIncrement( &g_Accepts );
 	CSocketServerEx *pSocket = CreateSocket(newSocket, &clientAddress);
 	if (pSocket == NULL) {
-		log.AddLog( LOG_ERROR, "ServerClose:CreateSocketEx Fail" );
+		logger.AddLog(LOG_ERROR, "ServerClose:CreateSocketEx Fail" );
 		closesocket(newSocket);
 		return;
 	}
 	pSocket->Initialize( g_hIOCompletionPort );
-	log.AddLog( LOG_DEBUG, "SocketInit" );
+	logger.AddLog(LOG_DEBUG, "SocketInit" );
 #else
 
 	int clientAddressLength = sizeof(sockaddr_in);
@@ -447,13 +447,13 @@ bool CIOServerEx::WrapAcceptEx( void )
 	OverlappedAccept * pOverlapped = OverlappedPool::Alloc();
     pOverlapped->sock = socket(AF_INET, SOCK_STREAM, 0);
 	if(pOverlapped->sock == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		goto fail;
 	}
     if(!AcceptEx(m_hSocket, pOverlapped->sock, pOverlapped->buffer, 0, 
       sizeof(struct sockaddr_in) + 16, sizeof(struct sockaddr_in) + 16, &read, 
       (LPOVERLAPPED)pOverlapped) && GetLastError() != ERROR_IO_PENDING) {
-		log.AddLog(LOG_ERROR, "AcceptEx error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "AcceptEx error %d", WSAGetLastError());
 		goto fail;
 	}
 	
@@ -484,7 +484,7 @@ void CIOServerEx::OnEventCallback()
 	if ( WrapAcceptEx())
 	{
 		InterlockedIncrement( &g_AcceptExThread );
-		log.AddLog( LOG_NORMAL, "AcceptEx Thread Added %d", g_AcceptExThread );
+		logger.AddLog(LOG_NORMAL, "AcceptEx Thread Added %d", g_AcceptExThread );
 	}
 
 #endif
@@ -496,7 +496,7 @@ BOOL CIOServerEx::Create( int nPort )
 #ifndef _USE_ACCEPTEX
 	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_hSocket == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		return FALSE;
 	}
 
@@ -506,18 +506,18 @@ BOOL CIOServerEx::Create( int nPort )
 	sin.sin_port = htons(nPort);
 
 	if (bind(m_hSocket, (struct sockaddr*)&sin, sizeof(sin))) {
-		log.AddLog(LOG_ERROR, "bind error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "bind error %d", WSAGetLastError());
 		goto fail;
 	}
 	if (listen(m_hSocket, LISTEN_BACKLOG)) {
-		log.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
 		goto fail;
 	}
 
 	m_acceptEvent = WSACreateEvent();
 	WSAEventSelect(m_hSocket, m_acceptEvent, FD_ACCEPT);
 	if (!RegisterEvent(m_acceptEvent)) {
-		log.AddLog(LOG_ERROR, "RegisterWait error on port %d", nPort);
+		logger.AddLog(LOG_ERROR, "RegisterWait error on port %d", nPort);
 		goto fail;
 	}
 	
@@ -555,13 +555,13 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 #ifndef _USE_ACCEPTEX
 	allocator = al;
 	if (Create(nPort))
-		log.AddLog(LOG_NORMAL, "Service ready on port %d", nPort);
+		logger.AddLog(LOG_NORMAL, "Service ready on port %d", nPort);
 #else
 	allocator = al;
 	int i;
 	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if(m_hSocket == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "acceptex socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "acceptex socket error %d", WSAGetLastError());
 		return;
 	}
 	struct sockaddr_in sin;
@@ -570,18 +570,18 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 	sin.sin_port = htons(nPort);
 
 	if(bind(m_hSocket, (struct sockaddr*)&sin, sizeof(sin))) {
-		log.AddLog(LOG_ERROR, "bind(port %d) error %d", nPort, WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "bind(port %d) error %d", nPort, WSAGetLastError());
 		goto fail;
 	}
 	if(listen(m_hSocket, LISTEN_BACKLOG)) {
-		log.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "listen error %d", WSAGetLastError());
 		goto fail;
 	}
 	HANDLE result;
 	result = CreateIoCompletionPort((HANDLE)m_hSocket, g_hIOCompletionPort, (DWORD) this, 0);
 	
 	if(result == NULL) {
-		log.AddLog(LOG_ERROR, "CreateIoCompletionPort: %d %x %x\n", GetLastError(), m_hSocket, g_hIOCompletionPort);
+		logger.AddLog(LOG_ERROR, "CreateIoCompletionPort: %d %x %x\n", GetLastError(), m_hSocket, g_hIOCompletionPort);
 		goto fail;
 	}
 
@@ -595,13 +595,13 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 //	m_acceptEvent = WSACreateEvent();
 //	WSAEventSelect(m_hSocket, m_acceptEvent, FD_ACCEPT);
 //	if (!RegisterEvent(m_acceptEvent)) {
-//		log.AddLog(LOG_ERROR, "RegisterEvent error on port %d", nPort);
+//		logger.AddLog(LOG_ERROR, "RegisterEvent error on port %d", nPort);
 //		goto fail;
 //	}
 
 
 #endif
-    log.AddLog(LOG_NORMAL, "service ready on port %d", nPort);
+    logger.AddLog(LOG_NORMAL, "service ready on port %d", nPort);
 
 	return;
 
@@ -620,7 +620,7 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	cip.S_un.S_addr = pAddress->sin_addr.S_un.S_addr;
 
 	if( !IPaccessLimit.SetAccessIP( cip )){
-		//log.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
+		//logger.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
 		return NULL;
 	}
 
@@ -632,7 +632,7 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	LeaveCriticalSection(&sockSect);
 
 #ifdef _DEBUG
-	/*log.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
+	/*logger.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
 			pAddress->sin_addr.S_un.S_un_b.s_b1,
 			pAddress->sin_addr.S_un.S_un_b.s_b2,
 			pAddress->sin_addr.S_un.S_un_b.s_b3,

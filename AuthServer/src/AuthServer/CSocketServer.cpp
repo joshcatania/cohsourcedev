@@ -16,7 +16,6 @@
 
 BOOL SendSocketEx(SOCKET mys, const char *format, ...);
 extern BOOL SendSocket(in_addr , const char *format, ...);
-// 여기서 IP서버에 과금 시작이라고 알려주어야 한다.
 static bool ServerPlayOk( CSocketServer *mysocket, const unsigned char *packet)
 {
 	int pwd = 0;
@@ -72,9 +71,6 @@ static bool ServerPlayFail( CSocketServer *mysocket, const unsigned char *packet
 	AS_LOG_VERBOSE( "RCV: AS_PLAY_FAIL, uid:%d, failcode:%d", uid, failcode );
 	AS_LOG_VERBOSE( "SND: AC_PLAY_FAIL, uid:%d, failcode:%d", uid, failcode );
 
-	// 이 부분에서 처리가 필요하다.
-	// IP 과금은 좀 많이 귀찮군..
-	
 	char account[MAX_ACCOUNT_LEN+1];
 	int stat=0;
 	in_addr loginip;
@@ -157,7 +153,6 @@ static bool ServerGetUserNum( CSocketServer *mysocket, const unsigned char *pack
 
 static bool ServerBanUser( CSocketServer *mysocket, const unsigned char *packet )
 {
-	// block_flag1 의 4번째 Bit를 켠다. 
 	int uid = GetIntFromPacket( packet );
 	short reason = GetShortFromPacket( packet );
 	AS_LOG_VERBOSE( "RCV: AS_BAN_USER,uid:%d,reason:%d",uid, reason);
@@ -184,13 +179,13 @@ static bool SetServerId( CSocketServer *mysocket, const unsigned char *packet )
 
 		if (g_ServerList.SetServerSocketById( mysocket->serverid, mysocket, mysocket->getaddr(), port))
 		{
-			log.AddLog(LOG_ERROR, "Successfuly registered world server (id specified by server): ServerId: %d   IP: %s", 
+			logger.AddLog(LOG_ERROR, "Successfuly registered world server (id specified by server): ServerId: %d   IP: %s", 
 				static_cast<int>(mysocket->serverid.GetValueChar()),
 				mysocket->IP());
 		}
 		else
 		{
-			log.AddLog(LOG_ERROR, "Failed to register world server because server id was not found on server list: ServerId: %d   IP: %s", 
+			logger.AddLog(LOG_ERROR, "Failed to register world server because server id was not found on server list: ServerId: %d   IP: %s", 
 				static_cast<int>(mysocket->serverid.GetValueChar()),
 				mysocket->IP());
 			return true; // disconnects server
@@ -198,7 +193,7 @@ static bool SetServerId( CSocketServer *mysocket, const unsigned char *packet )
 	}
 	else
 	{
-		log.AddLog(LOG_ERROR, "Received SetServerId, but ignored it because \"gameServerSpecifiesId=true\" is not specified in the config file:  IP: %s",
+		logger.AddLog(LOG_ERROR, "Received SetServerId, but ignored it because \"gameServerSpecifiesId=true\" is not specified in the config file:  IP: %s",
 			mysocket->IP());
 	}
 
@@ -280,7 +275,7 @@ static bool ServerReadUserData( CSocketServer *mysocket, const unsigned char *pa
 		if ( !g_ServerList.IsServerUp(mysocket->serverid) )
 		{
 #ifdef _DEBUG
-			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", mysocket->serverid, account );
+			logger.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", mysocket->serverid, account );
 #endif 
 		} 
         else 
@@ -293,7 +288,7 @@ static bool ServerReadUserData( CSocketServer *mysocket, const unsigned char *pa
     else 
     {
 #ifdef _DEBUG
-        log.AddLog( LOG_ERROR, "Not set up to use user data!");
+        logger.AddLog( LOG_ERROR, "Not set up to use user data!");
 #endif
 	}
 
@@ -367,7 +362,7 @@ static bool ServerReadGameData( CSocketServer *mysocket, const unsigned char *pa
 		if ( !g_ServerList.IsServerUp(mysocket->serverid) )
 		{
 #ifdef _DEBUG
-			log.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", mysocket->serverid, account );
+			logger.AddLog( LOG_ERROR, "Invalid Serverid :%d, %s", mysocket->serverid, account );
 #endif 
 		} 
         else 
@@ -380,7 +375,7 @@ static bool ServerReadGameData( CSocketServer *mysocket, const unsigned char *pa
     else 
     {
 #ifdef _DEBUG
-        log.AddLog( LOG_ERROR, "Not set up to use user's game data!");
+        logger.AddLog( LOG_ERROR, "Not set up to use user's game data!");
 #endif
 	}
 
@@ -400,7 +395,6 @@ static bool ServerShardTransfer( CSocketServer *mysocket, const unsigned char *p
 	return false;
 }
 
-// 서버쪽에서 이제 로그인을 받아도 좋다고 하는 패킷 처리이다. 
 static bool ServerSetActive( CSocketServer *mysocket, const unsigned char *packet )
 {
 	AS_LOG_VERBOSE( "RCV: AS_SET_CONNECT");
@@ -416,20 +410,8 @@ static bool ServerSetActive( CSocketServer *mysocket, const unsigned char *packe
 	return false;
 }
 
-// 전체 몇명인지 알려주어야 한다. 
-// 한번에 100명을 넘지 않도록 하자. L2는 아래면 충분하다.
-// account, uid, stat, ip, loginflag, warnflag 
-// 하지만 다른게임이 필요할시에는 md5key를 주어야 한다.
-// 이 Function은 현재 지원중인 게임 CODE에 따라서 따로 동작할 필요가 있다.
-// select ssn from user_info with (nolock) where account='%s'
 static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *packet )
 {
-	// 순서를 생각해서 처리해보자.
-	// 순서는 먼저 IP Stat이 아니라면 그냥 각종 사항을 세팅해 준다.. 
-	// db에서 읽어와야 할것 .. ssn, loginflag, warnflag, 
-	// sessionkey는 발급해주어야 한다.
-    // md5key를 가져올수 없기 때문에 reconnect는 사실상 없다고 봐야 한다.
-	
 	int playerNum = GetIntFromPacket( packet );
 
 	AS_LOG_VERBOSE( "RCV: AS_PLAY_USER_LIST, playerNum:%d", playerNum);
@@ -440,7 +422,7 @@ static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *pa
 	in_addr ip;
 	bool nodata = false, bSuccess = false;
 	char account[MAX_ACCOUNT_LEN+1];
-	char ssn[14]; // 한국에서만 사용 된다.. 다른 곳에서는 필요 없어. 
+	char ssn[14];
 	int gender=0, age = 0, nSSN, ssn2;
 	time_t currentTime = time(NULL);
 	char   curYear[2];
@@ -460,8 +442,6 @@ static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *pa
 		loginflag = GetIntFromPacket( packet );
 		warnflag  = GetIntFromPacket ( packet );
 		
-		// user_time 테이블을 가져 와야 한다.
-
 		if ( config.Country == CC_KOREA ) {
 			CDBConn conn(g_linDB);		
 			conn.ResetHtmt();
@@ -482,15 +462,10 @@ static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *pa
 				bSuccess = false;
 			}
 			if ( bSuccess == false ) {
-				// KICK List 추가 Routine가 들어간다.
 				continue;
 			}
 			gender = ssn[6] - '0';
 		
-			// 2003-11-25 darkangel
-			// 5와 6은 국내 거주 외국인들의 외국인 등록번호이다. 
-			// 이경우에는 2000년 이전 태생으로 간주한다.
-
 			if ( ssn[6] == '1' || ssn[6] == '2' || ssn[6] == '5' || ssn[6] == '6')   // before 2000
 				age = (curYear[0] - ssn[0]) * 10 + (curYear[1] - ssn[1]);
 			else									// after 2000
@@ -541,23 +516,16 @@ static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *pa
 		lu->age = age;
         // Not setting lu->regions, because it is not needed at this point in the code
 
-		// 여기까지 왔으면 로그인 처리를 하도록 한다. 
 		if (! accountdb.RegAccountByServer( lu, uid, mysocket, 0, 0 ) )
 		{
 			delete lu;
-			// Kick List에 넣도록 한다.
 			continue;
-
 		}
 		delete lu;
 
 		if ( paystat < 1000 ) {
-			// 이 경우에는 PC방이다. 
-			// 일단 나중에 처리하자.
 		}
 	}
-	// 처리 패킷을 보내주어야 한다.
-	
 	AS_LOG_VERBOSE( "SND: SQ_COMPLETE_USERLIST");
 
 	mysocket->Send( "cd", SQ_COMPLETE_USERLIST, usercount );
@@ -635,7 +603,7 @@ _BEFORE
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", mys, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", mys, format);
 	} else {
 		len -= 1;
 	}
@@ -687,7 +655,7 @@ void CSocketServer::OnClose(SOCKET closedSocket)
 	ActionTime = time(0);
 	ActionTm = *localtime(&ActionTime);
 
-	log.AddLog(LOG_ERROR, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
+	logger.AddLog(LOG_ERROR, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
 	errlog.AddLog( LOG_NORMAL, "%d-%d-%d %d:%d:%d,main server connection close from %s, 0x%x\r\n",		
 				ActionTm.tm_year + 1900, ActionTm.tm_mon + 1, ActionTm.tm_mday,
 				ActionTm.tm_hour, ActionTm.tm_min, ActionTm.tm_sec, IP(), closedSocket );	
@@ -722,7 +690,7 @@ void CSocketServer::OnRead()
 				packetLen = inBuf[pi] + (inBuf[pi + 1] << 8) + 1 - config.PacketSizeType;
 				if (packetLen <= 0 || packetLen > BUFFER_SIZE) {
 					errorNum = 1;
-					log.AddLog(LOG_ERROR, "%d: bad packet size %d", GetSocket(), packetLen);
+					logger.AddLog(LOG_ERROR, "%d: bad packet size %d", GetSocket(), packetLen);
 					break;
 				} else {
 					pi += 2;
@@ -736,7 +704,7 @@ void CSocketServer::OnRead()
 			if (pi + packetLen <= ri) {
 
 				if (inBuf[pi] >= AS_MAX) {
-					log.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
+					logger.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
 					errorNum = 2;
 					break;
 				} else {
@@ -801,13 +769,7 @@ void CSocketServer::SetAddress(in_addr inADDR )
 {
 	addr = inADDR;
 
-//  2004-01-29 darkangel
-//  reconnect 를 서포트 하도록 되어 있다면 이것은 Connect패킷이 왔을때 처리한다.
-
 	if ( !config.supportReconnect ) {
-
-//  이미 서버 ID가 세팅되어 있다고 간주한다. 
-//  현재 서버가 살아 있다고 세팅한다. 
 		CDBConn conn(g_linDB);
 		conn.Execute( "update worldstatus set status=1 where idx=%d", serverid );
 		g_ServerList.SetServerStatus( serverid, 1 );
@@ -829,7 +791,7 @@ _BEFORE
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", GetSocket(), format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", GetSocket(), format);
 	} else {
 		len -= 1;
 		len = len + config.PacketSizeType;

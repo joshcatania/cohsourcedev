@@ -15,6 +15,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{F2988785-89A0-3357-B635-D11E6E9F8F18}</ProjectGuid>
     <RootNamespace>HeroBrowser</RootNamespace>
     <Keyword>Qt4VSv1.0</Keyword>

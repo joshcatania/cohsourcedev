@@ -1,4 +1,4 @@
-// Log.cpp: implementation of the CLog class.
+// logger.cpp: implementation of the CLog class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -23,7 +23,7 @@ static COLORREF colors[] = {
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
-CLog log(128, "winlog");
+CLog logger(128, "winlog");
 CFileLog filelog("use");
 CFileLog actionlog( "act" );
 CFileLog errlog( "err" );

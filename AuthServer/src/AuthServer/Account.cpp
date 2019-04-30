@@ -13,9 +13,6 @@ using namespace CryptoPP;
 // Construction/Destruction
 //////////////////////////////////////////////////////////////////////
 
-// 2003-11-25 darkangel
-// 이 쿼리들은 대부분 쓰이지 않는다. 대부분의 경우 Stored Procedure로 교체되었다.
-
 #define SQL_SELECT_PWD "Select password From user_auth with (nolock) Where account = '%s'"
 #define SQL_SELECT_ACCOUNT "Select  uid, pay_stat, login_flag, warn_flag, block_flag, block_flag2, subscription_flag  From user_account with (nolock) Where account = '%s'"
 #define SQL_SELECT_ETC "Select ssn From user_info with (nolock) Where account = '%s'"
@@ -40,8 +37,6 @@ CAccount::~CAccount()
 {
 }
 
-// 2003-11-25 darkangel
-// block_msg 테이블에 있는 내용을 이용하여 패킷에서 사용할 unicode msg packet을 만든다.
 int CAccount::MakeBlockInfo(  char *msg )
 {
 	int size=1;
@@ -82,10 +77,6 @@ int CAccount::MakeBlockInfo(  char *msg )
 	return (int)(buffer-msg);
 }
 
-// 2003-07-06 darkangel
-// 인증서버가 인증 DB 의 user_account Table을 읽어오는 곳이다. 
-// StoredProcedure 를 호출하기 때문에 반드시 현재의 DB 상의 SP를 확인해야 한다. 
-// ap_GStat을 사용한다.
 char CAccount::Load( const char *name )
 {
 
@@ -191,7 +182,7 @@ char CAccount::Load( const char *name )
 		        }
                 else
                 {
-                    log.AddLog( LOG_ERROR, "LOGIN FAIL, Account:%s has more than %i regions.  (MAX_REGIONS must be changed to allow this many.)", name, MAX_REGIONS );
+                    logger.AddLog(LOG_ERROR, "LOGIN FAIL, Account:%s has more than %i regions.  (MAX_REGIONS must be changed to allow this many.)", name, MAX_REGIONS );
                     conn.ResetHtmt();
                     return S_DATABASE_FAIL;
                 }                 
@@ -214,15 +205,8 @@ char CAccount::Load( const char *name )
 
 	return S_ALL_OK;
 }
-// 모든 사항을 통과했을 경우에 기타 필요한 정보를 읽어 들인다.  개인정량 남은시간, 쿼터 신청자, 주민등록번호등등... 마케팅 요청이 들어왔을때 이부분만 수정
-// LoadEtc는 각 나라에 필요한 Localizing 을 위해서 존재한다. 
-// 그렇기 때문에 Stored Procedure를 쓰지 않는다. 각 나라마다 일일히 다른 Stored Procedure를 생성하기보다는 SQL문 자체가 더 직관적이기 때문이다. 
-// 2003-07-06 darkangel
-// 한국에서는 주민등록번호가 등록되어 있지 않은 사용자는 로그인 할수 없다. 
-// 나이제한에 걸리기 때문이다.
 char CAccount::LoadEtc()
 {
-	// 한국의 경우에 나이 계산이 들어간다. 
 	if ( config.Country == CC_KOREA ) {
 		CDBConn conn(g_linDB);		
 		
@@ -248,14 +232,8 @@ char CAccount::LoadEtc()
 		curYear[0] = ( today->tm_year/10 ) + '0'; // ':' = 2000
 		curYear[1] = ( today->tm_year%10 ) + '0';
 		
-		// gender를 계산할지 말지를 결정한다. 
-		// log상에는 남기지만 ssn2를 넣기 때문에 ssn2의 가장 큰 수를 저장하면 된다.. 고민??
 		gender = ssn[6] - '0';
 		
-		// 2003-11-25 darkangel
-		// 5와 6은 국내 거주 외국인들의 외국인 등록번호이다. 
-		// 이경우에는 2000년 이전 태생으로 간주한다.
-
 		if ( ssn[6] == '1' || ssn[6] == '2' || ssn[6] == '5' || ssn[6] == '6')   // before 2000
 			age = (curYear[0] - ssn[0]) * 10 + (curYear[1] - ssn[1]);
 		else									// after 2000
@@ -277,8 +255,6 @@ char CAccount::LoadEtc()
 	return S_ALL_OK;
 }
 
-// 2003-07-06 darkangel
-// Password 를 DB에서 읽어온다.
 char CAccount::LoadPassword( const char *name, char *passwd, unsigned char& hash_type, unsigned int& salt )
 {
 #define SQL_IGNORED_PARAM 0
@@ -403,19 +379,14 @@ char CAccount::CheckPassword( const char *name, char *dbpwdLineage2, char *dbpwd
 
 		if(memcmp(passwd, passwdDB, len) != 0) {
 			err_msg = S_INCORRECT_PWD;
-
-			if (config.Country == CC_KOREA ){
-				log.AddLog( LOG_VERBOSE, "계정 %s 패스워드가 잘못되었습니다.", name );
-			} else {
-				log.AddLog( LOG_VERBOSE, "LOGIN FAIL, Incorrect password. Account:%s", name );
-			}
+			logger.AddLog(LOG_VERBOSE, "LOGIN FAIL, Incorrect password. Account:%s", name );
 
             return err_msg;
 		}else{
 			err_msg = Load( name );
 			if ( err_msg != S_ALL_OK ){
 
-				log.AddLog( LOG_WARN, "LOGIN FAIL, Can't load user_account table from db. Account:%s", name );
+				logger.AddLog(LOG_WARN, "LOGIN FAIL, Can't load user_account table from db. Account:%s", name );
 
 				return err_msg;
 			}
@@ -459,14 +430,11 @@ char CAccount::CheckPassword( const char *name, char *dbpwdLineage2, char *dbpwd
 		}
 	} else {
 
-		log.AddLog( LOG_WARN, "LOGIN FAIL, Can't load password from db. Account:%s", name );
+		logger.AddLog(LOG_WARN, "LOGIN FAIL, Can't load password from db. Account:%s", name );
 
 		return err_msg;
 	}
 
-	// 2003-11-25 darkangel
-	// GM CheckMode는 새로 업데이트된 서버에 사용자가 미리 들어오지 못하게 하고 GM이나 기타 사내 직원들만
-	// 들어오도록 하는 루틴입니다. 그 외의 사용자는 GMCheckMode가 풀릴때까지 들어 올수 없습니다.
 	if ( config.GMCheckMode ) {
 		if ( (login_flag & 16) || ( login_flag & 32) ) {
 		} else {
@@ -474,8 +442,6 @@ char CAccount::CheckPassword( const char *name, char *dbpwdLineage2, char *dbpwd
 			return S_SERVER_CHECK;
 		}
 	} 
-	// 2003-07-29
-	// Quiz나 패스워드를 반드시 수정하고 들어와야 할 경우가 있다. 그러한 경우 처리.
 	if ( login_flag & 3 ){
 		AS_LOG_VERBOSE( "SND: AC_LOGIN_FAIL, S_MODIFY_PASSWORD" );
 		return S_MODIFY_PASSWORD;
@@ -484,7 +450,7 @@ char CAccount::CheckPassword( const char *name, char *dbpwdLineage2, char *dbpwd
 	err_msg = LoadEtc();
 
 	if ( err_msg != S_ALL_OK )
-		log.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,fail to read user_account table, load etc fail : %d", err_msg );
+		logger.AddLog(LOG_WARN, "SND: AC_LOGIN_FAIL,fail to read user_account table, load etc fail : %d", err_msg );
 	
 	return err_msg;
 }

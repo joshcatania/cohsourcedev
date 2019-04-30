@@ -30,16 +30,11 @@ VOID CALLBACK IPSocketTimerRoutine(PVOID lpParam, BYTE TimerOrWaitFired)
 
 	if ( IPServerReconnect == true ) {
 		SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
-		// 2. 소켓 Connection에 사용할 Destination Setting을 한다.
+
 		sockaddr_in Destination;
 		Destination.sin_family = AF_INET;
 		Destination.sin_addr   = config.IPServer;
 		Destination.sin_port   = htons( (u_short)config.IPPort );
-		// 3. Connection을 맺는다. 
-		
-		// 4. 맺어진 Connection을 이용하여 LOGSocket을 생성한다. 
-		//    Connection Error가 생겼더라도 관계 없다. 
-		//    그렇게 되면 자동적으로 Timer가 작동하여 10초에 한번씩 Reconnection을 시도하게 된다. 
 
 		int ErrorCode = connect( LOGSock, ( sockaddr *)&Destination, sizeof( sockaddr ));
 		
@@ -183,11 +178,8 @@ _BEFORE
 	result = r.second;
 	WaitUserLock.Leave();
 	
-	// 만일 기존에 등록이 된 흔적이 아직도 남아 있다면 IP서버에서 아직 응답이 오지 않은 것으로 간주한다. 
-	// 그대로 두면 영원히 로그인을 못할 수 있기 때문에 그때에는  그 정보를 지워버리고 다시 처음부터 프로세스를 
-	// 시작 하도록 처리한다. 
 	if ( result == false ) {
-		LoginUser *prvLu=NULL; // Dummy 용이다. 
+		LoginUser *prvLu=NULL;
 		DelUserWait( uid, &prvLu );
 	}
 _AFTER_FIN
@@ -236,7 +228,6 @@ _AFTER_FIN
 	return true;
 }
 
-// SessionID는 어떠한 경우에도 0이 오면 안된다.
 int CIPSessionDB::AddSessionID ( int uid, int sessionid )
 {
 _BEFORE
@@ -274,8 +265,6 @@ _BEFORE
 		}
 	}else
 		ErrorCode = IP_ALREADY_WAIT;
-//	AddUserWait가 실패하는 경우는 이미 무언가 되어 있는 것이므로 다시 시도하도록 한다. 
-//  즉 DelWaitUser를 하고 다시 로그인 하게 된다. 
 _AFTER_FIN
 	return ErrorCode;
 }
@@ -312,23 +301,17 @@ _BEFORE
 		ReleaseSessionRequest( IPSession,  IP, Kind );
 		return rtCode;
 	}
-	// 성공이면 사용자에게 로그인 성공 메세지를 보내도록 한다. 
 	CSocketServerEx *pSocket = serverEx->FindSocket(lu->s);		
 	if (!pSocket) {
 		ReleaseSessionRequest( IPSession,  lu->loginIp, Kind );
 		delete lu;
 		return FALSE;
 	}
-	// 정상적으로 Acquire되었다면 등록한다. 
-	// Acquire된 IP Kind를 Stat에 등록한 다음에 accountDB에 등록한다. 
 	lu->stat = Kind;
 	if ( accountdb.RegAccount( lu, Uid, pSocket, SpecificTime, 0 ) ){
 		int result = AddSessionID( Uid, IPSession );
-		// SessionID 저장을 실패했다면 과금이 불가능해 지기 때문에 모두 로그 아웃 처리한다. 
 		if ( result == 0 ) {
 			accountdb.logoutAccount( Uid ); 
-			// AddSessionID가 실패 했기 때문에 accountdb내의 Release루틴은 이 작동하지 않기 때문에
-			// 명시적으로 ReleaseSessionCall을 해주어야 한다. 
 			ReleaseSessionRequest( IPSession,  lu->loginIp, Kind );
 		}
 	} else {
@@ -342,12 +325,6 @@ _AFTER_FIN
 }
 char CIPSessionDB::AcquireSessionFail( int Uid, int IPSession, char ErrorCode )
 {
-	// IP Login이 성공했다면 사용자에게 메세지를 보내야 하겠지만
-	// IP Login이 실패 했다고 해서 사용자에게 메세지를 보낼 필요는 없다. 
-	// 현재의 결제 프로세스는 총 2가지로 나눈다. 
-	// 개인정액 -> PC방정액 -> PC방 정량 -> 개인정량   또는
-	// PC방정액->PC방정량->개인정액->개인정량의 순서이기 때문에
-	// PC방은 실패해도 관계해도 굳이 사용자 클라이언트에 메세지를 보낼 필요 없다. 
 	LoginUser *lu=NULL;
 	DelUserWait( Uid, &lu );
 	
@@ -356,9 +333,6 @@ char CIPSessionDB::AcquireSessionFail( int Uid, int IPSession, char ErrorCode )
 
 		return ErrorCode;
 	}
-	
-	// Stat을 검사해서 정량인지 판별한다. 
-	// Session 획득에 실패 했다면 개인결제 체크에 들어가도록 한다. 
 	
 	CSocketServerEx *pSocket = serverEx->FindSocket(lu->s);		
 	if (!pSocket) {
@@ -374,7 +348,6 @@ char CIPSessionDB::AcquireSessionFail( int Uid, int IPSession, char ErrorCode )
 		return ErrorCode;
 	}
 
-	// 개인정액을 먼저 체크할 경우에는 이중이 되나 별로 상관 없다고 생각한다. 
 	char result = accountdb.CheckPersonalPayStat( pSocket, lu, Uid );
 	pSocket->ReleaseRef();	
 	
@@ -385,7 +358,7 @@ char CIPSessionDB::AcquireSessionFail( int Uid, int IPSession, char ErrorCode )
 
 static bool DummyPacket( CIPSocket *s, const unsigned char *packet )
 {
-	log.AddLog( LOG_WARN, "Call DummyPacket What What What" );
+	logger.AddLog(LOG_WARN, "Call DummyPacket What What What" );
 	return false;
 }
 static bool StartIPChargeFail( CIPSocket *s, const unsigned char *packet )
@@ -408,7 +381,7 @@ _BEFORE
 	GetStrFromPacket( packet, 15, account );
 	account[14]=0;
 #ifdef _DEBUG
-	log.AddLog( LOG_WARN, "Call StartIPChargeFail,%s,%d,%d.%d.%d.%d", account, ErrorCode, ip.S_un.S_un_b.s_b1, ip.S_un.S_un_b.s_b2, ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4);	
+	logger.AddLog(LOG_WARN, "Call StartIPChargeFail,%s,%d,%d.%d.%d.%d", account, ErrorCode, ip.S_un.S_un_b.s_b1, ip.S_un.S_un_b.s_b2, ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4);	
 #endif
 	if ( uid > 0 )
 		accountdb.logoutAccount( uid );
@@ -420,7 +393,7 @@ static bool StartIPCharge( CIPSocket *s, const unsigned char *packet )
 {
 _BEFORE
 #ifdef _DEBUG
-	log.AddLog( LOG_WARN, "RCV: IA_IP_START_OK," );
+	logger.AddLog(LOG_WARN, "RCV: IA_IP_START_OK," );
 #endif
 	int Uid=0, SpecTime=0, kind=0, ip=0;
 	Uid = GetIntFromPacket( packet );
@@ -431,8 +404,6 @@ _BEFORE
 	ip       = GetIntFromPacket( packet );
 	char account[15];
 
-	// accountdb에서 가져 와야 하는것..
-	// account, loginflag, warnflag, md5key, socket
 	int loginflag = 0, warnflag=0, md5key=0;
 	SOCKET ps;
 	bool result = accountdb.GetAccountInfo( Uid, account, &loginflag, &warnflag, &md5key, &ps );
@@ -462,7 +433,7 @@ _BEFORE
 	int  SessionID = GetIntFromPacket( packet );
 
 #ifdef _DEBUG
-	log.AddLog( LOG_WARN, "IA_IP_USE_Success,uid:%d,kind:%d,SpecTime:%d,SessionID:%d", uid, kind, SpecTime, SessionID );
+	logger.AddLog(LOG_WARN, "IA_IP_USE_Success,uid:%d,kind:%d,SpecTime:%d,SessionID:%d", uid, kind, SpecTime, SessionID );
 #endif
 	ipsessionDB.AcquireSessionSuccess( uid, SessionID, 0, SpecTime, (int)kind );
 _AFTER_FIN
@@ -482,7 +453,7 @@ _BEFORE
 		ipsessionDB.AcquireSessionFail( uid, 0, ErrorCode );
 
 #ifdef _DEBUG
-	log.AddLog( LOG_WARN, "IA_IP_USE_FAIL,FAILCODE:%d,UID:%d",ErrorCode, uid );
+	logger.AddLog(LOG_WARN, "IA_IP_USE_FAIL,FAILCODE:%d,UID:%d",ErrorCode, uid );
 #endif
 _AFTER_FIN
 	return false;
@@ -522,7 +493,7 @@ static bool ReadyIPOK( CIPSocket *s, const unsigned char *packet )
 {
 _BEFORE
 #ifdef _DEBUG
-	log.AddLog( LOG_WARN, "RCV: IA_IP_READY_OK," );
+	logger.AddLog(LOG_WARN, "RCV: IA_IP_READY_OK," );
 #endif
 	int Uid=0, SpecTime=0, kind=0, ip=0;
 	Uid = GetIntFromPacket( packet );
@@ -533,8 +504,6 @@ _BEFORE
 	ip       = GetIntFromPacket( packet );
 	char account[15];
 	memset( account, 0, 15 );
-	// accountdb에서 가져 와야 하는것..
-	// account, loginflag, warnflag, md5key, socket
 	int loginflag = 0, warnflag=0, md5key=0;
 	SOCKET ps;
 	bool result = accountdb.GetAccountInfo( Uid, account, &loginflag, &warnflag, &md5key, &ps );
@@ -553,8 +522,7 @@ _BEFORE
 _AFTER_FIN
 	return false;
 }
-// ReadyIPFail은 Acquire가 된 다음에 사용되는 것이다.  그렇기 때문에 AcquireSessionFail과는 틀리다.
-// logout을 불러줄수 있다면 그게 좋다.
+
 static bool ReadyIPFail( CIPSocket *s, const unsigned char *packet )
 {
 _BEFORE
@@ -623,8 +591,8 @@ CIPSocket::CIPSocket( SOCKET aSoc )
 CIPSocket::~CIPSocket()
 {
 //	if( reconnect == true )
-//		log.AddLog( LOG_ERROR, "Reconnected set" );
-	log.AddLog( LOG_ERROR, "IPSocket Deleted" );
+//		logger.AddLog(LOG_ERROR, "Reconnected set" );
+	logger.AddLog(LOG_ERROR, "IPSocket Deleted" );
 }
 
 void CIPSocket::OnClose(SOCKET closedSocket)
@@ -637,7 +605,7 @@ void CIPSocket::OnClose(SOCKET closedSocket)
 	IPServerReconnect = true;
 	config.UseIPServer = false;
 
-	log.AddLog(LOG_ERROR, "*close connection IPServer from %s, %x(%x)", IP(), closedSocket, this);
+	logger.AddLog(LOG_ERROR, "*close connection IPServer from %s, %x(%x)", IP(), closedSocket, this);
 /*
 	if ( !g_bTerminating ) {
 		EnterCriticalSection( &m_cs );
@@ -657,7 +625,7 @@ void CIPSocket::OnClose(SOCKET closedSocket)
 void CIPSocket::OnTimerCallback( void )
 {
 /*
-	log.AddLog( LOG_WARN, "Timer Callback Reconnect IPServer Timer Called" );
+	logger.AddLog(LOG_WARN, "Timer Callback Reconnect IPServer Timer Called" );
 	if ( g_bTerminating )
 	{
 		ReleaseRef();
@@ -675,7 +643,7 @@ void CIPSocket::OnTimerCallback( void )
 	}
 	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
 	if (m_hSocket == INVALID_SOCKET) {
-		log.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
+		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		RegisterTimer( 30000, true );
 		LeaveCriticalSection( &m_cs );
 		ReleaseRef();
@@ -734,7 +702,7 @@ void CIPSocket::OnRead()
 			if (pi + 3 <= ri) {
 				packetLen = inBuf[pi] + (inBuf[pi + 1] << 8) + 1;
 				if (packetLen <= 0 || packetLen > BUFFER_SIZE) {
-					log.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
+					logger.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
 					break;
 				} else {
 					pi += 2;
@@ -748,7 +716,7 @@ void CIPSocket::OnRead()
 			if (pi + packetLen <= ri) {
 
 				if (inBuf[pi] >= IA_MAX) {
-					log.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
+					logger.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
 					break;
 				} else {
 					CIPPacketServer *pPacket = CIPPacketServer::Alloc();
@@ -789,7 +757,7 @@ bool CIPSocket::Send(const char* format, ...)
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
 		len -= 1;
 		len = len;
@@ -804,9 +772,6 @@ bool CIPSocket::Send(const char* format, ...)
 
 char CIPSessionDB::StartIPCharge(UINT uid, UINT ip, int kind, ServerId WorldID)
 {
-//  과금을 위해 IPServer에 보내야 하는 것은 다음과 같다. 
-//	UINT SessionID	//	UINT g_SKey		//	int	Uid		//	char WorldID //	int IP	//	int     Kind		
-
 	char ErrorCode=IP_ALL_OK;
 _BEFORE
 	UINT IPSessionID = FindSessionID( uid );
@@ -862,8 +827,6 @@ _AFTER_FIN
 
 char CIPSessionDB::ReadyToIPCharge(UINT uid, UINT ip, int kind, ServerId WorldID)
 {
-//  과금을 위해 IPServer에 보내야 하는 것은 다음과 같다. 
-//	UINT SessionID	//	UINT g_SKey		//	int	Uid		//	char WorldID //	int IP	//	int     Kind		
 	char ErrorCode=IP_ALL_OK;
 _BEFORE
 

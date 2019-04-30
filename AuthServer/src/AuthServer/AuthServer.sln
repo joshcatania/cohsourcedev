@@ -1,23 +1,19 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AuthServer", "AuthServer.vcproj", "{9E1C935D-FDA7-45B8-9229-5420D79B8592}"
-	ProjectSection(WebsiteProperties) = preProject
-		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.Debug = "False"
-	EndProjectSection
-	ProjectSection(ProjectDependencies) = postProject
-		{86057C3B-EF19-4D2C-A123-B67FFF48186A} = {86057C3B-EF19-4D2C-A123-B67FFF48186A}
-		{15A16D8B-3845-40A9-B5D6-16CF665A8A5E} = {15A16D8B-3845-40A9-B5D6-16CF665A8A5E}
-	EndProjectSection
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arda2", "..\..\lib\arda2\arda2_vc8.vcproj", "{86057C3B-EF19-4D2C-A123-B67FFF48186A}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "AuthServer", "AuthServer.vcxproj", "{9E1C935D-FDA7-45B8-9229-5420D79B8592}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.Debug = "False"
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cryptLib", "..\..\lib\cryptLib\cryptLib.vcproj", "{15A16D8B-3845-40A9-B5D6-16CF665A8A5E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "arda2", "..\..\lib\arda2\arda2.vcxproj", "{86057C3B-EF19-4D2C-A123-B67FFF48186A}"
+	ProjectSection(WebsiteProperties) = preProject
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.Debug = "False"
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cryptLib", "..\..\lib\cryptLib\cryptLib.vcxproj", "{15A16D8B-3845-40A9-B5D6-16CF665A8A5E}"
 	ProjectSection(WebsiteProperties) = preProject
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.Debug = "False"

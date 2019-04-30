@@ -75,9 +75,6 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 	char  err_msg = 0;
 	unsigned short cdkind=0;
 	
-	// 2003-11-25 by darkangel
-	// 로그인 금지된 IP  List안에 포함되어 있을 경우.
-	// 경고 메세지도 없이 서버와의 연결이 무조건 끊긴다.
 	in_addr cip = mysocket->getaddr();
 	
 	if ( config.useForbiddenIPList ) {
@@ -97,7 +94,7 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 		int size = GetIntFromPacket( packet );
 		if (size<0 || size>sizeof(RSAblock))
 		{
-			log.AddLog( LOG_ERROR, "SND: AC_LOGIN_FAIL,invalid_key_size" );
+			logger.AddLog(LOG_ERROR, "SND: AC_LOGIN_FAIL,invalid_key_size" );
 			mysocket->Send( "cc", AC_LOGIN_FAIL, S_INCORRECT_MD5Key );
 			return false;
 		}
@@ -116,18 +113,15 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 	subscription = GetIntFromPacket( packet );
 	cdkind		 = GetShortFromPacket( packet );
 	
-    log.AddLog( LOG_VERBOSE, "RCV: AQ_LOGIN,account:%s,ip:%d.%d.%d.%d,subscription:%d,cdkind:%d", name, cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2, cip.S_un.S_un_b.s_b3, cip.S_un.S_un_b.s_b4, subscription, cdkind);
-	log.AddLog( LOG_DEBUG, "RCV: AQ_LOGIN,useMD5:%i, MD5Key %i", useMD5, mysocket->GetMd5Key());
+    logger.AddLog(LOG_VERBOSE, "RCV: AQ_LOGIN,account:%s,ip:%d.%d.%d.%d,subscription:%d,cdkind:%d", name, cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2, cip.S_un.S_un_b.s_b3, cip.S_un.S_un_b.s_b4, subscription, cdkind);
+	logger.AddLog(LOG_DEBUG, "RCV: AQ_LOGIN,useMD5:%i, MD5Key %i", useMD5, mysocket->GetMd5Key());
 
 	err_msg = account.CheckPassword( name, passwordLineage2, passwordSHA512, mysocket->GetMd5Key(), useMD5 );
 
 	if ( err_msg != S_ALL_OK )
 	{
 #ifdef _DEBUG
-		if ( config.Country == CC_KOREA ) {
-			log.AddLog( LOG_ERROR, "계정 %s 암호 체크에 실패 했습니다.  MSG: %d", name, err_msg );
-		} else
-			log.AddLog( LOG_ERROR, "SND: AC_LOGIN_FAIL,Error Msg: %d", err_msg );
+		logger.AddLog(LOG_ERROR, "SND: AC_LOGIN_FAIL,Error Msg: %d", err_msg );
 #endif
 		mysocket->Send( "cc", AC_LOGIN_FAIL, err_msg );
 		return false;
@@ -222,7 +216,6 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
     memcpy(loginuser->regions, account.regions, sizeof(account.regions));
 	
 	mysocket->uid = account.uid;
-	// 무료 기간으로 세팅할 경우이다.
 	int OperationCode = (int)(( account.pay_stat% 1000 ) / 100 );
 
 	if ( config.UseIPServer){
@@ -308,7 +301,7 @@ _BEFORE
 	}
 	if ( pKey != md5key ){
 		pSocket->Send( "cc", AC_PLAY_FAIL, S_NO_LOGININFO );		
-		log.AddLog( LOG_ERROR, "md5key does not matching" );
+		logger.AddLog(LOG_ERROR, "md5key does not matching" );
 		return false;
 	}
 
@@ -321,18 +314,11 @@ _BEFORE
 		return false;
 	}
 	
-	/******************************************************************************************/
-	// 여기 까지는 일단 정량 정액, PC방 모두 같은 로직이기 때문에 일단은 통과한다. 
-	// 이제는 정량및 PC방 시간 체크 로직이 들어가야 한다. 
-	// 이 밑의 로직은 일반적인 정액 사용자를 위한 로직이다. 
-	// 일단 PayStat을 확인해야 한다. 
-
 	int OperationCode = (int)(( pay_stat% 1000 ) / 100 );	
 	int RemainTime=0;
 	char RetCode = S_ALL_OK;
 
 	if ( OperationCode== 0 ){
-	// 정액일 경우부터 별도의 체크를 할것인지 생각한다. ( 추후 구현 )
 	} else if ( OperationCode == PERSONAL_SPECIFIC ) {
 		RetCode= accountdb.CheckUserTime( uid ,&RemainTime );
 	}
@@ -355,9 +341,6 @@ _BEFORE
 		}
 	}
 
-	// 이 아래부분은 PC방도 똑같은 형태로 진행되어야 하기 때문에 따로 뽑아 내도록 하자. 
-	// 모든 체크를 통과했으면 정상적인 프로세스로 진행하도록 한다. 
-	// 인수는 uid, serverid, account, time_left, loginflag, warnflag, md5key, socket->m_hSocket,RemainTime
 	pSocket->AddRef();
 	accountdb.AboutToPlay( uid, account, RemainTime, loginflag, warnflag, md5key, pSocket, serverid, pay_stat, queueLevel, loyalty, loyaltyLegacy);
 	pSocket->ReleaseRef();
@@ -381,7 +364,7 @@ static bool LogoutPacket( CSocketServerEx *mysocket, const unsigned char *packet
 
 static bool DeprecatedPacket(CSocketServerEx * /*mysocket*/, const unsigned char * /*packet*/)
 {
-	log.AddLog( LOG_ERROR, "Received a deprecated packet from client connection.");
+	logger.AddLog(LOG_ERROR, "Received a deprecated packet from client connection.");
 	return true;
 }
 
@@ -441,7 +424,7 @@ _BEFORE
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", pSocket->GetSocket(), format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", pSocket->GetSocket(), format);
 	} else {
 		len -= 1;
 		len = len + config.PacketSizeType;
@@ -455,7 +438,6 @@ _AFTER_FIN
 	return TRUE;
 }
 
-// MD5Key를 적용해서 처리합니다. 아직 미구현.
 static bool LoginPacketMd5Key( CSocketServerEx *pSocket, const unsigned char *packet)
 {
 	return LoginPacketSecure(pSocket, packet, true);
@@ -491,16 +473,12 @@ CSocketServerEx::CSocketServerEx( SOCKET aSoc )
 	m_TimerHandle = NULL;
 	int zero = 0;
 	
-
-	// 처음
 	m_lastIO = GetTickCount();
 	InterlockedIncrement( &(reporter.m_SocketCount ));
-//	InterlockedIncrement( &(reporter.m_SocketEXObjectCount ));
-//  흠.. 뭐 대충 8000명은 확실히 버티니까 3분..-.-
 	int ret = CreateTimerQueueTimer( &m_TimerHandle, g_hSocketTimer,SocketExTimerCallback, (LPVOID)GetSocket(), config.SocketTimeOut, config.SocketTimeOut , 0 );
 //	int ret = RegisterTimer( (config.SocketTimeOut), TRUE );
 	if ( ret == 0 ) {
-		log.AddLog(LOG_ERROR, "create socket timer error" );
+		logger.AddLog(LOG_ERROR, "create socket timer error" );
 	}
 	if ( config.ProtocolVer == USA_AUTH_PROTOCOL_VERSION )
 	{
@@ -539,7 +517,7 @@ void CSocketServerEx::OnClose(SOCKET closedSocket)
 	mode = SM_CLOSE;
 	InterlockedDecrement( &(reporter.m_SocketCount ));
 	serverEx->RemoveSocket(closedSocket);
-	log.AddLog(LOG_DEBUG, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
+	logger.AddLog(LOG_DEBUG, "*close connection from %s, %x(%x)", IP(), closedSocket, this);
 	if ( um_mode != UM_PLAY_OK && uid != 0 )
 		accountdb.removeAccountPreLogIn( uid, closedSocket );
 	else
@@ -569,13 +547,13 @@ void CSocketServerEx::OnRead()
 			if (pi + 3 <= ri) {
 				packetLen = inBuf[pi] + (inBuf[pi + 1] << 8) + 1 - config.PacketSizeType;
 				if (packetLen <= 0 || packetLen > BUFFER_SIZE) {
-					log.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
+					logger.AddLog(LOG_ERROR, "%d: bad packet size %d", m_hSocket, packetLen);
 					break;
 				} else {
 /////////////////////////////
 //decode routine need
 /////////////////////////////
-					log.AddLog( LOG_DEBUG, "Received %d bytes DecKey 0x87546CA1, 0x%x", packetLen+2, DecOneTimeKey);
+					logger.AddLog(LOG_DEBUG, "Received %d bytes DecKey 0x87546CA1, 0x%x", packetLen+2, DecOneTimeKey);
 					pi += 2;
 					mode = SM_READ_BODY;
 				}
@@ -589,7 +567,7 @@ void CSocketServerEx::OnRead()
 				result = DecPacket(inBuf+2, DecOneTimeKey , packetLen);
 				if ( !result ){
 #ifdef _DEBUG
-					log.AddLog( LOG_ERROR, "unknown protocol,decrypt error" );
+					logger.AddLog(LOG_ERROR, "unknown protocol,decrypt error" );
 #endif
 					break;
 				}
@@ -597,7 +575,7 @@ void CSocketServerEx::OnRead()
 				DumpPacket( inBuf, packetLen+2 );
 #endif
 				if (inBuf[pi] >= AQ_MAX) {
-					log.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
+					logger.AddLog(LOG_ERROR, "unknown protocol %d", inBuf[pi]);
 					break;
 				} else {
 					CPacketServerEx *pPacket = CPacketServerEx::Alloc();
@@ -678,14 +656,11 @@ void CSocketServerEx::Send(const char* format, ...)
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
-		// 길이에서 type 부분을 제외한다. 
-		// sizeType에 따라 Length를 조절한다. 
-
 		len = len -1 + config.PacketSizeType;
 		
-		log.AddLog( LOG_DEBUG, "Sent %d bytes", len+3-config.PacketSizeType);
+		logger.AddLog(LOG_DEBUG, "Sent %d bytes", len+3-config.PacketSizeType);
 		int tmplen = 	len+1-config.PacketSizeType;
 		EncPacket( (unsigned char *)(buffer+2), EncOneTimeKey, tmplen );
 #ifdef _DEBUG
@@ -702,7 +677,6 @@ void CSocketServerEx::Send(const char* format, ...)
 	}
 }
 
-// Encryption을 하지 않고 패킷을 보낼 때 사용한다. 
 void CSocketServerEx::NonEncSend(const char* format, ...)
 {
 	if (mode == SM_CLOSE) {
@@ -716,7 +690,7 @@ void CSocketServerEx::NonEncSend(const char* format, ...)
 	int len = Assemble(buffer + 2, BUFFER_SIZE - 2, format, ap);
 	va_end(ap);
 	if (len == 0) {
-		log.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
+		logger.AddLog(LOG_ERROR, "%d: assemble too large packet. format %s", m_hSocket, format);
 	} else {
 		len -= 1;
 		len = len + config.PacketSizeType;
@@ -725,7 +699,7 @@ void CSocketServerEx::NonEncSend(const char* format, ...)
 
 	}
 	pBuffer->m_size = len+3-config.PacketSizeType;
-	log.AddLog( LOG_DEBUG, "Sent %d bytes, Non Encrypt", len+3-config.PacketSizeType);
+	logger.AddLog(LOG_DEBUG, "Sent %d bytes, Non Encrypt", len+3-config.PacketSizeType);
 #ifdef _DEBUG
 	DumpPacket( (unsigned char *)buffer, len+3-config.PacketSizeType );
 #endif
@@ -742,7 +716,7 @@ void CSocketServerEx::Send( const char *sendmsg, int msglen )
 	CIOBuffer *pBuffer = CIOBuffer::Alloc();
 	char *buffer = pBuffer->m_buffer;
 	memcpy( buffer, sendmsg, msglen);
-	log.AddLog( LOG_DEBUG, "Sent %d bytes, EncKey 0x87546CA1, 0x%x", msglen, EncOneTimeKey);
+	logger.AddLog(LOG_DEBUG, "Sent %d bytes, EncKey 0x87546CA1, 0x%x", msglen, EncOneTimeKey);
 #ifdef _DEBUG
 	DumpPacket( (unsigned char *)buffer, msglen );
 #endif

@@ -1,4 +1,4 @@
-// Log.h: interface for the CLog class.
+// logger.h: interface for the CLog class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -87,7 +87,7 @@ private:
 };
 
 
-extern CLog log;
+extern CLog logger;
 extern CFileLog filelog;
 extern CFileLog actionlog;
 extern CFileLog errlog;
@@ -95,8 +95,8 @@ extern CLogdFilelog logdfilelog;
 
 // By default LOG_DEBUG and LOG_VERBOSE messages are turned off in release
 // builds. You can override that in the config.txt file.
-#define AS_LOG_DEBUG(...)	log.AddLog( LOG_DEBUG, __VA_ARGS__ )
-#define AS_LOG_VERBOSE(...) log.AddLog( LOG_VERBOSE, __VA_ARGS__ )
+#define AS_LOG_DEBUG(...)	logger.AddLog(LOG_DEBUG, __VA_ARGS__ )
+#define AS_LOG_VERBOSE(...) logger.AddLog(LOG_VERBOSE, __VA_ARGS__ )
 
 
 

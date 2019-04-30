@@ -60,7 +60,7 @@ void DBEnv::Init(int connCount)
 			if(Login()) {
 				AllocSQLPool();
 			} else {
-				log.AddLog(LOG_ERROR, "db login failed");
+				logger.AddLog(LOG_ERROR, "db login failed");
 				SQLFreeHandle(SQL_HANDLE_ENV, m_henv);
 				m_henv = SQL_NULL_HENV;
 				//TBROWN - delete our pool
@@ -69,7 +69,7 @@ void DBEnv::Init(int connCount)
 			return;
 		}
 	}
-	log.AddLog(LOG_ERROR, "db env allocation failed");
+	logger.AddLog(LOG_ERROR, "db env allocation failed");
 }
 
 bool DBEnv::Login(bool reset)
@@ -128,7 +128,7 @@ void DBEnv::AllocSQLPool(void)
 			if (ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO) {
 				ret = SQLAllocHandle(SQL_HANDLE_STMT, m_pSqlPool[i].hdbc, &m_pSqlPool[i].stmt);
 				if (!(ret == SQL_SUCCESS || ret == SQL_SUCCESS_WITH_INFO)) {
-					log.AddLog(LOG_ERROR, "stmt allocation failed");
+					logger.AddLog(LOG_ERROR, "stmt allocation failed");
 					SQLFreeHandle(SQL_HANDLE_DBC, m_pSqlPool[i].hdbc);
 					m_pSqlPool[i].stmt = 0;
 					m_pSqlPool[i].hdbc = 0;
@@ -139,7 +139,7 @@ void DBEnv::AllocSQLPool(void)
 				
 			} else {
 				// Connection failed.
-				log.AddLog(LOG_ERROR, "hdbc connection failed");
+				logger.AddLog(LOG_ERROR, "hdbc connection failed");
 				SQLFreeHandle(SQL_HANDLE_DBC, m_pSqlPool[i].hdbc);
 				m_pSqlPool[i].stmt = 0;
 				m_pSqlPool[i].hdbc = 0;
@@ -147,7 +147,7 @@ void DBEnv::AllocSQLPool(void)
 			}
 		} else {
 			// Allocation failed.
-			log.AddLog(LOG_ERROR, "hdbc allocation failed");
+			logger.AddLog(LOG_ERROR, "hdbc allocation failed");
 			m_pSqlPool[i].stmt = 0;
 			m_pSqlPool[i].hdbc = 0;
             m_pSqlPool[i].reset = FALSE;
@@ -198,7 +198,7 @@ bool DBEnv::LoadConnStrFromReg()
 	if (keyStr == NULL)
 	{
 		//TBROWN - returning false here instead of exceptioning below
-		log.AddLog(LOG_WARN, "Invalid gameId set in config file. Will manually prompt instead.");
+		logger.AddLog(LOG_WARN, "Invalid gameId set in config file. Will manually prompt instead.");
 		return false;
 	}
 
@@ -232,7 +232,7 @@ void DBEnv::SaveConnStrToReg()
 	if (keyStr == NULL)
 	{
 		const char *error_message = "Invalid gameId set in config file. Don't know how to store the connection in the registry.";
-		log.AddLog(LOG_ERROR, error_message);
+		logger.AddLog(LOG_ERROR, error_message);
 		MessageBox( NULL, error_message, "Error", MB_ICONERROR | MB_OK );
 		exit(0);
 	}
@@ -265,16 +265,16 @@ void DBEnv::OnTimerCallback()
 		        AllocSQLPool();
                 m_recoveryNeeded = FALSE;
                 m_lock.Leave();
-                log.AddLog(LOG_NORMAL, "db recovery succeeded");
+                logger.AddLog(LOG_NORMAL, "db recovery succeeded");
             } else {
                 m_lock.Leave();
                 RegisterTimer(RECOVERY_INTERVAL);
-            	log.AddLog(LOG_ERROR, "db recovery failed: env allocation");
+            	logger.AddLog(LOG_ERROR, "db recovery failed: env allocation");
             }
         } else
 			m_lock.Leave();
     } else {
-        log.AddLog(LOG_ERROR, "db recovery failed: login impossible");
+        logger.AddLog(LOG_ERROR, "db recovery failed: login impossible");
         RegisterTimer(RECOVERY_INTERVAL);
     }
     ReleaseRef();
@@ -494,7 +494,7 @@ bool CDBConn::Fetch(bool *nodata)
 		return true;
 	} else {
 		if (r != SQL_NO_DATA) {
-			log.AddLog(LOG_ERROR, "Fetch error = %d", r);
+			logger.AddLog(LOG_ERROR, "Fetch error = %d", r);
 		}
 		return false;
 	}
@@ -540,9 +540,9 @@ void CDBConn::Error(SQLSMALLINT handleType, SQLHANDLE handle, const char *comman
     r = SQLGetDiagRec(handleType, handle, 1, state, &native, message, sizeof(message), &len);
 	if (r == SQL_SUCCESS) {
     	if (command) {
-    		log.AddLog(LOG_ERROR, "sql: %s", command);
+    		logger.AddLog(LOG_ERROR, "sql: %s", command);
     	}
-		log.AddLog(LOG_ERROR, "%s:%s", state, (char*)message);
+		logger.AddLog(LOG_ERROR, "%s:%s", state, (char*)message);
         if(strcmp((char *)state, "08S01") == 0) {
             m_pEnv->m_lock.Enter();
             if(!m_pEnv->m_recoveryNeeded && !m_pCurSql->reset) {
@@ -564,9 +564,9 @@ void CDBConn::ErrorExceptInsert(SQLSMALLINT handleType, SQLHANDLE handle, const 
 	if (SQLGetDiagRec(handleType, handle, 1, state, &native, message, sizeof(message), &len) == SQL_SUCCESS) {
 		if (strcmp((char*)state, "23000")) {
 			if (command) {
-				log.AddLog(LOG_ERROR, "sql: %s", command);
+				logger.AddLog(LOG_ERROR, "sql: %s", command);
 			}
-			log.AddLog(LOG_ERROR, "%s:%s", state, (char*)message);
+			logger.AddLog(LOG_ERROR, "%s:%s", state, (char*)message);
 		}
 	}
 }

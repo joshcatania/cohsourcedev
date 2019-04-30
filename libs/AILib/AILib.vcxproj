@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{10980900-D4E8-420B-ADE5-06AFDDD419BF}</ProjectGuid>
     <RootNamespace>AILib</RootNamespace>
     <Keyword>Win32Proj</Keyword>

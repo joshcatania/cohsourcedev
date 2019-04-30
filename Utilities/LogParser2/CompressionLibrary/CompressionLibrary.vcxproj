@@ -11,6 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
     <ProjectGuid>{5DD7B31E-32CE-449D-9FE6-C310E7B71F53}</ProjectGuid>
     <RootNamespace>CompressionLibrary</RootNamespace>
     <Keyword>ManagedCProj</Keyword>
