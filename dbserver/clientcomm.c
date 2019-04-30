@@ -400,7 +400,8 @@ static void sqlGetPlayersCallback(Packet *pak,U8 *cols,int col_count,ColumnInfo 
 	{
 		if (maxLastActive < server_started) 
 		{
-			LOG( LOG_SYSTEM_SPECS, 0, 0, "IP,%s,AuthName,%s,SystemSpecs,%s", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, client->systemSpecs);
+			//LOG( LOG_SYSTEM_SPECS, 0, 0, "IP,%s,AuthName,%s,SystemSpecs,%s", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, client->systemSpecs);
+			LOG( LOG_SYSTEM_SPECS, 0, 0, "IP,%s,AuthName,%s,SystemSpecs,%s", makeIpStr(0), client->account_name, client->systemSpecs);
 		}
 		free(client->systemSpecs);
 		client->systemSpecs = 0;
@@ -878,7 +879,8 @@ static int handleLogin(Packet *pak,GameClientLink *client)
 		protocol_version	= pktGetBitsPack(pak,1);
 		if (protocol_version != DBSERVER_CLIENT_PROTOCOL_VERSION) // date of last change
 		{
-			LOG_OLD_ERR("IP: %s connected with protocol %d", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), protocol_version);
+			//LOG_OLD_ERR("IP: %s connected with protocol %d", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), protocol_version);
+			LOG_OLD_ERR("IP: %s connected with protocol %d", makeIpStr(0), protocol_version);
 			sendMsg(client->link,"WrongProtocol", client);
 			return 0;
 		}
@@ -902,7 +904,8 @@ static int handleLogin(Packet *pak,GameClientLink *client)
 				sprintf(buf,"WrongVersion \"%s\" \"%s\"",correct_version,game_version);
 			else
 				sprintf(buf,"WrongVersionPatcher \"%s\" \"%s\"",correct_version,game_version);
-			LOG_OLD_ERR("IP: %s, AuthName %s, connected with version %s checksum: %08x %08x %08x %08x", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, game_version, game_checksum[0], game_checksum[1], game_checksum[2], game_checksum[3]);
+			//LOG_OLD_ERR("IP: %s, AuthName %s, connected with version %s checksum: %08x %08x %08x %08x", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, game_version, game_checksum[0], game_checksum[1], game_checksum[2], game_checksum[3]);
+			LOG_OLD_ERR("IP: %s, AuthName %s, connected with version %s checksum: %08x %08x %08x %08x", makeIpStr(0), client->account_name, game_version, game_checksum[0], game_checksum[1], game_checksum[2], game_checksum[3]);
 			sendMsg(client->link,buf, client);
 			return 0;
 		}
@@ -974,7 +977,8 @@ static int handleLogin(Packet *pak,GameClientLink *client)
 		if (patchValue && patchValue[0] && stricmp(patchValue, "0")!=0) 
 		{
 			U32 patchValueInt = atoi(patchValue);
-			LOG_OLD( "IP: %s, AuthName %s, sent PatchValue of %u", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, (U32)patchValueInt);
+			//LOG_OLD( "IP: %s, AuthName %s, sent PatchValue of %u", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, (U32)patchValueInt);
+			LOG_OLD( "IP: %s, AuthName %s, sent PatchValue of %u", makeIpStr(0), client->account_name, (U32)patchValueInt);
 		}
 	}
 	if (!pktEnd(pak))
@@ -998,7 +1002,8 @@ static int handleLogin(Packet *pak,GameClientLink *client)
 		if (keyed_access_level)
 		{
 			char *issuedTo = pktGetString(pak);
-			LOG( LOG_ADMIN, LOG_LEVEL_IMPORTANT, 0, "IP: %s, AuthName %s, has access level key of %d issued to \"%s\"", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, keyed_access_level, issuedTo);
+			//LOG( LOG_ADMIN, LOG_LEVEL_IMPORTANT, 0, "IP: %s, AuthName %s, has access level key of %d issued to \"%s\"", makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, keyed_access_level, issuedTo);
+			LOG( LOG_ADMIN, LOG_LEVEL_IMPORTANT, 0, "IP: %s, AuthName %s, has access level key of %d issued to \"%s\"", makeIpStr(0), client->account_name, keyed_access_level, issuedTo);
 		}
 	}
 
@@ -2582,8 +2587,10 @@ static void handleCheckName(Packet *pak, GameClientLink *client)
 
 static void handleSlotTokenRedeem(Packet *pak, GameClientLink *client)
 {
-	if(client)
-		account_handleSlotTokenClaim(makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, client->auth_id);
+	if (client) {
+		//account_handleSlotTokenClaim(makeIpStr(client->link->addr.sin_addr.S_un.S_addr), client->account_name, client->auth_id);
+		account_handleSlotTokenClaim(makeIpStr(0), client->account_name, client->auth_id);
+	}
 }
 
 typedef struct UnlockCharacterCbData 

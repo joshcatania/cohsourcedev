@@ -9,9 +9,16 @@
 
 void entStatusCb(EntCon *container,char *buf)
 {
+	/*
 	sprintf(buf,"%5d Name %-16s Auth %-16s Ip %-16s MapId %d SmapId %d  %s%s",
 		container->id,container->ent_name,container->account,makeIpStr(container->client_ip),
 		container->map_id,container->static_map_id,
+		container->connected ? "" : "NoConnect ",
+		container->callback_link ? "InMapXfer " : "");
+		*/
+	sprintf(buf, "%5d Name %-16s Auth %-16s Ip 0.0.0.0 MapId %d SmapId %d  %s%s",
+		container->id, container->ent_name, container->account,
+		container->map_id, container->static_map_id,
 		container->connected ? "" : "NoConnect ",
 		container->callback_link ? "InMapXfer " : "");
 }
