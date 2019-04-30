@@ -16,6 +16,7 @@
 #include "utils/mathutil.h"
 #include "utils/SuperAssert.h"
 #include "utils/utils.h"
+#include <utils\timing.h>
 
 #define ASQL_WORKERS (SQLCONN_MAX - 1)
 #define ASQL_MAX_RETRIES 30
@@ -581,81 +582,37 @@ static void asql_free_flexible_inventory(asql_flexible_inventory * flex_inv) {
 static bool asql_find_or_create_account(SqlConn conn, asql_account * acc, asql_inventory ** inv_list, int * inv_count) {
 	*inv_count = 0;
 	*inv_list = NULL;
-
-	HSTMT stmt = asql_prepare(conn, ASQL_FIND_OR_CREATE_ACCOUNT, "{CALL dbo.SP_find_or_create_account (@auth_id=?, @name=?, @loyalty_bits=?, @last_loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
-
-	ssize_t name_size = acc->name[0] ? strlen(acc->name) : SQL_NULL_DATA;
-	ssize_t loyalty_bits_size = LOYALTY_SQL_BYTES;
-	ssize_t last_email_date_size = sizeof(acc->last_email_date);
-	ssize_t free_xfer_date_size = sizeof(acc->free_xfer_date);
-
-	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &acc->auth_id, sizeof(acc->auth_id), NULL);
-	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT_OUTPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAY_SIZE(acc->name)-1, 0, &acc->name, sizeof(acc->name), &name_size);
-	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_OUTPUT, SQL_C_BINARY, SQL_BINARY, LOYALTY_SQL_BYTES, 0, &acc->loyalty_bits, sizeof(acc->loyalty_bits), &loyalty_bits_size);
-	sqlConnStmtBindParam(stmt, 4, SQL_PARAM_OUTPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->last_loyalty_point_count, sizeof(acc->last_loyalty_point_count), NULL);
-	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_OUTPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->loyalty_points_spent, sizeof(acc->loyalty_points_spent), NULL);
-	sqlConnStmtBindParam(stmt, 6, SQL_PARAM_OUTPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_SMALLDATETIME_PRECISION, MSSQL_SMALLDATETIME_DECIMALDIGITS, &acc->last_email_date, sizeof(acc->last_email_date), &last_email_date_size);
-	sqlConnStmtBindParam(stmt, 7, SQL_PARAM_OUTPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->last_num_emails_sent, sizeof(acc->last_num_emails_sent), NULL);
-	sqlConnStmtBindParam(stmt, 8, SQL_PARAM_OUTPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_SMALLDATETIME_PRECISION, MSSQL_SMALLDATETIME_DECIMALDIGITS, &acc->free_xfer_date, sizeof(acc->free_xfer_date), &free_xfer_date_size);
+	for (int i = 0; i < 16; ++i) {
+		acc->loyalty_bits[i] = 0xFF;
+	}
+	acc->last_loyalty_point_count = 0xFFFF;
+	acc->loyalty_points_spent = 46;
 
 	asql_inventory inv;
 	asql_inventory_bytes bytes;
-	asql_bind_inventory_columns(stmt, &inv, &bytes);
 
 	if (!asql_execute_procedure(conn, ASQL_FIND_OR_CREATE_ACCOUNT))
 		return false;
 
-	devassert(loyalty_bits_size == LOYALTY_SQL_BYTES);
+	if (!asql_check_inventory_results(&inv, &bytes))
+		return false;
 
-	if (last_email_date_size == SQL_NULL_DATA)
-		memset(&acc->last_email_date, 0, sizeof(acc->last_email_date));
-
-	if (free_xfer_date_size == SQL_NULL_DATA)
-		memset(&acc->free_xfer_date, 0, sizeof(acc->free_xfer_date));
-
-	int limit = 0;
-	int ret;
-	while ((ret = _sqlConnStmtFetch(stmt, conn)) != SQL_NO_DATA) {
-		if (ret != SQL_SUCCESS)
-			sqlConnStmtPrintError(stmt, asql_stored_procedure_names[ASQL_FIND_OR_CREATE_ACCOUNT]);
-
-		if(!SQL_SUCCEEDED(ret))
-			continue;
-
-		if (!asql_check_inventory_results(&inv, &bytes))
-			return false;
-
-		void * next = dynArrayFit(reinterpret_cast<void**>(inv_list), sizeof(asql_inventory), &limit, (*inv_count)++);
-		memcpy(next, &inv, sizeof(asql_inventory));
-	}
-
+	printf("find_or_create_account: '%i', '%s', '%hh', '%h', '%h', '%i', '%h', '%i'\n", &acc->auth_id, &acc->name, &acc->loyalty_bits, &acc->last_loyalty_point_count,
+		&acc->loyalty_points_spent, timerGetSecondsSince2000FromSQLTimestamp(&acc->last_email_date),
+		&acc->last_num_emails_sent, timerGetSecondsSince2000FromSQLTimestamp(&acc->free_xfer_date));
+	// TODO
 	return true;
 }
 
 static void asql_find_or_create_account_finish(bool success, Account * account, asql_account * acc, asql_inventory * inv_list, int inv_count) {
-	devassert(acc->auth_id == account->auth_id);
-
-	if (!success) {
-		// retry
-		asql_find_or_create_account_async(account);
-		goto cleanup;
-	}
-
 	account->asql = asql_find_account(account->auth_id);
 	if (!account->asql)
 		account->asql = MP_ALLOC(asql_account);
 
 	memcpy(account->asql, acc, sizeof(asql_account));
-	assert(account->asql->auth_id == account->auth_id);
-
-	assert(stashIntAddPointer(as.accounts, account->asql->auth_id, account->asql, false));
 
 	accountInventory_LoadFinished(account, inv_list, inv_count);
 	AccountDb_LoadFinished(account);
-
-cleanup:
-	if (inv_list)
-		free(inv_list);
 }
 
 void asql_find_or_create_account_async(Account * account) {
@@ -670,20 +627,11 @@ void asql_find_or_create_account_async(Account * account) {
 }
 
 static bool asql_update_account(SqlConn conn, asql_account * acc) {
-	ssize_t loyalty_bits_size = LOYALTY_SQL_BYTES;
-	ssize_t last_email_date_is_null = SQL_NULL_DATA;
-	ssize_t free_xfer_date_is_null = SQL_NULL_DATA;
-
-	HSTMT stmt = asql_prepare(conn, ASQL_UPDATE_ACCOUNT, "{CALL dbo.SP_update_account (@auth_id=?, @loyalty_bits=?, @loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
-	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &acc->auth_id, sizeof(acc->auth_id), NULL);
-	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, LOYALTY_SQL_BYTES, 0, &acc->loyalty_bits, sizeof(acc->loyalty_bits), &loyalty_bits_size);
-	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->last_loyalty_point_count, sizeof(acc->last_loyalty_point_count), NULL);
-	sqlConnStmtBindParam(stmt, 4, SQL_PARAM_INPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->loyalty_points_spent, sizeof(acc->loyalty_points_spent), NULL);
-	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_SMALLDATETIME_PRECISION, MSSQL_SMALLDATETIME_DECIMALDIGITS, &acc->last_email_date, sizeof(acc->last_email_date), (acc->last_email_date.year==0) ? &last_email_date_is_null : NULL);
-	sqlConnStmtBindParam(stmt, 6, SQL_PARAM_INPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->last_num_emails_sent, sizeof(acc->last_num_emails_sent), NULL);
-	sqlConnStmtBindParam(stmt, 7, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_SMALLDATETIME_PRECISION, MSSQL_SMALLDATETIME_DECIMALDIGITS, &acc->free_xfer_date, sizeof(acc->free_xfer_date), (acc->free_xfer_date.year==0) ? &free_xfer_date_is_null : NULL);
-
-	return asql_execute_procedure(conn, ASQL_UPDATE_ACCOUNT);
+	printf("update_account: '%l', '%hh', '%h', '%h', '%h', '%i', '%h', '%i'\n", &acc->auth_id, &acc->loyalty_bits, &acc->last_loyalty_point_count,
+		&acc->loyalty_points_spent, timerGetSecondsSince2000FromSQLTimestamp(&acc->last_email_date),
+		&acc->last_num_emails_sent, timerGetSecondsSince2000FromSQLTimestamp(&acc->free_xfer_date));
+	// TODO
+	return true;
 }
 
 static void asql_update_account_finish(bool success, Account * account, asql_account * acc) {
@@ -738,37 +686,10 @@ void asql_add_micro_transaction_async(MicroTransaction * transaction) {
 }
 
 static bool asql_add_game_transaction(SqlConn conn, asql_game_transaction * gtx, asql_inventory * inv) {
-	ssize_t sku_bytes = sizeof(gtx->sku_id);
-	ssize_t shard_id_is_null = SQL_NULL_DATA;
-	ssize_t ent_id_is_null = SQL_NULL_DATA;
-	ssize_t granted_is_null = SQL_NULL_DATA;
-	ssize_t claimed_is_null = SQL_NULL_DATA;
-	ssize_t saved_is_null = SQL_NULL_DATA;
-
-	HSTMT stmt = asql_prepare(conn, ASQL_ADD_GAME_TRANSACTION, "{CALL dbo.SP_add_game_transaction (@order_id=?, @auth_id=?, @sku_id=?, @transaction_date=?, @csr_did_it=?, @shard_id=?, @ent_id=?, @granted=?, @claimed=?)}");
-	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &gtx->order_id, sizeof(gtx->order_id), NULL);
-	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &gtx->auth_id, sizeof(gtx->auth_id), NULL);
-	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_CHAR, ARRAY_SIZE(gtx->sku_id.c), 0, &gtx->sku_id.c, sizeof(gtx->sku_id), &sku_bytes);
-	sqlConnStmtBindParam(stmt, 4, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_DATETIME_PRECISION, MSSQL_DATETIME_DECIMALDIGITS, &gtx->transaction_date, sizeof(gtx->transaction_date), NULL);
-	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_BIT, SQL_BIT, 0, 0, &gtx->csr_did_it, sizeof(gtx->csr_did_it), 0);
-	sqlConnStmtBindParam(stmt, 6, SQL_PARAM_INPUT, SQL_C_TINYINT, SQL_TINYINT, 0, 0, &gtx->shard_id, sizeof(gtx->shard_id), (gtx->shard_id>0) ? NULL : &shard_id_is_null);
-	sqlConnStmtBindParam(stmt, 7, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &gtx->ent_id, sizeof(gtx->ent_id), (gtx->ent_id>0) ? NULL : &ent_id_is_null);
-	sqlConnStmtBindParam(stmt, 8, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &gtx->granted, sizeof(gtx->granted), (gtx->granted!=0) ? NULL : &granted_is_null);
-	sqlConnStmtBindParam(stmt, 9, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &gtx->claimed, sizeof(gtx->claimed), (gtx->claimed!=0 || gtx->granted==0) ? NULL : &claimed_is_null);
-
-	asql_inventory_bytes bytes;
-	asql_bind_inventory_columns(stmt, inv, &bytes);
-
-	if (!asql_execute_procedure(conn, ASQL_ADD_GAME_TRANSACTION))
-		return false;
-
-	int ret = _sqlConnStmtFetch(stmt, conn);
-	if (ret != SQL_SUCCESS)
-		sqlConnStmtPrintError(stmt, asql_stored_procedure_names[ASQL_ADD_GAME_TRANSACTION]);
-	if(!SQL_SUCCEEDED(ret))
-		return false;
-
-	return asql_check_inventory_results(inv, &bytes);
+	printf("add_game_transaction: '%s', '%i', '%s', '%i', '%hh', '%hh', '%i', '%l', '%l'\n", orderIdAsString(gtx->order_id), &gtx->auth_id, skuIdAsString(gtx->sku_id),
+		timerGetSecondsSince2000FromSQLTimestamp(&gtx->transaction_date), &gtx->csr_did_it, &gtx->shard_id, &gtx->ent_id, &gtx->granted, &gtx->claimed);
+	// TODO
+	return true;
 }
 
 static void asql_add_game_transaction_finish(bool success, GameTransaction * transaction) {
