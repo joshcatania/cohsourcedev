@@ -225,9 +225,6 @@ bool Decrypt(unsigned char *buf, __int64 &key, int length)
 	return true;
 }
 
-//  Encrypt : Mayde by  darkangel 2003-07-05
-//  오고 가는 패킷을 Encrypt 하기 위하여 사용된다. 
-//  config.encrypt == true일때에만 작동하도록 해야 한다.
 void Encrypt(unsigned char *buf, __int64 &key, int &length)
 {
 	if ( config.encrypt == false )
@@ -243,11 +240,6 @@ void Encrypt(unsigned char *buf, __int64 &key, int &length)
 	key+=length;
 }
 
-//  WriteAction : Made by darkangel 2003-07-05
-//  각 액션을 저장하기 위해서 만든 것으로 SSN은 생년월일을 뜻한다. 
-//  Action은 login, logout, quit, kick, startgame 등이 존재한다. 
-//  logD와 이쪽에서 처리를 하면 된다. 
-//  L2에서는 쓰이지 않는다. 
 void WriteAction( char *action, char *account, in_addr ip, int ssn, char gender, int worldid, int stat)
 {
 	if ( config.UseLogD )
@@ -268,7 +260,7 @@ void WriteAction( char *action, char *account, in_addr ip, int ssn, char gender,
 		ip.S_un.S_un_b.s_b3,
 		ip.S_un.S_un_b.s_b4, stat,ssn, gender);
 }
-// 첫문자 대문자 두번째 문자 소문자 입니다. 
+
 void StdAccount( char *account )
 {
 _BEFORE
@@ -290,7 +282,7 @@ _BEFORE
 	}
 _AFTER_FIN
 }
-// DumpPacket은 Debug버전에서만 동작하도록 되어 있다. 
+
 void DumpPacket( const unsigned char *packet, int packetlen )
 {
 #ifdef _DEBUG
@@ -335,7 +327,6 @@ HFONT GetAFont(HDC hDC)
 // param1 depends on LOG_ID
 void WriteLogD ( int LOG_ID, char *account, in_addr ip, int stat, int age, int gender, int zipcode, int param1, int uid  )
 {
-	// Lineage2 만 사용하도록 한다. 다른 게임은 이 로그를 사용하지 않는다. 넘 복잡하다.
 	if ( !( config.gameId & 8) )
 		return;
 
@@ -475,7 +466,6 @@ time_t ConvertSQLToTome( SQL_TIMESTAMP_STRUCT &sqlDate, struct tm *tm)
 	return mktime(tm);
 }
 
-// 계정은 첫문자가 알파벳으로 시작하며 영문자와 숫자만 가능하며 14자 이하이다. 
 bool CheckAccount( char *account )
 {
 	int inx=0;

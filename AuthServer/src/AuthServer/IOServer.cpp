@@ -154,7 +154,6 @@ CIOSocket *CServer::CreateSocket( SOCKET newSocket, LPSOCKADDR_IN pAddress )
 	if (!config.gameServerSpecifiesId)
 	{
 		serverid = g_ServerList.SetServerSocketByAddress( pAddress->sin_addr, mysocket );
-		// ?  . 
 		if ( !serverid.IsValid() ){		
 			log.AddLog(LOG_ERROR, "Non-registered world server %d.%d.%d.%d", 
 							pAddress->sin_addr.S_un.S_un_b.s_b1,
@@ -213,9 +212,6 @@ CSocketServer *CServer::FindSocket( in_addr s )
 	return pSocket;
 }
 
-// 2003-07-08 darkangel
-// Socket  ? ? ??  ? ü??. 
-// Socket  ?    ?  ?? ?. 
 bool CServer::GetServerStatus( in_addr s )
 {
 	bool result=false;
@@ -355,8 +351,6 @@ void OverlappedPool::FreeAll()
 
 CIOServerEx::CIOServerEx()
 {
-	// ??.
-	
 	m_hSocket		= INVALID_SOCKET;
 	m_acceptEvent	= WSA_INVALID_EVENT;
 	m_hAcceptSocket = INVALID_SOCKET;
@@ -598,9 +592,6 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 	}
 
 	g_AcceptExThread = config.AcceptCallNum;
-//  Automatic þ? ? ?  þ?. T.T
-//  Connection? ? ? ? ? Job ó?   Bottle Neck ?  ´.
-//  Automatic   ?.
 //	m_acceptEvent = WSACreateEvent();
 //	WSAEventSelect(m_hSocket, m_acceptEvent, FD_ACCEPT);
 //	if (!RegisterEvent(m_acceptEvent)) {
@@ -621,8 +612,6 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 
 CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 {
-	//    ? ? 
-	// ? ?   ?  ?´. 
 	if ( reporter.m_SocketCount >= config.SocketLimit ){
 		return NULL;
 	} 
