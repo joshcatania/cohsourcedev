@@ -1207,6 +1207,7 @@
     <ClCompile Include="UI\uiNet.c" />
     <ClCompile Include="UI\uiNewFeatures.c" />
     <ClCompile Include="UI\uiPictureBrowser.c" />
+    <ClCompile Include="UI\uiPlaySpanStoreLauncher.c" />
     <ClCompile Include="Ui\uiRaidResult.c" />
     <ClCompile Include="UI\uiReticle.c" />
     <ClCompile Include="UI\uiSalvageOpen.c" />
@@ -2336,6 +2337,7 @@
     <ClInclude Include="UI\uiNet.h" />
     <ClInclude Include="UI\uiNewFeatures.h" />
     <ClInclude Include="UI\uiPictureBrowser.h" />
+    <ClInclude Include="UI\uiPlaySpanStoreLauncher.h" />
     <ClInclude Include="Ui\uiRaidResult.h" />
     <ClInclude Include="UI\uiReticle.h" />
     <ClInclude Include="UI\uiSalvageOpen.h" />

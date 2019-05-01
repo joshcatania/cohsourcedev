@@ -1,3 +1,6 @@
+
+#if defined(USE_POST_BACK_RELAY)
+
 #ifndef POSTBACKLISTENER_H
 #define POSTBACKLISTENER_H
 
@@ -36,3 +39,5 @@ const char * postback_update_stats();
 C_DECLARATIONS_END
 
 #endif
+
+#endif // USE_POST_BACK_RELAY

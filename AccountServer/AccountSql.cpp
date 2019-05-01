@@ -830,80 +830,15 @@ static bool asql_read_inventory_rows(SqlConn conn, HSTMT stmt, asql_flexible_inv
 }
 
 static bool asql_add_multi_game_transaction(SqlConn conn, MultiGameTransaction *transaction) {
-	// The order here must match the order in the TVP_game_transaction type in the database!
-	OrderId order_ids[MAX_MULTI_GAME_TRANSACTIONS];
-
-	U32 auth_ids[MAX_MULTI_GAME_TRANSACTIONS];
-
-	SkuId sku_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	ssize_t sku_bytes[MAX_MULTI_GAME_TRANSACTIONS];
-
-	SQL_TIMESTAMP_STRUCT transaction_dates[MAX_MULTI_GAME_TRANSACTIONS];
-
-	U8 shard_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	ssize_t shard_bytes[MAX_MULTI_GAME_TRANSACTIONS];
-
-	U32 ent_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	ssize_t ent_bytes[MAX_MULTI_GAME_TRANSACTIONS];
-
-	long granted_values[MAX_MULTI_GAME_TRANSACTIONS];
-	ssize_t granted_bytes[MAX_MULTI_GAME_TRANSACTIONS];
-
-	long claimed_values[MAX_MULTI_GAME_TRANSACTIONS];
-	ssize_t claimed_bytes[MAX_MULTI_GAME_TRANSACTIONS];
-
-	U8 csr_did_its[MAX_MULTI_GAME_TRANSACTIONS];
-
-	for (signed index = 0; index < transaction->count; index++) {
-		order_ids[index] = transaction->transactions[index].order_id;
-
-		auth_ids[index] = transaction->transactions[index].auth_id;
-
-		sku_ids[index] = transaction->transactions[index].sku_id;
-		sku_bytes[index] = sizeof(SkuId);
-
-		transaction_dates[index] = transaction->transactions[index].transaction_date;
-
-		shard_ids[index] = transaction->transactions[index].shard_id;
-		shard_bytes[index] = shard_ids[index] ? sizeof(shard_ids[index]) : SQL_NULL_DATA;
-
-		ent_ids[index] = transaction->transactions[index].ent_id;
-		ent_bytes[index] = ent_ids[index] ? sizeof(ent_ids[index]) : SQL_NULL_DATA;
-
-		granted_values[index] = transaction->transactions[index].granted;
-		granted_bytes[index] = granted_values[index] ? sizeof(granted_values[index]) : SQL_NULL_DATA;
-
-		claimed_values[index] = transaction->transactions[index].claimed;
-		claimed_bytes[index] = (claimed_values[index] || !granted_values[index]) ? sizeof(claimed_values[index]) : SQL_NULL_DATA;
-
-		csr_did_its[index] = transaction->transactions[index].csr_did_it;
-	}
-
-	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MULTI_GAME_TRANSACTION, "{CALL dbo.SP_add_multi_game_transaction (@game_transactions=?, @parent_order_id=?)}");
-
-	sqlConnStmtStartBindParamTableValued(stmt, 1, MAX_MULTI_GAME_TRANSACTIONS, L"TVP_game_transaction", &transaction->count);
-	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, order_ids, sizeof(order_ids[0]), NULL);
-	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, auth_ids, sizeof(auth_ids[0]), NULL);
-	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_CHAR, ARRAY_SIZE(sku_ids->c), 0, sku_ids, sizeof(sku_ids[0]), sku_bytes);
-	sqlConnStmtBindParam(stmt, 4, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP, SQL_TYPE_TIMESTAMP, MSSQL_DATETIME_PRECISION, MSSQL_DATETIME_DECIMALDIGITS, transaction_dates, sizeof(transaction_dates[0]), NULL);
-	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_TINYINT, SQL_TINYINT, 0, 0, shard_ids, sizeof(shard_ids[0]), shard_bytes);
-	sqlConnStmtBindParam(stmt, 6, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, ent_ids, sizeof(ent_ids[0]), ent_bytes);
-	sqlConnStmtBindParam(stmt, 7, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, granted_values, sizeof(granted_values[0]), granted_bytes);
-	sqlConnStmtBindParam(stmt, 8, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, claimed_values, sizeof(claimed_values[0]), claimed_bytes);
-	sqlConnStmtBindParam(stmt, 9, SQL_PARAM_INPUT, SQL_C_BIT, SQL_BIT, 0, 0, csr_did_its, sizeof(csr_did_its[0]), NULL);
-	sqlConnStmtEndBindParamTableValued(stmt);
-
-	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &transaction->order_id, sizeof(transaction->order_id), NULL);
+	asql_init_flexible_inventory(&transaction->flex_inv);
 
 	asql_inventory inv;
-	asql_inventory_bytes bytes;
-	asql_bind_inventory_columns(stmt, &inv, &bytes);
+	for (signed index = 0; index < transaction->count; index++) {
+		if (asql_add_game_transaction(conn, &transaction->transactions[index], &inv)) {
+			asql_add_flexible_inventory(&transaction->flex_inv, &inv);
+		}
+	}
 
-	if (!asql_execute_procedure(conn, ASQL_ADD_MULTI_GAME_TRANSACTION))
-		return false;
-
-	if (!asql_read_inventory_rows(conn, stmt, &transaction->flex_inv, &inv, &bytes, asql_stored_procedure_names[ASQL_ADD_MULTI_GAME_TRANSACTION]))
-		return false;
 	if (!devassert(transaction->flex_inv.count == transaction->count))
 		return false;
 

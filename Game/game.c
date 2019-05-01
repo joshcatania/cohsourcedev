@@ -1995,7 +1995,7 @@ void game_loadData(int isCostumeCreator)
 		loadend_printf("");
 		
 		// PlaySpan URL defs
-		//PlaySpanStoreLauncher_InitModule();
+		PlaySpanStoreLauncher_InitModule();
 
 	}
 

@@ -97,6 +97,7 @@ static ParseTable parse_AccountServerShard[] =
 	{ 0 },
 };
 
+#if defined(USE_POST_BACK_RELAY)
 ParseTable parse_PostBackRelay[] =
 {
 	{ "PostBackRelay",		TOK_IGNORE | TOK_PARSETABLE_INFO, sizeof(PostBackRelay), 0, NULL, 0 },
@@ -105,6 +106,7 @@ ParseTable parse_PostBackRelay[] =
 	{ "\n",					TOK_END, 0 },
 	{ "", 0, 0 }
 };
+#endif // USE_POST_BACK_RELAY
 
 StaticDefineInt parse_PlaySpanStoreFlags[] =
 {
@@ -121,7 +123,9 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "MtxSecretKey",							TOK_FIXEDSTR(AccountServerCfg,mtxSecretKey) },
 	{ "MtxIOThreads",							TOK_INT(AccountServerCfg,mtxIOThreads,1) },
 	{ "PlayNCAdminWebPageSecretKey",			TOK_FIXEDSTR(AccountServerCfg,playNCChallengeRespSecretKey) },
+#if defined(USE_POST_BACK_RELAY)
 	{ "PostBackRelay",							TOK_STRUCT(AccountServerCfg,relays,parse_PostBackRelay)	},
+#endif // USE_POST_BACK_RELAY
 	{ "SqlLogin",								TOK_FIXEDSTR(AccountServerCfg,sqlLogin) },
 	{ "SqlDbName",								TOK_FIXEDSTR(AccountServerCfg,sqlDbName) },
 	{ "PlaySpanServerRetryFreqSecs",			TOK_INT(AccountServerCfg,playSpanServerRetryFreqSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_RETRY_SECS)			},
@@ -133,7 +137,9 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "PlaySpanAuthTimeoutMins",				TOK_INT(AccountServerCfg,playSpanAuthTimeoutMins,DEFAULT_PLAYSPAN_AUTH_TIMEOUT_MINS)			},
 	{ "PlaySpanAuthRekeyIntervalMins",			TOK_INT(AccountServerCfg,playSpanAuthRekeyIntervalMins,DEFAULT_PLAYSPAN_REKEY_INTERVAL_MINS)			},
 	{ "PlaySpanDomain",							TOK_STRING(AccountServerCfg,playSpanDomain,NULL)				},
+#if defined(USE_POST_BACK_RELAY)
 	{ "PlaySpanCatalog",						TOK_STRING(AccountServerCfg,playSpanCatalog,DEFAULT_PLAYSPAN_CATALOG_ID)				},
+#endif // USE_POST_BACK_RELAY
 	{ "PlaySpanURL_Home",						TOK_STRING(AccountServerCfg,playSpanURL_Home,NULL)				},
 	{ "PlaySpanURL_CategoryView",				TOK_STRING(AccountServerCfg,playSpanURL_CategoryView,NULL)		},
 	{ "PlaySpanURL_ItemView",					TOK_STRING(AccountServerCfg,playSpanURL_ItemView,NULL)			},
@@ -1253,7 +1259,7 @@ U32		g_tickCount;
 void UpdateConsoleTitle(void)
 {
 	char buf[2000];
-	char const *mtx_stats = "";
+	char const *mtx_stats = "NOMTX";
 	int i;
 	int nConnected = 0;
 
@@ -1261,7 +1267,9 @@ void UpdateConsoleTitle(void)
 		if(g_accountServerState.shards[i]->link.connected)
 			++nConnected;
 	
+#if defined(USE_POST_BACK_RELAY)
 	mtx_stats = postback_update_stats();	
+#endif // USE_POST_BACK_RELAY
 	snprintf(buf, ARRAY_SIZE(buf), "%i: AccountServer. %i shards %i accounts (PAK R:%d D:%d) (SQL Q:%d) %s (%i).",
 		_getpid(), nConnected, AccountDb_GetCount(), g_packetcount, qGetSize(s_delayedPackets), asql_in_flight(), mtx_stats, ((g_tickCount / ACCOUNTSERVER_TICK_FREQ) % 10));
 	setConsoleTitle(buf);
@@ -1428,7 +1436,9 @@ static void reconfig(void) {
 	int i;
 
 	reloadConfig();
+#if defined(USE_POST_BACK_RELAY)
 	postback_reconfig();
+#endif // USE_POST_BACK_RELAY
 
 	for(i = 0; i < g_accountServerState.shard_count; ++i)
 		if(g_accountServerState.shards[i]->link.connected)
@@ -1519,12 +1529,14 @@ void reloadConfig(void)
 	}
 
 	printf_stderr("Listening for MicroTransactions in the environment '%s'\n", g_accountServerState.cfg.mtxEnvironment);
+#if defined(USE_POST_BACK_RELAY)
 	if(g_accountServerState.cfg.relays)
 	{
 		for (i=0; i<eaSize(&g_accountServerState.cfg.relays); i++)
 			printf_stderr("PostBackRelay server: %s:%d\n", g_accountServerState.cfg.relays[i]->ip, g_accountServerState.cfg.relays[i]->port);
 	}
 	else
+#endif // USE_POST_BACK_RELAY
 	{
 		if(isDevelopmentMode())
 		{
@@ -1532,7 +1544,11 @@ void reloadConfig(void)
 		}
 		else
 		{
+#if defined(USE_POST_BACK_RELAY)
 			FatalErrorf("No PostBackRelay server specified in account_server.cfg.");
+#else // USE_POST_BACK_RELAY
+			printf_stderr("No PostBackRelay server specified in account_server.cfg.");
+#endif // USE_POST_BACK_RELAY
 		}
 	}
 }
@@ -1691,8 +1707,10 @@ int main(int argc,char **argv)
 	Transaction_Init();
 	AccountRequest::Init();
 	AccountServer_InitDelayedQueue();
+#if defined(USE_POST_BACK_RELAY)
 	postback_start(g_accountServerState.cfg.mtxIOThreads, g_accountServerState.cfg.mtxEnvironment, 
 		g_accountServerState.cfg.mtxSecretKey, g_accountServerState.cfg.playSpanDomain, g_accountServerState.cfg.relays, playspan_message);
+#endif // USE_POST_BACK_RELAY
 
 	printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "AccountServer ready.");
 	printf(" (took %f seconds)\n\n",timerElapsed(startup_timer));
@@ -1724,7 +1742,11 @@ int main(int argc,char **argv)
 			AccountServer_TickDelayedPackets();
 			AccountRequest::Tick();
 			AccountDb_Tick();
+#if defined(USE_POST_BACK_RELAY)
 			mtx_alive = postback_tick();
+#else // USE_POST_BACK_RELAY
+			mtx_alive = true;
+#endif // USE_POST_BACK_RELAY
 			CatalogUpdate_Tick();
 			clientCountByShardTick();
 			AccountServer_RedeemedCountByShardTick();
@@ -1757,7 +1779,9 @@ int main(int argc,char **argv)
 
 	AccountDb_Shutdown();
 	accountInventory_Shutdown();
+#if defined(USE_POST_BACK_RELAY)
 	postback_stop();
+#endif // USE_POST_BACK_RELAY
 	lnkFlushAll();
 
 	EXCEPTION_HANDLER_END;
