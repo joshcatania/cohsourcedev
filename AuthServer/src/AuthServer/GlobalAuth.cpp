@@ -189,7 +189,11 @@ _BEFORE
 _AFTER_FIN
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 };
-unsigned char blowFishKey[] = "[;'.]94-31==-%&@!^+]";
+
+unsigned char blowFishKey[] = {
+	0xa4, 0xde, 0x6b, 0x64, 0xff, 0x24, 0xad, 0x74, 0x52, 0xa0,
+	0x6a, 0x35, 0xaf, 0xf5, 0x37, 0x11, 0xd3, 0x5a, 0xc8, 0x42
+};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {

@@ -628,7 +628,7 @@ void CSocketServerEx::OnCreate()
 	DecOneTimeKey = oneTimeKey | PRIVATE_KEY;
 
 	if ( config.encrypt == true)
-		NonEncSend("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, config.ProtocolVer, 
+		Send("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, config.ProtocolVer, 
 			expByteCount, expByteCount, expBuffer, modByteCount, modByteCount, modBuffer);
 	else{
 		NonEncSend("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, 0, 

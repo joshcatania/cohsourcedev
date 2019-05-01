@@ -202,7 +202,7 @@ bool DBEnv::LoadConnStrFromReg()
 		return false;
 	}
 
-	e = RegOpenKeyEx(HKEY_LOCAL_MACHINE, GLOBALAUTH_REG_ENTRY, 0, KEY_READ, &hKey);
+	e = RegOpenKeyEx(HKEY_CURRENT_USER, GLOBALAUTH_REG_ENTRY, 0, KEY_READ, &hKey);
 	if (e == ERROR_SUCCESS) {
 		dwSize = MAX_CONN_STR;
 		e = RegQueryValueEx(hKey, (LPTSTR)keyStr, NULL, &dwType, buffer, &dwSize);
@@ -240,7 +240,7 @@ void DBEnv::SaveConnStrToReg()
 
 	strcpy((char *)buffer, (const char *)m_connStr);
     DesWriteBlock(buffer, MAX_CONN_STR);
-	LONG e = RegCreateKeyEx(HKEY_LOCAL_MACHINE, GLOBALAUTH_REG_ENTRY, 0, "", 
+	LONG e = RegCreateKeyEx(HKEY_CURRENT_USER, GLOBALAUTH_REG_ENTRY, 0, "", 
       REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dwResult);
 	if (e == ERROR_SUCCESS) {
 		DWORD dwType = REG_BINARY;
