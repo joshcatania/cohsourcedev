@@ -1522,8 +1522,8 @@ int connectToDbserver(float timeout)
 		}
 	}
 
-	dbLog("MapServer:Connect", 0, "MapID: %d at IP: 0.0.0.0/0.0.0.0 Port: %d",
-		db_state.map_id, server_state.udp_port);
+	dbLog("MapServer:Connect", 0, "MapID: %d at IP: %s/%s Port: %d",
+		db_state.map_id, makeIpStr(ip_list[0]), makeIpStr(ip_list[1]), server_state.udp_port);
 
 	if (done_once) {
 		// Reconnect
