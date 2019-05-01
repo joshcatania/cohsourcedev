@@ -574,7 +574,7 @@ int netOpenSocketAsync(NetLink *link,const char *address,int port)
 	int		ret;
 
 	// This is total boilerplate
-	link->socket = socket(AF_INET,SOCK_STREAM,0);
+	link->socket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if (link->socket < 0)
 	{
 		return 0;
@@ -708,7 +708,7 @@ int netOpenSocket(NetLink *link,const char *address,int port,int tcp){
 static int netOpenSocketTcp(NetLink *link,const char *address,int port){
 	int		ret;
 
-	link->socket = socket(AF_INET,SOCK_STREAM,0);
+	link->socket = socket(AF_INET,SOCK_STREAM,IPPROTO_TCP);
 	if (link->socket < 0)
 	{
 		return 0;
@@ -735,7 +735,7 @@ static int netOpenSocketTcp(NetLink *link,const char *address,int port){
 static int netOpenSocketUdp(NetLink *link,const char *address,int port){
 	unsigned int ip;
 
-	link->socket = socket(AF_INET,SOCK_DGRAM,0);
+	link->socket = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 
 	// Was the socket created successfully?
 	if ((int)link->socket < 0)

@@ -698,7 +698,7 @@ void trickGoogleDesktopDll(int silent)
 
 	// Now, make winsock load (which brings googledesktop, and possibly other unsavory elements)
 	sockStart();
-	dummySock = socket(AF_INET,SOCK_DGRAM,0);
+	dummySock = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 
 
 	// since the address space above is mapped, the dlls must go elsewhere or perish, so we have effectively

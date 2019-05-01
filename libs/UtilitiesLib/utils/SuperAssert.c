@@ -1010,7 +1010,7 @@ DWORD WINAPI listenThreadMain(void *data) {
 	if (assertCallback && !(g_assertmode & ASSERTMODE_CALLBACK)) // If the mode includes CALLBACK this was executed in the main thread
 		assertCallback(assertbuf);
 
-	s = socket(AF_INET, SOCK_STREAM, 0);
+	s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	do {
 		sockSetAddr(&addr_in,htonl(INADDR_ANY),port);
 		if (sockBind(s,&addr_in))

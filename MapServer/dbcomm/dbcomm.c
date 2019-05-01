@@ -2089,7 +2089,7 @@ void dbDelinkMe(char *errorMsg)
 	map.process_id = _getpid();
 	map.cookie = db_state.cookie;
 
-	sock = socket(AF_INET, SOCK_STREAM, 0);
+	sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockSetAddr(&addr,ipFromString(db_state.server_name),DEFAULT_DBCRASHMAP_PORT);
 	connect(sock,(void *)&addr,sizeof(addr));
 	send(sock,(void*)&map,sizeof(map),0);

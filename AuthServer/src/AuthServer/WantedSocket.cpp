@@ -21,7 +21,7 @@ VOID CALLBACK WantedSocketTimerRoutine(PVOID lpParam, BYTE TimerOrWaitFired)
 	g_hWantedServerTimer = NULL;
 
 	if ( WantedServerReconnect == true ) {
-		SOCKET WantedSock = socket(AF_INET, SOCK_STREAM, 0);
+		SOCKET WantedSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 		sockaddr_in Destination;
 		Destination.sin_family = AF_INET;
 		Destination.sin_addr   = config.WantedIP;

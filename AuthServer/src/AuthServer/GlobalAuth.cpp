@@ -396,7 +396,7 @@ exception_init();
 		CreateIOThread( );
 		if ( config.UseLogD ) {
 
-			SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
+			SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.LogDIP;
@@ -415,7 +415,7 @@ exception_init();
 
 		if ( config.UseIPServer ) {
 
-			SOCKET IPSock = socket(AF_INET, SOCK_STREAM, 0);
+			SOCKET IPSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.IPServer;
@@ -432,7 +432,7 @@ exception_init();
 		}
 
 		if ( config.UseWantedSystem ) {
-			SOCKET WantedSocket = socket( AF_INET, SOCK_STREAM, 0 );
+			SOCKET WantedSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 			sockaddr_in WantedAddr;
 			WantedAddr.sin_family = AF_INET;
 			WantedAddr.sin_addr = config.WantedIP;

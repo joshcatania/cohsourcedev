@@ -15,7 +15,7 @@ SOCKET connectToTcp(U32 destip, int port) {
 	int result;
 	SOCKET s;
 
-	s = socket(AF_INET, SOCK_STREAM, 0);
+	s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (s==INVALID_SOCKET) {
 		printf("Couldn't create socket");
 		return INVALID_SOCKET;
@@ -64,7 +64,7 @@ void sendToUDP(U32 destip, int port, char *data, int len) {
 	int result;
 	SOCKET s;
 
-	s = socket(AF_INET, SOCK_DGRAM, 0);
+	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (s==INVALID_SOCKET) {
 		printf("Couldn't create socket");
 		return;
@@ -84,7 +84,7 @@ void sendToUDPStream(U32 destip, int port, char *data, int len, int loops) {
 	SOCKET s;
 	int i;
 
-	s = socket(AF_INET, SOCK_DGRAM, 0);
+	s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (s==INVALID_SOCKET) {
 		printf("Couldn't create socket");
 		return;

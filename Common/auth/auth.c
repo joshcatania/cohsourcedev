@@ -466,7 +466,7 @@ int authConnect(char *ip_name,int port)
 	if (!timer)
 		timer = timerAlloc();
 	authDisconnect();
-	auth_state.socket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	auth_state.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 	if (strcmp(ip_name,"127.0.0.1")==0)
 		sockSetAddr(&addr,inet_addr(ip_name),port);
