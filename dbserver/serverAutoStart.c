@@ -83,7 +83,7 @@ bool assembleAutoStartList(void)
 					printf(", ");
 				printf("%s", required_servers[j]);
 				badcount++;
-				ret = false;
+				//ret = false;
 			}
 		}
 		if (badcount)
