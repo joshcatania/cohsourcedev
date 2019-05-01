@@ -1253,7 +1253,7 @@ void dbInit(int start_static)
 		F32 minTimeToWait=15;
 		int minStaticMapLaunchers=1;
 		F32 minTimeToWaitPerLauncher=3;
-		bool adequateLaunchersConnected=false;
+		bool adequateLaunchersConnected=true;
 
 		if (start_static)
 		{
@@ -1302,7 +1302,7 @@ void dbInit(int start_static)
 			}
 
 			// Start LogServer, other servers
-			adequateLaunchersConnected = serverAutoStartInit();
+			// adequateLaunchersConnected = serverAutoStartInit();
 			if (!adequateLaunchersConnected) {
 				int response = MessageBox(compatibleGetConsoleWindow(), "Launchers specified in loadBalanceShardSpecific.cfg or servers.cfg are not connected (see console).\nThese MUST be connected for the server to operate properly, please fix this and click Retry.  (See DbServer console window for details.)", "DbServer Startup ERROR", MB_ABORTRETRYIGNORE|MB_SYSTEMMODAL);
 				if (response==IDABORT) {
