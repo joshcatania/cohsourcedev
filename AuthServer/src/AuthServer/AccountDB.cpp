@@ -786,8 +786,11 @@ _BEFORE
 			SendWantedServerLogout( lu.account, uid, lu.serverid );
 		if ( lu.serverid.IsValid() )
 		{
-			//AS_LOG_DEBUG( "quitgame, account:%s, ip:%d.%d.%d.%d, uid:%d", lu.account, lu.loginIp.S_un.S_un_b.s_b1,lu.loginIp.S_un.S_un_b.s_b2,lu.loginIp.S_un.S_un_b.s_b3,lu.loginIp.S_un.S_un_b.s_b4, uid );
+#if DISABLE_USERDATA_LOGGING
+			AS_LOG_DEBUG( "quitgame, account:%s, ip:%d.%d.%d.%d, uid:%d", lu.account, lu.loginIp.S_un.S_un_b.s_b1,lu.loginIp.S_un.S_un_b.s_b2,lu.loginIp.S_un.S_un_b.s_b3,lu.loginIp.S_un.S_un_b.s_b4, uid );
+#else
 			AS_LOG_DEBUG( "quitgame, account:%s, ip:0.0.0.0, uid:%d", lu.account, uid );
+#endif
 			RecordLogout( 'L', uid, lu.logintime, lu.queuetime, lu.serverid, lu.loginIp, config.gameId, lu.account, lu.stat, lu.ssn, lu.ssn2, lu.gender, lu.age, lu.cdkind );
 		}
 	}
