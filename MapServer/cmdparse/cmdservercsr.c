@@ -674,7 +674,12 @@ void csrWho(ClientLink *client,char *player_name)
 	if (e) {
 		ClientLink *client_target= clientFromEnt(e);
 		if (client_target) {
-			conPrintf(client, "%s 0.0.0.0\n", localizedPrintf(e,"IPAddress"));
+			U32 uIP = client->link->addr.sin_addr.S_un.S_addr;
+#if DISABLE_USERDATA_LOGGING
+			uIP = 0;
+#endif
+
+			conPrintf(client, "%s %s\n", localizedPrintf(e,"IPAddress"), makeIpStr(uIP));
 			conPrintf(client, "%1.2f %1.2f %1.2f\n", ENTPOSPARAMS(e));
 		}
 	}

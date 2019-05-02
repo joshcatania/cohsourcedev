@@ -341,7 +341,7 @@ _BEFORE
 	int len = AnsiToUnicode( account, 15, w_account, 15 );
 	w_account[14] = 0;
 
-	// remove ip from logd logs -diss
+#if DISABLE_USERDATA_LOGGING
 	ip.S_un.S_addr = 0;
 	ip.S_un.S_un_b.s_b1 = 0;
 	ip.S_un.S_un_b.s_b2 = 0;
@@ -349,6 +349,7 @@ _BEFORE
 	ip.S_un.S_un_b.s_b4 = 0;
 	ip.S_un.S_un_w.s_w1 = 0;
 	ip.S_un.S_un_w.s_w2 = 0;
+#endif
 
 	if ((config.UseLogD) && ( !LogDReconnect) && ( g_opFlag != 0)){
 		wchar_t msg_packet[1024];
@@ -356,17 +357,17 @@ _BEFORE
 
 		if ( LOG_ID == LOG_ACCOUNT_AUTHED )
 			swprintf( msg_packet, LOG_F_ACCOUNT_AUTHED,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_AUTHED,uid, 
-			 stat, age, gender, param1, zipcode,w_account );
+			 ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode,w_account );
 		else if ( LOG_ID == LOG_ACCOUNT_LOGIN )
-			swprintf( msg_packet, LOG_F_ACCOUNT_LOGIN,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGIN,uid, stat, age, gender, param1, zipcode , w_account);
+			swprintf( msg_packet, LOG_F_ACCOUNT_LOGIN,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGIN,uid, ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode , w_account);
 	//  quitgame
 		else if ( LOG_ID == LOG_ACCOUNT_LOGOUT ){
-			swprintf( msg_packet, LOG_F_ACCOUNT_LOGOUT, tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGOUT, uid, stat, age, gender, param1, zipcode , w_account);
+			swprintf( msg_packet, LOG_F_ACCOUNT_LOGOUT, tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGOUT, uid, ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode , w_account);
 		}
 	//  logout
 		else if ( LOG_ID == LOG_ACCOUNT_LOGOUT2 )
 		swprintf( msg_packet, LOG_F_ACCOUNT_LOGOUT2, tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGOUT2, uid, 
-				
+				ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4,
 				stat, age , gender, w_account);
 		gLogLock.ReadLock();
 		pLogSocket->Send("cddS", RQ_LOG_SEND_MSG, SERVER_TYPE, AUTH_LOG_TYPE, msg_packet);
@@ -380,19 +381,19 @@ _BEFORE
 
 		if ( LOG_ID == LOG_ACCOUNT_AUTHED )
 			sprintf( msgpacket, LOG_F_ACCOUNT_AUTHED_1,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_AUTHED,uid, 
-			stat, age, gender, param1, zipcode, account );
+			ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode, account );
 		else if ( LOG_ID == LOG_ACCOUNT_LOGIN )
-			sprintf( msgpacket, LOG_F_ACCOUNT_LOGIN_1,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGIN,uid, stat, age, gender, param1, zipcode, account );
+			sprintf( msgpacket, LOG_F_ACCOUNT_LOGIN_1,  tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGIN,uid, ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode, account );
 	//  quitgame
 		else if ( LOG_ID == LOG_ACCOUNT_LOGOUT )
-			sprintf( msgpacket, LOG_F_ACCOUNT_LOGOUT_1, tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGOUT, uid, stat, age, gender, param1, zipcode, account );
+			sprintf( msgpacket, LOG_F_ACCOUNT_LOGOUT_1, tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,LOG_ACCOUNT_LOGOUT, uid, ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4, stat, age, gender, param1, zipcode, account );
 	//  logout
 		else if ( LOG_ID == LOG_ACCOUNT_LOGOUT2 )
 			sprintf( msgpacket, LOG_F_ACCOUNT_LOGOUT2_1, 
 						tm.wMonth, tm.wDay, tm.wYear, tm.wHour, tm.wMinute, tm.wSecond, tm.wMilliseconds,
 						LOG_ACCOUNT_LOGOUT2, 
 						uid, 
-						
+						ip.S_un.S_un_b.s_b1,ip.S_un.S_un_b.s_b2,ip.S_un.S_un_b.s_b3,ip.S_un.S_un_b.s_b4,
 						stat, 
 						age, gender,
 						account );

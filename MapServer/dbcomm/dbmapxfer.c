@@ -520,6 +520,7 @@ void handleDbNewMap(Packet *pak)
 	int		link_id,map_id,ip_list[2],udp_port,tcp_port,login_cookie;
 	NetLink	*link;
 	Entity	*e;
+	U32 uIP;
 
 	link_id		= pktGetBitsPack(pak,1);
 	map_id		= pktGetBitsPack(pak,1);
@@ -530,13 +531,20 @@ void handleDbNewMap(Packet *pak)
 	login_cookie = pktGetBitsPack(pak,1);
 
 	link = findLinkById(link_id);
-	if (!link)
+	if (!link) {
 		return;
+	}
 
 	sendClientNewMap(link,map_id,ip_list[0],udp_port,tcp_port,login_cookie);
 
 	e = entFromDbIdEvenSleeping(link_id);
-	LOG_OLD( "Sending map %d, 0.0.0.0:%d, cookie: %x to client",map_id,udp_port, login_cookie);
+
+	uIP = link->addr.sin_addr.S_un.S_addr;
+#if DISABLE_USERDATA_LOGGING
+	uIP = 0;
+#endif
+
+	LOG_OLD( "Sending map %d, %s:%d, cookie: %x to client",map_id, makeIpStr(uIP), udp_port, login_cookie);
 	if (e->dbcomm_state.map_xfer_step == MAPXFER_WAIT_NEW_MAPSERVER_READY)
 		e->dbcomm_state.map_xfer_step = MAPXFER_DONE;
 }

@@ -620,8 +620,11 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	cip.S_un.S_addr = pAddress->sin_addr.S_un.S_addr;
 
 	if( !IPaccessLimit.SetAccessIP( cip )){
-		//logger.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
+#if DISABLE_USERDATA_LOGGING
+#else
+		logger.AddLog(LOG_WARN, "AccessLimit Expire,%d.%d.%d.%d", cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2,cip.S_un.S_un_b.s_b3,cip.S_un.S_un_b.s_b4 );
 		return NULL;
+#endif
 	}
 
 	CSocketServerEx* mysocket = (*allocator)(s);
@@ -632,11 +635,14 @@ CSocketServerEx *CIOServerEx::CreateSocket(SOCKET s, LPSOCKADDR_IN pAddress)
 	LeaveCriticalSection(&sockSect);
 
 #ifdef _DEBUG
-	/*logger.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
+#if DISABLE_USERDATA_LOGGING
+#else
+	logger.AddLog(LOG_NORMAL, "*new connection from %d.%d.%d.%d,0x%x", 			
 			pAddress->sin_addr.S_un.S_un_b.s_b1,
 			pAddress->sin_addr.S_un.S_un_b.s_b2,
 			pAddress->sin_addr.S_un.S_un_b.s_b3,
-			pAddress->sin_addr.S_un.S_un_b.s_b4, mysocket->GetSocket());*/
+			pAddress->sin_addr.S_un.S_un_b.s_b4, mysocket->GetSocket());
+#endif
 #endif 
 	return mysocket;
 }

@@ -112,4 +112,6 @@ int rdrToggleFeatures(int gfx_features_enable, int gfx_features_disable, bool on
 void rdrSetNumberOfTexUnits( int num_units );		// use this to tell the engine how many texture units are available
 void rdrClearOldDriverCheck(void);
 
+#define ENABLE_RENDER_TELEMETRY 0
+
 #endif

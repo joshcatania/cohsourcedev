@@ -709,7 +709,11 @@ int resumeCharacter(ClientLink* client, int ent_idx_cookie)
 	//printf("Made it to resume Character, cookie is %d, ent idx is %d.\n", ent_idx_cookie, i );
 	if( i == -1 )
 	{
-		LOG_OLD_ERR("Can't find match for login cookie in resumeCharacter! cookie: %x from 0.0.0.0:%d", ent_idx_cookie, client->link->addr.sin_port);
+		U32 uIP = client->link->addr.sin_addr.S_un.S_addr;
+#if DISABLE_USERDATA_LOGGING
+		uIP = 0;
+#endif
+		LOG_OLD_ERR("Can't find match for login cookie in resumeCharacter! cookie: %x from %s:%d", ent_idx_cookie, makeIpStr(uIP), client->link->addr.sin_port);
 		return FALSE;
 	}
 
@@ -3700,7 +3704,12 @@ int parseClientInput( Packet *pak, ClientLink *client )
 	if ((pak->id == 37) == (!got_notahacker))
 	{
 		// This command should show up if and only if it's the 37th packet
-		LOG( LOG_CHEATING, LOG_LEVEL_VERBOSE, 0, "%s NOTAHACKER packet (id: %d; client: %d), AuthName %s, IP 0.0.0.0", got_notahacker?"Extra":"MISSING", pak->id, got_notahacker, e->auth_name);
+
+		U32 uIP = client->link->addr.sin_addr.S_un.S_addr;
+#if DISABLE_USERDATA_LOGGING
+		uIP = 0;
+#endif
+		LOG( LOG_CHEATING, LOG_LEVEL_VERBOSE, 0, "%s NOTAHACKER packet (id: %d; client: %d), AuthName %s, IP %s", got_notahacker?"Extra":"MISSING", pak->id, got_notahacker, e->auth_name, makeIpStr(uIP));
 	}
 	return 1;
 

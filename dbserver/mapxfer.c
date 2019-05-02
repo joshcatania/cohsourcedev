@@ -56,6 +56,10 @@ U32 getMatchingIpType(U32 ip_list[2],U32 client_ip)
 
 static char *linkIpStr(NetLink *link)
 {
+#if DISABLE_USERDATA_LOGGING
+	return makeIpStr(0);
+#endif
+
 	return makeIpStr(link->addr.sin_addr.S_un.S_addr);
 }
 

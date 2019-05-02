@@ -843,13 +843,15 @@ bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t
 	struct tm queueloginTM;
 	char szIP[16];
 	unsigned long lastWorld = lastWorldId.GetValueChar();
-/*
+
+#if DISABLE_USERDATA_LOGGING
+	sprintf( szIP, "0.0.0.0");
+#else
 	sprintf( szIP, "%d.%d.%d.%d", LastIP.S_un.S_un_b.s_b1,
 								  LastIP.S_un.S_un_b.s_b2,
 								  LastIP.S_un.S_un_b.s_b3,
 								  LastIP.S_un.S_un_b.s_b4);
-*/	
-	sprintf( szIP, "0.0.0.0");
+#endif
 
 	TIMESTAMP_STRUCT dblogout, 
 					 dblogin,
@@ -1082,12 +1084,17 @@ char AccountDB::CheckPersonalPayStat(CSocketServerEx *pSocket, LoginUser *lu, in
 	    logger.AddLog( LOG_VERBOSE, "SND: AC_LOGIN_OK,uid:%d,account:%s", Uid, lu->account);
 
 		pSocket->m_lastIO = GetTickCount();
-//		WriteAction( "login", lu->account, lu->loginIp, lu->ssn, lu->gender, 0, lu->stat );
+#if DISABLE_USERDATA_LOGGING
+#else
+		WriteAction( "login", lu->account, lu->loginIp, lu->ssn, lu->gender, 0, lu->stat );
+#endif
 		WriteLogD( LOG_ACCOUNT_AUTHED, lu->account, lu->loginIp, lu->stat, lu->age, lu->gender, 0, reporter.m_UserCount, Uid );
 	} else{
-		
-        //logger.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
+#if DISABLE_USERDATA_LOGGING
+        logger.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:%d.%d.%d.%d,%x", Uid, lu->account, lu->loginIp.S_un.S_un_b.s_b1, lu->loginIp.S_un.S_un_b.s_b2, lu->loginIp.S_un.S_un_b.s_b3, lu->loginIp.S_un.S_un_b.s_b4, pSocket->GetSocket() );
+#else
         logger.AddLog( LOG_WARN, "SND: AC_LOGIN_FAIL,uid:%d,account:%s,ip:0.0.0.0,%x", Uid, lu->account, pSocket->GetSocket() );
+#endif
 	}
 
 	return result;

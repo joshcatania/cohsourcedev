@@ -17,5 +17,7 @@ void logDisconnect(ClientLink *client, const char * reason);
 U32		svrGetSecondsIdle(void);
 void	svrResetSecondsIdle(void);
 
+#define DISABLE_USERDATA_LOGGING 1
+
 // End mkproto
 #endif

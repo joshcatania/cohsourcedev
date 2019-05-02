@@ -1,6 +1,8 @@
 #ifndef LOG_H
 #define LOG_H
 
+#define ENABLE_CHAT_LOGS 0
+
 C_DECLARATIONS_BEGIN
 
 typedef enum LogType

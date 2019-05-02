@@ -66,4 +66,6 @@ inline void GetStrFromPacket(const unsigned char *&packet, int dstLen, char *dst
     packet += LNStrNCpy(dst, (char *)packet, dstLen);
 }
 
+#define DISABLE_USERDATA_LOGGING 1
+
 #endif
