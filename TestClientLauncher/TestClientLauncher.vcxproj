@@ -82,7 +82,7 @@
       <AdditionalIncludeDirectories>include/;C:\Program Files\Microsoft Visual Studio .NET\Vc7\atlmfc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
@@ -102,7 +102,7 @@
       <AdditionalIncludeDirectories>include/;C:\Program Files\Microsoft Visual Studio .NET\Vc7\atlmfc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -122,7 +122,7 @@
       <AdditionalIncludeDirectories>include/;C:\Program Files\Microsoft Visual Studio .NET\Vc7\atlmfc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>
@@ -142,7 +142,7 @@
       <AdditionalIncludeDirectories>include/;C:\Program Files\Microsoft Visual Studio .NET\Vc7\atlmfc\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;winmm.lib;oldnames.lib;ws2_32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>

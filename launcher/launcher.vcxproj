@@ -111,7 +111,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib;</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -121,7 +121,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -131,7 +131,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib;</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -141,7 +141,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\x64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -151,7 +151,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\;..\3rdparty\bin\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -161,7 +161,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\p4api\bin\$(Platform)\;..\3rdparty\bin\x64\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>psapi.lib;kernel32.lib;user32.lib;uuid.lib;shell32.lib;advapi32.lib;gdi32.lib;cryptlib.lib;zlibstat.lib</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>

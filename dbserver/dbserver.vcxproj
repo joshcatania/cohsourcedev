@@ -120,7 +120,7 @@
     </PostBuildEvent>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <PerUserRedirection>true</PerUserRedirection>
     </Link>
@@ -133,7 +133,7 @@
     <Link>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -156,7 +156,7 @@
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -171,7 +171,7 @@
     </PostBuildEvent>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -188,7 +188,7 @@
     </PostBuildEvent>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
@@ -205,7 +205,7 @@
     </PostBuildEvent>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
-      <AdditionalDependencies>kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;rpcrt4.lib;libzmq.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(Platform)\Release\;%(AdditionalLibraryDirectories);</AdditionalLibraryDirectories>
     </Link>
     <ClCompile>
