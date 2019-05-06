@@ -2,6 +2,8 @@
 // NOTE - the textparser can NOT be used from a second thread.
 // Please let Mark know if this needs to be changed
 
+// DO NOT USE UNLESS YOU KNOW WHAT YOU ARE DOING... SPOILERS: YOU PROBABLY DON'T...     #define DUMP_ALL_BINS_TO_TEXT_HACKY_HACK
+
 #include "superassert.h"
 #include "memorypool.h"
 #include "textparser.h"
@@ -48,6 +50,10 @@
 #include "Estring.h"
 #include "rand.h"
 #include "endian.h"
+
+#if defined(DUMP_ALL_BINS_TO_TEXT_HACKY_HACK)
+	#include <ShlObj.h>
+#endif // DUMP_ALL_BINS_TO_TEXT_HACKY_HACK
 
 #undef ParserAllocStruct
 
@@ -2431,6 +2437,24 @@ bool ParserLoadFiles(const char* dir, const char* filemask, const char* persistf
 				if (ParserReadBinaryFile(binfile, persistfilepath, pti, structptr, NULL, globaldefines)) {
 					recursive_call = false;
 					PERFINFO_AUTO_STOP();
+
+#if defined(DUMP_ALL_BINS_TO_TEXT_HACKY_HACK)
+					{
+						static int no = 1000;
+						char dumpfile[MAX_PATH] = {0};
+						char dumpfilepath[MAX_PATH] = {0};
+						char* p;
+						int res;
+						sprintf(dumpfile, "C:/coh/dump/%s%s_%d", (flags & PARSER_SERVERONLY) ? "server/" : "", persistfile, no++);
+						for (p = dumpfile; p = strchr(p, '\\'); ++p) *p = '/';
+						strcpy(dumpfilepath, dumpfile);
+						p = strrchr(dumpfilepath, '/');
+						*p = 0;
+						res = SHCreateDirectoryEx(NULL, dumpfilepath, NULL);
+						ParserWriteTextFile(dumpfile, pti, structptr, 0, 0);
+					}
+#endif // DUMP_ALL_BINS_TO_TEXT_HACKY_HACK
+
 					return 1;
 				} else verbose_printf("ParserLoadFiles: error loading %s, loading text files instead\n", persistfile);
 			}
@@ -2671,6 +2695,24 @@ bool ParserLoadFilesShared(const char* sharedMemoryName, const char* dir, const 
 
 	PERFINFO_AUTO_STOP();
 	PERFINFO_AUTO_STOP();
+
+#if defined(DUMP_ALL_BINS_TO_TEXT_HACKY_HACK)
+	if (ret)
+	{
+		static int no = 2000;
+		char dumpfile[MAX_PATH] = {0};
+		char dumpfilepath[MAX_PATH] = {0};
+		char* p;
+		int res;
+		sprintf(dumpfile, "C:/coh/dump/%s%s_%d", (flags & PARSER_SERVERONLY) ? "server/" : "", persistfile, no++);
+		for (p = dumpfile; p = strchr(p, '\\'); ++p) *p = '/';
+		strcpy(dumpfilepath, dumpfile);
+		p = strrchr(dumpfilepath, '/');
+		*p = 0;
+		res = SHCreateDirectoryEx(NULL, dumpfilepath, NULL);
+		ParserWriteTextFile(dumpfile, pti, structptr, 0, 0);
+	}
+#endif // DUMP_ALL_BINS_TO_TEXT_HACKY_HACK
 
 	return ret;
 }
