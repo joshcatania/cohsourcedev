@@ -1468,6 +1468,8 @@ int contactsWindow()
 	static PlayerType currentlyDisplayedPlayerType = kPlayerType_Count;
 	int contactCount = eaSize(&contacts);
 	Entity *e = playerPtr();
+	static const char* BROKER = "Broker";
+	static const char* TIPS = "Tips";
 
 	static ScrollBar sb = { WDW_CONTACT, 0 };
 
@@ -1497,30 +1499,30 @@ int contactsWindow()
 		uiTabControlRemoveAll(contactCategories);
 		uiTabControlAdd(contactCategories, "ActiveString", "Active");
 		uiTabControlAdd(contactCategories, "InactiveString", "Inactive");
-		uiTabControlAdd(contactCategories, "DetectiveString", "Broker");
+		uiTabControlAdd(contactCategories, "DetectiveString", (uiTabData) BROKER);
 	}
 
 	if (e->pchar->playerTypeByLocation != currentlyDisplayedPlayerType)
 	{
 		if (e->pchar->playerTypeByLocation == kPlayerType_Hero)
 		{
-			uiTabControlRename(contactCategories, "DetectiveString", "Broker");
+			uiTabControlRename(contactCategories, "DetectiveString", (uiTabData) BROKER);
 		}
 		else
 		{
-			uiTabControlRename(contactCategories, "BrokerString", "Broker");
+			uiTabControlRename(contactCategories, "BrokerString", (uiTabData) BROKER);
 		}
 		currentlyDisplayedPlayerType = e->pchar->playerTypeByLocation;
 	}
 
 	if (!isTipsTabDisplayed && e->pchar->iLevel >= 19 && !ENT_IS_IN_PRAETORIA(e))
 	{
-		uiTabControlAdd(contactCategories, "TipsString", "Tips");
+		uiTabControlAdd(contactCategories, "TipsString", (uiTabData) TIPS);
 		isTipsTabDisplayed = true;
 	}
 	else if (isTipsTabDisplayed && (e->pchar->iLevel < 19 || ENT_IS_IN_PRAETORIA(e)))
 	{
-		uiTabControlRemove(contactCategories, "Tips");
+		uiTabControlRemove(contactCategories, (uiTabData) TIPS);
 		isTipsTabDisplayed = false;
 	}
 
