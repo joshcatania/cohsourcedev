@@ -119,7 +119,7 @@ static void playerUnload(int player_id)
 		}
 		containerRemoveMember(leagues, league_id, player_id, 0, CONTAINERADDREM_FLAG_UPDATESQL | CONTAINERADDREM_FLAG_NOTIFYSERVERS);
 	}
-	
+
 	if (!waitingEntitiesRemove(container)) {
 		// Do this only if the container wasn't already freed in a failure callback
 		//  perhaps this should just not free in the callbacks?
@@ -302,7 +302,7 @@ AnyContainer* handleContainerUpdate(int list_id,int id,int notdiff,char* str)
 	// mission map hack 2/3
 	if (container && list_id == CONTAINER_TEAMUPS && ((GroupCon *)container)->map_id != teamup_map_id)
 		teamCheckLeftMission(teamup_map_id, id, "handleContainerUpdate");
-	
+
 	return container;
 }
 
@@ -390,24 +390,24 @@ char *putCharacterVerifyUniqueName(char *str)
 	char namebuf[100];
 	char authIdBuffer[20];
 	int baddata = 0;
-	int renamed = 0;	
+	int renamed = 0;
 	U32 authId = 0;
 
-	if (findFieldText(str, "Name", namebuf)) 
+	if (findFieldText(str, "Name", namebuf))
 	{
 		if (findFieldText(str, "AuthId", authIdBuffer))
 		{
 			authId = atoi(authIdBuffer);
 		}
 
-		while (!playerNameValid(namebuf, NULL, authId)) 
+		while (!playerNameValid(namebuf, NULL, authId))
 		{
 			strcpy(namebuf, unescapeString(namebuf));
 			incrementName(namebuf, 20); //MAX_PLAYER_NAME_LEN
 			strcpy(namebuf, escapeString(namebuf));
 			renamed = 1;
 		}
-		if (renamed) 
+		if (renamed)
 		{
 			char diff[128];
 			sprintf(diff, "Name \"%s\"\n", namebuf);
@@ -417,7 +417,7 @@ char *putCharacterVerifyUniqueName(char *str)
 			tpltUpdateData(&buf,&buflen,diff,dbListPtr(CONTAINER_ENTS)->tplt);//,1);
 			str = buf;
 		}
-	} 
+	}
 	else
 	{
 		baddata = 1;
@@ -588,7 +588,7 @@ void handleContainerSet(Packet *pak,NetLink *link)
         {
 			dbquery_insert_player = 1;
         }
-        
+
 		{
 			static	LineList	line_list;
 			ContainerTemplate	*tplt = dbListPtr(list_id)->tplt;
@@ -948,7 +948,7 @@ void handleContainerReflect(Packet* pak, NetLink* link)
 		{
 			ent_con = containerPtr(ent_list, reflect_in[i]->target_cid);
 			if (ent_con && ent_con->lock_id)
-			{ 
+			{
 				PUSH_REFLECTION(0, ent_con->lock_id);
 			}
 		}
@@ -1225,7 +1225,7 @@ void handleMapXferTest(Packet *pak_in,NetLink *link)
 {
 	int		list_id,map_id,container_id,count;
 	Packet	*pak;
-	MapCon	*map_con;
+	MapCon	*map_con = NULL;
 	EntCon	*ent_con;
 
 	list_id			= pktGetBitsPack(pak_in,1);
@@ -1299,7 +1299,7 @@ void handleAddDelGroupMembers(Packet *pak, NetLink *link)
 	autolock = pktGetBool(pak);
 
 	list = dbListPtr(list_id);
-	// Special handling of supergroups.  In order to allow CS to join SG's that are not loaded (i.e. no members currently online), we 
+	// Special handling of supergroups.  In order to allow CS to join SG's that are not loaded (i.e. no members currently online), we
 	// containerLoad() supergroups rather than the usual containerPtr () call
 	group = list_id == CONTAINER_SUPERGROUPS ? containerLoad(list, id) : containerPtr(list, id);
 
@@ -1403,14 +1403,14 @@ void handlePlayerDisconnect(Packet *pak,DBClientLink *client)
  		addSingleAutoPass(ent_con->account);
  	}
 
-	if (ent_con->callback_link && ent_con->is_gameclient) 
+	if (ent_con->callback_link && ent_con->is_gameclient)
 	{
 		// This character is currently in the queue trying to log in, this case happens if a relay/lock and load command was
 		//  executed on him while he was waiting for his map to start up
 		LOG_DEBUG( "handlePlayerDisconnect %d: just UNLOCKING (request: %d)",plr_id,dbLockIdFromLink(client->link));
 		containerUnlock(ent_con, dbLockIdFromLink(client->link));
-	} 
-	else 
+	}
+	else
 	{
 		LOG_DEBUG( "handlePlayerDisconnect %d: unloading (request: %d)",plr_id,dbLockIdFromLink(client->link));
 		sendPlayerLogout(plr_id, 4, (logout==0) || (logout_login==2));
@@ -1441,7 +1441,7 @@ void handleReqEntNames(Packet *pak_in,NetLink *link)
 
 		name = pnameFindById( id_list[i] );
 		entInfo = entCatalogGet( id_list[i], false );
-		
+
 		pktSendBitsPack(pak,1,id_list[i]);
 		pktSendString(pak,name ? name : "empty");
 		pktSendBitsPack(pak,3,SAFE_MEMBER(entInfo,gender));
@@ -1836,7 +1836,7 @@ void handleReqAllOnline(Packet *pak_in, NetLink *link)
 		}
 		pktSendBitsPack(cached_pak,20,0);
 
-		cached_zipped_stream = zipData(cached_pak->stream.data, cached_pak->stream.size, &zipsize); 
+		cached_zipped_stream = zipData(cached_pak->stream.data, cached_pak->stream.size, &zipsize);
 
 	}
 
@@ -1888,7 +1888,7 @@ void handleReqSomeOnlineEnts(Packet *pak, NetLink *link)
 
 	pktSendBitsPack( pakRes, 1, userdata );
 	pktSendBitsAuto( pakRes, count );
-	for( i = 0; i < count; ++i ) 
+	for( i = 0; i < count; ++i )
 	{
 		int idEnt = pktGetBitsAuto(pak);
 		EntCon *e = (EntCon*)containerPtr(ent_list, idEnt);
@@ -2400,10 +2400,10 @@ void handleBaseDestroy(Packet *pak, NetLink *link)
 	container_id = sqlGetSingleValue(cmd, cmd_len, NULL, SQLCONN_FOREGROUND);
 
 	container = containerPtr(dbListPtr(CONTAINER_BASE), container_id);
-		
+
 	if (!container)
 		container = containerLoad(dbListPtr(CONTAINER_BASE), container_id);
-		
+
 	if (container)
 		containerDelete(container);
 
@@ -2453,12 +2453,12 @@ void handleSendStatserverCmd(Packet *pak, NetLink *link)
 		if(strStartsWith(cmd, "statserver_levelingpact"))
 		{
 			//channel, message, params
-			sprintf( response, "cmdrelay_dbid %d\n" 
+			sprintf( response, "cmdrelay_dbid %d\n"
 				"svr_sgstat_localized_message %d \"%s\" \"%s\"", idEntSrc, INFO_USER_ERROR, "LevelingPactStatDown", " ");
 		}
 		else
 		{
-			sprintf( response, "server_sgstat_cmd %d\n" 
+			sprintf( response, "server_sgstat_cmd %d\n"
 				"svr_sgstat_conprintf_response %d \"statserver not connected\"", idEntSrc, idEntSrc);
 		}
 		sendToEnt(link->userData, idEntSrc, false, response);
@@ -2536,11 +2536,11 @@ void handleRestoreDeletedChar(Packet *pak, NetLink *link)
 	int seqNbr = -1;
 	pktGetBitsArray(pak,(sizeof(requestor)*8),&requestor);
 	auth_id = pktGetBitsPack(pak,1);
-	strcpy_s( authName, ARRAY_SIZE(authName), pktGetString(pak) ); 
+	strcpy_s( authName, ARRAY_SIZE(authName), pktGetString(pak) );
 	strcpy_s( charName, ARRAY_SIZE(charName), pktGetString(pak) );
 	seqNbr = pktGetBitsPack(pak,1);
-	strcpy_s( deletionDate, ARRAY_SIZE(deletionDate), pktGetString(pak) ); 
-	
+	strcpy_s( deletionDate, ARRAY_SIZE(deletionDate), pktGetString(pak) );
+
 	rslt = offlinePlayerRestoreDeleted(auth_id,authName,charName,seqNbr,deletionDate);
 
 	// Send reply packet
@@ -2550,13 +2550,13 @@ void handleRestoreDeletedChar(Packet *pak, NetLink *link)
 		Packet	*pak_out = pktCreateEx(link,DBSERVER_OFFLINE_RESTORE_RSLT);
 		switch ( rslt )
 		{
-			case kOfflineRestore_SUCCESS :				
+			case kOfflineRestore_SUCCESS :
 					szRsltStrFmt = "Deleted character %s restored."; break;
-			case kOfflineRestore_PLAYER_NOT_FOUND :		
+			case kOfflineRestore_PLAYER_NOT_FOUND :
 					szRsltStrFmt = "%s not found! Restore failed."; break;
-			case kOfflineRestore_DATA_FILE_UNKNOWN :	
+			case kOfflineRestore_DATA_FILE_UNKNOWN :
 					szRsltStrFmt = "Unknown data file for %s. Restore failed."; break;
-			case kOfflineRestore_NO_MATCHING_DATA :		
+			case kOfflineRestore_NO_MATCHING_DATA :
 					szRsltStrFmt = "No matching data for %s. Restore failed."; break;
 			default:
 					szRsltStrFmt = "UNKNOWN ERROR restoring %s."; break;
@@ -2584,7 +2584,7 @@ void handleListDeletedChars(Packet *pak, NetLink *link)
 	auth_id		= (int)pktGetBitsPack(pak,1);
 	strncpy_s( auth_name, ARRAY_SIZE(auth_name), pktGetString(pak), _TRUNCATE );
 	strncpy_s( deletionDate, ARRAY_SIZE(deletionDate), pktGetString(pak), _TRUNCATE );
-	
+
 	p = deletedPlayers = _alloca(MAX_DELETED_CHAR_BATCH * sizeof(deletedPlayers[0]));
 	memset(deletedPlayers,0,MAX_DELETED_CHAR_BATCH * sizeof(deletedPlayers[0]));
 	offlinePlayerListDeleted(auth_id,auth_name,deletionDate,deletedPlayers,MAX_DELETED_CHAR_BATCH,&numDeleted,&auth_id);
@@ -2627,9 +2627,9 @@ void handleReqSgChannelInvite(Packet *pak,NetLink *link)
 		Packet	*pak_out = pktCreateEx(link,DBSERVER_SG_CHANNEL_INVITE);
 
 		sprintf(restrict,"Where SuperGroupsId = %d and ContainerId != %d",sg_id,db_id);
-		
+
 		// if rank is 0, then actual value in DB is "NULL", which doesn't work well with '>='
-		if(min_rank > 0)	
+		if(min_rank > 0)
 			strcatf(restrict, " and Rank >= %d", min_rank);
 
 		pktSendBitsPack(pak_out,1,auth_id);
@@ -2754,7 +2754,7 @@ void sendLogLevels(NetLink * link, int cmd)
 }
 
 void testAllLogging()
-{ 
+{
 	Packet *pak_out=0;
 	NetLink * link;
 
@@ -2798,7 +2798,7 @@ void testAllLogging()
 		pak_out = pktCreateEx(link, QUEUESERVER_SVR_TEST_LOG_LEVELS );
 		pktSend(&pak_out, link);
 	}
-	 
+
 	link = statLink();
 	if( link )
 	{
@@ -2830,7 +2830,7 @@ void updateAllServerLoggingInformation()
 		link = accountLink();
 		if( link )
 			sendLogLevels( link, ACCOUNT_CLIENT_UPDATE_LOG_LEVELS );
-		
+
 		// auctionserver
 		link = auctionLink(0);
 		if( link )
@@ -2858,7 +2858,7 @@ void updateAllServerLoggingInformation()
 	}
 }
 
-int handleInitialConnect( Packet * pak, NetLink * link ) 
+int handleInitialConnect( Packet * pak, NetLink * link )
 {
 	Packet *pak_out;
 	int i;
@@ -2873,7 +2873,7 @@ int handleInitialConnect( Packet * pak, NetLink * link )
 		sprintf(buf,"protocol version mismatch:\n dbserver: %d\n mapserver %d\n",DBSERVER_PROTOCOL_VERSION,map_protocol);
 		sendFail(link,1,0,buf);
 		lnkBatchSend(link);
-		netRemoveLink(link); 
+		netRemoveLink(link);
 		return 0;
 	}
 
@@ -2897,7 +2897,7 @@ int handleInitialConnect( Packet * pak, NetLink * link )
 		pktSend(&pak_out,link);
 	}
 
-	if (authUserIsReactivationActive()) 
+	if (authUserIsReactivationActive())
 	{
 		pak_out = pktCreateEx(link, DBSERVER_NOTIFY_REACTIVATION);
 		pktSend(&pak_out, link);
@@ -2930,7 +2930,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 				// It was a control command
 				client->last_command = 1;
 			}
-			else 
+			else
 			{
 				char *logfile=NULL;
 				if (pak->id <= client->last_processed_packet_id)
@@ -3070,7 +3070,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			handleRequestSGEldestOn(pak,link);
 		xcase DBCLIENT_REQ_SG_CHANNEL_INVITE:
 			handleReqSgChannelInvite(pak,link);
-		xcase DBCLIENT_SGRP_STATSADJ: 
+		xcase DBCLIENT_SGRP_STATSADJ:
 			handleSgrpStatAdj(pak,link);
 		xcase DBCLIENT_DESTROY_BASE:
 			handleBaseDestroy(pak,link);
@@ -3096,7 +3096,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			handleBackupApply(pak, link);
 		xcase DBCLIENT_BACKUP_VIEW:
 			handleBackupView(pak, link);
-		xcase DBCLIENT_REQ_SOME_ONLINE_ENTS: 
+		xcase DBCLIENT_REQ_SOME_ONLINE_ENTS:
 			handleReqSomeOnlineEnts(pak, link);
 		xcase DBCLIENT_OVERRIDE_START_ZONE:
 			handleOverrrideStartZone(pak);
@@ -3106,7 +3106,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			handleAuctionClientReqHistInfo(pak, link);
 		xcase DBCLIENT_AUCTION_XACT_REQ:
 			handleAuctionXactReq(pak,link);
-		xcase DBCLIENT_AUCTION_XACT_UPDATE: 
+		xcase DBCLIENT_AUCTION_XACT_UPDATE:
 			handleAuctionXactUpdate(pak,link);
 		xcase DBCLIENT_AUCTION_PURGE_FAKE:
 			handleAuctionPurgeFake(pak,link);
@@ -3114,9 +3114,9 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			handleAuctionXactMultiReq(pak,link);
 		xcase DBCLIENT_MININGDATA_RELAY:
 			handleMiningDataRelay(pak);
-		xcase DBCLIENT_SEND_AUCTIONSERVER_CMD: 
+		xcase DBCLIENT_SEND_AUCTIONSERVER_CMD:
 			handleSendAuctionCmd(pak,link);
-		xcase DBCLIENT_ACCOUNTSERVER_CMD: 
+		xcase DBCLIENT_ACCOUNTSERVER_CMD:
 			handleSendAccountCmd(pak,link);
 		xcase DBCLIENT_ACCOUNTSERVER_SHARDXFER:
 			handleAccountShardXfer(pak);
@@ -3202,7 +3202,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			turnstileDBserver_handleGroupUpdate(pak);
 		xcase DBCLIENT_EVENTHISTORY_FIND:
 			handleEventHistoryFind(pak, link);
-		xcase DBCLIENT_CLOSE_INSTANCE: 
+		xcase DBCLIENT_CLOSE_INSTANCE:
 			turnstileDBserver_handleCloseInstance(pak);
 		xcase DBCLIENT_REJOIN_INSTANCE:
 			turnstileDBserver_handleRejoinRequest(pak, link);
@@ -3212,7 +3212,7 @@ int dbHandleClientMsg(Packet *pak,int cmd, NetLink *link)
 			{
 				//	add to list
 				WeeklyTF_AddTFToken(WeeklyTFCfg_getCurrentWeek(0), pktGetString(pak));
-			}		
+			}
 		xcase DBCLIENT_MAP_WEEKLY_TF_REMOVE_TOKEN:
 			{
 				//	remove from list

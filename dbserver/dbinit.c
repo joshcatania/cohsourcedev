@@ -110,11 +110,11 @@ static void unloadStrandedEnts(int map_id, NetLink *link)
 	int		lock_id = dbLockIdFromLink(link);
 
 	if (lock_id == 0) {
-		if (!link) 
+		if (!link)
 		{
 			LOG_OLD_ERR( "unloadStrandedEnts called with lock_id of 0! map_id %d, (NULL link)", map_id);
-		} 
-		else 
+		}
+		else
 		{
 			LOG_OLD_ERR( "unloadStrandedEnts called with lock_id of 0! map_id %d, (%s)", map_id, makeIpStr(link->addr.sin_addr.S_un.S_addr));
 		}
@@ -316,7 +316,7 @@ void updateDbServerTitle()
 	if(beaconClientCount()){
 		strcatf(beaconServerString, "Bc%d ", beaconClientCount());
 	}
-	
+
 	sprintf(buf,
 		"DbServer Launchrs %d  Maps %d  Svrs:%s%s%s%s%s LoggingIn %d  Playing %d  Packets %Id  Latency %d(%d)  SQL(Q:%d R:%d A:%d W:%d) Tick %1.2fs %s",
 			launcherCount(),
@@ -380,7 +380,7 @@ void msgScan()
 	checkServerAutoStart();
 	if(authDisconnected())
 		reconnectToAuth();
-	
+
 	// @todo -AB: work this out :07/12/07
 	waitingEntitiesCheck();
 	dbRelayQueueCheck();
@@ -587,7 +587,7 @@ static void detachContainerServer(DBClientLink* client, DbList* dblist)
 	printf_stderr("Detaching server for %s\n", dblist->name);
 
 	// look for another container server waiting for this list
-	for (i=0; i<net_links.links->size; i++) 
+	for (i=0; i<net_links.links->size; i++)
 	{
 		NetLink			*link;
 		DBClientLink	*waitclient;
@@ -633,7 +633,7 @@ void registerContainerServer(Packet *pak,NetLink *link)
 	attachContainerServer(client, dblist);
 }
 
-// container server is registering groups that it wants notification of 
+// container server is registering groups that it wants notification of
 void registerContainerServerNotify(Packet* pak, NetLink* link)
 {
 	U32			lock_id = dbLockIdFromLink(link);
@@ -756,15 +756,15 @@ void dbDelink()
 
 static HWND hwnd;
 static bool requestClose=false;
-static BOOL CtrlHandler(DWORD fdwCtrlType) 
-{ 
-	switch (fdwCtrlType) 
-	{ 
-	case CTRL_CLOSE_EVENT: 
-	case CTRL_LOGOFF_EVENT: 
-	case CTRL_SHUTDOWN_EVENT: 
-	case CTRL_BREAK_EVENT: 
-	case CTRL_C_EVENT: 
+static BOOL CtrlHandler(DWORD fdwCtrlType)
+{
+	switch (fdwCtrlType)
+	{
+	case CTRL_CLOSE_EVENT:
+	case CTRL_LOGOFF_EVENT:
+	case CTRL_SHUTDOWN_EVENT:
+	case CTRL_BREAK_EVENT:
+	case CTRL_C_EVENT:
 		{
 			int num_playing = ent_list?ent_list->num_alloced:0;
 			if (num_playing > 1) {
@@ -779,17 +779,17 @@ static BOOL CtrlHandler(DWORD fdwCtrlType)
 			//is closed with control event.  If dbserver (not run as logserver) is closed
 			//with control event, this function call safely does nothing
 			logServerShutdown();
-			
+
 			dbPrepShutdown(NULL, 0);
 			// Allow exit
 			return FALSE;
 		}
-		// Pass other signals to the next handler. 
+		// Pass other signals to the next handler.
 	default:
 		printf_stderr("return false\n");
-		return FALSE; 
-	} 
-} 
+		return FALSE;
+	}
+}
 
 void checkExitRequest(void) {
 	if (requestClose) {
@@ -806,12 +806,12 @@ void checkExitRequest(void) {
 static void initCtrlHandler(void) {
 	static int inited=false;
 	if (!inited) {
-		BOOL fSuccess;		
+		BOOL fSuccess;
 		hwnd = GetConsoleWindow();
 
-		fSuccess = SetConsoleCtrlHandler( 
-			(PHANDLER_ROUTINE) CtrlHandler,  // handler function 
-			TRUE);  	// add to list 
+		fSuccess = SetConsoleCtrlHandler(
+			(PHANDLER_ROUTINE) CtrlHandler,  // handler function
+			TRUE);  	// add to list
 		inited=true;
 	}
 }
@@ -880,7 +880,7 @@ static void repairAuthId()
 		cols = sqlReadColumnsSlow(ent_list->tplt->tables, NULL, "ContainerId, AuthName", "WHERE AuthId IS NULL", &row_count, field_ptrs);
 
 		for (i=0; i<row_count; i++)
-		{			
+		{
 			int container_id;
 			char *auth_name;
 			int auth_id;
@@ -1061,7 +1061,7 @@ void dbInit(int start_static)
 	turnstileCommInit();
 	startMapCrashReportThread();
 
-	svrMonInit();  
+	svrMonInit();
 	if (!authCommInit(server_cfg.auth_server,server_cfg.auth_server_port))
 		FatalErrorf("Can't find auth server %s:%d quitting.\n",server_cfg.auth_server,server_cfg.auth_server_port);
 	if(server_cfg.queue_server)
@@ -1153,12 +1153,12 @@ void dbInit(int start_static)
 		sqlRemoveForeignKeyConstraintAsync("Ents", "TeamupsId", "Teamups");
 		//sqlRemoveForeignKeyConstraintAsync("Ents2","RaidsId","Raids");
 		sqlRemoveForeignKeyConstraintAsync("Ents2","LeaguesId","Leagues");
-	} 
+	}
 	tpltRegisterForeignKeyConstraint("Ents","TaskforcesId","Taskforces");
 	tpltRegisterForeignKeyConstraint("Ents","SupergroupsId","Supergroups");
 	tpltRegisterForeignKeyConstraint("Ents2","LevelingPactsId","LevelingPacts");
 	tpltRegisterForeignKeyConstraint("Base","SupergroupId","Supergroups");
-	//tpltRegisterForeignKeyConstraint("Maps","MapGroupsId","MapGroups"); 
+	//tpltRegisterForeignKeyConstraint("Maps","MapGroupsId","MapGroups");
 
 	loadstart_printf("Update tables...");
 	tpltUpdateSqlcolumns(testdatabasetypes_list->tplt);
@@ -1196,7 +1196,7 @@ void dbInit(int start_static)
 
 	sqlAddIndexAsync("Petitions_Fetched_date", "Petitions", "Fetched ASC, Date ASC");
 	loadend_printf("");
-	
+
 	// nuke teamups on restart
 	loadstart_printf("Clearing teamups and invalid characters...");
 	sqlExecAsync("UPDATE dbo.Ents SET TeamupsId = NULL WHERE TeamupsId is not NULL;", SQL_NTS);
@@ -1215,7 +1215,7 @@ void dbInit(int start_static)
 	tpltSetAllForeignKeyConstraintsAsync();
 	sqlFifoFinish();
 	loadend_printf("");
-	
+
 	repairAuthId();
 
 #if defined(DO_STUPID_DATABASE_TESTS)
@@ -1223,10 +1223,10 @@ void dbInit(int start_static)
 #endif
 	offlineInitOnce();
 	backupLoadIndexFiles();
-	
+
 	// Populate the running stats
 	stat_ReadTable();
-	
+
 	teamups_list->tplt->dont_write_to_sql = !server_cfg.write_teamups_to_sql;
 	league_list->tplt->dont_write_to_sql = !server_cfg.write_teamups_to_sql;
 	containerListLoadFile(doors_list);
@@ -1243,7 +1243,7 @@ void dbInit(int start_static)
 			_exit(0);
 		}
 	#endif
-	
+
 	//tryConnectConnServer(server_cfg.conn_server,server_cfg.db_server_id,server_cfg.db_server_name);
 
 	launcherCommInit();
@@ -1321,7 +1321,7 @@ void dbInit(int start_static)
 				//	adequateLaunchersConnected = true;
 				//}
 			}
-		} while (!adequateLaunchersConnected);		
+		} while (!adequateLaunchersConnected);
 
 		setFieldRequiresCR(0);
 		containerListLoadFile(map_list);
@@ -1389,7 +1389,7 @@ void dbInit(int start_static)
 			if(map_con->safePlayersLow > map_con->safePlayersHigh)
 				map_con->safePlayersHigh = map_con->safePlayersLow;
 		}
-	
+
 		if (!start_static) {
 			int count=0;
 			for(i=0; i<map_list->num_alloced; i++)
@@ -1435,7 +1435,7 @@ void dbInit(int start_static)
 					{
 						int ret = launcherCommStartProcess(my_hostname,0,map_con);
 						printf_stderr("%d ", map_con->id);
-						if (!ret) 
+						if (!ret)
 						{// Will wait forever otherwise.
 							printf_stderr("\nFailed to find launcher to start static map, not launching static maps\n");
 							abort = 1;
@@ -1746,7 +1746,7 @@ static void dbLaunchMapFromConsole()
 static void floodAuthWithQuits(int nQuits)
 {
 	int i;
-	for( i = 0; i < nQuits; ++i ) 
+	for( i = 0; i < nQuits; ++i )
 	{
 		// reason can be 1 to 6 AFAICT
 		authSendQuitGame(i+1,1,0);
@@ -1769,11 +1769,11 @@ int main(int argc,char **argv)
 	memCheckInit();
 
 	EXCEPTION_HANDLER_BEGIN
-	
+
 	setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'D', 0x00ff00);
 
 	regSetAppName("CoH");
-	
+
 	timeBeginPeriod(1);
 
 	//memtest();
@@ -1809,7 +1809,7 @@ int main(int argc,char **argv)
 	}
 
 	sockStart();
-	packetStartup(0, init_encryption);	
+	packetStartup(0, init_encryption);
 	logSetDir("dbserver");
 	logSetUseTimestamped(true);
 	serverCfgLoad();
@@ -1983,7 +1983,7 @@ int main(int argc,char **argv)
 
 
 	dbInit(start_static);
-	
+
 	printf_stderr("%s DbServer Ready.\n", timerGetTimeString());
 
 	for(;;)
@@ -2001,7 +2001,7 @@ int main(int argc,char **argv)
 					memMonitorDisplayStats();
 				xcase 'w':
 					waitingEntitiesDumpStats();
-                xcase 'A': 
+                xcase 'A':
                     g_authdbgprintf_enabled = !g_authdbgprintf_enabled;
                     printf("auth debug %s\n",g_authdbgprintf_enabled?"enabled":"disabled");
 				xcase 'a':
@@ -2023,7 +2023,7 @@ int main(int argc,char **argv)
 					dbLaunchMapFromConsole();
 				xcase 'q':
 					 printf("sending %i quits\n", s_nQuitsToSend);
-					 floodAuthWithQuits(s_nQuitsToSend);	
+					 floodAuthWithQuits(s_nQuitsToSend);
 				xcase 'Q':
 					 printf("num quits to send (blocking, hurry!):");
 					 scanf("%i", &s_nQuitsToSend);

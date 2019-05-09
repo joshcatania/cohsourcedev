@@ -37,11 +37,11 @@
 */
 #define ACTUALLY_STORE_BINARY_AS_BINARY 0
 
-/** 
+/**
 * A structure for storing information about each parameter bind
 * that requires a temporary buffer until after the SQL statement
 * has been closed.
-*/ 
+*/
 typedef struct sqlBindTemp {
 	size_t bytes;
 	union {
@@ -70,7 +70,7 @@ static unsigned char* hexStrToBinStr2(char* hexString,U8 *binStr)
 {
 	int i, len;
 
-	len = strlen(hexString) / 2; // !this will let the last character fall off if we had an odd length string 
+	len = strlen(hexString) / 2; // !this will let the last character fall off if we had an odd length string
 	for(i = 0; i < len; i++)
 		binStr[i] = (getBinFromHex(hexString[i*2]) << 4) | getBinFromHex(hexString[i*2+1]);
 	binStr[i] = 0;
@@ -95,7 +95,7 @@ static char* binStrToHexStr2(unsigned char* binArray, char *hexStr)
 bool sqlCreateTable(char *name, TableType table_type)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 	bool ret;
 
 	// Verify that the table name has no namespace in it
@@ -112,7 +112,7 @@ bool sqlCreateTable(char *name, TableType table_type)
 					buf_len = sprintf(buf, "CREATE TABLE dbo.%s (ContainerId SERIAL NOT NULL PRIMARY KEY, Active INTEGER);", name);
 				DBPROV_XDEFAULT();
 			}
-		xcase TT_SUBCONTAINER: 
+		xcase TT_SUBCONTAINER:
 			buf_len = sprintf(buf, "CREATE TABLE dbo.%s (ContainerId INTEGER NOT NULL, SubId INTEGER NOT NULL);"
 						"ALTER TABLE dbo.%s ADD CONSTRAINT PK_%s PRIMARY KEY (ContainerId, SubId);",
 						name, name, name);
@@ -139,7 +139,7 @@ bool sqlAddField(char *table, char *name, char *type)
 bool sqlChangeFieldType(char *table, char *name, char *newtype)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
@@ -157,26 +157,26 @@ bool sqlDeleteField(char *table, char *name, char *type)
 	return sqlExecDdlf(DDL_ADD, "ALTER TABLE dbo.%s DROP COLUMN %s;", table, name);
 }
 
-/** 
-* Execute a semicolon seperated list SQL database commands if 
+/**
+* Execute a semicolon seperated list SQL database commands if
 * the specified DDL command type is allowed by the server.
-*/ 
+*/
 bool sqlExecDdl(DdlType ddl_type, char *str, int str_len)
 {
 	sqlCheckDdl(ddl_type);
 	return SQL_SUCCEEDED(sqlConnExecDirectMany(str, str_len, SQLCONN_FOREGROUND, true));
 }
 
-/** 
-* Execute a semicolon seperated list SQL database commands if 
-* the specified DDL command type is allowed by the server with 
-* printf style formatting. 
+/**
+* Execute a semicolon seperated list SQL database commands if
+* the specified DDL command type is allowed by the server with
+* printf style formatting.
 */
 bool sqlExecDdlf(DdlType ddl_type, char *fmt, ...)
 {
 	bool ret;
 	char *buf = estrTemp();
-	
+
 	va_list va;
 	va_start(va, fmt);
 	estrConcatfv(&buf, fmt, va);
@@ -189,15 +189,15 @@ bool sqlExecDdlf(DdlType ddl_type, char *fmt, ...)
 	return ret;
 }
 
-/** 
+/**
 * Add a SQL database foreign key constraint from a column on the
-* first table to be validated against the primary key of a 
+* first table to be validated against the primary key of a
 * second table.
-*/ 
+*/
 void sqlAddForeignKeyConstraintAsync(char *table, char *key, char *foreign_table)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
@@ -209,13 +209,13 @@ void sqlAddForeignKeyConstraintAsync(char *table, char *key, char *foreign_table
 	sqlExecAsync(buf, buf_len);
 }
 
-/** 
+/**
 * Removes a foreign key contraint from a SQL database table.
-*/ 
+*/
 void sqlRemoveForeignKeyConstraintAsync(char *table, char *key, char *foreign_table)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
@@ -224,23 +224,23 @@ void sqlRemoveForeignKeyConstraintAsync(char *table, char *key, char *foreign_ta
 			buf_len = sprintf(buf, "DO $$BEGIN IF EXISTS (SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'fk_%s_%s_%s') THEN ALTER TABLE dbo.%s DROP CONSTRAINT FK_%s_%s_%s; END IF; END$$;", strlwrdupa(table), strlwrdupa(key), strlwrdupa(foreign_table), table, table, key, foreign_table);
 		DBPROV_XDEFAULT();
 	}
-	
+
 	sqlExecAsync(buf, buf_len);
 }
 
 /**
-* Add a named index to a SQL database table that contains both 
-* the table's primary key and columns provided by with the 
-* fields parameter. 
+* Add a named index to a SQL database table that contains both
+* the table's primary key and columns provided by with the
+* fields parameter.
 *
-* @note Uses a hash of the table name to pick a single thread 
+* @note Uses a hash of the table name to pick a single thread
 *       for all index operations on that table to avoid locking
 *       problems.
 */
 void sqlAddIndexAsync(char *index, char *table, char *fields)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
@@ -256,14 +256,14 @@ void sqlAddIndexAsync(char *index, char *table, char *fields)
 /**
 * Remove an index by name from a SQL database table.
 *
-* @note Uses a hash of the table name to pick a single thread 
+* @note Uses a hash of the table name to pick a single thread
 *       for all index operations on that table to avoid locking
 *       problems.
 */
 void sqlRemoveIndexAsync(char *index, char *table)
 {
 	char buf[SHORT_SQL_STRING];
-	int buf_len;
+	int buf_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
@@ -339,11 +339,11 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 							bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 							bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 						DBPROV_XDEFAULT();
-					}					
+					}
 				xcase TT_SUBCONTAINER:
 					estrConcatf(estr, "INSERT INTO dbo.%s (ContainerId,SubId) VALUES (?,?);", name);
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
-					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);					
+					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);
 				xdefault:
 					FatalErrorf(__FUNCTION__ "does not implement table type %d", slot->table->table_type);
 			}
@@ -388,7 +388,7 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 				break;
 
 			TODO(); // Rip out this deprecated funcionality
-			if (col->data_type == CFTYPE_TEXTBLOB) {				
+			if (col->data_type == CFTYPE_TEXTBLOB) {
 				char *s = diff->text + line->str_idx;
 				if(*s)
 				{
@@ -569,7 +569,7 @@ static HSTMT sqlTableSelect(TableInfo *table, int *id_ptr, SqlConn conn)
 	for(col = 0; col < table->num_columns; col++)
 		s_bindField(stmt, &table->columns[col], col, &idx, conn);
 	assert(idx <= MAX_QUERY_SIZE);
-	
+
 	return stmt;
 }
 
@@ -875,6 +875,7 @@ int sqlTableReadMulti(ContainerTemplate *tplt, TableInfo *table, int container_i
 	{
 		int		size;
 		char	*mem;
+		char    **retval = NULL;
 
 		if (retcode != SQL_SUCCESS)
 			sqlConnStmtPrintError(stmt, cmd_buf);
@@ -886,7 +887,13 @@ int sqlTableReadMulti(ContainerTemplate *tplt, TableInfo *table, int container_i
 			break;
 
 		multi_count++;
-		multi_buf = realloc(multi_buf,multi_count * sizeof(char **));
+		retval = realloc(multi_buf,multi_count * sizeof(char **));
+		if (retval == NULL) {
+			// World ending, we're out of RAM... breaking out of while() to
+			// hopefully clean up on the way out.
+			break;
+		}
+		multi_buf = retval;
 		mem = lineListToMem(&list, &size, 0, 0);
 		multi_buf[multi_count-1] = malloc(size);
 		memcpy(multi_buf[multi_count-1],mem,size);
@@ -926,14 +933,14 @@ char *sqlContainerRead(ContainerTemplate *tplt, int container_id, SqlConn conn)
 	return mem;
 }
 
-/** 
+/**
 * Return a single integer result from the result of executing a
 * command on the SQL database.
-* 
+*
 * @param bind_list An optional list of parameter
 *                  binds terminated by an entry of type @ref
 *                  CFTYPE_NULL.
-*/ 
+*/
 int sqlGetSingleValue(char *cmd, int cmd_len, BindList * bind_list, SqlConn conn)
 {
 	HSTMT stmt;
@@ -946,7 +953,7 @@ int sqlGetSingleValue(char *cmd, int cmd_len, BindList * bind_list, SqlConn conn
 		int bind;
 		for (bind = 0; bind_list->data_type; bind++, bind_list++) {
 			bindInputParameter(stmt, bind, bind_list->data_type, bind_list->data, NULL);
-		}		
+		}
 	}
 
 	bindOutputColumn(stmt, 0, CFTYPE_INT, sizeof(count), &count, &row_results[conn][0]);
@@ -1091,10 +1098,10 @@ char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, cha
 	return dyn_mem;
 }
 
-/** 
+/**
 * Query the list of columns for a given table in the SQL
 * database as an array of @ref ColumnInfo structures.
-*/ 
+*/
 int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 {
 	HSTMT stmt;
@@ -1346,7 +1353,7 @@ char **sqlReadTableNames(int *countp)
 	return table_names;
 }
 
-/** 
+/**
 * Validates whether a Data Definition Language (DDL)
 * command of the specified type is allowed by the server.
 */
@@ -1388,10 +1395,10 @@ void sqlCheckDdl(DdlType type)
 				"allow it.",name,name);
 }
 
-/** 
+/**
 * Build various test strings to validate that a string of
 * special characters can fit in the SQL database table column.
-*/ 
+*/
 static char * testString(char * string, size_t len, bool unicode, bool min)
 {
 	static const char test_utf8[4] = {0xF0, 0xA4, 0xAD, 0xA2};
@@ -1421,7 +1428,7 @@ static char * testString(char * string, size_t len, bool unicode, bool min)
 }
 
 /**
-* Verify minimum and maximum values for each 
+* Verify minimum and maximum values for each
 * @ref ContainerFieldType.
 */
 static char * testDataBaseValues(ContainerTemplate * tplt, bool min)
@@ -1440,7 +1447,7 @@ static char * testDataBaseValues(ContainerTemplate * tplt, bool min)
 		for (j=0; j<table->num_columns; j++)
 		{
 			char tmp[16384];
-			ColumnInfo * field = &table->columns[j];				
+			ColumnInfo * field = &table->columns[j];
 			if (field->reserved_word)
 				continue;
 
@@ -1487,10 +1494,10 @@ static char * testDataBaseValues(ContainerTemplate * tplt, bool min)
 	return buf;
 }
 
-/** 
+/**
 * Run a single test of SQL database types using the container
 * text provided.
-*/ 
+*/
 static void testContainerLoadSave(struct DbList * list, int cid, DbContainer ** container, char * text)
 {
 	// Test update

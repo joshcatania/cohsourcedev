@@ -21,7 +21,7 @@ StaticDefineInt	ParseRole[] =
 	DEFINE_END
 };
 
-TokenizerParseInfo ParseRunServer[] = 
+TokenizerParseInfo ParseRunServer[] =
 {
 	{ "Command",		TOK_STRING(RunServer, command, 0) },
 	{ "KillAndRestart",	TOK_INT(RunServer, kill_and_restart, 0) },
@@ -100,8 +100,8 @@ TokenizerParseInfo ParseLoadBalanceConfig[] = {
 void copyDefaults(LoadBalanceConfig *dst, LoadBalanceConfig *src)
 {
 	TokenizerParseInfo *pti = ParseLoadBalanceConfig;
-	int i;
-	FORALL_PARSEINFO(pti, i) 
+	int i = 0;
+	FORALL_PARSEINFO(pti, i)
 	{
 		switch (TOK_GET_TYPE(pti[i].type)) {
 		xcase TOK_INT_X:
@@ -200,14 +200,14 @@ bool loadBalanceConfigLoad()
 	fullpath = fileLocateRead("server/db/loadBalanceDefault.cfg", buf);
 	printf("Loading %s... ", fullpath);
 	default_loaded = ParserLoadFiles(NULL, "server/db/loadBalanceDefault.cfg", NULL, 0, ParseLoadBalanceConfig, &default_config, NULL, NULL, NULL);
-	if (!default_loaded) 
+	if (!default_loaded)
 	{
 		LOG_OLD_ERR( "failed to load loadBalanceDefault.cfg");
-		if (!loaded_once) 
+		if (!loaded_once)
 		{
 			FatalErrorf("Failed to load required file server/db/loadBalanceDefault.cfg!");
-		} 
-		else 
+		}
+		else
 		{
 			printf("Failed to load server/db/loadBalanceDefault.cfg!\n");
 		}
@@ -219,14 +219,14 @@ bool loadBalanceConfigLoad()
 		strcpy(buf, "server/db/loadBalanceShardSpecific.cfg");
 	printf("Loading %s... ", buf);
 	shard_loaded = ParserLoadFiles(NULL, "server/db/loadBalanceShardSpecific.cfg", NULL, 0, ParseLoadBalanceConfig, &shard_config, NULL, NULL, NULL);
-	if (!shard_loaded) 
+	if (!shard_loaded)
 	{
 		LOG_OLD_ERR( "failed to load loadBalanceShardSpecific.cfg");
 		printf("not found, using defaults.\n");
 		// Just use default file
 		ParserDestroyStruct(ParseLoadBalanceConfig, &load_balance_config);
-	} 
-	else 
+	}
+	else
 	{
 		ParserDestroyStruct(ParseLoadBalanceConfig, &load_balance_config);
 		// Use default except where the values are non-0 in the override and
@@ -262,7 +262,7 @@ bool loadBalanceConfigLoad()
 			if (role->primaryRole & ROLE_MISSION) {
 				mission_found = true;
 			}
-			if (role->primaryRole & ROLE_MONITOR && 
+			if (role->primaryRole & ROLE_MONITOR &&
 				!(role->primaryRole == ROLE_MONITOR))
 			{
 				LOG(LOG_ERROR, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "LoadBalanceConfig error: Found role with both Monitor and something else.  Monitor is exclusive with all other primary roles.");
@@ -274,12 +274,12 @@ bool loadBalanceConfigLoad()
 				bad = true;
 			}
 		}
-		if (!zone_found) 
+		if (!zone_found)
 		{
 			LOG(LOG_ERROR, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "LoadBalanceConfig error: No servers allowed to launch zone maps");
 			bad = true;
 		}
-		if (!mission_found) 
+		if (!mission_found)
 		{
 			LOG(LOG_ERROR, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "LoadBalanceConfig error: No servers allowed to launch mission maps");
 			bad = true;
@@ -334,7 +334,7 @@ bool loadBalanceConfigLoad()
 		load_balance_config = *&default_config;
 		printf("Loaded load balancing config: %d roles specified.\n", eaSize(&load_balance_config.serverRoles));
 	}
-	else 
+	else
 	{
 		ret = false;
 		if (!loaded_once)
@@ -345,7 +345,7 @@ bool loadBalanceConfigLoad()
 	if (!assembleAutoStartList())
 		ret = false;
 
-	if (!loaded_once) 
+	if (!loaded_once)
 	{
 		FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE|FOLDER_CACHE_CALLBACK_CAN_USE_SHARED_MEM, "server/db/loadBalance*.cfg", loadBalanceReloadCallback);
 	}
@@ -358,7 +358,7 @@ ServerRoleDescription *getNextServerRole(ServerRoleDescription* curRole, U32 ip)
 {
 	int size = eaSize(&load_balance_config.serverRoles);
 	int i;
-	for (i=0; i<size; i++) 
+	for (i=0; i<size; i++)
 	{
 		ServerRoleDescription *role = load_balance_config.serverRoles[i];
 		if (role->iprange[1]==0) {
@@ -376,7 +376,7 @@ ServerRoleDescription *getNextServerRole(ServerRoleDescription* curRole, U32 ip)
 				role = NULL;
 			}
 		}
-		
+
 		if(role){
 			if(curRole){
 				if(curRole == role){
@@ -387,25 +387,25 @@ ServerRoleDescription *getNextServerRole(ServerRoleDescription* curRole, U32 ip)
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
 ServerRoleDescription *getServerRole(U32 ip)
 {
 	ServerRoleDescription* role = getNextServerRole(NULL, ip);
-	
+
 	if(!role)
 	{
 		static ServerRoleDescription fallback;
-		
+
 		if (!fallback.primaryRole) {
 			fallback.primaryRole = ROLE_ZONE | ROLE_MISSION;
 		}
-		
+
 		return &fallback;
 	}
-	
+
 	return role;
 }
 

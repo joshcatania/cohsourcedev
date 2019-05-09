@@ -13,6 +13,8 @@
 #include "earray.h"
 #include "log.h"
 
+#include <assert.h>
+
 static int cmpLines(const LineTracker *a,const LineTracker *b)
 {
 	return a->idx - b->idx;
@@ -233,7 +235,7 @@ const char *lineValueToText(ContainerTemplate *tplt,LineList *list,LineTracker *
 		xdefault:
 			value = list->text + line->str_idx;
 #ifdef _FULLDEBUG
-			assert(line->is_str);			
+			assert(line->is_str);
 			assert(line->size == strlen(value));
 #endif
 	}
@@ -503,13 +505,20 @@ void arrayFit(void **basep,int struct_size,int *max_count,int idx_to_fit,void **
 {
 	int		last_max,copy_bytes;
 	char	*base = *basep,*data = *datap;
+	char    *retval = NULL;
 	#define	EXTRA_SPACE (32-1)
 
 	if (idx_to_fit >= *max_count)
 	{
 		last_max = *max_count;
 		*max_count = (idx_to_fit + EXTRA_SPACE) & ~EXTRA_SPACE;
-		base = realloc(base,struct_size * *max_count);
+		retval = realloc(base,struct_size * *max_count);
+		if (retval == NULL) {
+			// realloc() failed, so the world is ending... we're out of RAM.
+			// Luckily, that's unlikely...
+			return;
+		}
+		base = retval;
 		memset(base + struct_size * last_max,0,(*max_count - last_max) * struct_size);
 		*basep = base;
 	}
@@ -527,6 +536,7 @@ void memToLineList(void *mem_v,LineList *dst)
 	dst->cmd_count	= mem[1];
 	dst->text_count	= mem[2];
 
+	// If we're out of memory, these are going to fail silently.
 	arrayFit(&dst->lines,sizeof(dst->lines[0]),&dst->max_lines,dst->count,&curr);
 	arrayFit(&dst->row_cmds,sizeof(dst->row_cmds[0]),&dst->cmd_max,dst->cmd_count,&curr);
 	arrayFit(&dst->text,sizeof(dst->text[0]),&dst->text_max,dst->text_count,&curr);

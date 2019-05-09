@@ -234,7 +234,7 @@ static void setSpecialColumn(SpecialColumn *col, DbContainer *container, uintptr
 	{
 		xcase CFTYPE_ANSISTRING:
 			// pass
-		xcase CFTYPE_UNICODESTRING:					
+		xcase CFTYPE_UNICODESTRING:
 			utf16ToUtf8(addr, 8192); // this code does not know what size the buffer is, assume the SQL max of 8K
 		xcase CFTYPE_INT:
 		{
@@ -262,7 +262,7 @@ static void setSpecialColumn(SpecialColumn *col, DbContainer *container, uintptr
 			}
 		}
 		xcase CFTYPE_BYTE:
-			*((U8*)addr) = (U8)atoi(buf);				
+			*((U8*)addr) = (U8)atoi(buf);
 		xcase CFTYPE_FLOAT:
 			*((F32*)addr) = atof(buf);
 		xcase CFTYPE_DATETIME:
@@ -433,12 +433,12 @@ AnyContainer *containerUpdate(DbList *list,int id,char *diff_orig,int update_sql
 		return container;
 	}
 
-	curr_idx = static_idx = (++static_idx) % ARRAY_SIZE(diffs);
+	curr_idx = static_idx = (static_idx + 1) % ARRAY_SIZE(diffs);
 	diff_list	= &diffs[curr_idx].list;
 	diff		= &diffs[curr_idx].diff;
 	assert(!diffs[curr_idx].in_use);
 	diffs[curr_idx].in_use = 1;
- 
+
 	if (!container)
 	{
 		if (update_sql == 2) // update even if offline
@@ -471,10 +471,10 @@ AnyContainer *containerUpdate(DbList *list,int id,char *diff_orig,int update_sql
 	}
 done:
 	diffs[curr_idx].in_use = 0;
-	
+
 	if ( container && list->container_updt_cb )
 		(*list->container_updt_cb)( container );
-	
+
 	return container;
 }
 
@@ -572,7 +572,7 @@ void containerUnload(DbList *list,int id)
 	if (container->type == CONTAINER_ENTS && waitingEntitiesIsIDWaiting(id))
 	{
 		char buffer[16384];
-		LOG(LOG_ERROR, LOG_LEVEL_ALERT, 0, "Someone unloaded a player during map transfer. The stack has been logged for analysis.") 
+		LOG(LOG_ERROR, LOG_LEVEL_ALERT, 0, "Someone unloaded a player during map transfer. The stack has been logged for analysis.")
 		sdDumpStackToBuffer(buffer, sizeof(buffer), NULL);
 		LOG(LOG_ERROR, LOG_LEVEL_IMPORTANT, 0, "%s", buffer);
 	}
@@ -695,7 +695,7 @@ AnyContainer *containerAlloc(DbList *list,int idx)
 			if (!list->max_container_id)
 			{
 				char cmd[SHORT_SQL_STRING];
-				int cmd_len;
+				int cmd_len = 0;
 
 				switch (gDatabaseProvider) {
 					xcase DBPROV_MSSQL:
@@ -819,7 +819,7 @@ void containerSendList(DbList *list,int *selections,int count,int lock,NetLink *
 			if (!container) {
 				pktSendBitsPack(pak,1,CONTAINER_ERR_DOESNT_EXIST);
 			} else {
-				if (list == ent_list) 
+				if (list == ent_list)
 				{
 					EntCon * ent_con = (EntCon*)container;
 					LOG_OLD_ERR( "Error sending \"%s\" (%d) to mapserver\n", ent_con->ent_name, ent_con->id);
@@ -832,7 +832,7 @@ void containerSendList(DbList *list,int *selections,int count,int lock,NetLink *
 		if (container->type == CONTAINER_ENTS)
 		{
 			EntCon *con = (EntCon *) container;
-			if (server_cfg.log_relay_verbose) 
+			if (server_cfg.log_relay_verbose)
 			{
 				LOG_OLD("containerSendList Sending Ent %d, demand_loaded: %d, is_map_xfer: %d", con->id, con->demand_loaded, con->is_map_xfer);
 			}
@@ -1002,8 +1002,8 @@ MapCon *containerFindBaseBySgId(int sgid)
 	int i;
 	char sgbase_name[256];
 	snprintf(sgbase_name, ARRAY_SIZE( sgbase_name ), "Base(supergroupid=%d)",sgid);
-	
-	for( i = 0; i < list->num_alloced; ++i ) 
+
+	for( i = 0; i < list->num_alloced; ++i )
 	{
 		MapCon *c = (MapCon *)list->containers[i];
 		if( c && c->active && 0==strcmp(c->map_name,sgbase_name))

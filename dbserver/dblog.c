@@ -33,12 +33,13 @@ void dbMemLogEcho(const char* s, ...)
 {
 	va_list ap;
 	char buf[MEMLOG_LINE_WIDTH+10];
+	int count = 0;
 
 	va_start(ap, s);
-	if (vsprintf(buf,s,ap) < 10) return;
+	count = vsprintf(buf,s,ap);
 	va_end(ap);
+
+	if (count < 10) return;
 
 	printf("%s\n", buf);
 }
-
-
