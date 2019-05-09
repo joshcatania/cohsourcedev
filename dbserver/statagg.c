@@ -174,7 +174,7 @@ static _inline StatCols *GetStatColFromName(char *pchName)
 			}
 		}
 	}
-	
+
 	return NULL;
 }
 
@@ -182,7 +182,7 @@ static _inline StatCols *GetStatColFromName(char *pchName)
  * FixupPeriod
  *
  */
-static _inline int FixupPeriod(int iPer, U32 uNow, U32 uStartTodaySecs, 
+static _inline int FixupPeriod(int iPer, U32 uNow, U32 uStartTodaySecs,
 	U32 uStartYesterdaySecs, U32 uStartThisMonthSecs,
 	U32 uStartLastMonthSecs)
 {
@@ -240,7 +240,7 @@ static _inline int FixupPeriod(int iPer, U32 uNow, U32 uStartTodaySecs,
  * GetStartTimes
  *
  */
-static void GetStartTimes(U32 uNow, U32 *puStartTodaySecs, U32 *puStartYesterdaySecs, 
+static void GetStartTimes(U32 uNow, U32 *puStartTodaySecs, U32 *puStartYesterdaySecs,
 	U32 *puStartMonthSecs, U32 *puStartLastMonthSecs)
 {
 	struct tm now;
@@ -429,7 +429,7 @@ static void RotateStats(void)
 
 	// See if the stats need to be rotated
 	uNow = timerSecondsSince2000();
-	GetStartTimes(uNow, &uStartTodaySecs, &uStartYesterdaySecs, 
+	GetStartTimes(uNow, &uStartTodaySecs, &uStartYesterdaySecs,
 		&uStartMonthSecs, &uStartLastMonthSecs);
 
 	if(s_uLastUpdateTime < uStartTodaySecs)
@@ -656,7 +656,7 @@ void stat_ReadTable(void)
 	initStuffBuff(&sb,200);
 
 	s_uLastUpdateTime = timerSecondsSince2000();
-	GetStartTimes(s_uLastUpdateTime, &uStartTodaySecs, &uStartYesterdaySecs, 
+	GetStartTimes(s_uLastUpdateTime, &uStartTodaySecs, &uStartYesterdaySecs,
 		&uStartThisMonthSecs, &uStartLastMonthSecs);
 
 	// A buffer ODBC wants.
@@ -684,7 +684,7 @@ void stat_ReadTable(void)
 	};
 
 	addStringToStuffBuff(&sb, " FROM dbo.Stats INNER JOIN dbo.Ents %s ON Stats.ContainerID=Ents.ContainerID WHERE Ents.LastActive>='%s';",
-		nolock, timerMakeDateStringFromSecondsSince2000(pchLastMonth, uStartLastMonthSecs));		
+		nolock, timerMakeDateStringFromSecondsSince2000(pchLastMonth, uStartLastMonthSecs));
 
 	// Allocate the row buffer.
 	pchBuff = malloc(iLen);
@@ -707,6 +707,7 @@ void stat_ReadTable(void)
 	if(!SQL_SUCCEEDED(retcode))
 	{
 		freeStuffBuff(&sb);
+		free(pchBuff);
 		return;
 	}
 

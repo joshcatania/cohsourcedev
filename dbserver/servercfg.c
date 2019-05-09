@@ -63,22 +63,22 @@ static void setDefaultBeaconizerConfig()
 {
 	server_cfg.do_not_launch_beacon_clients = 0;
 	server_cfg.do_not_launch_master_beacon_server = 0;
-	
+
 	server_cfg.request_beacon_server_count = -1;
-	
+
 	getExecutableDir(server_cfg.beacon_request_cache_dir);
-	
+
 	forwardSlashes(server_cfg.beacon_request_cache_dir);
-	
+
 	if(	strlen(server_cfg.beacon_request_cache_dir) >= 3 &&
 		isalpha((U8)server_cfg.beacon_request_cache_dir[0]) &&
 		!strncmp(server_cfg.beacon_request_cache_dir + 1, ":/", 2))
 	{
 		strcpy_s(server_cfg.beacon_request_cache_dir + 3, sizeof(server_cfg.beacon_request_cache_dir) - 3, "beaconrequestcache");
 	}
-	
+
 	forwardSlashes(server_cfg.beacon_request_cache_dir);
-	
+
 	server_cfg.master_beacon_server[0] = 0;
 }
 
@@ -149,6 +149,9 @@ void serverCfgLoad()
 	if (!realFilename || !(file = fopen(realFilename, "rt")))
 	{
 		printf("Can't load server/db/servers.cfg!\n");
+		if (file != NULL) {
+			fclose(file);
+		}
 		return;
 	}
 	for(;;)
@@ -223,7 +226,7 @@ void serverCfgLoad()
 #endif
 		else if (stricmp(s,"SqlDbName")==0)
 			strcpy(server_cfg.sql_db_name,s2);
-		
+
 		/* no longer reserved on the launcher
 		if (stricmp(s,"SharedHeapMegs")==0)
 		{

@@ -85,9 +85,9 @@ typedef struct {
 	int							openFileInfoArrSz;		// may include some unused elements
 	int							numFilesOpen;			// we may want to limit the number open at one time
 	int							lastTempDbId;			// for internal use we may need to generate temp ID's.
-} tStorageIndex;	
+} tStorageIndex;
 
-// The two storage classes manage data a little differently. 
+// The two storage classes manage data a little differently.
 //		- Offline character data will have 1 tStorageIndex containing multiple tOpenFileInfo objects.
 //		- Deleted character data will have >= 0 tStorageIndex objects, each of which contains 1 tOpenFileInfo object.
 typedef struct {
@@ -126,10 +126,10 @@ static void					storageIndexRelease( tOfflineDataStore* pStore, int nIndexOfs );
 static char*				offlineDir( void );
 static char*				indexFname(tDataFileSpec* fileSpec );
 static char*				dataFname(tDataFileSpec* fileSpec );
-static bool   				addPlayerToOfflineStore(int id, tOfflineObjStatus status, 
+static bool   				addPlayerToOfflineStore(int id, tOfflineObjStatus status,
 									tDataFileSpec* fileSpec,
 									bool bUpdateIdxCache, bool bUnloadContainer);
-static bool   				copyEntityContainerToStorage(int id, tOfflineObjStatus status, 
+static bool   				copyEntityContainerToStorage(int id, tOfflineObjStatus status,
 									tDataFileSpec* fileSpec,
 									EntCon** ppEnt /* OUT (NULL is OK), if *ppEnd != NULL, we use that container, otherwise, we load *ppEnt for id */,
 									OfflinePlayer* pNewPlayerData /* OUT (NULL is NOT-OK) */ );
@@ -143,11 +143,11 @@ static FILE* 				prepareIndexFile( tDataFileSpec* fileSpec, long offset /*-1 mea
 static FILE* 				prepareDataFile( tDataFileSpec* fileSpec, long offset /*-1 means "close it"*/, int origin /*e.g., SEEK_SET, SEEK_END...*/ );
 static bool  				patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjStatus status );
 static void					openDataAppendFile( tStorageClass storageClass, int* p_file_size, FILE** p_file_ptr, tDataFileKey* p_data_fileKey );
-static bool					readIndexStringRec( FILE* dataFile, 
+static bool					readIndexStringRec( FILE* dataFile,
 								char* buffer, size_t buffSz, int* fldOffsets /*OUT*/, int nFldOffsetsSz,
 								size_t* p_string_size /*OUT*/, int* p_num_fields /*OUT*/ );
 static U32					fldValueFromLineList( ContainerTemplate *tplt, LineList* lineList, const char* fldName, U32 defaultVal );
-static void					fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char* fldName, 
+static void					fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char* fldName,
 								char* buffer, size_t strSz );
 static void					deletedPlayers_InitDataFileSpec( tDataFileSpec* fileSpec, const char* dataMMYYYY /* if NULL, current month is used */ );
 static void					logTimeToTimeStruct( const char* szLogTime, struct tm* pTime );
@@ -172,10 +172,10 @@ void offlineInitOnce( void )
 	// Prepare the initial offline player data structs
 	tDataFileSpec offLineSpec = { 0 };
 	tDataFileSpec deletedSpec = { 0 };
-	
+
 	offLineSpec.storageClass = kStorageClass_OfflineCharacters;
 	prepareOpenFileInfo( &offLineSpec, NULL, NULL );
-	
+
 	// Maintenance....
 	offlineUnusedPlayers();
 
@@ -191,7 +191,7 @@ char *offlineDir()
 {
 	char	*s;
 	static char offline_dir[MAX_PATH] = { 0 };
-	
+
 	if ( offline_dir[0] == '\0' )	// just do this work once
 	{
 		strcpy(offline_dir,fileDataDir());
@@ -211,20 +211,20 @@ char *indexFname( tDataFileSpec* fileSpec )
 {
 	static tDataFileSpec sDataFileSpec = { ~0, ~0 };
 	static char sIndexFilePath[MAX_PATH] = { 0 };
-	
+
 	if (( fileSpec->storageClass != sDataFileSpec.storageClass ) ||
 		( fileSpec->dataFileKey  != sDataFileSpec.dataFileKey ))
 	{
 		if ( fileSpec->storageClass == kStorageClass_OfflineCharacters )
 		{
 			sprintf_s(sIndexFilePath,ARRAY_SIZE(sIndexFilePath),
-						"%s/players.idx", offlineDir(), 
+						"%s/players.idx", offlineDir(),
 						fileSpec->dataFileKey);
 		}
 		else if ( fileSpec->storageClass == kStorageClass_DeletedCharacters )
 		{
 			sprintf_s(sIndexFilePath,ARRAY_SIZE(sIndexFilePath),
-						"%s/deletedPlayers_%d.idx", offlineDir(), 
+						"%s/deletedPlayers_%d.idx", offlineDir(),
 						fileSpec->dataFileKey);
 		}
 		sDataFileSpec.storageClass = fileSpec->storageClass;
@@ -237,7 +237,7 @@ char *dataFname(tDataFileSpec* fileSpec)
 {
 	static tDataFileSpec sDataFileSpec = { ~0, ~0 };
 	static char sDataFilePath[MAX_PATH] = { 0 };
-	
+
 	if (( fileSpec->storageClass != sDataFileSpec.storageClass ) ||
 		( fileSpec->dataFileKey	 != sDataFileSpec.dataFileKey ))
 	{
@@ -299,7 +299,7 @@ FILE* prepareIndexFile( tDataFileSpec* fileSpec, long offset, int origin /*e.g.,
 	return *ppFile;
 }
 
-void deletedPlayers_InitDataFileSpec( tDataFileSpec* fileSpec, 
+void deletedPlayers_InitDataFileSpec( tDataFileSpec* fileSpec,
 								const char* dateMMYYYY /* or NULL for the current month */ )
 {
 	fileSpec->storageClass = kStorageClass_DeletedCharacters;
@@ -318,7 +318,7 @@ void deletedPlayers_InitDataFileSpec( tDataFileSpec* fileSpec,
 				(( dateMMYYYY[6] - '0' ) * 100 ) +
 				(( dateMMYYYY[0] - '0' ) * 10 ) +
 				(( dateMMYYYY[1] - '0' ) * 1 )
-			);		
+			);
 	}
 	else
 	{
@@ -342,7 +342,7 @@ void prepareOpenFileInfo( tDataFileSpec* fileSpec, tStorageIndex** ppIndex, int*
 	tStorageIndex* pIndex = NULL;
 	int indexDataOfs = 0;	// to locate the tStorageIndex
 	int fileDataOfs = 0;	// to locate a file managed by the tStorageIndex
-	
+
 	if ( fileSpec->storageClass == kStorageClass_OfflineCharacters )
 	{
 		// The "key" is a 1-based file number.
@@ -385,13 +385,13 @@ void prepareOpenFileInfo( tDataFileSpec* fileSpec, tStorageIndex** ppIndex, int*
 						nOldestAccess	= pStore->storageIndexArr[i]->lastAccess;
 					}
 				}
-				storageIndexRelease( pStore, nOldest ); 
+				storageIndexRelease( pStore, nOldest );
 				devassert(pStore->storageIndexCount < kMaxDeletedFileIndexesOpen);
 			}
 			indexDataOfs = pStore->storageIndexCount;
 		}
 	}
-	
+
 	// Make room to store a new tStorageIndex item, and make the item (if needed)
 	dynArrayFit((void **)&pStore->storageIndexArr,sizeof(pStore->storageIndexArr[0]),&pStore->storageIndexArrSz,indexDataOfs);
 	pStore->storageIndexCount = ( indexDataOfs >= pStore->storageIndexCount ) ? (indexDataOfs+1) : pStore->storageIndexCount;
@@ -400,7 +400,7 @@ void prepareOpenFileInfo( tDataFileSpec* fileSpec, tStorageIndex** ppIndex, int*
 		pStore->storageIndexArr[indexDataOfs] = (tStorageIndex*)calloc(1,sizeof(tStorageIndex));
 	}
 	pIndex = pStore->storageIndexArr[indexDataOfs];
-	
+
 	// Create the player array cache stash table
 	if ( pIndex->playerArrayCache == NULL )
 	{
@@ -410,7 +410,7 @@ void prepareOpenFileInfo( tDataFileSpec* fileSpec, tStorageIndex** ppIndex, int*
 	{
 		pIndex->authNameTable =  stashTableCreateWithStringKeys(kOfflinePlayerDataInitialSize, StashDeepCopyKeys);
 	}
-	
+
 	// Make room to store a new tOpenFileInfo and make the item (if needed)
 	dynArrayFit((void **)&pIndex->openFileInfo,sizeof(pIndex->openFileInfo[0]),&pIndex->openFileInfoArrSz,fileDataOfs);
 	pIndex->openFileInfoCount = ( fileDataOfs >= pIndex->openFileInfoCount ) ? (fileDataOfs+1) : pIndex->openFileInfoCount;
@@ -420,7 +420,7 @@ void prepareOpenFileInfo( tDataFileSpec* fileSpec, tStorageIndex** ppIndex, int*
 		pIndex->openFileInfo[fileDataOfs]->id = fileSpec->dataFileKey;
 	}
 	pStore->storageIndexArr[indexDataOfs]->lastAccess = timerSecondsSince2000();
-	
+
 	if ( ppIndex )		*ppIndex		= pStore->storageIndexArr[indexDataOfs];
 	if ( pFileInfoOfs )	*pFileInfoOfs	= fileDataOfs;
 }
@@ -444,7 +444,7 @@ tDataFileKey offlinedPlayers_InitActiveFileInfo( void )
 				break;
 			fileKey = highKey;
 		}
-		
+
 		spec.dataFileKey = fileKey;
 		prepareOpenFileInfo( &spec, NULL, NULL );	// make sure data structs are frosty
 		pIndex->activeFileInfo = pIndex->openFileInfo[fileKey-1];	// fileKey is a 1-based index
@@ -461,10 +461,10 @@ FILE* prepareDataFile( tDataFileSpec* fileSpec, long offset, int origin /*e.g., 
 	tStorageIndex* pIndex = NULL;
 	tOpenFileInfo* openFileInfo = NULL;
 	int fileInfoOfs = 0;
-	
+
 	prepareOpenFileInfo(fileSpec,&pIndex,&fileInfoOfs);
 	openFileInfo = pIndex->openFileInfo[fileInfoOfs];
-	
+
 	// offset -1 means, "close the file"
 	if ( offset == -1 )
 	{
@@ -478,7 +478,7 @@ FILE* prepareDataFile( tDataFileSpec* fileSpec, long offset, int origin /*e.g., 
 		return NULL;
 	}
 
-	// we want to open the file	
+	// we want to open the file
 	if (!openFileInfo->filePtr)
 	{
 		openFileInfo->filePtr = fopen(dataFname(fileSpec),"r+b");
@@ -509,7 +509,7 @@ bool patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjSta
 	int fldOffsets[kCurrentIndexFlds+1] = { 0 };
 	int currTime = (int)timerSecondsSince2000();
 	int dataFileNbr;
-	
+
 	typedef struct tPatchSpec {
 		int fldNbr;		// 0-based
 		int* sourceData;
@@ -521,30 +521,30 @@ bool patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjSta
 		{ kIndexTextFld_storageStatus,	(int*)&status,	"%u"	},
 		{ kIndexTextFld_dateStored,		&currTime,		"%-12u"	},
 	};
-	
+
 	dataFileNbr = ( fileSpec->storageClass == kStorageClass_OfflineCharacters ) ? fileSpec->dataFileKey : 0;
-	
-	
+
+
 	// Get a copy of the index record
 	indexFile = prepareIndexFile( fileSpec, p->idxfile_pos, SEEK_SET );
 	if (ftell(indexFile) != p->idxfile_pos)
 	{
 		return false;
 	}
-	if (( ! readIndexStringRec( indexFile, 
-			indexEntry, ARRAY_SIZE(indexEntry), 
+	if (( ! readIndexStringRec( indexFile,
+			indexEntry, ARRAY_SIZE(indexEntry),
 			fldOffsets, kCurrentIndexFlds, &recSize, &fldCount )) ||
 		( ! VALID_INDEX_REC_FLD_COUNT(fldCount) ))
 	{
 		return false;
 	}
-	
+
 	// The last entry in fldOffsets is the offset of the NULL terminator or newline
 	// at the end. Allows us to measure the field length of the last item in the
 	// same way as other items: by subtract the current field offset from the next one.
 	// In the case of the last item, the "next" is a fake offset.
 	fldOffsets[fldCount] = recSize;
-	
+
 	for (patchSpecI=0; patchSpecI < ARRAY_SIZE(specs); patchSpecI++ )
 	{
 		const char* szPrintFmt = "%u";
@@ -554,7 +554,7 @@ bool patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjSta
 			continue;
 		}
 		sprintf_s( fldBuffer, ARRAY_SIZE(fldBuffer), pSpec->szPrintFmtStr, *(pSpec->sourceData) );
-		
+
 		// make sure we don't clobber the space separated values...
 		fldPtr = ( indexEntry + fldOffsets[pSpec->fldNbr] );
 		newFldSz = strlen(fldBuffer);
@@ -574,7 +574,7 @@ bool patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjSta
 			success = false;
 		}
 	}
-	
+
 	// Now that we have patch our copy, write it (cautiously) to the index file.
 	fseek( indexFile, p->idxfile_pos, SEEK_SET );
 	if (ftell(indexFile) != p->idxfile_pos)
@@ -583,7 +583,7 @@ bool patchIndexRecord( tDataFileSpec* fileSpec, OfflinePlayer* p, tOfflineObjSta
 	}
 	fwrite( indexEntry, recSize, 1, indexFile );
 	fflush( indexFile );
-	
+
 	return success;
 }
 
@@ -608,10 +608,10 @@ void openDataAppendFile( tStorageClass storageClass, int* p_file_size, FILE** p_
 	tStorageIndex* pIndex = NULL;
 	int fileDataOfs = 0;
 	tDataFileSpec spec = { 0 };
-	
+
 	spec.storageClass	= storageClass;
 	spec.dataFileKey	= *p_data_fileKey;
-	
+
 	if ( storageClass == kStorageClass_OfflineCharacters )
 	{
 		// We append to the highest numbered file, using our single index
@@ -630,7 +630,7 @@ void openDataAppendFile( tStorageClass storageClass, int* p_file_size, FILE** p_
 		prepareOpenFileInfo( &spec, &pIndex, &fileDataOfs );
 		pIndex->activeFileInfo = pIndex->openFileInfo[fileDataOfs];
 	}
-	
+
 	data_append = prepareDataFile(&spec,0,SEEK_END);
 	if ( storageClass == kStorageClass_DeletedCharacters )
 	{
@@ -652,14 +652,14 @@ void openDataAppendFile( tStorageClass storageClass, int* p_file_size, FILE** p_
 			data_append = prepareDataFile(&spec, 0, SEEK_END);
 		}
 	}
-	
+
 	if ( p_file_size )		*p_file_size	= fileSz;
 	if ( p_file_ptr )		*p_file_ptr		= data_append;
 	if ( p_data_fileKey )	*p_data_fileKey	= spec.dataFileKey;
 }
 
-bool readIndexStringRec( FILE* dataFile, 
-			char* buffer, size_t buffSz, int* fldOffsets, int nFldOffsetsSz, 
+bool readIndexStringRec( FILE* dataFile,
+			char* buffer, size_t buffSz, int* fldOffsets, int nFldOffsetsSz,
 			size_t* p_string_size, int* p_num_fields )
 {
 	size_t str_size = 0;
@@ -669,7 +669,7 @@ bool readIndexStringRec( FILE* dataFile,
 	bool in_quotes = false;
 	bool is_blank = false;
 	bool was_blank = true;	// needs to be true as an initial state
-	
+
 	// like fgets(), but for binary mode files. also counts fields...
 	if ( dataFile != NULL )
 	{
@@ -718,10 +718,10 @@ bool readIndexStringRec( FILE* dataFile,
 		}
 		buffer[str_size] = '\0';
 	}
-	
+
 	*p_string_size = str_size;
 	*p_num_fields = fld_count;
-	
+
 	return ( str_size > 0 );
 }
 
@@ -746,7 +746,7 @@ int offlinePlayerMoveOffline(int id)
 	return !! addPlayerToOfflineStore(id, kOfflineObjStatus_OFFLINE, &spec, true,true);
 }
 
-bool addPlayerToOfflineStore(int id, tOfflineObjStatus status, 
+bool addPlayerToOfflineStore(int id, tOfflineObjStatus status,
 									tDataFileSpec* fileSpec,
 									bool bUpdateIdxCache, bool bUnloadContainer)
 {
@@ -767,14 +767,14 @@ bool addPlayerToOfflineStore(int id, tOfflineObjStatus status,
 	return false;
 }
 
-bool copyEntityContainerToStorage(int id, tOfflineObjStatus status, 
+bool copyEntityContainerToStorage(int id, tOfflineObjStatus status,
 									tDataFileSpec* fileSpec,
 									EntCon** ppEnt, OfflinePlayer* pNewPlayerData )
 {
 	EntCon* ent_con;
 	U32		origin,archetype;
 	extern AttributeList *var_attrs;
-	
+
 	if (( ppEnt != NULL ) && ( *ppEnt != NULL ))
 	{
 		// caller passed in an entity container, so use that
@@ -810,11 +810,11 @@ bool copyEntityContainerToStorage(int id, tOfflineObjStatus status,
 	pNewPlayerData->archetype		= archetype;
 	pNewPlayerData->fileKey			= fileSpec->dataFileKey;
 	pNewPlayerData->level			= ent_con->level;
-	
+
 	return writePlayerDataToDataFiles(fileSpec->storageClass,pNewPlayerData, containerGetText(ent_con), status );
 }
 
-bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewPlayerData, 
+bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewPlayerData,
 									const char* szRawData, tOfflineObjStatus status  )
 {
 	tDataFileSpec spec;
@@ -822,10 +822,10 @@ bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewP
 	FILE* indexFile = NULL;
 	int fileSize = 0;
 	int fileNbr = 0;
-	
+
 	spec.storageClass	= storageClass;
 	spec.dataFileKey	= pNewPlayerData->fileKey;
-	
+
 	devassert( OFFLINE_VALID_STORAGE_CLASS(spec.storageClass) );
 
 	openDataAppendFile( storageClass, &fileSize, &data_append, &spec.dataFileKey );
@@ -833,7 +833,7 @@ bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewP
 	pNewPlayerData->fileKey		= spec.dataFileKey;
 	pNewPlayerData->file_pos	= (U32)fileSize;
 	pNewPlayerData->idxfile_pos	= ftell(indexFile);
-	
+
 	// Write the data
 	{
 		int		origsize,zipsize;
@@ -844,10 +844,10 @@ bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewP
 		fwrite(&zipsize,4,1,data_append);
 		fwrite(zipped,zipsize,1,data_append);
 		fflush(data_append);
-		free(zipped);	
+		free(zipped);
 	}
-	
-	// Add an index file entry. 
+
+	// Add an index file entry.
 	// Maintenance note: See patchIndexRecord() if you change this format (which you can't
 	// really do without invalidating existing data, but I thought I'd mention it anyway).
 	fprintf(indexFile,"%u %u %u %u \"%s\" %d %d %d %d %12u \"%s\"\n",
@@ -863,9 +863,9 @@ bool writePlayerDataToDataFiles(tStorageClass storageClass, OfflinePlayer* pNewP
 			pNewPlayerData->dateStored,
 			pNewPlayerData->auth_name);
 	fflush(indexFile);
-	
+
 	LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, 0, "%s %u \"%s\"\n", storageClass == kStorageClass_OfflineCharacters ? "Offline" : "Delete", pNewPlayerData->auth_id,pNewPlayerData->name);
-		
+
 	return true;
 }
 
@@ -908,9 +908,9 @@ OfflinePlayerArray* storedData_PlayerArrayFromAuthId( tDataFileSpec* fileSpec, c
 	int fileInfoIndex = 0;
 	int auth_id = authSpec->auth_id;
 	OfflinePlayerArray* pList = NULL;
-	
+
 	prepareOpenFileInfo( fileSpec, &pIndex, &fileInfoIndex );
-	
+
 	if (( auth_id == 0 ) && ( authSpec->auth_name_p != NULL ) && ( authSpec->auth_name_p[0] != '\0' ))
 	{
 		StashElement elem;
@@ -918,7 +918,7 @@ OfflinePlayerArray* storedData_PlayerArrayFromAuthId( tDataFileSpec* fileSpec, c
 		{
 			auth_id = stashElementGetInt(elem);
 		}
-	}		
+	}
 	if ( stashIntFindPointer(pIndex->playerArrayCache, auth_id, &pList) )
 	{
 		return pList;
@@ -1047,13 +1047,13 @@ void storedData_AddToPlayerArray( tDataFileSpec* fileSpec, OfflinePlayer* p)
 	tOpenFileInfo* fileInfo = NULL;
 	tStorageIndex* pIndex = NULL;
 	tAuthSpec authSpec = { 0 };
-	
+
 	// Strategy: find the auth_id via hash table lookup, then add to the
 	// the list of db_id's (characters) for this auth_id
-	
-	//	First, make sure we have data to search 
+
+	//	First, make sure we have data to search
 	prepareOpenFileInfo( fileSpec, &pIndex, NULL );
-	
+
 	// If the player's db_id is zero we need to assign a temporary id.
 	// Otherwise, we don't be able to find him by id later on.
 	if ( p->db_id == 0 )
@@ -1106,7 +1106,7 @@ int offlinePlayerList(int auth_id,char *auth_name,OfflinePlayer *list,int max_li
 	OfflinePlayer		*p;
 	tDataFileSpec		spec = { 0 };
 	tAuthSpec			authSpec = { 0 };
-	
+
 	spec.storageClass	= kStorageClass_OfflineCharacters;
 	authSpec.auth_id = auth_id;
 	authSpec.auth_name_p = auth_name;
@@ -1121,9 +1121,9 @@ int offlinePlayerList(int auth_id,char *auth_name,OfflinePlayer *list,int max_li
 		// an offline record, check to make sure p->db_id is not in the list of
 		// currently online player ids.
 		p = pList->data[fromIdx];
-		if (p->name[0] && 
-			p->fileKey && 
-			p->storage_status == kOfflineObjStatus_OFFLINE && 
+		if (p->name[0] &&
+			p->fileKey &&
+			p->storage_status == kOfflineObjStatus_OFFLINE &&
 			!dbIdInList(p->db_id,online_ids,online_count))
 		{
 			list[toIdx++] = *p;
@@ -1138,7 +1138,7 @@ void storageIndexLoadFromDisk( tDataFileSpec* spec )
 	int				i,count,del_count=0;
 	intptr_t		indexFileSz;
 	FILE*			indexFile;
-	
+
 	// Check to see if it's already loaded
 	{
 		tStorageIndex* pIndex = NULL;
@@ -1149,24 +1149,24 @@ void storageIndexLoadFromDisk( tDataFileSpec* spec )
 			return;
 		}
 	}
-	
+
 	indexFileSz = fileSize(indexFname(spec));
 	if (( indexFileSz <= 0 ) ||
 		(( indexFile = prepareIndexFile(spec,0,SEEK_SET)) == NULL ))
 	{
 		return;
 	}
-	
+
 	if (( mem = (char*)malloc(indexFileSz+1)) == NULL )
 	{
 		return;
 	}
-	
+
 	fread(mem,indexFileSz,1,indexFile);
 	mem[indexFileSz] = 0;
 
 	//
-	// Build our cached index data from scratch	
+	// Build our cached index data from scratch
 	//
 	storedData_CreateIndexCache(spec);
 
@@ -1183,7 +1183,7 @@ void storageIndexLoadFromDisk( tDataFileSpec* spec )
 		}
 		auth_id = atoi(args[kIndexTextFld_auth_id]);
 		db_id	= atoi(args[kIndexTextFld_db_id]);
-			
+
 		player.fileKey = atoi(args[kIndexTextFld_fileNbr]);
 		player.file_pos = atoi(args[kIndexTextFld_filePos]);
 		player.auth_id	= auth_id;
@@ -1192,11 +1192,11 @@ void storageIndexLoadFromDisk( tDataFileSpec* spec )
 		player.level	= atoi(args[kIndexTextFld_level]);
 		player.origin	= atoi(args[kIndexTextFld_origin]);
 		player.archetype= atoi(args[kIndexTextFld_archetype]);
-		
+
 		// Older records may not have all of these fields
-		player.storage_status	= 
-				( count > kIndexTextFld_storageStatus ) ?  
-					atoi(args[kIndexTextFld_storageStatus]) : 
+		player.storage_status	=
+				( count > kIndexTextFld_storageStatus ) ?
+					atoi(args[kIndexTextFld_storageStatus]) :
 					kOfflineObjStatus_OFFLINE;
 		player.dateStored =
 				( count > kIndexTextFld_dateStored ) ?
@@ -1206,7 +1206,7 @@ void storageIndexLoadFromDisk( tDataFileSpec* spec )
 				( count > kIndexTextFld_AuthName ) ?
 					args[kIndexTextFld_AuthName] :
 					"" );
-		
+
 		player.idxfile_pos = s - mem;
 		storedData_AddToPlayerArray(spec,&player);
 	}
@@ -1237,7 +1237,7 @@ void storageIndexRelease( tOfflineDataStore* pStore, int nIndexOfs )
 		}
 		SAFE_FREE(pIndex->openFileInfo);
 	}
-	
+
 	if (( pStore->storageIndexCount > 1 ) &&
 		( nIndexOfs < (pStore->storageIndexCount-1) ))
 	{
@@ -1263,7 +1263,7 @@ char *storedData_GetPlayer(tStorageClass storageClass, OfflinePlayer *p)
 	char	*zipdata,*data=NULL;
 	FILE	*file;
 	tDataFileSpec spec;
-	
+
 	spec.storageClass	= storageClass;
 	spec.dataFileKey	= p->fileKey;
 
@@ -1288,13 +1288,13 @@ char *storedData_GetPlayer(tStorageClass storageClass, OfflinePlayer *p)
 		//	and deleted player information, we modified the index files only.
 		//	Now, when/if the old data is read we do a fixup.
 		//
-		const char* kStandardSwapText = 
+		const char* kStandardSwapText =
 				"SupergroupsId 0\n"
 				"TaskforcesId 0\n"
 				"Ents2[0].LevelingPactsId 0\n";
 		char templateMods[512];
 		const char* newAuthName = p->auth_name;
-		
+
 		if (( newAuthName == NULL ) || ( *newAuthName == '\0' ))
 		{
 			newAuthName = pnameFindById( p->auth_id );
@@ -1308,7 +1308,7 @@ char *storedData_GetPlayer(tStorageClass storageClass, OfflinePlayer *p)
 				p->auth_id,
 				newAuthName,
 				kStandardSwapText
-			 );		
+			 );
 		}
 		else
 		{
@@ -1319,7 +1319,7 @@ char *storedData_GetPlayer(tStorageClass storageClass, OfflinePlayer *p)
 				kStandardSwapText
 			 );
 		}
-	
+
 		zipdata = malloc(zipsize);
 		fread(zipdata,zipsize,1,file);
 		data_size = origsize + 1;
@@ -1351,7 +1351,7 @@ AnyContainer *offlinePlayerTempLoad(int db_id)
 	}
 	authSpec.auth_id = pCatalogInfo->authId;
 	authSpec.auth_name_p = NULL;
-	
+
 	if ((( p = storedData_StoredPlayerFromAuthAndId( &spec, &authSpec, db_id )) != NULL ) &&
 		( p->fileKey != 0 ))
 	{
@@ -1379,7 +1379,7 @@ int offlinePlayerFindByName(char *name)
 	tDataFileSpec spec = { 0 };
 	tStorageIndex* pStore = NULL;
 	int fileDataIndex = 0;
-	
+
 	spec.storageClass = kStorageClass_OfflineCharacters;
 	prepareOpenFileInfo( &spec, &pStore, &fileDataIndex );
 
@@ -1405,14 +1405,14 @@ int offlinePlayerDelete(int auth_id,char *auth_name,int db_id)
 	OfflinePlayer *p = NULL;
 	tDataFileSpec spec = { 0 };
 	tAuthSpec authSpec = { 0 };
-	
+
 	authSpec.auth_id = auth_id;
 	authSpec.auth_name_p = auth_name;
-	
+
 	// We're looking in the offline storage, even though the
 	// operation is for deletion.
 	spec.storageClass = kStorageClass_OfflineCharacters;
-	
+
 	// A player is deleted by "offlining" him and marking his index record
 	// with status kOfflineObjStatus_DELETED. That allows a deleted player
 	// to be easily restored.
@@ -1467,7 +1467,7 @@ int restoreFromOfflineStorage( tStorageClass storageClass, OfflinePlayer *offlin
 	{
 		return kOfflineRestore_NO_MATCHING_DATA;
 	}
-	
+
 	if ( offlinePlayer->db_id == 0 )
 	{
 		// If zero, set it to a negative number to force it to get a new db_id in containerAlloc()
@@ -1480,7 +1480,7 @@ int restoreFromOfflineStorage( tStorageClass storageClass, OfflinePlayer *offlin
 	{
 		//cleanup
 		free(data);
-		containerUnload(list,offlinePlayer->db_id);	
+		containerUnload(list,offlinePlayer->db_id);
 		return kOfflineRestore_NO_MATCHING_DATA;
 	}
 	if (new_data != data)
@@ -1529,7 +1529,7 @@ int restoreFromOfflineStorage( tStorageClass storageClass, OfflinePlayer *offlin
 	LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, 0, "Restore %u \"%s\" \"%s\"\n", ent_con->auth_id, ent_con->account, ent_con->ent_name);
 	containerUnload(dbListPtr(CONTAINER_ENTS),offlinePlayer->db_id);
 	free(data);
-	
+
 	{
 		tDataFileSpec spec;
 		spec.storageClass	= storageClass;
@@ -1537,7 +1537,7 @@ int restoreFromOfflineStorage( tStorageClass storageClass, OfflinePlayer *offlin
 		patchIndexRecord(&spec,offlinePlayer,kOfflineObjStatus_RESTORED);
 	}
 	offlinePlayer->storage_status = kOfflineObjStatus_RESTORED;
-	
+
 	return kOfflineRestore_SUCCESS;
 }
 
@@ -1565,7 +1565,7 @@ tOfflineRestoreResult offlinePlayerRestoreOfflined(int auth_id,char *auth_name,i
 	return restoreFromOfflineStorage( kStorageClass_OfflineCharacters, offlinePlayer, &authSpec );
 }
 
-tOfflineRestoreResult offlinePlayerRestoreDeleted(int auth_id, char* auth_name, char* char_name, 
+tOfflineRestoreResult offlinePlayerRestoreDeleted(int auth_id, char* auth_name, char* char_name,
 														int seqNbr, char* deletionDateMMYYYY /* MM/YYYY */)
 {
 	tDataFileSpec spec;
@@ -1575,7 +1575,7 @@ tOfflineRestoreResult offlinePlayerRestoreDeleted(int auth_id, char* auth_name, 
 	storageIndexLoadFromDisk( &spec );
 	authSpec.auth_id = auth_id;
 	authSpec.auth_name_p = auth_name;
-	
+
 	offlinePlayer = storedData_StoredPlayerFromAuthAndName( &spec, kOfflineObjStatus_DELETED, &authSpec, char_name, seqNbr );
 	if (( offlinePlayer == NULL ) ||
 		( offlinePlayer->storage_status != kOfflineObjStatus_DELETED ))
@@ -1591,7 +1591,7 @@ tOfflineRestoreResult offlinePlayerRestoreDeleted(int auth_id, char* auth_name, 
 	return restoreFromOfflineStorage( kStorageClass_DeletedCharacters, offlinePlayer, &authSpec );
 }
 
-void offlinePlayerListDeleted(int auth_id,char *auth_name, char* deletionDateMMYYYY /* MM/YYYY */, 
+void offlinePlayerListDeleted(int auth_id,char *auth_name, char* deletionDateMMYYYY /* MM/YYYY */,
 								OfflinePlayer *list,int max_list, int* p_num_found, int* p_auth_id)
 {
 	int player_count = 0;
@@ -1689,7 +1689,7 @@ void offlineUnusedPlayers()
 			LOG(LOG_OFFLINE, LOG_LEVEL_IMPORTANT, 0, "rejecting offline of authid %i, lastactive is greater than %s", auth_id, datestr);
 			continue;
 		}
-		
+
 		// Dude has no active ents so move his characters to the offline table, unless the
 		// player level is above "protect_level". Keep those guys around.
 		buf_len = sprintf(buf, "WHERE AuthId = %d AND (Level < %d OR Level IS NULL)", auth_id, protect_level-1);
@@ -1762,14 +1762,14 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 }
 
 #ifdef OFFLINE_ENABLE_DELETION_LOG_IMPORT_CODE
-		
+
 	void logTimeToTimeStruct( const char* szLogTime, struct tm* pTime )
 	{
-		//                           111111111  
+		//                           111111111
 		//                 0123456789012345678
 		// Format sample: "03-02-2009 11:36:37"
 		memset( pTime, 0, sizeof(struct tm) );
-		
+
 		if (( szLogTime[2]  == '-' ) &&
 			( szLogTime[5]  == '-' ) &&
 			( szLogTime[13] == ':' ) &&
@@ -1781,9 +1781,9 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 			pTime->tm_mon	= (((( szLogTime[0 ] - '0' ) * 10 ) + ( szLogTime[1 ] - '0' )) - 1 );
 			pTime->tm_mday	=  ((( szLogTime[3 ] - '0' ) * 10 ) + ( szLogTime[4 ] - '0' ));
 			pTime->tm_year	= ((
-				(( szLogTime[6] - '0' ) * 1000 ) + 
-				(( szLogTime[7] - '0' ) * 100 ) + 
-				(( szLogTime[8] - '0' ) * 10 ) + 
+				(( szLogTime[6] - '0' ) * 1000 ) +
+				(( szLogTime[7] - '0' ) * 100 ) +
+				(( szLogTime[8] - '0' ) * 10 ) +
 				( szLogTime[9] - '0' )) - 1900 );
 		}
 		else
@@ -1791,7 +1791,7 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 			devassert( 0 );	// bad format
 		}
 	}
-	
+
 	static void offlineProcessOneDeletionLogFile( const char* szLogFile )
 	{
 		// Read a deletion log and add it to our database
@@ -1820,17 +1820,18 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 		char lastChar = 0;
 
 		FILE* fLog = fopen( szLogFile, "r" );
-		
+
 		LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, LOG_CONSOLE, "Processing deletion log: %s.\n", szLogFile );
 		if ( fLog == NULL )
 		{
 			LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, LOG_CONSOLE, "offlineProcessDeletionLogFiles - can't open %s.\n", szLogFile );
+			free(containerBuffer);
 			return;
 		}
 
 		fld_id	= kLineStart;
 		lineDataSize	= 0;
-		
+
 		while (( aChar = fgetc(fLog)) != EOF )
 		{
 			if (( aChar == '\t' ) || ( fld_id == kLineStart ))
@@ -1844,7 +1845,7 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 				}
 				fld_id++;
 				fldSize = 0;
-				
+
 				switch( fld_id )
 				{
 					case kLineStart :
@@ -1872,7 +1873,7 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 					default :
 						break;
 				}
-				
+
 				if ( aChar == '\t' )
 				{
 					continue;
@@ -1891,7 +1892,7 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 					DbList* list = dbListPtr(CONTAINER_ENTS);
 					LineList lineList = { 0 };
 					struct tm delDate = { 0 };
-					
+
 					#if 0
 						LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, LOG_CONSOLE,
 							"Date: %s\n"
@@ -1901,9 +1902,9 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 							"Data:\n%s\n",
 								deletionDate, userIpAdd, authName, charName, containerBuffer );
 					#endif
-					
+
 					logTimeToTimeStruct( deletionDate, &delDate );
-					
+
 					textToLineList(list->tplt,containerBuffer,&lineList,0);
 					player.auth_id			= (int)fldValueFromLineList(list->tplt,&lineList,"AuthId",0);
 					strcpy_s(player.auth_name,ARRAY_SIZE(player.auth_name),authName);
@@ -1915,8 +1916,8 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 					player.origin			= fldValueFromLineList(list->tplt,&lineList,"Origin",0);
 					player.archetype		= fldValueFromLineList(list->tplt,&lineList,"PlayerType",0);
 					player.fileKey			= 0;
-					player.level			= fldValueFromLineList(list->tplt,&lineList,"Level",0);					
-					
+					player.level			= fldValueFromLineList(list->tplt,&lineList,"Level",0);
+
 					// Presumed date format is mm-dd-yyyy
 					// The file key is YYYYMM.
 					devassert( (strlen(deletionDate)==19) && ( deletionDate[2] == '-' ) && ( deletionDate[5] == '-' ));
@@ -1987,7 +1988,7 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 			}
 			lastChar = aChar;
 		}
-		
+
 		LOG( LOG_OFFLINE, LOG_LEVEL_IMPORTANT, LOG_CONSOLE, "  --> Records imported from %s: %d\n", szLogFile, num_imported );
 		fclose( fLog );
 		free(containerBuffer);
@@ -1999,21 +2000,21 @@ void fldStrFromLineList( ContainerTemplate *tplt, LineList* lineList, const char
 		intptr_t findDataHdl;
 		char* lastPathNameSegment;
 		char fullPath[2048];
-		
+
 		strncpy_s( fullPath, ARRAY_SIZE(fullPath), szLogFileSpec, _TRUNCATE );
-		
+
 		lastPathNameSegment = strrchr( fullPath, '\\' );
 		if ( lastPathNameSegment == NULL ) lastPathNameSegment = strrchr( fullPath, '/' );
 		if ( lastPathNameSegment != NULL ) lastPathNameSegment++;	// pass the divider...
 		if ( lastPathNameSegment == NULL ) lastPathNameSegment = fullPath;
-		
+
 		if (( strchr( lastPathNameSegment, '*' ) != NULL ) ||
 			( strchr( lastPathNameSegment, '?' ) != NULL ))
 		{
 			//
 			// Handle wildcards
 			//
-			size_t spaceForFileName = (( ARRAY_SIZE(fullPath) - strlen(fullPath) ) -  1 ); 
+			size_t spaceForFileName = (( ARRAY_SIZE(fullPath) - strlen(fullPath) ) -  1 );
 			bool bMoreFiles = (( findDataHdl = _findfirst( szLogFileSpec, &findInfo )) != -1 );
 			while ( bMoreFiles )
 			{

@@ -160,21 +160,21 @@ void containerInitIndex(IndexedContainer *cont_lines,const char *data,int create
 {
 	char				*str,*s;
 	ContainerLine		*line;
-	
+
 	cont_lines->count = 0; //WAS: memset(cont_lines,0,sizeof(*cont_lines));
 	dynArrayFit(&cont_lines->data,1,&cont_lines->data_max,strlen(data)+1);
 	strcpy(cont_lines->data,data);
 
 	// preallocate some space
 	dynArrayFit(&cont_lines->lines, sizeof(ContainerLine), &cont_lines->max_lines, MAX_QUERY_RESULTS);
-	
+
 	if (create)
 	{
 		cont_lines->hash_table = stashTableCreateWithStringKeys(stashOptimalSize(MAX_QUERY_RESULTS), StashDeepCopyKeys);
 	}
 	else
 		stashTableClear(cont_lines->hash_table);
-	
+
 	str = cont_lines->data;
 	for(;;)
 	{
@@ -292,7 +292,12 @@ void ctnrLineInit(CtnrLineState *state,char *data,char *table_name)
 
 	memset(state,0,sizeof(*state));
 	if (len > ctnrLineBuf_size) {
-		ctnrLineBuf = realloc(ctnrLineBuf, MAX(len+512, 10*1024));
+		char *retval = realloc(ctnrLineBuf, MAX(len+512, 10*1024));
+		if (retval == NULL) {
+			// World ending, we're out of RAM.
+			return;
+		}
+		ctnrLineBuf = retval;
 	}
 	state->buf = ctnrLineBuf;
 	memcpy(ctnrLineBuf, data, len);
@@ -349,7 +354,7 @@ void odbcInitialSetup(void)
 	// Verify connection timeout
 	timeout = sqlConnGetInfo(SQL_ATTR_QUERY_TIMEOUT, false, SQLCONN_FOREGROUND);
 	assertmsgf(!timeout, "SQL server is set to timeout after %d seconds", timeout);
-	
+
 	switch (gDatabaseProvider) {
 		xdefault:
 			//assert(sqlConnSetConnectAttr(SQL_ATTR_TXN_ISOLATION, (SQLPOINTER)SQL_TXN_READ_UNCOMMITTED, i));
@@ -370,7 +375,7 @@ void odbcInitialSetup(void)
 void queryDatabaseVersion(void)
 {
 	char cmd[SHORT_SQL_STRING];
-	int cmd_len;
+	int cmd_len = 0;
 
 	switch (gDatabaseProvider) {
 		xcase DBPROV_MSSQL:
