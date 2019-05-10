@@ -250,7 +250,7 @@ void authSendSetConnect()
 	AuthPacket	*pak = authAllocPacket(AS_SET_CONNECT);
 	authdbg_printf("sent: AS_SET_CONNECT\n");
 
-	authPutU32(pak,cfg_IsVIPShard());
+	authPutU32(pak,cfg_VIPShard());
 	authSendPacket(pak);
 }
 

@@ -301,9 +301,12 @@ int drawTopTab(NavigationTab * tab, F32 centerX, F32 centerY, F32 z )
 	if( mouseClickHit(&box, MS_LEFT) && (!locked || (sMenuType == HYBRID_MENU_CREATION && !creationGrayedTab ) ))
 	{
 		int cur_idx = getNavTabIndexFromMenu(current_menu());
-
-		if( navigationSet[sMenuType][cur_idx].onExitFunc )
+		// current_menu() might not return the index of a navigation set menut entry (for example could also be MENU_REDIRECT)
+		// in which case getNavTabIndexFromMenu() returns -1 so make sure to check cur_idx before using it
+		if (cur_idx >= 0 && navigationSet[sMenuType][cur_idx].onExitFunc != NULL)
+		{
 			navigationSet[sMenuType][cur_idx].onExitFunc();
+		}
 
 		hybrid_start_menu(tab->menu);
 

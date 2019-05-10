@@ -347,8 +347,8 @@ int UTF8GetLength(const char* str){
 		characterCount++;
 
 		//	this assert means that the string doesn't have a properly encoded string
-		//	an example catch made is that the character × (not x) was in menumessages.ms
-		//	"ToHitToolTip",			"ToHit is an important part of your actual chance to hit a target.  Hit Chance = Clamp(Player Accuracy × Power Accuracy × Clamp( ToHit – Target Defense )). The clamp keeps numbers between 5% and 95%."
+		//	an example catch made is that the character  (not x) was in menumessages.ms
+		//	"ToHitToolTip",			"ToHit is an important part of your actual chance to hit a target.  Hit Chance = Clamp(Player Accuracy  Power Accuracy  Clamp( ToHit  Target Defense )). The clamp keeps numbers between 5% and 95%."
 		//	which tripped this assert
 		//	Temporary: thinking of a way to trap this before it gets here, or how to pass this up properly.
 		devassertmsg(i <= byteLength, "last %d chars: %s", debugLength, binStrToHexStr(&str[max(0, byteLength - debugLength)], min(byteLength, debugLength) + 1));

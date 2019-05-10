@@ -686,7 +686,7 @@ void sgroup_readDBData(Packet *in_pak,int db_id,int count)
 			// arises with a yellow star that's not dark, but is inactive.  What I really need to do is limit this check to active players.  I need to
 			// think about this some more, so I'm going to leave the count code in for now, but not actually do anything with it yet.
 
-			// Precheck: this better be a real person, we also reject GM's at the hidden über GM rank
+			// Precheck: this better be a real person, we also reject GM's at the hidden ber GM rank
 			// and the player must have logged on within the demote timeout period
 			// 1/14/2010 Also reject dark players
 			if (stat->db_id && stat->rank != NUM_SG_RANKS - 1 && 

@@ -110,7 +110,9 @@ void Transaction_MicroFinished(bool success, MicroTransaction * transaction)
 	}
 
 	// ack on failure so we do not log too many failures in the transaction log for customer service
+#if defined(USE_POST_BACK_RELAY)
 	postback_ack(transaction->message);
+#endif // USE_POST_BACK_RELAY
 	MP_FREE(MicroTransaction, transaction);
 }
 
@@ -356,6 +358,8 @@ static const char * key_userid[] = {"userid", NULL};
 static const char * key_virtualamount[] = {"virtualamount", NULL};
 static const char * key_virtualcurrency[] = {"virtualcurrency", NULL};
 
+#if defined(USE_POST_BACK_RELAY)
+
 static void handle_mtx(PostbackMessage * message, yajl_val mtx) {
 	// transaction data
 	const char * transactionid;
@@ -488,3 +492,5 @@ void playspan_message(PostbackMessage * message, void * data, size_t size) {
 
 	handle_mtx(message, tree);
 }
+
+#endif // USE_POST_BACK_RELAY

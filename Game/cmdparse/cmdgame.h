@@ -763,10 +763,6 @@ typedef struct GameState
 	int doFullVerify;	// Force a full checksum verify at startup
 	int noVerify;		// skip verify
 	
-	bool launchedFromSteam; // Indicates that the game was launched via the Valve Steam client
-	bool steamIsInitialized; // Indicates that the Valve Steam SDK was successfully initialized
-	U32  steamAuthSessionTicketID;	// from COHSteam_GetAuthSessionTicket()
-
 	// Leave these at/near the end since they are large and rarely used
 	char newAccountURL[256];
 	char linkAccountURL[256];

@@ -58,7 +58,7 @@ _BEFORE
 		DWORD dwTransferred = 0;
 		CIOObject *pObject = NULL;
 		LPOVERLAPPED lpOverlapped = NULL;
-		BOOL bSuccess = GetQueuedCompletionStatus(g_hIOCompletionPort, &dwTransferred, (LPDWORD) &pObject, &lpOverlapped, INFINITE);
+		BOOL bSuccess = GetQueuedCompletionStatus(g_hIOCompletionPort, &dwTransferred, (PULONG_PTR)&pObject, &lpOverlapped, INFINITE);
 
 		if (pObject) {
 			InterlockedIncrement( &g_nRunningThread);
@@ -86,7 +86,7 @@ _BEFORE
 		DWORD dwTransferred = 0;
 		CIOObject *pObject = NULL;
 		LPOVERLAPPED lpOverlapped = NULL;
-		BOOL bSuccess = GetQueuedCompletionStatus(g_hIOCompletionPortInt, &dwTransferred, (LPDWORD) &pObject, &lpOverlapped, INFINITE);
+		BOOL bSuccess = GetQueuedCompletionStatus(g_hIOCompletionPortInt, &dwTransferred, (PULONG_PTR)&pObject, &lpOverlapped, INFINITE);
 
 		if (pObject)
 			pObject->OnIOCallback(bSuccess, dwTransferred, lpOverlapped);

@@ -90,7 +90,7 @@ static DWORD WINAPI mapCrashThread( LPVOID lpParam )
 	int addrLen = sizeof(incomingIP);
 	CrashMap	map;
 
-	crashmap_sock = socket(AF_INET, SOCK_STREAM, 0);
+	crashmap_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	sockSetAddr(&addr_in,htonl(INADDR_ANY),DEFAULT_DBCRASHMAP_PORT);
 	if (!sockBind(crashmap_sock,&addr_in)) {
 		printf("Can't bind port %d, Mapserver crash autodetection/delinking will not function.\n",DEFAULT_DBCRASHMAP_PORT);
@@ -194,6 +194,7 @@ void addCrashedMap(MapCon *map_con, char * message, char *status, int ipaddr)
 		COPY(num_ents);
 		COPY(launcher_id);
 		COPY(dontAutoStart);
+		COPY(transient);
 		COPY(introZone);
 		COPY(is_static);
 		crashed->base_map_id = map_con->id;

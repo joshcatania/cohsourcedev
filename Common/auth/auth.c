@@ -466,7 +466,7 @@ int authConnect(char *ip_name,int port)
 	if (!timer)
 		timer = timerAlloc();
 	authDisconnect();
-	auth_state.socket = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+	auth_state.socket = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 
 	if (strcmp(ip_name,"127.0.0.1")==0)
 		sockSetAddr(&addr,inet_addr(ip_name),port);
@@ -505,7 +505,10 @@ void authSetKey(U32 key,int set_global_auth)
 	auth_state.global_auth = set_global_auth;
 	if (set_global_auth)
 	{
-		U8 blowFishKey[] = "[;'.]94-31==-%&@!^+]";
+		U8 blowFishKey[] = {
+			0xa4, 0xde, 0x6b, 0x64, 0xff, 0x24, 0xad, 0x74, 0x52, 0xa0,
+			0x6a, 0x35, 0xaf, 0xf5, 0x37, 0x11, 0xd3, 0x5a, 0xc8, 0x42
+		};
 
 		cryptBlowfishInit(&auth_state.blowfish_ctx,blowFishKey,sizeof(blowFishKey));
 	}

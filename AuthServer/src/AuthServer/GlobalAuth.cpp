@@ -189,7 +189,11 @@ _BEFORE
 _AFTER_FIN
 	return DefWindowProc(hwnd, uMsg, wParam, lParam);
 };
-unsigned char blowFishKey[] = "[;'.]94-31==-%&@!^+]";
+
+unsigned char blowFishKey[] = {
+	0xa4, 0xde, 0x6b, 0x64, 0xff, 0x24, 0xad, 0x74, 0x52, 0xa0,
+	0x6a, 0x35, 0xaf, 0xf5, 0x37, 0x11, 0xd3, 0x5a, 0xc8, 0x42
+};
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
@@ -396,7 +400,7 @@ exception_init();
 		CreateIOThread( );
 		if ( config.UseLogD ) {
 
-			SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
+			SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.LogDIP;
@@ -415,7 +419,7 @@ exception_init();
 
 		if ( config.UseIPServer ) {
 
-			SOCKET IPSock = socket(AF_INET, SOCK_STREAM, 0);
+			SOCKET IPSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 			sockaddr_in Destination;
 			Destination.sin_family = AF_INET;
 			Destination.sin_addr   = config.IPServer;
@@ -432,7 +436,7 @@ exception_init();
 		}
 
 		if ( config.UseWantedSystem ) {
-			SOCKET WantedSocket = socket( AF_INET, SOCK_STREAM, 0 );
+			SOCKET WantedSocket = socket( AF_INET, SOCK_STREAM, IPPROTO_TCP );
 			sockaddr_in WantedAddr;
 			WantedAddr.sin_family = AF_INET;
 			WantedAddr.sin_addr = config.WantedIP;

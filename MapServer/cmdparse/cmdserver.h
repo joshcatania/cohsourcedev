@@ -68,6 +68,8 @@ typedef struct ServerState
 	unsigned int		enableBoostDiminishing : 1;		// Enable diminishing returns on boosts (aka Enhancement Diversification)
 	unsigned int		skyFadeInteresting : 1;			// Set to 1 if skyFade values need to be sent
 
+	unsigned int		transient : 1;
+
 	int		viewCutScene;    //viewing a cut scene
 	Mat4	cutSceneCameraMat;  //since many files dont care what a cutScene is 
 	F32		cutSceneDepthOfField; //out here to be parallel with cutScene CameraMat

@@ -314,7 +314,7 @@ void serverCfgLoad()
 		else if (stricmp(s, "MaxCoVLevel")==0)
 			server_cfg.max_cov_level = atoi(s2);
 		else if (stricmp(s, "MaxDualSlots")==0)
-			server_cfg.dual_player_slots = MINMAX(atoi(s2),1, MAX_PLAYER_SLOTS);
+			server_cfg.dual_player_slots = MINMAX(atoi(s2),1, DUAL_PLAYER_SLOTS);
 		else if (stricmp(s, "BackupDays")==0)
 			server_cfg.backup_period = MAX( 30, atoi(s2) );
 		else if (stricmp(s, "OfflineProtectLevel")==0)
@@ -642,7 +642,7 @@ void cfg_setIsBetaShard(int data)
 	server_cfg.isBetaShard = data;
 }
 
-int cfg_IsVIPShard(void)
+int cfg_VIPShard(void)
 {
 	return server_cfg.isVIPServer;
 }

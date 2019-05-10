@@ -1364,6 +1364,10 @@ void parseArgs2(int argc,char **argv)
 		{
 			reward_SetWeeklyTFList(argv[++i]);
 		}
+		else if (stricmp(argv[i], "-transient") == 0)
+		{
+			server_state.transient = 1;
+		}
 		else if (stricmp(argv[i], "-idleExitTimeout") == 0)
 		{
 			int timeout_minutes = atoi(argv[++i]);

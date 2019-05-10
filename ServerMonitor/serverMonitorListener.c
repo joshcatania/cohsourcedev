@@ -39,7 +39,7 @@ static DWORD WINAPI listenThreadMain(void *data) {
 	struct sockaddr_in	addr_in;
 	int port=DEFAULT_SVRMON_LISTEN_PORT;
 	int result;
-	SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+	SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	SOCKET s2;
 	g_listenThreadRunning=true;
 
@@ -311,7 +311,7 @@ static DWORD WINAPI commandThreadMain(void *data)
 	struct sockaddr_in	addr_in;
 	int port=DEFAULT_SVRMON_COMMAND_PORT;
 	int result;
-	SOCKET s = socket(AF_INET, SOCK_STREAM, 0);
+	SOCKET s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	g_commandThreadRunning=true;
 
 	sockSetAddr(&addr_in,htonl(INADDR_ANY),port);

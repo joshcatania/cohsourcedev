@@ -144,6 +144,7 @@ TokenizerParseInfo ParseStaticMapInfo[] =
 	{	"MonorailLine",		TOK_INT(StaticMapInfo, monorailLine, 0),			},
 	{	"DontTrackGurneys",	TOK_INT(StaticMapInfo, dontTrackGurneys, 0),		},
 	{	"DontAutoStart",	TOK_INT(StaticMapInfo, dontAutoStart, 0),			},
+	{	"Transient",		TOK_INT(StaticMapInfo, transient, 0),				},
 	{	"IntroZone",		TOK_INT(StaticMapInfo, introZone, 0),				},
 	{	"OpaqueFogOfWar",	TOK_INT(StaticMapInfo, opaqueFogOfWar, 0),			},
 	{	"MinCritters",		TOK_INT(StaticMapInfo, minCritters, 0)				},

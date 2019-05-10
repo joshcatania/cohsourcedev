@@ -43,7 +43,7 @@ typedef intptr_t IntFromPtrAndStr(void *parent_ptr,void *struct_ptr,const char *
 typedef const char *StrFromPtrAndInt(void *parent_ptr,void *struct_ptr,intptr_t num);
 
 typedef struct{
-	int offset;			//
+	intptr_t offset;
 	int isPointer;		// Perform indirection assuming the parent is a pointer?
 	char* structName;	// For debug only.	What is the name of the parent structure this indirection operates on?
 	char* fieldName;	// For debug only.  What is the name of the field this indirection is supposed to access?
@@ -84,7 +84,7 @@ typedef struct LineDesc
 	struct 
 	{
         ContainerPackType type;
-		int		size;
+		intptr_t size;
 		char	*name;
 		StructIndirection indirection[MAX_INDIRECTIONS];
 		IntFromStr	*int_from_str_func;

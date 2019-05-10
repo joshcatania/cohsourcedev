@@ -128,7 +128,7 @@ void serverCfgLoad(void);
 int dbIsLocalIp(U32 ip);
 
 int cfg_IsBetaShard();
-int cfg_IsVIPShard();
+int cfg_VIPShard();
 
 void cfg_setIsBetaShard(int data);
 void cfg_setVIPShard(int data);

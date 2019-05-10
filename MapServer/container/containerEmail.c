@@ -104,7 +104,7 @@ LineDesc email_line_desc[] =
 	{{ PACKTYPE_DATE, 0,						"Sent",			OFFSET(Email,sent),    },	"Time Email was Sent"},	
 	{{ PACKTYPE_INT, SIZE_INT32,					"SenderAuth",	OFFSET(Email,sender_auth), },	"Auth ID of the Sender"},
 
-	{{ PACKTYPE_SUB, MAX_RECIPIENTS,			"Recipients",   (int)recipient_desc },	"Who gets the email"},
+	{{ PACKTYPE_SUB, MAX_RECIPIENTS,			"Recipients",   (intptr_t)recipient_desc },	"Who gets the email"},
 	{ 0 },
 };
 

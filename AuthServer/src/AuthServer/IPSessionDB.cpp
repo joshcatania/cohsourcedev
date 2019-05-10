@@ -29,7 +29,7 @@ VOID CALLBACK IPSocketTimerRoutine(PVOID lpParam, BYTE TimerOrWaitFired)
 	g_hIPServerTimer = NULL;
 
 	if ( IPServerReconnect == true ) {
-		SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, 0);
+		SOCKET LOGSock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 
 		sockaddr_in Destination;
 		Destination.sin_family = AF_INET;
@@ -641,7 +641,7 @@ void CIPSocket::OnTimerCallback( void )
 		closesocket( m_hSocket );
 		m_hSocket = INVALID_SOCKET;
 	}
-	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+	m_hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (m_hSocket == INVALID_SOCKET) {
 		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		RegisterTimer( 30000, true );

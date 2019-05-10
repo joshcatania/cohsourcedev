@@ -1041,7 +1041,8 @@ SpecialColumn map_cmds[] =
 	{ "MissionInfo",	CFTYPE_ANSISTRING,	OFFSETOF(MapCon,mission_info)									},
 	{ "MapGroupsId",	CFTYPE_INT,			OFFSETOF(MapCon,mapgroup_id),	CMD_MEMBER,	CONTAINER_MAPGROUPS	},
 	{ "DontAutoStart",	CFTYPE_INT,			OFFSETOF(MapCon,dontAutoStart)									},
-	{ "NewPlayerSpawn",	CFTYPE_INT,			OFFSETOF(MapCon,deprecated)									},
+	{ "Transient",		CFTYPE_INT,			OFFSETOF(MapCon,transient)										},
+	{ "NewPlayerSpawn",	CFTYPE_INT,			OFFSETOF(MapCon,deprecated)										},
 	{ "IntroZone",		CFTYPE_INT,			OFFSETOF(MapCon,introZone)										},
 	{ "BaseMapID",		CFTYPE_INT,			OFFSETOF(MapCon,base_map_id)									},
 	{ "SafePlayersLow",	CFTYPE_INT,			OFFSETOF(MapCon,safePlayersLow)									},
@@ -1217,7 +1218,9 @@ void dbInit(int start_static)
 	
 	repairAuthId();
 
+#if defined(DO_STUPID_DATABASE_TESTS)
 	testDataBaseTypes(testdatabasetypes_list);
+#endif
 	offlineInitOnce();
 	backupLoadIndexFiles();
 	
@@ -1304,17 +1307,19 @@ void dbInit(int start_static)
 			// Start LogServer, other servers
 			adequateLaunchersConnected = serverAutoStartInit();
 			if (!adequateLaunchersConnected) {
-				int response = MessageBox(compatibleGetConsoleWindow(), "Launchers specified in loadBalanceShardSpecific.cfg or servers.cfg are not connected (see console).\nThese MUST be connected for the server to operate properly, please fix this and click Retry.  (See DbServer console window for details.)", "DbServer Startup ERROR", MB_ABORTRETRYIGNORE|MB_SYSTEMMODAL);
-				if (response==IDABORT) {
-					exit(1);
-				} else if (response==IDRETRY) {
-					// Loop
-					loadBalanceConfigLoad(); // Reload
-					WeeklyTFCfgLoad();
-					serverCfgLoad(); // Reload (for Master-BeaconServer IP).
-				} else if (response==IDIGNORE) {
-					adequateLaunchersConnected = true;
-				}
+				printf_stderr("Launchers specified in loadBalanceShardSpecific.cfg or servers.cfg are not connected. Without these launchers the application servers will function in a degraded state.\n");
+				adequateLaunchersConnected = true;
+				//int response = MessageBox(compatibleGetConsoleWindow(), "Launchers specified in loadBalanceShardSpecific.cfg or servers.cfg are not connected (see console).\nThese MUST be connected for the server to operate properly, please fix this and click Retry.  (See DbServer console window for details.)", "DbServer Startup ERROR", MB_ABORTRETRYIGNORE|MB_SYSTEMMODAL);
+				//if (response==IDABORT) {
+				//	exit(1);
+				//} else if (response==IDRETRY) {
+				//	// Loop
+				//	loadBalanceConfigLoad(); // Reload
+				//	WeeklyTFCfgLoad();
+				//	serverCfgLoad(); // Reload (for Master-BeaconServer IP).
+				//} else if (response==IDIGNORE) {
+				//	adequateLaunchersConnected = true;
+				//}
 			}
 		} while (!adequateLaunchersConnected);		
 

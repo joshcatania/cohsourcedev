@@ -172,7 +172,7 @@ void sqlConnStmtPrintBinds(HSTMT stmt)
 	SQLHDESC apd = NULL;
 	SQLHDESC ipd = NULL;
 	SQLINTEGER num_binds = 0;
-	SQLUINTEGER array_size = 0;
+	size_t array_size = 0;
 	int i;
 
 	if(!SQL_SUCCEEDED(SQLGetStmtAttr(stmt, SQL_ATTR_APP_PARAM_DESC, &apd, 0, NULL))) {

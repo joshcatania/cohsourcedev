@@ -12,6 +12,8 @@
 
 #define DB_CONNECTION_TIMEOUT 40 // warn user if havent heard from db in this time
 
+#define DISABLE_RENDER_TELEMETRY
+
 typedef struct
 {
 	int		idx;

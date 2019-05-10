@@ -4164,9 +4164,9 @@ static void loginFrame()
 			cryptStore(g_achPassword, g_achPassword, sizeof(g_achPassword));
 		}
 
-		loginToAuthServer(0);
-
-		s_loggedIn_serverSelected = LOGIN_STAGE_SERVER_SELECT;
+		if (loginToAuthServer(0)) {
+			s_loggedIn_serverSelected = LOGIN_STAGE_SERVER_SELECT;
+		}
 	}
 
 	exitButtonX = xPosition(screenScaleX, screenScaleY, LOGIN_X + LOGIN_BUTTON_WD / 2);

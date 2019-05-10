@@ -9,6 +9,10 @@
 #include "endian.h"
 #include "strings_opt.h"
 #include "log.h"
+#ifdef _WIN32
+#include <wininclude.h>
+#include <iphlpapi.h>
+#endif
 
 void	sockSetAddr(struct sockaddr_in *addr,unsigned int ip,int port)
 {
@@ -163,6 +167,10 @@ char *makeHostNameStr(U32 ip)
 	return host_ent->h_name;
 }
 
+// sorry for the Windows-specific code, future code porters -Pazaz
+#ifdef _WIN32
+static PMIB_IPADDRTABLE pIPAddrTable;
+#endif
 
 // From RFC 1918
 //   The Internet Assigned Numbers Authority (IANA) has reserved the
@@ -175,6 +183,12 @@ char *makeHostNameStr(U32 ip)
 int isLocalIp(U32 ip)
 {
 	U8	a,b,c,d;
+#ifdef _WIN32
+	int i = 0;
+	DWORD dwSize = 0;
+	DWORD dwRetVal = 0;
+	LPVOID lpMsgBuf;
+#endif
 
 	a = ip & 255;
 	b = (ip >> 8) & 255;
@@ -188,6 +202,42 @@ int isLocalIp(U32 ip)
 		return 1;
 	if (a == 127 && b == 0 && c == 0 && d == 1)
 		return 1;
+
+#ifdef _WIN32
+	if (!pIPAddrTable) {
+		if (GetIpAddrTable(pIPAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER) {
+			free(pIPAddrTable);
+			pIPAddrTable = (MIB_IPADDRTABLE*)malloc(dwSize);
+		}
+		if (pIPAddrTable == NULL) {
+			printf("Memory allocation failed for GetIpAddrTable\n");
+			return 0;
+		}
+
+		if ((dwRetVal = GetIpAddrTable(pIPAddrTable, &dwSize, 0)) != NO_ERROR) {
+			printf("GetIpAddrTable failed with error %d\n", dwRetVal);
+			if (FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, dwRetVal, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+				(LPTSTR)& lpMsgBuf, 0, NULL)) {
+				printf("\tError: %s", lpMsgBuf);
+				LocalFree(lpMsgBuf);
+			}
+			return 0;
+		}
+	}
+
+	for (i = 0; i < (int)pIPAddrTable->dwNumEntries; i++) {
+		if (pIPAddrTable->table[i].dwAddr == ip) {
+			return 1;
+		}
+	}
+	
+	/* if memory leaks occur, add this in and make sure it gets run
+	if (pIPAddrTable) {
+		free(pIPAddrTable);
+		pIPAddrTable = NULL;
+	}*/
+#endif
+
 	return 0;
 }
 

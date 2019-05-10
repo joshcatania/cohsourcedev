@@ -26,7 +26,6 @@
 #include "LWC.h"
 #include "RegistryReader.h"
 #include "AppLocale.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 #include "MessageStoreUtil.h"
 #include "process_util.h"
 #include "win_init.h"
@@ -34,18 +33,6 @@
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
 
 char g_GameArguments[2048];
-
-bool isSteamRegistryKeySet()
-{
-	if (regGetAppInt("installedThroughSteam", 0) == 1)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
-}
 
 void game_beforeRegisterWinClass(int argc, char **argv)
 {
@@ -252,53 +239,6 @@ int main(int argc, char **argv)
 
 	// localized strings are loaded here
 	game_beforeParseArgs(1);
-
-	// set launchedFromSteam to true if either the parameter -launchedFromSteam
-	// is passed on the command line or the registry key installedThroughSteam is set.
-	game_state.launchedFromSteam = game_state.launchedFromSteam || isSteamRegistryKeySet();
-
-	// Check if we were launched from Steam, if so, initialize the Steam SDK
-	/*if (game_state.launchedFromSteam)
-	{
-
-		if (COHSteam_Init())
-		{
-			printf("Steam API initialized\n");
-			game_state.steamIsInitialized = true;
-		}
-		else
-		{
-
-			// Check if we're running through Steam, if not, COHSteamAPI_RestartAppIfNecessary will trigger Steam to
-			// kill this game process and re-launch CoH through Steam. This is because The CoH client must be a child
-			// process of the Steam client otherwise Steam API initialization fails.
-			if (COHSteamAPI_RestartAppIfNecessary())
-			{
-				// Kill the splash screen so that it doesn't overlay our message box
-				DestroySplash();
-
-				printf("Client not launched through steam, need to restart.\n");
-
-				// We kill the Launcher process here if it's the parent process of this process.
-				// If we don't do this, when Steam re-launches CoH, it will re-use the running launcher, and we'll
-				// be in a restart loop (as that Launcher won't be a child of the Steam client.
-				if (killParentIfLauncher())
-				{
-					printf("Killed parent launcher process, see you on the other side.\n");
-					winMsgError("City of Heroes has been installed via Steam on this computer. In order for Steam features to work correctly, the game will now restart under Steam. This may take a minute.");
-					exit(EXIT_SUCCESS);
-				}
-				else
-				{
-					printf("Attempt to kill NCLauncher.exe parent process failed.\n");
-					winMsgError("City of Heroes was unable to initialize the Steam API, Steam features will be unavailable.");
-					// We used to exit the application here, but I'm now allowing it to carry on so that
-					// people can still play in the event that Steam is down or something else bad has caused
-					// initialization to fail.
-				}
-			}
-		}
-	}*/
 
 	//Do after getAutoResumeInfo() so game_state.fullscreen will be correct
 	parseArgs(argc,argv);

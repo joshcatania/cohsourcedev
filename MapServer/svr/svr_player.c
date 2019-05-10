@@ -470,7 +470,7 @@ void svrCheckIdleShutdown(void)
 {
 	// local servers for development and editing don't ever idle exit.
 	// also only idle out static map instances, not the master started with AutoStart at shard startup (see comments above)
-	if ( !db_state.local_server && server_state.idle_exit_timeout > 0 && isStaticMapInstance())
+	if ( !db_state.local_server && server_state.idle_exit_timeout > 0 && (server_state.transient || isStaticMapInstance()))
 	{
 		// is the server currently idle
 		if (!player_count)

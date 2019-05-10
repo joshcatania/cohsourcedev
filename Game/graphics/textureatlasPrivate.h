@@ -244,7 +244,7 @@ static INLINEDBG void atlasTexToBasicTextureFromPixData(AtlasTex *tex, U8 *bitma
 	int new_width = 1 << log2(src_width);
 	int new_height = 1 << log2(src_height);
 	BasicTexture *btex = texGenNew(new_width, new_height, tex->name);
-	U8 *buffer = bitmap;
+	U8 *buffer = NULL;
 
 	if ((pixel_type & PIX_MASK) == PIX_LA)
 	{
@@ -268,7 +268,6 @@ static INLINEDBG void atlasTexToBasicTextureFromPixData(AtlasTex *tex, U8 *bitma
 		int y;
 		U8 *src, *dst;
 
-		buffer = NULL;
 		estrStackCreate((char**)(&buffer), total_size);
 		estrSetLengthNoMemset((char**)(&buffer), total_size);
 		dst = buffer;
@@ -299,7 +298,8 @@ static INLINEDBG void atlasTexToBasicTextureFromPixData(AtlasTex *tex, U8 *bitma
 	data->v_mult = ((float)src_height) / ((float)btex->realHeight);
 	data->u_offset = 0;
 	data->v_offset = 0;
-	if (pixel_type & PIX_NO_VFLIP) {
+	if (pixel_type & PIX_NO_VFLIP)
+	{
 		data->v_offset = data->v_mult;
 		data->v_mult *= -1;
 	}

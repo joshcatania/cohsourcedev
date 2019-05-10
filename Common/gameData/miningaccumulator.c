@@ -66,7 +66,7 @@ LineDesc MiningAccumulator_line_desc[] =
 	"name of the item for which data is being accumulated"},
 	{{	PACKTYPE_DATE,		0,							"WeekStart",	OFFSET(MiningAccumulator,week_start)						},
 	"when 'ThisWeek' data started being accumulated"},
-	{{	PACKTYPE_EARRAY,	(int)MiningAccumulatorEntryCreate,	"MinedData",	(int)MiningAccumulatorEntry_desc							},
+	{{	PACKTYPE_EARRAY,	(intptr_t)MiningAccumulatorEntryCreate,	"MinedData",	(intptr_t)MiningAccumulatorEntry_desc							},
 	"data accumulated over various time frames"},
 	{ 0 },
 };

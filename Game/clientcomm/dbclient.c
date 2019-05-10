@@ -472,18 +472,18 @@ void handleAccountPlayNCAuthKeyUpdate(Packet *pak)
 {
 	int request_key = pktGetBitsAuto(pak);
 	char * auth_key = pktGetString(pak);
-	/*#if ! defined(TEST_CLIENT)		
+	#if ! defined(TEST_CLIENT)		
 		PlaySpanStoreLauncher_ReceiveAuthKeyResponse(request_key, auth_key);
-	#endif*/
+	#endif
 }
 
 void handleClientAuth(Packet *pak)
 {
 	U32 timeStamp = pktGetBitsAuto(pak);
 	char* digest = pktGetString(pak);
-	/*#if ! defined(TEST_CLIENT)	
+	#if ! defined(TEST_CLIENT)	
 		PlaySpanStoreLauncher_SetDigest( timeStamp, digest );
-	#endif*/
+	#endif
 }
 
 void receiveAccountServerUnavailable(Packet *pak)
@@ -1114,7 +1114,11 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
 		// Check for registry value saying the Updater has something to say
 		pktSendString(pak, regGetPatchValue());
 		{
+#if defined(DISABLE_RENDER_TELEMETRY)
+			char *systemSpecString = "Disabled";
+#else
 			char *systemSpecString = rdrGetSystemSpecCSVString();
+#endif
 			pktSendString(pak, "");
 			pktSendZipped(pak, strlen(systemSpecString)+1, systemSpecString);
 		}

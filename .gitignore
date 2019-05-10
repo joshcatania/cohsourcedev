@@ -40,7 +40,10 @@ logs/
 .moc/
 
 # Assets installed by external means
+/Utilities/pig/PigLibTest/
+/Utilities/bin/
 /bin/*/
+
 
 # Except the folders below
 !/bin/beaconizer/
@@ -59,3 +62,5 @@ obj/
 Win32/
 x64/
 
+
+/start-ourodev.bat

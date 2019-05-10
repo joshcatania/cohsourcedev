@@ -55,7 +55,6 @@
 #include "hwlight.h"
 #include "log.h"
 #include "dbclient.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 #include "estring.h"
 
 void windowDestroyDisplayContexts(void);
@@ -1458,16 +1457,6 @@ void windowExit(int exitCode)
 	{
 //		saveOnExit();
 		saveAutoResumeInfoCryptic();
-	}
-
-	if (game_state.steamIsInitialized)
-	{
-		if (game_state.steamAuthSessionTicketID)
-		{
-			//COHSteam_CancelAuthSessionTicket(game_state.steamAuthSessionTicketID);
-		}
-
-		//COHSteam_Shutdown();
 	}
 
 	demoStop();

@@ -45,7 +45,7 @@ int netInit(NetLinkList *nlist,int udp_port,int tcp_port){
 	netioEnterCritical();
 	if (udp_port)
 	{
-		nlist->udp_sock = socket(AF_INET,SOCK_DGRAM,0);
+		nlist->udp_sock = socket(AF_INET,SOCK_DGRAM,IPPROTO_UDP);
 		sockSetAddr(&addr_in,htonl(INADDR_ANY),udp_port);
 		if (!sockBind(nlist->udp_sock,&addr_in))
 			goto fail;
@@ -55,9 +55,9 @@ int netInit(NetLinkList *nlist,int udp_port,int tcp_port){
 	if (tcp_port)
 	{
 #ifndef _XBOX
-		nlist->listen_sock = WSASocket(AF_INET, SOCK_STREAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
+		nlist->listen_sock = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0, WSA_FLAG_OVERLAPPED);
 #else
-		nlist->listen_sock = socket(AF_INET, SOCK_STREAM, 0);
+		nlist->listen_sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 #endif
 		sockSetAddr(&addr_in,htonl(INADDR_ANY),tcp_port);
 		if (!sockBind(nlist->listen_sock,&addr_in))

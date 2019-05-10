@@ -166,7 +166,7 @@ StructDesc testdatabasetypes_desc[] =
 
 LineDesc testdatabasetypes_schema_desc[] =
 {
-	{ PACKTYPE_SUB, 1, "TestDataBaseTypes", (int)testdatabasetypes_desc},
+	{ PACKTYPE_SUB, 1, "TestDataBaseTypes", (intptr_t)testdatabasetypes_desc},
 	{ 0 }
 };
 
@@ -749,7 +749,7 @@ StructDesc costume_part_desc[] =
 
 LineDesc costumes_line_desc[] =
 {
-	{ PACKTYPE_SUB, MAX_COSTUMES*MAX_COSTUME_PARTS,  "CostumeParts", (int)costume_part_desc },
+	{ PACKTYPE_SUB, MAX_COSTUMES*MAX_COSTUME_PARTS,  "CostumeParts", (intptr_t)costume_part_desc },
 	{ 0 },
 };
 
@@ -933,7 +933,7 @@ StructDesc appearance_desc[] =
 
 LineDesc appearances_line_desc[] =
 {
-	{ PACKTYPE_SUB, MAX_COSTUMES,  "Appearance", (int)appearance_desc },
+	{ PACKTYPE_SUB, MAX_COSTUMES,  "Appearance", (intptr_t)appearance_desc },
 	{ 0 },
 };
 
@@ -982,7 +982,7 @@ StructDesc powercustomization_desc[] =
 };
 LineDesc powercustomization_list_line_desc[] =
 {
-	{ PACKTYPE_SUB, MAX_COSTUMES*MAX_POWERS,  "PowerCustomizations", (int)powercustomization_desc },
+	{ PACKTYPE_SUB, MAX_COSTUMES*MAX_POWERS,  "PowerCustomizations", (intptr_t)powercustomization_desc },
 	{ 0 },
 
 };
@@ -2471,7 +2471,7 @@ StructDesc ent_desc[] =
 
 LineDesc ent_schema_desc[] =
 {
-	{ PACKTYPE_SUB,		1,			"Ents",		(int)ent_desc },
+	{ PACKTYPE_SUB,		1,			"Ents",		(intptr_t)ent_desc },
 	{ 0 }
 };
 
@@ -2908,7 +2908,7 @@ StructDesc stat_desc[] =
 
 LineDesc stats_line_desc[] =
 {
-	{ PACKTYPE_SUB, MAX_DB_STATS,  "Stats", (int)stat_desc },
+	{ PACKTYPE_SUB, MAX_DB_STATS,  "Stats", (intptr_t)stat_desc },
 	{ 0 },
 };
 
@@ -4949,10 +4949,10 @@ LineDesc teamup_line_desc[] =
 	{{ PACKTYPE_INT,			SIZE_INT32,							"MaximumPlayerCount",	OFFSET(Teamup, maximumPlayerCount)		},
 		"The biggest this Teamup's member count has ever been."},
 
-	{{ PACKTYPE_EARRAY,			(int)rewardtoken_Create,			"TeamupRewardTokensActive",			(int)team_active_player_reward_token_desc		},
+	{{ PACKTYPE_EARRAY,			(int)rewardtoken_Create,			"TeamupRewardTokensActive",			(intptr_t)team_active_player_reward_token_desc		},
 		"reward tokens the active player of this team has"},
 
-	{ PACKTYPE_SUB,			1,									"TeamupTask",	(int)team_task_desc								},
+	{ PACKTYPE_SUB,			1,									"TeamupTask",	(intptr_t)team_task_desc								},
 
 	{ 0 },
 };
@@ -5010,11 +5010,11 @@ LineDesc taskforce_line_desc[] =
 	{{ PACKTYPE_LARGE_ESTRING_BINARY, 0,						"PlayerStoryArc",	OFFSET(TaskForce, playerCreatedArc) },
 		"Serialized player-created story arc that this taskforce is running"},
 
-	{ PACKTYPE_SUB, CONTACTS_PER_TASKFORCE,		"TaskForceContacts",		(int)tf_contact_desc		},
-	{ PACKTYPE_SUB,	STORYARCS_PER_TASKFORCE,	"TaskForceStoryArcs",		(int)tf_storyarc_desc		},
-	{ PACKTYPE_SUB,	TASKS_PER_TASKFORCE,		"TaskForceTasks",			(int)tf_task_desc			},
-	{ PACKTYPE_SUB, SOUVENIRCLUES_PER_PLAYER,	"TaskForceSouvenirClues",	(int)tf_souvenirClue_desc	},
-	{ PACKTYPE_SUB, PARAMETERS_PER_TASKFORCE,	"TaskForceParameters",		(int)tf_parameters_desc		},
+	{ PACKTYPE_SUB, CONTACTS_PER_TASKFORCE,		"TaskForceContacts",		(intptr_t)tf_contact_desc		},
+	{ PACKTYPE_SUB,	STORYARCS_PER_TASKFORCE,	"TaskForceStoryArcs",		(intptr_t)tf_storyarc_desc		},
+	{ PACKTYPE_SUB,	TASKS_PER_TASKFORCE,		"TaskForceTasks",			(intptr_t)tf_task_desc			},
+	{ PACKTYPE_SUB, SOUVENIRCLUES_PER_PLAYER,	"TaskForceSouvenirClues",	(intptr_t)tf_souvenirClue_desc	},
+	{ PACKTYPE_SUB, PARAMETERS_PER_TASKFORCE,	"TaskForceParameters",		(intptr_t)tf_parameters_desc		},
 	{ 0 },
 };
 

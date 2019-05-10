@@ -3182,11 +3182,11 @@ static void beaconServerStartup(BeaconizerType beaconizerType,
 
 	beacon_server.curMapIndex = -1;
 
-	printf(	"\n\n[������������ BEACON %sSERVER RUNNING %s������������������������������������������������������������]\n",
+	printf(	"\n\n[ BEACON %sSERVER RUNNING %s]\n",
 			beacon_server.isMasterServer ? "MASTER " :
 				beacon_server.isRequestServer ? "REQUEST " :
 					"",
-			beacon_server.isMasterServer ? "" : "������?");
+			beacon_server.isMasterServer ? "" : "?");
 
 	beaconCurTimeString(1);
 }
@@ -3958,7 +3958,7 @@ static void printClientState(BeaconServerClientData* client, S32 index, void* us
 		}
 	}
 
-	printf("����������������������������������������������������������������������������������������������������\n");
+	printf("\n");
 
 	printf("?s", index == beacon_server.selectedClient ? ">" : " ");
 
@@ -4196,13 +4196,13 @@ static void beaconServerPrintClientStates(void){
 	consoleSetDefaultColor();
 
 	printf(	"\n"
-			"       ��������������?n"
+			"       ?n"
 			"       ?");
 
 	beaconPrintf(COLOR_RED|COLOR_GREEN|COLOR_BLUE, "Client Info");
 
 	printf(	" ?n"
-			"����������������������������������������������������������������������������������������������������\n"
+			"\n"
 			"?");
 
 	beaconPrintf(COLOR_GREEN,
@@ -4217,11 +4217,11 @@ static void beaconServerPrintClientStates(void){
 		beaconServerMoveSelection(0);
 		beaconServerForEachClient(printClientState, NULL);
 	}else{
-		printf(	"����������������������������������������������������������������������������������������������������\n"
+		printf(	"\n"
 				"?No Clients Connected!\n");
 	}
 
-	printf(	"����������������������������������������������������������������������������������������������������\n"
+	printf(	"\n"
 			"\n\n");
 }
 

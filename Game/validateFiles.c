@@ -134,9 +134,9 @@ static bool PromptUserBeforeFullScan(bool bFirstPrompt)
 	// First time thru, user gets an ok/cancel prompt
 	if(bFirstPrompt) {
 		if(locale == LOCALE_ID_GERMAN)
-			str = "Ein neuer Patch oder Reparatur wurde festgestellt. City of Heroes wird nun die Dateien überprüfen.";
+			str = "Ein neuer Patch oder Reparatur wurde festgestellt. City of Heroes wird nun die Dateien berprfen.";
 		else if(locale == LOCALE_ID_FRENCH)
-			str = "Nouvelle version ou Réparation détectée. Vérification des fichiers City of Heroes amorcée.";
+			str = "Nouvelle version ou Rparation dtecte. Vrification des fichiers City of Heroes amorce.";
 		else
 			str = "New Patch or Repair has been detected. City of Heroes will now verify the files.";
 		ok = winMsgOkCancelParented(hlogo, str);
@@ -146,13 +146,13 @@ static bool PromptUserBeforeFullScan(bool bFirstPrompt)
 	//	and give them a chance to reconsider.
 	if(!ok) {
 		if(locale == LOCALE_ID_GERMAN)
-			str = "Möchten Sie die Überprüfung abbrechen? Dies könnte aufgrund von beschädigten Dateien weitere Spielabstürze veranlassen." 
-					" Wenn Sie “Ja” wählen, und City of Heroes nicht mehr laufen können, müßen Sie die Installation wieder Reparieren."
-					" Dies wird die Dateien neu überprüfen, um jegliche beschädigte Dateien zu reparieren.";
+			str = "Mchten Sie die berprfung abbrechen? Dies knnte aufgrund von beschdigten Dateien weitere Spielabstrze veranlassen." 
+					" Wenn Sie Ja whlen, und City of Heroes nicht mehr laufen knnen, men Sie die Installation wieder Reparieren."
+					" Dies wird die Dateien neu berprfen, um jegliche beschdigte Dateien zu reparieren.";
 		else if(locale == LOCALE_ID_FRENCH)
-			str = "Souhaitez-vous annuler la vérification des fichiers ? Cela pourrait augmenter le risque de plantage dû à la corruption de certains fichiers."
-					" Si vous cliquez sur Oui et n'arrivez ensuite plus à lancer City of Heroes, il vous faudra Réparer cette installation."
-					" Cela aura pour effet de vérifier les données du jeu et de réparer tout fichier corrompu.";
+			str = "Souhaitez-vous annuler la vrification des fichiers ? Cela pourrait augmenter le risque de plantage d  la corruption de certains fichiers."
+					" Si vous cliquez sur Oui et n'arrivez ensuite plus  lancer City of Heroes, il vous faudra Rparer cette installation."
+					" Cela aura pour effet de vrifier les donnes du jeu et de rparer tout fichier corrompu.";
 		else
 			str =	"Would you like to cancel the file verification? Doing so puts your game at risk of random crashes due to corrupted files."
 					" If you click Yes and are no longer able to run City of Heroes you will need to Repair this installation,"
@@ -210,9 +210,9 @@ static bool CalculateChecksum(const char* path, int len, U32 values[4], int time
 					// resume progress dialog, will pick up where we left off
 					wchar_t *verifyingFiles;
 					if(locale == LOCALE_ID_GERMAN)
-						verifyingFiles = L"Dateien werden überprüft";
+						verifyingFiles = L"Dateien werden berprft";
 					else if(locale == LOCALE_ID_FRENCH)
-						verifyingFiles = L"Vérification des fichiers";
+						verifyingFiles = L"Vrification des fichiers";
 					else
 						verifyingFiles = L"Verifying Files";
 					startProgressDialog(hlogo, verifyingFiles, L"Cancel Requested");
@@ -324,9 +324,9 @@ bool game_validateChecksums(bool bForceFullVerify, bool *pCancelled)
 		wchar_t *verifyingFiles;
 		int locale = locGetIDInRegistry();
 		if(locale == LOCALE_ID_GERMAN)
-			verifyingFiles = L"Dateien werden überprüft";
+			verifyingFiles = L"Dateien werden berprft";
 		else if(locale == LOCALE_ID_FRENCH)
-			verifyingFiles = L"Vérification des fichiers";
+			verifyingFiles = L"Vrification des fichiers";
 		else
 			verifyingFiles = L"Verifying Files";
 		if( !startProgressDialog(hlogo, verifyingFiles, L"Cancel Requested") ) {

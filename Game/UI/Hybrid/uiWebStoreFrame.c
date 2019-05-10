@@ -114,7 +114,7 @@ void webStoreOpenProduct(const char * product)
 	webStoreFrame(1);
 
 	//set url based on product
-	//PlaySpanStoreLauncher_ShowProductInStore(product);
+	PlaySpanStoreLauncher_ShowProductInStore(product);
 }
 
 void webStoreOpenCategory(const char * category)
@@ -123,7 +123,7 @@ void webStoreOpenCategory(const char * category)
 	webStoreFrame(1);
 
 	//set url based on category
-	//PlaySpanStoreLauncher_ShowCategoryInStore(category, 0);
+	PlaySpanStoreLauncher_ShowCategoryInStore(category, 0);
 }
 
 void webStoreAddToCart(const char * product)
@@ -132,7 +132,7 @@ void webStoreAddToCart(const char * product)
 	webStoreFrame(1);
 
 	//set url based on product
-	//PlaySpanStoreLauncher_AddProductToShoppingCart(product);
+	PlaySpanStoreLauncher_AddProductToShoppingCart(product);
 }
 
 void webStoreAddMultipleToCart(const ShoppingCart * products, U32 first, U32 last)
@@ -152,7 +152,7 @@ void webStoreAddMultipleToCart(const ShoppingCart * products, U32 first, U32 las
 		strcat(skus, ",");
 		strcat(skus, skuIdAsString(products->items[first+i]));
 	}
-	//PlaySpanStoreLauncher_AddProductToShoppingCart( skus );
+	PlaySpanStoreLauncher_AddProductToShoppingCart( skus );
 }
 
 void webOpenURLNoStore(const char * url)
@@ -170,7 +170,7 @@ void webOpenUpgradeToVIP()
 	webStoreFrame(1);
 
 	showStoreButtons = false;
-	//PlaySpanStoreLauncher_UpgradeToVIP();
+	PlaySpanStoreLauncher_UpgradeToVIP();
 }
 
 void webStoreOpenSupport(void)
@@ -178,7 +178,7 @@ void webStoreOpenSupport(void)
 	//open window and init
 	webStoreFrame(1);
 
-	//PlaySpanStoreLauncher_NCSoftHelp();
+	PlaySpanStoreLauncher_NCSoftHelp();
 }
 
 void webStoreOpenSupportKB(int kb)
@@ -186,7 +186,7 @@ void webStoreOpenSupportKB(int kb)
 	//open window and init
 	webStoreFrame(1);
 
-	//PlaySpanStoreLauncher_NCSoftHelpKB(kb);
+	PlaySpanStoreLauncher_NCSoftHelpKB(kb);
 }
 
 void webStoreOpenNewFeatures()
@@ -194,11 +194,11 @@ void webStoreOpenNewFeatures()
 	//open window and init
 	webStoreFrame(1);
 
-	//if (!PlaySpanStoreLauncher_NewFeatures())
-	//{
+	if (!PlaySpanStoreLauncher_NewFeatures())
+	{
 		dialogStd(DIALOG_OK, "NewFeaturesNotAvailable", NULL, NULL, NULL, NULL, 0);
 		webStoreFrame(0);
-	//}
+	}
 }
 
 void webStoreOpenDefault()
@@ -207,7 +207,7 @@ void webStoreOpenDefault()
 	webStoreFrame(1);
 
 	//set default url
-	//PlaySpanStoreLauncher_EnterStoreFront();
+	PlaySpanStoreLauncher_EnterStoreFront();
 }
 
 void webStoreFrameClose()
@@ -265,7 +265,7 @@ static int drawBrowserButtonFrame(F32 x, F32 y, F32 z, F32 sc)
 		if (D_MOUSEHIT == drawHybridBarButton(&sButtonHome, xwalk, ywalk, zwalk, buttonWd, buttonScale*sc, 0, 0))
 		{
 			sndPlay("N_SelectSmall", SOUND_GAME);
-			//PlaySpanStoreLauncher_EnterStoreFront();
+			PlaySpanStoreLauncher_EnterStoreFront();
 		}
 	}
 	//draw shoppingcart button
@@ -275,7 +275,7 @@ static int drawBrowserButtonFrame(F32 x, F32 y, F32 z, F32 sc)
 		if (D_MOUSEHIT == drawHybridBarButton(&sButtonCart,xwalk, ywalk, zwalk, buttonWd, buttonScale*sc, 0, 0))
 		{
 			sndPlay("N_SelectSmall", SOUND_GAME);
-			//PlaySpanStoreLauncher_ShowShoppingCart();
+			PlaySpanStoreLauncher_ShowShoppingCart();
 		}
 	}
 	//draw storesupport button
@@ -285,7 +285,7 @@ static int drawBrowserButtonFrame(F32 x, F32 y, F32 z, F32 sc)
 		if (D_MOUSEHIT == drawHybridBarButton(&sButtonSupport, xwalk, ywalk, zwalk, buttonWd, buttonScale*sc, 0, 0))
 		{
 			sndPlay("N_SelectSmall", SOUND_GAME);
-			//PlaySpanStoreLauncher_NCSoftHelp();
+			PlaySpanStoreLauncher_NCSoftHelp();
 		}
 	}
 	//draw myaccount button
@@ -295,7 +295,7 @@ static int drawBrowserButtonFrame(F32 x, F32 y, F32 z, F32 sc)
 		if (D_MOUSEHIT == drawHybridBarButton(&sButtonAccount, xwalk, ywalk, zwalk, buttonWd, buttonScale*sc, 0, 0))
 		{
 			sndPlay("N_SelectSmall", SOUND_GAME);
-			//PlaySpanStoreLauncher_ManageAccount();
+			PlaySpanStoreLauncher_ManageAccount();
 		}
 	}
 	//draw close button

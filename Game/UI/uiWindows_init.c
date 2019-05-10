@@ -97,6 +97,11 @@
 #include "uiContactFinder.h"
 #include "uiLoyaltyTree.h"
 #include "uiWebStoreFrame.h"
+
+#if defined(USE_MAIN_STORE_ACCESS)
+	#include "uiMainStoreAccess.h"
+#endif // USE_MAIN_STORE_ACCESS
+
 #include "uiLWC.h"
 #include "uiLoyaltyTreeAccess.h"
 #include "uiSalvageOpen.h"
@@ -335,6 +340,9 @@ WindowDefault window_defaults[] =
 	{ WDW_CONTACT_FINDER,			kWdwAnchor_Center,	kWdwAnchor_Middle, 0,  0,  385, 385,  contactFinderWindow,	ALWAYS_CLOSED, R10, 0, {{0}}, },
 	{ WDW_LOYALTY_TREE,				kWdwAnchor_Center,	kWdwAnchor_Middle, 0,  0,  800, 670,  loyaltyTreeWindow,	DEFAULT_CLOSED, R10, 0, {{0}}, {0}, 1},
 	{ WDW_WEB_STORE,				kWdwAnchor_Center,	kWdwAnchor_Middle, 0,  0,  800, 600,  webStoreFrameWindow,	DEFAULT_CLOSED, R10, 1, {{0}}, {0}, 1},
+#if defined(USE_MAIN_STORE_ACCESS)
+	{ WDW_MAIN_STORE_ACCESS,		kWdwAnchor_Right,	kWdwAnchor_Top, -10,  175,  50, 50,  mainStoreAccessWindow,	DEFAULT_OPEN, R22, 1, {{0}}, {0}, 1},
+#endif // USE_MAIN_STORE_ACCESS
 	{ WDW_LOYALTY_TREE_ACCESS,		kWdwAnchor_Right,	kWdwAnchor_Top, -10,  115,  50, 50,  loyaltyTreeAccessWindow,	DEFAULT_OPEN, R22, 1, {{0}}, {0}, 1},
 	{ WDW_LWC_UI,					kWdwAnchor_Left,	kWdwAnchor_Top, 50,  90,  100, 50,	uiLWCWindow,	DEFAULT_OPEN, R22, 0, {{0}}, {0}, 1},
 	{ WDW_SALVAGE_OPEN,				kWdwAnchor_Center,	kWdwAnchor_Middle, 0,  0,  1000, 400,  salvageOpenWindow,	ALWAYS_CLOSED, R10, 0, {{0}}, {0}, 1},

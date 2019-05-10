@@ -35,7 +35,7 @@ static InvertibleRSAFunction *RSA_Params = NULL;
 
 void InitRSAParams()
 {
-	LC_RNG rng(time(NULL));
+	LC_RNG rng(static_cast<CryptoPP::word32>(time(NULL)));
 	RSA_Params = new InvertibleRSAFunction(rng, 1152);
 }
 
@@ -173,13 +173,13 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 
 		{
 		CDBConn dbconn(g_linDB);
-		SQLINTEGER UserInd=0;
+		SQLLEN UserInd=0;
 		SQLBindCol( dbconn.m_stmt, 1, SQL_C_BINARY, (char *)(userdata), MAX_USERDATA_ORIG, &UserInd );
 
-		SQLINTEGER UserIndNew=0;
+		SQLLEN UserIndNew=0;
 		SQLBindCol( dbconn.m_stmt, 2, SQL_C_BINARY, (char *)(&userdata[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &UserIndNew );
 
-		SQLINTEGER cbUid=0;
+		SQLLEN cbUid=0;
 		SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&account.uid), 0, &cbUid );
 
 		dbconn.Execute( "SELECT user_data, user_data_new FROM user_data WHERE uid = ?" );
@@ -628,7 +628,7 @@ void CSocketServerEx::OnCreate()
 	DecOneTimeKey = oneTimeKey | PRIVATE_KEY;
 
 	if ( config.encrypt == true)
-		NonEncSend("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, config.ProtocolVer, 
+		Send("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, config.ProtocolVer, 
 			expByteCount, expByteCount, expBuffer, modByteCount, modByteCount, modBuffer);
 	else{
 		NonEncSend("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, 0, 

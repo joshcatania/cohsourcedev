@@ -53,7 +53,7 @@ void CIOServer::Stop()
 
 BOOL CIOServer::Create( int nPort )
 {
-	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+	m_hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (m_hSocket == INVALID_SOCKET) {
 		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		return FALSE;
@@ -494,7 +494,7 @@ void CIOServerEx::OnEventCallback()
 BOOL CIOServerEx::Create( int nPort )
 {
 #ifndef _USE_ACCEPTEX
-	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+	m_hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (m_hSocket == INVALID_SOCKET) {
 		logger.AddLog(LOG_ERROR, "socket error %d", WSAGetLastError());
 		return FALSE;
@@ -559,7 +559,7 @@ void CIOServerEx::Run( int nPort, SocketExAllocator al )
 #else
 	allocator = al;
 	int i;
-	m_hSocket = socket(AF_INET, SOCK_STREAM, 0);
+	m_hSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(m_hSocket == INVALID_SOCKET) {
 		logger.AddLog(LOG_ERROR, "acceptex socket error %d", WSAGetLastError());
 		return;

@@ -10,7 +10,6 @@
 #pragma warning(disable : 4514)
 #pragma warning(disable : 4201)
 
-const char *mailServer;
 LONG	Terminating;
 
 class CLogCritical 
@@ -39,16 +38,7 @@ CExceptionInit theExceptionInit;
 static char g_szLogPath[MAX_PATH];
 
 static LPTOP_LEVEL_EXCEPTION_FILTER previousFilter;
-#define MAIL_FROM   "server@ncsoft-url-stripped-todo.co.kr"
-#ifdef _DEBUG
-#define RECV_TO "darkangel@ncsoft-url-stripped-todo.co.kr\0"
-#elif defined(NPCSVR)
-#define RECV_TO "darkangel@ncsoft-url-stripped-todo.co.kr\0" 
-#else
-#define RECV_TO "darkangel@ncsoft-url-stripped-todo.co.kr\0" 
-#endif
 // #define USE_LAUNCHER
-#define SEND_EMAIL
 
 const int NumCodeBytes = 16;	// Number of code bytes to record.
 const int MaxStackDump = 80; // 2048;	// Maximum number of DWORDS in stack dumps.
@@ -305,149 +295,6 @@ static char* GetFilePart(char *source)
 		return result;
 }
 
-#ifdef SEND_EMAIL
-static char heloStr[256] = "HELO main1.ncsoft-url-stripped-todo.co.kr\r\n";
-static char mailStr[256] = "MAIL From: <darkangel@ncsoft-url-stripped-todo.co.kr>\r\n";
-static char rcptStr[256] = "RCPT To: <darkangel@ncsoft-url-stripped-todo.co.kr>\r\n";
-static char subjectStr[256];
-static char dataStr[] = "DATA\r\n";
-static char finishStr[] = "\r\n.\r\n";
-static char quitStr[] = "QUIT\r\n";
-
-static bool sendFile(SOCKET sock, const char *name)
-{
-	HANDLE hFile = CreateFile(name, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
-
-	if (hFile == INVALID_HANDLE_VALUE)
-		return true;
-
-	char buf[1024];
-	for ( ; ; ) {
-		DWORD dwRead;
-		if (!ReadFile(hFile, buf, sizeof(buf), &dwRead, NULL) || !dwRead)
-			break;
-		if (send(sock, buf, dwRead, 0) <= 0)
-			return false;
-	}
-	CloseHandle(hFile);
-	return true;
-}
-
-static BOOL sendMail(const char *host, const char *from, const char *to, const char *body)
-{
-	time_t currentTime;
-	int packetLen;
-	char packetBuffer[2048];
-	SOCKET sock;
-
-	BOOL smResult = FALSE;
-
-	WSADATA wsaData;
-	if (WSAStartup(MAKEWORD(2,2), &wsaData) != 0){
-		return FALSE;
-	}
-	sock = socket(AF_INET, SOCK_STREAM, 0);
-	if (sock == INVALID_SOCKET) {
-		WSACleanup();
-		return FALSE;
-	}
-	int timeout = 5000;
-	int result = setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout, sizeof(timeout));
-	if (result == SOCKET_ERROR) {
-		goto exit;
-	}
-	timeout = 5000;
-	result = setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout, sizeof(timeout));
-	if (result == SOCKET_ERROR) {
-		goto exit;
-	}
-	struct sockaddr_in addr;
-
-	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = INADDR_ANY; // bind socket local any where
-	addr.sin_port = 0;
-	if (bind(sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR) {
-		goto exit;
-	}
-	addr.sin_family = AF_INET;
-	if (host[0] >= '0' && host[0] <= '9') {
-		addr.sin_addr.s_addr = inet_addr(host);
-	} else {
-		hostent *h = gethostbyname(host);
-		if (h == NULL)
-			goto exit;
-		memcpy(&addr.sin_addr.s_addr, h->h_addr_list[0], h->h_length);
-		char *t = inet_ntoa(addr.sin_addr);
-	}
-	addr.sin_port = htons(25);
-	if (connect(sock, (struct sockaddr *)&addr, sizeof(addr)) == SOCKET_ERROR) {
-		goto exit;
-	}
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	if (send(sock, heloStr, (int)strlen(heloStr), 0) <= 0)
-		goto exit;
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	sprintf(mailStr, "MAIL From: <%s>\r\n", from);
-	if (send(sock, mailStr, (int)strlen(mailStr), 0) <= 0)
-		goto exit;
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	for ( ; to[0]; to += strlen(to) + 1) {
-		sprintf(rcptStr, "RCPT To: <%s>\r\n", to);
-		if (send(sock, rcptStr, (int)strlen(rcptStr), 0) <= 0)
-			goto exit;
-		packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	}
-	if (send(sock, dataStr, (int)strlen(dataStr), 0) <= 0)
-		goto exit;
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	currentTime = time(NULL);
-	{
-		SOCKADDR_IN sockname;
-		memset(&sockname, 0, sizeof(sockname));
-		int namelen = sizeof(sockname);
-		getsockname(sock, (LPSOCKADDR) &sockname, &namelen);
-#ifdef SERVER
-		sprintf(subjectStr, "Subject: Server [%d](%d.%d.%d.%d) crashed at %s\r\n", serverId,
-			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
-			sockname.sin_addr.S_un.S_un_b.s_b3, sockname.sin_addr.S_un.S_un_b.s_b4,
-			ctime(&currentTime));
-		logger.Add(LOG_ERROR, "Server crashed at %s", ctime(&currentTime));
-#elif defined(CACHED)
-		sprintf(subjectStr, "Subject: CacheD [%d](%d.%d.%d.%d) crashed at %s\r\n", serverId,
-			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
-			sockname.sin_addr.S_un.S_un_b.s_b3, sockname.sin_addr.S_un.S_un_b.s_b4,
-			ctime(&currentTime));
-#elif defined(AUTHD)
-		sprintf(subjectStr, "Subject: AuthD [%d](%d.%d.%d.%d) crashed at %s\r\n", serverId,
-			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
-			sockname.sin_addr.S_un.S_un_b.s_b3, sockname.sin_addr.S_un.S_un_b.s_b4,
-			ctime(&currentTime));
-#elif defined(NPCSVR)
-		sprintf(subjectStr, "Subject: NPCSvr (%d.%d.%d.%d) crashed at %s\r\n", 
-			sockname.sin_addr.S_un.S_un_b.s_b1, sockname.sin_addr.S_un.S_un_b.s_b2,
-			sockname.sin_addr.S_un.S_un_b.s_b3, sockname.sin_addr.S_un.S_un_b.s_b4,
-			ctime(&currentTime));
-#endif
-	}
-	if (send(sock, subjectStr, (int)strlen(subjectStr), 0) <= 0)
-		goto exit;
-	if (!sendFile(sock, body)) 
-		goto exit;
-	if (send(sock, finishStr, (int)strlen(finishStr), 0) <= 0)
-		goto exit;
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	if (send(sock, quitStr, (int)strlen(quitStr), 0) <= 0)
-		goto exit;
-	packetLen = recv(sock, packetBuffer, sizeof(packetBuffer), 0);
-	smResult = TRUE;
-exit:
-	closesocket(sock);
-	sock = 0;
-	WSACleanup();
-	return smResult;
-}
-#endif
-
 BOOL GetLogicalAddress(
 		PVOID addr, PSTR szModule, DWORD len, DWORD& section, DWORD& offset )
 {
@@ -505,16 +352,28 @@ void ImageHelpStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
 	STACKFRAME sf;
 	memset(&sf, 0, sizeof(sf));
 
-	sf.AddrPC.Offset       = ptrContext->Eip;
 	sf.AddrPC.Mode         = AddrModeFlat;
-	sf.AddrStack.Offset    = ptrContext->Esp;
 	sf.AddrStack.Mode      = AddrModeFlat;
-	sf.AddrFrame.Offset    = ptrContext->Ebp;
 	sf.AddrFrame.Mode      = AddrModeFlat;
 
-	while ( 1 )
+#ifdef _M_IX86
+	sf.AddrPC.Offset = ptrContext->Eip;
+	sf.AddrStack.Offset = ptrContext->Esp;
+	sf.AddrFrame.Offset = ptrContext->Ebp;
+
+	DWORD machineType = IMAGE_FILE_MACHINE_I386;
+#endif
+#ifdef _M_X64
+	sf.AddrPC.Offset = ptrContext->Rip;
+	sf.AddrStack.Offset = ptrContext->Rsp;
+	sf.AddrFrame.Offset = ptrContext->Rbp;
+
+	DWORD machineType = IMAGE_FILE_MACHINE_AMD64;
+#endif
+
+	for ( ; ; )
 	{
-		if (!StackWalk(IMAGE_FILE_MACHINE_I386,
+		if (!StackWalk(machineType,
 						GetCurrentProcess(),
 						GetCurrentThread(),
 						&sf,
@@ -535,10 +394,14 @@ void ImageHelpStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
 		pSymbol->SizeOfStruct = sizeof(symbolBuffer);
 		pSymbol->MaxNameLength = 512;
 
+#ifdef _M_IX86
 		DWORD symDisplacement = 0;
+#endif
+#ifdef _M_X64
+		DWORD64 symDisplacement = 0;
+#endif
 
-		if (SymGetSymFromAddr(GetCurrentProcess(), sf.AddrPC.Offset,
-							&symDisplacement, pSymbol)) {
+		if (SymGetSymFromAddr(GetCurrentProcess(), sf.AddrPC.Offset, &symDisplacement, pSymbol)) {
 			hprintf(LogFile, "%s+%x ", pSymbol->Name, symDisplacement);
 		} 
 		{// No symbol found.  Print out the logical address instead.
@@ -548,20 +411,20 @@ void ImageHelpStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
 			// VirtualQuery can be used to get the allocation base associated with a
 			// code address, which is the same as the ModuleHandle. This can be used
 			// to get the filename of the module that the crash happened in.
-			if (VirtualQuery(IntToPtr(sf.AddrPC.Offset), &MemInfo, sizeof(MemInfo)) &&
+			if (VirtualQuery(reinterpret_cast<void*>(sf.AddrPC.Offset), &MemInfo, sizeof(MemInfo)) &&
 					GetModuleFileName((HINSTANCE)MemInfo.AllocationBase,
 					CrashModulePathName, sizeof(CrashModulePathName)) > 0)
 				CrashModuleFileName = GetFilePart(CrashModulePathName);
 
 			CHAR szModule[MAX_PATH] = "";
 			DWORD section = 0, offset = 0;
-			GetLogicalAddress(IntToPtr(sf.AddrPC.Offset),
+			GetLogicalAddress(reinterpret_cast<void*>(sf.AddrPC.Offset),
 								szModule, sizeof(szModule), section, offset);
 			hprintf(LogFile, "%04x:%08x %s\r\n", section, offset, szModule);
 
 			hprintf(LogFile, "Params: %08x %08x %08x %08x\r\n", sf.Params[0], sf.Params[1], sf.Params[2], sf.Params[3]);
 			hprintf(LogFile, "[%s] Bytes at CS:EIP: ", CrashModuleFileName);
-			unsigned char *code = (unsigned char*) IntToPtr(sf.AddrPC.Offset);
+			unsigned char *code = reinterpret_cast<unsigned char*>(sf.AddrPC.Offset);
 			for (int codebyte = 0; codebyte < NumCodeBytes; codebyte++) {
 				__try {
 					hprintf(LogFile, "%02x ", code[codebyte]);
@@ -575,7 +438,9 @@ void ImageHelpStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
 	}
 }
 
-void	IntelStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
+#ifdef _M_IX86
+
+void IntelStackWalk(HANDLE LogFile, PCONTEXT ptrContext)
 {
 	hprintf(LogFile, "\r\nIntel Call Stack Information\r\n");
 
@@ -762,16 +627,24 @@ static void GenerateExceptionReport(PEXCEPTION_POINTERS data)
 		ImageHelpStackWalk(LogFile, Context);
 		SymCleanup(GetCurrentProcess());
 	}
-#ifdef _M_IX86  // Intel Only!
 	else {
 		// Walk the stack using x86 specific code
 		IntelStackWalk(LogFile, Context );
 	}
-#endif
 
 	RecordModuleList(LogFile);
 	CloseHandle(LogFile);
 }
+
+#else  // _M_IX86
+
+static void GenerateExceptionReport(PEXCEPTION_POINTERS /* data */)
+{
+	// TODO: Implement 64 bit version
+}
+
+#endif // _M_IX86
+
 
 LONG WINAPI RecordExceptionInfo(PEXCEPTION_POINTERS data)
 {
@@ -786,12 +659,8 @@ LONG WINAPI RecordExceptionInfo(PEXCEPTION_POINTERS data)
 
 	if (!Terminating && data->ExceptionRecord->ExceptionCode != 0xe0000001) {
 		CLogCritical theCritical;
-		if (mailServer == NULL)
-			DeleteFile(g_szLogPath);
+		DeleteFile(g_szLogPath);
 		GenerateExceptionReport(data);
-		if (mailServer && sendMail(mailServer, MAIL_FROM, RECV_TO, g_szLogPath)) {
-			DeleteFile(g_szLogPath);
-		}
 	}
 
 	if (previousFilter)
@@ -926,8 +795,7 @@ void trans_func( unsigned int u, _EXCEPTION_POINTERS* pExp )
 		return;
 	{
 		CLogCritical theCritical;
-		if (mailServer == NULL)
-			DeleteFile(g_szLogPath);
+		DeleteFile(g_szLogPath);
 		GenerateExceptionReport(pExp);
 	}
 	throw new CSystemException( u );
@@ -940,9 +808,6 @@ void send_exception(bool bExit)
 		return;
 	{
 		CLogCritical theCritical;
-		if (mailServer && sendMail(mailServer, MAIL_FROM, RECV_TO, g_szLogPath)) {
-			DeleteFile(g_szLogPath);
-		}
 	}
 	if (bExit) {
 		Terminating = TRUE;
@@ -952,12 +817,10 @@ void send_exception(bool bExit)
 
 void	exception_init()
 {
-	if (mailServer == NULL)
-		return;
+	return;
 	HANDLE hFile = CreateFile(g_szLogPath, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
 	if (hFile != INVALID_HANDLE_VALUE) {
 		CloseHandle(hFile);
-		sendMail(mailServer, MAIL_FROM, RECV_TO, g_szLogPath);
 		DeleteFile(g_szLogPath);
 	}
 }

@@ -136,7 +136,6 @@
 #include "RegistryReader.h"
 #include "uiCursor.h"
 #include "crypt.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 #include "game.h"
 #include "costume_client.h"
 #include "character_eval.h"
@@ -1378,11 +1377,6 @@ void parseArgs0(int argc, char **argv)
 			game_state.ignoreBadDrivers = 1;
 			bSkipArgIfPresent = true;
 		}
-		else if (CHECKARG("-launchedFromSteam"))
-		{
-			game_state.launchedFromSteam = true;
-			bSkipArgIfPresent = true;
-		}
 
 		if(bSkipArgIfPresent)
 		{
@@ -1995,7 +1989,7 @@ void game_loadData(int isCostumeCreator)
 		loadend_printf("");
 		
 		// PlaySpan URL defs
-		//PlaySpanStoreLauncher_InitModule();
+		PlaySpanStoreLauncher_InitModule();
 
 	}
 
@@ -2181,10 +2175,6 @@ void game_beforeLoop(int isCostumeCreator, int timer)
 	// the old driver warning on the login page.  The dialog is there just in case the drivers
 	// are bad and the game won't initialize.
 	rdrClearOldDriverCheck();
-
-	/*if (game_state.steamIsInitialized)
-		COHSteam_RequestCurrentStats();*/
-
 }
 
 void game_setProgressString(const char *progressString, const char *userMessageID, PROGRESSDIALOGTYPE type)
@@ -2385,13 +2375,6 @@ int game_mainLoop(int timer)
 				
 				LWC_Tick();
 				
-			/*PERFINFO_AUTO_STOP_START("COHSteam_Tick", 1);
-
-				if (game_state.steamIsInitialized)
-					COHSteam_Tick();
-
-			PERFINFO_AUTO_STOP();*/
-
 		PERFINFO_AUTO_STOP_CHECKED("others");
 		
 		// HEY YOU: Don't put anything after autoTimerTickEnd()!!!!!!

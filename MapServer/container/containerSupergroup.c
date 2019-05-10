@@ -544,28 +544,28 @@ LineDesc supergroup_line_desc[] =
 
 	// subtables
 
-	{{ PACKTYPE_SUB,	MAX_SUPERGROUP_ALLIES,				"SuperGroupAllies",			(int)sg_ally_struct_desc			},
+	{{ PACKTYPE_SUB,	MAX_SUPERGROUP_ALLIES,				"SuperGroupAllies",			(intptr_t)sg_ally_struct_desc			},
 		"allies of this supergroup"},
 
-	{{ PACKTYPE_EARRAY, (int)rewardtoken_Create,			"SgrpRewardTokens",			(int)sgroup_reward_token_desc		},
+	{{ PACKTYPE_EARRAY, (int)rewardtoken_Create,			"SgrpRewardTokens",			(intptr_t)sgroup_reward_token_desc		},
 		"reward tokens this supergroup has"},
 
-	{{ PACKTYPE_EARRAY, (int)createSupergroupMemberInfo,	"SgrpMembers",				(int)sgroup_member_desc				},
+	{{ PACKTYPE_EARRAY, (int)createSupergroupMemberInfo,	"SgrpMembers",				(intptr_t)sgroup_member_desc				},
 		"list of members and their ranks"},
 
-	{{ PACKTYPE_EARRAY, (int)CreateSpecialDetail,		"SpecialDetails",			(int)sgroup_special_detail_desc		},
+	{{ PACKTYPE_EARRAY, (int)CreateSpecialDetail,		"SpecialDetails",			(intptr_t)sgroup_special_detail_desc		},
 		"list of special details (base details that we need to know outside of the base"},
 
-	{{ PACKTYPE_EARRAY, (int)CreateRecipeInvItem,		"Recipes",					(int)sgroup_recipe_desc				},	
+	{{ PACKTYPE_EARRAY, (int)CreateRecipeInvItem,		"Recipes",					(intptr_t)sgroup_recipe_desc				},
 		"number of supergroup recipes (unused)"},
 
-	{{ PACKTYPE_SUB, NUM_SG_RANKS,						"SgrpCustomRanks",			(int)sgroup_rank_desc				},
+	{{ PACKTYPE_SUB, NUM_SG_RANKS,						"SgrpCustomRanks",			(intptr_t)sgroup_rank_desc				},
 		"names and permissions for the different sg ranks"},
 
-	{{ PACKTYPE_SUB, 1,									"SGTask",					(int)sg_task_desc					},
+	{{ PACKTYPE_SUB, 1,									"SGTask",					(intptr_t)sg_task_desc					},
 		"information for the supergroup mission this sg has"},
 
-	{{ PACKTYPE_SUB, MAX_SUPER_GROUP_MEMBERS,			"SgrpPraetBonusIDs",		(int)sgrp_praet_bonus_desc			},
+	{{ PACKTYPE_SUB, MAX_SUPER_GROUP_MEMBERS,			"SgrpPraetBonusIDs",		(intptr_t)sgrp_praet_bonus_desc			},
 		"DBIDs of all members who granted this SG a Praetorian bonus"},
 
 	{ 0 },

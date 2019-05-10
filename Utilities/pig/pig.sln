@@ -1,11 +1,8 @@
-Microsoft Visual Studio Solution File, Format Version 9.00
-# Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UtilitiesLib", "..\..\libs\UtilitiesLib\UtilitiesLib.vcproj", "{A6741F6E-5476-4F9F-9D65-62B54AAF1D08}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "UtilitiesLib", "..\..\libs\UtilitiesLib\UtilitiesLib.vcxproj", "{A6741F6E-5476-4F9F-9D65-62B54AAF1D08}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pigtest", "pigtest.vcproj", "{7237F57D-631A-42D3-B22C-D657251C9277}"
-	ProjectSection(ProjectDependencies) = postProject
-		{A6741F6E-5476-4F9F-9D65-62B54AAF1D08} = {A6741F6E-5476-4F9F-9D65-62B54AAF1D08}
-	EndProjectSection
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "pigtest", "pigtest.vcxproj", "{7237F57D-631A-42D3-B22C-D657251C9277}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

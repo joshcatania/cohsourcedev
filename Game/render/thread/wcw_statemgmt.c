@@ -1286,7 +1286,7 @@ void WCW_EnableClipPlanes(int numPlanes, GLfloat planes[6][4])
 // are not available (e.g. skinned vertex program output on non nVidia hardware)
 //
 // Reference for code that was already here:
-// Lengyel, Eric. “Modifying the Projection Matrix to Perform Oblique Near-plane Clipping”.
+// Lengyel, Eric. Modifying the Projection Matrix to Perform Oblique Near-plane Clipping.
 // Terathon Software 3D Graphics Library, 2004. http://www.terathon.com/code/oblique.html
 //
 // reworked some to fit with usage for skinned gfx nodes.

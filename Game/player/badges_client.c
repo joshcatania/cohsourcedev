@@ -19,7 +19,6 @@
 #include "MessageStoreUtil.h"
 #include "cmdgame.h"
 #include "bitfield.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 
 char *g_pchBadgeText[BADGE_ENT_MAX_BADGES];
 char *g_pchBadgeFilename[BADGE_ENT_MAX_BADGES];
@@ -33,22 +32,10 @@ char *g_pchSgBadgeButton[BADGE_SG_MAX_BADGES];
 // as visible.
 int g_DebugBadgeDisplayMode = 0;
 
-static void unlockSteamAchievement(const char *achievementName)
-{
-#ifndef TEST_CLIENT
-	bool hasAchievement = false;
-	/*if (COHSteam_GetAchievement(achievementName, &hasAchievement) && !hasAchievement)
-	{
-		COHSteam_SetAchievement(achievementName);
-	}*/
-#endif
-}
-
 void entity_ReceiveBadgeUpdate(Entity *e, Packet *pak)
 {
 	int i;
 	int n;
-	bool updateSteam = false;
 
 	// Badge update
 	//
@@ -61,9 +48,6 @@ void entity_ReceiveBadgeUpdate(Entity *e, Packet *pak)
 	//       visible
 	//       known
 	//       meter
-
-	if (e && e->pl && e == playerPtr() && game_state.steamIsInitialized)
-		updateSteam = true;
 
 	g_DebugBadgeDisplayMode = pktGetBitsPack(pak, 4);
 
@@ -90,11 +74,6 @@ void entity_ReceiveBadgeUpdate(Entity *e, Packet *pak)
 
 				free(g_pchBadgeFilename[iIdx]);
 				g_pchBadgeFilename[iIdx] = ctsFilename;
-
-				if (updateSteam && badge->steamExport)
-				{
-					unlockSteamAchievement(badge->steamExport);
-				}
 			}
 			else
 			{

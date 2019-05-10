@@ -84,7 +84,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Link>
-      <AdditionalDependencies>IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;CubeMapGenLib_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;CubeMapGenLib_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPD.lib;LIBCD.lib;MSVCRTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\libcubemapgen\;..\3rdparty\zlibsrc\$(Platform)\$(Configuration)\;..\3rdparty\IJGWin32\$(Platform)\$(Configuration)\;..\3rdparty\cryptopp\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -101,7 +101,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
     <Link>
-      <AdditionalDependencies>IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;CubeMapGenLib_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;CubeMapGenLib_Debug.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPD.lib;LIBCD.lib;MSVCRTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\libcubemapgen\;..\3rdparty\zlibsrc\$(Platform)\Debug\;..\3rdparty\IJGWin32\$(Platform)\Debug\;..\3rdparty\cryptopp\$(Platform)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -118,7 +118,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
     <Link>
-      <AdditionalDependencies>../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;CubeMapGenLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;CubeMapGenLib.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPMTD.lib;MSVCRTD.lib;LIBC.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <OutputFile>$(TargetPath)</OutputFile>
       <AdditionalLibraryDirectories>..\3rdparty\libcubemapgen\;..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\IJGWin32\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -135,7 +135,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Link>
-      <AdditionalDependencies>../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>iphlpapi.lib;IJGWin32.lib;cryptlib.lib;zlibstat.lib;../Utilities/Allegorithmic/1.x/lib/win32/release/substance_ogl2.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>LIBCPMTD.lib;MSVCRTD.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\$(Configuration)\;..\3rdparty\IJGWin32\$(Platform)\$(Configuration)\;..\3rdparty\cryptopp\$(Platform)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <OutputFile>$(TargetPath)</OutputFile>
@@ -1206,6 +1206,7 @@
     <ClCompile Include="UI\uiNet.c" />
     <ClCompile Include="UI\uiNewFeatures.c" />
     <ClCompile Include="UI\uiPictureBrowser.c" />
+    <ClCompile Include="UI\uiPlaySpanStoreLauncher.c" />
     <ClCompile Include="Ui\uiRaidResult.c" />
     <ClCompile Include="UI\uiReticle.c" />
     <ClCompile Include="UI\uiSalvageOpen.c" />
@@ -2334,6 +2335,7 @@
     <ClInclude Include="UI\uiNet.h" />
     <ClInclude Include="UI\uiNewFeatures.h" />
     <ClInclude Include="UI\uiPictureBrowser.h" />
+    <ClInclude Include="UI\uiPlaySpanStoreLauncher.h" />
     <ClInclude Include="Ui\uiRaidResult.h" />
     <ClInclude Include="UI\uiReticle.h" />
     <ClInclude Include="UI\uiSalvageOpen.h" />

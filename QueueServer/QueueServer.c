@@ -751,7 +751,7 @@ static void printf_timestamp(char *fmt, ...)
 void connectDbStart(char *dbServerName, NetLink *netLink)
 {
 	printf_timestamp("Starting connection to %s\n", dbServerName);
-	netConnectAsync(netLink,dbServerName,DEFAULT_DBLAUNCHER_PORT,NLT_TCP,5.0f);
+	netConnectAsync(netLink,dbServerName,DEFAULT_QUEUESERVER_PORT,NLT_TCP,5.0f);
 }
 
 // Once a connection attempt has been started, call this each loop to see if the connection has succeeded.
@@ -788,7 +788,7 @@ void queueserver_load(void)
 	g_queueServerState.tick_timer = timerAlloc();
 	g_queueServerState.packet_timer = timerAlloc();
 
-#if 1
+#if 0
 	// DGNOTE 8/10/2010
 	// This is the original connect code - it's the "try once and commit suicide if we don't connect" version.  Given the current condition of the
 	// dbserver this isn't as hideous as it sounds.  As things currently stand, it appears that if the queueserver starts a connection attempt too
@@ -830,7 +830,7 @@ void queueserver_tick(void)
 
 // DGNOTE 8/10/2010
 // This is the new and improved retry code.  See the comment above in queueserver_load(...) for details on why you might want to turn this on
-#if 0
+#if 1
 	int result;
 	static int connecting_to_dbserver = 1;
 #ifdef I_WANT_A_30_SECOND_DELAY_AT_STARTUP

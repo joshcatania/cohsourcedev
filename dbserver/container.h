@@ -213,6 +213,7 @@ typedef struct MapCon
 	U32		lastRecvTime; // Last time we received a who update (i.e. the mapserver is in it's main loop)
 
 	int		dontAutoStart;
+	int		transient;
 	int		introZone;
 	int		base_map_id;
 	int		safePlayersLow;

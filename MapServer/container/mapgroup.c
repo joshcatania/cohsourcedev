@@ -45,7 +45,7 @@ LineDesc mapgroup_line_desc[] =
 		"TODO"},
 	{{ PACKTYPE_INT,			SIZE_INT32,							"EventSignalTS",	OFFSET(MapGroup, eventSignalTS)					},
 		"TODO"},
-	{ PACKTYPE_EARRAY,			(int)createMapDataToken,			"MapDataTokens",	(int) mapdata_token_desc						},
+	{ PACKTYPE_EARRAY,			(int)createMapDataToken,			"MapDataTokens",	(intptr_t) mapdata_token_desc						},
 	{ 0 },
 };
 

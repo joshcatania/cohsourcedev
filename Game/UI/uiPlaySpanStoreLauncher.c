@@ -5,7 +5,6 @@
 
 #include "uiPlaySpanStoreLauncher.h"
 #include "uiWebBrowser.h"
-#include "..\libs\HeroBrowser\HeroBrowser.h"
 #include "assert.h"
 #include "AccountCatalog.h"
 #include "uiLogin.h"
@@ -583,7 +582,11 @@ void PlaySpanStoreLauncher_ServiceHeroAuths( void )
 		if ( eaSize(&mruChallenge->challengeParams) )
 		{
 			const char* challenge =  mruChallenge->challengeParams[0]->value;
+#if defined(USE_QTWEBKIT_BROWSER)
 			bool is_auth_complete = webBrowser_authorize( auth_info.name, response_error, challenge );
+#else // USE_QTWEBKIT_BROWSER
+			bool is_auth_complete = true;
+#endif // USE_QTWEBKIT_BROWSER
 		}
 		// clear the current challenge slot since it is serviced
 		clearChallengeRequestSlot(challengeSlot);
@@ -619,7 +622,11 @@ void PlaySpanStoreLauncher_ReceiveAuthKeyResponse( int request_key, const char* 
 	if ( eaSize(&s_ChallengedURLRequests[challengeSlot].challengeParams) )
 	{
 		const char* challenge = s_ChallengedURLRequests[challengeSlot].challengeParams[0]->value;
+#if defined(USE_QTWEBKIT_BROWSER)
 		bool is_auth_complete = webBrowser_authorize( auth_info.name, auth_key, challenge );
+#else // USE_QTWEBKIT_BROWSER
+		bool is_auth_complete = true;
+#endif // USE_QTWEBKIT_BROWSER
 		if (cmdAccessLevel()>ACCESS_USER) printf(" onHeroAuth: Authorization response received. Retrying request...\n");
 	}
 	

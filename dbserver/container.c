@@ -612,7 +612,7 @@ void containerDelete(AnyContainer *container_void)
 		if(list->tplt->member_id == CONTAINER_ENTS)
 		{
 			// bruce: synchronous sql call to make extra sure deleting a team deletes the ent->team link
-			estrPrintf(&buf, "UPDATE dbo.%s SET %s = NULL WHERE %s = %d",
+			estrPrintf(&buf, "UPDATE dbo.%s SET %s = NULL WHERE %s = %d;",
 						list->tplt->member_table ? list->tplt->member_table->name : "Ents",
 						list->tplt->member_field_name,
 						list->tplt->member_field_name,

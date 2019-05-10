@@ -34,6 +34,10 @@ typedef struct StaticMapInfo
 	// is for static test maps that don't need to be running.
 	int		dontAutoStart;
 
+	// Transient maps are unloaded when no players are left on them anymore
+	// is for maps that don't need to be permanently running
+	int		transient;
+
 	// Zone to introduce new players to the game
 	//    1=hero tutorial
 	//    2=villain tutorial

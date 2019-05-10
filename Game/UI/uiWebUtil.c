@@ -26,7 +26,6 @@
 #include "net_linklist.h"
 #include "net_link.h"
 #include "crypt.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 
 // modulus for live 
 static char g_ncnc_1024_dev_pubmod[] = {

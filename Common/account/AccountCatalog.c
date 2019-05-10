@@ -191,7 +191,11 @@ void accountCatalogInit(void)
 		initCatalogCache();
 
 		TODO(); // Move this data into shared memory
+#ifdef ACCOUNTSERVER
+		ParserLoadFiles(NULL, PRODUCT_CATALOG_DEF_FILENAME, bin_filename, PARSER_SERVERONLY, parse_ProductCatalog, &s_ProductCatalog, NULL, NULL, NULL);
+#else
 		ParserLoadFiles(NULL, PRODUCT_CATALOG_DEF_FILENAME, bin_filename, 0, parse_ProductCatalog, &s_ProductCatalog, NULL, NULL, NULL);
+#endif
 
 		accountCatalog_SetCatalogTimeStamp( timerSecondsSince2000() );	// if we're a client, the server may update this later.
 

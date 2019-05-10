@@ -192,7 +192,6 @@
 #include "inventory_client.h"
 #include "AccountCatalog.h"
 #include "uiBody.h"
-#include "../../3rdparty/steam/coh_steam_api.h"
 #include "basedata.h"
 
 GameState game_state;
@@ -764,13 +763,6 @@ enum
 	CMD_TEST_CAN_START_STATIC_MAP,
 	CMD_SHOW_OPTIONS,
 	CMD_FORCE_CUT_SCENE_LETTERBOX,
-	CMD_STEAM_DEBUG,
-	CMD_STEAM_GRANT_ACHIEVEMENT,
-	CMD_STEAM_REVOKE_ACHIEVEMENT,
-	CMD_STEAM_CHECK_ACHIEVEMENT,
-	CMD_STEAM_REVOKE_ALL_ACHIEVEMENTS,
-	CMD_STEAM_GET_USER_NAME,
-	CMD_STEAM_GENERATE_AUTH_SESSION_TICKET,
 };
 
 #define MAX_SCROLL_OUT_DIST 80.0
@@ -2775,17 +2767,6 @@ Cmd game_cmds[] =
 	{ 0, "linkAccountURL", 0, {{ CMDSTR(game_state.linkAccountURL)}}, CMDF_HIDEPRINT,
 						"URL for link account website" },
 
-	{ 9, "steamDebug", CMD_STEAM_DEBUG, {{CMDINT(tmp_int)}}, CMDF_HIDEPRINT, "Set steam debug level" },
-	{ 9, "steamGrantAchievement", CMD_STEAM_GRANT_ACHIEVEMENT, {{CMDSTR(tmp_str)}}, CMDF_HIDEPRINT, "Grant a steam achievement" },
-	{ 9, "steamAddAchievement", CMD_STEAM_GRANT_ACHIEVEMENT, {{CMDSTR(tmp_str)}}, CMDF_HIDEPRINT, "Grant a steam achievement" },
-	{ 9, "steamRevokeAchievement", CMD_STEAM_REVOKE_ACHIEVEMENT, {{CMDSTR(tmp_str)}}, CMDF_HIDEPRINT, "Revoke a steam achievement" },
-	{ 9, "steamRemoveAchievement", CMD_STEAM_REVOKE_ACHIEVEMENT, {{CMDSTR(tmp_str)}}, CMDF_HIDEPRINT, "Revoke a steam achievement" },
-	{ 9, "steamCheckAchievement", CMD_STEAM_CHECK_ACHIEVEMENT, {{CMDSTR(tmp_str)}}, CMDF_HIDEPRINT, "Check a steam achievement" },
-	{ 9, "steamRevokeAllAchievements", CMD_STEAM_REVOKE_ALL_ACHIEVEMENTS, {{0}}, CMDF_HIDEPRINT, "Clear all steam achievements" },
-	{ 9, "steamRemoveAllAchievements", CMD_STEAM_REVOKE_ALL_ACHIEVEMENTS, {{0}}, CMDF_HIDEPRINT, "Clear all steam achievements" },
-	{ 9, "steamGetUserName", CMD_STEAM_GET_USER_NAME, {{0}}, CMDF_HIDEPRINT, "Get Steam User Name" },
-	{ 9, "steamGenerateAuthSessionTicket", CMD_STEAM_GENERATE_AUTH_SESSION_TICKET, {{0}}, CMDF_HIDEPRINT, "Generate a new auth session ticket" },
-	
 	{ 0 },
 };
 
@@ -5833,90 +5814,6 @@ int cmdGameParse(char *str, int x, int y)
 		xcase CMD_SHOW_OPTIONS:
 			{
 				windows_Show("options");
-			}
-		xcase CMD_STEAM_DEBUG:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				//COHSteam_SetDebugLevel(tmp_int);
-			}
-		xcase CMD_STEAM_GRANT_ACHIEVEMENT:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				bool rc = false;//COHSteam_SetAchievement(tmp_str);
-				printf("COHSteam_SetAchievement(%s) %s\n", tmp_str, rc ? "succeeded" : "failed");
-			}
-		xcase CMD_STEAM_REVOKE_ACHIEVEMENT:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				bool rc = false;//COHSteam_ClearAchievement(tmp_str);
-				printf("COHSteam_ClearAchievement(%s) %s\n", tmp_str, rc ? "succeeded" : "failed");
-			}
-		xcase CMD_STEAM_CHECK_ACHIEVEMENT:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				bool achieved = false;
-				/*if (COHSteam_GetAchievement(tmp_str, &achieved))
-				{
-					printf("COHSteam_GetAchievement(%s) returned %s\n", tmp_str, achieved ? "true" : "false");
-				}
-				else
-				{
-					printf("COHSteam_GetAchievement(%s) failed\n", tmp_str);
-				}*/
-			}
-		xcase CMD_STEAM_REVOKE_ALL_ACHIEVEMENTS:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				bool rc = false;//COHSteam_ClearAllAchievements(tmp_str);
-				printf("COHSteam_ClearAllAchievements() %s\n", rc ? "succeeded" : "failed");
-			}
-		xcase CMD_STEAM_GET_USER_NAME:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				//printf("COHSteam_GetUserName() returned %s\n", COHSteam_GetUserName());
-			}
-		xcase CMD_STEAM_GENERATE_AUTH_SESSION_TICKET:
-			if (!game_state.steamIsInitialized)
-			{
-				printf("Steam is not initialized\n");
-			}
-			else
-			{
-				/*U8 steam_auth_ticket[STEAM_AUTH_SESSION_TICKET_MAX_LEN];
-				U32 steam_auth_ticket_len = 0;*/
-
-				// Cancel the old ticket first
-				if (game_state.steamAuthSessionTicketID)
-				{
-					//COHSteam_CancelAuthSessionTicket(game_state.steamAuthSessionTicketID);
-					game_state.steamAuthSessionTicketID = 0;
-				}
-
-				game_state.steamAuthSessionTicketID = 0;//COHSteam_GetAuthSessionTicket(steam_auth_ticket, sizeof(steam_auth_ticket), &steam_auth_ticket_len);
 			}
 		xdefault:
 #ifndef FINAL

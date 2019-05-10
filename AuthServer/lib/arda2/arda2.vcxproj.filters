@@ -329,9 +329,6 @@
     <ClInclude Include="storage\stoFileBuffer.h">
       <Filter>storage\header files</Filter>
     </ClInclude>
-    <ClInclude Include="storage\stoFileCryptFile.h">
-      <Filter>storage\header files</Filter>
-    </ClInclude>
     <ClInclude Include="storage\stoFileMemory.h">
       <Filter>storage\header files</Filter>
     </ClInclude>
@@ -659,9 +656,6 @@
       <Filter>storage\source files</Filter>
     </ClCompile>
     <ClCompile Include="storage\stoFile.cpp">
-      <Filter>storage\source files</Filter>
-    </ClCompile>
-    <ClCompile Include="storage\stoFileCryptFile.cpp">
       <Filter>storage\source files</Filter>
     </ClCompile>
     <ClCompile Include="storage\stoFileMemory.cpp">

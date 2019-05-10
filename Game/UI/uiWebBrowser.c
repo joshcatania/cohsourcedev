@@ -472,7 +472,7 @@ void uiWebBowser_generate_events(bool * eventActivated)
 		webBrowser_tick_inactive(25);	// browser is 'inactive' limit event processing
 	}
 
-	//PlaySpanStoreLauncher_ServiceHeroAuths();	// check for timouts on any authorizations in progress
+	PlaySpanStoreLauncher_ServiceHeroAuths();	// check for timouts on any authorizations in progress
 #endif // USE_QTWEBKIT_BROWSER
 }
 
@@ -513,9 +513,7 @@ static bool uiWebBrowser_handle_native_ui(void)
 	xLoc = 400.0f; yLoc = 740.0f; zLoc = 10.0f;
 	if( D_MOUSEHIT == drawStdButton( (xLoc)*screenScaleX, yLoc*screenScaleY, zLoc, 80*screenScale, 30*screenScale, color, "Playspan", 1.f, 0 ) )
 	{
-		//PlaySpanStoreLauncher_EnterStoreFront();
-		static const char s_url_google[] = "www.google.com";
-		uiWebBrowser_goto_url(s_url_google);
+		PlaySpanStoreLauncher_EnterStoreFront();
 	}
 	if( D_MOUSEHIT == drawStdButton( (xLoc+120)*screenScaleX, yLoc*screenScaleY, zLoc, 80*screenScale, 30*screenScale, color, "Google", 1.f, 0 ) )
 	{
@@ -619,7 +617,7 @@ static int webNotifyCallback( EHeroWebNotice notice, void* data )
 				// Send the Steam Auth Session Ticket
 				BrowserSendSteamAuthSessionTicket();
 
-				//PlaySpanStoreLauncher_RequestAuthorizationPlayNC(pGeneric->url, pGeneric->sc1);
+				PlaySpanStoreLauncher_RequestAuthorizationPlayNC(pGeneric->url, pGeneric->sc1);
 			}
 			break;
 		case kWebNotice_onNewFeatureClicked:

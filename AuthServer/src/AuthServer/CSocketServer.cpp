@@ -221,13 +221,13 @@ static bool ServerWriteUserData( CSocketServer *mysocket, const unsigned char *p
 
 	CDBConn dbconn(g_linDB);
 	
-	SQLINTEGER udIndOrg = MAX_USERDATA_ORIG;
+	SQLLEN udIndOrg = MAX_USERDATA_ORIG;
 	SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, MAX_USERDATA_ORIG, 0, (SQLPOINTER)UserData, MAX_USERDATA_ORIG, &udIndOrg );
 
-	SQLINTEGER udIndNew = MAX_USERDATA_NEW;
+	SQLLEN udIndNew = MAX_USERDATA_NEW;
 	SQLBindParameter( dbconn.m_stmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, MAX_USERDATA_NEW, 0, (SQLPOINTER)(&UserData[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &udIndNew );
 
-	SQLINTEGER cbUid=0;
+	SQLLEN cbUid=0;
 	SQLBindParameter( dbconn.m_stmt, 3, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&Uid), 0, &cbUid );
 
 	dbconn.Execute( "UPDATE user_data SET user_data=?,user_data_new=? WHERE uid = ?" );
@@ -259,13 +259,13 @@ static bool ServerReadUserData( CSocketServer *mysocket, const unsigned char *pa
 		// forces CDBConn::~CDBConn() to be called.
 		{
 		CDBConn dbconn(g_linDB);
-		SQLINTEGER UserInd=0;
+		SQLLEN UserInd=0;
 		SQLBindCol( dbconn.m_stmt, 1, SQL_C_BINARY, (char *)(userdata), MAX_USERDATA_ORIG, &UserInd );
 
-		SQLINTEGER UserIndNew=0;
+		SQLLEN UserIndNew=0;
 		SQLBindCol( dbconn.m_stmt, 2, SQL_C_BINARY, (char *)(&userdata[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &UserIndNew );
 
-		SQLINTEGER cbUid=0;
+		SQLLEN cbUid=0;
 		SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&uid), 0, &cbUid );
 
 		dbconn.Execute( "SELECT user_data, user_data_new FROM user_data WHERE uid = ?" );
@@ -308,13 +308,13 @@ static bool ServerWriteGameData( CSocketServer *mysocket, const unsigned char *p
 
 	CDBConn dbconn(g_linDB);
 	
-	SQLINTEGER udIndOrg = MAX_USERDATA_ORIG;
+	SQLLEN udIndOrg = MAX_USERDATA_ORIG;
 	SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, MAX_USERDATA_ORIG, 0, (SQLPOINTER)gamedata, MAX_USERDATA_ORIG, &udIndOrg );
 
-	SQLINTEGER udIndNew = MAX_USERDATA_NEW;
+	SQLLEN udIndNew = MAX_USERDATA_NEW;
 	SQLBindParameter( dbconn.m_stmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, MAX_USERDATA_NEW, 0, (SQLPOINTER)(&gamedata[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &udIndNew );
 
-	SQLINTEGER cbUid=0;
+	SQLLEN cbUid=0;
 	SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&Uid), 0, &cbUid );
 
 	dbconn.Execute( "UPDATE user_data SET user_game_data=?,user_game_data_new=? WHERE uid = ?" );
@@ -346,13 +346,13 @@ static bool ServerReadGameData( CSocketServer *mysocket, const unsigned char *pa
 		// forces CDBConn::~CDBConn() to be called.
 		{
 		CDBConn dbconn(g_linDB);
-		SQLINTEGER UserInd=0;
+		SQLLEN UserInd=0;
 		SQLBindCol( dbconn.m_stmt, 1, SQL_C_BINARY, (char *)(gamedata), MAX_USERDATA_ORIG, &UserInd );
 
-		SQLINTEGER UserIndNew=0;
+		SQLLEN UserIndNew=0;
 		SQLBindCol( dbconn.m_stmt, 2, SQL_C_BINARY, (char *)(&gamedata[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &UserIndNew );
 
-		SQLINTEGER cbUid=0;
+		SQLLEN cbUid=0;
 		SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&uid), 0, &cbUid );
 
 		dbconn.Execute( "SELECT user_game_data, user_game_data_new FROM user_data WHERE uid = ?" );

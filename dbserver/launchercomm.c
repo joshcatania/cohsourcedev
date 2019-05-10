@@ -1529,6 +1529,9 @@ int launcherCommStartProcess(const char *db_hostname, U32 host_ip, MapCon* map_c
 	client = best_link->userData;
 	estrPrintf(&cmd,".\\mapserver.exe -db %s -udp %d -map_id %d -launcher -cookie %d",
 		db_hostname,-1/*client->port_id*/,map_con->id, map_con->cookie);
+	if (map_con->transient) {
+		estrConcatf(&cmd, " -transient");
+	}
 	if (server_cfg.assertMode) {
 		estrConcatf(&cmd, " -assertmode %d", server_cfg.assertMode);
 	}

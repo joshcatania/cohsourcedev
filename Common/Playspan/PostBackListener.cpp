@@ -1,3 +1,6 @@
+
+#if defined(USE_POST_BACK_RELAY)
+
 #include <zmq.h>
 #include "../3rdparty/cryptopp/randpool.h"
 
@@ -497,3 +500,5 @@ const char * postback_update_stats() {
 }
 
 C_DECLARATIONS_END
+
+#endif // USE_POST_BACK_RELAY
