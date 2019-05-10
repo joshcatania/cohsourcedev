@@ -315,7 +315,7 @@ static bool ServerWriteGameData( CSocketServer *mysocket, const unsigned char *p
 	SQLBindParameter( dbconn.m_stmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, MAX_USERDATA_NEW, 0, (SQLPOINTER)(&gamedata[MAX_USERDATA_ORIG]), MAX_USERDATA_NEW, &udIndNew );
 
 	SQLLEN cbUid=0;
-	SQLBindParameter( dbconn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&Uid), 0, &cbUid );
+	SQLBindParameter( dbconn.m_stmt, 3, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&Uid), 0, &cbUid );
 
 	dbconn.Execute( "UPDATE user_data SET user_game_data=?,user_game_data_new=? WHERE uid = ?" );
 
