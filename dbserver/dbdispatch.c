@@ -2305,15 +2305,9 @@ static void sqlReqCustomDataCallback(Packet *pak_out,U8 *cols,int row_count,Colu
 				// Otherwise, it might be one of these other primitives.
 				switch(field_ptrs[j]->data_type)
 				{
-					xcase CFTYPE_UNICODESTRING:
-						utf16ToUtf8(&cols[idx], field_ptrs[j]->num_bytes);
-						pktSendString(pak_out,&cols[idx]);
 					xcase CFTYPE_ANSISTRING:
-					case CFTYPE_TEXTBLOB:
 						pktSendString(pak_out,&cols[idx]);
 					xcase CFTYPE_BINARY_MAX:
-					case CFTYPE_UNICODESTRING_MAX:
-					case CFTYPE_ANSISTRING_MAX:
 						assert(0); // there isn't a clean way to do this right now
 					xcase CFTYPE_INT:
 						pktSendBitsPack(pak_out,1,*(int *)(&cols[idx]));

@@ -189,6 +189,18 @@ bool sqlExecDdlf(DdlType ddl_type, char *fmt, ...)
 	return ret;
 }
 
+// Can't use ADD IF NOT EXISTS because the table it refers to might not even exist
+const char* POSTGRES_ADD_FK_CONSTRAINT = \
+"DO $$ " \
+"BEGIN " \
+"IF (select constraint_exists('fk_%s_%s_%s')) IS FALSE THEN " \
+"ALTER TABLE dbo.%s " \
+"ADD CONSTRAINT FK_%s_%s_%s " \
+"FOREIGN KEY(%s) REFERENCES dbo.%s; " \
+"END IF; " \
+"END " \
+"$$;";
+
 /** 
 * Add a SQL database foreign key constraint from a column on the
 * first table to be validated against the primary key of a 
@@ -203,11 +215,20 @@ void sqlAddForeignKeyConstraintAsync(char *table, char *key, char *foreign_table
 		xcase DBPROV_MSSQL:
 			buf_len = sprintf(buf, "IF NOT EXISTS (SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'FK_%s_%s_%s') ALTER TABLE dbo.%s ADD CONSTRAINT FK_%s_%s_%s FOREIGN KEY (%s) REFERENCES %s;", table, key, foreign_table, table, table, key, foreign_table, key, foreign_table);
 		xcase DBPROV_POSTGRESQL:
-			buf_len = sprintf(buf, "DO $$BEGIN IF NOT EXISTS (SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'fk_%s_%s_%s') THEN ALTER TABLE dbo.%s ADD CONSTRAINT FK_%s_%s_%s FOREIGN KEY (%s) REFERENCES dbo.%s; END IF; END$$;", strlwrdupa(table), strlwrdupa(key), strlwrdupa(foreign_table), table, table, key, foreign_table, key, foreign_table);
+			buf_len = sprintf(buf, POSTGRES_ADD_FK_CONSTRAINT, table, key, foreign_table, table, table, key, foreign_table, key, foreign_table);
 		DBPROV_XDEFAULT();
 	}
 	sqlExecAsync(buf, buf_len);
 }
+
+const char* POSTGRES_DROP_CONSTRAINT = \
+"DO $$ " \
+"BEGIN " \
+"IF (SELECT constraint_exists('FK_%s_%s_%s')) IS TRUE " \
+"THEN ALTER TABLE dbo.%s DROP CONSTRAINT FK_%s_%s_%s;" \
+"END IF; " \
+"END " \
+"$$;";
 
 /** 
 * Removes a foreign key contraint from a SQL database table.
@@ -221,7 +242,7 @@ void sqlRemoveForeignKeyConstraintAsync(char *table, char *key, char *foreign_ta
 		xcase DBPROV_MSSQL:
 			buf_len = sprintf(buf, "IF EXISTS (SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'FK_%s_%s_%s') ALTER TABLE dbo.%s DROP CONSTRAINT FK_%s_%s_%s;", table, key, foreign_table, table, table, key, foreign_table);
 		xcase DBPROV_POSTGRESQL:
-			buf_len = sprintf(buf, "DO $$BEGIN IF EXISTS (SELECT constraint_name FROM information_schema.table_constraints WHERE constraint_name = 'fk_%s_%s_%s') THEN ALTER TABLE dbo.%s DROP CONSTRAINT FK_%s_%s_%s; END IF; END$$;", strlwrdupa(table), strlwrdupa(key), strlwrdupa(foreign_table), table, table, key, foreign_table);
+			buf_len = sprintf(buf, POSTGRES_DROP_CONSTRAINT, table, key, foreign_table, table, table, key, foreign_table);
 		DBPROV_XDEFAULT();
 	}
 	
@@ -246,7 +267,7 @@ void sqlAddIndexAsync(char *index, char *table, char *fields)
 		xcase DBPROV_MSSQL:
 			buf_len = sprintf(buf, "IF NOT EXISTS (SELECT sys.indexes.name FROM sys.indexes JOIN sys.objects on sys.indexes.object_id=sys.objects.object_id WHERE sys.indexes.name = N'%s' and sys.objects.name=N'%s') CREATE INDEX %s ON dbo.%s (%s);", index, table, index, table, fields);
 		xcase DBPROV_POSTGRESQL:
-			buf_len = sprintf(buf, "DO $$BEGIN IF NOT EXISTS (SELECT relname FROM pg_catalog.pg_class JOIN pg_catalog.pg_index ON pg_catalog.pg_class.oid = pg_catalog.pg_index.indexrelid WHERE relname = '%s' AND indrelid = '%s'::regclass::oid) THEN CREATE INDEX %s ON dbo.%s (%s); END IF; END$$;", strlwrdupa(index), strlwrdupa(table), index, table, fields);
+			buf_len = sprintf(buf, "CREATE INDEX IF NOT EXISTS %s ON dbo.%s (%s);", index, table, fields);
 		DBPROV_XDEFAULT();
 	}
 
@@ -269,7 +290,7 @@ void sqlRemoveIndexAsync(char *index, char *table)
 		xcase DBPROV_MSSQL:
 			buf_len = sprintf(buf, "IF EXISTS (SELECT sys.indexes.name FROM sys.indexes JOIN sys.objects on sys.indexes.object_id=sys.objects.object_id WHERE sys.indexes.name = N'%s' and sys.objects.name=N'%s') DROP INDEX %s ON dbo.%s;", index, table, index, table);
 		xcase DBPROV_POSTGRESQL:
-			buf_len = sprintf(buf, "DO $$BEGIN IF EXISTS (SELECT relname FROM pg_catalog.pg_class JOIN pg_catalog.pg_index ON pg_catalog.pg_class.oid = pg_catalog.pg_index.indexrelid WHERE relname = '%s' AND indrelid = '%s'::regclass::oid) THEN DROP INDEX %s ON dbo.%s; END IF; END$$;", strlwrdupa(index), strlwrdupa(table), index, table);
+			buf_len = sprintf(buf, "DROP INDEX IF EXISTS dbo.%s;", index);
 		DBPROV_XDEFAULT();
 	}
 
@@ -387,22 +408,6 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 			if (slot->sub_id != last_slot->sub_id || table != last_slot->table)
 				break;
 
-			TODO(); // Rip out this deprecated funcionality
-			if (col->data_type == CFTYPE_TEXTBLOB) {				
-				char *s = diff->text + line->str_idx;
-				if(*s)
-				{
-					char *hexbuf = _alloca(strlen(s)*2+1);
-					binStrToHexStr2(s,hexbuf);
-					estrConcatf(estr,"%s='HEXX%s',",col->name,hexbuf);
-				}
-				else
-				{
-					estrConcatf(estr,"%s=NULL,",col->name);
-				}
-				continue;
-			}
-
 			estrConcatf(estr, "%s=?,", col->name);
 			switch(col->data_type)
 			{
@@ -412,20 +417,6 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 #endif
 					bindInputParameter(stmt, (*bind)++, CFTYPE_ANSISTRING, diff->text + line->str_idx, &line->size);
 					break;
-				case CFTYPE_UNICODESTRING:
-				case CFTYPE_UNICODESTRING_MAX:
-				{
-					sqlBindTemp * temp = malloc(sizeof(sqlBindTemp) + (line->size+1) * sizeof(wchar_t));
-					int wsize = MultiByteToWideChar(CP_UTF8, 0, diff->text + line->str_idx, line->size, temp->wdata, line->size + 1);
-					temp->wdata[wsize] = 0;
-#ifdef _FULLDEBUG
-					assert(UTF16GetLength(temp->wdata) == UTF8GetLength(diff->text + line->str_idx));
-#endif
-					temp->bytes = wsize * sizeof(wchar_t);
-					bindInputParameter(stmt, (*bind)++, CFTYPE_UNICODESTRING, temp->wdata, &temp->bytes);
-					eaPush(bind_temps, temp);
-					break;
-				}
 				case CFTYPE_BINARY_MAX:
 				{
 #if ACTUALLY_STORE_BINARY_AS_BINARY
@@ -498,7 +489,8 @@ void sqlContainerUpdateInternal(ContainerTemplate *tplt, int container_id, LineL
 
 static void* s_getDataAtExec(HSTMT stmt, ColumnInfo *field, int column_idx, ssize_t *results, char *original_command, SqlConn conn)
 {
-	return sqlConnStmtGetData(stmt, column_idx+1, g_containerfieldinfo[field->data_type].access_type, results, original_command, conn);
+	
+	return sqlConnStmtGetData(stmt, column_idx+1, getContainerFieldInfo(field->data_type).access_type, results, original_command, conn);
 }
 
 static char row_data[SQLCONN_MAX][MAX_QUERY_SIZE];
@@ -507,7 +499,7 @@ static int glob_container_id[SQLCONN_MAX];
 
 static void s_bindField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data_idx, SqlConn conn)
 {
-	if(CFTYPE_IS_DYNAMIC(field->data_type)) {
+	if (!CFTYPE_IS_BOUND(field->data_type, field->column_size)) {
 		assert(field->num_bytes == -1);
 		return;
 	}
@@ -523,23 +515,9 @@ static void* s_getField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data
 	S8 *data = &row_data[conn][*data_idx];
 	SQLLEN *results = row_results[conn] + column_idx;
 
-	switch(field->data_type)
-	{
-		case CFTYPE_TEXTBLOB:
-		{
-			data = s_getDataAtExec(stmt, field, column_idx, results, original_command, conn);
-			if (strncmp(data, "HEXX", 4)==0)
-				hexStrToBinStr2(data + 4, data);
-			return data;
-		}
-		case CFTYPE_BLOB:
-		case CFTYPE_BINARY_MAX:
-		case CFTYPE_UNICODESTRING_MAX:
-		case CFTYPE_ANSISTRING_MAX:
-		{
-			return s_getDataAtExec(stmt, field, column_idx, results, original_command, conn);
-		}
-	};
+	if (!CFTYPE_IS_BOUND(field->data_type, field->column_size)) {
+		return s_getDataAtExec(stmt, field, column_idx, results, original_command, conn);
+	}
 
 	assert(field->num_bytes > 0);
 	(*data_idx) += field->num_bytes;
@@ -753,16 +731,7 @@ static int readRow(HSTMT stmt, ContainerTemplate *tplt, TableInfo *table, LineLi
 				if(!addStrToLine(list, line, data, results[col]))
 					continue;
 #endif
-
-			xcase CFTYPE_UNICODESTRING:
-			case CFTYPE_UNICODESTRING_MAX:
-				if(!addWStrToLine(list, line, data, results[col]/2))
-					continue;
-
-			xcase CFTYPE_ANSISTRING:
-			 case CFTYPE_ANSISTRING_MAX:
-			 case CFTYPE_TEXTBLOB:
-			 case CFTYPE_BLOB:
+			xcase CFTYPE_STRING:
 				if(!addStrToLine(list, line, data, results[col]))
 					continue;
 
@@ -1027,7 +996,7 @@ char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, cha
 			if(stricmp(args[i], field->name)==0)
 			{
 				// this doesn't work because i don't have a good way to pass the data around and ensure that the it will be freed
-				assert(!CFTYPE_IS_DYNAMIC(field->data_type));
+				assert(CFTYPE_IS_BOUND(field->data_type, field->column_size));
 
 				s_bindField(stmt, field, i, &rec_size, conn);
 
@@ -1122,17 +1091,7 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 
 	stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 
-	switch (gDatabaseProvider) {
-		xcase DBPROV_MSSQL:
-			schema_name = schema_name;
-			table_name = table_name;
-		xcase DBPROV_POSTGRESQL:
-			schema_name = strlwrdupa(schema_name);
-			table_name = strlwrdupa(table_name);
-		DBPROV_XDEFAULT();
-	}
-
-	if (!SQL_SUCCEEDED(SQLColumns(stmt, NULL, 0, schema_name, SQL_NTS, table_name, SQL_NTS, NULL, 0)))
+	if (!SQL_SUCCEEDED(SQLColumns(stmt, NULL, 0, schema_name, 3, strlwrdupa(table_name), SQL_NTS, NULL, 0)))
 	{
 		sqlConnStmtFree(stmt);
 		return 0;
@@ -1179,34 +1138,29 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 		columns[count].num_bytes = buffer_length;
 		columns[count].column_size = 0;
 
-		for (i = 1; i < CFTYPE_COUNT; i++)
 		{
-			if ((g_containerfieldinfo[i].actual_type == data_type) && ((g_containerfieldinfo[i].access_size == -1) == (column_size == 0 || column_size == INT_MAX)))
-			{
-				columns[count].data_type = i;
-				break;
+			ContainerFieldInfo info;
+			for (i = 1; i <= CFTYPE_COUNT; i++) {
+				info = getContainerFieldInfo(i);
+				if (info.actual_type == data_type || info.actual_type_long == data_type) {
+					columns[count].data_type = i;
+					break;
+				}
 			}
 		}
 		if (i == CFTYPE_COUNT)
 			FatalErrorf("Unknown type '%s' (%d) for column '%s' in '%s'", type_name, data_type, column_name, table_name);
 
-		if (CFTYPE_IS_LEGACY(columns[count].data_type))
-		{
-			columns[count].num_bytes = -1;
-			strcpy(columns[count].data_type_name, type_name);
-		}
-		else if (CFTYPE_IS_DYNAMIC(columns[count].data_type))
-		{
-			columns[count].num_bytes = -1;
-			sprintf(columns[count].data_type_name, "%s(max)", type_name);
-		}
-		else if (CFTYPE_IS_ARRAY(columns[count].data_type))
-		{
-			columns[count].column_size = column_size;
-			sprintf(columns[count].data_type_name, "%s(%d)", type_name, column_size);
-		}
-		else
-		{
+		if (CFTYPE_IS_UNBOUNDABLE(columns[count].data_type)) {
+			if (isUnbound(columns[count].data_type, type_name)) {
+				columns[count].num_bytes = -1;
+				sprintf(columns[count].data_type_name, "%s", type_name);
+			} else {
+				// We only care to set the column size for bound string/binary columns
+				columns[count].column_size = column_size;
+				sprintf(columns[count].data_type_name, "%s(%d)", type_name, column_size);
+			}
+		} else {
 			strcpy(columns[count].data_type_name, type_name);
 		}
 	}
@@ -1394,29 +1348,21 @@ void sqlCheckDdl(DdlType type)
 */ 
 static char * testString(char * string, size_t len, bool unicode, bool min)
 {
-	static const char test_utf8[4] = {0xF0, 0xA4, 0xAD, 0xA2};
+	static const char test_utf8[4] = { 0xC2, 0xA9, 0xAF, 0xA2 };
+	static const char test_ansi[4] = { 0x01, 0x10, 0x15, 0x99 };
 
 	char * s = string;
 	size_t i;
+	const char* default_chars = (unicode) ? test_utf8 : test_ansi;
 
-	if (min) {
-		memset(string, '$', len);
-		string[len] = 0;
-	} else if (!unicode) {
-		for(i=0; i<len; i++) {
-			*(s++) = '\\';
-			*(s++) = '\\';
-		}
-		*s = 0;
-	} else {
-		for(i=0; i<len; i++) {
-			*(s++) = test_utf8[0];
-			*(s++) = test_utf8[1];
-			*(s++) = test_utf8[2];
-			*(s++) = test_utf8[3];
-		}
-		*s = 0;
+	if (min)
+		len = (unicode) ? 4 : 2;
+
+	for (i = 0; i < len; i++) {
+		*(s++) = default_chars[i % 4];
 	}
+	*s = 0;
+
 	return string;
 }
 
@@ -1462,17 +1408,21 @@ static char * testDataBaseValues(ContainerTemplate * tplt, bool min)
 						int time = min ? timerGetSecondsSince2000FromString("2001-01-01 00:00:00") : timerSecondsSince2000();
 						estrConcatf(&buf, "%s \"%s\"\n", field->name, timerMakeDateStringFromSecondsSince2000(tmp, time));
 				}
-				xcase CFTYPE_UNICODESTRING: estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, min ? field->column_size : field->column_size/4, true, min));
-				xcase CFTYPE_ANSISTRING: estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, min ? field->column_size : field->column_size/2, false, min));
-				xcase CFTYPE_UNICODESTRING_MAX: estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, sizeof(tmp)/4-1, true, min));
-				xcase CFTYPE_ANSISTRING_MAX: estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, sizeof(tmp)/2-1, false, min));
+				xcase CFTYPE_STRING : {
+					if (field->column_size == 0) {
+						// Unbound length
+						estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, sizeof(tmp) - 1, true, min));
+					} else {
+						estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, field->column_size - 1, true, min));
+					}
+				}
 				xcase CFTYPE_BINARY_MAX: {
 					char escaped[16384*2+1];
 					int escaped_len = sizeof(escaped);
 					int k;
 					int len = min ? 1 : sizeof(tmp);
 
-					for (k=0; k<len; k++) tmp[k]=k;
+					for (k=0; k<len; k++) tmp[k]=k + 5;
 
 					escapeDataToBuffer(escaped, tmp, len, &escaped_len);
 					escaped[escaped_len] = 0;
@@ -1517,8 +1467,6 @@ void testDataBaseTypes(struct DbList * list)
 	char * text_empty = "Active 1";
 	char * text_min = testDataBaseValues(list->tplt, 1);
 	char * text_max = testDataBaseValues(list->tplt, 0);
-
-	loadstart_printf("verifying that the database is working correctly");
 
 	for (i=0; i<10; i++)
 	{

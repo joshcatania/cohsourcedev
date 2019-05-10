@@ -939,6 +939,10 @@ void* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, ssize_t *length, cons
 	}
 
 	*length = sb[conn].idx;
+	//TODO -- This is null terminating a binary but it might(?) fail if binary fills buff completely
+	if (ctype == SQL_C_BINARY) {
+		sb[conn].buff[sb[conn].idx] = 0;
+	}
 	return sb[conn].buff;
 }
 

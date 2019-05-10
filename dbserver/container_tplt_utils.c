@@ -20,36 +20,36 @@
 DatabaseProvider gDatabaseProvider = DBPROV_UNKNOWN;
 int gDatabaseVersion = 0;
 
-ContainerFieldInfo g_containerfieldinfo[] =
-{
-	{ 0,			SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	}, // CFTYPE_NULL
-	{ 1,			SQL_C_TINYINT,			SQL_TINYINT,		}, // CFTYPE_BYTE
-	{ 2,			SQL_C_SHORT,			SQL_SMALLINT,		}, // CFTYPE_SHORT
-	{ 4,			SQL_C_LONG,				SQL_INTEGER,		}, // CFTYPE_INT
-	{ 4,			SQL_C_FLOAT,			SQL_REAL,			}, // CFTYPE_FLOAT
-	{ 0,			SQL_C_WCHAR,			SQL_WVARCHAR,		}, // CFTYPE_UNICODESTRING
-	{ 0,			SQL_C_CHAR,				SQL_VARCHAR,		}, // CFTYPE_ANSISTRING
-	{ 16,			SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	}, // CFTYPE_DATETIME
-	{ -1,			SQL_C_BINARY,			SQL_VARBINARY,		}, // CFTYPE_BINARY_MAX
-	{ -1,			SQL_C_WCHAR,			SQL_WVARCHAR,		}, // CFTYPE_UNICODESTRING_MAX
-	{ -1,			SQL_C_CHAR,				SQL_VARCHAR,		}, // CFTYPE_ANSISTRING_MAX
-	{ -1,			SQL_C_CHAR,				SQL_LONGVARCHAR,	}, // CFTYPE_TEXTBLOB
-	{ -1,			SQL_C_BINARY,			SQL_LONGVARBINARY,	}, // CFTYPE_BLOB
+static ContainerFieldInfo cToSqlMappingsSqlServer[CFTYPE_COUNT] = {
+	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	NULL,		NULL			}, // CFTYPE_NULL
+	{ 1,	SQL_C_TINYINT,			SQL_TINYINT,		SQL_UNKNOWN_TYPE,	"tinyint",	NULL		}, // CFTYPE_BYTE
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT,		SQL_UNKNOWN_TYPE,	"smallint",	NULL		}, // CFTYPE_SHORT
+	{ 4,	SQL_C_LONG,				SQL_INTEGER,		SQL_UNKNOWN_TYPE,	"int",		NULL			}, // CFTYPE_INT
+	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"real",		NULL			}, // CFTYPE_FLOAT
+	{ 4,	SQL_C_CHAR,				SQL_VARCHAR,		SQL_LONGVARCHAR, 	"varchar",	"varchar(max)"	}, // CFTYPE_STRING
+	{ 16,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"datetime",	NULL		}, // CFTYPE_DATETIME
+	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary", "varbinary(max)"} // CFTYPE_BINARY
 };
-STATIC_ASSERT(ARRAY_SIZE(g_containerfieldinfo) == CFTYPE_COUNT);
 
-static char * g_containerfieldtypes[][CFTYPE_COUNT] = {
-	{NULL}, // DBPROV_UNKNOWN
-	{NULL, "tinyint", "smallint", "int", "real", "nvarchar", "varchar", "datetime", "varbinary(max)", "nvarchar(max)", "varchar(max)", "text", "image"}, // DBPROV_MSSQL
-	{NULL, "int2", "int2", "int4", "float4", "varchar", "varchar", "timestamp", "bytea", "text", "text", "text", "bytea"}, // DBPROV_POSTGRESQL
+static ContainerFieldInfo cToSqlMappingsPostgres[CFTYPE_COUNT] = {
+	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	NULL,			NULL		}, // CFTYPE_NULL
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			NULL		}, // CFTYPE_BYTE
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			NULL		}, // CFTYPE_SHORT
+	{ 4,	SQL_C_LONG,				SQL_INTEGER, 		SQL_UNKNOWN_TYPE,	"int4",			NULL		}, // CFTYPE_INT
+	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"float4",		NULL		}, // CFTYPE_FLOAT
+	{ 4,	SQL_C_CHAR,				SQL_VARCHAR, 		SQL_LONGVARCHAR,	"varchar",		"text"		}, // CFTYPE_STRING
+	{ 19,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"timestamp",	NULL	}, // CFTYPE_DATETIME
+	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary",	"bytea"		}  // CFTYPE_BINARY
 };
-STATIC_ASSERT(ARRAY_SIZE(g_containerfieldtypes) == DBPROV_COUNT);
 
 static int field_must_start_with_cr=1;
 
-char * getContainerFieldType(enum ContainerFieldType field_type)
-{
-	return g_containerfieldtypes[gDatabaseProvider][field_type];
+ContainerFieldInfo getContainerFieldInfo(enum ContainerFieldType type) {
+	switch (gDatabaseProvider) {
+		case DBPROV_MSSQL: return cToSqlMappingsSqlServer[type];
+		case DBPROV_POSTGRESQL: return cToSqlMappingsPostgres[type];
+		default: return cToSqlMappingsSqlServer[type];
+	}
 }
 
 void setFieldRequiresCR(int yes)
@@ -93,6 +93,7 @@ int dataType(char *str, int *column_size, int *num_bytes, char **sql_type_name)
 	int length = 0;
 	char * type_name;
 	char * length_str;
+	ContainerFieldInfo typeMapping;
 
 	type_name = strtok(str, "[");
 	length_str = strtok(NULL, "]");
@@ -100,7 +101,8 @@ int dataType(char *str, int *column_size, int *num_bytes, char **sql_type_name)
 	if (stricmp(type_name, "attribute")==0) { // used to support "IdxByAttribute" here
 		type = CFTYPE_INT;
 	} else if (stricmp(type_name, "int1")==0) {
-		type = CFTYPE_BYTE;
+		// int1 (byte) isn't in Postgres, so just have it default to short instead
+		type = CFTYPE_SHORT;
 	} else if (stricmp(type_name, "int2")==0) {
 		type = CFTYPE_SHORT;
 	} else if (stricmp(type_name, "int4")==0) {
@@ -108,19 +110,20 @@ int dataType(char *str, int *column_size, int *num_bytes, char **sql_type_name)
 	} else if (stricmp(type_name, "float4")==0) {
 		type = CFTYPE_FLOAT;
 	} else if (stricmp(type_name, "unicodestring")==0) {
-		type = CFTYPE_UNICODESTRING;
+		type = CFTYPE_STRING;
 	} else if (stricmp(type_name, "ansistring")==0) {
-		type = CFTYPE_ANSISTRING;
+		type = CFTYPE_STRING;
 	} else if (stricmp(type_name, "datetime")==0) {
 		type = CFTYPE_DATETIME;
 	} else if (stricmp(type_name, "binary(max)")==0) {
-		type = CFTYPE_BINARY_MAX;
+		type = CFTYPE_BINARY;
 	} else if (stricmp(type_name, "unicodestring(max)")==0) {
-		type = CFTYPE_UNICODESTRING_MAX;
+		type = CFTYPE_STRING;
 	} else if (stricmp(type_name, "ansistring(max)")==0) {
-		type = CFTYPE_ANSISTRING_MAX;
-	} else if (stricmp(type_name, "textblob")==0) {
-		type = CFTYPE_TEXTBLOB;
+		type = CFTYPE_STRING;
+	} else if (stricmp(type_name, "textblob") == 0) {
+		// No length is set so this will default to unbound string
+		type = CFTYPE_STRING;
 	} else {
 		FatalErrorf("Unknown data type: %s\n", type_name);
 	}
@@ -128,32 +131,37 @@ int dataType(char *str, int *column_size, int *num_bytes, char **sql_type_name)
 	if (length_str)
 		length = atoi(length_str);
 
-	switch (type) {
-		case CFTYPE_UNICODESTRING:
-		{
-			sprintf(static_sql_type_name, "%s(%d)", getContainerFieldType(type), length);
-			*column_size = length;
-			*num_bytes = (length+1)*2; // wide characters
-			*sql_type_name = static_sql_type_name;
-			break;
-		}
-		case CFTYPE_ANSISTRING:
-		{
-			sprintf(static_sql_type_name, "%s(%d)", getContainerFieldType(type), length);
-			*column_size = length;
-			*num_bytes = length+1;
-			*sql_type_name = static_sql_type_name;
-			break;
-		}
-		default:
-		{
-			*column_size = 0;
-			*num_bytes = g_containerfieldinfo[type].access_size;
-			*sql_type_name = g_containerfieldtypes[gDatabaseProvider][type];
-		}
-	}
+	typeMapping = getContainerFieldInfo(type);
 
+	if (length == 0) {
+		*column_size = 0;
+		if (CFTYPE_IS_UNBOUNDABLE(type)) {
+			*sql_type_name = typeMapping.db_unbound_type;
+			*num_bytes = -1;
+		} else {
+			*sql_type_name = typeMapping.db_bound_type;
+			*num_bytes = typeMapping.access_size;
+		}
+	} else {
+		sprintf(static_sql_type_name, "%s(%d)", typeMapping.db_bound_type, length);
+		*sql_type_name = static_sql_type_name;
+		*column_size = length;
+		*num_bytes = length * typeMapping.access_size;
+	}
 	return type;
+}
+
+/*
+  Check if the type name (from DB) is unbound.
+  Only need to use in getSqlTableInfo, any other time the column size for
+  unbound is set to 0 and you can use CFTYPE_IS_BOUND.
+*/
+bool isUnbound(enum ContainerFieldType type, char* typeName) {
+	ContainerFieldInfo info = getContainerFieldInfo(type);
+	if (info.db_unbound_type == NULL) {
+		return false;
+	}
+	return stricmp(info.db_unbound_type, typeName) == 0;
 }
 
 void containerInitIndex(IndexedContainer *cont_lines,const char *data,int create)
@@ -387,11 +395,11 @@ void bindInputParameter(HSTMT stmt, int index, enum ContainerFieldType type, con
 {
 	static const SQLLEN no_data = SQL_NULL_DATA;
 
-	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, g_containerfieldinfo[type].access_type, g_containerfieldinfo[type].actual_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, data ?size : (SQLLEN*)&no_data);
+	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, getContainerFieldInfo(type).access_type, getContainerFieldInfo(type).actual_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, data ?size : (SQLLEN*)&no_data);
 }
 
 void bindOutputColumn(HSTMT stmt, int index, enum ContainerFieldType type, size_t size, void * data, size_t * count)
 {
-	sqlConnStmtBindCol(stmt, index+1, g_containerfieldinfo[type].access_type, data, size, count);
+	sqlConnStmtBindCol(stmt, index+1, getContainerFieldInfo(type).access_type, data, size, count);
 }
 #endif

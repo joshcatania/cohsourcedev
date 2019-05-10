@@ -232,10 +232,8 @@ static void setSpecialColumn(SpecialColumn *col, DbContainer *container, uintptr
 
 	switch (col->type)
 	{
-		xcase CFTYPE_ANSISTRING:
+		xcase CFTYPE_STRING:
 			// pass
-		xcase CFTYPE_UNICODESTRING:					
-			utf16ToUtf8(addr, 8192); // this code does not know what size the buffer is, assume the SQL max of 8K
 		xcase CFTYPE_INT:
 		{
 			if (col->cmd != CMD_SETIFNULL || !*((int*)addr))

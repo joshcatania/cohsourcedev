@@ -196,7 +196,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 
 			// ContainerId
 			field = table->columns = realloc(0,1 * sizeof(table->columns[0]));
-			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, getContainerFieldType(CFTYPE_INT));
+			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, getContainerFieldInfo(CFTYPE_INT).db_bound_type);
 			field->reserved_word = 1;
 			table->num_columns = 1;
 
@@ -220,13 +220,17 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 		{
 			extern AttributeList *var_attrs;
 
-			// MS SQL 2008 R2 Native Client 10.0 has no support for
-			// SQL_GD_ANY_COLUMN so unbound columns must appear after the last
-			// bound column.  We could relax this restriction if we change
-			// sqlTableSelect() to explicitly request unbounded columns last.
-			if(!CFTYPE_IS_DYNAMIC(type) && table->num_columns)
-				assertmsgf(!CFTYPE_IS_DYNAMIC(table->columns[table->num_columns-1].data_type),
-					"Out of order unbounded column found %s in %s.\nAll unbounded (max) columns must be at the end of the table unless the database supports SQL_GD_ANY_COLUMN.", field->name, table->name);
+			// Bound columns must not be placed after unbound columns unless the ODBC supports
+			// SQL_GD_ANY_COLUMN. I think lack of SQL_GD_ANY_COLUMN is mostly an SQL Server thing
+			// but the columns are all presorted to be bound to unbound anyway. Still need to check, though.
+			if (table->num_columns > 0) {
+				if (CFTYPE_IS_BOUND(type, column_size)) {
+					//Check that the previous column isn't unbound
+					ColumnInfo previous = table->columns[table->num_columns - 1];
+					if (!CFTYPE_IS_BOUND(previous.data_type, previous.column_size))
+						assertmsgf(true, "Out of order unbounded column found %s in %s.\nAll unbounded (max) columns must be at the end of the table unless the database supports SQL_GD_ANY_COLUMN.", field->name, table->name);
+				}
+			}
 
 			table->num_columns++;
 			table->columns = realloc(table->columns,table->num_columns * sizeof(table->columns[0]));
@@ -319,11 +323,7 @@ static bool verifyTableColumns(TableInfo *table)
 			continue;
 		}
 
-		// Don't validate deprecated types
-		if (new_field->data_type == CFTYPE_TEXTBLOB || new_field->data_type == CFTYPE_BLOB)
-			continue;
-
-		assert(new_field->num_bytes >= field->num_bytes);
+		assert(!CFTYPE_IS_BOUND(new_field->data_type, new_field->column_size) || new_field->num_bytes >= field->num_bytes);
 		assert(new_field->column_size == field->column_size);
 	}
 
@@ -757,6 +757,8 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	bool retried = false;
 	int attr_id = 0;
 	int prev_attr_id;
+	ContainerFieldInfo stringFieldInfo;
+	ContainerFieldInfo intFieldInfo;
 
 	ZeroStruct(&table);
 	ZeroArray(columns);
@@ -766,10 +768,12 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	table.num_columns = 2;
 	table.columns = columns;
 
-	setField(&table.columns[0], "Id", CFTYPE_INT, sizeof(int), 0, getContainerFieldType(CFTYPE_INT));
+	intFieldInfo = getContainerFieldInfo(CFTYPE_INT);
+	setField(&table.columns[0], "Id", CFTYPE_INT, intFieldInfo.access_size, 0, intFieldInfo.db_bound_type);
 	table.columns[0].reserved_word = 1;
 
-	setField(&table.columns[1], "Name", CFTYPE_ANSISTRING, MAX_ATTRIBNAME_LEN, MAX_ATTRIBNAME_LEN, getContainerFieldType(CFTYPE_ANSISTRING));
+	stringFieldInfo = getContainerFieldInfo(CFTYPE_STRING);
+	setField(&table.columns[1], "Name", CFTYPE_STRING, stringFieldInfo.access_size * MAX_ATTRIBNAME_LEN, MAX_ATTRIBNAME_LEN, stringFieldInfo.db_bound_type);
 
 	hashColumnNames(&table);
 	updateTable(&table);
