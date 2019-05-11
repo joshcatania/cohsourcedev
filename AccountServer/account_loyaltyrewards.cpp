@@ -11,6 +11,7 @@
 #include "utils/file.h"
 #include "utils/log.h"
 #include "utils/mathutil.h"
+#include "earray.h"
 
 static bool accountLoyaltyMaybePurchase(Account *pAccount, SkuId sku_id, int quantity, bool csr_did_it)
 {
@@ -224,8 +225,9 @@ void handleAuthUpdateRequest(AccountServerShard *shard, Packet *packet_in)
 	bool vip = pktGetBool(packet_in);
 
 	// setting minimum for loyalty points
-	if (loyaltyEarned < 1)
-		loyaltyEarned = 1;
+	int min_loyalty = g_accountServerState.cfg.min_loyalty_points;
+	if (loyaltyEarned < min_loyalty)
+		loyaltyEarned = min_loyalty;
 	if (loyaltyLegacy < 1)
 		loyaltyLegacy = 1;
 
@@ -279,6 +281,25 @@ void handleAuthUpdateRequest(AccountServerShard *shard, Packet *packet_in)
 			pAccount->freeXferMonths = monthsSinceZero;
 			AccountDb_MarkUpdate(pAccount, ACCOUNTDB_UPDATE_SQL_ACCOUNT);
 		}
+	}
+
+	if (g_accountServerState.cfg.grant_all_sku)
+	{
+		const AccountProduct** catalog = getAccountCatalog();
+		int i;
+		for (i=0; i < eaSize(&catalog); i++)
+		{
+			const AccountProduct * product = catalog[i];
+			SkuId sku = product->sku_id;
+			AccountInventory *inv = AccountInventorySet_Find(&pAccount->invSet, sku);
+			int granted_total = inv ? inv->granted_total : 0;
+
+			if (!granted_total && accountCatalogIsProductAvailable(sku))
+			{
+				devassert(!orderIdIsNull(Transaction_GamePurchaseBySkuId(pAccount, sku, 0, 0, 1, false)));
+			}
+		}
+		AccountDb_MarkUpdate(pAccount, ACCOUNTDB_UPDATE_SQL_ACCOUNT);
 	}
 }
 

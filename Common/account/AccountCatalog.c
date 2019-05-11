@@ -249,6 +249,11 @@ static void releaseCatalogIndex(void)
 		stashTableDestroyConst(s_ProductCatalog.recipeIndex);
 }
 
+const AccountProduct** getAccountCatalog()
+{
+	return s_ProductCatalog.catalog;
+}
+
 static void reindexCatalog(void)
 {
 	int i;

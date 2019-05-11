@@ -97,6 +97,8 @@ const char * accountCatalogGetProductTypeString(AccountInventoryType invType);
 const AccountProduct* accountCatalogGetProduct(SkuId sku_id);
 const AccountProduct* accountCatalogGetProductByRecipe(const char* recipe);
 
+const AccountProduct** getAccountCatalog();
+
 // Return an EArray with just the saleable products in the def file order and
 // all their dynamic info as well (eg. currency, cost). Note that this points
 // into the master copy of the catalog so changing the values is a bad idea.

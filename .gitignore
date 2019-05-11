@@ -64,3 +64,6 @@ x64/
 
 
 /start-ourodev.bat
+
+# VS Code configuration directory
+.vscode

@@ -152,6 +152,8 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "PlaySpanURL_UpgradeToVIP",				TOK_STRING(AccountServerCfg,playSpanURL_UpgradeToVIP,NULL)		},
 	{ "cohURL_NewFeatures",						TOK_STRING(AccountServerCfg,cohURL_NewFeatures,NULL)			},
 	{ "cohURL_NewFeaturesUpdate",				TOK_STRING(AccountServerCfg,cohURL_NewFeaturesUpdate,NULL)		},
+	{ "GrantAllSKU",							TOK_BOOLFLAG(AccountServerCfg,grant_all_sku,0)					},
+	{ "MinLoyaltyPoints",						TOK_INT(AccountServerCfg,min_loyalty_points,1)					},
 	// Legacy stuff
 	{ "ArchiveMerged",							TOK_BOOLFLAG(AccountServerCfg,archive_merged,0)					},
 	{ "CompMode",								TOK_BOOLFLAG(AccountServerCfg,comp_mode,0)						},
