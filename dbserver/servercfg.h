@@ -113,6 +113,9 @@ typedef struct ServerCfg
 	char metrics_ipAddress[16000];  //enough space for really, really long hostnames
 	unsigned __int64 metrics_hwm; //sets the high water mark for the metric's system ZeroMQ connection
 
+	//This is used to tell the mapserver to advertise this address to clients
+	U32 advertisedIp;
+
 } ServerCfg;
 
 extern ServerCfg server_cfg;

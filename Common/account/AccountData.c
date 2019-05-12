@@ -611,7 +611,7 @@ int AccountGetStoreProductCount2(AccountInventorySet* invSet, const AccountProdu
 	return numOwned;
 }
 
-#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
+#if defined(SERVER) || defined(CLIENT)
 bool AccountStoreBuyProduct(U32 auth_id, SkuId sku_id, int quantity)
 {
 #if defined(CLIENT)
@@ -620,7 +620,9 @@ bool AccountStoreBuyProduct(U32 auth_id, SkuId sku_id, int quantity)
 	return inventoryServer_BuyProduct(auth_id, sku_id, quantity);
 #endif
 }
+#endif
 
+#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
 bool AccountStorePublishProduct(U32 auth_id, SkuId sku_id, bool bPublish)
 {
 #if defined(CLIENT)

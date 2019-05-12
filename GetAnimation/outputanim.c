@@ -116,7 +116,7 @@ void transferBoneData( BoneAnimTrack * bt, void * rot_fulls, void * pos_fulls )
 		track_size = bt->rot_fullkeycount * SIZE_OF_ROTKEY_COMPRESSED_TO_5_BYTES;
 
 	bt->rot_idx = allocBlockMem(MEM_ANIMDATA, track_size );
-	memcpy( bt->rot_idx, rot_fulls, track_size );	//each key value
+	memcpy((void*)bt->rot_idx, rot_fulls, track_size );	//each key value
 
 	total_fullkey_data[ROTATION_KEY] += track_size; //debug
 
@@ -130,7 +130,7 @@ void transferBoneData( BoneAnimTrack * bt, void * rot_fulls, void * pos_fulls )
 	else
 		assert(0);
 	bt->pos_idx = allocBlockMem(MEM_ANIMDATA, track_size );
-	memcpy( bt->pos_idx, pos_fulls, track_size );	//each key value
+	memcpy((void*)bt->pos_idx, pos_fulls, track_size );	//each key value
 
 	total_fullkey_data[POSITION_KEY] += track_size; //debug
 }
@@ -208,8 +208,8 @@ void outputAnimTrackToAnimFile( SkeletonAnimTrack * skeleton, char * targetFileP
 	BoneAnimTrack * bt;
 	SkeletonHeirarchy * skeletonHeirarchy;
 	FILE *file;
-	char *oldData, *newData;
-	int oldSize, newSize;
+	char *oldData;
+	int oldSize;
 
 	// #### open .anim file ##########
 	if( g_no_checkout ) {
@@ -227,7 +227,7 @@ void outputAnimTrackToAnimFile( SkeletonAnimTrack * skeleton, char * targetFileP
 	{
 		heirarchySize = sizeof( SkeletonHeirarchy );
 		//preserve pointer so I can write data below
-		skeletonHeirarchy = skeleton->skeletonHeirarchy; 
+		skeletonHeirarchy = (SkeletonHeirarchy*)skeleton->skeletonHeirarchy;
 		//then fix the pointer for the file write
 		skeleton->skeletonHeirarchy = (void *)((U32)sizeof( SkeletonAnimTrack )); //skeletonHeirarchy will be after SkeletonAnimTrack
 	}

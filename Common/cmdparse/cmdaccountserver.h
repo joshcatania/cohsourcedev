@@ -20,7 +20,7 @@ C_DECLARATIONS_BEGIN
 typedef struct Cmd Cmd;
 extern Cmd g_accountserver_cmds_server[];
 
-#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
+#if defined(SERVER) || defined(CLIENT)
 void AccountServer_ClientCommand(Cmd *cmd, int message_dbid, U32 auth_id, int dbid, char *source_str);
 #endif
 

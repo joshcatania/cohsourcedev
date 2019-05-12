@@ -311,9 +311,11 @@ bool AccountHasStoreProductOrIsPublished( AccountInventorySet * invSet, SkuId sk
 int AccountGetStoreProductCount( AccountInventorySet* invSet, SkuId sku_id, bool bActive);	// 0 for expired temporary items
 int AccountGetStoreProductCount2( AccountInventorySet* invSet, const AccountProduct* pProd, bool bActive );
 
-#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
+#if defined(SERVER) || defined(CLIENT)
 		// Initiates a purchase transaction.
 bool AccountStoreBuyProduct(U32 auth_id, SkuId sku_id, int quantity);
+#endif
+#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
 bool AccountStorePublishProduct(U32 auth_id, SkuId sku_id, bool bPublish);
 #endif
 

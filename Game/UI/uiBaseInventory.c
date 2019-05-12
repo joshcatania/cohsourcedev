@@ -58,6 +58,7 @@
 #include "Supergroup.h"
 #include "MessageStoreUtil.h"
 #include "baselegal.h"
+#include "StringCache.h"
 
 int gShowHiddenDetails = 0;
 
@@ -1116,7 +1117,7 @@ int baseInventoryWindow(void)
 		baseInventoryTabs = uiTabControlCreate(TabType_Undraggable, 0, 0, 0, 0, 0);
 		baseRoomStyleTabs = uiTabControlCreate(TabType_Undraggable, baseSetCurDecorToSelectedTab, 0, 0, 0, 0);
 
-		uiTabControlAdd( baseRoomStyleTabs,  "AllString", "All" );
+		uiTabControlAdd( baseRoomStyleTabs,  "AllString", (uiTabData)allocAddString("All"));
 		count = ARRAY_SIZE(roomdecor_names);
 		for( i = 0; i < ROOMDECOR_MAXTYPES; i++ )
 			uiTabControlAdd( baseRoomStyleTabs, roomdecor_names[i], roomdecor_names[i] );

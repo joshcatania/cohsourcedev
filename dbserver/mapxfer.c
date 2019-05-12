@@ -107,16 +107,37 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
 	pktSendBitsPack(pak_out,1,map_con->id);
 	if (ent_con->is_gameclient)
 	{
-		if(server_cfg.queue_server && game)
-			ip = getMatchingIpType(map_con->ip_list,game->nonQueueIP);
+		if (server_cfg.advertisedIp != 0)
+		{
+			// ignore what mapserver says, use value configured in servers.cfg
+			ip = server_cfg.advertisedIp;
+		}
 		else
-			ip = getMatchingIpType(map_con->ip_list,ent_con->callback_link->addr.sin_addr.S_un.S_addr);
+		{
+			if (server_cfg.queue_server && game)
+			{
+				ip = getMatchingIpType(map_con->ip_list, game->nonQueueIP);
+			}
+			else
+			{
+				ip = getMatchingIpType(map_con->ip_list, ent_con->callback_link->addr.sin_addr.S_un.S_addr);
+			}
+		}
+		
 		pktSendBitsPack(pak_out,1,ip);
 		pktSendBitsPack(pak_out,1,ip);
 	}
 	else
 	{
-		ip = getMatchingIpType(map_con->ip_list, ent_con->client_ip);
+		if (server_cfg.advertisedIp != 0)
+		{
+			// ignore what mapserver says, use value configured in servers.cfg
+			ip = server_cfg.advertisedIp;
+		}
+		else
+		{
+			ip = getMatchingIpType(map_con->ip_list, ent_con->client_ip);
+		}
 		pktSendBitsPack(pak_out,1,ip);
 		pktSendBitsPack(pak_out,1,ip);
 	}

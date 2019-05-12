@@ -5730,11 +5730,7 @@ int cmdGameParse(char *str, int x, int y)
 			}
 		xcase CMD_ACCOUNT_DEBUG_BUY_PRODUCT:
 			{
-#ifndef FINAL
 				AccountStoreBuyProduct( auth_info.uid, skuIdFromString(tmp_str) /* sku */, tmp_int /* quantity */ ); 
-#else
-				conPrintf("Debug commands not available in release client");
-#endif
 			}
 		xcase CMD_CATALOG_DEBUG_PUBLISH_PRODUCT:
 			{

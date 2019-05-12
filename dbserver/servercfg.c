@@ -146,6 +146,8 @@ void serverCfgLoad()
 
 	server_cfg.name_lock_timeout = DEFAULT_NAME_LOCK_TIMEOUT;
 
+	server_cfg.advertisedIp = 0;
+
 	if (!realFilename || !(file = fopen(realFilename, "rt")))
 	{
 		printf("Can't load server/db/servers.cfg!\n");
@@ -592,6 +594,10 @@ void serverCfgLoad()
 		{
 			server_cfg.metrics_hwm = (atoi(s2));
 		}
+		else if (stricmp(s, "AdvertisedIp") == 0)
+		{
+			server_cfg.advertisedIp = ipFromString(s2);
+		}
 	}
 	fclose(file);
 
@@ -650,4 +656,5 @@ void cfg_setVIPShard(int data)
 {
 	server_cfg.isVIPServer = data;
 }
+
 

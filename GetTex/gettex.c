@@ -1667,7 +1667,6 @@ static bool checkForDuplicateNames(const char *texturefilename, bool bPrintToCon
 {
 	char filename[MAX_PATH];
 	char pathname[MAX_PATH];
-	const char *lastauthor;
 	char *s;
 	StashElement element;
 
@@ -1784,7 +1783,6 @@ static int texWriteInnerLoop(TexDef *tex, bool just_init) {
 	const char *lastauthor=NULL;
 	int ret;
 	const char * addFiles[2] = {NULL, NULL};
-	bool bIsFileInDatabase;
 
 	PERFINFO_AUTO_START("checks", 1);
 	PERFINFO_AUTO_START("getRelativeTextureName", 1);

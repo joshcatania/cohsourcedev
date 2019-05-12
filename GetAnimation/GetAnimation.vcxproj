@@ -44,7 +44,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <PreBuildEvent>
-      <Command>..\utilities\bin\structparser2010 X $(ProjectDir) X $(ProjectFileName) X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
+      <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\common;..\common\utils;../tricube;../glh;../common/gridcoll;../libs/UtilitiesLib/utils;../libs/UtilitiesLib/components;../common/seq;../getvrml;../common/group;../3rdparty/zlibsrc;../libs/UtilitiesLib;../GetAnimation;../common/cmdParse;../common/entity;../Game/render/thread;../libs/UtilitiesLib\network;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -54,13 +54,18 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <OutputFile>..\bin\$(Configuration)\GetAnimation_1_5.exe</OutputFile>
+      <OutputFile>$(TargetPath)</OutputFile>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\$(Configuration)\;..\3rdparty\cryptopp\$(PlatformName)\$(Configuration)\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
     <PreBuildEvent>
-      <Command>..\utilities\bin\structparser2010 X $(ProjectDir) X $(ProjectFileName) X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
+      <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\common;..\common\utils;../tricube;../glh;../common/gridcoll;../libs/UtilitiesLib/utils;../libs/UtilitiesLib/components;../common/seq;../getvrml;../common/group;../3rdparty/zlibsrc;../libs/UtilitiesLib;../GetAnimation;../common/cmdParse;../common/entity;../Game/render/thread;../libs/UtilitiesLib/network;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -70,9 +75,14 @@
       <WarningLevel>Level3</WarningLevel>
     </ClCompile>
     <Link>
-      <OutputFile>..\bin\$(Configuration)\GetAnimation_1_5.exe</OutputFile>
+      <OutputFile>$(TargetPath)</OutputFile>
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(PlatformName)\Debug\;..\3rdparty\cryptopp\$(PlatformName)\Debug\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="mainanim.c" />

@@ -942,7 +942,7 @@ void outputResetVars()
 */
 void outputGroupInfo(char *fname)
 {
-	int			ret,i,size,count;
+	int			i,size,count;
 	ModelFormatOnDisk_v8	*model;
 	FILE		*file;
 	char		stripname[1000];

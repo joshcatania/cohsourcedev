@@ -74,7 +74,7 @@ Cmd g_accountserver_cmds_server[] =
 	{ 0 } ,
 };
 
-#if defined(SERVER) || (defined(CLIENT) && !defined(FINAL))
+#if defined(SERVER) || defined(CLIENT)
 extern NetLink db_comm_link;
 void AccountServer_ClientCommand(Cmd *cmd, int message_dbid, U32 auth_id, int dbid, char *source_str)
 {

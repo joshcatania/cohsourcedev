@@ -1136,7 +1136,6 @@ static void ParseVrmlForMaxFile(const char * vrml_path, const char * vrml_text)
 	if(start)
 	{
 		char buf2[256], *c;
-		int	ret;
 
 		// advance to start of file name
 		start += strlen(MAX_FILE_PREFIX);

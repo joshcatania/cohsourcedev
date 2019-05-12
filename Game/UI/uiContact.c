@@ -49,6 +49,7 @@
 #include "MessageStoreUtil.h"
 #include "playerCreatedStoryarcClient.h"
 #include "authUserData.h"
+#include "StringCache.h"
 
 void ContactSendCellCall(int handle);
 
@@ -1495,32 +1496,32 @@ int contactsWindow()
 	{
 		contactCategories = uiTabControlCreate(TabType_Undraggable, 0, 0, 0, 0, 0);
 		uiTabControlRemoveAll(contactCategories);
-		uiTabControlAdd(contactCategories, "ActiveString", "Active");
-		uiTabControlAdd(contactCategories, "InactiveString", "Inactive");
-		uiTabControlAdd(contactCategories, "DetectiveString", "Broker");
+		uiTabControlAdd(contactCategories, "ActiveString", (uiTabData)allocAddString("Active"));
+		uiTabControlAdd(contactCategories, "InactiveString", (uiTabData)allocAddString("Inactive"));
+		uiTabControlAdd(contactCategories, "DetectiveString", (uiTabData)allocAddString("Broker"));
 	}
 
 	if (e->pchar->playerTypeByLocation != currentlyDisplayedPlayerType)
 	{
 		if (e->pchar->playerTypeByLocation == kPlayerType_Hero)
 		{
-			uiTabControlRename(contactCategories, "DetectiveString", "Broker");
+			uiTabControlRename(contactCategories, "DetectiveString", (uiTabData)allocAddString("Broker"));
 		}
 		else
 		{
-			uiTabControlRename(contactCategories, "BrokerString", "Broker");
+			uiTabControlRename(contactCategories, "BrokerString", (uiTabData)allocAddString("Broker"));
 		}
 		currentlyDisplayedPlayerType = e->pchar->playerTypeByLocation;
 	}
 
 	if (!isTipsTabDisplayed && e->pchar->iLevel >= 19 && !ENT_IS_IN_PRAETORIA(e))
 	{
-		uiTabControlAdd(contactCategories, "TipsString", "Tips");
+		uiTabControlAdd(contactCategories, "TipsString", (uiTabData)allocAddString("Tips"));
 		isTipsTabDisplayed = true;
 	}
 	else if (isTipsTabDisplayed && (e->pchar->iLevel < 19 || ENT_IS_IN_PRAETORIA(e)))
 	{
-		uiTabControlRemove(contactCategories, "Tips");
+		uiTabControlRemove(contactCategories, (uiTabData)allocAddString("Tips"));
 		isTipsTabDisplayed = false;
 	}
 

@@ -20,8 +20,8 @@ typedef struct Packet Packet;
 typedef struct Entity Entity;
 void entity_ReceiveInvUpdate(Entity *e, Packet *pak);
 
-#ifndef FINAL
 bool inventoryClient_BuyProduct(U32 auth_id, SkuId sku_id, int quantity );
+#ifndef FINAL
 bool inventoryClient_PublishProduct(U32 auth_id, SkuId sku_id, bool bPublish );
 #endif
 

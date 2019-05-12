@@ -344,7 +344,7 @@ static void processAnimationVRML( char * sourcepath, char * targetpath, char * b
 	{
 		skeletonHeirarchy = calloc( 1, sizeof( SkeletonHeirarchy ) ); 
 		skeleton->skeletonHeirarchy = skeletonHeirarchy;
-		root = animConvertVrmlFileToAnimTrack( sourcepath, skeleton->skeletonHeirarchy );
+		root = animConvertVrmlFileToAnimTrack( sourcepath, (SkeletonHeirarchy*)skeleton->skeletonHeirarchy );
 	}
 	else //NOT_BASE_SKELETON
 	{
@@ -385,7 +385,7 @@ static Node * processSkeletonVRML( char * sourcepath, char * animName, int write
 
   skeletonHeirarchy = calloc( 1, sizeof( SkeletonHeirarchy ) ); 
   skeleton->skeletonHeirarchy = skeletonHeirarchy;
-  root = animConvertVrmlFileToAnimTrack( sourcepath, skeleton->skeletonHeirarchy );
+  root = animConvertVrmlFileToAnimTrack( sourcepath, (SkeletonHeirarchy*)skeleton->skeletonHeirarchy );
 
   outputPackSkeletonAnimTrack( skeleton, root ); //turn tree of nodes into BoneAnimTracks for this skeleton
 

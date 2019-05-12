@@ -42,5 +42,7 @@ Invoke-BuildAll "..\Utilities\StructParser\StructParser.sln"
 
 Invoke-BuildAll "..\AuthServer\src\AuthServer\AuthServer.sln"
 
+Invoke-Build "ArtTools.sln" -Configuration "Debug" -Platform "Win32"
+
 Invoke-Build "MasterSolution.sln" -Configuration "Opt Debug" -Platform "Win32"
 Invoke-Build "MasterSolution.sln" -Configuration "Release" -Platform "Win32"

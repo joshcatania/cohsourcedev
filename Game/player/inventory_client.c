@@ -55,7 +55,6 @@ void entity_ReceiveInvUpdate(Entity *e, Packet *pak)
 		AuctionInventory_Recv(&e->pchar->auctionInv,pak); 
 }
 
-#ifndef FINAL
 bool inventoryClient_BuyProduct(U32 auth_id, SkuId sku_id, int quantity)
 {
 	extern NetLink db_comm_link;
@@ -77,6 +76,7 @@ bool inventoryClient_BuyProduct(U32 auth_id, SkuId sku_id, int quantity)
 	return true;
 }
 
+#ifndef FINAL
 bool inventoryClient_PublishProduct(U32 auth_id, SkuId sku_id, bool bPublish )
 {
 	extern NetLink db_comm_link;

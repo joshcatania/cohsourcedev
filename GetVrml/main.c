@@ -549,7 +549,6 @@ static Reasons processVrml2(char *out_fname, char *vrml_name, char *out_group_fn
 	{
 		int	ret;
 		int is_legacy = (targetlibrary == PLAYER_LIBRARY) && isLegacy(out_fname, vrml_name);
-		bool bIsFileInDatabase;
 		const char * addFiles[3] = {NULL, NULL, NULL};
 
 		/* rules for processing:
