@@ -68,7 +68,7 @@ bool plSqlWriteCrc(const char* table, U32 ver, SqlConn conn)
 	char* cmd = estrTemp();
 	HSTMT stmt = sqlConnStmtAlloc(conn);
 
-	estrPrintf(&cmd, "{CALL dbo.SP_write_%s_crc(@crc=?)}", table);
+	estrPrintf(&cmd, "CALL dbo.SP_write_%s_crc(?);", table);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &ver, sizeof(ver), NULL);
 

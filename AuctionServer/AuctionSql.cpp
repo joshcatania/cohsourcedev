@@ -118,7 +118,7 @@ bool aucsql_read_history(ParseTable pti[], AuctionHistoryItem*** hHistItems)
 
 bool aucsql_insert_shard(const char** estr_shard)
 {
-	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_SHARD], "{CALL dbo.SP_insert_shard(@data=?)}", SQL_NTS, SQLCONN_FOREGROUND))
+	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_SHARD], "CALL dbo.SP_insert_shard(?);", SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_SHARD];
@@ -131,7 +131,7 @@ bool aucsql_insert_shard(const char** estr_shard)
 
 bool aucsql_insert_or_update_ent(int ent_id, const char* shard, const char** estr_ent)
 {
-	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_OR_UPDATE_ENT], "{CALL dbo.SP_insert_or_update_ent(@ent_id=?,@shard_name=?,@data=?)}", SQL_NTS, SQLCONN_FOREGROUND))
+	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_OR_UPDATE_ENT], "CALL dbo.SP_insert_or_update_ent(?,?,?);", SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_OR_UPDATE_ENT];
@@ -147,7 +147,7 @@ bool aucsql_insert_or_update_ent(int ent_id, const char* shard, const char** est
 
 bool aucsql_insert_or_update_history(const char* identifier, const char** estr_history)
 {
-	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_OR_UPDATE_HISTORY], "{CALL dbo.SP_insert_or_update_history(@identifier=?,@data=?)}", SQL_NTS, SQLCONN_FOREGROUND))
+	if (!plSqlPrepare(&as.proc[AUCSQL_INSERT_OR_UPDATE_HISTORY], "CALL dbo.SP_insert_or_update_history(?,?);", SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_OR_UPDATE_HISTORY];
@@ -162,7 +162,7 @@ bool aucsql_insert_or_update_history(const char* identifier, const char** estr_h
 
 bool aucsql_delete_ent(int ent_id, const char* shard)
 {
-	if (!plSqlPrepare(&as.proc[AUCSQL_DELETE_ENT], "{CALL dbo.SP_delete_ent(@ent_id=?,@shard_name=?)}", SQL_NTS, SQLCONN_FOREGROUND))
+	if (!plSqlPrepare(&as.proc[AUCSQL_DELETE_ENT], "CALL dbo.SP_delete_ent(?,?);", SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_DELETE_ENT];
