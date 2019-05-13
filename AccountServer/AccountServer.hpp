@@ -86,6 +86,7 @@ typedef struct AccountServerCfg
 	char *cohURL_NewFeatures;
 	char *cohURL_NewFeaturesUpdate;
 
+	bool grant_sku_from_list;
 	bool grant_all_sku;
 	int min_loyalty_points;
 

@@ -401,12 +401,12 @@ BEGIN
 			WHEN NOT MATCHED BY TARGET THEN
 				INSERT (auth_id, sku_id, granted_total, claimed_total, expires)
 				VALUES (source.auth_id, source.sku_id, source.granted, source.claimed,
-					DATEADD(second, @expiration_seconds * source.granted, GETDATE()))
+					NULL)
 			WHEN MATCHED THEN
 				UPDATE SET
 					granted_total = target.granted_total + source.granted,
 					claimed_total = target.claimed_total + source.claimed,
-					expires = DATEADD(second, @expiration_seconds * source.granted, GETDATE());
+					expires = NULL;
 	END
 	
 	SELECT sku_id, granted_total, claimed_total, saved_total, expires FROM dbo.inventory WHERE auth_id=@auth_id AND sku_id=@sku_id;

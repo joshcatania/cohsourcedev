@@ -10,8 +10,77 @@
 #include "utils/error.h"
 #include "utils/file.h"
 #include "utils/log.h"
+#include "utils/textparser.h"
 #include "utils/mathutil.h"
 #include "earray.h"
+
+typedef struct SkuPair
+{
+	const char *sku_id;
+	int amount;
+} SkuPair;
+
+typedef struct SkuPairList
+{
+	const SkuPair **skuList;
+} SkuPairList;
+
+
+SkuPairList g_SkuPairList = { NULL };
+
+ParseTable ParseSkuPair[]=
+{
+	{ "",   TOK_STRUCTPARAM|TOK_STRING(SkuPair, sku_id, 0 ) },
+	{ "",   TOK_STRUCTPARAM|TOK_INT(SkuPair, amount, 1) },
+	{ "\n",   TOK_STRUCTPARAM|TOK_END,  0 },
+	{ "", 0, 0 }
+};
+
+ParseTable ParseSkuPairList[]=
+{
+	{ "AutoGrantSKU",   TOK_STRUCT(SkuPairList, skuList,  ParseSkuPair),  0 },
+	{ "", 0, 0 }
+};
+
+static bool load_SkuPairListPostProcess(ParseTable pti[], SkuPairList *configDef)
+{
+	int i;
+	for (i = 0; i < eaSize(&configDef->skuList); i++)
+	{
+		const SkuPair* pair = configDef->skuList[i];
+
+		if (!pair->sku_id || !pair->sku_id[0] || strlen(pair->sku_id) != 8 || pair->amount < 1)
+		{
+			LOG(LOG_ACCOUNT, LOG_LEVEL_ALERT, LOG_CONSOLE_ALWAYS, "Invalid SKU %s or amount %d", pair->sku_id, pair->amount);
+			return false;
+		}
+		const AccountProduct* product = accountCatalogGetProduct(SKU(pair->sku_id));
+		if (!product || !accountCatalogIsProductPublished(product))
+		{
+			LOG(LOG_ACCOUNT, LOG_LEVEL_ALERT, LOG_CONSOLE_ALWAYS, "SKU %s is invalid or does not exist", pair->sku_id);
+			return false;
+		}
+	}
+
+	return true;
+}
+
+static void load_SkuPairList()
+{
+	static const char* filename = "server/db/default_sku.cfg";
+
+	// already loaded?
+	if (g_SkuPairList.skuList)
+	{
+		return;
+	}
+
+	if (!ParserLoadFiles(NULL, filename, NULL, 0, ParseSkuPairList, &g_SkuPairList, NULL, NULL, (ParserLoadPreProcessFunc)load_SkuPairListPostProcess))
+	{
+		Errorf("Could not load auto grant SKU list %s", filename);
+		g_SkuPairList.skuList = NULL;
+	}
+}
 
 static bool accountLoyaltyMaybePurchase(Account *pAccount, SkuId sku_id, int quantity, bool csr_did_it)
 {
@@ -283,7 +352,46 @@ void handleAuthUpdateRequest(AccountServerShard *shard, Packet *packet_in)
 		}
 	}
 
-	if (g_accountServerState.cfg.grant_all_sku)
+	if (g_accountServerState.cfg.grant_sku_from_list)
+	{
+		bool changed = false;
+
+		load_SkuPairList();
+		if (g_SkuPairList.skuList)
+		{
+			int i;
+			for (i = 0; i < eaSize(&g_SkuPairList.skuList); i++)
+			{
+				const SkuPair* pair = g_SkuPairList.skuList[i];
+				SkuId sku = SKU(pair->sku_id);
+				AccountInventory *inv = AccountInventorySet_Find(&pAccount->invSet, sku);
+				int granted_total = inv ? inv->granted_total : 0;
+
+				const AccountProduct* product = accountCatalogGetProduct(SKU(pair->sku_id));
+				int grant_limit = product ? product->grantLimit : 0;
+
+				int grant_amount = MIN(pair->amount, grant_limit); // grant only up to the allowed amount
+				grant_amount = MAX(grant_amount - granted_total, 0); // grant only difference between requested and already granted
+
+				// special case :(
+				if (product && !product->grantLimit)
+				{
+					grant_amount = MAX(pair->amount - granted_total, 0);
+				}
+
+				if (grant_amount && accountCatalogIsProductAvailable(sku))
+				{
+					devassert(!orderIdIsNull(Transaction_GamePurchaseBySkuId(pAccount, sku, 0, 0, grant_amount, false)));
+					changed = true;
+				}
+			}
+			if (changed)
+			{
+				AccountDb_MarkUpdate(pAccount, ACCOUNTDB_UPDATE_SQL_ACCOUNT);
+			}
+		}
+	}
+	else if (g_accountServerState.cfg.grant_all_sku)
 	{
 		const AccountProduct** catalog = getAccountCatalog();
 		int i;
