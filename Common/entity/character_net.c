@@ -7,6 +7,7 @@
 #include "mathutil.h" // MAX
 #include "netio.h"
 #include "earray.h"
+#include "stashtable.h"
 
 #include "powers.h"
 #include "assert.h"
@@ -83,11 +84,17 @@ const BasePower *basepower_Receive(Packet *pak, const PowerDictionary *pdict, En
  * SafeGetPowerByIdx
  *
  */
-Power *SafeGetPowerByIdx(Character *p, int ibuild, int iset, int ipow)
+Power *SafeGetPowerByIdx(Character *p, int ibuild, int iset, int ipow, int uid)
 {
 	PowerSet *pset;
+	Power *ret;
 
 	assert(p != NULL);
+
+	// Try unique ID first
+	if (uid > 0 && p->powersByUniqueID &&
+		stashIntFindPointer(p->powersByUniqueID, uid, &ret))
+		return ret;
 
 	if (ibuild < 0 || ibuild >= MAX_BUILD_NUM
 		|| iset < 0 || iset >= eaSize(&p->ppBuildPowerSets[ibuild]))

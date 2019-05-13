@@ -155,7 +155,7 @@ void entity_StanceReceive(Packet *pak)
 		ipow = pktGetBitsPack(pak, 4);
 
 		if(e)
-			e->pchar->ppowStance = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow);
+			e->pchar->ppowStance = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow, 0);
 	}
 	else if(e)
 	{

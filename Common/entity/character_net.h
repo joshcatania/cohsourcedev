@@ -23,7 +23,7 @@ void basepower_Send(Packet *pak, const BasePower *ppow);
 const BasePower *basepower_Receive(Packet *pak, const PowerDictionary *pdict, Entity *receivingEntity);
 
 // ARM NOTE: We should deprecate use of this function, replacing it with character_OwnsPowerByUID().
-Power *SafeGetPowerByIdx(Character *p, int ibuild, int iset, int ipow);
+Power *SafeGetPowerByIdx(Character *p, int ibuild, int iset, int ipow, int uid);
 
 void character_SendBoosts(Packet *pak, Character *pchar);
 void character_SendPowers(Packet *pak, Character *pchar);

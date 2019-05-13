@@ -67,7 +67,7 @@ bool entity_ActivatePowerReceive(Entity *e, Packet *pak)
 		}
 		else
 		{
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow, 0);
 
 			if(ppow!=NULL)
 			{
@@ -150,7 +150,7 @@ bool entity_ActivatePowerAtLocationReceive(Entity *e, Packet *pak)
 		}
 		else
 		{
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow, 0);
 
  			if(ppow!=NULL)
 			{
@@ -228,7 +228,7 @@ bool entity_SetDefaultPowerReceive(Entity *e, Packet *pak)
 
 	if(e->pchar!=NULL)
 	{
-		Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow);
+		Power *ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow, 0);
 
 		if(ppow!=NULL && ppow->ppowBase->eType==kPowerType_Click)
 		{
@@ -334,7 +334,7 @@ bool entity_StanceReceive(Entity *e, Packet *pak)
 		iset = pktGetBitsPack(pak, 4);
 		ipow = pktGetBitsPack(pak, 4);
 
-		if((ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow))!=NULL)
+		if((ppow = SafeGetPowerByIdx(e->pchar, ibuild, iset, ipow, 0))!=NULL)
 		{
 			character_EnterStance(e->pchar, ppow, true);
 			return true;

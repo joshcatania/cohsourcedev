@@ -169,7 +169,7 @@ void powerInfo_UpdateTimers(PowerInfo* info, float elapsedTime)
 			for(i=eaSize(&info->activePowers)-1; i>=0; i--)
 			{		
 				PowerRef *ppowRef = eaGet(&info->activePowers, i);
-				Power *pow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+				Power *pow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 				if (pow && pow->fUsageTime) {
 					// If a toggle power is on, reduce it's usage time if needed
 					pow->fUsageTime -= elapsedTime;
@@ -476,7 +476,7 @@ void entity_SendPowerInfoUpdate(Entity* e, Packet* pak)
 		for(i=0; i < iSize; i++)
 		{
 			PowerRef *ppowRef = e->powerDefChange[i];
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 
 			powerRef_Send(ppowRef, pak);
 
@@ -529,7 +529,7 @@ void entity_SendPowerInfoUpdate(Entity* e, Packet* pak)
 		for(i = 0; i < iSize; i++)
 		{
 			PowerRef *ppowRef = e->activeStatusChange[i];
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 
 			if(ppow!=NULL)
 			{
@@ -555,7 +555,7 @@ void entity_SendPowerInfoUpdate(Entity* e, Packet* pak)
 		for(i = 0; i < iSize; i++)
 		{
 			PowerRef *ppowRef = e->enabledStatusChange[i];
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 
 			if(ppow!=NULL)
 			{
@@ -574,7 +574,7 @@ void entity_SendPowerInfoUpdate(Entity* e, Packet* pak)
 		for(i = 0; i < iSize; i++)
 		{
 			PowerRef *ppowRef = e->usageStatusChange[i];
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 
 			if(ppow!=NULL)
 			{
@@ -596,7 +596,7 @@ void entity_SendPowerInfoUpdate(Entity* e, Packet* pak)
 		for(i = 0; i < iSize; i++)
 		{
 			PowerRef *ppowRef = e->rechargeStatusChange[i];
-			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power);
+			Power *ppow = SafeGetPowerByIdx(e->pchar, ppowRef->buildNum, ppowRef->powerSet, ppowRef->power, 0);
 
 			if(ppow!=NULL)
 			{
@@ -805,7 +805,7 @@ void entity_ReceivePowerInfoUpdate(Entity* e, Packet* pak)
 				}
 
 				// If we need to, add the power to the set.
-				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power);
+				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power, uniqueID);
 				if(ppowBase && (ppow==NULL || ppow->ppowBase!=ppowBase))
 				{
 					// If there is already a power in the spot, then it's
@@ -862,7 +862,7 @@ void entity_ReceivePowerInfoUpdate(Entity* e, Packet* pak)
 			}
 			else
 			{
-				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power);
+				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power, 0);
 				if(ppow!=NULL)
 				{
 					if(ppow == e->pchar->ppowStance)  e->pchar->ppowStance = NULL;
@@ -985,7 +985,7 @@ void entity_ReceivePowerInfoUpdate(Entity* e, Packet* pak)
 				iNumCharges = pktGetBitsPack(pak, 3);
 				fUsageTime = pktGetF32(pak);
 				fAvailableTime = pktGetF32(pak);
-				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power);
+				ppow = SafeGetPowerByIdx(e->pchar, ppowRef.buildNum, ppowRef.powerSet, ppowRef.power, 0);
 				if (ppow != NULL)
 				{
 					ppow->iNumCharges = iNumCharges;
