@@ -1,6 +1,6 @@
 CREATE SCHEMA dbo;
 
-CREATE OR REPLACE FUNCTION public.constraint_exists(
+CREATE OR REPLACE FUNCTION dbo.constraint_exists(
   name text
 )
 RETURNS boolean

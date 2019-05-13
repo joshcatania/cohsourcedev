@@ -520,8 +520,10 @@ static bool rebuildTableDataInPlace(ContainerTemplate *tplt, TableInfo *table)
 	TableInfo tmpTable;
 	int i;
 	char * columns = NULL;
-	char identity_insert_on[SHORT_SQL_STRING] = {0};
-	char identity_insert_off[SHORT_SQL_STRING] = {0};
+	// Query size is big because some tables (badge related) have hundreds of
+	// columns and the query has to include each column name individually.
+	char first_query[SHORT_SQL_STRING * 8] = { 0 };
+	char second_query[SHORT_SQL_STRING * 8] = { 0 };
 	ColumnInfo * field_descs = NULL;
 	int old_count;
 	bool ret;
@@ -531,7 +533,7 @@ static bool rebuildTableDataInPlace(ContainerTemplate *tplt, TableInfo *table)
 	strcat(tmpTable.name, "_tmp");
 
 	sqlCheckDdl(DDL_REBUILDTABLE);
-	printf("Creating tempoary table %s for in place rebuild\n", tmpTable.name);
+	printf("Creating temporary table %s for in place rebuild\n", tmpTable.name);
 	updateTable(&tmpTable);
 
 	old_count = sqlGetTableInfo(table->name, &field_descs);
@@ -549,16 +551,29 @@ static bool rebuildTableDataInPlace(ContainerTemplate *tplt, TableInfo *table)
 	estrSetLength(&columns, estrLength(&columns)-1);
 	assert(estrLength(&columns));
 
-	if (table->table_type == TT_CONTAINER)
+	// Containers are the only tables with auto generated sequential ids
+	// Need to make sure they're copied and the next id on insert will match the original tables.
+	// Or do we? I'm not sure it matters. Original code might not even be doing it for MSSQL
+	// or MSSQL might be handling it behind the scenes. Not sure.
+	if (table->table_type == TT_CONTAINER && gDatabaseProvider == DBPROV_MSSQL)
 	{
-		sprintf(identity_insert_on, " SET IDENTITY_INSERT dbo.%s_tmp ON;", table->name);
-		sprintf(identity_insert_off, " SET IDENTITY_INSERT dbo.%s_tmp OFF;", table->name);
+		sprintf(first_query,
+			"TRUNCATE TABLE dbo.%s_tmp; " \
+			"SET IDENTITY_INSERT dbo.%s_tmp ON; " \
+			"INSERT INTO dbo.%s_tmp(%s) SELECT %s FROM dbo.%s; " \
+			"SET IDENTITY_INSERT dbo.%s_tmp OFF;",
+			table->name, table->name, table->name, columns, columns, table->name, table->name
+		);
+	} else {
+		sprintf(first_query,
+			"TRUNCATE TABLE dbo.%s_tmp; " \
+			"INSERT INTO dbo.%s_tmp(%s) SELECT %s FROM dbo.%s;",
+			table->name, table->name, columns, columns, table->name
+		);
 	}
 
 	// Copy to temporary table
-	ret = sqlExecDdlf(DDL_REBUILDTABLE,
-		"TRUNCATE TABLE dbo.%s_tmp;%s INSERT INTO dbo.%s_tmp (%s) SELECT %s FROM dbo.%s;%s",
-		table->name, identity_insert_on, table->name, columns, columns, table->name, identity_insert_off);
+	ret = sqlExecDdlf(DDL_REBUILDTABLE, first_query);
 
 	if (ret)
 	{
@@ -568,16 +583,23 @@ static bool rebuildTableDataInPlace(ContainerTemplate *tplt, TableInfo *table)
 		// Create new table
 		updateTable(table);
 
-		if (table->table_type == TT_CONTAINER)
+		if (table->table_type == TT_CONTAINER && gDatabaseProvider == DBPROV_MSSQL)
 		{
-			sprintf(identity_insert_on, " SET IDENTITY_INSERT dbo.%s ON;", table->name);
-			sprintf(identity_insert_off, " SET IDENTITY_INSERT dbo.%s OFF;", table->name);
+			sprintf(second_query,
+				"SET IDENTITY_INSERT dbo.% s ON; " \
+				"INSERT INTO dbo.%s (%s) SELECT %s FROM dbo.%s_tmp; " \
+				"SET IDENTITY_INSERT dbo.%s OFF;",
+				table->name, table->name, columns, columns, table->name, table->name
+			);
+		} else {
+			sprintf(second_query,
+				"INSERT INTO dbo.%s(%s) SELECT %s FROM dbo.%s_tmp;",
+				table->name, columns, columns, table->name
+			);
 		}
 
 		// Copy to final location
-		ret = sqlExecDdlf(DDL_REBUILDTABLE,
-			"%s INSERT INTO dbo.%s (%s) SELECT %s FROM dbo.%s_tmp;%s",
-			identity_insert_on, table->name, columns, columns, table->name, identity_insert_off);
+		ret = sqlExecDdlf(DDL_REBUILDTABLE, second_query);
 	}
 
 	estrDestroy(&columns);

@@ -193,7 +193,7 @@ bool sqlExecDdlf(DdlType ddl_type, char *fmt, ...)
 const char* POSTGRES_ADD_FK_CONSTRAINT = \
 "DO $$ " \
 "BEGIN " \
-"IF (select constraint_exists('fk_%s_%s_%s')) IS FALSE THEN " \
+"IF (select dbo.constraint_exists('fk_%s_%s_%s')) IS FALSE THEN " \
 "ALTER TABLE dbo.%s " \
 "ADD CONSTRAINT FK_%s_%s_%s " \
 "FOREIGN KEY(%s) REFERENCES dbo.%s; " \
@@ -224,7 +224,7 @@ void sqlAddForeignKeyConstraintAsync(char *table, char *key, char *foreign_table
 const char* POSTGRES_DROP_CONSTRAINT = \
 "DO $$ " \
 "BEGIN " \
-"IF (SELECT constraint_exists('FK_%s_%s_%s')) IS TRUE " \
+"IF (SELECT dbo.constraint_exists('FK_%s_%s_%s')) IS TRUE " \
 "THEN ALTER TABLE dbo.%s DROP CONSTRAINT FK_%s_%s_%s;" \
 "END IF; " \
 "END " \
