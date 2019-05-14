@@ -11124,3 +11124,17 @@ void cfg_setMARTY_enabled(int data)
 {
 	server_state.MARTY_enabled = data;
 }
+
+void cfg_setIsAutoBuyProducts(bool b)
+{
+	Cmd* cmd = g_accountserver_cmds_server;
+	while(cmd->name)
+	{
+		if (strcmp(cmd->name, "acc_debug_buyproduct") == 0)
+		{
+			cmd->access_level = b ? 0 : 6;
+			break;
+		}
+		cmd++;
+	}
+}

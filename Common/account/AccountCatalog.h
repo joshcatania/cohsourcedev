@@ -54,7 +54,8 @@ U32			accountCatalog_GetTimeStampTestOffsetSecs( void );
 
 typedef enum
 {
-	STOREFLAG_NO_LOCALIZATION = ( 1 << 0 ),
+	STOREFLAG_NO_LOCALIZATION   = ( 1 << 0 ),
+	STOREFLAG_AUTO_BUY_PRODUCTS = ( 1 << 1 ),
 } AccountOnlineStoreFlags;
 
 typedef struct _AccountStoreAccessInfo

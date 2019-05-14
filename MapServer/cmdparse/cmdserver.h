@@ -200,6 +200,7 @@ void serverSetSkyFade(int sky1, int sky2, F32 weight); // 0.0 = all sky1
 
 void freePlayerControl( ClientLink* client );
 
+void cfg_setIsAutoBuyProducts(bool b);
 
 int cfg_IsBetaShard(void);
 

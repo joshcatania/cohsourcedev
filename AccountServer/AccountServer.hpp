@@ -89,6 +89,7 @@ typedef struct AccountServerCfg
 	bool grant_sku_from_list;
 	bool grant_all_sku;
 	int min_loyalty_points;
+	bool auto_buy_products;
 
 	// Legacy stuff
 	bool archive_merged;

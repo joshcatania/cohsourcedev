@@ -2857,8 +2857,8 @@ int processGameClientMsg(Packet *pak,int cmd, NetLink *link)
 			handleUnlockCharacter(pak, client);
 			break;
 		case DBCLIENT_ACCOUNTSERVER_CMD: // Testing only! this could be anybody.
-			if(isDevelopmentMode())
-				handleSendAccountCmd(pak,link);
+			// TODO: replace with access level check later: if(isDevelopmentMode())
+			handleSendAccountCmd(pak,link);
 			break;
 		case DBGAMECLIENT_QUITCLIENT:
 			clientcomm_quitClient(link, client);

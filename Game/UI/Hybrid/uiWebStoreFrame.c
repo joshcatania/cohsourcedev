@@ -28,6 +28,11 @@
 #include "inventory_client.h"
 #include "uiDialog.h"
 
+#include "../../../Common/account/AccountCatalog.h"
+#include "../../clientcomm/authclient.h"
+
+extern AuthInfo	auth_info;
+
 #define WSF_WEB_WIDTH	799.f  //width of the viewable web page
 #define WSF_WEB_HEIGHT	598.f //height of the viewable web page
 #define WSF_WIDTH		(WSF_WEB_WIDTH+HBPOPUPFRAME_LEFT_OFFSET+HBPOPUPFRAME_RIGHT_OFFSET)  //full width of the window
@@ -110,6 +115,14 @@ void webStoreFrame(int show); //fwd declaration
 
 void webStoreOpenProduct(const char * product)
 {
+	const AccountStoreAccessInfo* info = accountCatalog_GetStoreAccessInfo();
+
+	if (product && info && info->playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS)
+	{
+		AccountStoreBuyProduct(auth_info.uid, skuIdFromString(product), 1);
+		return;
+	}
+
 	//open window and init
 	webStoreFrame(1);
 
@@ -119,6 +132,13 @@ void webStoreOpenProduct(const char * product)
 
 void webStoreOpenCategory(const char * category)
 {
+	const AccountStoreAccessInfo* info = accountCatalog_GetStoreAccessInfo();
+
+	if (category && info && info->playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS)
+	{
+		return;
+	}
+
 	//open window and init
 	webStoreFrame(1);
 
@@ -128,6 +148,14 @@ void webStoreOpenCategory(const char * category)
 
 void webStoreAddToCart(const char * product)
 {
+	const AccountStoreAccessInfo* info = accountCatalog_GetStoreAccessInfo();
+
+	if (product && info && info->playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS)
+	{
+		AccountStoreBuyProduct(auth_info.uid, skuIdFromString(product), 1);
+		return;
+	}
+
 	//open window and init
 	webStoreFrame(1);
 
@@ -140,6 +168,20 @@ void webStoreAddMultipleToCart(const ShoppingCart * products, U32 first, U32 las
 	U32 i;
 	U32 numSkus = last - first;
 	char skus[256] = "";
+
+	const AccountStoreAccessInfo* info = accountCatalog_GetStoreAccessInfo();
+
+	if (products && info && info->playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS)
+	{
+		devassert(numSkus && products->itemCount >= last);
+
+		for (i = 0; i < numSkus; ++i)
+		{
+			AccountStoreBuyProduct(auth_info.uid, products->items[first+i], 1);
+		}
+
+		return;
+	}
 
 	//open window and init
 	webStoreFrame(1);

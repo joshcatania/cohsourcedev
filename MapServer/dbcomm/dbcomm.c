@@ -1244,8 +1244,12 @@ int dbMessageCallback(Packet *pak,int cmd,NetLink *link)
 		break;
 		xcase DBSERVER_ACCOUNTSERVER_CATALOG:
 		{	
+			const AccountStoreAccessInfo* accountInfo = accountCatalog_GetStoreAccessInfo();
+
 			cacheAccountServerCatalogUpdate( pak );
 			sendAccountCatalogUpdateToClients( pak );
+
+			cfg_setIsAutoBuyProducts((accountInfo->playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS) != 0);
 		}
 		xcase DBSERVER_ACCOUNTSERVER_CHARCOUNT:
 		{

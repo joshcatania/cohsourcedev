@@ -32,6 +32,8 @@
 #include "AppRegCache.h"
 #include "uiNewFeatures.h"
 
+#define BROWSER_DEBUG_PRINT_URL
+
 static bool	g_menu_initialized;
 static unsigned int g_saved_fpu_control;	// saved floating point control word
 
@@ -173,6 +175,15 @@ bool uiWebBrowser_goto_url(const char* url)
 	else
 	{
 		if (cmdAccessLevel()>ACCESS_USER) printf("browser: goto '%s'\n", url );
+
+#if defined(BROWSER_DEBUG_PRINT_URL)
+		if (url && *url)
+		{
+			printf("browser: goto '%s'\n", url );
+			return true;
+		}
+#endif // BROWSER_DEBUG_PRINT_URL
+
 #if defined(USE_QTWEBKIT_BROWSER)
 		return webBrowser_goto(url);
 #else

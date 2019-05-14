@@ -155,6 +155,7 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "GrantSKUFromList",						TOK_BOOLFLAG(AccountServerCfg,grant_sku_from_list,0)			},
 	{ "GrantAllSKU",							TOK_BOOLFLAG(AccountServerCfg,grant_all_sku,0)					},
 	{ "MinLoyaltyPoints",						TOK_INT(AccountServerCfg,min_loyalty_points,1)					},
+	{ "AutoBuyProducts",						TOK_BOOLFLAG(AccountServerCfg,auto_buy_products,0)				},
 	// Legacy stuff
 	{ "ArchiveMerged",							TOK_BOOLFLAG(AccountServerCfg,archive_merged,0)					},
 	{ "CompMode",								TOK_BOOLFLAG(AccountServerCfg,comp_mode,0)						},
@@ -1312,7 +1313,8 @@ bool accountSvrCfgLoad(AccountServerCfg *cfg)
 		info->playSpanURL_UpgradeToVIP	= _strdup( cfg->playSpanURL_UpgradeToVIP );
 		info->cohURL_NewFeatures		= _strdup( cfg->cohURL_NewFeatures );
 		info->cohURL_NewFeaturesUpdate	= _strdup( cfg->cohURL_NewFeaturesUpdate );
-		info->playSpanStoreFlags			    = cfg->playSpanStoreFlags;
+		info->playSpanStoreFlags		= cfg->playSpanStoreFlags;
+		info->playSpanStoreFlags		|= cfg->auto_buy_products ? STOREFLAG_AUTO_BUY_PRODUCTS : 0;
 	}
 	return loadResult;
 }
