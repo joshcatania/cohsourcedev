@@ -194,7 +194,13 @@ static int auctionMsgCallback(Packet *pak_in,int cmd,NetLink *auc_link)
 			days_active = server_cfg.auction_last_login_delay;
 			auction_state.sqlcb_link = auc_link;
 
-			estrPrintf(&restrict,"WHERE LastActive > DATEADD(d, -%i, GETDATE())", days_active);
+			switch (gDatabaseProvider) {
+			case DBPROV_MSSQL:
+				estrPrintf(&restrict, "WHERE LastActive > DATEADD(d, -%i, GETDATE())", days_active);
+			xcase DBPROV_POSTGRESQL:
+				estrPrintf(&restrict, "WHERE LastActive > NOW() - interval '%d days'", days_active);
+			}
+			
 			sqlReadColumnsAsync(ent_list->tplt->tables,0,"ContainerId",restrict,sqlAuctionGetActiveCallback,0,pak_out,0);
 
 			estrDestroy(&restrict);

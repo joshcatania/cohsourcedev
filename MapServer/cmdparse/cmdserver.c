@@ -3743,7 +3743,7 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
 				char sql_command[2000];
 
 				// move player to map id & position
-				sprintf(sql_command, "UPDATE dbo.ents SET mapid = %d, staticmapid = %d, posX = %f, posY = %f, posZ = %f WHERE name = N'%s' AND active IS NULL;",
+				sprintf(sql_command, "UPDATE dbo.ents SET mapid = %d, staticmapid = %d, posX = %f, posY = %f, posZ = %f WHERE name = '%s' AND active IS NULL;",
 					map_id,
 					map_id,
 					setpos[0],

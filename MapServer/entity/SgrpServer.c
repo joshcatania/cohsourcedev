@@ -2566,7 +2566,7 @@ void sgroup_sendRegistrationList(Entity* e, int sort_by_prestige, char *name)
 
  	if( dbSecondsSince2000() - last_request_time > 600 || !cachedSgroupInfoAll )
 	{
-		dbReqCustomData(CONTAINER_SUPERGROUPS,"Supergroups","Top 100","ORDER BY (isNull(Supergroups.prestige,0)+isNull(Supergroups.PrestigeBase,0)) DESC",
+		dbReqCustomData(CONTAINER_SUPERGROUPS,"Supergroups","Top 100","ORDER BY (COALESCE(Supergroups.prestige,0) + COALESCE(Supergroups.PrestigeBase,0)) DESC",
 				"ContainerId, Name, Description, Prestige, PrestigeBase", sgroup_readRegistrationPrestige, e->db_id);
 
 		last_request_time =  dbSecondsSince2000() ;

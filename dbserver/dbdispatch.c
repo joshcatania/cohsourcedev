@@ -2390,7 +2390,7 @@ void handleBaseDestroy(Packet *pak, NetLink *link)
 	}
 
 	// now destroy the container
-	cmd_len = sprintf(cmd, "SELECT ContainerId FROM Base WHERE ISNULL(SupergroupId,0) = %d AND ISNULL(UserId,0) = %d;", sg_id, user_id);
+	cmd_len = sprintf(cmd, "SELECT ContainerId FROM dbo.Base WHERE COALESCE(SupergroupId,0) = %d AND COALESCE(UserId,0) = %d;", sg_id, user_id);
 	container_id = sqlGetSingleValue(cmd, cmd_len, NULL, SQLCONN_FOREGROUND);
 
 	container = containerPtr(dbListPtr(CONTAINER_BASE), container_id);

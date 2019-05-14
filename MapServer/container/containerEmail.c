@@ -587,7 +587,7 @@ void emailGetHeaders(int db_id)
 {
 	char search[1000];
 
-	sprintf(search,"INNER JOIN Recipients ON Email.ContainerId = Recipients.ContainerId WHERE Recipients.recipient = %d AND Recipients.State > 0",db_id);
+	sprintf(search,"INNER JOIN dbo.Recipients ON Email.ContainerId = Recipients.ContainerId WHERE Recipients.recipient = %d AND Recipients.State > 0",db_id);
 	dbReqCustomData(CONTAINER_EMAIL,"Email",0,search,"ContainerId, Subject, Sender, SenderAuth, Sent ",emailHeaders_cb,db_id);
 }
 
@@ -595,7 +595,7 @@ void emailGetMessage(int db_id,int message_id)
 {
 	char search[1000];
 
-	sprintf(search,"INNER JOIN Recipients ON Email.ContainerId = Recipients.ContainerId WHERE Email.ContainerId = %d AND Recipients.recipient = %d AND Recipients.State > 0",message_id,db_id);
+	sprintf(search,"INNER JOIN dbo.Recipients ON Email.ContainerId = Recipients.ContainerId WHERE Email.ContainerId = %d AND Recipients.recipient = %d AND Recipients.State > 0",message_id,db_id);
 	dbReqCustomData(CONTAINER_EMAIL,"Email",0,search,"ContainerId, Msg",emailMessage_cb,db_id);
 	sprintf(search,"WHERE ContainerId = %d",message_id);
 	dbReqCustomData(CONTAINER_EMAIL,"Recipients",0,search,"ContainerId, Recipient, State",emailRecipient_cb,db_id);
@@ -609,26 +609,7 @@ void emailDeleteMessage(Entity * e,int message_id)
 	{
 		int		idx=0;
 		char	sql_command[1000];
-		char	*recip_clear_state =	"Update Recipients\n"
-										"set State = 0\n"
-										"where ContainerId = %d\n"
-										"And Recipient = %d\n\n",
-
-				*email_del	= 			"DECLARE @id AS Integer DECLARE @result AS Integer\n"
-										"SET @id = %d\n"
-										"SET @result = ISNULL((SELECT COUNT(*) As Expr1\n"
-										"FROM Recipients\n"
-										"GROUP BY State, ContainerId\n"
-										"HAVING (ContainerId = @id) AND Not (State = 0)), 0)\n"
-										"IF @result = 0 BEGIN\n"
-										"DELETE FROM Recipients\n"
-										"WHERE ContainerId = @id\n"
-										"DELETE FROM Email\n"
-										"WHERE ContainerId = @id \n"
-										"END\n";
-
-		idx += sprintf(sql_command+idx,recip_clear_state,message_id,e->db_id);
-		idx += sprintf(sql_command+idx,email_del,message_id);
+		sprintf(sql_command, "CALL dbo.mapserver_delete_message(%d, %d);", message_id, e->db_id);
 		dbExecuteSql(sql_command);
 	}
 }

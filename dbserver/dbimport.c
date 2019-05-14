@@ -148,10 +148,10 @@ static int pushContainer(int list_id, char *condata)
 					EntCatalogInfo *entInfo = entCatalogGet( id, false );	assert(entInfo);
 					authId = ( entInfo ) ? entInfo->authId : 0;
 					sqlFifoBarrier();
-					sprintf(cmd,"UPDATE dbo.Ents SET DbFlags = ISNULL(DbFlags,0) | 4096 WHERE ContainerId = %d;",id); // DBFLAG_RENAMEABLE
+					sprintf(cmd,"UPDATE dbo.Ents SET DbFlags = COALESCE(DbFlags,0) | 4096 WHERE ContainerId = %d;",id); // DBFLAG_RENAMEABLE
 					sqlConnExecDirect(cmd, SQL_NTS, SQLCONN_FOREGROUND, false);
 					sqlFifoBarrier();
-					sprintf(cmd,"UPDATE dbo.Ents SET Name = N'%s' WHERE ContainerId = %d;", new_name, id);
+					sprintf(cmd,"UPDATE dbo.Ents SET Name = '%s' WHERE ContainerId = %d;", new_name, id);
 					sqlConnExecDirect(cmd, SQL_NTS, SQLCONN_FOREGROUND, true);
 					sqlFifoBarrier();
 					playerNameDelete(old_name, id);	
