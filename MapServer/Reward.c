@@ -3597,7 +3597,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 		if(bLevelCapped)
 		{
 			int iLeftOver = 0;
-			character_GiveCappedExperience(e->pchar, reward->experience*(bArchitect?1.f:server_state.xpscale), &iXPReceived, &iXPDebt, &iLeftOver);
+			character_GiveCappedExperience(e->pchar, reward->experience*(bArchitect?server_state.aescale:server_state.xpscale), &iXPReceived, &iXPDebt, &iLeftOver); // Added AE Exp Scaling
 
 			if (source == REWARDSOURCE_DEBUG)
 				pDebug->debt += iXPDebt;
@@ -3615,7 +3615,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 		else
 		{
 
-			float fXPScale = bArchitect?1.f:server_state.xpscale;
+			float fXPScale = bArchitect?server_state.aescale:server_state.xpscale; // Added AE Exp Scaling
 			int bPatrolXP = false;
 
 			if( bExemplar )
@@ -3716,7 +3716,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 	if(reward->influence && !bArchitectTest && (!bArchitect || bArchitectAllRewards))
 	{
 		e->general_update = 1;
-		iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitect?1.f:server_state.xpscale));
+		iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitect?server_state.aescale:server_state.xpscale));
 
 		if(iInfluence)
 		{
@@ -4497,16 +4497,16 @@ bool rewardFindDefAndApplyToEntShortLog(Entity* e, const char **ppchName, Villai
 		{
 			addStringToStuffBuff(&s_sbRewardLog, "Reward: %s, %s, level %d\n{\n", e->name, rewardName, iLevel);
 			bRewardHadLoot |= rewardTeamMember(e,  // Team member to reward
-				rewardName,      // Reward table to fetch reward from
-				1.0f,            // The XP and influence scaling tweak
-				iLevel-1,        // Level in table
-				isVictimLevel,	 // Passed in from caller
-				1.0f,            // The portion of the entire reward to be given
-				1.0f,            // The portion of the entire reward from the group bonus
-				1.0f,            // The portion of the team part of the reward
-				vgroup,          // The villain def of the defeated villain
-				true,            // True if powers as well as xp and inf are given.
-				bIgnoreHandicap, // True to ignore level handicapping.
+				rewardName,					// Reward table to fetch reward from
+				1.0f,						// The XP and influence scaling tweak
+				iLevel-1,					// Level in table
+				isVictimLevel,				// Passed in from caller
+				1.0f,						// The portion of the entire reward to be given
+				1.0f,						// The portion of the entire reward from the group bonus
+				1.0f,						// The portion of the team part of the reward
+				vgroup,						// The villain def of the defeated villain
+				true,						// True if powers as well as xp and inf are given.
+				bIgnoreHandicap,			// True to ignore level handicapping.
 				rl,
 				source, 
 				CONTAINER_TEAMUPS,

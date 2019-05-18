@@ -11,6 +11,9 @@ typedef struct ServerCfg
 	char	db_server[256];
 	char	db_server_aux[MAX_DBSERVER - 1][256];
 	char	log_server[256];
+	char	stat_server[256];
+	char	raid_server[256];
+	char	arena_server[256];
 	char	auth_server[256];
 	int		auth_server_port;
 	int		map_server_count;
@@ -74,6 +77,8 @@ typedef struct ServerCfg
 	F32		timeZoneDelta;
 	int		disableContainerBackups;
 	F32		xpscale;
+	F32		aescale;
+	F32		ticketscale;
 	int		auction_last_login_delay;
 	char	client_commands[2000];
 	U32		missionserver_max_queueSize;

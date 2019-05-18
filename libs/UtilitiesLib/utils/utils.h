@@ -95,6 +95,8 @@ bool isConsoleOpen();
 
 void setGuiDisable(bool disable);
 bool isGuiDisabled();
+void setSilentMode(bool disable);
+bool isSilentMode();
 
 void newConsoleWindow(void);
 void setConsoleTitle(char *msg);

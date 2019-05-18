@@ -342,9 +342,10 @@ bool loadBalanceConfigLoad()
 			FatalErrorf("Errors in load balancing config files (see console for details)");
 		}
 	}
-	if (!assembleAutoStartList())
+	if (!assembleAutoStartList()) {
+		printf("Couldn't assemble Autostart list.\n");
 		ret = false;
-
+	}
 	if (!loaded_once) 
 	{
 		FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE|FOLDER_CACHE_CALLBACK_CAN_USE_SHARED_MEM, "server/db/loadBalance*.cfg", loadBalanceReloadCallback);

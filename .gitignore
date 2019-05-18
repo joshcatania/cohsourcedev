@@ -67,3 +67,6 @@ x64/
 
 # VS Code configuration directory
 .vscode
+*.dsn
+/bin/cohphysx.7z
+/bin/GlobalAuthError.txt

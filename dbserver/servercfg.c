@@ -109,6 +109,8 @@ void serverCfgLoad()
 	server_cfg.logins_per_minute	= 100;
 
 	server_cfg.xpscale				= 1.0f;
+	server_cfg.aescale				= 1.0f;
+	server_cfg.ticketscale			= 1.0f;
 	server_cfg.client_commands[0]	= 0;
 	server_cfg.map_server_params[0]	= 0;
 
@@ -301,6 +303,12 @@ void serverCfgLoad()
 			if (!server_cfg.use_logserver)
 				server_cfg.use_logserver = 1;
 		}
+		else if (stricmp(s,"StatServer")==0)
+			strcpy(server_cfg.stat_server,s2);
+		else if (stricmp(s,"RaidServer")==0)
+			strcpy(server_cfg.raid_server,s2);
+		else if (stricmp(s,"ArenaServer")==0)
+			strcpy(server_cfg.arena_server,s2);
 		else if (stricmp(s,"LogRelayVerbose")==0)
 			server_cfg.log_relay_verbose = atoi(s2);
 		else if (stricmp(s,"ChatServer")==0)
@@ -359,6 +367,10 @@ void serverCfgLoad()
 			server_cfg.disableContainerBackups = atoi(s2);
 		else if (stricmp(s, "XPScale")==0)
 			server_cfg.xpscale = atof(s2);
+		else if (stricmp(s, "AEScale")==0)
+			server_cfg.aescale = atof(s2);
+		else if (stricmp(s, "TicketScale")==0)
+			server_cfg.ticketscale = atof(s2);
 		else if (stricmp(s, "AuctionInvMaxLastLoginDays")==0)
 			server_cfg.auction_last_login_delay = atoi(s2);
 		else if (stricmp(s, "AuthnameLimiterEnabled")==0)

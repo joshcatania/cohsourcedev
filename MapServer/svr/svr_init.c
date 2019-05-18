@@ -536,6 +536,10 @@ static void parseArgs0(int argc,char **argv)
 			// allow parseArgs1 to also see this parameter to set the assert mode
 			handled = 0;
 		}
+		else if (stricmp(argv[i], "-silent")==0)
+		{
+			setSilentMode(true);
+		}
 #ifndef FINAL
 		else if (stricmp(argv[i], "-productionmode")==0)
 		{
@@ -909,6 +913,10 @@ void parseArgs2(int argc,char **argv)
 			;
 		else if (strcmp(argv[i],"-xpscale")==0)
 			server_state.xpscale = atof(argv[++i]);
+		else if (strcmp(argv[i],"-aescale")==0)
+			server_state.aescale = atof(argv[++i]);
+		else if (strcmp(argv[i],"-ticketscale")==0)
+			server_state.ticketscale = atof(argv[++i]);
 		else if (strcmp(argv[i], "-gridcachebits")==0)
 		{
 			if(i + 1 < argc)

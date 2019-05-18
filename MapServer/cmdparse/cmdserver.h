@@ -114,6 +114,8 @@ typedef struct ServerState
 	int		tsr_dbconnect; // When running a MapServer -tsr, connect to the DbServer, and exit when it closes
 	int		nostats;	// Don't calculate, load, or store, statistics for players
 	float	xpscale;
+	float	aescale;
+	float	ticketscale;
 
 	int		groupDefVersion;
 

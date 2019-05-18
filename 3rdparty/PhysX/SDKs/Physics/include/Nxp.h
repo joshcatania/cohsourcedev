@@ -100,10 +100,16 @@ AM: PLEASE MAKE SURE TO HAVE AN 'NX_' PREFIX ON ALL NEW DEFINES YOU ADD HERE!!!!
 //#define NX_SUPPORT_MESH_SCALE		// Experimental mesh scale support
 
 #define NX_DEFORMABLE_BATCH_SIZE   32
-#if defined(ANDROID) || (defined(__APPLE__) && defined(__arm))
+#if defined(ANDROID) || defined (SN_TARGET_PSP2) || (defined(__APPLE__) && defined(__arm))
+#if !defined(NX_DISABLE_FLUIDS)
 #define NX_DISABLE_FLUIDS
+#endif
+#if !defined(NX_DISABLE_CLOTH)
 #define NX_DISABLE_CLOTH
+#endif
+#if !defined(NX_DISABLE_SOFTBODY)
 #define NX_DISABLE_SOFTBODY
+#endif
 #endif
 
 #ifdef NX_DISABLE_FLUIDS

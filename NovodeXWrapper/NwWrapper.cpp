@@ -1295,6 +1295,8 @@ void nwCreatePhysicsSDK()
 
 #ifdef SERVER
 	desc.flags = NX_SDKF_NO_HARDWARE;
+#else
+	desc.flags &= ~NX_SDKF_NO_HARDWARE;
 #endif
 
 	debugAllocator = new MyAllocator();
@@ -1381,7 +1383,7 @@ static void nwDeleteAllScenes( )
 
 U8	  nwHardwarePresent()
 {
-	return !!(nxSDK && !!nxSDK->getHWVersion());
+	return !!(nxSDK && nxSDK->getHWVersion() != NX_HW_VERSION_NONE);
 }
 
 
@@ -1430,7 +1432,7 @@ int nwCreateScene()
 #ifdef CLIENT
 	nxScene[iNewScene] = NULL;
 
-	if ( !nx_state.softwareOnly && nxSDK->getHWVersion() )
+	if (!nx_state.softwareOnly && (nxSDK->getHWVersion() != NX_HW_VERSION_NONE))
 	{
 		sceneDesc.simType = NX_SIMULATION_HW;
 		nxScene[iNewScene] = nxSDK->createScene(sceneDesc);

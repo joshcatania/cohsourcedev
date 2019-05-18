@@ -15,7 +15,7 @@
 #ifdef NX_PHYSX_LOADER_EXPORTS
     #if defined(WIN32)
 	#define NXPHYSXLOADERDLL_API extern "C" __declspec(dllexport)
-    #elif defined(__linux__) 
+#elif defined(__linux__)
       #if defined(NX_LINUX_USE_VISIBILITY)
         #define NXPHYSXLOADERDLL_API extern "C" __attribute__ ((visibility ("default")))
       #else
