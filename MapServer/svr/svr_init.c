@@ -536,6 +536,10 @@ static void parseArgs0(int argc,char **argv)
 			// allow parseArgs1 to also see this parameter to set the assert mode
 			handled = 0;
 		}
+		else if (stricmp(argv[i], "-silent")==0)
+		{
+			setSilentMode(true);
+		}
 #ifndef FINAL
 		else if (stricmp(argv[i], "-productionmode")==0)
 		{

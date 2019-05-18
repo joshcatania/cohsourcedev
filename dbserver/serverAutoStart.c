@@ -55,6 +55,18 @@ bool assembleAutoStartList(void)
 			required_servers[0]="";
 			found[0]=1;
 		}
+		if (!server_cfg.stat_server[0]) {
+			required_servers[1]="";
+			found[1]=1;
+		}
+		if (!server_cfg.arena_server[0]) {
+			required_servers[2]="";
+			found[2]=1;
+		}
+		if (!server_cfg.raid_server[0]) {
+			required_servers[3]="";
+			found[3]=1;
+		}
 		for (i=0; i<eaSize(&eaRunServers); i++) {
 			for (j=0; j<ARRAY_SIZE(required_servers); j++) {
 				char required_name[500];
@@ -83,13 +95,12 @@ bool assembleAutoStartList(void)
 					printf(", ");
 				printf("%s", required_servers[j]);
 				badcount++;
-				//ret = false;
+				ret = false;
 			}
 		}
 		if (badcount)
 		{
-			printf("\n");
-			//printf("\n   Please edit server/db/loadBalanceShardSpecific.cfg and fix this.\n");
+			printf("Bad count; please edit server/db/loadBalanceShardSpecific.cfg and fix this.\n");
 		}
 	}
 	return ret;

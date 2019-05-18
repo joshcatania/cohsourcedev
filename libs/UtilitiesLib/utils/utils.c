@@ -389,6 +389,8 @@ int system_detach(char *cmd, int minimized/*not used*/)
 #endif
 
 bool gui_disabled = false;
+bool silent_mode = false;
+
 void setGuiDisable(bool disable)
 {
 	gui_disabled = disable;
@@ -398,6 +400,17 @@ bool isGuiDisabled()
 {
 	return gui_disabled;
 }
+
+void setSilentMode(bool disable)
+{
+	silent_mode = disable;
+}
+
+bool isSilentMode()
+{
+	return silent_mode;
+}
+
 
 int systemf(const char *cmd,...)
 {
@@ -618,6 +631,11 @@ void consoleInit(int minWidth, int minHeight, int bufferLines)
 		mode |= ENABLE_EXTENDED_FLAGS; // MSDN for SetConsoleMode says you need this
 		ret = SetConsoleMode(hStdIn, mode);
 		devassert(ret);
+	}
+
+	if(isSilentMode()) {
+	    ShowWindow(hDlg, SW_MINIMIZE);  //won't hide the window without SW_MINIMIZE
+	    ShowWindow(hDlg, SW_HIDE);
 	}
 
 	if(isGuiDisabled() ||IsUsingCider()) return;

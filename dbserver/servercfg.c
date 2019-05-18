@@ -301,6 +301,12 @@ void serverCfgLoad()
 			if (!server_cfg.use_logserver)
 				server_cfg.use_logserver = 1;
 		}
+		else if (stricmp(s,"StatServer")==0)
+			strcpy(server_cfg.stat_server,s2);
+		else if (stricmp(s,"RaidServer")==0)
+			strcpy(server_cfg.raid_server,s2);
+		else if (stricmp(s,"ArenaServer")==0)
+			strcpy(server_cfg.arena_server,s2);
 		else if (stricmp(s,"LogRelayVerbose")==0)
 			server_cfg.log_relay_verbose = atoi(s2);
 		else if (stricmp(s,"ChatServer")==0)
