@@ -3763,13 +3763,13 @@ static void debug_DrawGetCharacter(void)
     if(!cache_dir)
     {
         char *tmp = getenv("USERNAME");
-        estrPrintf(&cache_dir,"n:/nobackup/CharacterCache/%s/",tmp?tmp:"default");
+        estrPrintf(&cache_dir,"./n/nobackup/CharacterCache/%s/",tmp?tmp:"default");
         mkdirtree(cache_dir);
     }
 
     if(!g_charname)
     {
-        char *src_shardnames = fileAlloc("n:/nobackup/CharacterCache/src_shards.txt",NULL);
+        char *src_shardnames = fileAlloc("./n/nobackup/CharacterCache/src_shards.txt",NULL);
         char *shard;
 		dy += 5;
         if(src_shardnames)

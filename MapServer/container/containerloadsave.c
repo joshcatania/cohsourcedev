@@ -5935,7 +5935,7 @@ void morphCharacter(ClientLink* client, Entity *e, char *at, char *pri_power, ch
 			return;
 		}
 
-		sprintf(fname, "n:/nobackup/resource/characters/%s/%s%s/%d.txt", at, pri_power, sec_power,
+		sprintf(fname, "./n/nobackup/resource/characters/%s/%s%s/%d.txt", at, pri_power, sec_power,
 			(int) clientLinkGetDebugVar(client, "MorphLevel"));
 	}
 	morphCharacterFile(client, e, fname);

@@ -4200,7 +4200,7 @@ void aiDebugSendEntDebugMenu(ClientLink* client)
 					// Save current character
 					NEW_ITEM("Save Character To Common Folder", "packageent");
 
-					if(dirExists("n:/nobackup/resource/characters/common/"))
+					if(dirExists("./n/nobackup/resource/characters/common/"))
 					{
 
 						// Load existing common characters
@@ -4208,7 +4208,7 @@ void aiDebugSendEntDebugMenu(ClientLink* client)
 						{
 							int count,i;
 							char **dirs;
-							dirs = fileScanDirFolders("n:/nobackup/resource/characters/common/", &count, FSF_FOLDERS | FSF_NOHIDDEN);
+							dirs = fileScanDirFolders("./n/nobackup/resource/characters/common/", &count, FSF_FOLDERS | FSF_NOHIDDEN);
 							for(i=0; i<count; i++)
 							{
 								char *group = strrchr(dirs[i],'/');

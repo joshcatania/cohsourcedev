@@ -530,7 +530,7 @@ Cmd server_cmds[] =
 						"The command spawns a specific type or group of Critters or NPCs.\n"
 						"The syntax is: spawn <CritterName or NPCName or SpawnBindingName>\n"
 						"Any of the names attached to an NPC block or a Critter block in\n"
-						"N:/game/data/SpawnArea/Global.txt can be used in place of CritterName or NPCName.\n"},
+						"./n/game/data/SpawnArea/Global.txt can be used in place of CritterName or NPCName.\n"},
 	{ 4, "spawnvillain", SCMD_SPAWNVILLAIN, {{CMDSENTENCE(tmp_str)}}, CMDF_HIDEVARS, 
 						0},
 	{ 9, "spawnmob",	SCMD_SPAWN_MOB, {{CMDINT(tmp_int)}, {CMDINT(tmp_int2)}, {CMDINT(tmp_int3)}}, CMDF_HIDEVARS,
@@ -542,7 +542,7 @@ Cmd server_cmds[] =
 						"The command spawns a number of a specific type or group of Critters or NPCs.\n"
 						"The syntax is: spawnmany <CritterName or NPCName or SpawnBindingName> <Count>\n"
 						"Any of the names attached to an NPC block or a Critter block in\n"
-						"N:/game/data/SpawnArea/Global.txt can be used in place of CritterName or NPCName.\n"},
+						"./n/game/data/SpawnArea/Global.txt can be used in place of CritterName or NPCName.\n"},
 	{ 4, "spawnmanyvillains",	SCMD_SPAWNMANYVILLAINS, {{CMDSTR(tmp_str)}, {CMDINT(tmp_int)}}, CMDF_HIDEVARS,
 						"The command spawns a number of villains.\n"
 						"The syntax is: spawnmanyvillains <VillainName> <Count>\n"},

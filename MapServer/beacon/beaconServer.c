@@ -2894,8 +2894,8 @@ static void beaconServerAddToSymStore(const char* fileName){
 	char fileNameBackSlashes[1000];
 	strcpy_s(SAFESTR(fileNameBackSlashes), fileName);
 	backSlashes(fileNameBackSlashes);
-	beaconPrintf(COLOR_YELLOW, "Adding \"%s\" to symstore (N:\\nobackup\\symserv\\dataVS8)...\n", fileName);
-	sprintf(buffer, "symstoreVS8 add /f \"%s\" /s N:\\nobackup\\symserv\\dataVS8 /t \"Cryptic Programs\"", fileNameBackSlashes);
+	beaconPrintf(COLOR_YELLOW, "Adding \"%s\" to symstore (./n/nobackup/symserv/dataVS8)...\n", fileName);
+	sprintf(buffer, "symstoreVS8 add /f \"%s\" /s ./n/nobackup/symserv/dataVS8 /t \"Cryptic Programs\"", fileNameBackSlashes);
 	beaconPrintfDim(COLOR_YELLOW, "Command: \"%s\"\n", buffer);
 	system(buffer);
 }

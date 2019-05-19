@@ -1038,7 +1038,7 @@ void receivePackagedEnt(Packet *pak)
 		char filename[MAX_PATH];
 		FILE *file;
 
-		sprintf(filename, "n:/nobackup/resource/characters/common/%s/%s.txt","unknown",pname?pname:"unknown");
+		sprintf(filename, "./n/nobackup/resource/characters/common/%s/%s.txt","unknown",pname?pname:"unknown");
 		mkdirtree(filename);
 		if(file = fopen(filename, "wt"))
 		{

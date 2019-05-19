@@ -69,7 +69,7 @@ static void saveCurrData(void)
 
 static void calcDefaultMapName()
 {
-	char	*s=0,buf[1000] = "n:/game/data/maps/test.txt";
+	char	*s=0,buf[1000] = "./n/game/data/maps/test.txt";
 
 	if (game_state.world_name[0]) {
 		s = fileLocateWrite(game_state.world_name, buf);
