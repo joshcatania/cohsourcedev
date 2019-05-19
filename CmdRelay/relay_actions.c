@@ -233,11 +233,9 @@ BOOL onApplyPatch(char * updateSvr)
 
 	// possible directories where CohUpdater might be located
 	// TODO: some sort of directory search...
-	char * paths[] = {	"C:\\CohUpdater",
-						"C:\\CohUpdater\\bin",
-						"D:\\CohUpdater",
-						"D:\\CohUpdater\\bin",
-						"C:\\game\\tools\\util",
+	char * paths[] = {	"./c/CohUpdater",
+						"./c/CohUpdater/bin",
+						"./c/game/tools/util",
 						{0},	// this must be last entry (for while-loop)
 	};
 

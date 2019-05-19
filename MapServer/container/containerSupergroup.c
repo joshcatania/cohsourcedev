@@ -596,7 +596,7 @@ char *packageSuperGroup(Supergroup *sg)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\supergroup_todbserver.txt", "wb");
+		f = fopen("./c/supergroup_todbserver.txt", "wb");
 		if (f) {
 			fwrite(result, 1, strlen(result), f);
 			fclose(f);
@@ -647,7 +647,7 @@ void unpackSupergroup(Entity *e, char *mem, int send_to_client)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\supergroup_fromdbserver.txt", "wb");
+		f = fopen("./c/supergroup_fromdbserver.txt", "wb");
 		if (f) {
 			fwrite(mem, 1, strlen(mem), f);
 			fclose(f);

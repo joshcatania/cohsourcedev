@@ -1181,7 +1181,7 @@ void DebugPrintEncounterCoverage(ClientLink* client)
 	pec_client = client;
 	if (isDevelopmentMode())
 	{
-		pec_file = fopen("c:\\encountercoverage.txt", "wb");
+		pec_file = fopen("./c/encountercoverage.txt", "wb");
 		fwrite("EncounterLayouts ", 1, strlen("EncounterLayouts "), pec_file);
 	}
 	conPrintf(client, "Encounter layouts on this map:\n");
@@ -6306,7 +6306,7 @@ void EncounterNeighborhoodList(ClientLink* client)
 
 	g_neighborhoodspawnlist = stashTableCreateWithStringKeys(10, StashDeepCopyKeys);
 	g_neighborhoodlistclient = client;
-	g_neighborhoodout = fopen("c:\\encounterneighborhood.txt", "w");
+	g_neighborhoodout = fopen("./c/encounterneighborhood.txt", "w");
 
 	// iterate through every spawndef and record
 	for (i = 0; i < g_encountergroups.size; i++)

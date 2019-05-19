@@ -225,7 +225,7 @@ TTCachedDebugString *createTTCachedDebugString(unsigned short *text, TTDrawConte
 {
 	TTCachedDebugString *ret = malloc(sizeof(TTCachedDebugString));;
 	if (!fTextDebug) {
-		fTextDebug = fopen("C:\\textdebug.txt","w");
+		fTextDebug = fopen("./c/textdebug.txt","w");
 	}
 	if (!stDebugStrings) {
 		stDebugStrings = createStringTable();

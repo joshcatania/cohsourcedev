@@ -514,7 +514,7 @@ LRESULT CALLBACK DlgMainProc(HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam)
 			case IDC_CS:
 				break;
 			case IDC_HELPBTN:
-				ShellExecute ( NULL, TEXT("open"), TEXT("c:\\game\\docs\\System Implementation\\Test Client Commands.txt"), NULL, NULL, SW_SHOW);
+				ShellExecute ( NULL, TEXT("open"), TEXT("./c/game/docs/System Implementation/Test Client Commands.txt"), NULL, NULL, SW_SHOW);
 				break;
 			case IDLOGOUT:
 				onQuitChild(GetDlgItem(hDlg, IDC_LIST2));

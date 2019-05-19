@@ -1351,7 +1351,7 @@ static void beaconClientSetForcedInactive(S32 on, char* reason){
 
 static void beaconClientRunRadiosityClient(void){
 	time_t curTime = time(NULL);
-	const char* commandText = "C:\\RadiosityClient\\RadiosityClient.exe";
+	const char* commandText = "./c/RadiosityClient/RadiosityClient.exe";
 	char* timeString = asctime(localtime(&curTime));
 	
 	timeString[strlen(timeString) - 1] = 0;
@@ -2095,7 +2095,7 @@ static void beaconClientInstall(void){
 
 			beaconCreateNewExe(buffer, beacon_client.exeData, beacon_client.exeSize);
 
-			sprintf(buffer, "c:\\Beaconizer\\%s -beaconclient -noencrypt", beaconClientExeName);
+			sprintf(buffer, "./c/Beaconizer/%s -beaconclient -noencrypt", beaconClientExeName);
 			
 			consoleSetColor(COLOR_BRIGHT|COLOR_RED|COLOR_GREEN, 0);
 			printf(	"Setting registry entry:\n"

@@ -16,7 +16,7 @@
 #include "file.h" // for isDevelopmentMode()
 
 #define CURSOR_SWBLENDING
-//#define CURSOR_SWBLENDING_DUMP "C:\\temp\\swcursor\\"
+//#define CURSOR_SWBLENDING_DUMP "./c/temp/swcursor/"
 
 #ifdef CURSOR_SWBLENDING_DUMP
 #include <file.h>

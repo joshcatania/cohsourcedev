@@ -924,7 +924,7 @@ void saveVisualTextFile(void)
 		part = 0;
 	}
 
-	costume_WriteTextFile(costume, "c:\\visuals.tmp");
+	costume_WriteTextFile(costume, "./c/visuals.tmp");
 
 	// Add a tab to all lines in front of the output file.
 	{
@@ -933,8 +933,8 @@ void saveVisualTextFile(void)
 		char buffer[1024];
 		int firstLine = 1;
 
-		src = fopen("c:\\visuals.tmp", "rt");
-		dest = fopen("c:\\visuals.txt", "wt");
+		src = fopen("./c/visuals.tmp", "rt");
+		dest = fopen("./c/visuals.txt", "wt");
 
 		while(fgets(buffer, 1024, src))
 		{
@@ -959,7 +959,7 @@ void saveVisualTextFile(void)
 
 		fclose(src);
 		fclose(dest);
-		remove("c:\\visuals.tmp");
+		remove("./c/visuals.tmp");
 	}
 }
 

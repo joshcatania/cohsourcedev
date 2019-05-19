@@ -964,7 +964,7 @@ static void setupDebugParams(void)
 				strftime(the_date, MAX_PATH, "%Y%m%d", gmtime(&now));
 			}
 
-			sprintf( fpath, "c:\\temp\\SHADER_DBG_LOG_%s_f%05d", the_date, game_state.client_frame);
+			sprintf( fpath, "./c/temp/SHADER_DBG_LOG_%s_f%05d", the_date, game_state.client_frame);
 
 			printf( "=========== BEGIN: Shader Debug Log: %s =============\n", fpath );
 			gSHADER_DBG_LOG_FILE = fopen( fpath, "wt" );

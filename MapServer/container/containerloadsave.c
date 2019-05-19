@@ -4095,7 +4095,7 @@ static char *s_packageEnt(Entity *e, int start_line_idx)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\temp.out.txt", "wt");
+		f = fopen("./c/temp.out.txt", "wt");
 		if (f) {
 			fwrite(sb.buff, 1, strlen(sb.buff), f);
 			fclose(f);
@@ -4412,7 +4412,7 @@ void unpackEnt( Entity *e, char *buff )
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\temp.in.txt", "wt");
+		f = fopen("./c/temp.in.txt", "wt");
 		if (f) {
 			fwrite(buff, 1, strlen(buff), f);
 			fclose(f);
@@ -5443,7 +5443,7 @@ char *packageTeamup(Entity *e)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\team_todbserver.txt", "wb");
+		f = fopen("./c/team_todbserver.txt", "wb");
 		if (f) {
 			fwrite(result, 1, strlen(result), f);
 			fclose(f);
@@ -5458,7 +5458,7 @@ void unpackLeague(Entity *e,char *mem)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\league_fromdbserver.txt", "wb");
+		f = fopen("./c/league_fromdbserver.txt", "wb");
 		if (f) {
 			fwrite(mem, 1, strlen(mem), f);
 			fclose(f);
@@ -5488,7 +5488,7 @@ void unpackTeamup(Entity *e,char *mem)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\team_fromdbserver.txt", "wb");
+		f = fopen("./c/team_fromdbserver.txt", "wb");
 		if (f) {
 			fwrite(mem, 1, strlen(mem), f);
 			fclose(f);
@@ -5540,7 +5540,7 @@ char *packageEventHistory(KarmaEventHistory *event)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\eventhistory_todbserver.txt", "wb");
+		f = fopen("./c/eventhistory_todbserver.txt", "wb");
 		if (f)
 		{
 			fwrite(result, 1, strlen(result), f);
@@ -5558,7 +5558,7 @@ KarmaEventHistory *unpackEventHistory(char *mem)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\eventhistory_fromdbserver.txt", "wb");
+		f = fopen("./c/eventhistory_fromdbserver.txt", "wb");
 		if (f)
 		{
 			fwrite(mem, 1, strlen(mem), f);
@@ -5593,7 +5593,7 @@ char *packageTaskForce(Entity *ent)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\taskforce_todbserver.txt", "wb");
+		f = fopen("./c/taskforce_todbserver.txt", "wb");
 		if (f) {
 			fwrite(result, 1, strlen(result), f);
 			fclose(f);
@@ -5618,7 +5618,7 @@ static void s_unpackTaskForce(TaskForce **ptaskforce, int dbid, char *mem, int i
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\taskforce_fromdbserver.txt", "wb");
+		f = fopen("./c/taskforce_fromdbserver.txt", "wb");
 		if (f) {
 			fwrite(mem, 1, strlen(mem), f);
 			fclose(f);
@@ -5688,7 +5688,7 @@ void unpackLevelingPact(Entity *e, char *mem, int send_to_client)
 
 	if(isDevelopmentMode())
 	{
-		FILE* f = fopen("c:\\levelingpact_fromdbserver.txt", "wb");
+		FILE* f = fopen("./c/levelingpact_fromdbserver.txt", "wb");
 		if(f)
 		{
 			fwrite(mem, 1, strlen(mem), f);

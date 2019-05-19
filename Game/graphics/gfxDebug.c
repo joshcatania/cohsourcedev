@@ -329,7 +329,7 @@ void gfxScreenDumpEx(char *subdir,int is_movie, char *extra_jpeg_data, int extra
 						pix[(i*128+j)*4+k] = MIN(255,v);
 					pix[(i*128+j)*4+3]=255;
 				}
-			tgaSave("C:\\game\\src\\texture_library\\btest\\buildingLightPattern.tga", pix, 128, 128, 3);
+			tgaSave("./c/game/src/texture_library/btest/buildingLightPattern.tga", pix, 128, 128, 3);
 			return;
 		}
 	}

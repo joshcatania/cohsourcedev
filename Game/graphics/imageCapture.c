@@ -124,7 +124,7 @@ void ImageCapture_WriteMapImages(char *filename, char *directory, int checkin)
 	char mapName[1000];
 	
 	
-	//example: char mapname[] = "C:\\game\\data\\maps\\Missions\\Outdoor_Missions\\V_Outdoor_LongBow_CargoBase\\V_Outdoor_LongBow_CargoBase.txt";
+	//example: char mapname[] = "./c/game/data/maps/Missions/Outdoor_Missions/V_Outdoor_LongBow_CargoBase/V_Outdoor_LongBow_CargoBase.txt";
 
 	//FIRST COUNT THE NUMBER OF '.'s IN THE FILENAME!  More than one period will result in everyone's client crashing.  Not good.
 	s = strchr(filename, '.');//point to the first period.

@@ -3138,18 +3138,18 @@ void TestTextParser(void)
 		printf("failed!\n");
 
 	printf("writing test file ..");
-	if (ParserWriteTextFile("c:\\parsertest.txt", ParseTestBlockList, &parserdebug_fromtext, 0, 0))
+	if (ParserWriteTextFile("./c/parsertest.txt", ParseTestBlockList, &parserdebug_fromtext, 0, 0))
 		printf("success\n");
 	else
 		printf("failed!\n");
 
 	printf("reading test file ..");
-	if (ParserLoadFiles(NULL, "c:\\parsertest.txt", "parsertest.bin", PARSER_FORCEREBUILD, 
+	if (ParserLoadFiles(NULL, "./c/parsertest.txt", "parsertest.bin", PARSER_FORCEREBUILD, 
 		ParseTestBlockList, &parserdebug_fromfile, NULL, NULL, NULL))
 		printf("success\n");
 	else
 		printf("failed!\n");
-	ParserWriteTextFile("c:\\parsertest.fromfile.txt", ParseTestBlockList, &parserdebug_fromfile, 0, 0);
+	ParserWriteTextFile("./c/parsertest.fromfile.txt", ParseTestBlockList, &parserdebug_fromfile, 0, 0);
 
 	printf("comparing file to test string ..");
 	if (ParserCompareStruct(ParseTestBlockList, &parserdebug_fromtext, &parserdebug_fromfile))
@@ -3158,12 +3158,12 @@ void TestTextParser(void)
 		printf("success\n");
 
 	printf("getting precompiled result from .bin file ..");
-	if (ParserLoadFiles(NULL, "c:\\parsertest.txt", "parsertest.bin", 0, 
+	if (ParserLoadFiles(NULL, "./c/parsertest.txt", "parsertest.bin", 0, 
 		ParseTestBlockList, &parserdebug_frombin, NULL, NULL, NULL))
 		printf("success\n");
 	else
 		printf("failed!\n");
-	ParserWriteTextFile("c:\\parsertest.frombin.txt", ParseTestBlockList, &parserdebug_frombin, 0, 0);
+	ParserWriteTextFile("./c/parsertest.frombin.txt", ParseTestBlockList, &parserdebug_frombin, 0, 0);
 
 	printf("comparing bin file to text file ..");
 	if (ParserCompareStruct(ParseTestBlockList, &parserdebug_fromfile, &parserdebug_frombin))
@@ -3172,20 +3172,20 @@ void TestTextParser(void)
 		printf("success\n");
 
 	printf("writing schema to disk ..");
-	if (ParseInfoWriteTextFile("c:\\parsertest.schema.txt", ParseTestBlockList))
+	if (ParseInfoWriteTextFile("./c/parsertest.schema.txt", ParseTestBlockList))
 		printf("success\n");
 	else
 		printf("failed!\n");
 
 	printf("reading schema from disk ..");
-	if (ParseInfoReadTextFile("c:\\parsertest.schema.txt", &schema, &size))
+	if (ParseInfoReadTextFile("./c/parsertest.schema.txt", &schema, &size))
 		printf("success\n");
 	else printf("failed!\n");
 
 	if (schema)
 	{
 		printf("writing schema to disk again ..");
-		if (ParseInfoWriteTextFile("c:\\parsertest.schema2.txt", schema[0]))
+		if (ParseInfoWriteTextFile("./c/parsertest.schema2.txt", schema[0]))
 			printf("success\n");
 		else
 			printf("failed!\n");
@@ -3198,7 +3198,7 @@ void TestTextParser(void)
 		else printf("failed!\n");
 
 		printf("writing to disk using schema ..");
-		if (ParserWriteTextFile("c:\\parsertest.fromschema.txt", schema[0], &parserdebug_fromschema, 0, 0))
+		if (ParserWriteTextFile("./c/parsertest.fromschema.txt", schema[0], &parserdebug_fromschema, 0, 0))
 			printf("success\n");
 		else printf("failed!\n");
 	}

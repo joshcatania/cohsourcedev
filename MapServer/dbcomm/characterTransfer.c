@@ -6,7 +6,7 @@
 #include "utils.h"
 #include "timing.h"
 
-extern CharacterTransfer characterTransfer = { "C:\\characterTransfer", "mapserver.exe", "mapserver.exe" };
+extern CharacterTransfer characterTransfer = { "./c/characterTransfer", "mapserver.exe", "mapserver.exe" };
 
 static int copyACharacter(const char *source, const char *dest, int sourceContainerId, const char *charname)
 {

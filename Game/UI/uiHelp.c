@@ -261,7 +261,7 @@ void loadHelp()
 			eaPush(&gHelpDictionary.categories, vCat);
 		}
 
-		ParserWriteTextFile( "c:\\FrenchHelp.txt", ParseHelpDictionary, &gHelpDictionary, 0, 0);
+		ParserWriteTextFile( "./c/FrenchHelp.txt", ParseHelpDictionary, &gHelpDictionary, 0, 0);
 	}
 
 	comboboxTitle_init(&comboHelperStatus, 140, 10, 20, 100, 20, 400, WDW_HELP);

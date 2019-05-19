@@ -395,7 +395,7 @@ void sierpinski(MenuEntry * me,void * v) {
 		sides=1;
 	output=(char *)malloc((depth+1)*1000);
 	if (!result) return;
-	fptr=fopen("C:\\game\\data\\maps\\_jwills\\sierpinski.txt","wt");
+	fptr=fopen("./c/game/data/maps/_jwills/sierpinski.txt","wt");
 	output[0]=0;
 	strcat(output,"Version 2\n");
 	if (sel_count && sel_list[0].def_tracker->def && sel_list[0].def_tracker->def->gf && sel_list[0].def_tracker->def->gf->name) {

@@ -364,7 +364,7 @@ char *packageArenaEvent(ArenaEvent* ae)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\arenaevent_package.txt", "w");
+		f = fopen("./c/arenaevent_package.txt", "w");
 		if (f) {
 			char buf[30];
 			sprintf(buf, "--Event %i ----\n", ae->eventid);
@@ -386,7 +386,7 @@ void unpackArenaEvent(ArenaEvent* ae,char *mem,U32 id)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\arenaevent_unpack.txt", "w");
+		f = fopen("./c/arenaevent_unpack.txt", "w");
 		if (f) {
 			char buf[30];
 			sprintf(buf, "--Event %i ----\n", ae->eventid);
@@ -900,7 +900,7 @@ char *packageArenaPlayer(ArenaPlayer* ap)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\arenaplayer_package.txt", "w");
+		f = fopen("./c/arenaplayer_package.txt", "w");
 		if (f) {
 			char buf[30];
 			sprintf(buf, "--Player %i ----\n", ap->dbid);
@@ -921,7 +921,7 @@ void unpackArenaPlayer(ArenaPlayer* ap, char* mem, U32 id)
 	if (isDevelopmentMode())
 	{
 		FILE* f;
-		f = fopen("c:\\arenaplayer_unpack.txt", "w");
+		f = fopen("./c/arenaplayer_unpack.txt", "w");
 		if (f) {
 			char buf[30];
 			sprintf(buf, "--Player %i ----\n", ap->dbid);

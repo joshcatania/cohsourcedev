@@ -3859,15 +3859,15 @@ void CoreDump::Write(const char	*d, const NxTriangleMesh *mesh)
 				mesh->saveToDesc( tmd );
 				// now write the size of the data
 				NxInitCooking();
-				//UserStream us( "c:\\tri.bin", true );
-				UserStream userStream( "c:\\tri.bin", false );
+				//UserStream us( "./c/tri.bin", true );
+				UserStream userStream( "./c/tri.bin", false );
 				status = NxCookTriangleMesh( tmd, userStream );
 			}
 
 			if ( status )
 			{
 				// k, now open up the file for reading binary
-				FILE *fp = fopen( "c:\\tri.bin", "rb" );					
+				FILE *fp = fopen( "./c/tri.bin", "rb" );					
 				if ( fp )
 				{
 					char tmp[512];
@@ -4111,14 +4111,14 @@ void CoreDump::Write( const	char *d, const NxConvexMesh	*mesh )
 			mesh->saveToDesc( cmd );
 			
 			NxInitCooking();
-			//UserStream us( "c:\\goog.bin", true );
-			UserStream userStream( "c:\\goog.bin", false );
+			//UserStream us( "./c/goog.bin", true );
+			UserStream userStream( "./c/goog.bin", false );
 			status = NxCookConvexMesh( cmd, userStream );
 		}
 		if ( status )
 		{
 			// k, now open up the file for reading binary
-			FILE *fp = fopen( "c:\\goog.bin", "rb" );					
+			FILE *fp = fopen( "./c/goog.bin", "rb" );					
 			if ( fp )
 			{
 				char tmp[512];

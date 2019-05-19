@@ -2752,7 +2752,7 @@ static void beaconServerSetIcon(U8 letter, U32 colorRGB){
 
 static void beaconServerGetLatestData(void){
 	
-	_chdir("c:\\game\\");
+	_chdir("./c/game/");
 	
 	beaconPrintf(COLOR_YELLOW, "Skipping Perforce get because it is disabled\n");
 }
@@ -3057,7 +3057,7 @@ static void beaconServerStartup(BeaconizerType beaconizerType,
 		// Set the default request cache directory if it isn't set from the command line.
 
 		if(!estrLength(&beacon_server.requestCacheDir)){
-			beaconServerSetRequestCacheDir("c:\\beaconizer\\requestcache\\");
+			beaconServerSetRequestCacheDir("./c/beaconizer/requestcache/");
 		}
 
 		beaconPrintf(COLOR_GREEN, "Using beacon request cache dir: %s\n", beacon_server.requestCacheDir);
@@ -6076,11 +6076,11 @@ static void beaconServerWriteCurMapData(void){
 	S32 j;
 	S32 k;
 
-	strcpy(fileName, "c:\\beaconizer\\requestmaps");
+	strcpy(fileName, "./c/beaconizer/requestmaps");
 
 	makeDirectories(fileName);
 
-	sprintf(fileName, "c:\\beaconizer\\requestmaps\\%s.%d.txt", beacon_server.serverUID, count++);
+	sprintf(fileName, "./c/beaconizer/requestmaps/%s.%d.txt", beacon_server.serverUID, count++);
 
 	f = fopen(fileName, "wt");
 

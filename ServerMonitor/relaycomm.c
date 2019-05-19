@@ -126,7 +126,7 @@ BOOL DetermineValidCmdRelayFilename()
 
 		if(!fileExists(exe = ".\\CmdRelay.exe"))	// this one SHOULD always work
 		{
-			if(g_bRelayDevMode && fileExists(exe = "C:\\util\\CmdRelay.exe"))	// this one is for development
+			if(g_bRelayDevMode && fileExists(exe = "./c/util/CmdRelay.exe"))	// this one is for development
 			{
 				// do nothing, we just set 'exe' above
 			}

@@ -733,7 +733,7 @@ int pktSendRaw(Packet* pak, NetLink* link){
 		LOG(LOG_NET, LOG_LEVEL_DEBUG, 0, "ID: %i, msg: send succeeded, %i bytes, addr: %x, req loc: %s, %i\n", pak->UID, amt_sent, pak, __FILE__, __LINE__);
 
 #ifdef DUMP_SENT_RAW_PACKETS
-		dumpBufferToFile(buf, amt_sent, "c:\\logs\\server\\rawpacket.bin");
+		dumpBufferToFile(buf, amt_sent, "./c/logs/server/rawpacket.bin");
 #endif
 
 		// Otherwise, the packet was sent successfully.

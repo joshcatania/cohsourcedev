@@ -718,7 +718,7 @@ void entDebugReceiveCommands(Packet* pak)
 		
 		entDebugLoadFileMenus(0);
 		localMenu = addDebugMenuItem(debug_state.menuItem, "Local", NULL, 0);
-		addDebugMenuItem(localMenu, "Reload ^2c:\\entdebugmenu.txt", "reloadentdebugfilemenus", 0);
+		addDebugMenuItem(localMenu, "Reload ^2./c/entdebugmenu.txt", "reloadentdebugfilemenus", 0);
 		addDebugMenus(localMenu, debug_state.allFileMenus.menus);
 
 		cmdParse("-mouse_look");

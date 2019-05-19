@@ -551,7 +551,7 @@ static S32 writeBeaconFile(char* fileName, S32 writeCheck, S32 doCheckoutCheckin
 		
 		printf("Can't open beacon file: %s\n", fileName);
 		
-		sprintf(absoluteFileName, "c:\\temp_beacon_file_%d.v%d.bcn\n", rand() % 1000, curBeaconFileVersion);
+		sprintf(absoluteFileName, "./c/temp_beacon_file_%d.v%d.bcn\n", rand() % 1000, curBeaconFileVersion);
 		
 		beaconWriter.fileHandle = fileOpen(absoluteFileName, "wb");
 		

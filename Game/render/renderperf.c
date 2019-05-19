@@ -360,7 +360,7 @@ void renderPerfTestSuite(int num_runs)
 	for (i = 1; i < TESTS_TO_RUN; i++)
 		renderPerfTest2(i, num_runs, &results2[i], results.header.maxThroughput);
 
-	sprintf(path, "C:\\PerfTest\\");
+	sprintf(path, "./c/PerfTest/");
 	makeDirectories(path);
 	
 	strcpy(filename, path);

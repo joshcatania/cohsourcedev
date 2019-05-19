@@ -637,7 +637,7 @@ void editCmdReplaceTex()
 	{
 		GroupDef	*def;
 		char		*s;
-		static char	buf[1000] = "c:\\game\\src\\texture_library\\*";
+		static char	buf[1000] = "./c/game/src/texture_library/*";
 		BasicTexture *bind = 0;
 
 		def = sel_list[0].def_tracker->def;
@@ -645,7 +645,7 @@ void editCmdReplaceTex()
 		if (def->tex_names[idx])
 			bind = texFind(def->tex_names[idx]);
 		if (bind)
-			sprintf(buf,"c:\\game\\src\\texture_library\\%s\\%s.tga",bind->dirname,bind->name);
+			sprintf(buf,"./c/game/src/texture_library/%s/%s.tga",bind->dirname,bind->name);
 		backSlashes(buf);
 		s = winGetFileName("Targa files (.tga)",buf,0);
 		if (s)

@@ -573,7 +573,7 @@ ExtractBodyComplete:
 		LOG(LOG_NET, LOG_LEVEL_DEBUG, 0,"ID: %i, msg: Received complete TCP packet, %i bytes long, addr: %x, req loc: %s, %i\n", pak->UID, link->bytesRead, pak, __FILE__, __LINE__);
 
 #ifdef DUMP_RECV_RAW_PACKETS
-		dumpBufferToFile(pak->stream.data, link->bytesRead, "c:\\logs\\client\\rawpacket.bin");
+		dumpBufferToFile(pak->stream.data, link->bytesRead, "./c/logs/client/rawpacket.bin");
 #endif
 
 
@@ -649,7 +649,7 @@ int pktGetTcp(Packet** pakptr, NetLink* link)
 			return 0;
 
 #ifdef PATCHCLIENT
-		dumpBufferToFile2(pak->stream.data + link->bytesRead, amt, "c:\\logs\\client\\rawpacket2.bin");
+		dumpBufferToFile2(pak->stream.data + link->bytesRead, amt, "./c/logs/client/rawpacket2.bin");
 #endif
 
 		// Otherwise, some data has been retrieved.
@@ -711,7 +711,7 @@ int pktGetTcp(Packet** pakptr, NetLink* link)
 	LOG(LOG_NET, LOG_LEVEL_DEBUG, 0,"ID: %i, msg: Received complete TCP packet, %i bytes long, addr: %x, req loc: %s, %i\n", pak->UID, link->bytesRead, pak, __FILE__, __LINE__);
 
 #ifdef DUMP_RECV_RAW_PACKETS
-	dumpBufferToFile(pak->stream.data, link->bytesRead, "c:\\logs\\client\\rawpacket.bin");
+	dumpBufferToFile(pak->stream.data, link->bytesRead, "./c/logs/client/rawpacket.bin");
 #endif
 
 				

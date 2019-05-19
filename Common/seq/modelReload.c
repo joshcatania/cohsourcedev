@@ -442,7 +442,7 @@ void releaseGetVrmlLock(void)
 
 int tryToLockGetVrml(void)
 {
-	char *lockfilename = "c:\\getvrml.lock";
+	char *lockfilename = "./c/getvrml.lock";
 	log_printf("getvrml.log","waitForGetvrmlToFinish");
 	fileForceRemove(lockfilename);
 	if ((getvrml_lock_handle = fopen(lockfilename, "wl")) == NULL)

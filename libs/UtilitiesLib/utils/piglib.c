@@ -364,7 +364,7 @@ void dumpMemoryToFile(void *mem, unsigned int count)
 #ifdef _XBOX
 	sprintf(fn, "devkit:\\memory_%d.txt", callcount);
 #else
-	sprintf(fn, "C:\\memory_%d.txt", callcount);
+	sprintf(fn, "./c/memory_%d.txt", callcount);
 #endif
 	callcount++;
 

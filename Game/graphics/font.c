@@ -508,7 +508,7 @@ void printToScreenLog(int message_priority, char const *fmt, ...)
 		static	FILE	*file;
 
 		if (!file)
-			file = fopen("c:\\client_warnings.txt","wt");
+			file = fopen("./c/client_warnings.txt","wt");
 		if (file)
 		{
 			fprintf(file,"%s",str);

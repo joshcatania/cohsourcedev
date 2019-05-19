@@ -180,12 +180,12 @@ void loadQuickCommandFile() {
 	FILE * qcf = NULL;
 	char line[1000];
 
-	qcf = fopen("C:\\textclientcommand.txt","r");
+	qcf = fopen("./c/textclientcommand.txt","r");
 	if (!qcf)
-		qcf = fopen(".\\textclientcommand.txt","r");
+		qcf = fopen("./textclientcommand.txt","r");
 	if(!qcf)
     {
-        Errorf("warning: couldn't open .\\textclientcommand.txt or c:\\textclientcommand.txt");
+        Errorf("warning: couldn't open ./textclientcommand.txt or ./c/textclientcommand.txt");
         return;
     }
     
@@ -214,9 +214,9 @@ void loadServerListFile() {
 	FILE * slf=NULL;
 	char line[1000];
 
-	slf = fopen("C:\\textclientserverlist.txt","r");
+	slf = fopen("./c/textclientserverlist.txt","r");
 	if (!slf)
-		slf = fopen(".\\textclientserverlist.txt","r");
+		slf = fopen("./textclientserverlist.txt","r");
 	assert(slf);
 
 	getNextLine(0,0,0);
@@ -244,9 +244,9 @@ void loadLoginInfoFile() {
 	char line[1000];
 	int num_logins = 0;
 
-	lif = fopen("C:\\textclientlogininfo.txt","r");
+	lif = fopen("./c/textclientlogininfo.txt","r");
 	if (!lif)
-		lif = fopen(".\\textclientlogininfo.txt","r");
+		lif = fopen("./textclientlogininfo.txt","r");
 	assert(lif);
 
 	getNextLine(0,0,0);

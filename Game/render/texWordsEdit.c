@@ -1493,7 +1493,7 @@ void texWordsEdit_fileSaveDynamic(void)
 		return;
 
 	// Choose a new .texword file
-	strcpy(fileName, "c:\\game\\data\\texts\\Base\\texture_library\\Dynamic\\NewDynamic.texword");
+	strcpy(fileName, "./c/game/data/texts/Base/texture_library/Dynamic/NewDynamic.texword");
 	if (winGetFileName("*.texword", fileName, 1)) {
 		int i;
 		TexWord *texWord;
@@ -2968,7 +2968,7 @@ static void writeNode(FILE *fout, TextureTreeNode *treeroot, char *dir)
 }
 
 void texWordsEdit_fileSaveList(void) {
-	FILE *fout = fopen("C:\\texture_localization.txt", "w");
+	FILE *fout = fopen("./c/texture_localization.txt", "w");
 	if (!fout)
 		return;
 	addAllNodes();
@@ -3066,7 +3066,7 @@ void texWordsEdit_filePrune(void)
 	eaQSort(eaText, textEntryCompare);
 	// Write new list
 	{
-		FILE *fout = fileOpen("C:\\game\\data\\texts\\English\\textureWords2.ms", "w");
+		FILE *fout = fileOpen("./c/game/data/texts/English/textureWords2.ms", "w");
 		for (i=0; i<eaSize(&eaText); i++) {
 			TextEntry *te = eaText[i];
 			if (strStartsWith(te->filename, "texts/base/texture_library/")) {
@@ -3113,7 +3113,7 @@ static void texWordsEditorBuildFileMenu(DebugMenuItem *root)
 	addNodeToMenu(sub, treeroot, "texture_library");
 	freeNode(&treeroot);
 
-	addDebugMenuItem(sub, "Save list to c:\\texture_localization.txt", "filesavelist", 0);
+	addDebugMenuItem(sub, "Save list to ./c/texture_localization.txt", "filesavelist", 0);
 
 	// Jump to Next/Prev
 	{

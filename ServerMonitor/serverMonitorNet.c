@@ -967,10 +967,10 @@ void launchRemoteDesktop(U32 ip, const char *name)
 	char cmd[MAX_PATH];
 	char cwd[MAX_PATH];
 	char tempFileName[MAX_PATH];
-	char *templateFileName="c:\\temp\\ServerMonitorTemplate.rdp";
-	char *templateFileNameDE="c:\\temp\\ServerMonitorTemplateDE.rdp";
-	char *templateFileNameAUS="c:\\temp\\ServerMonitorTemplateAUS.rdp";
-	char *templateFileNameKR="c:\\temp\\ServerMonitorTemplateKR.rdp";
+	char *templateFileName="./c/temp/ServerMonitorTemplate.rdp";
+	char *templateFileNameDE="./c/temp/ServerMonitorTemplateDE.rdp";
+	char *templateFileNameAUS="./c/temp/ServerMonitorTemplateAUS.rdp";
+	char *templateFileNameKR="./c/temp/ServerMonitorTemplateKR.rdp";
 	char *domain = "NCLA";
 	FILE *fout;
 	bool isDE = (((ip & 0x0000ff00) >> 8) == 128) || strStartsWith(name, "cohde");
@@ -987,7 +987,7 @@ void launchRemoteDesktop(U32 ip, const char *name)
 		rdptemplate = rdptemplateKR;
 	}
 
-	sprintf(tempFileName, "c:\\temp\\%s.rdp", name);
+	sprintf(tempFileName, "./c/temp/%s.rdp", name);
 	while (strchr(tempFileName, ' ')) {
 		char *s = strchr(tempFileName, ' ');
 		strcpy(s, s+1);

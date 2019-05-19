@@ -2325,7 +2325,7 @@ int game_mainLoop(int timer)
 				//FILE *f;
 				sprintf(buf, "Time to load game and get into a map: %1.3gs\n", timerElapsed(timer));
 				printf("%s", buf);
-				//f=fopen("C:\\jimb.txt", "a");
+				//f=fopen("./c/jimb.txt", "a");
 				//fprintf(f, "%s", buf);
 				//fclose(f);
 				timerFree(timer);

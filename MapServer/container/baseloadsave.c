@@ -256,9 +256,9 @@ void baseSaveMapToDb(void)
 	{
 		char tmp[MAX_PATH];
 		FILE* f;
-		sprintf(tmp,"c:\\base_%i.txt", g_base.curr_id);
+		sprintf(tmp,"./c/base_%i.txt", g_base.curr_id);
 		f = fopen(tmp,"wt");
-		//f = fopen("c:\\base.txt", "wt");
+		//f = fopen("./c/base.txt", "wt");
 		if (f) {
 			fwrite(db_state.map_data, 1, estrLength(&db_state.map_data), f);
 			fclose(f);

@@ -69,7 +69,7 @@ glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST); CHECKGL;
 	// wcw glEnable( GL_COLOR_MATERIAL ); CHECKGL;
 }
 
-//#define OGL_OVERRIDE_FILE "C:\\temp\\NV_6150.txt"
+//#define OGL_OVERRIDE_FILE "./c/temp/NV_6150.txt"
 #ifdef OGL_OVERRIDE_FILE
 // Enable this to load a list of OpenGL extensions from an external file
 bool extInitCheck(const char *extension, bool windows_extension)

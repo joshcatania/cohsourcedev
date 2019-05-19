@@ -2701,9 +2701,9 @@ void load_PowerDictionary(SHARED_MEMORY_PARAM PowerDictionary *ppow, char *pchFi
 	//Code to allow artists their own pfx overrides for testing
 	artTestPowerLoaded = 0;
 	ZeroStruct( &artTestPower );
-	if( isDevelopmentMode() && fileExists("c:\\test.pfx") )
+	if( isDevelopmentMode() && fileExists("./c/test.pfx") )
 	{
-		if( ParserLoadFiles( NULL, "c:\\test.pfx", NULL, 0, ParseBasePower, &artTestPower, NULL, NULL, NULL ) )
+		if( ParserLoadFiles( NULL, "./c/test.pfx", NULL, 0, ParseBasePower, &artTestPower, NULL, NULL, NULL ) )
 			artTestPowerLoaded = 1;
 	}
 	//End pfx overrides

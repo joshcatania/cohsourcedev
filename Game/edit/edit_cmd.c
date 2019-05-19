@@ -604,10 +604,10 @@ void editStateInit()
 	//bindKey("f3","findNextProperty 2",0);
 	//bindKey("f","findNextProperty 1",0);
 
-	if(isDevelopmentMode() && fileExists("c:\\config_edit.txt"))
+	if(isDevelopmentMode() && fileExists("./c/config_edit.txt"))
 	{
 		cmdAccessOverride(9);
-		cmdParse("exec c:\\config_edit.txt");
+		cmdParse("exec ./c/config_edit.txt");
 		cmdAccessOverride(0);
 	}
 

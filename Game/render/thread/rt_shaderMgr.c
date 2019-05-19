@@ -2087,7 +2087,7 @@ void runNvidiaPerfText(char* debug_fn)
 {
 	char cmdline[MAX_PATH];
 	char *data, *s;
-	static char *output_file = "c:\\temp\\nvshaderperf.txt";
+	static char *output_file = "./c/temp/nvshaderperf.txt";
 	sprintf(cmdline, "\"C:\\Program Files\\NVIDIA Corporation\\NVIDIA NVShaderPerf\\nvshaderperf.exe\" %s > %s", debug_fn, output_file);
 	system(cmdline);
 	data = fileAlloc(output_file, NULL);

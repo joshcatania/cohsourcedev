@@ -164,7 +164,7 @@ void VisitLocationPrintAllOnMap(ClientLink* client)
 	// print them
 	if (isDevelopmentMode())
 	{
-		f = fopen("c:\\visitlocationlist.txt", "wb");
+		f = fopen("./c/visitlocationlist.txt", "wb");
 		fwrite("VisitLocations ", 1, strlen("VisitLocations "), f);
 	}
 	conPrintf(client, "Visit Locations on this map:\n");

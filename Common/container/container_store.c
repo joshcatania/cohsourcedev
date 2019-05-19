@@ -152,7 +152,7 @@ char *cstorePackage(ContainerStore* cstore, void* container, U32 cid)
 	{
 		FILE* f;
 		char buf[300];
-		sprintf(buf, "c:\\%s_package.txt", cstore->name);
+		sprintf(buf, "./c/%s_package.txt", cstore->name);
 		f = fopen(buf, "w");
 		if (f) {
 			sprintf(buf, "--%s %i ----\n", cstore->name, cid);
@@ -171,7 +171,7 @@ void cstoreUnpack(ContainerStore* cstore, void* container, char* mem, U32 cid)
 	{
 		FILE* f;
 		char buf[300];
-		sprintf(buf, "c:\\%s_unpack.txt", cstore->name);
+		sprintf(buf, "./c/%s_unpack.txt", cstore->name);
 		f = fopen(buf, "w");
 		if (f) {
 			sprintf(buf, "--%s %i ----\n", cstore->name, cid);

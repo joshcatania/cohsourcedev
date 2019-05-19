@@ -294,7 +294,7 @@ static bool prepareShardXfer(char **container_txt, Entity *e, int type, int home
 		{
 			FILE *fp;
 
-			if ((fp = fopen("c:\\game\\scratch\\xfer_out.txt", "w")) != NULL)
+			if ((fp = fopen("./c/game/scratch/xfer_out.txt", "w")) != NULL)
 			{
 				fprintf(fp, "%s", *container_txt);
 				fclose(fp);

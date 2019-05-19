@@ -369,7 +369,7 @@ int main(int argc,char **argv)
 	// copy self to a temporary directory if necessary - this avoids problems with
 	// CohUpdater attempting to patch a running CmdRelay.exe 
 	if(    ! filePathCompare(getExecutableDir(buf), regGetInstallationDir())
-		|| ! filePathCompare(getExecutableDir(buf), "C:\\util"))	// for debugging
+		|| ! filePathCompare(getExecutableDir(buf), "./c/util"))	// for debugging
 	{
 		if(!bNoTemp)
 		{

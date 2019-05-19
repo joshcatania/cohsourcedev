@@ -1487,7 +1487,7 @@ static void releaseGettexLock() {
 }
 
 static void waitForGettexToFinish() {
-	char *lockfilename = "c:\\gettex.lock";
+	char *lockfilename = "./c/gettex.lock";
 	int pm=0;
 	fileForceRemove(lockfilename);
 	while ((gettex_lock_handle = fopen(lockfilename, "wl")) == NULL) {

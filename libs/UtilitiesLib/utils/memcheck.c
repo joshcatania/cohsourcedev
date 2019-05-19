@@ -226,7 +226,7 @@ void memCheckDumpAllocs()
 HFILE		warnfile;
 OFSTRUCT	reopenbuf;
 
-	warnfile = OpenFile(  "c:\\memlog.txt",	// pointer to the filename
+	warnfile = OpenFile(  "./c/memlog.txt",	// pointer to the filename
 						  &reopenbuf,	// pointer to the file information struct
 						  OF_CREATE);	// specifies the action and attributes
 
@@ -305,7 +305,7 @@ void heapInfoPrint()
 
 void heapWalkLog(HANDLE heap)
 {
-	heapWalk(heap,1,"C:\\heap.log");
+	heapWalk(heap,1,"./c/heap.log");
 }
 void heapCompact(HANDLE heap)
 {
@@ -341,15 +341,15 @@ void heapCompactAll(void)
 
 void heapInfoLog()
 {
-	heapWalk(_crtheap,1,"c:\\heap_crt.log");
+	heapWalk(_crtheap,1,"./c/heap_crt.log");
 #if PRIVATE_EARRAY_HEAP
-	heapWalk(g_earrayheap,1,"c:\\heap_earray.log");
+	heapWalk(g_earrayheap,1,"./c/heap_earray.log");
 #endif
 #if PRIVATE_PARSER_HEAPS
-	heapWalk(g_parserheap,1,"c:\\heap_parser.log");
-	heapWalk(g_stringheap,1,"c:\\heap_string.log");
+	heapWalk(g_parserheap,1,"./c/heap_parser.log");
+	heapWalk(g_stringheap,1,"./c/heap_string.log");
 #endif
-	heapWalk(GetProcessHeap(),1,"c:\\heap_process.log");
+	heapWalk(GetProcessHeap(),1,"./c/heap_process.log");
 }
 
 // Dummy wrappers for calling from command window

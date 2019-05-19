@@ -225,7 +225,7 @@ void saveAutoResumeInfoCryptic(void)
 	FILE	*file;
 
 	PERFINFO_AUTO_START("saveAutoResumeInfoCryptic", 1);
-		file = fileOpen( "c:\\resume_info.txt", "wt");
+		file = fileOpen( "./c/resume_info.txt", "wt");
 
 		if( file )
 		{
@@ -252,7 +252,7 @@ int getAutoResumeInfoCryptic( void )
 	// Encrypt an empty string
 	g_achPassword[0] = 0;
 	cryptStore(g_achPassword, g_achPassword, sizeof(g_achPassword));
-	mem = fileAlloc( "c:\\resume_info.txt", 0 );
+	mem = fileAlloc( "./c/resume_info.txt", 0 );
 	if (!mem)
 		return 0;
 

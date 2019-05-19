@@ -333,7 +333,7 @@ static void nwDebugDumpVerts( const char* name, const float* verts, U32 uiVertCo
 	char cFileName[512];
 	const float* pfCurrentVertPointer = verts;
 	STR_COMBINE_BEGIN(cFileName);
-	STR_COMBINE_CAT("C:\\ageiadumps\\");
+	STR_COMBINE_CAT("./c/ageiadumps/");
 	STR_COMBINE_CAT("dump");
 	STR_COMBINE_CAT(name);
 	STR_COMBINE_CAT(".verts");
@@ -354,7 +354,7 @@ static void nwDebugDumpTris( const char* name, const U32* puiTris, U32 uiTriCoun
 	char cFileName[512];
 	const U32* pfCurrentTriPointer = puiTris;
 	STR_COMBINE_BEGIN(cFileName);
-	STR_COMBINE_CAT("C:\\ageiadumps\\");
+	STR_COMBINE_CAT("./c/ageiadumps/");
 	STR_COMBINE_CAT(name);
 	STR_COMBINE_CAT(".tris");
 	STR_COMBINE_END();

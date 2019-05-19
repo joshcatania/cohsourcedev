@@ -282,7 +282,7 @@ void PNPCPrintAllOnMap(ClientLink* client)
 	paom_client = client;
 	if (isDevelopmentMode())
 	{
-		paom_file = fopen("c:\\pnpclist.txt", "wb");
+		paom_file = fopen("./c/pnpclist.txt", "wb");
 		fwrite("PersistentNPCs ", 1, strlen("PersistentNPCs "), paom_file);
 	}
 	conPrintf(client, "%s\n", localizedPrintf(0,"NPCsOnMap"));

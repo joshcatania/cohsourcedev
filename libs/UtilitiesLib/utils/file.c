@@ -62,9 +62,9 @@ void moveFromCRoot(char* path) {
 	// TODO: We should eventually make this not specific to Vista, and we should
 	//  make sure that we don't write to the root of users' C: drives as well.
 	if (IsUsingVistaOrLater() && isDevelopmentMode()) {
-		static const char C_ROOT[] = "C:\\";
-		static const char C_ROOT_GAME[] = "C:\\cryptic\\";
-		static const char C_ROOT_REPLACE[] = "C:\\cryptic\\scratch\\";
+		static const char C_ROOT[] = "./c/";
+		static const char C_ROOT_GAME[] = "./c/cryptic/";
+		static const char C_ROOT_REPLACE[] = "./c/cryptic/scratch/";
 		static const int C_ROOT_LEN = sizeof(C_ROOT) - 1;
 		static int CHARS_TO_ADD = sizeof(C_ROOT_REPLACE) - 1;
 

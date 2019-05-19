@@ -63,7 +63,7 @@ MapSetGenerator * loadGenerator(FILE * fin) {
 }
 
 void initGenerators() {
-	FILE * fin=fopen("C:\\game\\data\\Defs\\MapGeneration.def","r");
+	FILE * fin=fopen("./c/game/data/Defs/MapGeneration.def","r");
 	char token[64];
 	fscanf(fin,"%s",token);
 	while (stricmp(token,"begin")==0) {
@@ -125,7 +125,7 @@ MissionSetRules * loadRuleSet(FILE * fin) {
 }
 
 void loadRules() {
-	FILE * fin=fopen("C:\\game\\data\\Defs\\MapGeneration.rules","r");
+	FILE * fin=fopen("./c/game/data/Defs/MapGeneration.rules","r");
 	char token[128];
 	int i,j;
 	fscanf(fin,"%s",token);
@@ -605,7 +605,7 @@ int preprocessGenerators() {
 	static int rewrite=0;
 	static int read=0;
 	if (!read) {
-		FILE * fin=fopen("C:\\game\\data\\Defs\\MapGeneration.pieces","r");
+		FILE * fin=fopen("./c/game/data/Defs/MapGeneration.pieces","r");
 		char mapset[128];
 		char piece[128];
 		MapPiece * mp;
@@ -728,7 +728,7 @@ int preprocessGenerators() {
 		}
 	}
 	if (rewrite) {
-		FILE * fout=fopen("C:\\game\\data\\Defs\\MapGeneration.pieces","w");
+		FILE * fout=fopen("./c/game/data/Defs/MapGeneration.pieces","w");
 		if (!fout)
 			return 0;
 		for (i=0;i<eaSize(&g_excludes);i++)

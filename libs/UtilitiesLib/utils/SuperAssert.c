@@ -1143,7 +1143,7 @@ static void sendAssertEmail(void)
 	char command[4096 + ASSERT_BUF_SIZE * 2] = "";
 	char *cur = g_assertEmailAddresses;
 
-	Strncatt(command, "c:\\game\\tools\\util\\sendemail.exe");
+	Strncatt(command, "./c/game/tools/util/sendemail.exe");
 
 	if ( !fileExists(command) )
 		return;
