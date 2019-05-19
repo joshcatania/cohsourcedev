@@ -836,7 +836,7 @@ static void plotSphere()
 
 	writeSphere();
 
-	system("c:/work/gnuplot/bin/wgnuplot_pipes.exe sphere.plt -");
+	system("./c/work/gnuplot/bin/wgnuplot_pipes.exe sphere.plt -");
 }
 
 static void plotSphereLength()
@@ -847,7 +847,7 @@ static void plotSphereLength()
 
 	writeSphere();
 
-	system("c:/work/gnuplot/bin/wgnuplot_pipes.exe spherelength.plt -");
+	system("./c/work/gnuplot/bin/wgnuplot_pipes.exe spherelength.plt -");
 }
 
 static void vec3unitrand(Vec3 * v)
@@ -917,7 +917,7 @@ static void plotSample()
 
 	writeSample();
 
-	system("c:/work/gnuplot/bin/wgnuplot_pipes.exe sample.plt -");
+	system("./c/work/gnuplot/bin/wgnuplot_pipes.exe sample.plt -");
 }
 
 static void plotSampleLength()
@@ -928,7 +928,7 @@ static void plotSampleLength()
 
 	writeSample();
 
-	system("c:/work/gnuplot/bin/wgnuplot_pipes.exe samplelength.plt -");
+	system("./c/work/gnuplot/bin/wgnuplot_pipes.exe samplelength.plt -");
 }
 
 static void drawQuadShader(CGtechnique technique, float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
@@ -1359,8 +1359,8 @@ static void drawAmbient()
 		WCW_BindTexture(ssao.texTarget, 0, ssao.reducedDepthTex[ssao.curFbo]);
 		glGetTexImage(ssao.texTarget, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, reducedDepth); CHECKGL;
 
-		tiffSave("C:/ssao_screen_depth.tiff", depth, ssao.screenWidth, ssao.screenHeight, 1, 4, 1, 0, 0);
-		tiffSave("C:/ssao_reduced_depth.tiff", depth, ssao.depthWidth, ssao.depthHeight, 1, 4, 1, 0, 0);
+		tiffSave("./c/ssao_screen_depth.tiff", depth, ssao.screenWidth, ssao.screenHeight, 1, 4, 1, 0, 0);
+		tiffSave("./c/ssao_reduced_depth.tiff", depth, ssao.depthWidth, ssao.depthHeight, 1, 4, 1, 0, 0);
 
 		free(depth);
 		free(reducedDepth);

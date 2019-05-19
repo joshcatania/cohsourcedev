@@ -2170,14 +2170,14 @@ GroupFile *groupLoad(const char *fname)
 
 GroupFile *groupLoadFromMem(const char *map_data)
 {
-	char	*fakename = "c:/temp/tempmap.txt";
+	char	*fakename = "./c/temp/tempmap.txt";
 	FILE	*tempfile;
 	GroupFile	*file;
 
 	tempfile = fileOpen(fakename,"wb");
 	fwrite(map_data,strlen(map_data),1,tempfile);
 	fclose(tempfile);
-	file = groupLoad("c:/temp/tempmap.txt");
+	file = groupLoad("./c/temp/tempmap.txt");
 	unlink(fakename);
 	return file;
 }

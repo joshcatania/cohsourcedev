@@ -312,7 +312,7 @@ static void sysInit() // non game-specific initializations
 	}
 
 	loadstart_printf("Networking startup%s.. ", server_state.noEncryption ? "(No Encryption)" : "");
-	//logNSetLogDir("c:/logs/server");
+	//logNSetLogDir("./c/logs/server");
 	timerCpuSpeed();
 	setLoadPriority();
 	atexit( at_exit_func );

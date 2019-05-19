@@ -5959,7 +5959,7 @@ void gameStateSave()
 		return;
 	}
 	else
-		file = fileOpen( "c:/config.txt", "wt" );
+		file = fileOpen( "./c/config.txt", "wt" );
 
 	if (!file)
 		return;
@@ -6200,7 +6200,7 @@ void gameStateLoad()
 		file = fileOpen("config.txt","rt");
 	}
 	else
-		file = fileOpen( "c:/config.txt", "rt" );
+		file = fileOpen( "./c/config.txt", "rt" );
 
 	if (!file)
 		return;

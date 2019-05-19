@@ -506,9 +506,9 @@ static void saveCubemap(const char* dirName, const char *name, void *filteredFac
 
 	// create parent dir if it doesn't exist
 	if( dirName )
-		sprintf(parentDir, "c:/game/src/texture_library/static_cubemaps/%s", dirName);
+		sprintf(parentDir, "./c/game/src/texture_library/static_cubemaps/%s", dirName);
 	else
-		strcpy(parentDir, "c:/temp");
+		strcpy(parentDir, "./c/temp");
 
 	if (!dirExists(parentDir))
 		SHCreateDirectoryEx(NULL, parentDir, NULL);

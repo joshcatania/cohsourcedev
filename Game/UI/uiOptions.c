@@ -319,7 +319,7 @@ void optionSave(char * pch)
 	if(pch) 
 		strcpy(filename,pch);
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/options.txt");
+		strcpy(filename, "./c/options.txt");
 	else
 		sprintf(filename, "%s/options.txt", getExecutableDir(dir));
 
@@ -358,7 +358,7 @@ void optionLoad(char *pch)
 	if(pch)
 		strcpy(filename, pch);
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/options.txt");
+		strcpy(filename, "./c/options.txt");
 	else
 		sprintf(filename, "%s/options.txt", getExecutableDir(dir));
 

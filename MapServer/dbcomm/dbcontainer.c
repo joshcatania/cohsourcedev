@@ -751,7 +751,7 @@ void dbWriteAttributes(char *fname,char *data)
 	int			idx,max_idx=0,count;
 	FILE		*file;
 
-	sprintf(dirpath,"c:/coh_data/attributes/%s",fname);
+	sprintf(dirpath,"./c/coh_data/attributes/%s",fname);
 	mem = fileAlloc(dirpath, 0);
 	file = fileOpen(dirpath, "wt" );
 	if(!file)

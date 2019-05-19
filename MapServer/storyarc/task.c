@@ -2507,7 +2507,7 @@ void UniqueTaskPreload()
 
 	mem = fileAlloc(fileName, 0);
 	if(!mem){
-		mem = fileAlloc("c:/coh_data/attributes/vars.attribute", 0);
+		mem = fileAlloc("./c/coh_data/attributes/vars.attribute", 0);
 	}
 
 	if(!mem){

@@ -2052,7 +2052,7 @@ Cmd server_cmds[] =
 		"Prints the list of all available weekly TF tokens" },
 
 	{ 9, "contactdebugoutputflowchartfile", SCMD_CONTACT_DEBUG_OUTPUT_FLOWCHART_FILE, {{0}}, 0,
-		"Creates the C:/contactFlowchartInfo.txt file that is used as input for the flowchart program." },
+		"Creates the ./c/contactFlowchartInfo.txt file that is used as input for the flowchart program." },
 
 	{ 0, "sethelperstatus", SCMD_SET_HELPER_STATUS, {{CMDINT(tmp_int)}}, 0,
 		"Sets your helper status.  0 = off, 1 = help me!, 2 = mentor" },
@@ -2183,7 +2183,7 @@ void serverStateLoad(char *config_file)
 	if (!file)
 		file = fileOpen("./svrconfig.txt","rt");
 	if (!file)
-		file = fileOpen("c:/svrconfig.txt","rt");
+		file = fileOpen("./c/svrconfig.txt","rt");
 	if (!file)
 		return;
 	while(fgets(buf,sizeof(buf),file))

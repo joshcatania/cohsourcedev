@@ -783,7 +783,7 @@ void editTextureMenuCallback(MenuEntry *me, ClickInfo *ci)
 		edit_state.textureSwapReopen=1;
 		return;
 	}
-	strcpy(fileName, "c:/game/src/texture_library/");
+	strcpy(fileName, "./c/game/src/texture_library/");
 	if (composite)
 		strcat(fileName, texFindComposite(originalTexture)?texFindComposite(originalTexture)->dirname:"");
 	else

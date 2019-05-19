@@ -105,7 +105,7 @@ static void beaconServerGetRequestFileName(	char* fileName,
 			,
 			estrLength(&beacon_server.requestCacheDir) ?
 				beacon_server.requestCacheDir :
-				"c:/beaconizer/requestcache",
+				"./c/beaconizer/requestcache",
 			subDir && subDir[0] ? subDir : "",
 			subDir && subDir[0] ? "/" : "",
 			partialFileName,

@@ -653,7 +653,7 @@ static FileScanAction deleteAutosaveFunc(char * dir,struct _finddata32_t * fileD
 
 	if (strcmp(fileData->name,target)==0) {
 		char buf[255];
-		strcpy(buf,"C:/game/data/");
+		strcpy(buf,"./c/game/data/");
 		strcat(buf,dir);
 		strcat(buf,"/");
 		strcat(buf,fileData->name);

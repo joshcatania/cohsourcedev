@@ -37,7 +37,7 @@ void dumpData(char *msg,const void *datav,int count)
 	unsigned char	*data = (unsigned char*)datav;
 
 	if (!file)
-		file = fopen("c:/temp/gameclient.txt","wt");
+		file = fopen("./c/temp/gameclient.txt","wt");
 
 	fprintf(file,"%s%d:",msg,count);
 	for(i=0;i<count;i++)

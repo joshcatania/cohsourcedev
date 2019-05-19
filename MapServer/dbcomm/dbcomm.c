@@ -211,7 +211,7 @@ int dbMessageScanUntilTimeout(const char* name, PerformanceInfo** perfInfo, int 
 	return 0;
 }
 
-#define MAPFNAME "c:/mapname.txt"
+#define MAPFNAME "./c/mapname.txt"
 static char *getEditMapName()
 {
 	char	*mem,*s;

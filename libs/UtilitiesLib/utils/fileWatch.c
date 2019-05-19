@@ -85,7 +85,7 @@ static void adjustFileName(const char* fileName, char* fileNameOut){
 	const char* cur;
 	char* curOut = NULL;
 
-	// Check for an absolute filename (c:/something, OR \\server\share\filename).
+	// Check for an absolute filename (./c/something, OR \\server\share\filename).
 	if(	isalpha(fileName[0]) &&
 		fileName[1] == ':'
 		||
@@ -129,7 +129,7 @@ static void adjustFileName(const char* fileName, char* fileNameOut){
 		{
 			if(cur[1] == '.'){
 				// cur == ".."
-				// fileNameOut: "c:/game/data/thing/whatever"
+				// fileNameOut: "./c/game/data/thing/whatever"
 				//                                    curOut^  (null terminator)
 
 				while(curOut - fileNameOut >= 3){

@@ -2826,7 +2826,7 @@ void texShowUsage(char *match_string)
 	FILE		*file;
 	char		buf[1000];
 
-	file = fopen("c:/texusage.txt","wt");
+	file = fopen("./c/texusage.txt","wt");
 	for(i=0;i<eaSize(&g_basicTextures);i++)
 	{
 		bind = g_basicTextures[i];
@@ -2851,7 +2851,7 @@ void texShowUsageRes(int xres, int yres)
 	char		buf[1000];
 	U32 byteCount = getImageByteCountWithMips(GL_COMPRESSED_RGBA_S3TC_DXT3_EXT, xres, yres, countMipMapLevels(xres,yres));
 
-	file = fopen("c:/texusage.txt","wt");
+	file = fopen("./c/texusage.txt","wt");
 	for(i=0;i<eaSize(&g_basicTextures);i++)
 	{
 		bind = g_basicTextures[i];

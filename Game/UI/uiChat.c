@@ -794,7 +794,7 @@ void saveChatSettings( char * pchFile )
 	if(pchFile)
 		strcpy( filename, pchFile );
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/chat.txt");
+		strcpy(filename, "./c/chat.txt");
 	else
 		sprintf(filename, "%s/chat.txt", getExecutableDir(dir));
 
@@ -848,7 +848,7 @@ void loadChatSettings( char * pchFile )
  	if(pchFile)
 		strcpy( filename, pchFile );
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/chat.txt");
+		strcpy(filename, "./c/chat.txt");
 	else
 		sprintf(filename, "%s/chat.txt", getExecutableDir(dir));
 

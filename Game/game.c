@@ -209,7 +209,7 @@ void parseArgs(int argc,char **argv)
 
 	//	fileAddSearchPath("./data");
 	//	if(!game_state.nodebug){
-	//		fileAddSearchPath("c:/game_edit/data");
+	//		fileAddSearchPath("./c/game_edit/data");
 	//	}
 }
 

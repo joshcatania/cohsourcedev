@@ -3223,9 +3223,9 @@ void DumpSpawndefs()
     // --------------------
     // printout
     {
-        FILE *fp = fopen("c:/storyarcinfo.csv","w");
+        FILE *fp = fopen("./c/storyarcinfo.csv","w");
         if(!fp)
-            Errorf("couldn't open c:/storyarcinfo.csv");
+            Errorf("couldn't open ./c/storyarcinfo.csv");
         else
         {
             

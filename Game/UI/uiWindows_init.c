@@ -856,7 +856,7 @@ void wdwSave(char * pch)
 	if(pch) 
 		strcpy(filename,pch);
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/wdw.txt");
+		strcpy(filename, "./c/wdw.txt");
 	else
 		sprintf(filename, "%s/wdw.txt", getExecutableDir(dir));
 
@@ -901,7 +901,7 @@ void wdwLoad(char *pch)
 	if(pch)
 		strcpy( filename, pch);
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/wdw.txt");
+		strcpy(filename, "./c/wdw.txt");
 	else
 		sprintf(filename, "%s/wdw.txt", getExecutableDir(dir));
 

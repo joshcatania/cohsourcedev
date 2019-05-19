@@ -1169,7 +1169,7 @@ void dumpBufferToFile(unsigned char* buffer, int size, char* filename){
 	if(!file){
 		file = fopen(filename,"wb");
 		if(!file){
-			file = fopen("c:/temp/pkts.bin","wb");
+			file = fopen("./c/temp/pkts.bin","wb");
 			assert(file);
 		}
 	}
@@ -1183,7 +1183,7 @@ void dumpBufferToFile2(unsigned char* buffer, int size, char* filename){
 	if(!file){
 		file = fopen(filename,"wb");
 		if(!file){
-			file = fopen("c:/temp/pkts.bin","wb");
+			file = fopen("./c/temp/pkts.bin","wb");
 			assert(file);
 		}
 	}

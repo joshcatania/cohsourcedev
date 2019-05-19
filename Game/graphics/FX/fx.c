@@ -87,7 +87,7 @@ static void readtfx()
 	char buf[1000];
 	char * s;
 
-	file = fopen("c:/tfx.txt","rt");
+	file = fopen("./c/tfx.txt","rt");
 	if (file)
 	{
 		fgets(buf,sizeof(buf),file);

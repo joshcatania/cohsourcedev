@@ -36,7 +36,7 @@ void gridCollRecordStop()
 	FILE	*file;
 
 	coll_recording = 0;
-	file = fopen("c:/temp/gridcoll.bin","wb");
+	file = fopen("./c/temp/gridcoll.bin","wb");
 	fwrite(coll_rec_list,sizeof(coll_rec_list[0]),coll_rec_count,file);
 	fclose(file);
 	free(coll_rec_list);
@@ -63,7 +63,7 @@ void loadCollRec()
 {
 	int		bytes;
 
-	coll_rec_list = fileAlloc("c:/temp/gridcoll.bin",&bytes);
+	coll_rec_list = fileAlloc("./c/temp/gridcoll.bin",&bytes);
 	coll_rec_count = bytes / sizeof(CollRecord);
 }
 

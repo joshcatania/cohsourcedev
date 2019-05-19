@@ -86,7 +86,7 @@ int renderNvparse(char *str)
 	int		len;
 	char	*mem;
 
-		file = fileOpen("c:/temp/nvparse_errs.txt","w+");
+		file = fileOpen("./c/temp/nvparse_errs.txt","w+");
 		if (file)
 		{
 			nvparse_print_errors(fileRealPointer(file));

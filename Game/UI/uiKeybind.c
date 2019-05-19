@@ -1134,7 +1134,7 @@ void bindListSave(char * pch, int silent)
 	else
 	{
 		if(isDevelopmentMode())
-			strcpy(filename, "C:/keybinds.txt");
+			strcpy(filename, "./c/keybinds.txt");
 		else
 			sprintf(filename, "%s/keybinds.txt", getExecutableDir(dir));
 	}
@@ -1189,7 +1189,7 @@ void bindListLoad(char *pch, int silent)
 	if(pch)
 		strcpy( filename, pch);
 	else if(isDevelopmentMode())
-		strcpy(filename, "C:/keybinds.txt");
+		strcpy(filename, "./c/keybinds.txt");
 	else
 		sprintf(filename, "%s/keybinds.txt", getExecutableDir(dir));
 

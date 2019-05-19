@@ -1498,7 +1498,7 @@ void mapGeneratorUpkeep(int * mapGenerator) {
 		sprintf(workingDirectory,game_state.world_name);
 		forwardSlashes(workingDirectory);
 		if (!strstri(workingDirectory,":/game/data"))
-			sprintf(workingDirectory,"C:/game/data/%s",game_state.world_name);
+			sprintf(workingDirectory,"./c/game/data/%s",game_state.world_name);
 		*(strrchr(workingDirectory,'/'))=0;
 		me=addEntryToMenu(MGMenu," ",changeWorkingDirectory,NULL);
 		forwardSlashes(workingDirectory);

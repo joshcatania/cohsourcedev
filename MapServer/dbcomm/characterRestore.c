@@ -243,7 +243,7 @@ static void crRestoreCharacter(DeletionHeader *header)
 {
 	int ret;
 	char inputLine[100];
-	char *filename = "C:/restoretemp.txt";
+	char *filename = "./c/restoretemp.txt";
 	FILE *f;
 
 	printf("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");

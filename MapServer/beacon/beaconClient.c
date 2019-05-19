@@ -2082,9 +2082,9 @@ static void beaconClientInstall(void){
 	if(beaconAcquireMutex(hMutex)){
 		char buffer[1000];
 
-		sprintf(buffer, "c:/Beaconizer/%s", beaconClientExeName);
+		sprintf(buffer, "./c/Beaconizer/%s", beaconClientExeName);
 		
-		// Check if I am not the installed file (c:/beaconizer/BeaconClient.exe).
+		// Check if I am not the installed file (./c/beaconizer/BeaconClient.exe).
 		
 		if(stricmp(buffer, beaconGetExeFileName())){
 			RegReader reader;

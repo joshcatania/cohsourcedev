@@ -131,7 +131,7 @@ int getPopHelpEvent(char *tag)
 void reloadPopHelp(void)
 {
 	loaded_pop_help = 0;
-	loadPopHelp("defs/PopHelp.def", "server/db/templates/pophelp.attribute", "c:/coh_data/attributes/pophelp.attribute");
+	loadPopHelp("defs/PopHelp.def", "server/db/templates/pophelp.attribute", "./c/coh_data/attributes/pophelp.attribute");
 }
 
 int loadedPopHelp(void)

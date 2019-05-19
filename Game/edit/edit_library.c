@@ -1015,14 +1015,14 @@ void createFavoritesMenu() {
 	favoritesMenuUpdateRecentItems(NULL,NULL);
 	favoritesMenu->colorFunc=favoriteMenuColorFunc;
 	ELVLatchTopBottom(libraryMenu->lv,favoritesMenu->lv);
-	fileScanAllDataDirs("C:/palettes/",paletteScanner);
+	fileScanAllDataDirs("./c/palettes/",paletteScanner);
 }
 
 int recreateFavoritesMenu;
 
 void createFavoritesMenuCallback(const char *relpath, int when) {
 	char file[256];
-	sprintf(file,"C:/palettes/%s",relpath);
+	sprintf(file,"./c/palettes/%s",relpath);
 	if (strEndsWith(relpath,".txt") && fileExists(file))
 		recreateFavoritesMenu=1;
 }
@@ -1051,9 +1051,9 @@ void libUpdateList()
 			stashAddInt(allLibraryObjectNames,name,1, false);
 		}
 		createFavoritesMenu();
-		if (dirExists("c:/palettes")) {
+		if (dirExists("./c/palettes")) {
 			FolderCache * fc=FolderCacheCreate();
-			FolderCacheAddFolder(fc,"C:/palettes/",0);
+			FolderCacheAddFolder(fc,"./c/palettes/",0);
 			FolderCacheQuery(fc,NULL);
 			FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE_AND_DELETE, "*.txt", createFavoritesMenuCallback);
 		}

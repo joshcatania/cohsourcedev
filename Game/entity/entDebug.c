@@ -659,7 +659,7 @@ void entDebugLoadFileMenus(int forced)
 	{
 		debug_state.loadedFileMenus = 1;
 		memset(&debug_state.allFileMenus, 0, sizeof(debug_state.allFileMenus));
-		ParserLoadFiles(NULL, "c:/entdebugmenu.txt", NULL, 0, parseAllDebugMenus, &debug_state.allFileMenus, NULL, NULL, NULL);
+		ParserLoadFiles(NULL, "./c/entdebugmenu.txt", NULL, 0, parseAllDebugMenus, &debug_state.allFileMenus, NULL, NULL, NULL);
 	}
 }
 

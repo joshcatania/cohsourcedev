@@ -218,7 +218,7 @@ void dbg_LogBatchPass(SortThing sortThings[], int sortThingCount, ViewportInfo* 
 			{
 				strftime(the_date, MAX_PATH, "%Y_%m_%d", gmtime(&now));
 			}
-			snprintf(filename, sizeof(filename), "C:/coh_batch_log_%s_f%d-v%02d_%s_%s.txt",
+			snprintf(filename, sizeof(filename), "./c/coh_batch_log_%s_f%d-v%02d_%s_%s.txt",
 								the_date, s_bBatchLogFrameStart, s_bBatchLogPass, nameSuffix, viewport->name);
 			file = fopen( filename, "wt");
 			fprintf( file, "   #\ttree?,\talpha test?,\talpha,\tdraw white,\tShader,\tBlend bits,\tTexBind,\tModel,\t\tTex_index(sub-obj),\tsubobj tris,\tsubobj count,\ttris,\tverts,\tmatrix,\ttexbind name,\tname,\tfile,\tnode,\tbones\n");

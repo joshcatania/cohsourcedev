@@ -132,8 +132,8 @@ void netprofile_dumpStats(void)
 {
 	if (!htSendBits)
 		return;
-	mkdir("c:/temp");
-	dumpfile = fopen("c:/temp/pktSendStats.txt", "w");
+	mkdir("./c/temp");
+	dumpfile = fopen("./c/temp/pktSendStats.txt", "w");
 	if (!dumpfile)
 		return;
 	dumpStashTable(htSendBits, "htSendBits");

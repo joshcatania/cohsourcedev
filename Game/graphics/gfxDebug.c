@@ -89,7 +89,7 @@ void gfxDump360()
 		createMat3PYR(cam_info.cammat, control_state.pyr.cur);
 		gfxSetViewMat(cam_info.cammat, cam_info.viewmat, cam_info.inv_viewmat);
 		gfxUpdateFrame(1, 0, 0);
-		sprintf(fname, "c:/temp/spin_%03f.bmp",ang);
+		sprintf(fname, "./c/temp/spin_%03f.bmp",ang);
 		rdrPixBufDumpBmp(fname);
 	}
 
@@ -418,9 +418,9 @@ void gfxTextureDump(int texid, char *fn)
 	U8 *pix;
 
 	if (fn) {
-		sprintf(filename, "C:/%s.tga", fn);
+		sprintf(filename, "./c/%s.tga", fn);
 	} else {
-		sprintf(filename, "C:/texture_%d.tga", texid);
+		sprintf(filename, "./c/texture_%d.tga", texid);
 	}
 
 	pix = rdrGetTex(texid, &w, &h, 1, 1, 0);
@@ -451,11 +451,11 @@ void gfxRenderDump(char *fn, ...)
 	rdrGetFrameBufferAsync(0, 0, w, h, GETFRAMEBUF_STENCIL, stencil);
 	rdrQueueFlush();
 
-	snprintf(filename, sizeof(filename), "C:/%s_color.tiff", buf);
+	snprintf(filename, sizeof(filename), "./c/%s_color.tiff", buf);
 	tiffSave(filename, color, w, h, 4, 1, 1, 0, 1);
-	snprintf(filename, sizeof(filename), "C:/%s_depth.tiff", buf);
+	snprintf(filename, sizeof(filename), "./c/%s_depth.tiff", buf);
 	tiffSave(filename, depth, w, h, 1, 4, 1, 0, 0);
-	snprintf(filename, sizeof(filename), "C:/%s_stencil.tiff", buf);
+	snprintf(filename, sizeof(filename), "./c/%s_stencil.tiff", buf);
 	tiffSave(filename, stencil, w, h, 1, 4, 1, 0, 0);
 
 	free(stencil);
@@ -483,7 +483,7 @@ void gfxRenderDumpColor( char *fn, ...)
 	rdrGetFrameBufferAsync(0, 0, w, h, GETFRAMEBUF_RGBA, buffer);
 	rdrQueueFlush();
 
-	snprintf(filename, sizeof(filename), "C:/%s.tga", buf);
+	snprintf(filename, sizeof(filename), "./c/%s.tga", buf);
 	tgaSave(filename, buffer, w, h, 4);
 
 	free(buffer);
@@ -856,7 +856,7 @@ void gfxShowDebugIndicators2(void)
 			dummyUniqueId++;
 			costume = npcDefsGetCostume( game_state.headShot, 0 );
 			bind = seqGetHeadshot( costume, dummyUniqueId );
-			//seqMakeABodyShotTga( costume, "c:/matthew/test.tga" );
+			//seqMakeABodyShotTga( costume, "./c/matthew/test.tga" );
 			game_state.headShot = 1;
 		}
 		display_sprite( bind, 128, 256, 5000, 1.0, 1.0, 0xffffffff );

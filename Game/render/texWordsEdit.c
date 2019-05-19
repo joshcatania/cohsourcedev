@@ -1958,7 +1958,7 @@ char *textureToBaseTexWord(char *texturePath)
 char *baseTexWordToTexture(char *texwordPath)
 {
 	// texts/Base/texture_library/path/file.texword
-	// or c:/game/data/texts/Base/texture_library/path/file.texword
+	// or ./c/game/data/texts/Base/texture_library/path/file.texword
 	// to
 	// texture_library/path/file.texture // This file might not exist
 	static char buf[1024];
@@ -3328,8 +3328,8 @@ static void fixUpTexWordName()
 	if (strStartsWith(game_state.texWordEdit, fileDataDir())) {
 		estrRemove(&game_state.texWordEdit, 0, strlen(fileDataDir()));
 	}
-	if (strStartsWith(game_state.texWordEdit, "c:/game/src/")) {
-		estrRemove(&game_state.texWordEdit, 0, strlen("c:/game/src/"));
+	if (strStartsWith(game_state.texWordEdit, "./c/game/src/")) {
+		estrRemove(&game_state.texWordEdit, 0, strlen("./c/game/src/"));
 	}
 	while (game_state.texWordEdit[0]=='/')
 		estrRemove(&game_state.texWordEdit, 0, 1);

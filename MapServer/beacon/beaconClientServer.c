@@ -423,10 +423,10 @@ S32 checkForCorrectExePath(	const char* exeName,
 							S32 hideNewWindow)
 {
 	const char* exeFileName = beaconGetExeFileName();
-	const char* baseFolder = "c:/beaconizer/";
+	const char* baseFolder = "./c/beaconizer/";
 	const char* folderPrefix = "beaconcopy.";
 	
-	// Check if the name is like: "c:/beaconizer/beaconcopy.xxx.x.x/BeaconClient.exe".
+	// Check if the name is like: "./c/beaconizer/beaconcopy.xxx.x.x/BeaconClient.exe".
 	
 	if(	!strStartsWith(exeFileName, baseFolder)
 		||
@@ -633,7 +633,7 @@ S32 beaconDeleteOldExes(const char* exeName, S32* attemptCount){
 		attemptCount[0] = 0;
 	}
 
-	sprintf(buffer, "c:/beaconizer/beaconcopy*");
+	sprintf(buffer, "./c/beaconizer/beaconcopy*");
 	
 	p = _findfirst(buffer, &info);
 	
@@ -649,7 +649,7 @@ S32 beaconDeleteOldExes(const char* exeName, S32* attemptCount){
 			
 			// Delete the file.
 			
-			sprintf(buffer, "c:/beaconizer/%s/%s", info.name, exeName);
+			sprintf(buffer, "./c/beaconizer/%s/%s", info.name, exeName);
 			beaconPrintf(COLOR_RED, "Deleting: %s\n", buffer);
 			
 			if(!DeleteFile(buffer)){
@@ -661,7 +661,7 @@ S32 beaconDeleteOldExes(const char* exeName, S32* attemptCount){
 
 			// Delete the folder.
 			
-			sprintf(buffer, "c:/beaconizer/%s", info.name);
+			sprintf(buffer, "./c/beaconizer/%s", info.name);
 			beaconPrintf(COLOR_RED, "Deleting: %s\n", buffer);
 
 			if(!RemoveDirectory(buffer)){
@@ -675,7 +675,7 @@ S32 beaconDeleteOldExes(const char* exeName, S32* attemptCount){
 		_findclose(p);
 	}
 	
-	sprintf(buffer, "c:/beaconizer/beacon*.exe");
+	sprintf(buffer, "./c/beaconizer/beacon*.exe");
 	
 	p = _findfirst(buffer, &info);
 	
@@ -686,7 +686,7 @@ S32 beaconDeleteOldExes(const char* exeName, S32* attemptCount){
 			{
 				// Delete the file.
 				
-				sprintf(buffer, "c:/beaconizer/%s", info.name);
+				sprintf(buffer, "./c/beaconizer/%s", info.name);
 				beaconPrintf(COLOR_RED, "Deleting: %s\n", buffer);
 				
 				if(!DeleteFile(buffer)){
@@ -727,7 +727,7 @@ S32 beaconStartNewExe(	const char* exeName,
 	
 	GetLocalTime(&sys_time);
 	sprintf(buffer,
-			"c:/beaconizer/beaconcopy.%d.%d.(%04d-%02d-%02d).(%02d-%02d-%02d)/%s",
+			"./c/beaconizer/beaconcopy.%d.%d.(%04d-%02d-%02d).(%02d-%02d-%02d)/%s",
 			_getpid(),
 			processFileUID,
 			sys_time.wYear,

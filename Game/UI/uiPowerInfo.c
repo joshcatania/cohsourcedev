@@ -2157,7 +2157,7 @@ static powerDumpData(char *msg)
 {
 	static FILE	*file;
 	if (!file)
-		file = fopen("c:/powertext.txt","wt");
+		file = fopen("./c/powertext.txt","wt");
 	fprintf(file,"%s:",msg);
 	fprintf(file,"\n");
 	fflush(file);

@@ -627,15 +627,15 @@ void printSharedHeapInfo()
 	}
 
 	printf("---------------------------------------------------------\n");
-	printf("Writing shared heap allocation walk to c:/sheepdump.csv...\n");
+	printf("Writing shared heap allocation walk to ./c/sheepdump.csv...\n");
 	sharedHeapInfoFile = NULL;
 
 	while (!sharedHeapInfoFile)
 	{
-		sharedHeapInfoFile = fopen( "c:/sheepdump.csv", "wt" );
+		sharedHeapInfoFile = fopen( "./c/sheepdump.csv", "wt" );
 		if (!sharedHeapInfoFile)
 		{
-			printf("Let go of c:/sheepdump.csv, please!\n");
+			printf("Let go of ./c/sheepdump.csv, please!\n");
 			Sleep(1000);
 		}
 	}	

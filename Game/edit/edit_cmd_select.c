@@ -1215,7 +1215,7 @@ static int visCmp2(const void *a, const void *b)
 
 static void displayTabulation(int for_textures)
 {
-	FILE *f = fopen("C:/search_tabulation.csv", "wt");
+	FILE *f = fopen("./c/search_tabulation.csv", "wt");
 	if (!for_textures)
 	{
 		int i, total_models = 0, total_subs = 0;

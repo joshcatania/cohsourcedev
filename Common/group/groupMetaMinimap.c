@@ -865,7 +865,7 @@ void automap_fillHeader(ArchitectMapHeader * header, char *filename)
 	char *branchIndependentFilename = NULL;
 	nSections = nSections?nSections:1;
 
-	if ((branchIndependentFilename = strstri(filename, "maps")) == NULL)		//	start after C:/game/data/ and c:/gamefix/data/ info
+	if ((branchIndependentFilename = strstri(filename, "maps")) == NULL)		//	start after ./c/game/data/ and ./c/gamefix/data/ info
 	{
 		branchIndependentFilename = filename;
 	}

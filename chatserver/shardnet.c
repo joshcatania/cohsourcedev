@@ -987,7 +987,7 @@ int main(int argc,char **argv)
 				xcase 'm':
 					memMonitorDisplayStats();
 				xcase 'd':
-					printf("dumping memory table to c:/memlog.txt..\n");
+					printf("dumping memory table to ./c/memlog.txt..\n");
 					memCheckDumpAllocs();
 					printf("done.\n");
 				xcase 's':

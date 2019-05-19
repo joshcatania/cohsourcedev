@@ -2005,10 +2005,10 @@ void printStashTableMemDump()
 
 	while (!stashDumpFile)
 	{
-		stashDumpFile = fopen( "c:/hashdump.csv", "wt" );
+		stashDumpFile = fopen( "./c/hashdump.csv", "wt" );
 		if (!stashDumpFile)
 		{
-			printf("Let go of c:/hashdump.csv, please!\n");
+			printf("Let go of ./c/hashdump.csv, please!\n");
 			Sleep(1000);
 		}
 	}	

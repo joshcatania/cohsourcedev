@@ -2219,7 +2219,7 @@ static void attribfiledict_Load(SHARED_MEMORY_PARAM AttribFileDict *hitems, char
 	estrPrintf(&fname, "defs/dbidmaps/%s.dbidmap", stem);
 	if (!fileExists(fname))
 	{
-		estrPrintf(&fname, "c:/coh_data/dbidmaps/%s.dbidmap", stem);
+		estrPrintf(&fname, "./c/coh_data/dbidmaps/%s.dbidmap", stem);
 	}
 
 	pchBinFilename = MakeBinFilename(fname);
@@ -2318,7 +2318,7 @@ void s_writeDbidsFromStem(const GenericInventoryType* const* types, const Attrib
 {
 	char *fname = NULL;
 	estrCreate(&fname);
-	estrPrintf(&fname, "c:/coh_data/dbidmaps/%s.dbidmap", stem);
+	estrPrintf(&fname, "./c/coh_data/dbidmaps/%s.dbidmap", stem);
 	genericinvtype_WriteDbIds(types, attribs, fname);
 	estrDestroy(&fname);
 }

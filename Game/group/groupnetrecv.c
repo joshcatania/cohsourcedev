@@ -1133,7 +1133,7 @@ void dumpDebugGroupTree(void)
 	{
 		GroupDefTraverser traverser={0};
 		extern int ctri_total;
-		dump_fout = fopen("C:/groupInfoNew.txt", "w");
+		dump_fout = fopen("./c/groupInfoNew.txt", "w");
 		groupProcessDefExBegin(&traverser, &group_info, dumpDebugGroupTree_cb);
 		fprintf(dump_fout, "ctri total: %d\n", ctri_total);
 		fclose(dump_fout);

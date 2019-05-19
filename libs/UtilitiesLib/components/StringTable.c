@@ -860,10 +860,10 @@ void printStringTableMemUsage()
 
 	while (!stringDumpFile)
 	{
-		stringDumpFile = fopen( "c:/stringdump.csv", "wt" );
+		stringDumpFile = fopen( "./c/stringdump.csv", "wt" );
 		if (!stringDumpFile)
 		{
-			printf("Let go of c:/stringdump.csv, please!\n");
+			printf("Let go of ./c/stringdump.csv, please!\n");
 			Sleep(1000);
 		}
 	}
@@ -934,10 +934,10 @@ void printStringTable(StringTableImp* table)
 
 	while (!stringDumpFile)
 	{
-		stringDumpFile = fopen( "c:/stringtable.txt", "wt" );
+		stringDumpFile = fopen( "./c/stringtable.txt", "wt" );
 		if (!stringDumpFile)
 		{
-			printf("Let go of c:/stringtable.txt, please!\n");
+			printf("Let go of ./c/stringtable.txt, please!\n");
 			Sleep(1000);
 		}
 	}

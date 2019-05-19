@@ -32,13 +32,13 @@ badgestat_column_desc s_column_desc[BADGESTATSTYPE_MAXTYPES] =
 {
 	// BADGESTATSTYPE_ENTITY
 	{	"server/db/templates/badgestats.attribute",
-		"c:/coh_data/attributes/badgestats.attribute",
+		"./c/coh_data/attributes/badgestats.attribute",
 		"Badges",			false,	"c",	true,
 		1,	861,	BADGE_ENT_MAX_STATS-1,
 		offsetof(EntPlayer, aiBadgeStats)	},
 	// BADGESTATSTYPE_SUPERGROUP
 	{	"server/db/templates/supergroup_badgestats.attribute",
-		"c:/coh_data/attributes/supergroup_badgestats.attribute",
+		"./c/coh_data/attributes/supergroup_badgestats.attribute",
 		"SgrpBadgeStats",	false,	"id",	false,
 		0,	999,	BADGE_SG_MAX_STATS-1,
 		offsetof(stat_SgrpStats,badgeStats.aiStats)	},

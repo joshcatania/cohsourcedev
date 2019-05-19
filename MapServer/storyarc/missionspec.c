@@ -1026,8 +1026,8 @@ void MissionDebugCheckAllMapStats(ClientLink *client, Entity *player)
 	
 	MissionMapPreload();
 
-	file = fileOpen("C:/missionSpecValidationResults.txt", "wb");
-	lobbyFile = fileOpen("C:/missionSpecLobbyCounts.txt", "wb");
+	file = fileOpen("./c/missionSpecValidationResults.txt", "wb");
+	lobbyFile = fileOpen("./c/missionSpecLobbyCounts.txt", "wb");
 
 	missionSpecCount = eaSize(&missionSpecs);
 	for (missionSpecIndex = 0; missionSpecIndex < missionSpecCount; missionSpecIndex++)

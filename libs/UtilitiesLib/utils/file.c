@@ -161,7 +161,7 @@ int fileSearchPathCount()
 }
 
 
-bool addAppropriateDataDirs(const char *path) // Input is like "C:/game"
+bool addAppropriateDataDirs(const char *path) // Input is like "./c/game"
 {
 	static char fn[MAX_PATH+20];
 	sprintf_s(SAFESTR(fn), "%s/data", path);
@@ -207,24 +207,24 @@ static bool searchForDataDir(char *path)
 				s++;
 
 				if(!stricmp(s, "coh")){
-					// If path has "/coh/bin/" in it, use c:/game.
-					// If path has "*fix*/coh/bin/" in it, use c:/gamefix.
+					// If path has "/coh/bin/" in it, use ./c/game.
+					// If path has "*fix*/coh/bin/" in it, use ./c/gamefix.
 					if (strstri(path, "hot"))
 					{
-						sprintf_s(SAFESTR(buf), "c:/hotfix");
+						sprintf_s(SAFESTR(buf), "./c/hotfix");
 					}
 					else if (fixPtr = strstri(path, "fix"))
 					{
-						sprintf_s(SAFESTR(buf), "c:/gamefix%c", 
+						sprintf_s(SAFESTR(buf), "./c/gamefix%c", 
 							(fixPtr[3] != '\\' && fixPtr[3] != '/' ? fixPtr[3] : '\0'));
 					}
 					else if (strstri(path, "future"))
 					{
-						sprintf_s(SAFESTR(buf), "c:/gamefuture");
+						sprintf_s(SAFESTR(buf), "./c/gamefuture");
 					}
 					else
 					{
-						sprintf_s(SAFESTR(buf), "c:/game");
+						sprintf_s(SAFESTR(buf), "./c/game");
 					}
 
 					if(addAppropriateDataDirs(buf)){
@@ -233,19 +233,19 @@ static bool searchForDataDir(char *path)
 				}
 				else
 				{
-					// If path has "/*/bin/" in it, use c:/*.
+					// If path has "/*/bin/" in it, use ./c/*.
 					if (fixPtr = strstri(path, "fix"))
 					{
-						sprintf_s(SAFESTR(buf), "c:/%s%s%c", s, "fix",
+						sprintf_s(SAFESTR(buf), "./c/%s%s%c", s, "fix",
 							(fixPtr[3] != '\\' && fixPtr[3] != '/' ? fixPtr[3] : '\0'));
 					}
 					else if (strstri(path, "future"))
 					{
-						sprintf_s(SAFESTR(buf), "c:/%s%s", s, "future");
+						sprintf_s(SAFESTR(buf), "./c/%s%s", s, "future");
 					}
 					else
 					{
-						sprintf_s(SAFESTR(buf), "c:/%s", s);
+						sprintf_s(SAFESTR(buf), "./c/%s", s);
 					}
 
 					if(addAppropriateDataDirs(buf)){
@@ -304,22 +304,22 @@ static void findAutoDataDir(bool searchByPath)
 				char *src;
 				char *data;
 			} programmer_paths[] = {
-				{"C:/game/code/coh/bin", "C:/game"},
-				{"C:/gamefix/code/coh/bin", "C:/gamefix"},
-				{"C:/gamefix/code/util", "C:/gamefix"},
-				{"C:/game/code/Utilities/bin", "C:/game"},
-				{"C:/game/code/*/bin", "C:/%s"},
-				{"C:/gamefix/code/*/bin", "C:/%sFix"},
-				{"//*/game/code/coh/bin", "C:/game"}, // Running over network via remote debugger
-				{"C:/src/coh/bin", "C:/game"},
-				{"C:/fix/coh/bin", "C:/gamefix"},
-				{"C:/fix/util", "C:/gamefix"},
-				{"C:/src/Utilities/bin", "C:/game"},
-				{"C:/src/*/bin", "C:/%s"},
-				{"C:/fix/*/bin", "C:/%sFix"},
-				{"C:/src*/coh/bin", "C:/game"},
-				{"C:/src*/util", "C:/game"},
-				{"//*/src/coh/bin", "C:/game"}, // Running over network via remote debugger
+				{"./c/game/code/coh/bin", "./c/game"},
+				{"./c/gamefix/code/coh/bin", "./c/gamefix"},
+				{"./c/gamefix/code/util", "./c/gamefix"},
+				{"./c/game/code/Utilities/bin", "./c/game"},
+				{"./c/game/code/*/bin", "./c/%s"},
+				{"./c/gamefix/code/*/bin", "./c/%sFix"},
+				{"//*/game/code/coh/bin", "./c/game"}, // Running over network via remote debugger
+				{"./c/src/coh/bin", "./c/game"},
+				{"./c/fix/coh/bin", "./c/gamefix"},
+				{"./c/fix/util", "./c/gamefix"},
+				{"./c/src/Utilities/bin", "./c/game"},
+				{"./c/src/*/bin", "./c/%s"},
+				{"./c/fix/*/bin", "./c/%sFix"},
+				{"./c/src*/coh/bin", "./c/game"},
+				{"./c/src*/util", "./c/game"},
+				{"//*/src/coh/bin", "./c/game"}, // Running over network via remote debugger
 			};
 			strcpy(path, getExecutableName());
 			forwardSlashes(path);
@@ -419,7 +419,7 @@ void fileLoadDataDirs(int forceReload)
 			if (file) // New scheme, look for gamedatadir.txt in current directory
 				verbose = 0; // Could set this to 1 if we want a printout about what's going on
 			else
-				file = fopen("c:/gamedatadir.txt","rt~");
+				file = fopen("./c/gamedatadir.txt","rt~");
 #else
 			file = fopen("game:/gamedatadir.txt","rt~");
 #endif
@@ -644,7 +644,7 @@ char* fileFixName(char* src, char* tgt)
 #include <sys/types.h>
 #include <direct.h>
 
-// Pigged paths look like "c:/game/data/piggs/file.pigg:/myfile.txt" or "./piggs/file.pigg:/myfile.txt"
+// Pigged paths look like "./c/game/data/piggs/file.pigg:/myfile.txt" or "./piggs/file.pigg:/myfile.txt"
 int is_pigged_path(const char *path) {
 	if (!path) return 0;
 	if (path[0]=='.') {
@@ -2435,7 +2435,7 @@ FILE *fileGetStdout(){
 
 		if (!ciderWrapper)
 		{
-			ciderWrapper = x_fopen("C:/ciderlog.txt", "wt");
+			ciderWrapper = x_fopen("./c/ciderlog.txt", "wt");
 			ciderWrapper->nameptr = "stdout";
 		}
 
@@ -2543,12 +2543,12 @@ int fileMakeLocalBackup(const char *_fname, int time_to_keep) {
 		forwardSlashes(temp);
 		forwardSlashes(fname);
 		if (strnicmp(temp, fname, strlen(temp))==0) {
-			sprintf_s(SAFESTR(backupPathBase), "%c:/BACKUPS/%s.", temp[0], fname+strlen(temp));
+			sprintf_s(SAFESTR(backupPathBase), "%./c/BACKUPS/%s.", temp[0], fname+strlen(temp));
 		} else {
 			sprintf_s(SAFESTR(backupPathBase), "%s.", fname);
 		}
 	} else { // relative
-		sprintf_s(SAFESTR(backupPathBase), "%c:/BACKUPS/%s.", fileDataDir()[0], fname);
+		sprintf_s(SAFESTR(backupPathBase), "%./c/BACKUPS/%s.", fileDataDir()[0], fname);
 	}
 	forwardSlashes(backupPathBase);
 	strcpy(dir, backupPathBase);

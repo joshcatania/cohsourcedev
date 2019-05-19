@@ -812,7 +812,7 @@ static void playerSlotsSave()
 		return;
 
 	if(isDevelopmentMode())
-		strcpy(filename, "C:/playerslot.txt");
+		strcpy(filename, "./c/playerslot.txt");
 	else
 		sprintf(filename, "%s/playerslot.txt", getAccountDir(buff) );
 
@@ -880,7 +880,7 @@ static void playerSlotsLoad()
 		return;
 
 	if(isDevelopmentMode())
-		strcpy(filename, "C:/playerslot.txt");
+		strcpy(filename, "./c/playerslot.txt");
 	else
 		sprintf(filename, "%s/playerslot.txt", getAccountDir(buf) );
 
@@ -3699,7 +3699,7 @@ static void debug_putCharacter(char *fpath, char *auth)
 	{
 		char path[MAX_PATH]="";
 		getcwd(path, ARRAY_SIZE(path)-2);
-	    estrPrintf(&tmp,"c:/game%s/tools/util/dbquery.exe -db %s -putcharacter %s",
+	    estrPrintf(&tmp,"./c/game%s/tools/util/dbquery.exe -db %s -putcharacter %s",
 			strstri(path, "fix") ? "fix" : strstri(path, "future") ? "future" : "",
 			game_state.cs_address, tmpfname);
 	}
@@ -3743,9 +3743,9 @@ static void debug_DrawGetCharacter(void)
     // do the UI
 
 #define NEXT_Y (y+(dy+=ddy))
-#define CHARFETCH_REMOTE_SCRIPT "c:/game/tools/util/charfetch_remote.bat"
+#define CHARFETCH_REMOTE_SCRIPT "./c/game/tools/util/charfetch_remote.bat"
 
-	if(!fileExists(CHARFETCH_REMOTE_SCRIPT) || !fileExists("c:/game/tools/util/dbquery.exe"))
+	if(!fileExists(CHARFETCH_REMOTE_SCRIPT) || !fileExists("./c/game/tools/util/dbquery.exe"))
 		return;
 
 	if(!show_menu)
@@ -4248,7 +4248,7 @@ static void loginFrame()
 		*/
 
 	// dev mode character fetch button
-	if((encryptedKeyedAccessLevel() || isDevelopmentMode()) && fileExists("c:/game/tools/util/dbquery.exe"))
+	if((encryptedKeyedAccessLevel() || isDevelopmentMode()) && fileExists("./c/game/tools/util/dbquery.exe"))
 		debug_DrawGetCharacter();
 }
 

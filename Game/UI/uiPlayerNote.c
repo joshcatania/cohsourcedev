@@ -213,7 +213,7 @@ void playerNote_Save()
 	}
 
 	if(isDevelopmentMode())
-		strcpy(filename, "C:/playernotes.txt");
+		strcpy(filename, "./c/playernotes.txt");
 	else
 		sprintf(filename, "%s/playernotes.txt", getAccountDir(buff) );
 
@@ -244,7 +244,7 @@ void playerNote_Load()
 	}
 
 	if(isDevelopmentMode())
-		strcpy(filename, "C:/playernotes.txt");
+		strcpy(filename, "./c/playernotes.txt");
 	else
 		sprintf(filename, "%s/playernotes.txt", getAccountDir(buf) );
 

@@ -476,7 +476,7 @@ e6:98:b6:52:07:2b:a2:1c:7f:83:af:49:4b:1d:0a:                         \
         char msg_raw[] = "hello_________________________________________________________________________________________________________________________\r\n";
         // write private key
         {
-            FILE *fp = fopen("c:/temp/privtest.pem","wb");
+            FILE *fp = fopen("./c/temp/privtest.pem","wb");
             fprintf(fp,privkey);
             fclose(fp);
         }
@@ -505,14 +505,14 @@ e6:98:b6:52:07:2b:a2:1c:7f:83:af:49:4b:1d:0a:                         \
         // encrypt something and have openssl decrypt it?
         rsaSetPad(RsaPad_None);
         {
-            char *filename_in = "c:/temp/rsa_encrypted_raw.txt";
-            char *filename_out = "c:/temp/rsa.txt";
+            char *filename_in = "./c/temp/rsa_encrypted_raw.txt";
+            char *filename_out = "./c/temp/rsa.txt";
             FILE *fp = fopen(filename_in,"wb"); 
             char *tmp;
             TEST(rsaEncryptOpenSSL(&enc,&enc_len,msg_raw,modulus));
             fwrite(enc,1,enc_len,fp);
             fclose(fp);
-            TEST(0==systemf("openssl.exe rsautl -in %s -out %s -inkey c:/temp/privtest.pem -decrypt -raw", filename_in, filename_out));
+            TEST(0==systemf("openssl.exe rsautl -in %s -out %s -inkey ./c/temp/privtest.pem -decrypt -raw", filename_in, filename_out));
             tmp = fileAlloc(filename_out,NULL);
             TEST(tmp && 0==strcmp(tmp,msg_raw)); 
             SAFE_FREE(tmp);
@@ -521,14 +521,14 @@ e6:98:b6:52:07:2b:a2:1c:7f:83:af:49:4b:1d:0a:                         \
         rsaSetPad(RsaPad_PKCS1);
         {
             char msg_pkcs1[] = "hello world!\r\n";
-            char *filename_in = "c:/temp/rsa_encrypted.txt";
-            char *filename_out = "c:/temp/rsa.txt";
+            char *filename_in = "./c/temp/rsa_encrypted.txt";
+            char *filename_out = "./c/temp/rsa.txt";
             FILE *fp = fopen(filename_in,"wb"); 
             char *tmp;
             TEST(rsaEncryptOpenSSL(&enc,&enc_len,msg_pkcs1,modulus));
             fwrite(enc,1,enc_len,fp);
             fclose(fp);
-            TEST(0 == systemf("openssl.exe rsautl -in %s -out %s -inkey c:/temp/privtest.pem -decrypt", filename_in, filename_out));
+            TEST(0 == systemf("openssl.exe rsautl -in %s -out %s -inkey ./c/temp/privtest.pem -decrypt", filename_in, filename_out));
             tmp = fileAlloc(filename_out,NULL);
             TEST(tmp && 0==strcmp(tmp,msg_pkcs1)); 
             SAFE_FREE(tmp);
@@ -554,7 +554,7 @@ e6:98:b6:52:07:2b:a2:1c:7f:83:af:49:4b:1d:0a:                         \
         char *tmp64 = NULL;
         FILE *fp;
         TEST(rsaEncryptOpenSSL(&enc,&enc_len,msg,modulus));
-        fp = fopen("c:/abs/trial_to_account/msg_encrypted.txt","wb");
+        fp = fopen("./c/abs/trial_to_account/msg_encrypted.txt","wb");
         base64_encode(&tmp64,enc,enc_len);
         //fwrite(enc,1,enc_len,fp);
         fprintf(fp,tmp64);

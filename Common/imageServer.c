@@ -696,8 +696,8 @@ void imageserver_SaveShot( const cCostume * costume, ImageServerParams *imagePar
 }
 
 
-// from C:/game/srcDir/stuff/capnAmaxing.csv in C:/game/srcDir  to C:/game/targetDir
-//generate C:/game/targetDir/stuff/capnAmaxing.csv
+// from ./c/game/srcDir/stuff/capnAmaxing.csv in ./c/game/srcDir  to ./c/game/targetDir
+//generate ./c/game/targetDir/stuff/capnAmaxing.csv
 static void getTargetPathAndName( char * csvFilePathAndName, char * sourceDir, char * targetDir, char * tgaFilePathAndName )
 {
 	int len; 
@@ -841,7 +841,7 @@ static void serverImageCallback(const char *relPath, int when)
 
 	fileWaitForExclusiveAccess(csvFilePathAndName);
 
-	//Generate name C:/game/targetDir/stuff/capnAmazing.tga
+	//Generate name ./c/game/targetDir/stuff/capnAmazing.tga
 	getTargetPathAndName( csvFilePathAndName, game_state.imageServerSource, game_state.imageServerTarget, tgaFilePathAndName );
 
 	serveUpAnImage( csvFilePathAndName, tgaFilePathAndName, relPath );

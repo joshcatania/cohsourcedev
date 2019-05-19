@@ -38,7 +38,7 @@ void beaconServerSetDataToolsRootPath(const char* dataToolsRootPath){
 }
 
 const char* beaconServerGetDataToolsRootPath(void){
-	return beacon_server.dataToolsRootPath ? beacon_server.dataToolsRootPath : "c:/game";
+	return beacon_server.dataToolsRootPath ? beacon_server.dataToolsRootPath : "./c/game";
 }
 
 const char* beaconServerGetDataPath(void){
@@ -2163,7 +2163,7 @@ static void beaconServerGetBeaconLogFile(	char* fileNameOut,
 	}
 
 	sprintf(fileNameOut,
-			"c:/beaconizer/info/branch%d/%s/%s",
+			"./c/beaconizer/info/branch%d/%s/%s",
 			9999,
 			dir,
 			buffer);
@@ -2597,7 +2597,7 @@ static void beaconServerLoadMapFilesFromSpec(void){
 }
 
 static void beaconServerLoadLocalMapList(void){
-	char* mapListLocal = "c:/maps_local.txt";
+	char* mapListLocal = "./c/maps_local.txt";
 
 	if(fileExists(mapListLocal)){
 		printf("Reading personal map files: %s\n", mapListLocal);
@@ -2877,7 +2877,7 @@ static void beaconServerInstall(void){
 	if(result == WAIT_OBJECT_0 || result == WAIT_ABANDONED){
 		char buffer[1000];
 
-		sprintf(buffer, "c:/Beaconizer/%s", beaconServerExeName);
+		sprintf(buffer, "./c/Beaconizer/%s", beaconServerExeName);
 
 		if(stricmp(buffer, beaconGetExeFileName())){
 			//printf("Installing BeaconClient in registry: \n%s\n%s\n", buffer, beaconGetExeFileName());
@@ -2984,7 +2984,7 @@ static void beaconServerStartup(BeaconizerType beaconizerType,
 	if(	beacon_server.isMasterServer &&
 		beacon_server.symStore &&
 		!beaconIsProductionMode() &&
-		!strnicmp(beaconGetExeFileName(), "c:/src/", 7) &&
+		!strnicmp(beaconGetExeFileName(), "./c/src/", 7) &&
 		strEndsWith(beaconGetExeFileName(), "/mapserver.exe"))
 	{
 		S32 result = MessageBox(NULL,

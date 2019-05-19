@@ -896,8 +896,8 @@ void editContextMenuShow(int x, int y, int model_menu)
 		contextMenu_SetCustomColors(edit_cm, BORDER_COLOR, BACK_COLOR);
 		editAddContextCommands(edit_cm, contextCommands);
 		editAddContextCommands(edit_cm, rootCommands);
-		if (fileExists("C:/editmenu.txt"))
-			editAddCustomCommands(edit_cm, "C:/editmenu.txt");
+		if (fileExists("./c/editmenu.txt"))
+			editAddCustomCommands(edit_cm, "./c/editmenu.txt");
 	}
 	if (!model_cm)
 	{

@@ -176,7 +176,7 @@ void saveCustomWindows(void)
 	for( i = eaSize(&fileList)-1; i>=0; i-- )
 	{
 		CustomWindowList *pCW = fileList[i];
-		mkdir("C:/game/data/customwindows");
+		mkdir("./c/game/data/customwindows");
 		ParserWriteTextFile(pCW->ppWindow[0]->pchFileName, ParseCustomWindowList, pCW, 0, 0);
 		eaDestroy(&pCW->ppWindow);
 		eaRemove(&fileList, i);

@@ -861,7 +861,7 @@ tCgEffectSpec* cgfx_FindEffectByName( const char* szEffectNm )
 /****************************************************************************
 	cgfx_EffectNameToCgfxFullPath
 
-	"foo" --> "c:/game/data/shaders/cgfx/foo.cgfx"
+	"foo" --> "./c/game/data/shaders/cgfx/foo.cgfx"
 ****************************************************************************/
 void cgfx_EffectNameToCgfxFullPath( const char* szName, char* pathBuff, size_t nBuffSz )
 {
