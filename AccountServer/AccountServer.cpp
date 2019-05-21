@@ -8,6 +8,7 @@
 #include "AccountData.h"
 #include "AccountDb.hpp"
 #include "AccountCmds.h"
+#include "AccountSqlVendor.hpp"
 #include "CmdAccountServer.h"
 #include "crypt.h"
 #include "stringcache.h"
@@ -128,6 +129,7 @@ static ParseTable parse_AccountServerCfg[] =
 #endif // USE_POST_BACK_RELAY
 	{ "SqlLogin",								TOK_FIXEDSTR(AccountServerCfg,sqlLogin) },
 	{ "SqlDbName",								TOK_FIXEDSTR(AccountServerCfg,sqlDbName) },
+	{ "SqlDbProvider",							TOK_FIXEDSTR(AccountServerCfg, sqlDbProvider) },
 	{ "PlaySpanServerRetryFreqSecs",			TOK_INT(AccountServerCfg,playSpanServerRetryFreqSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_RETRY_SECS)			},
 	{ "PlaySpanRelayServerAckAlarmSecs",		TOK_INT(AccountServerCfg,playSpanServerAckAlarmSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_ACK_ALARM_SEC)			},
 	{ "PlaySpanRelayServerAckAlarmRepeatSecs",	TOK_INT(AccountServerCfg,playSpanServerAckAlarmRepeatFregSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_ACK_ALARM_REPEAT_SECS)			},
@@ -167,6 +169,7 @@ static ParseTable parse_AccountServerCfg[] =
 }; 
 
 AccountServerState g_accountServerState;
+AccountSqlVendor* g_sqlVendor;
 
 static StashTable s_ProductsWithUpdatesToBroadcast = NULL;
 
@@ -1315,6 +1318,11 @@ bool accountSvrCfgLoad(AccountServerCfg *cfg)
 		info->cohURL_NewFeaturesUpdate	= _strdup( cfg->cohURL_NewFeaturesUpdate );
 		info->playSpanStoreFlags		= cfg->playSpanStoreFlags;
 		info->playSpanStoreFlags		|= cfg->auto_buy_products ? STOREFLAG_AUTO_BUY_PRODUCTS : 0;
+
+		if (stricmp(cfg->sqlDbProvider, "postgresql") == 0)
+			g_sqlVendor = new AccountSqlPostgresql();
+		else
+			g_sqlVendor = new AccountSqlMssql();
 	}
 	return loadResult;
 }

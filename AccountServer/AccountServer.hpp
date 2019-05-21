@@ -18,6 +18,7 @@
 #include "net_link.h"
 #include "account/AccountTypes.h"
 #include "account/AccountData.h"
+#include "AccountSqlVendor.hpp"
 
 C_DECLARATIONS_BEGIN
 
@@ -60,6 +61,7 @@ typedef struct AccountServerCfg
 	// SQL configuration
 	char sqlLogin[1024];
 	char sqlDbName[1024];
+	char sqlDbProvider[1024];
 
 	U32 playSpanServerRetryFreqSecs;
 	U32 playSpanServerAckAlarmSecs;					// if we don't get a message from the relay server in this # secs, log an error.
@@ -118,6 +120,7 @@ typedef struct AccountServerState
 } AccountServerState;
 
 extern AccountServerState g_accountServerState;
+extern AccountSqlVendor* g_sqlVendor;
 
 bool AccountServer_DelayPacketUntilLater(AccountServerShard *shard, Packet *pak);
 

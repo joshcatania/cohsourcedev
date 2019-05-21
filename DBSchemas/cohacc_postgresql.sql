@@ -12,12 +12,10 @@ CREATE TABLE dbo.account(
   CONSTRAINT c_loyalty_bits_length CHECK (length(loyalty_bits) <= 16)
 );
 
-
 CREATE TABLE dbo.product_type(
 	product_type_id int NOT NULL PRIMARY KEY,
 	name varchar(128) NULL
 );
-
 
 CREATE TABLE dbo.product(
 	sku_id char(8) NOT NULL PRIMARY KEY,
@@ -67,7 +65,6 @@ CREATE TABLE dbo.mtx_log(
   CONSTRAINT FK_mtx_log_product FOREIGN KEY (sku_id) REFERENCES dbo.product (sku_id)
 );
 
-
 CREATE TYPE dbo.TVP_game_transaction AS(
 	order_id uuid,
 	auth_id int,
@@ -77,9 +74,69 @@ CREATE TYPE dbo.TVP_game_transaction AS(
 	ent_id int,
 	granted int,
 	claimed int,
-	csr_did_it bit
+	csr_did_it smallint
 );
 
+CREATE TYPE dbo.TVP_product AS (
+  sku_id char(8), 
+  name varchar(128), 
+  product_type_id integer, 
+  grant_limit integer, 
+  expiration_seconds integer
+);
+
+CREATE TYPE dbo.TVP_product_type AS (
+  product_type_id integer,
+  name varchar(128)
+);
+
+CREATE OR REPLACE PROCEDURE dbo.merge_products_from_bins(
+	IN bin_products dbo.TVP_product
+)
+LANGUAGE 'plpgsql'
+AS $$
+BEGIN
+	INSERT INTO dbo.product SELECT * FROM bin_products
+	ON CONFLICT (sku_id)
+	DO UPDATE SET name = bin_products.name, product_type_id = bin_products.product_type_id, 
+		grant_limit = bin_products.grant_limit, expiration_seconds = bin_products.expiration_seconds;
+
+	DELETE FROM dbo.product
+  WHERE NOT EXISTS (SELECT 1 FROM bin_products bins WHERE bins.sku_id = product.sku_id);
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE dbo.merge_product_types_from_bins(
+  IN product_type_ids integer[],
+  IN names text[]
+)
+LANGUAGE 'plpgsql'
+AS $$
+BEGIN
+  CREATE TEMPORARY TABLE tmp_product_type (product_type_id integer, name varchar(128));
+  
+  INSERT INTO tmp_product_type (product_type_id, name)
+    SELECT * FROM unnest(product_type_ids, names);
+  
+  DELETE FROM dbo.product_type
+  WHERE NOT EXISTS (SELECT 1 FROM tmp_product_type tmp WHERE tmp.product_type_id = product_type.product_type_id);
+END;
+$$;
+
+CREATE OR REPLACE PROCEDURE dbo.merge_product_types()
+LANGUAGE 'plpgsql'
+AS $$
+BEGIN
+	INSERT INTO dbo.product_type SELECT * FROM tmp_product_type
+  ON CONFLICT (product_type_id)
+  DO UPDATE SET name = excluded.name;
+  
+  DELETE FROM dbo.product_type
+  WHERE NOT EXISTS (SELECT 1 FROM tmp_product_type WHERE tmp_product_type.product_type_id = product_type.product_type_id);
+	
+	DROP TABLE tmp_product_type;
+END;
+$$;
 
 CREATE OR REPLACE PROCEDURE dbo.SP_add_game_transaction(
 	IN order_id uuid,
@@ -274,30 +331,19 @@ CREATE OR REPLACE PROCEDURE dbo.SP_save_game_transaction(
 )
 LANGUAGE 'plpgsql'
 AS $$
-DECLARE 
-	transaction_cursor refcursor;
-	csr_order_id uuid;
-	csr_claimed integer;
-	csr_sku_id char(8);
 BEGIN
-	OPEN transaction_cursor FOR
+	CREATE TEMPORARY TABLE tmp_save ON COMMIT DROP AS
 		SELECT order_id, sku_id, claimed FROM dbo.game_log 
 		WHERE (order_id = SP_save_game_transaction.search_id OR parent_order_id = SP_save_game_transaction.search_id) 
 			AND auth_id = SP_save_game_transaction.auth_id AND saved = 0;
-
-	LOOP
-		FETCH NEXT FROM transaction_cursor INTO csr_order_id, csr_sku_id, csr_claimed;
-		EXIT WHEN NOT FOUND;
-
-		UPDATE dbo.game_log SET saved = 1 WHERE CURRENT OF transaction_cursor;
-		IF csr_claimed.claimed > 0 THEN
-			UPDATE dbo.inventory SET saved_total = saved_total + csr_claimed.claimed 
-			WHERE auth_id = SP_save_game_transaction.auth_id AND sku_id = csr_sku_id.sku_id;
-		END IF;
-	END LOOP;
-
-	CLOSE transaction_cursor;
-	DEALLOCATE transaction_cursor;		
+			
+	UPDATE dbo.game_log game SET saved = 1 
+	FROM dbo.game_log RIGHT JOIN tmp_save tmp ON game.order_id = tmp.order_id;
+	
+	UPDATE dbo.inventory inv SET saved_total = saved_total + tmp.claimed 
+	FROM dbo.inventory INNER JOIN tmp_save tmp ON inv.sku_id = tmp.sku_id
+	WHERE inv.auth_id = SP_save_game_transaction.auth_id
+	AND tmp.claimed > 0;	
 END;
 $$;
 

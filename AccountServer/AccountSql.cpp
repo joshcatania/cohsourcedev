@@ -317,44 +317,34 @@ void asql_sync_product_types() {
 	HSTMT stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 
 #ifdef ASQL_USE_TABLE_VALUED_PARAMETERS
-	size_t rows = kAccountInventoryType_Count;
+	ssize_t rows = kAccountInventoryType_Count;
 
-	sqlConnStmtStartBindParamTableValued(stmt, 1, kAccountInventoryType_Count, L"TVP_product_type", &rows);
+	sqlConnStmtStartBindParamTableValued(stmt, 1, kAccountInventoryType_Count, L"tvp_product_type", &rows);
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, product_type_ids, sizeof(*product_type_ids), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAYSIZE(*names), 0, names, sizeof(*names), name_bytes);
 	sqlConnStmtEndBindParamTableValued(stmt);
 
-	ret = sqlConnStmtExecDirect(stmt,
-		"MERGE INTO product_type AS target"
-		" USING ? AS source"
-		" ON target.product_type_id = source.product_type_id"
-		" WHEN MATCHED THEN UPDATE SET name = source.name"
-		" WHEN NOT MATCHED BY TARGET THEN INSERT (product_type_id, name) VALUES (source.product_type_id, source.name)"
-		" WHEN NOT MATCHED BY SOURCE THEN DELETE;",
-		SQL_NTS, SQLCONN_FOREGROUND, false);
+	ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_types_from_bins(?);", SQL_NTS, SQLCONN_FOREGROUND, false);
 #else
-	ret = sqlConnStmtExecDirect(stmt, "CREATE TABLE #tmp_product_type (product_type_id int, name varchar(128));", SQL_NTS, SQLCONN_FOREGROUND, false);
-	
+//	ret = g_sqlVendor->mergeBinsIntoProductType(sql.conns[])
+	ret = sqlConnStmtExecDirect(stmt, g_sqlVendor->createTemporaryTableProductType(), SQL_NTS, SQLCONN_FOREGROUND, false);
+
 	if (SQL_SUCCEEDED(ret)) {
+		SQLCHAR insert_query[] = "INSERT INTO tmp_product_type VALUES (?, ?);";
+		SQLPrepare(stmt, insert_query, SQL_NTS);
 		sqlConnStmtBindParamArray(stmt, kAccountInventoryType_Count, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, product_type_ids, sizeof(*product_type_ids), NULL);
 		sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAYSIZE(*names), 0, names, sizeof(*names), name_bytes);
 		
-		ret = sqlConnStmtExecDirect(stmt, "INSERT INTO #tmp_product_type VALUES (?, ?);", SQL_NTS, SQLCONN_FOREGROUND, false);
+		ret = _sqlConnStmtExecute(stmt, SQLCONN_FOREGROUND);
+		//ret = sqlConnStmtExecDirect(stmt, insert_query, SQL_NTS, SQLCONN_FOREGROUND, false);
 
 		sqlConnStmtBindParamArray(stmt, 1, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtUnbindParams(stmt);
 	}
-
+		
 	if (SQL_SUCCEEDED(ret)) {
-		ret = sqlConnStmtExecDirect(stmt,
-			"MERGE INTO product_type AS target"
-			" USING #tmp_product_type AS source"
-			" ON target.product_type_id = source.product_type_id"
-			" WHEN MATCHED THEN UPDATE SET name = source.name"
-			" WHEN NOT MATCHED BY TARGET THEN INSERT (product_type_id, name) VALUES (source.product_type_id, source.name)"
-			" WHEN NOT MATCHED BY SOURCE THEN DELETE;",
-			SQL_NTS, SQLCONN_FOREGROUND, false);
+		ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_types();", SQL_NTS, SQLCONN_FOREGROUND, false);
 	}
 #endif
 
@@ -371,7 +361,7 @@ void asql_sync_products() {
 
 	const AccountProduct** products = accountCatalogGetEnabledProducts();
 
-	size_t size = eaSize(&products);
+	ssize_t size = eaSize(&products);
 	assert(size);
 
 	SkuId * sku_ids = new SkuId[size];
@@ -388,7 +378,7 @@ void asql_sync_products() {
 	long * expiration_seconds = new long[size];
 	ssize_t * expiration_second_bytes = new ssize_t[size];
 
-	for (unsigned i=0; i<size; i++) {
+	for (int i=0; i<size; i++) {
 		sku_ids[i] = products[i]->sku_id;
 		sku_bytes[i] = sizeof(SkuId);
 
@@ -420,17 +410,10 @@ void asql_sync_products() {
 	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, expiration_seconds, sizeof(*expiration_seconds), expiration_second_bytes);
 	sqlConnStmtEndBindParamTableValued(stmt);
 
-	ret = sqlConnStmtExecDirect(stmt,
-		"MERGE INTO product AS target"
-		" USING ? AS source"
-		" ON target.sku_id = source.sku_id"
-		" WHEN MATCHED THEN UPDATE SET name = source.name, product_type_id = source.product_type_id, grant_limit = source.grant_limit, expiration_seconds = source.expiration_seconds"
-		" WHEN NOT MATCHED BY TARGET THEN INSERT (sku_id, name, product_type_id, grant_limit, expiration_seconds) VALUES (source.sku_id, source.name, source.product_type_id, source.grant_limit, source.expiration_seconds)"
-		" WHEN NOT MATCHED BY SOURCE THEN DELETE;",
-		SQL_NTS, SQLCONN_FOREGROUND, false);
+	ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_from_bins(?);", SQL_NTS, SQLCONN_FOREGROUND, false);
 #else
 	ret = sqlConnStmtExecDirect(stmt,
-		"CREATE TABLE #tmp_product (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);",
+		"CREATE TEMPORARY TABLE tmp_product (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);",
 		SQL_NTS, SQLCONN_FOREGROUND, false);
 
 	if (SQL_SUCCEEDED(ret)) {
@@ -441,7 +424,7 @@ void asql_sync_products() {
 		sqlConnStmtBindParam(stmt, 4, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, grant_limits, sizeof(*grant_limits), grant_limit_bytes);
 		sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, expiration_seconds, sizeof(*expiration_seconds), expiration_second_bytes);
 
-		ret = sqlConnStmtExecDirect(stmt, "INSERT INTO #tmp_product VALUES (?, ?, ?, ?, ?);", SQL_NTS, SQLCONN_FOREGROUND, false);
+		ret = sqlConnStmtExecDirect(stmt, "INSERT INTO tmp_product VALUES (?, ?, ?, ?, ?);", SQL_NTS, SQLCONN_FOREGROUND, false);
 
 		sqlConnStmtBindParamArray(stmt, 1, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtUnbindParams(stmt);
