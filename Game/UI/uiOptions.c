@@ -1949,7 +1949,7 @@ static OptionDisplayType ShouldDisplayAgeiaSupportOption(GameOptions *go)
 {
 	IS_AN_ADVANCED_OPTION
 	#if NOVODEX
-		if (!nwHardwarePresent())
+		if ( !nwHardwarePresent() )
 			return OPT_DISABLE;
 		return OPT_DISPLAY;
 	#else
