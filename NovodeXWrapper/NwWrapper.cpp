@@ -1420,7 +1420,7 @@ int nwCreateScene()
 #ifdef CLIENT
 	nxScene[iNewScene] = NULL;
 
-	if ( !nx_state.softwareOnly && (nxSDK->getHWVersion() != NX_HW_VERSION_NONE))
+	if (!nx_state.softwareOnly && (nxSDK->getHWVersion() != NX_HW_VERSION_NONE))
 	{
 		sceneDesc.simType = NX_SIMULATION_HW;
 		nxScene[iNewScene] = nxSDK->createScene(sceneDesc);
