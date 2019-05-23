@@ -756,6 +756,7 @@ void dbDelink()
 
 static HWND hwnd;
 static bool requestClose=false;
+static bool reallyExit = false;
 static BOOL CtrlHandler(DWORD fdwCtrlType) 
 { 
 	switch (fdwCtrlType) 
@@ -767,7 +768,7 @@ static BOOL CtrlHandler(DWORD fdwCtrlType)
 	case CTRL_C_EVENT: 
 		{
 			int num_playing = ent_list?ent_list->num_alloced:0;
-			if (num_playing > 1) {
+			if (num_playing > 0) {
 				// There are people playing, ask the main thread to exit
 				requestClose = true;
 				// Do not allow exit
@@ -780,6 +781,7 @@ static BOOL CtrlHandler(DWORD fdwCtrlType)
 			//with control event, this function call safely does nothing
 			logServerShutdown();
 			
+			// XXX: I don't think this dbPrepShutdown does anything.
 			dbPrepShutdown(NULL, 0);
 			// Allow exit
 			return FALSE;
@@ -792,13 +794,16 @@ static BOOL CtrlHandler(DWORD fdwCtrlType)
 } 
 
 void checkExitRequest(void) {
+	if (reallyExit) {
+		// Exit immediately if we already sent the warning!
+		exit(0);
+	}
 	if (requestClose) {
 		// Warn them on exit!
-		if (IDYES==MessageBox(hwnd, "Are you sure you want to forcefully close the DbServer?  Please shut down the servers through the ServerMonitor for a graceful shutdown.", "DBServer Close Confirmation", MB_YESNO | MB_ICONERROR)) {
-			// Exit immediately!
-			dbPrepShutdown(NULL, 0);
-			exit(0);
-		}
+		printf_stderr("Are you sure you want to forcefully close the DbServer? "
+			"Please use the ServerMonitor or press \'&\' for a graceful shutdown. "
+			"If you really want to shut down, force shutdown again.\n");
+		reallyExit = true;
 		requestClose = false;
 	}
 }
@@ -2077,6 +2082,8 @@ int main(int argc,char **argv)
 					g_heuristicdebug_enabled = !g_heuristicdebug_enabled;
 					printf("%s loadBalance heuristic debugging\n", g_heuristicdebug_enabled ? "Enabling" : "Disabling");
 				}
+				xcase '&':
+					dbPrepShutdown("Server shutting down!", 0);
 				xcase '?':
 				{
 					printf("\n");
@@ -2098,6 +2105,7 @@ int main(int argc,char **argv)
 					printf("X = Disable transacted mode for the SQL fifo\n");
 					printf("h = toggle load balancer heuristic debug\n");
 					printf("H = validate heaps\n");
+					printf("& = Shut down gracefully\n");
 				}
 			}
 		}
