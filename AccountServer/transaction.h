@@ -27,7 +27,7 @@ typedef struct GameTransaction {
 
 typedef struct MultiGameTransaction {
 	OrderId order_id;
-	ssize_t count;
+	SQLINTEGER count;
 	asql_game_transaction transactions[MAX_MULTI_GAME_TRANSACTIONS];
 	asql_flexible_inventory flex_inv;
 	Account *account;

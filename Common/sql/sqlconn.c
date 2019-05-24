@@ -1,6 +1,5 @@
 #include "sqlconn.h"
 #include "wininclude.h"
-#include "sqlinclude.h"
 #include "superassert.h"
 #include "stackdump.h"
 #include "timing.h"
@@ -818,7 +817,7 @@ int sqlConnStmtSetBindOffset(HSTMT stmt, size_t *offset) {
 	return ret;
 }
 
-int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, ssize_t* strlen) {
+int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, SQLINTEGER* strlen) {
 	SQLRETURN ret;	
 
 	ret = SQLBindParameter(stmt, param, paramtype, ctype, sqltype, colsize, decimals, data, buflen, strlen);
@@ -827,7 +826,7 @@ int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sq
 	return ret;
 }
 
-int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t *tabletype, ssize_t *numrows) {
+int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t *tabletype, SQLINTEGER *numrows) {
 	SQLRETURN ret;
 	
 	ret = sqlConnStmtBindParam(stmt, param, SQL_PARAM_INPUT, SQL_C_DEFAULT, SQL_SS_TABLE, maxrows, 0, tabletype, tabletype ? SQL_NTS : 0, numrows);
@@ -853,7 +852,7 @@ int sqlConnStmtUnbindParams(HSTMT stmt) {
 	return ret;
 }
 
-int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, ssize_t* strlen)
+int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, SQLINTEGER* strlen)
 {
 	SQLRETURN ret;
 

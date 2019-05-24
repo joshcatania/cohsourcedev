@@ -1,14 +1,12 @@
 #ifndef _SQLCONN_H
 #define _SQLCONN_H
 
+#include "sqlinclude.h"
+
 #define SHORT_SQL_STRING 1024
 #define LONG_SQL_STRING 16*1024*1024
 
 C_DECLARATIONS_BEGIN
-
-// stolen evilly from sqltypes.h
-typedef void* HSTMT;
-typedef void* HDBC;
 
 typedef unsigned int SqlConn;
 #define SQLCONN_FOREGROUND 0
@@ -51,13 +49,13 @@ int sqlConnExecDirectMany(char *cmd, int cmd_len, SqlConn conn, bool utf8);
 // parameter binding
 int sqlConnStmtBindParamArray(HSTMT stmt, size_t count, size_t row_size);
 int sqlConnStmtSetBindOffset(HSTMT stmt, size_t *offset);
-int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, ssize_t* strlen);
-int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t *tabletype, ssize_t *numrows);
+int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, SQLINTEGER* strlen);
+int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t *tabletype, SQLINTEGER *numrows);
 int sqlConnStmtEndBindParamTableValued(HSTMT stmt);
 int sqlConnStmtUnbindParams(HSTMT stmt);
 
 // column binding
-int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, ssize_t* strlen);
+int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, SQLINTEGER* strlen);
 int sqlConnStmtUnbindCols(HSTMT stmt);
 
 // streaming data
