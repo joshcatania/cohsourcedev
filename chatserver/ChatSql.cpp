@@ -123,7 +123,7 @@ bool chatsql_insert_or_update_user(U32 auth_id, const char** estr_user)
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_USER];
-	SQLINTEGER user_length = estrLength(estr_user);
+	SQLLEN user_length = estrLength(estr_user);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, 0, 0, (void*)*estr_user, user_length, &user_length);
@@ -137,8 +137,8 @@ bool chatsql_insert_or_update_channel(const char *name, const char** estr_channe
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_CHANNEL];
-	SQLINTEGER name_length = strlen(name);
-	SQLINTEGER channel_length = estrLength(estr_channel);
+	SQLLEN name_length = strlen(name);
+	SQLLEN channel_length = estrLength(estr_channel);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, CHANNEL_NAME_COLUMN_LENGTH, 0, (void*)name, name_length, &name_length);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, 0, 0, (void*)*estr_channel, channel_length, &channel_length);
@@ -152,7 +152,7 @@ bool chatsql_insert_or_update_user_gmail(U32 auth_id, const char** estr_user_gma
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_USER_GMAIL];
-	SQLINTEGER user_gmail_length = estrLength(estr_user_gmail);
+	SQLLEN user_gmail_length = estrLength(estr_user_gmail);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, 0, 0, (void*)*estr_user_gmail, user_gmail_length, &user_gmail_length);
@@ -167,7 +167,7 @@ bool chatsql_delete_channel(const char* name)
 
 	HSTMT stmt = cs.proc[CHATSQL_DELETE_CHANNEL];
 
-	SQLINTEGER name_length = strlen(name);
+	SQLLEN name_length = strlen(name);
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, CHANNEL_NAME_COLUMN_LENGTH, 0, (void*)name, name_length, &name_length);
 
 	return plSqlExecute(stmt, chatsql_stored_procedure_names[CHATSQL_DELETE_CHANNEL], SQLCONN_FOREGROUND);

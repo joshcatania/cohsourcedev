@@ -52,23 +52,23 @@ static const char * asql_stored_procedure_names[] = {
 STATIC_ASSERT(ARRAY_SIZE(asql_stored_procedure_names) == ASQL_STORED_PROCEDURE_MAX);
 
 struct asql_inventory_bytes {
-	SQLINTEGER sku_id_bytes;
-	SQLINTEGER granted_total_bytes;
-	SQLINTEGER claimed_total_bytes;
-	SQLINTEGER saved_total_bytes;
-	SQLINTEGER expires_bytes;
+	SQLLEN sku_id_bytes;
+	SQLLEN granted_total_bytes;
+	SQLLEN claimed_total_bytes;
+	SQLLEN saved_total_bytes;
+	SQLLEN expires_bytes;
 };
 
 struct asql_game_transaction_bytes {
-	SQLINTEGER order_id_bytes;
-	SQLINTEGER auth_id_bytes;
-	SQLINTEGER sku_id_bytes;
-	SQLINTEGER transaction_date_bytes;
-	SQLINTEGER shard_id_bytes;
-	SQLINTEGER ent_id_bytes;
-	SQLINTEGER granted_bytes;
-	SQLINTEGER claimed_bytes;
-	SQLINTEGER csr_did_it_bytes;
+	SQLLEN order_id_bytes;
+	SQLLEN auth_id_bytes;
+	SQLLEN sku_id_bytes;
+	SQLLEN transaction_date_bytes;
+	SQLLEN shard_id_bytes;
+	SQLLEN ent_id_bytes;
+	SQLLEN granted_bytes;
+	SQLLEN claimed_bytes;
+	SQLLEN csr_did_it_bytes;
 };
 
 struct __declspec(align(EXPECTED_WORST_CACHE_LINE_SIZE)) asql_task {
@@ -302,7 +302,7 @@ void asql_sync_product_types() {
 
 	long product_type_ids[kAccountInventoryType_Count];
 	char names[kAccountInventoryType_Count][128];
-	SQLINTEGER name_bytes[kAccountInventoryType_Count];
+	SQLLEN name_bytes[kAccountInventoryType_Count];
 
 	for (unsigned i=0; i<kAccountInventoryType_Count; i++) {
 		product_type_ids[i] = i;
@@ -375,18 +375,18 @@ void asql_sync_products() {
 	assert(size);
 
 	SkuId * sku_ids = new SkuId[size];
-	SQLINTEGER* sku_bytes = new SQLINTEGER[size];
+	SQLLEN* sku_bytes = new SQLLEN[size];
 
 	char (*names)[128] = new char[size][128];
-	SQLINTEGER* name_bytes = new SQLINTEGER[size];
+	SQLLEN* name_bytes = new SQLLEN[size];
 
 	long * product_type_ids = new long[size];
 
 	long * grant_limits = new long[size];
-	SQLINTEGER* grant_limit_bytes = new SQLINTEGER[size];
+	SQLLEN* grant_limit_bytes = new SQLLEN[size];
 
 	long * expiration_seconds = new long[size];
-	SQLINTEGER* expiration_second_bytes = new SQLINTEGER[size];
+	SQLLEN* expiration_second_bytes = new SQLLEN[size];
 
 	for (unsigned i=0; i<size; i++) {
 		sku_ids[i] = products[i]->sku_id;
@@ -485,14 +485,14 @@ bool asql_search_for_account(SqlConn conn, const char *auth_name_or_id, U32 *fou
 {
 	HSTMT stmt = asql_prepare(conn, ASQL_SEARCH_FOR_ACCOUNT, "SELECT TOP 1 auth_id FROM account WHERE auth_id=? OR name=?;");
 
-	SQLINTEGER found_auth_id_bytes = sizeof(*found_auth_id);
+	SQLLEN found_auth_id_bytes = sizeof(*found_auth_id);
 
 	sqlConnStmtBindCol(stmt, 1, SQL_C_LONG, found_auth_id, sizeof(*found_auth_id), &found_auth_id_bytes);
 
 	long search_for_id = atoi(auth_name_or_id);
-	SQLINTEGER search_for_id_bytes = search_for_id ? sizeof(search_for_id) : SQL_NULL_DATA;
+	SQLLEN search_for_id_bytes = search_for_id ? sizeof(search_for_id) : SQL_NULL_DATA;
 	
-	SQLINTEGER auth_name_or_id_bytes = SQL_NTS;
+	SQLLEN auth_name_or_id_bytes = SQL_NTS;
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &search_for_id, sizeof(search_for_id), &search_for_id_bytes);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, SIZEOF2(asql_account, name), 0, (void*)auth_name_or_id, SIZEOF2(asql_account, name), &auth_name_or_id_bytes);
@@ -584,10 +584,10 @@ static bool asql_find_or_create_account(SqlConn conn, asql_account * acc, asql_i
 
 	HSTMT stmt = asql_prepare(conn, ASQL_FIND_OR_CREATE_ACCOUNT, "{CALL dbo.SP_find_or_create_account (@auth_id=?, @name=?, @loyalty_bits=?, @last_loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
 
-	SQLINTEGER name_size = acc->name[0] ? strlen(acc->name) : SQL_NULL_DATA;
-	SQLINTEGER loyalty_bits_size = LOYALTY_SQL_BYTES;
-	SQLINTEGER last_email_date_size = sizeof(acc->last_email_date);
-	SQLINTEGER free_xfer_date_size = sizeof(acc->free_xfer_date);
+	SQLLEN name_size = acc->name[0] ? strlen(acc->name) : SQL_NULL_DATA;
+	SQLLEN loyalty_bits_size = LOYALTY_SQL_BYTES;
+	SQLLEN last_email_date_size = sizeof(acc->last_email_date);
+	SQLLEN free_xfer_date_size = sizeof(acc->free_xfer_date);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &acc->auth_id, sizeof(acc->auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT_OUTPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAY_SIZE(acc->name)-1, 0, &acc->name, sizeof(acc->name), &name_size);
@@ -670,9 +670,9 @@ void asql_find_or_create_account_async(Account * account) {
 }
 
 static bool asql_update_account(SqlConn conn, asql_account * acc) {
-	SQLINTEGER loyalty_bits_size = LOYALTY_SQL_BYTES;
-	SQLINTEGER last_email_date_is_null = SQL_NULL_DATA;
-	SQLINTEGER free_xfer_date_is_null = SQL_NULL_DATA;
+	SQLLEN loyalty_bits_size = LOYALTY_SQL_BYTES;
+	SQLLEN last_email_date_is_null = SQL_NULL_DATA;
+	SQLLEN free_xfer_date_is_null = SQL_NULL_DATA;
 
 	HSTMT stmt = asql_prepare(conn, ASQL_UPDATE_ACCOUNT, "{CALL dbo.SP_update_account (@auth_id=?, @loyalty_bits=?, @loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &acc->auth_id, sizeof(acc->auth_id), NULL);
@@ -701,7 +701,7 @@ void asql_update_account_async(Account * account) {
 }
 
 static bool asql_add_micro_transaction(SqlConn conn, asql_micro_transaction * mtx, asql_inventory * inv) {
-	SQLINTEGER sku_bytes = sizeof(mtx->sku_id);
+	SQLLEN sku_bytes = sizeof(mtx->sku_id);
 
 	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MICRO_TRANSACTION, "{CALL dbo.SP_add_micro_transaction (@order_id=?, @auth_id=?, @sku_id=?, @transaction_date=?, @quantity=?, @points=?)}");
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &mtx->order_id, sizeof(mtx->order_id), NULL);
@@ -738,11 +738,11 @@ void asql_add_micro_transaction_async(MicroTransaction * transaction) {
 }
 
 static bool asql_add_game_transaction(SqlConn conn, asql_game_transaction * gtx, asql_inventory * inv) {
-	SQLINTEGER sku_bytes = sizeof(gtx->sku_id);
-	SQLINTEGER shard_id_is_null = SQL_NULL_DATA;
-	SQLINTEGER ent_id_is_null = SQL_NULL_DATA;
-	SQLINTEGER granted_is_null = SQL_NULL_DATA;
-	SQLINTEGER claimed_is_null = SQL_NULL_DATA;
+	SQLLEN sku_bytes = sizeof(gtx->sku_id);
+	SQLLEN shard_id_is_null = SQL_NULL_DATA;
+	SQLLEN ent_id_is_null = SQL_NULL_DATA;
+	SQLLEN granted_is_null = SQL_NULL_DATA;
+	SQLLEN claimed_is_null = SQL_NULL_DATA;
 	//ssize_t saved_is_null = SQL_NULL_DATA;
 
 	HSTMT stmt = asql_prepare(conn, ASQL_ADD_GAME_TRANSACTION, "{CALL dbo.SP_add_game_transaction (@order_id=?, @auth_id=?, @sku_id=?, @transaction_date=?, @csr_did_it=?, @shard_id=?, @ent_id=?, @granted=?, @claimed=?)}");
@@ -836,21 +836,21 @@ static bool asql_add_multi_game_transaction(SqlConn conn, MultiGameTransaction *
 	U32 auth_ids[MAX_MULTI_GAME_TRANSACTIONS];
 
 	SkuId sku_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	SQLINTEGER sku_bytes[MAX_MULTI_GAME_TRANSACTIONS];
+	SQLLEN sku_bytes[MAX_MULTI_GAME_TRANSACTIONS];
 
 	SQL_TIMESTAMP_STRUCT transaction_dates[MAX_MULTI_GAME_TRANSACTIONS];
 
 	U8 shard_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	SQLINTEGER shard_bytes[MAX_MULTI_GAME_TRANSACTIONS];
+	SQLLEN shard_bytes[MAX_MULTI_GAME_TRANSACTIONS];
 
 	U32 ent_ids[MAX_MULTI_GAME_TRANSACTIONS];
-	SQLINTEGER ent_bytes[MAX_MULTI_GAME_TRANSACTIONS];
+	SQLLEN ent_bytes[MAX_MULTI_GAME_TRANSACTIONS];
 
 	long granted_values[MAX_MULTI_GAME_TRANSACTIONS];
-	SQLINTEGER granted_bytes[MAX_MULTI_GAME_TRANSACTIONS];
+	SQLLEN granted_bytes[MAX_MULTI_GAME_TRANSACTIONS];
 
 	long claimed_values[MAX_MULTI_GAME_TRANSACTIONS];
-	SQLINTEGER claimed_bytes[MAX_MULTI_GAME_TRANSACTIONS];
+	SQLLEN claimed_bytes[MAX_MULTI_GAME_TRANSACTIONS];
 
 	U8 csr_did_its[MAX_MULTI_GAME_TRANSACTIONS];
 
@@ -1032,8 +1032,8 @@ static bool asql_read_unsaved_game_transactions(SqlConn conn, U32 auth_id, U8 sh
 	*gtx_count = 0;
 	*gtx_list = NULL;
 
-	SQLINTEGER shard_id_is_null = SQL_NULL_DATA;
-	SQLINTEGER ent_id_is_null = SQL_NULL_DATA;
+	SQLLEN shard_id_is_null = SQL_NULL_DATA;
+	SQLLEN ent_id_is_null = SQL_NULL_DATA;
 
 	HSTMT stmt = asql_prepare(conn, ASQL_READ_UNSAVED_GAME_TRANSACTIONS, "{CALL dbo.SP_read_unsaved_game_transactions (@auth_id=?, @shard_id=?, @ent_id=?)}");
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
