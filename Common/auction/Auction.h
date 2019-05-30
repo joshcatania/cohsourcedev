@@ -10,6 +10,8 @@
 #include "textparser.h"
 #include "basetsd.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 typedef struct StaticDefineInt StaticDefineInt;
 typedef struct AuctionEnt AuctionEnt;
@@ -146,5 +148,7 @@ void AuctionInventory_Destroy( AuctionInventory *hItem );
 
 INT64 calcAuctionSellFee(INT64 price);
 int calcAuctionSoldFee(int price, int origPrice, int amt, int amtCancelled);
+
+C_DECLARATIONS_END
 
 #endif //AUCTION_H

@@ -22,6 +22,8 @@
 #ifndef STRINGTABLE_H
 #define STRINGTABLE_H
 
+C_DECLARATIONS_BEGIN
+
 typedef struct StringTableImp StringTableImp;
 typedef StringTableImp *StringTable;
 typedef int (*StringProcessor)(char*);
@@ -100,5 +102,7 @@ int WriteStringTable(SimpleBufHandle file, StringTable table);
 StringTable ReadStringTable(SimpleBufHandle file);
 
 void printStringTableMemUsage();
+
+C_DECLARATIONS_END
 
 #endif

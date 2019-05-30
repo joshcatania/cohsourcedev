@@ -8,6 +8,8 @@
 
 #define DEFAULT_LOCALE_ID LOCALE_ID_ENGLISH
 
+C_DECLARATIONS_BEGIN
+
 char* locGetName(int localeID);
 char* locGetAlpha2(int localeID);
 int locIsUserSelectable(int localeID);
@@ -64,4 +66,7 @@ typedef enum
 	REGION_NA			= 0,
 	REGION_EU			= 1,
 };
+
+C_DECLARATIONS_END
+
 #endif

@@ -15,6 +15,9 @@
 #define CONTAINER_UTIL_H
 
 #include "stdtypes.h"
+
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 
 // traces
@@ -37,5 +40,7 @@ void containerReflectAdd(ContainerReflectInfo*** reflectlist, U32 target_list, U
 void containerReflectDestroy(ContainerReflectInfo*** reflectlist);
 void containerReflectSend(Packet* pak, ContainerReflectInfo*** reflectlist); // affected by <filter> field
 void containerReflectGet(Packet* pak, ContainerReflectInfo*** reflectlist);
+
+C_DECLARATIONS_END
 
 #endif // CONTAINER_UTIL_H

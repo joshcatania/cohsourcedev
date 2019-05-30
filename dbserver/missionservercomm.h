@@ -1,5 +1,7 @@
 #pragma once
 
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
 
@@ -24,3 +26,5 @@ void handleMissionServerEmail( Packet * pak_in );
 
 #define DB_MISSIONSERVER_MAX_SENDQUEUE_SIZE_DEFAULT			1000000
 #define DB_MISSIONSERVER_MAX_SENDQUEUEPUBLISH_SIZE_DEFAULT	500000
+
+C_DECLARATIONS_END

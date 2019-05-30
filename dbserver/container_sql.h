@@ -5,6 +5,8 @@
 #include "container_tplt_utils.h"
 #include "sql/sqlconn.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 typedef struct LineList LineList;
@@ -125,5 +127,7 @@ void sqlContainerUpdateInternal(ContainerTemplate *tplt, int container_id, void 
 
 // startup test
 void testDataBaseTypes(struct DbList * list);
+
+C_DECLARATIONS_END
 
 #endif

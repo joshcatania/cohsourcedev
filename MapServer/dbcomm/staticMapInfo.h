@@ -1,6 +1,8 @@
 #ifndef STATICMAPINFO_H
 #define STATICMAPINFO_H
 
+C_DECLARATIONS_BEGIN
+
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 
@@ -222,5 +224,7 @@ extern bool g_MapIsMissionMap;
 
 void MonorailsLoad(void);
 MonorailLine* MonorailGetLine(char* linename);
+
+C_DECLARATIONS_END
 
 #endif

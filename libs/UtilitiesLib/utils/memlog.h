@@ -4,6 +4,8 @@
 #define MEMLOG_NUM_LINES 256
 #define MEMLOG_LINE_WIDTH 256
 
+C_DECLARATIONS_BEGIN
+
 typedef void (*Printf)(FORMAT, ...);
 typedef struct MemLog 
 {
@@ -20,5 +22,7 @@ void memlog_printf(MemLog* log, FORMAT fmt, ...);
 void memlog_printfv(MemLog* log, char const *fmt, va_list args);
 void memlog_dump(MemLog* log);
 void memlog_setCallback(MemLog* log, Printf callback);
+
+C_DECLARATIONS_END
 
 #endif

@@ -8,6 +8,8 @@
 
 #include "account/AccountTypes.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct NetLink NetLink;
 typedef struct Packet Packet;
 
@@ -29,5 +31,7 @@ void handleRequestShardJump(Packet *pak_in, NetLink *link);
 void handleAuctionPurgeFake(Packet *pak_in, NetLink *link);
 
 NetLink *auctionLink(bool bThrottle);
+
+C_DECLARATIONS_END
 
 #endif //AUCTIONSERVERCOMM_H

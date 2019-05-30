@@ -6,6 +6,8 @@
 #ifndef STATAGG_H__
 #define STATAGG_H__
 
+C_DECLARATIONS_BEGIN
+
 void stat_ReadTable(void);
 	// Call once at startup to set up initial state of stats
 
@@ -15,6 +17,8 @@ void stat_Update(void);
 
 void stat_UpdateStatsForEnt(int dbid, char *pchEnt);
 	// Update all the stats which appear in the given text ent definition.
+
+C_DECLARATIONS_END
 
 #endif /* #ifndef STATAGG_H__ */
 

@@ -1,6 +1,8 @@
 #ifndef OVERLOADPROTECTION_H
 #define OVERLOADPROTECTION_H
 
+C_DECLARATIONS_BEGIN
+
 bool overloadProtection_IsEnabled(void);
 bool overloadProtection_DoNotStartMaps(void);
 int  overloadProtection_GetStatus(void);
@@ -18,6 +20,8 @@ void overloadProtection_MonitorOverride(char *message);
 // SQL state overloads
 void overloadProtection_SetSQLQueueWaterMarks(int lowWaterMark, int highWaterMark);
 void overloadProtection_SetSQLStatus(int sql_queue_count);
+
+C_DECLARATIONS_END
 
 #endif // OVERLOADPROTECTION_H
 

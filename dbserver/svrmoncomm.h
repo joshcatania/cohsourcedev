@@ -8,6 +8,8 @@
 #define SVRMON_PROTOCOL_MAJOR_VERSION 20110804
 #define SVRMON_PROTOCOL_MINOR_VERSION 20110804
 
+C_DECLARATIONS_BEGIN
+
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 
@@ -211,5 +213,7 @@ TokenizerParseInfo EntConNetInfo[] =
 
 
 #endif
+
+C_DECLARATIONS_END
 
 #endif

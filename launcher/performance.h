@@ -5,6 +5,8 @@
 
 #include "textparser.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 
 typedef struct TrackedPerformance {
@@ -54,4 +56,7 @@ TokenizerParseInfo TrackedPerformanceInfoCPU[] =
 };
 
 #endif
+
+C_DECLARATIONS_END
+
 #endif

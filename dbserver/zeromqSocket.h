@@ -1,6 +1,8 @@
 #ifndef _ZEROMQSOCKET_H
 #define _ZEROMQSOCKET_H
 
+C_DECLARATIONS_BEGIN
+
 #define IP_ADD_MAX 16000 //enough space for really, really long hostnames
 
 typedef struct
@@ -31,4 +33,7 @@ void zmqResetConnection(ZmqSocket* zmqConn);
 void zmqSetNewIPAddress(ZmqSocket* zmqConn, char* address);
 void zmqSetNewPortNumber(ZmqSocket* zmqConn, int portNumber);
 void zmqSetHighWaterMark(ZmqSocket* zmqConn, unsigned __int64 hwm_value);
+
+C_DECLARATIONS_END
+
 #endif

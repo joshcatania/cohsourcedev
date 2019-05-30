@@ -5,6 +5,8 @@
 #include "netio.h"
 #include "..\Common\ClientLogin\clientcommLogin.h"
 
+C_DECLARATIONS_BEGIN
+
 #ifndef SQL_NTS
 #define SQL_NTS                   (-3)
 #endif
@@ -43,6 +45,8 @@ void sqlReadColumnsAsyncWithDebugDelay(TableInfo *table, char *limit, char *col_
 void sqlDeleteRowAsync(char *table, int container_id);
 void sqlExecAsync(char *str, int str_len);
 void sqlExecAsyncEx(char *str, int str_len, int container_id, bool utf8);
+
+C_DECLARATIONS_END
 
 #endif
 

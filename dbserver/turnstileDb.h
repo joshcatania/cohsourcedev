@@ -13,6 +13,8 @@
 
 #include "stdtypes.h"
 
+C_DECLARATIONS_BEGIN
+
 void turnstileCommInit(void);
 int turnstileServerSecondsSinceUpdate();
 
@@ -39,5 +41,7 @@ void turnstileDBserver_handleQueueForSpecificMissionInstance(Packet *pak_in);
 void turnstileDBserver_addBanDBId(Packet *pak_in);
 void turnstileDBserver_handleCrashedIncarnateMap(int mapID);
 void turnstileDBserver_init();
+
+C_DECLARATIONS_END
 
 #endif // TURNSTILEDB_H

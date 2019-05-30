@@ -4,6 +4,8 @@
 #include "stdtypes.h"
 #include "authconn.h"
 
+C_DECLARATIONS_BEGIN
+
 // These values are duplicated in AuthServer/src/AuthServer/Config.h
 #define USA_AUTH_PROTOCOL_VERSION			30206	// version of the auth used in us/europe production coh from 2004/4/28 - ???
 #define ASIA_AUTH_PROTOCOL_VERSION			30207	// version of the auth used in asia
@@ -55,6 +57,8 @@ U32 authGetKey();
 void authEncryptLineage2(const char * original, char * encoded, unsigned int encodeBlock);
 int authIsGlobalAuth();
 int authSocketOk();
+
+C_DECLARATIONS_END
 
 // End mkproto
 #endif

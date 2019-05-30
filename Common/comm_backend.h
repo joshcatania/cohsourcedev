@@ -3,6 +3,8 @@
 
 #include "network\netio.h"
 
+C_DECLARATIONS_BEGIN
+
 #define DBSERVER_PROTOCOL_VERSION			20110503	// DbServer<->Mapserver<->ServerMonitor protocol number
 #define DBSERVER_CLIENT_PROTOCOL_VERSION	20110614	// DbServer<->Client protocol number
 #define DBSERVER_AUCTION_PROTOCOL_VERSION	20070427	// DbServer<->AuctionServer protocol number
@@ -869,5 +871,7 @@ enum
 {
 	BEACON2DB_BEACONSERVER_STATUS = COMM_MAX_CMD,
 };
+
+C_DECLARATIONS_END
 
 #endif

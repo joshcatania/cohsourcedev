@@ -1,11 +1,13 @@
 #ifndef _CONTAINER_H
 #define _CONTAINER_H
 
-typedef const struct StashTableImp *cStashTable;
-typedef struct Packet Packet;
-
 #include "auth/auth.h"		// for AUTH_BYTES
 #include "account/AccountTypes.h"
+
+C_DECLARATIONS_BEGIN
+
+typedef const struct StashTableImp *cStashTable;
+typedef struct Packet Packet;
 
 typedef struct StashTableImp *StashTable;
 typedef struct ContainerTemplate ContainerTemplate;
@@ -412,6 +414,7 @@ void containerUnlockById(int lock_id);
 AnyContainer *containerLoadCached(DbList *list,int id,char **cache_data);
 bool containerGetField(DbList *list, DbContainer *container, int field_type, char *field_name, char * ret_str, int * ret_int, F32 *ret_f32 );
 
+C_DECLARATIONS_END
 
 // End mkproto
 #endif

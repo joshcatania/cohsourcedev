@@ -9,6 +9,8 @@
 #include "stdtypes.h"
 #include "auth.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef enum
 {
 	PREORDER_NONE                = 0,
@@ -204,6 +206,8 @@ void authUserSetAceInHoleE(U32 *data, int i);
 #define AUTH_USER_DBSERVER 1 
 void authUserMaskAuthBits(U8 *bitsToMask, int owner);
 #endif
+
+C_DECLARATIONS_END
 
 #endif /* #ifndef AUTHUSERDATA_H__ */
 

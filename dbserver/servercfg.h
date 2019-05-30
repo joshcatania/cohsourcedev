@@ -4,6 +4,8 @@
 #include "stdtypes.h"
 #include "auctionservercomm.h"
 
+C_DECLARATIONS_BEGIN
+
 #define MAX_DBSERVER 16
 
 typedef struct ServerCfg
@@ -135,5 +137,7 @@ int cfg_VIPShard();
 
 void cfg_setIsBetaShard(int data);
 void cfg_setVIPShard(int data);
+
+C_DECLARATIONS_END
 
 #endif

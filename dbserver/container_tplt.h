@@ -4,6 +4,8 @@
 #include "gametypes.h"
 #include "container_sql.h"
 
+C_DECLARATIONS_BEGIN
+
 void tpltRegisterForeignKeyConstraint(char *table, char *key, char *foreign_table);
 void tpltSetAllForeignKeyConstraintsAsync(void);
 
@@ -16,5 +18,7 @@ void tpltDropUnreferencedTables(void);
 void tpltUpdateSqlcolumns(ContainerTemplate *tplt);
 AttributeList *tpltLoadAttributes(char *fname, char *alt_fname, char *tablename);
 void tpltDeleteAll(ContainerTemplate *tplt, char *null_field, bool renumber);
+
+C_DECLARATIONS_END
 
 #endif

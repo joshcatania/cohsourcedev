@@ -1,6 +1,8 @@
 #ifndef _LAUNCHERCOMM_H
 #define _LAUNCHERCOMM_H
 
+C_DECLARATIONS_BEGIN
+
 int launcherCount(void);
 int launcherCountStaticMapLaunchers(void);
 void launcherLaunchBeaconizers(void);
@@ -21,5 +23,7 @@ void launcherReconcile(const char *ipStr);
 void launcherCommandSuspend(const char *ipStr);
 void launcherCommandResume(const char *ipStr);
 void launcherOverloadProtectionTick(void);
+
+C_DECLARATIONS_END
 
 #endif

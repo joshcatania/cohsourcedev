@@ -3,6 +3,8 @@
 
 #include "stdtypes.h"
 
+C_DECLARATIONS_BEGIN
+
 //
 // LSTL: 09/2009
 // Enables code with supports the "-process_deletion_log" command line option
@@ -59,6 +61,8 @@ void *offlinePlayerTempLoad(int db_id);
 #ifdef OFFLINE_ENABLE_DELETION_LOG_IMPORT_CODE
 	void offlineProcessDeletionLogFiles(const char* szLogFileSpec /* can include wildcards */);
 #endif
+
+C_DECLARATIONS_END
 
 #endif // _OFFLINE_H
 

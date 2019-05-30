@@ -1,6 +1,8 @@
 #ifndef _WEEKLYTFCFG_H
 #define _WEEKLYTFCFG_H
 
+C_DECLARATIONS_BEGIN
+
 typedef struct DateTime
 {
 	char *dateStr;
@@ -26,4 +28,7 @@ void WeeklyTF_AddTFToken(WeeklyTFCfg* weeklyTF_cfg,char *s);
 void WeeklyTF_RemoveTFToken(WeeklyTFCfg* weeklyTF_cfg,char *s);
 void WeeklyTF_SetEpochTime(WeeklyTFCfg* weeklyTF_cfg,char *date, char *time);
 WeeklyTFCfg* WeeklyTFCfg_getCurrentWeek(int reload);
+
+C_DECLARATIONS_END
+
 #endif

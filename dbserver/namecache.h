@@ -3,6 +3,8 @@
 
 #include "stdtypes.h"
 
+C_DECLARATIONS_BEGIN
+
 void pnameInit();
 char *pnameFindById(int db_id);
 int pnameFindByName(const char *name);
@@ -50,5 +52,7 @@ int tempLockFindbyName( char * name );
 int tempLockCheckAccountandRefresh( char * name, U32 authId, U32 time );
 void tempLockTick(U32 timeout, U32 time);
 void tempLockRemovebyName( const char * name );
+
+C_DECLARATIONS_END
 
 #endif

@@ -3,6 +3,7 @@
 
 #include "stdtypes.h"
 
+C_DECLARATIONS_BEGIN
 
 // Handles a list of entities waiting for their maps to start and for them to be unlocked
 
@@ -28,6 +29,6 @@ void doneWaitingChoosePlayerSucceded(EntCon *ent_con);
 // stats
 U32 waitingEntitiesGetPeakSize(bool bReset);
 
-
+C_DECLARATIONS_END
 
 #endif

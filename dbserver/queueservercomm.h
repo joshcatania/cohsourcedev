@@ -1,6 +1,8 @@
 #pragma once
 #include "..\Common\ClientLogin\clientcommLogin.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
 
@@ -42,10 +44,6 @@ void getGameClientOnQueueServerByName(char *authname, GameClientLink **game);
 
 void queueservercomm_switchgamestatus(GameClientLink *game, GameClientLoginStatus status);
 
-
-
-
-
-
 void reconnectQueueserverCommPlayersToAuth();
 
+C_DECLARATIONS_END

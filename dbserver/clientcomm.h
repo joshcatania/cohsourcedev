@@ -2,6 +2,8 @@
 #define _CLIENTCOMM_H
 #include "..\Common\ClientLogin\clientcommLogin.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 typedef struct MapCon MapCon;
@@ -65,5 +67,7 @@ void updateVip(void (*onVipUpdateCallback)(VipSqlCbData*), GameClientLink *clien
 void getEnts_sendPlayers(GameClientLink *client, ShardAccountCon *shardaccount_con);
 
 void addSingleAutoPass(char *authname);
+
+C_DECLARATIONS_END
 
 #endif

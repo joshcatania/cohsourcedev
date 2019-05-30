@@ -1,6 +1,8 @@
 #ifndef STRINGUTIL_H
 #define STRINGUTIL_H
 
+C_DECLARATIONS_BEGIN
+
 int narrowToWideStrCopy(const char* narrowString, unsigned short* wideString);
 int narrowToWideStrCopyChars(const char* narrowString, unsigned short* wideString, int charsToCopy);
 int UTF8ToWideStrConvert(const char* str, unsigned short* outBuffer, int outBufferMaxLength);
@@ -26,5 +28,7 @@ void Str_trimTrailingWhitespace(char *str);
 // hex string conversions
 unsigned char* hexStrToBinStr(char* hexString, int strLength);
 char* binStrToHexStr(const unsigned char* binArray, int arrayLength);
+
+C_DECLARATIONS_END
 
 #endif

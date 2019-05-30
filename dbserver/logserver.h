@@ -3,6 +3,8 @@
 
 #include "netio.h"
 
+C_DECLARATIONS_BEGIN
+
 int logNetInit();
 void logMain();
 void updateLogStats();
@@ -16,5 +18,7 @@ typedef struct
 	U32			*linked_auth_ids;
 	U32			needs_chat_status:1;
 } LogClientLink;
+
+C_DECLARATIONS_END
 
 #endif
