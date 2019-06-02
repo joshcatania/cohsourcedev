@@ -91,7 +91,16 @@ bool clientcommKickLogin(U32 auth_id,char *authname, int reason)
 
 int netGameClientLinkDelCallback(NetLink *link)
 {
+	GameClientLink * game = link->userData;
+	void**** realweakrefs = (void****)game->weakrefs;
+	int i;
+	
 	assert(!server_cfg.queue_server);	//note that this is a no queue servre only function
+	
+	for (i = 0; i < eaSize(&game->weakrefs); ++i) {
+		*realweakrefs[i] = NULL;
+	}
+	eaDestroy(&game->weakrefs);
 	return clientcomm_quitClient(link, link->userData);
 }
 
@@ -1556,9 +1565,16 @@ static void s_finishHandleChoosePlayer(Packet *pak, U8 *cols, int col_count, Col
 {
 	ChoosePlayerCreateCbData *cbData = data;
 	GameClientLink *client = cbData->client;
-	NetLink *link = client->link;
+	NetLink* link;
 	int	unlocked_character_count = col_count;
 	int owned_slots;
+
+	if (!client) {
+		free(cbData);
+		return;
+	}
+
+	link = client->link;
 
 	owned_slots = client->vip ? getNumPlayerSlotsVIP() : 0;
 	owned_slots += accountInventoryFindBonusCharacterSlots(client->auth_id);
@@ -1593,6 +1609,7 @@ static void s_finishHandleChoosePlayer(Packet *pak, U8 *cols, int col_count, Col
 		handlePlayerContainerLoaded(link,ent_con->id, client);
 	}
 
+	eaFindAndRemove(&client->weakrefs, &cbData->client);
 	free(cbData);
 }
 

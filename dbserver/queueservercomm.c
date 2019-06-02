@@ -190,9 +190,17 @@ GameClientLink * queueservercomm_gameclientCreate(U32 ip, U32 linkId)
 
 void queueservercomm_gameclientDestroy(GameClientLink *game)
 {
+	void**** realweakrefs = (void****)game->weakrefs;
+	int i;
+
 	if(game->loginStatus == GAMELLOGIN_LOGGINGIN)
 		g_queueStatus.loggingIn--;
-	
+
+	for (i = 0; i < eaSize(&game->weakrefs); ++i) {
+		*realweakrefs[i] = NULL;
+	}
+	eaDestroy(&game->weakrefs);
+
 	MP_FREE(GameClientLink, game);
 }
 

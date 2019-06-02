@@ -49,5 +49,8 @@ typedef struct
 	U32		remove;
 	int		vipFlagReady;
 	int		vip;
+#ifdef DBSERVER
+	void** weakrefs;		// actually GameClientLink*** - earray of pointers to pointers
+#endif
 } GameClientLink;
 
