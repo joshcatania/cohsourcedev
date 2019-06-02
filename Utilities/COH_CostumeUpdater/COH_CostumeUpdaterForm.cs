@@ -216,7 +216,6 @@ namespace COH_CostumeUpdater
             Dictionary<string, string> textureFilesDictionary;
             textureFilesDictionary = common.COH_IO.getFilesDictionary(@"c:\game\data\texture_library", "*.texture");
             costume.ddsViewer dds = new COH_CostumeUpdater.costume.ddsViewer(@"C:\Test\thumbNail", w, h, false);
-            int i = 0;
             foreach (KeyValuePair<string, string> kvp in textureFilesDictionary)
             {
                 if (dds == null)
@@ -227,7 +226,7 @@ namespace COH_CostumeUpdater
                 {
                     dds.saveImage(kvp.Key);
                 }
-                catch (Exception ex) 
+                catch (Exception) 
                 {
                     dds = null;
                 }

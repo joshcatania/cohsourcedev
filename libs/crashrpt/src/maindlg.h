@@ -116,7 +116,7 @@ public:
 		es.pfnCallback = LoadRTFString;
 
 		CString sText;
-		if (_stricmp(m_sModuleName, "CityOfHeroes.exe")==0) {
+		if (_stricmp(m_sModuleName, "Ouroboros.exe")==0) {
 			sText.Format(IDS_HEADER, _T("City of Heroes"), "");
 		}else if (_stricmp(m_sModuleName, "CostumeCreator.exe")==0) {
 			sText.Format(IDS_HEADER, _T("City of Heroes - Costume Creator"), "");

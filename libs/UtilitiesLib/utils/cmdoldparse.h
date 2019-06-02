@@ -270,6 +270,8 @@ extern CmdList globCmdOldList;
 
 void cmdOldListAddToHashes(CmdList *cmdlist, int index);
 
+Cmd *cmdOldListFind(CmdList *cmdlist, const char *name, const char *header, CmdHandler *handler);
+
 // No automatic handling of private commands, the app/library must have their own
 void cmdOldAddToPrivateCmdList(Cmd *cmds, CmdHandler handler, char *header);
 extern CmdList privCmdList;

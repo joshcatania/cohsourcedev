@@ -1,5 +1,4 @@
 ﻿using System;
-using P4API;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
@@ -119,7 +118,7 @@ namespace COH_CostumeUpdater.assetsMangement
 
                 return false;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -308,44 +307,7 @@ namespace COH_CostumeUpdater.assetsMangement
         }
         private static string executeP4Cmd(string cmd, string [] args)
         {
-            string results = "";
-            try
-            {
-                
-                P4Connection p4 = new P4Connection();
-                p4.Connect();
-
-                P4RecordSet recSet = p4.Run(cmd, args);
-
-                foreach (object obj in recSet.Messages)
-                {
-                    results += String.Format("{0}\r\n", (string)obj);
-                }
-
-                foreach (P4Record rec in recSet)
-                {
-                    FieldDictionary fd = rec.Fields;
-                    if (cmd.Equals("opened"))
-                    {
-                        results += fd["clientFile"];
-                    }
-                    else
-                    {
-                        foreach (string key in fd.Keys)
-                        {
-                            results += String.Format("{0}\t\t{1}\r\n", key, fd[key]);
-                        }
-                    }
-                    results += "\r\n";
-                }
-                p4.Disconnect();
-
-             }
-            catch (Exception ex)
-            {
-                return ex.Message;
-            }
-            return results;
+            return String.Empty;
         }
         private static string executeGimmeCmd(string cmd)
         {

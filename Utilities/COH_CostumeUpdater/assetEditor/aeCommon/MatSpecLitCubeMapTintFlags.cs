@@ -610,7 +610,7 @@ namespace COH_CostumeUpdater.assetEditor.aeCommon
                 openFileDialog1.InitialDirectory = System.IO.Path.GetDirectoryName(textureTXBx.Text);
 
             }
-            catch (Exception e)
+            catch (Exception)
             {
             }
         }

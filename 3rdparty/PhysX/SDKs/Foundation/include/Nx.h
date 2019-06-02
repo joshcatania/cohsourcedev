@@ -16,7 +16,9 @@
 DLL export macros
 */
 #ifndef NX_C_EXPORT
+#ifdef __cplusplus
 	#define NX_C_EXPORT extern "C"
+#endif
 #endif
 
 #ifndef NX_CALL_CONV
@@ -28,6 +30,8 @@ DLL export macros
               #define NX_CALL_CONV
         #elif defined __APPLE__
               #define NX_CALL_CONV
+	#elif defined(SN_TARGET_PSP2)
+			#define NX_CALL_CONV
 	#elif defined __CELLOS_LV2__
 	       #define NX_CALL_CONV
 	#elif defined _XBOX
@@ -51,7 +55,7 @@ DLL export macros
 		#error PhysX SDK: Platforms pointer size ambiguous!  The defines WIN32 and NX64 are in conflict.  
 	#endif
 	#define NX32
-#elif defined __CELLOS_LV2__
+#elif defined __CELLOS_LV2__ 
 	#ifdef __LP32__
             #define NX32
     #else
@@ -62,6 +66,8 @@ DLL export macros
 #elif defined __linux__
         #define NX32
 #elif defined(__PPCGEKKO__)
+	#define NX32
+#elif defined(SN_TARGET_PSP2)
 	#define NX32
 #else
 	#error PhysX SDK: Platforms pointer size ambiguous.  Please define NX32 or Nx64 in the compiler settings!
@@ -78,6 +84,7 @@ DLL export macros
 	#define _CELL_NX_COMPILE_TIME_NAME(x) _CELL_NX_COMPILE_TIME_NAME_(x)
 	#define NX_COMPILE_TIME_ASSERT(exp) extern char _CELL_NX_COMPILE_TIME_NAME(__LINE__)[ (exp) ? 1 : -1]
 #endif
+
 
 
 #if _MSC_VER

@@ -169,6 +169,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -179,6 +180,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -190,6 +192,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -200,6 +203,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -211,6 +215,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <TreatWarningAsError>false</TreatWarningAsError>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -221,6 +226,7 @@
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
@@ -232,6 +238,7 @@
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|x64'">
@@ -240,6 +247,7 @@
     </PreBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>./UtilsNew;./utils;./assert;./components;./language;./network;./version;../crashrpt/src/;./components/TriCube;./UtilsNew/google_sparsehash/src/;.;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

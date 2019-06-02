@@ -230,14 +230,6 @@ void fxInitDebrisManager()
 	if ( fx_debris_manager.uiMaxDebris == 0 )
 		return;
 
-	// debris max not inited, set it to default
-	/* - now a gfx option
-	if ( nx_state.hardware )
-		fx_debris_manager.uiMaxDebris = 750;
-	else
-		fx_debris_manager.uiMaxDebris = 200;
-		*/
-
 	fx_debris_manager.uiDebrisCount = 0;
 
 	fx_debris_manager.debrisQueue = createQueue();
@@ -363,13 +355,13 @@ void fxSetMaxDebrisCount()
 	xcase ePhysicsQuality_None:
 		uiMaxDebrisCount = 0;
 	xcase ePhysicsQuality_Low:
-		uiMaxDebrisCount = 150;
+		uiMaxDebrisCount = 250;
 	xcase ePhysicsQuality_Medium:
-		uiMaxDebrisCount = 350;
-	xcase ePhysicsQuality_High:
 		uiMaxDebrisCount = 500;
-	xcase ePhysicsQuality_VeryHigh:
+	xcase ePhysicsQuality_High:
 		uiMaxDebrisCount = 750;
+	xcase ePhysicsQuality_VeryHigh:
+		uiMaxDebrisCount = 1500;
 	}
 
 	if ( fx_debris_manager.uiMaxDebris == uiMaxDebrisCount )

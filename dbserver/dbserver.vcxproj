@@ -127,6 +127,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -144,12 +145,14 @@
     <ClCompile>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PostBuildEvent>
       <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin"</Command>
@@ -178,6 +181,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|x64'">
@@ -195,6 +199,7 @@
     <ClCompile>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|x64'">
@@ -212,6 +217,7 @@
     <ClCompile>
       <PreprocessorDefinitions>NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Common\account;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

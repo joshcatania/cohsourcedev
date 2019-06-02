@@ -383,7 +383,7 @@ void loyaltyTreeRender(F32 x, F32 y, F32 z, F32 sc)
 			case ACCOUNT_SERVER_UP:
 				if (mouseClickHitNoCol(MS_LEFT))
 				{
-					webOpenUpgradeToVIP();
+					//webOpenUpgradeToVIP();
 				}
 				setLTTooltip(&box, "VIPBannerButton");
 				break;

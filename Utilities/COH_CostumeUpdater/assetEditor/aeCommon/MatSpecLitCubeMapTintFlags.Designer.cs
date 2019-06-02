@@ -1128,7 +1128,7 @@
         private decimal dIncrement;
         private decimal dMaximum;
         private decimal dMinimum;
-        private bool isDirty;
+        private bool isDirty = false;
 
         
 //colorSetting

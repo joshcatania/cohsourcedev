@@ -2468,9 +2468,6 @@ void combineSpecMenu()
 	// trash icon
 	s_combo_trash( FRAME_SPACE + 30, FRAME_BOT - 25, 50, screenScaleX, screenScaleY );
 
-	//store icon
-	drawHybridStoreLargeButton("045-000-000-000", (DEFAULT_SCRN_WD-FRAME_SPACE-35)*screenScaleX, (FRAME_BOT-25)*screenScaleY, 50, MIN(screenScaleX, screenScaleY), CLR_WHITE, HB_STORE_CATEGORY, 0);  //PSID_Enhancement
-
 	if( combo.open )
 	{
 		if( D_MOUSEHIT == drawStdButton( (DEFAULT_SCRN_WD - FRAME_SPACE - 60)*screenScaleX, (FRAME_BOT+25)*screenScaleY, 120, 100*screenScaleX, 40*screenScaleY, 0xff0000ff, "ExitString", 2.f*screenScale, 0 ) )

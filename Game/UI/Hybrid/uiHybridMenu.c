@@ -2989,7 +2989,7 @@ static void openStoreWindow(const char * item, int flags)
 {
 	if (!item)
 	{
-		webStoreOpenDefault();
+		return;
 	}
 	else if (flags & HB_STORE_CATEGORY)
 	{

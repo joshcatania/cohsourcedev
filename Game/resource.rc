@@ -58,6 +58,7 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
+IDI_OUROBOROS           ICON                    "Icon_Ouroboros.ico"
 IDI_STATESMAN           ICON                    "Icon_Statesman.ico"
 IDI_CRYPTIC             ICON                    "CrypticIcn.ico"
 IDI_COV                 ICON                    "Icon_Cov.ico"
@@ -153,11 +154,11 @@ BEGIN
     BEGIN
         BLOCK "000004b0"
         BEGIN
-            VALUE "CompanyName", "Paragon Studios"
+            //VALUE "CompanyName", "Paragon Studios"
             VALUE "FileDescription", "City of Heroes"
             VALUE "InternalName", "City of Heroes"
-            VALUE "LegalCopyright", "Copyright (C) 2004-2010"
-            VALUE "OriginalFilename", "CityOfHeroes.exe"
+            //VALUE "LegalCopyright", "Copyright (C) 2004-2010"
+            VALUE "OriginalFilename", "Ouroboros.exe"
             VALUE "ProductName", "City of Heroes"
         END
     END

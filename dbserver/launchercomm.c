@@ -1572,6 +1572,14 @@ int launcherCommStartProcess(const char *db_hostname, U32 host_ip, MapCon* map_c
 	{
 		estrConcatf(&cmd, " -xpscale %f", server_cfg.xpscale);
 	}
+	if (server_cfg.aescale > 1.0f || server_cfg.aescale < 1.0f)
+	{
+		estrConcatf(&cmd, " -aescale %f", server_cfg.aescale);
+	}
+	if (server_cfg.ticketscale > 1.0f || server_cfg.ticketscale < 1.0f)
+	{
+		estrConcatf(&cmd, " -ticketscale %f", server_cfg.ticketscale);
+	}
 
 	{
 		WeeklyTFCfg *weeklyTF_cfg = WeeklyTFCfg_getCurrentWeek(0);

@@ -76,7 +76,6 @@ namespace FxLauncher.FxParser
             char[] ca = str.ToCharArray();
             string nStr = "";
             int i = 0;
-            char k;
 
             foreach (char c in ca)
             {
@@ -232,7 +231,7 @@ namespace FxLauncher.FxParser
                     this.ctxMn.MenuItems.Clear();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

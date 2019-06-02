@@ -541,15 +541,15 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	setDefaultNetworkVersion(4); // Only until Aaron gets a fix in to handle connecting V5 to V4 automatically.
 
 	if (!g_shardmonitor_mode) { // If we're running as a shard monitor, we don't want to accept incoming connections from other shard monitors!
-		if (fileExists("./bin/CityOfHeroes.exe")) {
+		if (fileExists("./bin/Ouroboros.exe")) {
 			g_are_executables_in_bin = 1;
 			serverMonitorListenThreadBegin();
 			svrMonShardMonCommInit();
-		} else if (fileExists("./CityOfHeroes.exe")) {
+		} else if (fileExists("./Ouroboros.exe")) {
 			serverMonitorListenThreadBegin();
 			svrMonShardMonCommInit();
 		} else {
-			MessageBox(NULL, "The ServerMonitor appears to have been started from an invalid path (can't find CityOfHeroes.exe), disabling Processes and CmdRelay tabs.", "Wrong Working Directory", MB_OK);
+			MessageBox(NULL, "The ServerMonitor appears to have been started from an invalid path (can't find Ouroboros.exe), disabling Processes and CmdRelay tabs.", "Wrong Working Directory", MB_OK);
 			g_primaryServerMonitor = false;
 		}
 	}

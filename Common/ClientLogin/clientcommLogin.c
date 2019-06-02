@@ -27,7 +27,7 @@ void initGameChecksum()
 	s = strrchr(full_path,'/');
 	if (s)
 		*s = 0;
-	strcat(full_path,"/CityOfHeroes.exe");
+	strcat(full_path,"/Ouroboros.exe");
 	if (!checksumFile(full_path,correct_game_checksum))
 	{
 		ignore_checksum = 1;

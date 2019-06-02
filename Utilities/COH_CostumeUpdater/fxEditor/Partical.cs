@@ -98,8 +98,6 @@ namespace COH_CostumeUpdater.fxEditor
                     return false;
                 }
             }
-
-            return false;
         }
 
         public object Clone()

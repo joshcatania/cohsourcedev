@@ -171,7 +171,7 @@ namespace COH_CostumeUpdater.common
                 }
                 
             }
-            catch (Exception exp)
+            catch (Exception)
             { }
         }
     }

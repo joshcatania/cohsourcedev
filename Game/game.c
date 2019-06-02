@@ -126,7 +126,6 @@
 #include "UtilsNew/profiler.h"
 #include "ssemath.h"
 #include "uiAuction.h"
-#include "uiPlaySpanStoreLauncher.h"
 #include "uiSalvageOpen.h"
 #include "zowieClient.h"
 #include "hwlight.h"
@@ -1377,6 +1376,18 @@ void parseArgs0(int argc, char **argv)
 			game_state.ignoreBadDrivers = 1;
 			bSkipArgIfPresent = true;
 		}
+		else if (CHECKARG("-patchDir"))
+		{
+			argv[i][0] = 0;
+			if (i+1 < argc && argv[i+1])
+			{
+				forwardSlashes(argv[i+1]);
+				PigSetAddPatchDir(unquote(argv[i+1]));
+
+				argv[i+1][0] = 0;
+				++i;
+			}
+		}
 
 		if(bSkipArgIfPresent)
 		{
@@ -1987,10 +1998,6 @@ void game_loadData(int isCostumeCreator)
 		UPDATE_PROGRESS_STRING("Loading items.. ");
 		load_Stores();
 		loadend_printf("");
-		
-		// PlaySpan URL defs
-		PlaySpanStoreLauncher_InitModule();
-
 	}
 
 	PERFINFO_AUTO_STOP_START("middle9", 1);

@@ -631,7 +631,6 @@ void info_Recipes( const DetailRecipe *pRec )
 			if (pHelp)
 			{
 				addStringToStuffBuff(&info.stuffbuff, "%s", pHelp);
-				estrDestroy(&pHelp);
 			}
 			uiEnhancementFree(&pEnh);
 		}

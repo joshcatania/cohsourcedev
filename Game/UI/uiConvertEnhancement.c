@@ -184,11 +184,6 @@ int convertEnhancementWindow()
 		eaCreateConst(&sOutsetList);
 		eaPushConst(&sOutsetList, empty);
 		combobox_init( &sOutsetTypes, 240.f, 40.f, 0, 175.f, 20.f, 100.f, sOutsetList, WDW_CONVERT_ENHANCEMENT );
-
-		{
-			Wdw * window = wdwGetWindow(WDW_CONVERT_ENHANCEMENT);
-			Strcpy(window->storeLink, "COBOCONV"); //Enhancement Conversion product code
-		}
 	}
 	if ((outset == 0) || sOutputBoost || !sInputBoost || sWaitingForOutput)
 	{

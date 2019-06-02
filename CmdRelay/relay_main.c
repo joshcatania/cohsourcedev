@@ -250,12 +250,12 @@ int main(int argc,char **argv)
 	logSetDir("cmdrelay");
 	sockStart();
 
-	if (fileExists("./bin/CityOfHeroes.exe"))
+	if (fileExists("./bin/Ouroboros.exe"))
 	{
 		g_are_executables_in_bin = 1;
 		strcpy(g_workingDir, ".");
 	}
-	else if (fileExists("./CityOfHeroes.exe"))
+	else if (fileExists("./Ouroboros.exe"))
 	{
 		g_are_executables_in_bin = 0;
 		strcpy(g_workingDir, ".");

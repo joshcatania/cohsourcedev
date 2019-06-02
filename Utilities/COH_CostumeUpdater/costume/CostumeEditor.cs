@@ -163,7 +163,7 @@ namespace COH_CostumeUpdater.costume
                     this.tvContextMenu.MenuItems.Clear();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
 

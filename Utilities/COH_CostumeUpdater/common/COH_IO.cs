@@ -233,7 +233,7 @@ namespace COH_CostumeUpdater.common
                     return alpha_bitmap;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             { return null; }
         }
 
@@ -333,7 +333,7 @@ namespace COH_CostumeUpdater.common
                 {
                     filesDictionary.Add(key, value);
                 }
-                catch (Exception ex) { }
+                catch (Exception) { }
                 System.Windows.Forms.Application.DoEvents();
             }
             

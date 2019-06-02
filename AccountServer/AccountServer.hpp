@@ -26,7 +26,6 @@ typedef struct StashTableImp* StashTable;
 typedef struct StaticDefineInt StaticDefineInt;
 typedef struct Account Account;
 typedef struct AccountProduct AccountProduct;
-typedef struct PostBackRelay PostBackRelay;
 class AccountRequest;
 
 typedef struct AccountServerShard
@@ -53,11 +52,7 @@ typedef struct AccountServerCfg
 	char mtxEnvironment[32];
 	int mtxIOThreads;
 	char mtxSecretKey[256];
-	PostBackRelay **relays;
 	
-	// PlayNC authentication for web clients
-	char playNCChallengeRespSecretKey[256];
-
 	// SQL configuration
 	char sqlLogin[1024];
 	char sqlDbName[1024];
@@ -73,20 +68,7 @@ typedef struct AccountServerCfg
 	U32 playSpanAuthRekeyIntervalMins;				// interval at which we create a new playspan digest with an updated auth timeout.  (At least 2x per timeout in case one gets lost)
 
 	// Web store URL info from account_server.cfg
-	char *playSpanDomain;
 	char* playSpanCatalog;
-	char *playSpanURL_Home;
-	char *playSpanURL_CategoryView;
-	char *playSpanURL_ItemView;
-	char *playSpanURL_ShowCart;
-	char *playSpanURL_AddToCart;
-	char *playSpanURL_ManageAccount;
-	char *playSpanURL_SupportPage;
-	char *playSpanURL_SupportPageDE;
-	char *playSpanURL_SupportPageFR;
-	char *playSpanURL_UpgradeToVIP;
-	char *cohURL_NewFeatures;
-	char *cohURL_NewFeaturesUpdate;
 
 	bool grant_sku_from_list;
 	bool grant_all_sku;

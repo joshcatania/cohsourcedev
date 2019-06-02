@@ -117,6 +117,7 @@ typedef struct PigFileDescriptor {
 
 void PigCritSecInit(void);
 int PigSetInit(void); // Loads all of the Pig files from the gamedatadir
+int PigSetAddPatchDir(const char *path); // Loads all of the Pig files from a custom location
 bool PigSetInited(void);
 int PigSetCheckForNew();
 void PigSetDestroy(void);

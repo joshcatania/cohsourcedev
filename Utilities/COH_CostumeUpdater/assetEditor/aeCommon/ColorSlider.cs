@@ -35,7 +35,6 @@ namespace COH_CostumeUpdater.assetEditor.aeCommon
         private int button2Ylocation;
         private int button2Height;
         private int button2Width;
-        private bool isVertical;
 
         //event handling delegate
         public event EventHandler ValueChanged;

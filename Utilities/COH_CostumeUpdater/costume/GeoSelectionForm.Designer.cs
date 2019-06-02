@@ -146,7 +146,6 @@ namespace COH_CostumeUpdater.costume
         private System.Windows.Forms.ColumnHeader filePathColumnHeader;
         private System.Windows.Forms.ColumnHeader fileTypeColumnHeader;
         private System.Windows.Forms.ColumnHeader geoColumnHeader;
-        private System.Windows.Forms.ListViewItem listviewitem;
         private System.Windows.Forms.Button okBtn;
         private System.Windows.Forms.Panel panel2;
         private System.Windows.Forms.ComboBox lvComboBox;

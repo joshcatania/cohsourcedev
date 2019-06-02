@@ -21,7 +21,7 @@ namespace COH_CostumeUpdater.costume
         public string fileName;
         public string filePath;
         public string bodyPart;
-        public string faceScale;
+        public string faceScale = String.Empty;
         public string charType;
 
         public ArrayList fileContent;

@@ -20,8 +20,6 @@ namespace COH_CostumeUpdater.costume
         public string header = "\tGeoSet";
         public string displayName;
         public string bodyPart;
-        public string defaultView;
-        public string zoomView;
 
         public ArrayList geoPiecesArrayList;
         public ArrayList members;

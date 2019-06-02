@@ -1502,7 +1502,7 @@ static void waitForGettexToFinish() {
 		printf(" done.\n");
 	}
 	if (gettex_lock_handle > 0) {
-		fprintf(gettex_lock_handle, "CityOfHeroes.exe\r\n");
+		fprintf(gettex_lock_handle, "Ouroboros.exe\r\n");
 	}
 }
 

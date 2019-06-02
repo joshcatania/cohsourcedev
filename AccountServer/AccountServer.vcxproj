@@ -106,6 +106,7 @@
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalLibraryDirectories>..\3rdparty\zlibsrc\$(Platform)\Release\;..\3rdparty\cryptopp\$(Platform)\Release\;..\3rdparty\yajl\bin\$(PlatformName)\Release\;..\3rdparty\zeromq2-1\builds\msvc\libzmq\$(Platform)\Release\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
@@ -127,6 +128,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
@@ -140,6 +142,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -153,6 +156,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|x64'">
@@ -166,6 +170,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|x64'">
@@ -179,6 +184,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\3rdparty\yajl\include;..\3rdparty\zeromq2-1\include;..\libs\UtilitiesLib\UtilsCXX;..\libs\UtilitiesLib\UtilsNew;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -191,7 +197,6 @@
     <ClCompile Include="..\Common\persist\textcrcdb.c" />
     <ClCompile Include="..\Common\persist\textcrcjournal.c" />
     <ClCompile Include="..\Common\Playspan\JSONParser.cpp" />
-    <ClCompile Include="..\Common\Playspan\PostBackListener.cpp" />
     <ClCompile Include="..\Common\sql\sqlconn.c" />
     <ClCompile Include="..\Common\sql\sqltask.cpp" />
     <ClCompile Include="accountcmds.cpp" />
@@ -220,7 +225,6 @@
     <ClInclude Include="..\Common\persist\textcrcdb.h" />
     <ClInclude Include="..\Common\persist\textcrcjournal.h" />
     <ClInclude Include="..\Common\Playspan\JSONParser.h" />
-    <ClInclude Include="..\Common\Playspan\PostBackListener.h" />
     <ClInclude Include="..\Common\sql\sqlconn.h" />
     <ClInclude Include="..\Common\sql\sqltask.h" />
     <ClInclude Include="AccountCmds.h" />

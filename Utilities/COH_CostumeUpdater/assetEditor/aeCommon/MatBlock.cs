@@ -776,7 +776,7 @@ namespace COH_CostumeUpdater.assetEditor.aeCommon
             {
                 viewTga(tgaFileNameTxBx.Text, true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }
@@ -843,7 +843,7 @@ namespace COH_CostumeUpdater.assetEditor.aeCommon
                 tx.Dispose();
                 device.Dispose();
             }
-            catch (Exception ex)
+            catch (Exception)
             { }
         }
        

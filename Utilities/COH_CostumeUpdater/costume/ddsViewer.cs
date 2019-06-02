@@ -321,7 +321,7 @@ namespace COH_CostumeUpdater.costume
                 
                 return btmap;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (gs != null)
                 {

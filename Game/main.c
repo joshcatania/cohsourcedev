@@ -161,14 +161,7 @@ int main(int argc, char **argv)
 
 	setAssertMode(ASSERTMODE_ERRORREPORT);	// we'll get reset better later
 
-	if (!getProjectKey(argc,argv))
-	{
-		// Make sure this file is saves with UTF-8 encoding or this string may not show up properly
-		winMsgAlert("You can't run this program directly, please run NCsoft Launcher instead.\n"
-			"Vous ne pouvez pas lancer ce programme directement. Veuillez d'abord exécuter le lanceur NCsoft.\n"
-			"Dieses Programm kann nicht direkt ausgeführt werden - bitte dazu den NCsoft-Launcher starten.\n");
-		exit(0);
-	}
+	getProjectKey(argc, argv);
 
 	// Do this before arguments get cleared out
 	SaveArguments(argc, argv);

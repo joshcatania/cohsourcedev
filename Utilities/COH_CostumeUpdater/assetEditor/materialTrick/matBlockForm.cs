@@ -22,7 +22,6 @@ namespace COH_CostumeUpdater.assetEditor.materialTrick
         private RichTextBox rTextBox;
         private Object selectdMatBtn;
         private ArrayList matTricksList;
-        private ArrayList dataSanpShot01;
         private bool finishedLoading;
 
         private System.Collections.Generic.Dictionary<string, string> tgaFilesDictionary;

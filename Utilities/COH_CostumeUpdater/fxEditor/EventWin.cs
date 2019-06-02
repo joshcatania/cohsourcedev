@@ -874,7 +874,7 @@ namespace COH_CostumeUpdater.fxEditor
             }
             catch(Exception ex)
             {
-                //MessageBox.Show(string.Format("row {0}, col {1}\r\nerror: {2}",e.RowIndex, e.ColumnIndex, ex.Message));
+                MessageBox.Show(string.Format("row {0}, col {1}\r\nerror: {2}",e.RowIndex, e.ColumnIndex, ex.Message));
             }
         }
 
@@ -908,7 +908,7 @@ namespace COH_CostumeUpdater.fxEditor
             }
             catch (Exception ex)
             {
-                //MessageBox.Show(ex.Message);
+                MessageBox.Show(ex.Message);
             }
         }
 

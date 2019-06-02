@@ -8,7 +8,6 @@ namespace COH_CostumeUpdater
     public class Region
     {
         private string root;
-        string includeHeader = "\tInclude";
         public string name;
         public string displayName;
         public string key;

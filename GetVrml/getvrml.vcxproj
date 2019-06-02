@@ -51,6 +51,7 @@
       <PreprocessorDefinitions>TRACKED_MEMPOOL;INCLUDE_MEMCHECK;WIN32;_DEBUG;_CONSOLE;OFFLINE;GETVRML;_CRTDBG_MAP_ALLOC=1;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>libtaucs.lib;blas_win32.lib;lapack_win32.lib;libatlas.lib;libcblas.lib;libf77blas.lib;liblapack.lib;libmetis.lib;vcf2c.lib;iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>
@@ -72,6 +73,7 @@
       <PreprocessorDefinitions>TRACKED_MEMPOOL;INCLUDE_MEMCHECK;WIN32;_DEBUG;_CONSOLE;OFFLINE;GETVRML;_CRTDBG_MAP_ALLOC=1;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BrowseInformation>true</BrowseInformation>
       <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>libtaucs.lib;blas_win32.lib;lapack_win32.lib;libatlas.lib;libcblas.lib;libf77blas.lib;liblapack.lib;libmetis.lib;vcf2c.lib;iphlpapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>

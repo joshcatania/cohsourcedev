@@ -50,6 +50,7 @@ char *forwardSlashes(char *path);
 void forwardSlashesEString(char **path);
 char *backSlashes(char *path);
 char *fixDoubleSlashes(char *fn);
+char *unquote(char *str);
 void concatpath_s(const char *s1,const char *s2,char *full,size_t full_size);
 #define concatpath(s1,s2,full) concatpath_s(s1, s2, SAFESTR(full))
 void makefullpath_s(const char *dir,char *full,size_t full_size);

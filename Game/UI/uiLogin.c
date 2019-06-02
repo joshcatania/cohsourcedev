@@ -69,7 +69,6 @@
 #include "uiContextMenu.h"
 #include "uiTray.h"
 #include "uiPlayerNote.h"
-#include "uiWebUtil.h"
 #include "trayCommon.h"
 #include "file.h"
 #include "sysutil.h"
@@ -165,7 +164,6 @@ static char g_ServerName[SERVER_NAME_SIZE];
 char g_achAccountName[32];
 U8 g_achPassword[MAX_PASSWORD_LEN];  // NOT A STRING!  This is the encrypted password.
 int g_iDontSaveName;
-int g_linkToExistingAccount = 0;
 
 char g_shardVisitorData[SHARD_VISITOR_DATA_SIZE];
 U32 g_shardVisitorDBID;
@@ -1213,7 +1211,7 @@ static void openStoreLocks(void * data)
 
 static void openStoreVIP(void *unused)
 {
-	webOpenUpgradeToVIP();
+	//webOpenUpgradeToVIP();
 }
 
 static void unlockCharacter(void *unused)
@@ -1933,14 +1931,7 @@ static void s_returnToServerSelect(void *notused)
 	}
 	else
 	{
-		if (authIsErrorAccountNotPaid())
-		{
-			dialogStd( DIALOG_YES_NO, "NotPaidBrowserPrompt", NULL, NULL, BrowserOpenLoginFailure, NULL, 0 );
-		}
-		else
-		{
-			dialogStd( DIALOG_OK, authGetError(), NULL, NULL, 0, NULL, 0 );
-		}
+		dialogStd( DIALOG_OK, authGetError(), NULL, NULL, 0, NULL, 0 );
 		s_loggedIn_serverSelected = LOGIN_STAGE_START;
 	}
 	s_CharacterSelectInit = 0;
@@ -2563,8 +2554,6 @@ static void selectCharacter()
 
 		estrDestroy(&tooltip);
 	}
-
-	drawHybridStoreMenuButton(NULL, 979.f, 31.f, 120.f, 1.f, CLR_WHITE, 0);
 
 	if (D_MOUSEHIT == drawHybridButton(&sButtonDelete, 900.f, 31.f, 120.f, 1.f, 0xbb0000ff, enableDeleteButton ? HB_DRAW_BACKING : (HB_DISABLED|HB_DRAW_BACKING)))
 	{
@@ -3909,10 +3898,6 @@ int loginToAuthServer(int retry)
 			memset(password, 0, sizeof(password));
 			return loginToAuthServer(retry);
 		}
-		else if (authIsErrorAccountNotPaid())
-		{
-			dialogStd( DIALOG_YES_NO, "NotPaidBrowserPrompt", NULL, NULL, BrowserOpenLoginFailure, NULL, 0 );
-		}
 		else
 		{
 	        dialogStd( DIALOG_OK, authGetError(), NULL, NULL, 0, NULL, 0 );
@@ -3935,52 +3920,6 @@ int loginToAuthServer(int retry)
 
 	memset(password, 0, sizeof(password));
 	return TRUE;
-}
-
-static const char *getCreateNewAccountURL()
-{
-	if (game_state.newAccountURL[0] == 0)
-	{
-		const char *project = regGetAppName();
-
-		if (strstriConst(project, "cohtest"))
-		{
-			return "https://plaync-preplay.austin.ncwest.ncsoft-url-stripped-todo.corp/cgi-bin/playncCreate.pl?qsr=m:COH"; // QA URL HERE
-		}
-		else if (strstriConst(project, "cohbeta"))
-		{
-			return "https://secure.pts.ncsoft-url-stripped-todo.com/cgi-bin/playncCreate.pl?qsr=m:COH"; // PTS URL HERE
-		}
-		else
-		{
-			return "https://secure.ncsoft-url-stripped-todo.com/cgi-bin/playncCreate.pl?qsr=m:COH"; // LIVE URL HERE
-		}
-	}
-
-	return game_state.newAccountURL;
-}
-
-static const char *getCreateLinkedAccountURL()
-{
-	if (game_state.linkAccountURL[0] == 0)
-	{
-		const char *project = regGetAppName();
-
-		if (strstriConst(project, "cohtest"))
-		{
-			return "https://plaync-preplay.austin.ncwest.ncsoft-url-stripped-todo.corp/cgi-bin/quickStart.pl?qsr=m:COH"; // QA URL HERE
-		}
-		else if (strstriConst(project, "cohbeta"))
-		{
-			return "https://secure.pts.ncsoft-url-stripped-todo.com/cgi-bin/quickStart.pl?qsr=m:COH"; // PTS URL HERE
-		}
-		else
-		{
-			return "https://secure.ncsoft-url-stripped-todo.com/cgi-bin/quickStart.pl?qsr=m:COH"; // LIVE URL HERE
-		}
-	}
-
-	return game_state.linkAccountURL;
 }
 
 static void loginFrame()
@@ -4178,32 +4117,7 @@ static void loginFrame()
 		sndPlay("N_Deselect", SOUND_GAME);
 		windowExit(0);
 	}
-	/*
-	if (D_MOUSEHIT == drawHybridBar(&heAccounts[0], 0, 
-		xPosition(screenScaleX, screenScaleY, WEB_X + WEB_BUTTON_WD / 2),
-		yPosition(screenScaleX, screenScaleY, WEB_Y + 25.0f), 20.0f, 
-		WEB_BUTTON_WD, UIScale, HB_ROUND_ENDS | HB_ALWAYS_FULL_ALPHA, 1.f, H_ALIGN_LEFT, V_ALIGN_CENTER ))
-	{
-		BrowserSendSteamAuthSessionTicket();
 
-		if (g_linkToExistingAccount)
-		{
-			webOpenURLNoStore(getCreateLinkedAccountURL());
-		}
-		else
-		{
-			webOpenURLNoStore(getCreateNewAccountURL());
-		}
-	}
-	
-	if (D_MOUSEHIT == drawHybridBar(&heAccounts[1], 0, 
-		xPosition(screenScaleX, screenScaleY, WEB_X + WEB_BUTTON_WD / 2),
-		yPosition(screenScaleX, screenScaleY, WEB_Y + 125.0f), 20.0f, 
-		WEB_BUTTON_WD, UIScale, HB_ROUND_ENDS | HB_ALWAYS_FULL_ALPHA, 1.f, H_ALIGN_LEFT, V_ALIGN_CENTER ))
-	{
-		ShellCommandByLocale(manageaccount_addresses, getCurrentLocale(), false);
-	}
-	*/
 #ifndef DISABLE_SETTINGS_BUTTON
 	if (D_MOUSEHIT == drawHybridBar(&heAccounts[2], 0, 
 		xPosition(screenScaleX, screenScaleY, WEB_X + WEB_BUTTON_WD / 2),
@@ -4213,41 +4127,6 @@ static void loginFrame()
 		windows_Show("options");
 	}
 #endif
-
-	//*****************************************
-	// Link to Existing Account Radio Button
-	//*****************************************
-	/*
-	BuildCBox(&box,
-		xPosition(screenScaleX, screenScaleY, WEB_X),
-		yPosition(screenScaleX, screenScaleY, WEB_Y + 67),
-		LOGIN_WD * UIScale, 15*UIScale);
-	if( mouseCollision(&box) )
-	{
-		if( mouseClickHit( &box, MS_LEFT) )
-		{
-			g_linkToExistingAccount = !g_linkToExistingAccount;
-			saveAutoResumeInfoToRegistry();
-		}
-	}
-
-	if( !g_linkToExistingAccount )
-		mark = atlasLoadTexture( "loginscreen_checkfield.tga" );
-	else
-		mark = atlasLoadTexture( "loginscreen_checkfield_selected.tga" );
-
-	gTextAttr_WhiteHybridBold12.piColor = (int *)LOGIN_FOREGROUND_TEXT_COLOR;  //set custom color depending on current artist
-	smf_Display(s_linkToAccount, 
-		xPosition(screenScaleX, screenScaleY, WEB_X), 
-		yPosition(screenScaleX, screenScaleY, WEB_Y + 67), 20,
-		LOGIN_WD * UIScale, LOGIN_HT * UIScale, 0, 0, &gTextAttr_WhiteHybridBold12, 0);
-	gTextAttr_WhiteHybridBold12.piColor = (int *)0xffffffff;  //revert color
-	display_sprite(mark,
-		xPosition(screenScaleX, screenScaleY, WEB_X + WEB_WD / 2) - 40 * textScale
-		- str_wd(&hybridbold_12, textScale, textScale, textStd("LinkToExistingAccountString")) / 2 - mark->width / 2 * textScale,
-		yPosition(screenScaleX, screenScaleY, WEB_Y + 75) - mark->height / 2 * textScale, 20, textScale, textScale,
-		CLR_WHITE );
-		*/
 
 	// dev mode character fetch button
 	if((encryptedKeyedAccessLevel() || isDevelopmentMode()) && fileExists("c:/game/tools/util/dbquery.exe"))
@@ -4337,7 +4216,6 @@ void loginMenu()
 
 	if (dbhasError())
 	{
-		webStoreFrameClose();
 		dialogStd(DIALOG_OK, dbGetError(), NULL, NULL, s_quitToLogin, NULL, 0 );
 	}
 

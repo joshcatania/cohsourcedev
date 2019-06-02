@@ -114,6 +114,8 @@ typedef struct ServerState
 	int		tsr_dbconnect; // When running a MapServer -tsr, connect to the DbServer, and exit when it closes
 	int		nostats;	// Don't calculate, load, or store, statistics for players
 	float	xpscale;
+	float	aescale;
+	float	ticketscale;
 
 	int		groupDefVersion;
 
@@ -194,6 +196,7 @@ void cmdOldServerHandleRelay(char *msg);
 void serverSynchTime(void);
 void cmdOldServerReadInternal(char *buf);
 
+void cmdCfgLoad(void);
 
 int serverFindSkyByName(const char *name);
 void serverSetSkyFade(int sky1, int sky2, F32 weight); // 0.0 = all sky1

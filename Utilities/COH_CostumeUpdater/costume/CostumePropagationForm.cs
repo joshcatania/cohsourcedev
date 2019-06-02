@@ -180,7 +180,7 @@ namespace COH_CostumeUpdater.costume
                 populate(diDirectory, tn);
             }
 
-            catch(Exception exp)
+            catch(Exception)
             {                
             }
 

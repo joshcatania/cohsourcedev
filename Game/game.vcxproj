@@ -93,10 +93,11 @@
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\CityOfHeroes.*"</Command>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\Ouroboros_Test.*"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
@@ -110,10 +111,11 @@
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\CityOfHeroes.*"</Command>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\Ouroboros_Test.*"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
@@ -127,10 +129,11 @@
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\CityOfHeroes.*"</Command>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\Ouroboros_Test.*"</Command>
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -144,12 +147,13 @@
       <AdditionalIncludeDirectories>UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <TreatWarningAsError>false</TreatWarningAsError>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <PreBuildEvent>
       <Command>..\utilities\bin\structparser X %(RootDir)%(Directory) X %(Filename).vcxproj X $(Platform) X $(Configuration) X $(VCInstallDir) X $(SolutionPath)</Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\CityOfHeroes.*"</Command>
+      <Command>xcopy /Y /D "$(TargetPath)" "$(ProjectDir)..\bin\Ouroboros.*"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -1206,7 +1210,6 @@
     <ClCompile Include="UI\uiNet.c" />
     <ClCompile Include="UI\uiNewFeatures.c" />
     <ClCompile Include="UI\uiPictureBrowser.c" />
-    <ClCompile Include="UI\uiPlaySpanStoreLauncher.c" />
     <ClCompile Include="Ui\uiRaidResult.c" />
     <ClCompile Include="UI\uiReticle.c" />
     <ClCompile Include="UI\uiSalvageOpen.c" />
@@ -1305,7 +1308,6 @@
     <ClCompile Include="UI\uiTrialReminder.c" />
     <ClCompile Include="UI\uiTurnstile.c" />
     <ClCompile Include="UI\uiUtilGame.c" />
-    <ClCompile Include="UI\uiWebBrowser.c" />
     <ClCompile Include="UI\uiWindows.c" />
     <ClCompile Include="Ui\uiWindows_init.c" />
     <ClCompile Include="UI\uiAvatar.c" />
@@ -1333,7 +1335,6 @@
     <ClCompile Include="Ui\uiSuperRegistration.c" />
     <ClCompile Include="Ui\uiTailor.c" />
     <ClCompile Include="UI\uiUtilMenu.c" />
-    <ClCompile Include="UI\uiWebUtil.c" />
     <ClCompile Include="UI\sprite\sprite_base.c" />
     <ClCompile Include="UI\sprite\sprite_debug.c" />
     <ClCompile Include="UI\sprite\sprite_font.c" />
@@ -2335,7 +2336,6 @@
     <ClInclude Include="UI\uiNet.h" />
     <ClInclude Include="UI\uiNewFeatures.h" />
     <ClInclude Include="UI\uiPictureBrowser.h" />
-    <ClInclude Include="UI\uiPlaySpanStoreLauncher.h" />
     <ClInclude Include="Ui\uiRaidResult.h" />
     <ClInclude Include="UI\uiReticle.h" />
     <ClInclude Include="UI\uiSalvageOpen.h" />
@@ -2434,7 +2434,6 @@
     <ClInclude Include="UI\uiTrialReminder.h" />
     <ClInclude Include="UI\uiTurnstile.h" />
     <ClInclude Include="UI\uiUtilGame.h" />
-    <ClInclude Include="UI\uiWebBrowser.h" />
     <ClInclude Include="UI\uiWindows.h" />
     <ClInclude Include="Ui\uiWindows_init.h" />
     <ClInclude Include="UI\uiAvatar.h" />
@@ -2462,7 +2461,6 @@
     <ClInclude Include="Ui\uiSuperRegistration.h" />
     <ClInclude Include="Ui\uiTailor.h" />
     <ClInclude Include="UI\uiUtilMenu.h" />
-    <ClInclude Include="UI\uiWebUtil.h" />
     <ClInclude Include="UI\sprite\sprite_base.h" />
     <ClInclude Include="UI\sprite\sprite_debug.h" />
     <ClInclude Include="UI\sprite\sprite_font.h" />
@@ -2590,6 +2588,7 @@
     <None Include="CrypticIcn.ico" />
     <None Include="Icon_Cov.ico" />
     <None Include="Icon_Korean.ico" />
+    <None Include="Icon_Ouroboros.ico" />
     <None Include="Icon_Rogue.ico" />
     <None Include="Icon_Statesman.ico" />
     <None Include="logo4small.bmp" />

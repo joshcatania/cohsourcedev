@@ -270,6 +270,7 @@ void character_Reset(Character *pchar, bool resetToggles)
 	character_CancelPowers(pchar);
 
 	powlist_RemoveAll(&pchar->listRechargingPowers);
+	powlist_RemoveAll(&pchar->listTogglePowers);
 
 	if (resetToggles)
 	{

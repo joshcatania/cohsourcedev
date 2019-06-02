@@ -111,8 +111,9 @@ bool fileIsInsideGameDataDir( const char* aPath );	// true if it's inside one of
 void fileAddGameDataDir( const char* aPath );
 void fileDisableAutoDataDir(void);
 void fileAutoDataDir(bool bEnableSourceControl);
-//int fileAddSearchPath(char* path);
+int fileAddSearchPath(const char* path);
 char *fileDataDir();
+const char *filePiggDir();
 void fileSpecialDir(const char *name, char *dest, size_t dest_size);
 char *fileTempDir();
 char *fileTempName();

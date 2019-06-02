@@ -2281,11 +2281,6 @@ int recipeInventoryWindow()
 			if (init) 
 			{
 				oldScale = sc;
-
-				{
-					Wdw * window = wdwGetWindow(WDW_RECIPEINVENTORY);
-					Strcpy(window->storeLink, "020-070-000-000"); //PSID_Recipe
-				}
 			}
 
 			// create unfiltered list of all recipes to be viewed

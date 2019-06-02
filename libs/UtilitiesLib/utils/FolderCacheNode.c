@@ -134,12 +134,7 @@ FolderNode *FolderNodeAdd(FolderNode **head, FolderNode **tail, FolderNode *pare
 			}
 		} else if (virtual_location < 0 && node->virtual_location < 0) {
 			// Both pigs
-			if (virtual_location != node->virtual_location) {
-				printf("Warning: duplicate file in two pigs: %s\n", fn);
-				update = virtual_location < node->virtual_location;
-			} else {
-				update = true;
-			}
+			update = virtual_location <= node->virtual_location;
 		} else if (virtual_location < 0) {
 			// Just the new one is a pig
 			// Use the pig if it has the same timestamp // *and* this is not an "override" data dir

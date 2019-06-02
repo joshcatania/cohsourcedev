@@ -82,6 +82,16 @@ char *fixDoubleSlashes(char *fn)
 	return fn;
 }
 
+char *unquote(char *in)
+{
+	int l = strlen(in);
+	if (in[0] == '"' && in[l-1] == '"') {
+		in[l-1] = '\0';
+		return in + 1;
+	}
+	return in;
+}
+
 void concatpath_s(const char *s1,const char *s2,char *full,size_t full_size)
 {
 	char	*s;

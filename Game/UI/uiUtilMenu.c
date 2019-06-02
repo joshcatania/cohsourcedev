@@ -1830,32 +1830,6 @@ void setHeadingFontFromSkin(int light)
 }
 
 //----------------------------------------------------------------------------------------------------------------------------------
-// Web Brower Launching
-//----------------------------------------------------------------------------------------------------------------------------------
-
-void ShellCommandByLocale(const char* cmdlist[], int locale, bool returnToLogin)
-{
-	char const *cmd;
-
-	if (locale < 0 || locale >= LOCALE_ID_COUNT)
-		return;
-
-	// UK English alternate is stored as the last item, if present.
-	if (locIsBritish(locale))
-		cmd = cmdlist[LOCALE_ID_COUNT];
-	else
-		cmd = cmdlist[locale];
-
-	if (cmd)
-	{
-	    ShellExecute(NULL,NULL,cmd,NULL,NULL,0);
-
-		if (returnToLogin)
-			quitToLogin(0);
-	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------------------
 // Going Rogue Expansion web purchase
 //----------------------------------------------------------------------------------------------------------------------------------
 

@@ -14,10 +14,6 @@ namespace FX_TreeParser
 {
     public partial class tgaBox : Form
     {
-        private int flags;
-        private float[] fade;
-        private bool hasAlpha;
-        private bool turnAlphaOn;
         private Bitmap mImage;
 
         public tgaBox(string path)

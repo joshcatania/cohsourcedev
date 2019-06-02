@@ -63,25 +63,13 @@ typedef struct _AccountStoreAccessInfo
 	// Memory management: 
 	//   - Strings must be malloc'd memory. 
 	//   - Call accountCatalog_ReleaseStoreAccessInfo() to release old values.
-	const char* playSpanDomain;	
     const char* playSpanCatalog;
-	const char* playSpanURL_Home;
-	const char* playSpanURL_CategoryView;
-	const char* playSpanURL_ItemView;
-	const char* playSpanURL_ShowCart;
-	const char* playSpanURL_AddToCart;
-	const char* playSpanURL_ManageAccount;
-	const char* playSpanURL_SupportPage;
-	const char* playSpanURL_SupportPageDE;
-	const char* playSpanURL_SupportPageFR;
-	const char* playSpanURL_UpgradeToVIP;
-	const char* cohURL_NewFeatures;
-	const char* cohURL_NewFeaturesUpdate;
 	//----------------------------
 	U32			playSpanStoreFlags;	// AccountOnlineStoreFlags OR'd together
 } AccountStoreAccessInfo;
 
 const AccountStoreAccessInfo*	accountCatalog_GetStoreAccessInfo( void );
+bool					accountCatalog_IsAutoBuyEnabled();
 void					accountCatalog_ReleaseStoreAccessInfo( void );
 void					accountCatalog_CacheAcctServerCatalogUpdate( Packet* pak_in );
 void					accountCatalog_AddAcctServerCatalogToPacket( Packet* pak_out );

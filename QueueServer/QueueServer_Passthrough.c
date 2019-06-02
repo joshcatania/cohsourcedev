@@ -322,20 +322,7 @@ void passSendAccountServerCatalog(Packet *pak_in, Packet *pak_out)
 	pktSendGetBitsAuto(pak_out,pak_in);			//auth_timeout
 	pktSendString(pak_out,pktGetString(pak_in));//MTX environment
 
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanDomain
 	pktSendString(pak_out,pktGetString(pak_in));//playSpanCatalog
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_Home
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_CategoryView
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_ItemView
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_ShowCart
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_AddToCart
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_ManageAccount
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_SupportPage
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_SupportPageDE
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_SupportPageFR
-	pktSendString(pak_out,pktGetString(pak_in));//playSpanURL_UpgradeToVIP
-	pktSendString(pak_out,pktGetString(pak_in));//cohURL_NewFeatures
-	pktSendString(pak_out,pktGetString(pak_in));//cohURL_NewFeaturesUpdate
 	pktSendGetBitsAuto(pak_out,pak_in);//playSpanStoreFlags
 }
 

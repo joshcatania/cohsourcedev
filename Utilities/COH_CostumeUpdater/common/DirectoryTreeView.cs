@@ -48,7 +48,7 @@ namespace COH_CostumeUpdater.common
                     tn.Nodes.Add(tnDir);
                 }
             }
-            catch(Exception exp)
+            catch(Exception)
             {                
             }
 

@@ -234,10 +234,6 @@ static void UpdateDownloadRate()
 	// dynamically set download rate based on game activity
 	bool bThrottle = false;
 
-	// throttle while store is up so as to not slow the store down
-	if( webStoreFrameIsVisible() )
-		bThrottle = true;
-
 	// check to see if recently had slow tick to dbserver or mapserver, or lost packets
 	if( commIsInTroubledMode() )
 		bThrottle = true;

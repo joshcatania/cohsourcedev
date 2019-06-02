@@ -386,7 +386,7 @@ namespace COH_CostumeUpdater.fxEditor
                     }
                 }
             }
-            catch(Exception ex)
+            catch(Exception)
             {
                 //MessageBox.Show(string.Format("row {0}, col {1}\r\nerror: {2}",e.RowIndex, e.ColumnIndex, ex.Message));
             }

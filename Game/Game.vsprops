@@ -15,7 +15,7 @@
 	<Tool
 		Name="VCLinkerTool"
 		AdditionalDependencies="winmm.lib ../3rdparty\directx\lib\Dxguid.lib ../3rdparty\directx\lib\dsound.lib ../3rdparty\directx\lib\dinput8.lib ../3rdparty\directx\lib\ddraw.lib opengl32.lib glu32.lib ws2_32.lib kernel32.lib Imm32.lib ../3rdparty\freetype\freetypeMT.lib ../3rdparty\jpgdlib\lib\jpgdlib.lib Msacm32.lib ../3rdparty\oggvorbis\lib/vorbis_static.lib ../3rdparty\oggvorbis\lib/ogg_static.lib ../3rdparty\oggvorbis\lib/vorbisfile_static.lib ../3rdparty\bin\IJGWin32.lib ../3rdparty/DoubleFusion/DFEngine.lib ../3rdparty\cg\lib\cg.lib ../3rdparty\cg\lib\cgGL.lib ..\3rdparty\nvdxt\Release\nvDXTlibMT_S.lib ..\3rdparty\nvperf\lib\winxp_x86\NVPerfSDK.lib"
-		OutputFile="..\bin\$(ConfigurationName)\CityOfHeroes.exe"
+		OutputFile="..\bin\$(ConfigurationName)\Ouroboros.exe"
 		SubSystem="2"
 		OptimizeReferences="1"
 		FixedBaseAddress="1"

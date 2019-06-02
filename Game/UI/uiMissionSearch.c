@@ -4407,11 +4407,6 @@ int missionsearch_Window(void)
 			smfSearch = smfBlock_Create();
 		if(!smfError)
 			smfError = smfBlock_Create();
-
-		{
-			Wdw * window = wdwGetWindow(WDW_MISSIONSEARCH);
-			Strcpy(window->storeLink, "020-080-000-000"); //PSID_MissionS
-		}
 	}
 
 	if( ArchitectCanEdit( playerPtr() ) )

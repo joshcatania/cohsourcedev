@@ -334,22 +334,14 @@ const AccountStoreAccessInfo* accountCatalog_GetStoreAccessInfo( void )
 	return &s_StoreAccessInfo;
 }
 
+bool accountCatalog_IsAutoBuyEnabled()
+{
+	return (s_StoreAccessInfo.playSpanStoreFlags & STOREFLAG_AUTO_BUY_PRODUCTS) != 0;
+}
+
 void accountCatalog_ReleaseStoreAccessInfo( void )
 {
-	free( (void*)s_StoreAccessInfo.playSpanDomain );
     free( (void*)s_StoreAccessInfo.playSpanCatalog );
-	free( (void*)s_StoreAccessInfo.playSpanURL_Home );
-	free( (void*)s_StoreAccessInfo.playSpanURL_CategoryView );
-	free( (void*)s_StoreAccessInfo.playSpanURL_ItemView );
-	free( (void*)s_StoreAccessInfo.playSpanURL_ShowCart );
-	free( (void*)s_StoreAccessInfo.playSpanURL_AddToCart );
-	free( (void*)s_StoreAccessInfo.playSpanURL_ManageAccount );
-	free( (void*)s_StoreAccessInfo.playSpanURL_SupportPage );
-	free( (void*)s_StoreAccessInfo.playSpanURL_SupportPageDE );
-	free( (void*)s_StoreAccessInfo.playSpanURL_SupportPageFR );
-	free( (void*)s_StoreAccessInfo.playSpanURL_UpgradeToVIP );
-	free( (void*)s_StoreAccessInfo.cohURL_NewFeatures );
-	free( (void*)s_StoreAccessInfo.cohURL_NewFeaturesUpdate );
 }
 
 #if defined(CLIENT) || defined(SERVER)
@@ -792,20 +784,7 @@ void accountCatalog_CacheAcctServerCatalogUpdate( Packet* pak_in )
 	info = cpp_const_cast(AccountStoreAccessInfo*)(accountCatalog_GetStoreAccessInfo());	
 
 	// Store URL info
-	info->playSpanDomain			= strdup( pktGetString(pak_in) );
 	info->playSpanCatalog			= strdup( pktGetString(pak_in) );
-	info->playSpanURL_Home			= strdup( pktGetString(pak_in) );
-	info->playSpanURL_CategoryView	= strdup( pktGetString(pak_in) );
-	info->playSpanURL_ItemView		= strdup( pktGetString(pak_in) );
-	info->playSpanURL_ShowCart		= strdup( pktGetString(pak_in) );
-	info->playSpanURL_AddToCart		= strdup( pktGetString(pak_in) );
-	info->playSpanURL_ManageAccount	= strdup( pktGetString(pak_in) );
-	info->playSpanURL_SupportPage	= strdup( pktGetString(pak_in) );
-	info->playSpanURL_SupportPageDE	= strdup( pktGetString(pak_in) );
-	info->playSpanURL_SupportPageFR	= strdup( pktGetString(pak_in) );
-	info->playSpanURL_UpgradeToVIP	= strdup( pktGetString(pak_in) );
-	info->cohURL_NewFeatures		= strdup( pktGetString(pak_in) );
-	info->cohURL_NewFeaturesUpdate	= strdup( pktGetString(pak_in) );
 	info->playSpanStoreFlags				= pktGetBitsAuto(pak_in);
 }
 
@@ -817,20 +796,7 @@ void accountCatalog_AddAcctServerCatalogToPacket( Packet* pak_out )
 	pktSendBitsAuto(pak_out,s_AuthTimeout);									// Auth timeout
 	pktSendString(pak_out,accountCatalog_GetMtxEnvironment());
 			
-	pktSendString(pak_out,   info->playSpanDomain );
 	pktSendString(pak_out,   info->playSpanCatalog );
-	pktSendString(pak_out,   info->playSpanURL_Home );
-	pktSendString(pak_out,   info->playSpanURL_CategoryView );
-	pktSendString(pak_out,   info->playSpanURL_ItemView );
-	pktSendString(pak_out,   info->playSpanURL_ShowCart );
-	pktSendString(pak_out,   info->playSpanURL_AddToCart );
-	pktSendString(pak_out,   info->playSpanURL_ManageAccount );
-	pktSendString(pak_out,   info->playSpanURL_SupportPage );
-	pktSendString(pak_out,   info->playSpanURL_SupportPageDE );
-	pktSendString(pak_out,   info->playSpanURL_SupportPageFR );
-	pktSendString(pak_out,   info->playSpanURL_UpgradeToVIP );
-	pktSendString(pak_out,   info->cohURL_NewFeatures );
-	pktSendString(pak_out,   info->cohURL_NewFeaturesUpdate );
 	pktSendBitsAuto(pak_out, info->playSpanStoreFlags );
 }
 
@@ -848,20 +814,7 @@ void accountCatalog_RelayServerCatalogPacket( Packet* pak_in, Packet* pak_out)
 	pktSendGetBitsAuto(pak_out,pak_in);		// Auth timeout
 	pktSendGetString(pak_out,pak_in);		// MTX Environment
 
-	pktSendGetString(pak_out,pak_in);			// playSpanDomain
 	pktSendGetString(pak_out,pak_in);			// playSpanCatalog
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_Home
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_CategoryView
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_ItemView
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_ShowCart
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_AddToCart
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_ManageAccount
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_SupportPage
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_SupportPageDE
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_SupportPageFR
-	pktSendGetString(pak_out,pak_in);			// playSpanURL_UpgradeToVIP
-	pktSendGetString(pak_out,pak_in);			// cohURL_NewFeatures
-	pktSendGetString(pak_out,pak_in);			// cohURL_NewFeaturesUpdate
 	pktSendGetBitsAuto(pak_out,pak_in);			// playSpanStoreFlags
 }
 

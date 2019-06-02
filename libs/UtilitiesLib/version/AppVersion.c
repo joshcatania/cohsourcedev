@@ -8,7 +8,7 @@
 #include <time.h>
 #include "../network/crypt.h"
 
-char app_client_name[128] = "CityOfHeroes.exe";
+char app_client_name[128] = "Ouroboros.exe";
 
 void appSetClientName(const char* appName)
 {

@@ -48,7 +48,6 @@
 #include "uiLevelSpec.h"
 #include "uiContactDialog.h"
 #include "uiRecipeInventory.h"
-#include "uiPlaySpanStoreLauncher.h"
 #include "wdwbase.h"
 #include "groupnetrecv.h"
 #include "costume.h"
@@ -4050,7 +4049,7 @@ void receiveAccountServerClientAuth(Packet *pak)
 
 	U32 timeStamp = pktGetBitsAuto(pak);
 	char * digest = pktGetString(pak);
-	PlaySpanStoreLauncher_SetDigest(timeStamp, digest);
+	//PlaySpanStoreLauncher_SetDigest(timeStamp, digest);
 	memset(digest, 0, strlen(digest));
 #endif
 }
@@ -4060,7 +4059,7 @@ void receiveAccountServerPlayNCAuthKey(Packet *pak)
 #if !defined(TEST_CLIENT)
 	int request_key = pktGetBitsAuto(pak);
 	char * auth_key = pktGetString(pak);
-	PlaySpanStoreLauncher_ReceiveAuthKeyResponse(request_key, auth_key);
+	//PlaySpanStoreLauncher_ReceiveAuthKeyResponse(request_key, auth_key);
 #endif
 }
 
@@ -4459,14 +4458,14 @@ void receiveChangeWindowColors(Packet *pak)
 void displaySupportHome(Packet *pak)
 {
 #ifndef TEST_CLIENT
-	webStoreOpenSupport();
+	//webStoreOpenSupport();
 #endif
 }
 
 void displaySupportKB(Packet *pak)
 {
 #ifndef TEST_CLIENT
-	webStoreOpenSupportKB(pktGetBitsAuto(pak));
+	pktGetBitsAuto(pak);
 #endif
 }
 

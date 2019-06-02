@@ -13,7 +13,6 @@
 #include "entPlayer.h"
 #include "player.h"
 #include "uiNet.h"
-#include "uiPlaySpanStoreLauncher.h"
 #include "timing.h"
 
 typedef enum WebDataState
@@ -48,7 +47,7 @@ int newFeaturesWindow()
 	{
 		if (mouseClickHitNoCol(MS_LEFT))
 		{
-			webStoreOpenNewFeatures();
+			//webStoreOpenNewFeatures();
 		}
 		//hover color
 		textColor = CLR_WHITE;
@@ -76,11 +75,11 @@ int newFeatures_webDataRetrieveCallback(void * data)
 
 void newFeatures_queryWebData(void)
 {
-	if (PlaySpanStoreLauncher_NewFeaturesUpdate())
-	{
-		webDataProcess = WEBDATA_WAITING;
-		timeSinceQuery = timerSecondsSince2000();
-	}
+	//if (PlaySpanStoreLauncher_NewFeaturesUpdate())
+	//{
+	//	webDataProcess = WEBDATA_WAITING;
+	//	timeSinceQuery = timerSecondsSince2000();
+	//}
 }
 
 void newFeatures_update(void)

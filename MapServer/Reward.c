@@ -3597,7 +3597,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 		if(bLevelCapped)
 		{
 			int iLeftOver = 0;
-			character_GiveCappedExperience(e->pchar, reward->experience*(bArchitect?1.f:server_state.xpscale), &iXPReceived, &iXPDebt, &iLeftOver);
+			character_GiveCappedExperience(e->pchar, reward->experience*(bArchitect?server_state.aescale:server_state.xpscale), &iXPReceived, &iXPDebt, &iLeftOver); // Added AE Exp Scaling
 
 			if (source == REWARDSOURCE_DEBUG)
 				pDebug->debt += iXPDebt;
@@ -3615,7 +3615,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 		else
 		{
 
-			float fXPScale = bArchitect?1.f:server_state.xpscale;
+			float fXPScale = bArchitect?server_state.aescale:server_state.xpscale; // Added AE Exp Scaling
 			int bPatrolXP = false;
 
 			if( bExemplar )
@@ -3716,7 +3716,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 	if(reward->influence && !bArchitectTest && (!bArchitect || bArchitectAllRewards))
 	{
 		e->general_update = 1;
-		iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitect?1.f:server_state.xpscale));
+		iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitect?server_state.aescale:server_state.xpscale));
 
 		if(iInfluence)
 		{

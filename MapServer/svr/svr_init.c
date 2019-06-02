@@ -909,6 +909,10 @@ void parseArgs2(int argc,char **argv)
 			;
 		else if (strcmp(argv[i],"-xpscale")==0)
 			server_state.xpscale = atof(argv[++i]);
+		else if (strcmp(argv[i],"-aescale")==0)
+			server_state.aescale = atof(argv[++i]);
+		else if (strcmp(argv[i],"-ticketscale")==0)
+			server_state.ticketscale = atof(argv[++i]);
 		else if (strcmp(argv[i], "-gridcachebits")==0)
 		{
 			if(i + 1 < argc)
@@ -2097,6 +2101,7 @@ int __cdecl main(int argc,char **argv)
 
 	if(!server_state.create_bins)
 	{
+		cmdCfgLoad();
 		connectToDbserver(NO_TIMEOUT);
 
 		if (map_batch_cmds)

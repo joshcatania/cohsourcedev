@@ -19,8 +19,6 @@ namespace COH_CostumeUpdater.fxEditor
         
         public string fileName;
         
-        private ArrayList data;
-        
         public BhvrNPartCommonFunctionPanel bpcfPanel;
         
         public event EventHandler PartComboBoxChanged;

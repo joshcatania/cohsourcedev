@@ -144,8 +144,8 @@ typedef enum WindowName
 	WDW_CONTACT_FINDER,
 	//120
 	WDW_LOYALTY_TREE,
-	WDW_WEB_STORE,
-	WDW_MAIN_STORE_ACCESS,
+	WDW_WEB_STORE, // not used anymore, enum left in here to maintain protocol compatibility
+	WDW_MAIN_STORE_ACCESS, // not used anymore, enum left in here to maintain protocol compatibility
 	WDW_LWC_UI,
 	WDW_LOYALTY_TREE_ACCESS,
 	WDW_SALVAGE_OPEN,
@@ -280,7 +280,6 @@ typedef struct Wdw
 	int		noFrame;
 	char	title[50];
 	int		maximizeable;
-	char	storeLink[64];
 
 	// children/parents
 	Wdw *parent;

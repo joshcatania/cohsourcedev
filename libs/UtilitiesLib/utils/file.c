@@ -50,7 +50,8 @@
 StringTable gameDataDirs = 0; // now used only inside of fileLoadDataDirs()
 static int loadedGameDataDirs = 0;
 static int addSearchPath = 1;
-char* mainGameDataDir = NULL;
+static char* mainGameDataDir = NULL;
+static char *piggDir = "./piggs";
 FolderCache *folder_cache=NULL;
 char *gameDataDirOverride = NULL;
 
@@ -137,7 +138,7 @@ static void initGameDataDirTable()
 	}
 }
 
-int fileAddSearchPath(char* path){
+int fileAddSearchPath(const char* path){
 	if(!dirExists(path))
 		return 0;
 
@@ -508,6 +509,11 @@ char *fileDataDir()
 		fileLoadDataDirs(0);
 
 	return mainGameDataDir;
+}
+
+const char *filePiggDir()
+{
+	return piggDir;
 }
 
 void fileSpecialDir(const char *name, char *dest, size_t dest_size)

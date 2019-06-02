@@ -143,7 +143,7 @@ namespace COH_CostumeUpdater.assetEditor.textureTrick
                 if(path!= null && path.Length > 1)
                     viewTga(path, true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }
@@ -230,7 +230,7 @@ namespace COH_CostumeUpdater.assetEditor.textureTrick
                 tx.Dispose();
                 device.Dispose();
             }
-            catch (Exception ex)
+            catch (Exception)
             { }
         }
 

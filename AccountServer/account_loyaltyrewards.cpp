@@ -297,8 +297,8 @@ void handleAuthUpdateRequest(AccountServerShard *shard, Packet *packet_in)
 	int min_loyalty = g_accountServerState.cfg.min_loyalty_points;
 	if (loyaltyEarned < min_loyalty)
 		loyaltyEarned = min_loyalty;
-	if (loyaltyLegacy < 1)
-		loyaltyLegacy = 1;
+	if (loyaltyLegacy < 0)
+		loyaltyLegacy = 0;
 
 	Account *pAccount = AccountDb_GetAccount(auth_id);
 	if (!devassert(pAccount))

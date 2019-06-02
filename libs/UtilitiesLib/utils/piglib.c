@@ -149,7 +149,6 @@ int PigFileRead(PigFile *handle, const char *filename)
 	backSlashes(fn);
 #endif
 	SAFE_FREE(handle->filename);
-	fileLocateWrite(fn, fn);
 	handle->filename = strdup(fn);
 	// Open file
 	handle->file = fopen(fn, "rb~");
@@ -865,88 +864,16 @@ void PigFileCheckForModifications(PigFilePtr handle) // If a hogg file, checks f
 
 static PigFile** pig_set = NULL;
 static bool pig_set_inited = false;
+static char **pig_patch_files = NULL;
+static int num_pig_patch_files = 0;
 
 bool PigSetInited(void)
 {
 	return pig_set_inited;
 }
 
-static const char* s_oldPiggFiles[] =
-{
-    "_unrefed_assets.pigg",
-    "unrefed_assets.pigg",
-    "texgui2.pigg",
-    "texplayers2.pigg",
-    "playerFemHuge.pigg",
-    "playerMale.pigg",
-    "soundvmusic1.pigg",
-    "soundvmusic2.pigg",
-    "soundvmusic3.pigg",
-    "soundvmusic4.pigg",
-    "soundvmusic5.pigg",
-    "soundvmusic6.pigg",
-    "soundvmusic7.pigg",
-    "soundv3.pigg",
-    "soundv4.pigg",
-    "soundv5.pigg",
-    "soundv6.pigg",
-};
-                                     
-static const char *s_retiredServerPiggStageFiles[] = 
-{
-	// Keep stage1, stage1a, stage2, stage3, stage3c. Remove other stage pigg files
-	"stage1b.pigg",
-	"stage1c.pigg",
-	"stage1d.pigg",
-	"stage1e.pigg",
-	"stage1f.pigg",
-	"stage2a.pigg",
-	"stage2b.pigg",
-	"stage2c.pigg",
-	"stage3a.pigg",
-	"stage3b.pigg",
-	"stage3d.pigg",
-	"stage3e.pigg",
-	"stage3f.pigg",
-	"stage3g.pigg",
-};
-
-static bool checkDeleteOldPiggFile(const char* folder, const char* name, bool deleteRetiredServerPiggs)
-{
-	int i;
-    // tbd, change this to look for corresponding txt file, and if none exists, delete the pigg.  Would just need to ship the pigg txt files for this to work.
-	for(i=0; i<ARRAY_SIZE(s_oldPiggFiles); i++) {
-		if(!stricmp(s_oldPiggFiles[i], name)) {
-			// delete this old pigg file!
-			// TBD, pass fileSpec instead of folder
-			char buf[MAX_PATH];
-			STR_COMBINE_SSS(buf, folder, "/piggs/", name);
-			printf("Deleting old pigg file %s\n", buf);
-			fileForceRemove(buf);
-			return true;
-		}
-	}
-
-	if (deleteRetiredServerPiggs)
-	{
-		for(i=0; i<ARRAY_SIZE(s_retiredServerPiggStageFiles); i++) {
-			if(!stricmp(s_retiredServerPiggStageFiles[i], name)) {
-				// delete this old pigg file!
-				// TBD, pass fileSpec instead of folder
-				char buf[MAX_PATH];
-				STR_COMBINE_SSS(buf, folder, "/piggs/", name);
-				printf("Deleting old pigg file %s\n", buf);
-				fileForceRemove(buf);
-				return true;
-			}
-		}
-	}
-
-	return false;
-}
-
 // Helper function for returning list of pigg file names that are not already loaded
-int searchForUnloadedPigs(const char* folder, char*** rpigNames)
+static int searchForUnloadedPigs(const char* folder, char*** rpigNames, bool fallback)
 {
 	char filespec[MAX_PATH];
     struct _finddata32_t c_file;
@@ -955,52 +882,23 @@ int searchForUnloadedPigs(const char* folder, char*** rpigNames)
 	int numPigFiles, numNewPigFiles;
 	char** pigNames;
 	static bool bFirstTime = true;
-	bool deleteRetiredServerPiggs = false;
 
-	STR_COMBINE_SS(filespec, folder, "/piggs/*.*gg");
-	if( (hFile = _findfirst32( filespec, &c_file )) == -1L ) {
+	STR_COMBINE_SS(filespec, folder, "/*.*gg");
+	hFile = _findfirst32( filespec, &c_file );
+	if( fallback && (hFile == -1L ) ) {
 		strcpy(filespec, "./piggs/*.*gg");
-		folder = ".";
+		folder = "./piggs";
 		if( (hFile = _findfirst32( filespec, &c_file )) == -1L ) {
 			return 0;
 		}
+	} else if (hFile == -1L) {
+		return 0;
 	}
 
-	// Only delete the s_retiredServerPiggStageFiles if client specfic piggs are not present
-	if (isProductionMode() && bFirstTime)
-	{
-		char filename1[MAX_PATH];
-		char filename2[MAX_PATH];
-		char filename3[MAX_PATH];
-		char filename4[MAX_PATH];
-		char filename5[MAX_PATH];
-		char filename6[MAX_PATH];
-
-		// These are client only piggs
-		STR_COMBINE_SS(filename1, folder, "/piggs/sound.pigg");
-		STR_COMBINE_SS(filename2, folder, "/piggs/soundMusic.pigg");
-		STR_COMBINE_SS(filename3, folder, "/piggs/texGui.pigg");
-
-		// These are server only piggs
-		STR_COMBINE_SS(filename4, folder, "/piggs/server_City_01_01.pigg");
-		STR_COMBINE_SS(filename5, folder, "/piggs/server_bin.pigg");
-		STR_COMBINE_SS(filename6, folder, "/piggs/server_db.pigg");
-
-		// See if client only piggs do not exist and server only piggs do
-		if (!fileExists(filename1) && !fileExists(filename2) && !fileExists(filename3) &&
-			fileExists(filename4) && fileExists(filename5) && fileExists(filename6))
-		{
-			deleteRetiredServerPiggs = true;
-		}
-	}
-	
-		
 	// cycle thru findfile results to get the total pigg file count
 	numPigFiles = 0;
 	do {
 		if (!strEndsWith(c_file.name, ".pigg") && !strEndsWith(c_file.name, ".hogg"))
-			continue;
-		if(bFirstTime && checkDeleteOldPiggFile(folder, c_file.name, deleteRetiredServerPiggs))
 			continue;
 
 		if (g_piggFileFilterCB && !g_piggFileFilterCB(c_file.name))
@@ -1022,7 +920,7 @@ int searchForUnloadedPigs(const char* folder, char*** rpigNames)
 		//if( eaSize(&pig_set) <= 0 && (strStartsWith(c_file.name, "stage2") || strStartsWith(c_file.name, "stage3")) )
 		//	continue; // fpe for testing
 
-		STR_COMBINE_SSS(fn, folder, "/piggs/", c_file.name);
+		STR_COMBINE_SSS(fn, folder, "/", c_file.name);
 		if(!PigSetGetPigFileByName(fn) ) {
 			pigNames[numNewPigFiles++] = strdup(fn);
 		}		
@@ -1037,7 +935,6 @@ int searchForUnloadedPigs(const char* folder, char*** rpigNames)
 }
 
 int PigSetInit(void) { // Loads all of the Pig files from a given directory
-	char *folder;
 	int i, np;
 	char** pigNames;
 
@@ -1045,41 +942,84 @@ int PigSetInit(void) { // Loads all of the Pig files from a given directory
 		return 0;
 	}
 
-	folder = fileDataDir(); // Call this first, because if fileDataDir is not defined, it calls PigSetInit, and we want the inner one to finish first, set num_pigs, and cause the outer one to exit
-
 	if (pig_set_inited) {
 		return 0; // Already inited
 	}
 	pig_set_inited = true; // Set this so that if we get a recursive call to PigSetInit (and we will, because we call fopen()), then we will just return immediately
-
-	assert(folder);
 
 	PigCritSecInit();
 
 	eaDestroy(&pig_set); // in case previous set existed (not possible?)
 	
 	// Get the list of pigg file names which need to be loaded
-	np = searchForUnloadedPigs(folder, &pigNames);
+	np = searchForUnloadedPigs(filePiggDir(), &pigNames, true);
 	if(!np) {
 		return 0;
 	}
 
 	// Create and load each pigg file
-	eaCreateWithCapacity(&pig_set, np);
+	eaCreateWithCapacity(&pig_set, np + num_pig_patch_files);
 	for(i=0; i<np; i++) {
 		PigFile* pf = calloc(sizeof(PigFile), 1);
 		PigFileCreate(pf);
+		if (pig_debug)
+			printf("Reading pigg: %s\n", pigNames[i]);
 		if (0 != PigFileRead(pf, pigNames[i])) {
 			free(pf);
-			return pigShowError(pigNames[i],PIG_ERRCODE_1,"Error tring to read Pig",-1);
+			return pigShowError(pigNames[i],PIG_ERRCODE_1,"Error trying to read Pig",-1);
 		}
 		eaPush(&pig_set, pf);
 		free(pigNames[i]);
 	}
 	free(pigNames);
 
+	for(i=0; i<num_pig_patch_files; i++) {
+		PigFile* pf = calloc(sizeof(PigFile), 1);
+		PigFileCreate(pf);
+		if (pig_debug)
+			printf("Reading patch pigg: %s\n", pig_patch_files[i]);
+		if (0 != PigFileRead(pf, pig_patch_files[i])) {
+			free(pf);
+			return pigShowError(pig_patch_files[i],PIG_ERRCODE_1,"Error trying to read Pig",-1);
+		}
+		eaPush(&pig_set, pf);
+	}
+
 	if (pig_debug)
 		printf("Read %d pigs\n", np);
+
+	return 0;
+}
+
+int PigSetAddPatchDir(const char *path) { // Loads all of the Pig files from a given directory
+	int np;
+	char** pigNames;
+	char patchDir[MAX_PATH + 20] = {0};
+
+	if(pig_disabled) {
+		return 0;
+	}
+
+	// Due to design issues, you have to add patch piggs *before* anything else is initialized
+	assert(!pig_set_inited);
+	assert(path);
+
+	if (!fileIsAbsolutePath(path))
+		sprintf(patchDir, "./%s", path);
+	else
+		strcpy(patchDir, path);
+
+	PigCritSecInit();
+
+	// Get the list of pigg file names which need to be loaded
+	np = searchForUnloadedPigs(patchDir, &pigNames, false);
+
+	pig_patch_files = realloc(pig_patch_files, sizeof(char*) * (num_pig_patch_files + np));
+	memcpy(&pig_patch_files[num_pig_patch_files], pigNames, sizeof(char*) * np);
+	num_pig_patch_files += np;
+	free(pigNames);
+
+	fileAddSearchPath(patchDir);
 
 	return 0;
 }
@@ -1098,7 +1038,7 @@ int PigSetCheckForNew(void)
 	oldNumPiggs = eaSize(&pig_set);
 
 	// Get the list of pigg file names which need to be loaded
-	newPiggNameCount = searchForUnloadedPigs(fileDataDir(), &newPigNames);
+	newPiggNameCount = searchForUnloadedPigs(filePiggDir(), &newPigNames, true);
 	if(!newPiggNameCount) 
 		return 0;
 

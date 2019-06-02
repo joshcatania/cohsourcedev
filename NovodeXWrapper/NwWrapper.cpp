@@ -112,8 +112,8 @@ static void nwDestroyActorFunctionQueues( );
 
 #define NX_SHAPE_STORED 1
 
-#define DEFAULT_MAX_DYNAMIC_ACTOR_COUNT 1600
-#define DEFAULT_MAX_NEW_DYNAMIC_ACTORS 300
+#define DEFAULT_MAX_DYNAMIC_ACTOR_COUNT 2000
+#define DEFAULT_MAX_NEW_DYNAMIC_ACTORS 500
 
 static int iLastSceneSimulated; // for debugging
 
@@ -564,13 +564,8 @@ void nwSetPhysicsQuality( ePhysicsQuality pq)
 	nx_state.physicsQuality = pq;
 #ifdef CLIENT
 	fxSetMaxDebrisCount();
-	if ( pq == ePhysicsQuality_VeryHigh )
-		nx_state.fakeHardware = 1;
-	else
-		nx_state.fakeHardware = 0;
 #endif
 }
-
 
 void nwSetRagdollCount( int count )
 {
@@ -579,17 +574,6 @@ void nwSetRagdollCount( int count )
 		nxMaxScenes = count;
 #endif
 }
-
-
-
-
-
-
-
-
-
-
-
 
 // -------------------------------------------------------------------------------------------------------------------
 // USER DATA
@@ -1132,6 +1116,7 @@ void  nwSetNovodexDefaults( )
 U8 nwInitializeNovodex( )
 {
 #ifdef CLIENT
+	//	if (nx_state.initialized || !nx_state.allowed || !IsUsingWin2kOrXp())
 	if ( nx_state.initialized || !nx_state.allowed || !nx_state.gameInPhysicsPossibleState || !IsUsingWin2kOrXp() )
 		return false;
 #else
@@ -1295,7 +1280,10 @@ void nwCreatePhysicsSDK()
 
 #ifdef SERVER
 	desc.flags = NX_SDKF_NO_HARDWARE;
+#else
+	desc.flags &= ~NX_SDKF_NO_HARDWARE;
 #endif
+
 
 	debugAllocator = new MyAllocator();
 	nxSDK = NxCreatePhysicsSDK(NX_PHYSICS_SDK_VERSION, debugAllocator, &nwOutputStream,desc);
@@ -1307,10 +1295,11 @@ void nwCreatePhysicsSDK()
 #ifdef SERVER
 	nxSDK->setParameter(NX_CONTINUOUS_CD, 1);
 #elif CLIENT
-//	nxSDK->setParameter(NX_SKIN_WIDTH,0.3f);
+	nxSDK->setParameter(NX_SKIN_WIDTH,0.3f);
 #endif
 //	nxSDK->setGlobalExceptionHandler( nwGiveUpExceptionHandler );
 	//nxSDK->setParameter(NX_BOUNCE_THRESHOLD, -20);
+	nxSDK->setParameter(NX_BOUNCE_THRESHOLD, -20); // Lets try the bounce threshold
 
 
 
@@ -1335,7 +1324,7 @@ void nwDeletePhysicsSDK()
 	debugAllocator = NULL;
 }
 // -------------------------------------------------------------------------------------------------------------------
-U8  nwEnabled()
+U8 nwEnabled()
 {
 #ifdef CLIENT 
 	if (nx_state.initialized && nxSDK && nxScene[NX_CLIENT_SCENE])
@@ -1379,9 +1368,9 @@ static void nwDeleteAllScenes( )
 
 }
 
-U8	  nwHardwarePresent()
+U8 nwHardwarePresent()
 {
-	return !!(nxSDK && !!nxSDK->getHWVersion());
+	return !!(nxSDK && nxSDK->getHWVersion() != NX_HW_VERSION_NONE);
 }
 
 
@@ -1391,14 +1380,19 @@ int nwCreateScene()
 
 	if ( !nxSceneConstants.bInited )
 	{
-		nxSceneConstants.timeStepSize = 1.0f/60.0f;
-		nxSceneConstants.timeStepMax = 8;
+		nxSceneConstants.timeStepSize = 1.0f / 60.0f;
+		nxSceneConstants.timeStepMax = 10;
 		nxSceneConstants.gravity = -80.0f;
-		nxSceneConstants.staticFriction = 0.7f;
-		nxSceneConstants.dynamicFriction = 0.5f;
-		nxSceneConstants.shapeSkinWidth = 0.10f;
 		nxSceneConstants.restitution = 0.5f;
-		
+#ifdef SERVER
+		nxSceneConstants.staticFriction = 1.0f;
+		nxSceneConstants.dynamicFriction = 0.75f;
+		nxSceneConstants.shapeSkinWidth = 0.10f;
+#else
+		nxSceneConstants.staticFriction = 0.75f;
+		nxSceneConstants.dynamicFriction = 0.5f;
+		nxSceneConstants.shapeSkinWidth = 0.05f;
+#endif		
 		nxSceneConstants.bInited = true;
 	}
 	PERFINFO_AUTO_START("nwCreateScene", 1);
@@ -1421,16 +1415,12 @@ int nwCreateScene()
 
 	NxSceneDesc sceneDesc;
 	sceneDesc.gravity = NxVec3(0, nxSceneConstants.gravity, 0);
-	//sceneDesc.broadPhase = NX_BROADPHASE_COHERENT;
-	//sceneDesc.collisionDetection = true;
-
-
 
 	// On the client, try a HW scene first, then sw
 #ifdef CLIENT
 	nxScene[iNewScene] = NULL;
 
-	if ( !nx_state.softwareOnly && nxSDK->getHWVersion() )
+	if (!nx_state.softwareOnly && (nxSDK->getHWVersion() != NX_HW_VERSION_NONE))
 	{
 		sceneDesc.simType = NX_SIMULATION_HW;
 		nxScene[iNewScene] = nxSDK->createScene(sceneDesc);
@@ -1449,7 +1439,9 @@ int nwCreateScene()
 		}
 	}
 	else
+	{
 		nx_state.hardware = 1; // found HW
+	}
 
 #else // server is SW only
 
@@ -1469,13 +1461,14 @@ int nwCreateScene()
 #ifdef CLIENT
 
 	// don't let jointed actors collide with static geometry
-	nxScene[iNewScene]->setGroupCollisionFlag(nxGroupStatic, nxGroupJointed, false );
-
-	nxScene[iNewScene]->setGroupCollisionFlag(nxGroupDebris, nxGroupDebris, false );
+	
+	nxScene[iNewScene]->setGroupCollisionFlag(nxGroupStatic, nxGroupJointed, true); // MDC Test
+	nxScene[iNewScene]->setGroupCollisionFlag(nxGroupDebris, nxGroupDebris, true); // Have debris collide with other debris
+	
 	nxScene[iNewScene]->setUserContactReport(&NwInstancedUserContactNotifyFxGeo );
 	nxScene[iNewScene]->setUserNotify(&NwUserJointBreakNotify);
 
-//	nxScene[iNewScene]->setActorGroupPairFlags(nxGroupDebris, nxGroupLargeDebris, NX_NOTIFY_ON_START_TOUCH );
+	nxScene[iNewScene]->setActorGroupPairFlags(nxGroupDebris, nxGroupLargeDebris, NX_NOTIFY_ON_START_TOUCH ); // Re-enabled large object collision
 	nxScene[iNewScene]->setActorGroupPairFlags(nxGroupDebris, nxGroupStatic, NX_NOTIFY_ON_START_TOUCH );
 	nxScene[iNewScene]->setActorGroupPairFlags(nxGroupLargeDebris, nxGroupStatic, NX_NOTIFY_ON_START_TOUCH );
 
@@ -2959,6 +2952,7 @@ static void nwInternalSetActorMat4(NxActorGuid guidActor, U32 pMatPtrInU32Form )
 			pActor->setGlobalPose(*pMat);
 	}
 	// no longer allocated separately -- delete pMat;
+	// delete pMat (this is done in other Cryptic games; do NOT do this - MDC, 2019)
 }
 
 void  nwSetActorMat4(NxActorGuid guidActor , float* mat4)
@@ -3200,14 +3194,15 @@ void  nwAddJoint(NwEmissaryData* nwEmissaryData, eNxJointDOF jointDOF, const Vec
 
 	if ( !nx_state.hardware )
 		pNewJointDesc->projectionMode = NX_JPM_POINT_MINDIST;
-	/*
+
+	/* Trying this out */
 	pNewJointDesc->swingDrive.driveType = NX_D6JOINT_DRIVE_POSITION;
 	pNewJointDesc->swingDrive.spring = 250.0f;
 	pNewJointDesc->swingDrive.damping = 100.0f;
 	NxQuat q;
 	q.id();
 	pNewJointDesc->driveOrientation = q;
-	*/
+	/* Seems to work well; puts some limits on joint accel */
 
 
 

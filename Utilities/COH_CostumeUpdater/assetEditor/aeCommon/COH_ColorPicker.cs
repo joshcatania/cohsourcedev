@@ -134,7 +134,7 @@ namespace COH_CostumeUpdater.assetEditor.aeCommon
                     mSliderV.setVal(HsvColor.getValue(c));
 
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                 }
             }

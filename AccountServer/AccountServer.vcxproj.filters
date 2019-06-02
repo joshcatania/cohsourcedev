@@ -91,9 +91,6 @@
     <ClCompile Include="..\Common\Playspan\JSONParser.cpp">
       <Filter>External\Playspan</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\Playspan\PostBackListener.cpp">
-      <Filter>External\Playspan</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\account\AccountCatalog.h">
@@ -172,9 +169,6 @@
       <Filter>External</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\Playspan\JSONParser.h">
-      <Filter>External\Playspan</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\Playspan\PostBackListener.h">
       <Filter>External\Playspan</Filter>
     </ClInclude>
   </ItemGroup>

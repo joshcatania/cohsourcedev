@@ -37,7 +37,6 @@
 #include "Player.h"
 #include "inventory_client.h"
 #include "authclient.h"
-#include "uiPlaySpanStoreLauncher.h"
 #include "clientcomm.h"
 #include "font.h"
 
@@ -473,7 +472,7 @@ void handleAccountPlayNCAuthKeyUpdate(Packet *pak)
 	int request_key = pktGetBitsAuto(pak);
 	char * auth_key = pktGetString(pak);
 	#if ! defined(TEST_CLIENT)		
-		PlaySpanStoreLauncher_ReceiveAuthKeyResponse(request_key, auth_key);
+		//PlaySpanStoreLauncher_ReceiveAuthKeyResponse(request_key, auth_key);
 	#endif
 }
 
@@ -482,7 +481,7 @@ void handleClientAuth(Packet *pak)
 	U32 timeStamp = pktGetBitsAuto(pak);
 	char* digest = pktGetString(pak);
 	#if ! defined(TEST_CLIENT)	
-		PlaySpanStoreLauncher_SetDigest( timeStamp, digest );
+		//PlaySpanStoreLauncher_SetDigest( timeStamp, digest );
 	#endif
 }
 
@@ -1082,13 +1081,13 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
 			#ifdef TEST_CLIENT
 				// Have TestClient checksum CityOfHeroes.exe
 				if (strEndsWith(exenamecopy, "TestClient.exe")) {
-					strcpy(strstri(exenamecopy, "TestClient.exe"), "CityOfHeroes.exe");
+					strcpy(strstri(exenamecopy, "TestClient.exe"), "Ouroboros.exe");
 				}
 			#endif
 			#ifdef TEXT_CLIENT
 				// Have TextClient checksum CityOfHeroes.exe
 				if (strEndsWith(exenamecopy, "TextClient.exe")) {
-					strcpy(strstri(exenamecopy, "TextClient.exe"), "CityOfHeroes.exe");
+					strcpy(strstri(exenamecopy, "TextClient.exe"), "Ouroboros.exe");
 				}
 			#endif
 			// Hack for running development build executables

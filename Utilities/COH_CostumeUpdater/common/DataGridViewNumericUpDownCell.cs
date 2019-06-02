@@ -60,7 +60,7 @@ namespace COH_CostumeUpdater.common
         private Decimal maximum;         // Caches the value of the Maximum property
         private bool thousandsSeparator; // Caches the value of the ThousandsSeparator property
         private bool enabledValue;
-        private bool firstTimePaint;
+        private bool firstTimePaint = false;
 
         /// <summary>
         /// Constructor for the DataGridViewNumericUpDownCell cell type

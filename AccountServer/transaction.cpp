@@ -4,7 +4,6 @@
 #include "AccountServer.hpp"
 #include "AccountSql.h"
 #include "Playspan/JSONParser.h"
-#include "Playspan/PostBackListener.h"
 #include "request.hpp"
 #include "account_inventory.h"
 #include "components/MemoryPool.h"
@@ -110,9 +109,6 @@ void Transaction_MicroFinished(bool success, MicroTransaction * transaction)
 	}
 
 	// ack on failure so we do not log too many failures in the transaction log for customer service
-#if defined(USE_POST_BACK_RELAY)
-	postback_ack(transaction->message);
-#endif // USE_POST_BACK_RELAY
 	MP_FREE(MicroTransaction, transaction);
 }
 
@@ -357,140 +353,3 @@ static const char * key_transactionid[] = {"transactionid", NULL};
 static const char * key_userid[] = {"userid", NULL};
 static const char * key_virtualamount[] = {"virtualamount", NULL};
 static const char * key_virtualcurrency[] = {"virtualcurrency", NULL};
-
-#if defined(USE_POST_BACK_RELAY)
-
-static void handle_mtx(PostbackMessage * message, yajl_val mtx) {
-	// transaction data
-	const char * transactionid;
-	const char * userid;
-	const char * transactiondate;
-	const char * virtualamount;
-	const char * virtualcurrency;
-	const char * balance;
-	const char * hash;
-
-	if (!yajl_get_string(mtx, key_transactionid, &transactionid)) goto cleanup;
-	if (!yajl_get_string(mtx, key_userid, &userid)) goto cleanup;
-	if (!yajl_get_string(mtx, key_transactiondate, &transactiondate)) goto cleanup;
-	if (!yajl_get_string(mtx, key_virtualamount, &virtualamount)) goto cleanup;
-	if (!yajl_get_string(mtx, key_virtualcurrency, &virtualcurrency)) goto cleanup;
-	if (!yajl_get_string(mtx, key_balance, &balance)) goto cleanup;
-	if (!yajl_get_string(mtx, key_hash, &hash)) goto cleanup;
-
-	// validate the transaction hash
-	{
-		CryptoPP::MD5 md5;
-		md5.Update(reinterpret_cast<const byte*>(g_accountServerState.cfg.mtxSecretKey), (unsigned)strlen(g_accountServerState.cfg.mtxSecretKey));
-		md5.Update(reinterpret_cast<const byte*>(transactionid), (unsigned)strlen(transactionid));
-		md5.Update(reinterpret_cast<const byte*>(userid), (unsigned)strlen(userid));
-		md5.Update(reinterpret_cast<const byte*>(virtualamount), (unsigned)strlen(virtualamount));
-		md5.Update(reinterpret_cast<const byte*>(virtualcurrency), (unsigned)strlen(virtualcurrency));
-		md5.Update(reinterpret_cast<const byte*>(balance), (unsigned)strlen(balance));
-		md5.Update(reinterpret_cast<const byte*>(transactiondate), (unsigned)strlen(transactiondate));
-
-		byte my_digest[CryptoPP::MD5::DIGESTSIZE];
-		md5.Final(my_digest);
-
-		byte src_digest[CryptoPP::MD5::DIGESTSIZE];
-
-		CryptoPP::HexDecoder hex;
-		hex.Put(reinterpret_cast<const byte*>(hash), (unsigned)strlen(hash));
-		hex.MessageEnd();
-		hex.Get(src_digest, CryptoPP::MD5::DIGESTSIZE);
-
-		if (!devassert(memcmp(src_digest, my_digest, CryptoPP::MD5::DIGESTSIZE)==0)) {
-			LOG(LOG_TRANSACTION, LOG_LEVEL_ALERT, LOG_CONSOLE_ALWAYS, "{\"reason\":\"mtx invalid hash\", \"transactionid\":\"%s\", \"userid\":\"%s\", \"transactiondate\":\"%s\"}",
-				transactionid, userid, transactiondate);
-			goto cleanup;
-		}
-	}
-
-	// find mtx environment separator
-	const char * account_name = strchr(userid, '.');
-	if (!devassert(account_name)) goto cleanup;
-
-	// replace mtx environment separator and increment
-	(*(char*)account_name++) = 0;
-
-	// validate mtx environment
-	if (!devassert(stricmp(userid, g_accountServerState.cfg.mtxEnvironment) == 0)) goto cleanup;
-
-	// extract auth UID
-	char * end = NULL;
-	int auth_id = strtol(account_name, &end, 10);
-	if (!devassert(auth_id && end && !*end)) goto cleanup;
-
-	// find the matching account
-	Account * account = AccountDb_GetAccount(auth_id);
-	if (!account) {
-		LOG(LOG_ACCOUNT, LOG_LEVEL_ALERT, LOG_CONSOLE_ALWAYS, "{\"reason\":\"mtx for offline account\", \"transactionid\":\"%s\", \"auth_id\":%d, \"transactiondate\":\"%s\"}",
-			transactionid, auth_id, transactiondate);
-
-		account = AccountDb_LoadOrCreateAccount(auth_id, NULL);
-	}
-
-	if (!yajl_get_string_as_int(mtx, key_balance, &account->virtualCurrencyBal)) goto cleanup;
-
-	// extract the individual orders
-	yajl_val items = yajl_tree_get(mtx, key_item, yajl_t_any);
-	if (!devassert(items)) goto cleanup;
-
-	size_t items_count;
-	yajl_val * items_array;
-	if (YAJL_IS_OBJECT(items)) {
-		items_count = 1;
-		items_array = &items;
-	} else if (devassert(YAJL_IS_ARRAY(items))) {
-		items_count = YAJL_GET_ARRAY(items)->len;
-		items_array = YAJL_GET_ARRAY(items)->values;
-	} else {
-		goto cleanup;
-	}
-
-	for(unsigned i=0; i<items_count; i++) {
-		yajl_val item = items_array[i];
-
-		const char * id;
-		const char * sku;
-		int quantity;
-		int virtualamount;
-
-		if (!yajl_get_string(item, key_id, &id)) goto cleanup;
-		if (!yajl_get_string(item, key_sku, &sku)) goto cleanup;
-		if (!yajl_get_string_as_int(item, key_quantity, &quantity)) goto cleanup;
-		if (!yajl_get_string_as_int(item, key_virtualamount, &virtualamount)) goto cleanup;
-
-		// convert from 000-000000-00000000
-		OrderId order_id = kOrderIdInvalid;
-		int ate = 0;
-		int got = sscanf(id, "%03hd-%06d-%08d%n", &order_id.u32[0], &order_id.u32[1], &order_id.u32[2], &ate);
-		if (!devassert(got == 3 && ate == 19 && id[ate]==0)) {
-			LOG(LOG_TRANSACTION, LOG_LEVEL_ALERT, LOG_CONSOLE_ALWAYS, "{\"reason\":\"invalid order_id\", \"transactionid\":\"%s\", \"auth_id\":%d, \"transactiondate\":\"%s\"}",
-				transactionid, auth_id, transactiondate);
-			goto cleanup;
-		}
-
-		TODO(); // temp hack to remove the quantity modifier from the SKU
-		char* dash = const_cast<char*>(strrchr(sku, '-'));
-		if (dash && isdigit(dash[1]))
-			*dash = 0;
-
-		// Increment the message reference count
-		message->refCnt++;
-		Transaction_MicroStartTransaction(account, order_id, skuIdFromString(sku), transactiondate, quantity, virtualamount, message);
-	}
-
-cleanup:
-	yajl_tree_free(mtx);
-}
-
-void playspan_message(PostbackMessage * message, void * data, size_t size) {
-	yajl_val tree = parse_json(data, size);
-	if (!tree)
-		return;
-
-	handle_mtx(message, tree);
-}
-
-#endif // USE_POST_BACK_RELAY

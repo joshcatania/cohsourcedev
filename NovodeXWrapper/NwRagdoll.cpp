@@ -1267,8 +1267,8 @@ Ragdoll* nwCreateRagdollNoPhysics( Entity* e )
 // -------------------------------------------------------------------------------------------------------------------
 static void initRagdollConstants()
 {
-	ragdollConstants.swing_spring = 0.2f;
-	ragdollConstants.swing_damper = 0.1;
+	ragdollConstants.swing_spring = 0.05f; // STO pre-init defaults (previously 0.2f)
+	ragdollConstants.swing_damper = 0.025f; // STO pre-init defaults (previously 0.1f)
 	ragdollConstants.twist_spring = 0.2f;
 	ragdollConstants.twist_damper = 0.1f;
 	ragdollConstants.swing_hardness = 0.9f;

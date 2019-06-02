@@ -38,7 +38,6 @@
 #include "netcomp.h"
 #include "AccountData.h"
 #include "AccountCatalog.h"
-#include "Playspan/PostBackListener.h"
 #include "AccountSql.h"
 #include "request.hpp"
 #include "request_certification.hpp"
@@ -98,17 +97,6 @@ static ParseTable parse_AccountServerShard[] =
 	{ 0 },
 };
 
-#if defined(USE_POST_BACK_RELAY)
-ParseTable parse_PostBackRelay[] =
-{
-	{ "PostBackRelay",		TOK_IGNORE | TOK_PARSETABLE_INFO, sizeof(PostBackRelay), 0, NULL, 0 },
-	{ "ip",					TOK_STRUCTPARAM | TOK_STRING(PostBackRelay, ip, 0), NULL },
-	{ "port",				TOK_STRUCTPARAM | TOK_INT(PostBackRelay, port, 0), NULL },
-	{ "\n",					TOK_END, 0 },
-	{ "", 0, 0 }
-};
-#endif // USE_POST_BACK_RELAY
-
 StaticDefineInt parse_PlaySpanStoreFlags[] =
 {
 	DEFINE_INT
@@ -116,17 +104,12 @@ StaticDefineInt parse_PlaySpanStoreFlags[] =
 	DEFINE_END
 };
 
-
 static ParseTable parse_AccountServerCfg[] =  
 {
 	{ "ShardName",								TOK_STRUCT(AccountServerCfg,shards,parse_AccountServerShard)	},
 	{ "MtxEnvironment",							TOK_FIXEDSTR(AccountServerCfg,mtxEnvironment) },
 	{ "MtxSecretKey",							TOK_FIXEDSTR(AccountServerCfg,mtxSecretKey) },
 	{ "MtxIOThreads",							TOK_INT(AccountServerCfg,mtxIOThreads,1) },
-	{ "PlayNCAdminWebPageSecretKey",			TOK_FIXEDSTR(AccountServerCfg,playNCChallengeRespSecretKey) },
-#if defined(USE_POST_BACK_RELAY)
-	{ "PostBackRelay",							TOK_STRUCT(AccountServerCfg,relays,parse_PostBackRelay)	},
-#endif // USE_POST_BACK_RELAY
 	{ "SqlLogin",								TOK_FIXEDSTR(AccountServerCfg,sqlLogin) },
 	{ "SqlDbName",								TOK_FIXEDSTR(AccountServerCfg,sqlDbName) },
 	{ "SqlDbProvider",							TOK_FIXEDSTR(AccountServerCfg, sqlDbProvider) },
@@ -138,25 +121,10 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "PlaySpanStoreFlags",						TOK_FLAGS(AccountServerCfg,playSpanStoreFlags,0), parse_PlaySpanStoreFlags		},
 	{ "PlaySpanAuthTimeoutMins",				TOK_INT(AccountServerCfg,playSpanAuthTimeoutMins,DEFAULT_PLAYSPAN_AUTH_TIMEOUT_MINS)			},
 	{ "PlaySpanAuthRekeyIntervalMins",			TOK_INT(AccountServerCfg,playSpanAuthRekeyIntervalMins,DEFAULT_PLAYSPAN_REKEY_INTERVAL_MINS)			},
-	{ "PlaySpanDomain",							TOK_STRING(AccountServerCfg,playSpanDomain,NULL)				},
-#if defined(USE_POST_BACK_RELAY)
-	{ "PlaySpanCatalog",						TOK_STRING(AccountServerCfg,playSpanCatalog,DEFAULT_PLAYSPAN_CATALOG_ID)				},
-#endif // USE_POST_BACK_RELAY
-	{ "PlaySpanURL_Home",						TOK_STRING(AccountServerCfg,playSpanURL_Home,NULL)				},
-	{ "PlaySpanURL_CategoryView",				TOK_STRING(AccountServerCfg,playSpanURL_CategoryView,NULL)		},
-	{ "PlaySpanURL_ItemView",					TOK_STRING(AccountServerCfg,playSpanURL_ItemView,NULL)			},
-	{ "PlaySpanURL_ShowCart",					TOK_STRING(AccountServerCfg,playSpanURL_ShowCart,NULL)			},
-	{ "PlaySpanURL_AddToCart",					TOK_STRING(AccountServerCfg,playSpanURL_AddToCart,NULL)			},
-	{ "PlaySpanURL_ManageAccount",				TOK_STRING(AccountServerCfg,playSpanURL_ManageAccount,NULL)		},
-	{ "PlaySpanURL_SupportPage",				TOK_STRING(AccountServerCfg,playSpanURL_SupportPage,NULL)		},
-	{ "PlaySpanURL_SupportPageDE",				TOK_STRING(AccountServerCfg,playSpanURL_SupportPageDE,NULL)		},
-	{ "PlaySpanURL_SupportPageFR",				TOK_STRING(AccountServerCfg,playSpanURL_SupportPageFR,NULL)		},
-	{ "PlaySpanURL_UpgradeToVIP",				TOK_STRING(AccountServerCfg,playSpanURL_UpgradeToVIP,NULL)		},
-	{ "cohURL_NewFeatures",						TOK_STRING(AccountServerCfg,cohURL_NewFeatures,NULL)			},
-	{ "cohURL_NewFeaturesUpdate",				TOK_STRING(AccountServerCfg,cohURL_NewFeaturesUpdate,NULL)		},
+	{ "PlaySpanCatalog",						TOK_STRING(AccountServerCfg,playSpanCatalog,"OURO")				},
 	{ "GrantSKUFromList",						TOK_BOOLFLAG(AccountServerCfg,grant_sku_from_list,0)			},
 	{ "GrantAllSKU",							TOK_BOOLFLAG(AccountServerCfg,grant_all_sku,0)					},
-	{ "MinLoyaltyPoints",						TOK_INT(AccountServerCfg,min_loyalty_points,1)					},
+	{ "MinLoyaltyPoints",						TOK_INT(AccountServerCfg,min_loyalty_points,0)					},
 	{ "AutoBuyProducts",						TOK_BOOLFLAG(AccountServerCfg,auto_buy_products,0)				},
 	// Legacy stuff
 	{ "ArchiveMerged",							TOK_BOOLFLAG(AccountServerCfg,archive_merged,0)					},
@@ -1204,7 +1172,7 @@ void handleGetPlayNCAuthKey(AccountServerShard *shard, Packet *packet_in)
 	//	Compute the authkey....
 	//
 	computedAuthKey = MakePlayNCAuthKey( 
-							g_accountServerState.cfg.playNCChallengeRespSecretKey, 
+							"Test", 
 							auth_name, 
 							digest_data );
 	
@@ -1274,9 +1242,6 @@ void UpdateConsoleTitle(void)
 		if(g_accountServerState.shards[i]->link.connected)
 			++nConnected;
 	
-#if defined(USE_POST_BACK_RELAY)
-	mtx_stats = postback_update_stats();	
-#endif // USE_POST_BACK_RELAY
 	snprintf(buf, ARRAY_SIZE(buf), "%i: AccountServer. %i shards %i accounts (PAK R:%d D:%d) (SQL Q:%d) %s (%i).",
 		_getpid(), nConnected, AccountDb_GetCount(), g_packetcount, qGetSize(s_delayedPackets), asql_in_flight(), mtx_stats, ((g_tickCount / ACCOUNTSERVER_TICK_FREQ) % 10));
 	setConsoleTitle(buf);
@@ -1302,20 +1267,7 @@ bool accountSvrCfgLoad(AccountServerCfg *cfg)
 		strupr(g_accountServerState.cfg.mtxEnvironment);
 		accountCatalog_SetMtxEnvironment( cfg->mtxEnvironment );
 		
-		info->playSpanDomain			= _strdup( cfg->playSpanDomain );
 		info->playSpanCatalog			= _strdup( cfg->playSpanCatalog );
-		info->playSpanURL_Home			= _strdup( cfg->playSpanURL_Home );
-		info->playSpanURL_CategoryView	= _strdup( cfg->playSpanURL_CategoryView );
-		info->playSpanURL_ItemView		= _strdup( cfg->playSpanURL_ItemView );
-		info->playSpanURL_ShowCart		= _strdup( cfg->playSpanURL_ShowCart );
-		info->playSpanURL_AddToCart		= _strdup( cfg->playSpanURL_AddToCart );
-		info->playSpanURL_ManageAccount	= _strdup( cfg->playSpanURL_ManageAccount );
-		info->playSpanURL_SupportPage	= _strdup( cfg->playSpanURL_SupportPage );
-		info->playSpanURL_SupportPageDE	= _strdup( cfg->playSpanURL_SupportPageDE );
-		info->playSpanURL_SupportPageFR	= _strdup( cfg->playSpanURL_SupportPageFR );
-		info->playSpanURL_UpgradeToVIP	= _strdup( cfg->playSpanURL_UpgradeToVIP );
-		info->cohURL_NewFeatures		= _strdup( cfg->cohURL_NewFeatures );
-		info->cohURL_NewFeaturesUpdate	= _strdup( cfg->cohURL_NewFeaturesUpdate );
 		info->playSpanStoreFlags		= cfg->playSpanStoreFlags;
 		info->playSpanStoreFlags		|= cfg->auto_buy_products ? STOREFLAG_AUTO_BUY_PRODUCTS : 0;
 
@@ -1449,9 +1401,6 @@ static void reconfig(void) {
 	int i;
 
 	reloadConfig();
-#if defined(USE_POST_BACK_RELAY)
-	postback_reconfig();
-#endif // USE_POST_BACK_RELAY
 
 	for(i = 0; i < g_accountServerState.shard_count; ++i)
 		if(g_accountServerState.shards[i]->link.connected)
@@ -1542,28 +1491,6 @@ void reloadConfig(void)
 	}
 
 	printf_stderr("Listening for MicroTransactions in the environment '%s'\n", g_accountServerState.cfg.mtxEnvironment);
-#if defined(USE_POST_BACK_RELAY)
-	if(g_accountServerState.cfg.relays)
-	{
-		for (i=0; i<eaSize(&g_accountServerState.cfg.relays); i++)
-			printf_stderr("PostBackRelay server: %s:%d\n", g_accountServerState.cfg.relays[i]->ip, g_accountServerState.cfg.relays[i]->port);
-	}
-	else
-#endif // USE_POST_BACK_RELAY
-	{
-		if(isDevelopmentMode())
-		{
-			printf_stderr("No PostBackRelay server specified in account_server.cfg.  MicroTransaction processing diabled.\n");
-		}
-		else
-		{
-#if defined(USE_POST_BACK_RELAY)
-			FatalErrorf("No PostBackRelay server specified in account_server.cfg.");
-#else // USE_POST_BACK_RELAY
-			printf_stderr("No PostBackRelay server specified in account_server.cfg.");
-#endif // USE_POST_BACK_RELAY
-		}
-	}
 }
 
 static void stress_test()
@@ -1720,10 +1647,6 @@ int main(int argc,char **argv)
 	Transaction_Init();
 	AccountRequest::Init();
 	AccountServer_InitDelayedQueue();
-#if defined(USE_POST_BACK_RELAY)
-	postback_start(g_accountServerState.cfg.mtxIOThreads, g_accountServerState.cfg.mtxEnvironment, 
-		g_accountServerState.cfg.mtxSecretKey, g_accountServerState.cfg.playSpanDomain, g_accountServerState.cfg.relays, playspan_message);
-#endif // USE_POST_BACK_RELAY
 
 	printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "AccountServer ready.");
 	printf(" (took %f seconds)\n\n",timerElapsed(startup_timer));
@@ -1737,8 +1660,6 @@ int main(int argc,char **argv)
 
 	while (!s_exiting)
 	{
-		static bool mtx_alive = false;
-
 		timerStart(g_flush_timer);
 
 		shardNetConnectTick(&g_accountServerState);
@@ -1755,11 +1676,6 @@ int main(int argc,char **argv)
 			AccountServer_TickDelayedPackets();
 			AccountRequest::Tick();
 			AccountDb_Tick();
-#if defined(USE_POST_BACK_RELAY)
-			mtx_alive = postback_tick();
-#else // USE_POST_BACK_RELAY
-			mtx_alive = true;
-#endif // USE_POST_BACK_RELAY
 			CatalogUpdate_Tick();
 			clientCountByShardTick();
 			AccountServer_RedeemedCountByShardTick();
@@ -1769,7 +1685,7 @@ int main(int argc,char **argv)
 			{
 				timerStart(g_activeAccount_timer);
 				UpdateConsoleTitle();
-				DBServer_Heartbeat(mtx_alive);
+				DBServer_Heartbeat(true);
 			}
 		}
 	}
@@ -1792,9 +1708,6 @@ int main(int argc,char **argv)
 
 	AccountDb_Shutdown();
 	accountInventory_Shutdown();
-#if defined(USE_POST_BACK_RELAY)
-	postback_stop();
-#endif // USE_POST_BACK_RELAY
 	lnkFlushAll();
 
 	EXCEPTION_HANDLER_END;

@@ -90,7 +90,6 @@
 #include "uiRegister.h"
 #include "uiRedirect.h"
 
-#include "uiWebBrowser.h"
 #include "uiWebStoreFrame.h"
 #include "uiEmail.h"
 #include "uiHybridMenu.h"
@@ -210,7 +209,6 @@ const char* getMenuName(int menu)
 			CASE(MENU_POWER_CUST_POWERPOOL);
 			CASE(MENU_POWER_CUST_INCARNATE);
 			CASE(MENU_LOAD_POWER_CUST);
-			CASE(MENU_WEB_BROWSER);
 			CASE(MENU_REDIRECT);
 			CASE(MENU_GAME);
 			#undef CASE
@@ -358,7 +356,6 @@ void (* menuFuncs[] )() =	{
 								powerCustomizationMenu,
 								powerCustomizationMenu,
 								loadPowerCust_menu,
-								uiWebBrowser_menu_service,
 								redirectMenu,
 								serveWindows,
 							};
@@ -655,8 +652,6 @@ void serve_menus()
 		// Do this to allow the options menu to work in the front end
 		if (!loadingScreenVisible() && menuFuncs[gCurrentMenu] != serveWindows)
 			serveWindows();
-
-		webStoreFrameMenuTick();  //enable web store from shell menu screens
 	}
 
 	PERFINFO_AUTO_STOP();

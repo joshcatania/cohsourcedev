@@ -78,9 +78,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="gameweb_server.c">
-      <Filter>win</Filter>
-    </ClCompile>
     <ClCompile Include="win\win_init.c">
       <Filter>win</Filter>
     </ClCompile>
@@ -414,13 +411,7 @@
     <ClCompile Include="..\Common\auction\AuctionData.c">
       <Filter>auction</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\account\AccountBilling.c">
-      <Filter>account</Filter>
-    </ClCompile>
     <ClCompile Include="..\Common\account\AccountCatalog.c">
-      <Filter>account</Filter>
-    </ClCompile>
-    <ClCompile Include="..\Common\account\AccountPayment.c">
       <Filter>account</Filter>
     </ClCompile>
     <ClCompile Include="ArenaFighter.c" />
@@ -445,11 +436,13 @@
     <ClCompile Include="testUtil.c" />
     <ClCompile Include="..\Common\filter\titles.c" />
     <ClCompile Include="..\Common\filter\validate_name.c" />
+    <ClCompile Include="..\Common\account\AccountData.c" />
+    <ClCompile Include="..\Common\account\AccountInventory.c" />
+    <ClCompile Include="..\Common\account\AccountTypes.cpp" />
+    <ClCompile Include="..\Common\entity\character_combat_eval.c" />
+    <ClCompile Include="..\Common\entity\incarnate.c" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="gameweb_server.h">
-      <Filter>win</Filter>
-    </ClInclude>
     <ClInclude Include="win\win_init.h">
       <Filter>win</Filter>
     </ClInclude>
@@ -813,16 +806,10 @@
     <ClInclude Include="..\Common\auction\AuctionData.h">
       <Filter>auction</Filter>
     </ClInclude>
-    <ClInclude Include="..\Common\account\AccountBilling.h">
-      <Filter>account</Filter>
-    </ClInclude>
     <ClInclude Include="..\Common\account\AccountCatalog.h">
       <Filter>account</Filter>
     </ClInclude>
     <ClInclude Include="..\Common\account\AccountData.h">
-      <Filter>account</Filter>
-    </ClInclude>
-    <ClInclude Include="..\Common\account\AccountPayment.h">
       <Filter>account</Filter>
     </ClInclude>
     <ClInclude Include="ArenaFighter.h" />

@@ -6,6 +6,9 @@
 #include "account.h"
 
 #define MAX_IP_LEN 15
+// In theory, the game client can accept up to 255 characters
+// of shard name, but there's no reason to give it that much
+// as it cannot render that much anyway.
 #define MAX_SERVER_NAME 25
 
 #define FREE_DURATION	  0
@@ -28,8 +31,8 @@ class CSocketServer;
 struct WorldServer
 {
 	ServerId serverid;
-	char ip[MAX_IP_LEN+1];
-	char inner_ip[MAX_IP_LEN+1];
+	char ip[255+1];
+	char inner_ip[255+1];
 	char name[MAX_SERVER_NAME+1];
 	in_addr outer_addr;
 	short int outer_port;

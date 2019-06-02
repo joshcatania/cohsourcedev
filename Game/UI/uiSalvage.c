@@ -1577,10 +1577,6 @@ int salvageWindow()
 	if( !s_state.tc )
 	{
 		salvagewindowstate_Init(&s_state);
-		{
-			Wdw * window = wdwGetWindow(WDW_SALVAGE);
-			Strcpy(window->storeLink, "020-070-000-000");  //PSID_Salvage
-		}
 	}
 
 	// ----------------------------------------

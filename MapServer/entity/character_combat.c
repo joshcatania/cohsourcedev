@@ -4913,7 +4913,27 @@ void character_TurnOnActiveTogglePowers(Character *p)
 			if(ppow && ppow->bActive
 				&& ppow->ppowBase->eType == kPowerType_Toggle)
 			{
-				int invokeID = character_GetOnactivateInvokeID(p, ppow->ppowBase);
+				PowerListItem *ppowListItem;
+				PowerListIter iter;
+				bool donotadd = false;
+				int invokeID;
+
+				// Make sure this toggle isn't already in the active toggle list.
+				// Needed because of an otherwise unavoidable conflict between
+				// character_Reset and resumeCharacter, which both want to be the
+				// one to turn on toggles when resetting powers after being offline.
+				for (ppowListItem = powlist_GetFirst(&p->listTogglePowers, &iter);
+					ppowListItem != NULL;
+					ppowListItem = powlist_GetNext(&iter))
+				{
+					// If it's already in the list, don't activate it again
+					if (ppowListItem->ppow->ppowBase == ppow->ppowBase) {
+						donotadd = true;
+						break;
+					}
+				}
+
+				invokeID = character_GetOnactivateInvokeID(p, ppow->ppowBase);
 
 				character_EnterStance(p, ppow, false);
 
@@ -4922,7 +4942,8 @@ void character_TurnOnActiveTogglePowers(Character *p)
 				power_ChangeActiveStatus(ppow, false);
 				power_ChangeActiveStatus(ppow, true);
 
-				powlist_Add(&p->listTogglePowers, ppow, invokeID ? invokeID : nextInvokeId());
+				if (!donotadd)
+					powlist_Add(&p->listTogglePowers, ppow, invokeID ? invokeID : nextInvokeId());
 				if (ppow->ppowBase->bShowBuffIcon)
 					p->entParent->team_buff_update = true;
 				ppow->fTimer = 0.0f;

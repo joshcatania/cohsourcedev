@@ -18,7 +18,6 @@
 #include "AccountServer.hpp"
 #include "account_inventory.h"
 #include "account_loyaltyrewards.h"
-#include "Playspan/PostBackListener.h"
 #include "request.hpp"
 #include "transaction.h"
 #include "comm_backend.h"
@@ -98,14 +97,6 @@ static void AccountSvrCmd_GetStatus(CMDARGS)
 				estrConcatStaticCharArray(&res, " [no destinations enabled]\n");
 		}
 	}
-
-#if defined(USE_POST_BACK_RELAY)
-	for (int i = 0; i < eaSize(&g_accountServerState.cfg.relays); ++i)
-	{
-		PostBackRelay *relay = g_accountServerState.cfg.relays[i];
-		estrConcatf(&res, "Relay %s:%d\n", relay->ip, relay->port);
-	}
-#endif // USE_POST_BACK_RELAY
 
 	estrConcatf(&res, "MtxEnvironment %s / Catalog %s (%d threads)\n",
 		g_accountServerState.cfg.mtxEnvironment, g_accountServerState.cfg.playSpanCatalog, g_accountServerState.cfg.mtxIOThreads);
@@ -431,9 +422,6 @@ static void AccountSvrCmd_CsrProductReconcile(CMDARGS)
 	Account *account = AccountDb_SearchForOnlineAccount(auth);
 	if(account)
 	{
-#if defined(USE_POST_BACK_RELAY)
-		postback_reconcile(account->auth_id);
-#endif // USE_POST_BACK_RELAY
 		estrConcatf(&res, "Started reconcile of account %s(%d), this may take a few minutes to complete.\n", account->auth_name, account->auth_id);
 	}
 	else

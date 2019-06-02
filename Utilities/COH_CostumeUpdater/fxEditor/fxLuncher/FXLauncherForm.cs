@@ -309,7 +309,7 @@ namespace FxLauncher
                 }
             }
 
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }
@@ -708,7 +708,7 @@ namespace FxLauncher
                     fi.Attributes = fi.Attributes | FileAttributes.ReadOnly;
 
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }

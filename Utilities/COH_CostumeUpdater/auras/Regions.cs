@@ -8,11 +8,11 @@ namespace COH_CostumeUpdater
 {
     public class Regions
     {
-        string header = "// Order matters\r\n//-----------------------------\r\n//\t1. Head\r\n//\t2. Upper\r\n//\t3. Lower\r\n\r\n";
+        // string header = "// Order matters\r\n//-----------------------------\r\n//\t1. Head\r\n//\t2. Upper\r\n//\t3. Lower\r\n\r\n";
         string sectionStart = "Region";
         string sectionEnd = "End";
-        string regionHeader = "Region";
-        string endHeader = "End";
+        // string regionHeader = "Region";
+        // string endHeader = "End";
         string nameHeader = "\tName";
         string displayNameHeader = "\tDisplayName";
         string includeHeader = "\tInclude";

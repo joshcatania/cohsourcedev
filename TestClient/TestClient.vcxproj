@@ -76,6 +76,7 @@
     <ClCompile>
       <PreprocessorDefinitions>TEXT_CLIENT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>..\Game\UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <OutputFile>$(TargetPath)</OutputFile>
@@ -103,6 +104,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\Game\UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Full Debug|Win32'">
@@ -119,6 +121,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\Game\UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">
@@ -135,6 +138,7 @@
     </PostBuildEvent>
     <ClCompile>
       <AdditionalIncludeDirectories>..\Game\UI\Hybrid;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>

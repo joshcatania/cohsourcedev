@@ -96,6 +96,7 @@ void acSendLoginMD5(const char* account_p, const char* password_p, int subscript
     case USA_AUTH_PROTOCOL_VERSION:
     case GLOBAL_AUTH_PROTOCOL_VERSION:
 	case GR_REACTIVATION_PROTOCOL_VERSION:
+	case OUROBOROS_PROTOCOL_VERSION_1:
 	{
 		char salt_buf[9];
 		U32 salt;
@@ -259,9 +260,26 @@ void acGetSendServerList(AuthPacket *pak)
 			si->server_type     = authGetU32(pak);
 		else
 			si->server_type = kShardType_None;
-		
-		sprintf(auth_info.servers[i].name,"%sWorldServer_%d",regGetAppName(),auth_info.servers[i].id);
-		printf("Auth sent dbserver #%d %s:%d\n",auth_info.servers[i].id,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port);
+
+		// Get shard names.
+		auth_info.servers[i].name[0] = '\0';
+		if (auth_info.protocol >= OUROBOROS_PROTOCOL_VERSION_1)
+		{
+			int bufferSize = authGetU08(pak);
+			// We're sending size as a byte, so can't be higher than 255.
+			if (bufferSize > 0)
+			{
+				// The server will send bufferSize bytes for the string, but without a null terminator.
+				// Be sure to add it.
+				authGetArray(pak, auth_info.servers[i].name, bufferSize);
+				auth_info.servers[i].name[bufferSize] = '\0';
+			}
+		}
+		if (!auth_info.servers[i].name[0])
+			// Original method - generate a lookup key or something.
+			sprintf(auth_info.servers[i].name, "%sWorldServer_%d", regGetAppName(), auth_info.servers[i].id);
+
+		printf("Auth sent dbserver #%d, %s %s:%d\n",auth_info.servers[i].id, auth_info.servers[i].name,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port);
 		//printf("Auth sent dbserver #%d %s:%d (%d/%d)\n",auth_info.servers[i].id,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port,si->curr_user_count,si->max_user_count);
 	}
 }
@@ -489,6 +507,7 @@ int authLogin(char *name,char *password)
 	}
 	loadend_printf("ok");
 
+	authSetKey(1234, 1);		// turn on encryption for first packet, key is ignored for blowfish
 	loadstart_printf("Auth:Waiting for protocol version... ");
 	if (!authWaitFor(AC_PROTOCOL_VER)) {
 		loadend_printf("failed");

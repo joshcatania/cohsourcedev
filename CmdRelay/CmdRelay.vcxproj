@@ -38,6 +38,7 @@
       <AdditionalIncludeDirectories>../libs\UtilitiesLib\version;../libs\UtilitiesLib\language;../libs\UtilitiesLib\utils;../libs/UtilitiesLib\assert;../libs/UtilitiesLib/components;../libs/UtilitiesLib;../libs/UtilitiesLib/network;../3rdparty/zlibsrc;../mapserver/dbcomm;../common/utils;../common/components;../common/network;../common;../common/auction;../mapserver;../dbserver;../3rdparty/cryptopp;..\common\network;..\common\version;../common/entity;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>_MT;WIN32;_CONSOLE;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <AdditionalDependencies>Iphlpapi.lib;psapi.lib;cryptlib.lib;zlibstat.lib;%(AdditionalDependencies)</AdditionalDependencies>

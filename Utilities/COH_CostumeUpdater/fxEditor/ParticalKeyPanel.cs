@@ -848,7 +848,7 @@ namespace COH_CostumeUpdater.fxEditor
                 device.Dispose();
             }
 
-            catch (Exception ex)
+            catch (Exception)
             { 
             }
         }
@@ -869,7 +869,7 @@ namespace COH_CostumeUpdater.fxEditor
             {
                 viewTga((string)textureNamePath_txBx.Tag, true);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
             }
         }

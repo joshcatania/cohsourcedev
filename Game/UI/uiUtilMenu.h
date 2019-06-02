@@ -132,7 +132,6 @@ int drawNLMIconButton(float x, float y, float z, float wd, float ht, char *txt, 
 
 void setHeadingFontFromSkin(int light);
 
-void ShellCommandByLocale(const char* cmdlist[], int locale, bool returnToLogin);
 void buyExpansionPurchase(void* data);
 
 void dialogGoingRogueNag(GRNagContext ctx);

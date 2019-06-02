@@ -47,6 +47,7 @@
       <AdditionalIncludeDirectories>../common;../mapserver;../game;../game/render;../game/graphics;../3rdparty/glew/glew-1.5.7/include;../common/utils;../common/gridcoll;../common/seq;../3rdparty/zlibsrc;../common/group;../libs/UtilitiesLib\utils;../libs/UtilitiesLib/components;../libs/UtilitiesLib;../libs/UtilitiesLib/assert;../Game/render/thread;../libs/UtilitiesLib/network;../3rdparty/cg/include;../3rdparty/nvidia_texture_tools_2/include;../3rdparty/nvidia-texture-tools-2.0.7-1/project/vc8/release.win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GIMME_INIT_WSA;WIN32;_DEBUG;_CONSOLE;GETTEX;OFFLINE;_CRTDBG_MAP_ALLOC=1;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
@@ -63,6 +64,7 @@
       <AdditionalIncludeDirectories>../common;../mapserver;../game;../game/render;../game/graphics;.../3rdparty/glew/glew-1.5.7/include;../common/utils;../common/gridcoll;../common/seq;../3rdparty/zlibsrc;../common/group;../libs/UtilitiesLib\utils;../libs/UtilitiesLib/components;../libs/UtilitiesLib;../libs/UtilitiesLib/assert;../Game/render/thread;../libs/UtilitiesLib/network;../3rdparty/cg/include;../3rdparty/nvidia-texture-tools-2.0.7-1/project/vc8/release.win32/include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>GIMME_INIT_WSA;WIN32;_DEBUG;_CONSOLE;GETTEX;OFFLINE;_CRTDBG_MAP_ALLOC=1;_CRT_SECURE_NO_DEPRECATE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <WarningLevel>Level3</WarningLevel>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <IgnoreSpecificDefaultLibraries>LIBCMT;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>

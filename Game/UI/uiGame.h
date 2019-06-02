@@ -38,7 +38,6 @@ typedef enum menuFunctions
 	MENU_POWER_CUST_POWERPOOL,	// Powers Customization - Power Pools
 	MENU_POWER_CUST_INCARNATE,	// Powers Customization - Incarnate
 	MENU_LOAD_POWER_CUST,	//	Power Customization load
-	MENU_WEB_BROWSER,	// in game web browser
 	MENU_REDIRECT,		// Error screen with instructions for what to fix
 	MENU_GAME,			// in gamewindows - DO NOT ADD SHELL MENUS AFTER THIS
 	MENU_TOTAL,

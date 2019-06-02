@@ -519,8 +519,6 @@ namespace COH_CostumeUpdater.costume
        
         private void updateMElements(ArrayList elements)
         {
-            bool isEnd = false;
-
             GeoPiece gp = (GeoPiece) this.Tag;
 
             int start = gp.getStartIndex();
@@ -546,7 +544,6 @@ namespace COH_CostumeUpdater.costume
 
             if (testStr.ToLower().Contains("end"))
             {
-                isEnd = true;
                 start += 1;
                 this.mElements.Insert(start++, "");
             }

@@ -391,11 +391,6 @@ static WindowMap s_aUserWindows[] =
 	{ "league",			WDW_LEAGUE,	1, 1, 1			},
 	{ "contactfinder",	WDW_CONTACT_FINDER, 1, 1, 0	},
 	{ "paragonrewards",	WDW_LOYALTY_TREE, 1, 1, 0	},
-	{ "webstore",		WDW_WEB_STORE, 1, 1, 0	},
-	{ "paragonmarket",	WDW_WEB_STORE, 1, 1, 0	},
-#if defined(USE_MAIN_STORE_ACCESS)
-	{ "mainstoreaccess",WDW_MAIN_STORE_ACCESS, 1, 0, 0	},
-#endif // USE_MAIN_STORE_ACCESS
 	{ "loyaltytreeaccess",WDW_LOYALTY_TREE_ACCESS, 1, 0, 0	},
 	{ "lwcui",			WDW_LWC_UI, 0, 0 ,0 },
 	{ "salvageopen",	WDW_SALVAGE_OPEN, 0, 0 ,0 },
@@ -2366,12 +2361,6 @@ int window_drawJelly( Wdw * wdw )
 			hit = MAX( hit, tmp );
 		}
 
-		if( wdw->storeLink[0] != 0 )
-		{
-			tmp = window_storeButton( wdw, x + wd - wdw->radius*scale - 25*scale, y - JELLY_HT*scale/2, z, scale, wdw->storeLink );
-			hit = MAX( hit, tmp );
-		}
-
 		if( wdw->parent )
 		{
 			tmp = window_lockButton( wdw, x + wdw->radius*scale, y - JELLY_HT*scale/2, z, scale );
@@ -2397,12 +2386,6 @@ int window_drawJelly( Wdw * wdw )
  		if( wdw->maximizeable )
 		{
 			tmp = window_maximizeButton( wdw, x + wd - wdw->radius*scale - 35*scale, y + ht + JELLY_HT*scale/2, z, scale );
-			hit = MAX( hit, tmp );
-		}
-
-		if( wdw->storeLink[0] != 0 )
-		{
-			tmp = window_storeButton( wdw, x + wd - wdw->radius*scale - 25*scale, y + ht + JELLY_HT*scale/2, z, scale, wdw->storeLink );
 			hit = MAX( hit, tmp );
 		}
 

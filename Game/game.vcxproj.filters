@@ -1372,9 +1372,6 @@
     <ClCompile Include="UI\uiUtilMenu.c">
       <Filter>UI\Menu</Filter>
     </ClCompile>
-    <ClCompile Include="UI\uiWebUtil.c">
-      <Filter>UI\Menu</Filter>
-    </ClCompile>
     <ClCompile Include="UI\sprite\sprite_base.c">
       <Filter>UI\sprite</Filter>
     </ClCompile>
@@ -1788,9 +1785,6 @@
     <ClCompile Include="UI\uiContactFinder.c">
       <Filter>UI\Menu</Filter>
     </ClCompile>
-    <ClCompile Include="UI\uiWebBrowser.c">
-      <Filter>UI\Menu</Filter>
-    </ClCompile>
     <ClCompile Include="LWC.c" />
     <ClCompile Include="UI\uiServerTransfer.c">
       <Filter>UI\Game</Filter>
@@ -1815,9 +1809,6 @@
       <Filter>graphics</Filter>
     </ClCompile>
     <ClCompile Include="validateFiles.c" />
-    <ClCompile Include="UI\uiPlaySpanStoreLauncher.c">
-      <Filter>UI\Menu</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\auth\auth.h">
@@ -3140,9 +3131,6 @@
     <ClInclude Include="UI\uiUtilMenu.h">
       <Filter>UI\Menu</Filter>
     </ClInclude>
-    <ClInclude Include="UI\uiWebUtil.h">
-      <Filter>UI\Menu</Filter>
-    </ClInclude>
     <ClInclude Include="UI\sprite\sprite_base.h">
       <Filter>UI\sprite</Filter>
     </ClInclude>
@@ -3546,9 +3534,6 @@
     <ClInclude Include="UI\uiContactFinder.h">
       <Filter>UI\Menu</Filter>
     </ClInclude>
-    <ClInclude Include="UI\uiWebBrowser.h">
-      <Filter>UI\Menu</Filter>
-    </ClInclude>
     <ClInclude Include="LWC.h" />
     <ClInclude Include="UI\uiServerTransfer.h">
       <Filter>UI\Game</Filter>
@@ -3567,9 +3552,6 @@
     </ClInclude>
     <ClInclude Include="..\Common\LWC_common.h" />
     <ClInclude Include="UI\uiSalvageOpen.h">
-      <Filter>UI\Menu</Filter>
-    </ClInclude>
-    <ClInclude Include="UI\uiPlaySpanStoreLauncher.h">
       <Filter>UI\Menu</Filter>
     </ClInclude>
   </ItemGroup>
@@ -3599,6 +3581,9 @@
       <Filter>Resource Files</Filter>
     </None>
     <None Include="logo4small_rogue.bmp">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="Icon_Ouroboros.ico">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

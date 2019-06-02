@@ -2140,6 +2140,8 @@ void cmdOldServerStateInit()
 	server_state.logSeqStates = 0;
 	server_state.logServerTicks = 0;
 	server_state.xpscale = 1.0;
+	server_state.aescale = 1.0;
+	server_state.ticketscale = 1.0;
 	server_visible_state.time = 0;
 	server_visible_state.timescale = DAY_TIMESCALE;
 
@@ -11137,4 +11139,62 @@ void cfg_setIsAutoBuyProducts(bool b)
 		}
 		cmd++;
 	}
+}
+
+static void cmdCfgReloadCallback(const char *relPath, int when)
+{
+	cmdCfgLoad();
+}
+
+typedef struct CmdConfigLine
+{
+	char *command;
+	int access_level;
+} CmdConfigLine;
+
+typedef struct CmdConfig
+{
+	CmdConfigLine **lines;
+} CmdConfig;
+
+static TokenizerParseInfo ParseCmdConfigLine[] = {
+	{ "",			TOK_STRUCTPARAM | TOK_STRING(CmdConfigLine, command, 0)	},
+	{ "",			TOK_STRUCTPARAM | TOK_INT(CmdConfigLine, access_level, 0) },
+	{ "\n",			TOK_END, 0 },
+	{ "", 0, 0 }
+};
+
+static TokenizerParseInfo ParseCmdConfig[] = {
+	{ "Cmd",		TOK_STRUCT(CmdConfig, lines, ParseCmdConfigLine), },
+	{ "", 0, 0 }
+};
+
+void cmdCfgLoad()
+{
+	const char* relFilename = "server/db/commands.cfg";
+	static bool loaded_once = false;
+	CmdConfig config = { 0 };
+	int i;
+
+	printf("Loading %s\n", relFilename);
+
+	StructInitFields(ParseCmdConfig, &config);
+	if (ParserLoadFiles(NULL, relFilename, NULL, PARSER_EMPTYOK | PARSER_OPTIONALFLAG, ParseCmdConfig, &config, NULL, NULL, NULL))
+	{
+		for (i = 0; i < eaSize(&config.lines); ++i)
+		{
+			CmdConfigLine *ln = config.lines[i];
+			Cmd *c = cmdOldListFind(&server_cmdlist, ln->command, NULL, NULL);
+
+			if (c)
+				c->access_level = ln->access_level;
+		}
+	}
+	StructClear(ParseCmdConfig, &config);
+
+	if (!loaded_once) {
+		FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE|FOLDER_CACHE_CALLBACK_CAN_USE_SHARED_MEM, relFilename, cmdCfgReloadCallback);
+	}
+
+	loaded_once = true;
 }

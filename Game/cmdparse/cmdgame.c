@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include "uiWebUtil.h"
 #include <stdarg.h>
 #include "cmdaccountserver.h"
 #include "DetailRecipe.h"
@@ -183,7 +182,6 @@
 #include "renderWater.h"
 #include "uiUtilMenu.h"
 #include "dbclient.h"
-#include "uiWebBrowser.h"
 #include "uiRedirect.h"
 #include "uiWebStoreFrame.h"
 #include "LWC.h"
@@ -4226,21 +4224,15 @@ int cmdGameParse(char *str, int x, int y)
 		xcase CMD_START_MENU:
 			start_menu(tmp_int);
 		xcase CMD_WEB_BROWSER_MENU:
-			if (current_menu() != MENU_WEB_BROWSER)
-			{
-				start_menu(MENU_WEB_BROWSER);
-			}
+			//if (current_menu() != MENU_WEB_BROWSER)
+			//	start_menu(MENU_WEB_BROWSER);
 		xcase CMD_WEB_BROWSER_GOTO_URL:
-			if( webStoreFrameIsVisible() )
-			{
-				uiWebBrowser_goto_url(tmp_str);	// web store frame is visible, just change URL
-			} 
-			else
-			{
-				webOpenURLNoStore(tmp_str);	// open browser and goto url
-			}
+			//if( webStoreFrameIsVisible() )
+			//	uiWebBrowser_goto_url(tmp_str);	// web store frame is visible, just change URL
+			//else
+			//	webOpenURLNoStore(tmp_str);	// open browser and goto url
 		xcase CMD_WEB_BROWSER_GET_WEB_RESET_DATA:
-			uiWebBrowser_get_web_reset_data(tmp_str);
+			//uiWebBrowser_get_web_reset_data(tmp_str);
 		xcase CMD_TAILOR_MENU:
 			start_menu(MENU_TAILOR);
 			requestSGColorData();
@@ -5576,7 +5568,7 @@ int cmdGameParse(char *str, int x, int y)
 		xcase CMD_PLAYER_NOTE_LOCAL:
 			playerNote_GetWindow( tmp_str, 0 );
 		xcase CMD_TEST_LOGIN_FAIL:
-            dialogStd( DIALOG_YES_NO, "NotPaidBrowserPrompt", NULL, NULL, BrowserOpenLoginFailure, NULL, 0 );
+            //dialogStd( DIALOG_YES_NO, "NotPaidBrowserPrompt", NULL, NULL, BrowserOpenLoginFailure, NULL, 0 );
 		xcase CMD_CUSTOM_WINDOW:
 			createCustomWindow(tmp_str);
 		xcase CMD_CUSTOM_TOGGLE:
@@ -5709,7 +5701,7 @@ int cmdGameParse(char *str, int x, int y)
 			}
 		xcase CMD_WEB_STORE:
 			{
-				webStoreOpenDefault();
+				//webStoreOpenDefault();
 			}
 		xcase CMD_WEB_STORE_OPEN_PRODUCT:
 			{
