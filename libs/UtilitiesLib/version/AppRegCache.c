@@ -14,19 +14,12 @@
 #define CUR_VER				"CurrentVersion"
 #define LAST_VER			"LastVersion"
 #define APPLIED_PATCH		"ApplyTarget"
-
-
-
 #define REFRESH_REQUIRED 0
 
 static struct{
 	unsigned int curVersion		: 1;
 	unsigned int lastVersion	: 1;
 } RegRefreshFlags = {0};
-
-// "CoH Server" is what most projects use, so it's the default for now.
-
-char app_registry_name[128] = "CoH";
 
 void regSetAppName(const char* appName)
 {

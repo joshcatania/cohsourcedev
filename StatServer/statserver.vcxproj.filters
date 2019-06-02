@@ -48,9 +48,6 @@
     <ClCompile Include="..\common\container\container_store.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
-    <ClCompile Include="..\dbserver\container_tplt_utils.c">
-      <Filter>dbcomm</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\container\container_util.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
@@ -139,6 +136,15 @@
     <ClCompile Include="statdb.c" />
     <ClCompile Include="statgroups.c" />
     <ClCompile Include="statserver.c" />
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDb.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dbserver\container_diff.h">
@@ -238,5 +244,11 @@
     <ClInclude Include="statdb.h" />
     <ClInclude Include="statgroups.h" />
     <ClInclude Include="statserver.h" />
+    <ClInclude Include="..\dbserver\ContainerDb.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -18,6 +18,7 @@
 #ifdef DBSERVER
 #include "..\Common\auth\authUserData.h"
 #include "container_tplt_utils.h"
+#include "dbglobals.h"
 #endif
 
 ServerCfg	server_cfg;

@@ -15,9 +15,6 @@
     <ClCompile Include="..\common\container\container_store.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
-    <ClCompile Include="..\dbserver\container_tplt_utils.c">
-      <Filter>dbcomm</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\container\container_util.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
@@ -42,6 +39,15 @@
     <ClCompile Include="..\common\gameData\arenastruct.c" />
     <ClCompile Include="arenaupdates.c" />
     <ClCompile Include="..\mapserver\container\containerArena.c" />
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDb.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dbserver\container_diff.h">
@@ -77,5 +83,11 @@
     <ClInclude Include="..\common\gameData\arenastruct.h" />
     <ClInclude Include="arenaupdates.h" />
     <ClInclude Include="..\mapserver\container\containerArena.h" />
+    <ClInclude Include="..\dbserver\ContainerDb.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -122,7 +122,7 @@ bool aucsql_insert_shard(const char** estr_shard)
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_SHARD];
-	ssize_t shard_length = estrLength(estr_shard);
+	SQLLEN shard_length = estrLength(estr_shard);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, 0, 0, (void*)*estr_shard, shard_length, &shard_length);
 
@@ -135,8 +135,8 @@ bool aucsql_insert_or_update_ent(int ent_id, const char* shard, const char** est
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_OR_UPDATE_ENT];
-	ssize_t shard_length = strlen(shard);
-	ssize_t ent_length = estrLength(estr_ent);
+	SQLLEN shard_length = strlen(shard);
+	SQLLEN ent_length = estrLength(estr_ent);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &ent_id, sizeof(ent_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, SHARD_NAME_COLUMN_LENGTH, 0, (void*)shard, shard_length, &shard_length);
@@ -151,8 +151,8 @@ bool aucsql_insert_or_update_history(const char* identifier, const char** estr_h
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_INSERT_OR_UPDATE_HISTORY];
-	ssize_t idenitifer_length = strlen(identifier);
-	ssize_t history_length = estrLength(estr_history);
+	SQLLEN idenitifer_length = strlen(identifier);
+	SQLLEN history_length = estrLength(estr_history);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, IDENTIFIER_COLUMN_LENGTH, 0, (void*)identifier, idenitifer_length, &idenitifer_length);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, 0, 0, (void*)*estr_history, history_length, &history_length);
@@ -166,7 +166,7 @@ bool aucsql_delete_ent(int ent_id, const char* shard)
 		return false;
 
 	HSTMT stmt = as.proc[AUCSQL_DELETE_ENT];
-	ssize_t shard_length = strlen(shard);
+	SQLLEN shard_length = strlen(shard);
 
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &ent_id, sizeof(ent_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, SHARD_NAME_COLUMN_LENGTH, 0, (void*)shard, shard_length, &shard_length);

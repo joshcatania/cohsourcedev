@@ -429,7 +429,7 @@ void sqlDeleteRowAsync(char *table, int container_id)
 * Execute a SQL statement asynchronously using a random SQL 
 * connection from the pool of SQL connections. 
 */
-void sqlExecAsync(char *str, int str_len)
+void sqlExecAsync(const char *str, int str_len)
 {
 	sqlExecAsyncEx(str, str_len, 0, true);
 }
@@ -441,7 +441,7 @@ void sqlExecAsync(char *str, int str_len)
 *                     specific SQL connection for the statement
 *                     to be executed on.
 */
-void sqlExecAsyncEx(char *str, int str_len, int container_id, bool utf8)
+void sqlExecAsyncEx(const char *str, int str_len, int container_id, bool utf8)
 {
 	SqlQueueEntry * entry;
 

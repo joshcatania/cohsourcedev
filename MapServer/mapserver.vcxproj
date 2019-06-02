@@ -185,6 +185,9 @@
     <ClCompile Include="..\Common\LWC_common.c" />
     <ClCompile Include="..\Common\TurnstileCommon.c" />
     <ClCompile Include="..\Common\TurnstileServerCommon.c" />
+    <ClCompile Include="..\dbserver\ContainerDb.cpp" />
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp" />
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp" />
     <ClCompile Include="ai\entai.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">MaxSpeed</Optimization>
       <InlineFunctionExpansion Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">AnySuitable</InlineFunctionExpansion>
@@ -463,20 +466,6 @@
       <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">Speed</FavorSizeOrSpeed>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">Default</BasicRuntimeChecks>
       <BufferSecurityCheck Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">false</BufferSecurityCheck>
-      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">ProgramDatabase</DebugInformationFormat>
-    </ClCompile>
-    <ClCompile Include="..\DBSERVER\container_tplt_utils.c">
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">MaxSpeed</Optimization>
-      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">Speed</FavorSizeOrSpeed>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">Default</BasicRuntimeChecks>
-      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Beaconizer|Win32'">ProgramDatabase</DebugInformationFormat>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">MaxSpeed</Optimization>
-      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Speed</FavorSizeOrSpeed>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">ProgramDatabase</DebugInformationFormat>
-      <Optimization Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">MaxSpeed</Optimization>
-      <FavorSizeOrSpeed Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">Speed</FavorSizeOrSpeed>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">Default</BasicRuntimeChecks>
       <DebugInformationFormat Condition="'$(Configuration)|$(Platform)'=='Opt Debug|Win32'">ProgramDatabase</DebugInformationFormat>
     </ClCompile>
     <ClCompile Include="..\common\container\container_util.c" />
@@ -1477,6 +1466,8 @@
     <ClInclude Include="..\Common\LWC_common.h" />
     <ClInclude Include="..\Common\TurnstileCommon.h" />
     <ClInclude Include="..\Common\TurnstileServerCommon.h" />
+    <ClInclude Include="..\dbserver\ContainerDb.hpp" />
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp" />
     <ClInclude Include="ai\entai.h" />
     <ClInclude Include="ai\entaiBehaviorAlias.h" />
     <ClInclude Include="ai\entaibehaviorcoh.h" />

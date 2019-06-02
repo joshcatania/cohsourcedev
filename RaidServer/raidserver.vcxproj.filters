@@ -24,9 +24,6 @@
     <ClCompile Include="..\common\container\container_store.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
-    <ClCompile Include="..\dbserver\container_tplt_utils.c">
-      <Filter>dbcomm</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\container\container_util.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
@@ -77,6 +74,15 @@
     <ClCompile Include="raidinfo.c" />
     <ClCompile Include="raidserver.c" />
     <ClCompile Include="..\common\gameData\raidstruct.c" />
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDb.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\dbserver\container_diff.h">
@@ -129,5 +135,11 @@
     <ClInclude Include="raidinfo.h" />
     <ClInclude Include="raidserver.h" />
     <ClInclude Include="..\common\gameData\raidstruct.h" />
+    <ClInclude Include="..\dbserver\ContainerDb.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

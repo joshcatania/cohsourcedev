@@ -401,9 +401,6 @@
     <ClCompile Include="..\DBSERVER\container_diff.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
-    <ClCompile Include="..\DBSERVER\container_tplt_utils.c">
-      <Filter>dbcomm</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\container\container_util.c">
       <Filter>dbcomm</Filter>
     </ClCompile>
@@ -1859,6 +1856,15 @@
     <ClCompile Include="script\zoneevents\NemesisPlot.c">
       <Filter>script\ZoneEvents</Filter>
     </ClCompile>
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDb.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp">
+      <Filter>dbcomm</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ai\entai.h">
@@ -3192,6 +3198,12 @@
     </ClInclude>
     <ClInclude Include="gameComm\NewFeatures.h">
       <Filter>gameComm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dbserver\ContainerDb.hpp">
+      <Filter>dbcomm</Filter>
+    </ClInclude>
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp">
+      <Filter>dbcomm</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

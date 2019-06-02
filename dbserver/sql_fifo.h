@@ -43,8 +43,8 @@ void sqlContainerUpdateFromScratchAsync(ContainerTemplate *tplt, int container_i
 void sqlReadColumnsAsync(TableInfo *table, char *limit, char *col_names, char *where, ReadColumnCallback callback, void* callbackData, Packet *pak, int container_id);
 void sqlReadColumnsAsyncWithDebugDelay(TableInfo *table, char *limit, char *col_names, char *where, ReadColumnCallback callback, void* callbackData, Packet *pak, int container_id, int debugDelayMS);
 void sqlDeleteRowAsync(char *table, int container_id);
-void sqlExecAsync(char *str, int str_len);
-void sqlExecAsyncEx(char *str, int str_len, int container_id, bool utf8);
+void sqlExecAsync(const char *str, int str_len);
+void sqlExecAsyncEx(const char *str, int str_len, int container_id, bool utf8);
 
 C_DECLARATIONS_END
 

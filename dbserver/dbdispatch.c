@@ -58,6 +58,7 @@
 #include "ConvertUTF.h"
 #include "overloadProtection.h"
 #include "logserver.h"
+#include "dbglobals.h"
 
 static F32	curr_max_latency;
 static int	curr_max_latency_cmd;

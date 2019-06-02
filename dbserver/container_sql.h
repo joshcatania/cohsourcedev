@@ -101,8 +101,8 @@ void sqlAddIndexAsync(char *index, char *table, char *fields);
 void sqlRemoveIndexAsync(char *index, char *table);
 char **sqlReadTableNames(int *countp); // via tpltDropUnreferencedTables()
 void sqlReadTableNamesFree(char **names, int count); // via tpltDropUnreferencedTables()
-bool sqlExecDdl(DdlType ddl_type, char *str, int str_len);
-bool sqlExecDdlf(DdlType ddl_type, char *fmt, ...);
+bool sqlExecDdl(DdlType ddl_type, const char *str, int str_len);
+bool sqlExecDdlf(DdlType ddl_type, const char *fmt, ...);
 
 // externally used in dbInit() only, before main loop! (via tpltUpdateSqlcolumns() or its subroutines)
 bool sqlCreateTable(char *name, TableType table_type);
@@ -123,7 +123,7 @@ void sqlDeleteRowInternal(char *table, int container_id, SqlConn conn);
 char *sqlContainerRead(ContainerTemplate *tplt, int container_id, SqlConn conn);
 int sqlGetSingleValue(char *expr, int str_len, BindList * bind_list, SqlConn conn);
 char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, char *where, int *count_ptr, ColumnInfo **field_ptrs, SqlConn conn, int debugDelayMS);
-void sqlContainerUpdateInternal(ContainerTemplate *tplt, int container_id, void *bin_data, SqlConn conn);
+void sqlContainerUpdateInternal(ContainerTemplate* tplt, int container_id, LineList* diff, SqlConn conn);
 
 // startup test
 void testDataBaseTypes(struct DbList * list);

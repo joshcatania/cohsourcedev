@@ -21,6 +21,12 @@
     <Filter Include="Source Files\Common\sql">
       <UniqueIdentifier>{e71a3adc-7d22-4b7d-b1ab-bb03c1347411}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sql">
+      <UniqueIdentifier>{d16cc0f4-31f6-41ee-b27d-c76415165979}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\sql">
+      <UniqueIdentifier>{c1283d8f-37cd-475c-a06f-693000f8d11f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="accountservercomm.c">
@@ -68,15 +74,6 @@
     <ClCompile Include="container_merge.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="container_sql.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="container_tplt.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="container_tplt_utils.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\common\container\container_util.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -90,9 +87,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dbimport.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="dbinit.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="dblog.c">
@@ -214,6 +208,27 @@
     </ClCompile>
     <ClCompile Include="..\Common\TurnstileCommon.c">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerDbPostgresql.cpp">
+      <Filter>Source Files\sql</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerDbMssql.cpp">
+      <Filter>Source Files\sql</Filter>
+    </ClCompile>
+    <ClCompile Include="ContainerDb.cpp">
+      <Filter>Source Files\sql</Filter>
+    </ClCompile>
+    <ClCompile Include="dbinit.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="container_sql.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="container_tplt.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="container_tplt_utils.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -423,6 +438,18 @@
     </ClInclude>
     <ClInclude Include="..\Common\TurnstileCommon.h">
       <Filter>Source Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerDb.hpp">
+      <Filter>Header Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerDbMssql.hpp">
+      <Filter>Header Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerDbPostgresql.hpp">
+      <Filter>Header Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="dbglobals.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

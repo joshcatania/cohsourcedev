@@ -34,6 +34,7 @@
 #include "netcomp.h"
 #include "log.h"
 #include "dbdispatch.h"
+#include "dbglobals.h"
 
 #define AUCTION_DEADMAN_TIME (60*2)
  

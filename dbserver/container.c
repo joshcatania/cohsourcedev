@@ -29,6 +29,7 @@
 #include "log.h"
 #include "ConvertUTF.h"
 #include "components/earray.h"
+#include "dbglobals.h"
 
 DbList	container_lists[MAX_CONTAINER_TYPES];
 int		container_count;

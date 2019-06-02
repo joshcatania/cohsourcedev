@@ -465,7 +465,7 @@ static void sqlConnTimerAddTime(SqlConn conn, float since_last)
 }
 
 #ifdef FULLDEBUG
-static void checkQuery(char * str, size_t str_len)
+static void checkQuery(const char * str, size_t str_len)
 {
 	if (str_len == SQL_NTS)
 		str_len = strlen(str);
@@ -475,7 +475,7 @@ static void checkQuery(char * str, size_t str_len)
 }
 #endif
 
-static SQLRETURN _sqlConnStmtExecDirectUtf8(HSTMT stmt, char *str, int str_len, SqlConn conn)
+static SQLRETURN _sqlConnStmtExecDirectUtf8(HSTMT stmt, const char *str, int str_len, SqlConn conn)
 {
 	SQLRETURN ret;
 	float since_last;
@@ -506,7 +506,7 @@ static SQLRETURN _sqlConnStmtExecDirectUtf8(HSTMT stmt, char *str, int str_len, 
 * @note You should always call @ref sqlExecDirectTimedUtf8 on if
 * the query supplies user created data. 
 */
-static SQLRETURN _sqlConnStmtExecDirectAscii(HSTMT stmt, char *str, int str_len, SqlConn conn)
+static SQLRETURN _sqlConnStmtExecDirectAscii(HSTMT stmt, const char *str, int str_len, SqlConn conn)
 {
 	SQLRETURN ret;
 	float since_last;
@@ -516,13 +516,13 @@ static SQLRETURN _sqlConnStmtExecDirectAscii(HSTMT stmt, char *str, int str_len,
 #endif
 
 	since_last = timerElapsedAndStart(sql.timers[conn]);
-	ret = SQLExecDirectA(stmt, str, str_len);
+	ret = SQLExecDirectA(stmt, (SQLCHAR*) str, str_len);
 	sqlConnTimerAddTime(conn, since_last);
 
 	return ret;
 }
 
-INLINEDBG int sqlConnStmtExecDirect(HSTMT stmt, char *str, int str_len, SqlConn conn, bool utf8)
+INLINEDBG int sqlConnStmtExecDirect(HSTMT stmt, const char *str, int str_len, SqlConn conn, bool utf8)
 {
 	SQLRETURN ret;
 	U32 firstFailTime = 0;
@@ -576,7 +576,7 @@ INLINEDBG int sqlConnStmtExecDirect(HSTMT stmt, char *str, int str_len, SqlConn 
 * @note You should always call this command when you pass in 
 * more than one sql command at a time. 
 */
-INLINEDBG int sqlConnStmtExecDirectMany(HSTMT stmt, char *str, int str_len, SqlConn conn, bool utf8)
+INLINEDBG int sqlConnStmtExecDirectMany(HSTMT stmt, const char *str, int str_len, SqlConn conn, bool utf8)
 {
 	SQLRETURN ret = SQL_SUCCESS;
 	SQLRETURN next;
@@ -767,7 +767,7 @@ bool sqlConnDatabaseConnect(const char * db_name, const char * app_name)
 	return true;
 }
 
-int sqlConnExecDirect(char *str, int str_len, SqlConn conn, bool utf8)
+int sqlConnExecDirect(const char *str, int str_len, SqlConn conn, bool utf8)
 {
 	HSTMT stmt = sqlConnStmtAlloc(conn);
 	SQLRETURN ret = sqlConnStmtExecDirect(stmt, str, str_len, conn, utf8);
@@ -779,7 +779,7 @@ int sqlConnExecDirect(char *str, int str_len, SqlConn conn, bool utf8)
 * @note You should always call this command when you pass in 
 * more than one sql command at a time. 
 */
-int sqlConnExecDirectMany(char *str, int str_len, SqlConn conn, bool utf8)
+int sqlConnExecDirectMany(const char *str, int str_len, SqlConn conn, bool utf8)
 {
 	HSTMT stmt = sqlConnStmtAlloc(conn);
 	SQLRETURN ret = sqlConnStmtExecDirectMany(stmt, str, str_len, conn, utf8);
@@ -818,7 +818,7 @@ int sqlConnStmtSetBindOffset(HSTMT stmt, size_t *offset) {
 	return ret;
 }
 
-int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, ssize_t* strlen) {
+int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, SQLLEN* strlen) {
 	SQLRETURN ret;	
 
 	ret = SQLBindParameter(stmt, param, paramtype, ctype, sqltype, colsize, decimals, data, buflen, strlen);
@@ -853,7 +853,7 @@ int sqlConnStmtUnbindParams(HSTMT stmt) {
 	return ret;
 }
 
-int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, ssize_t* strlen)
+int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, SQLLEN* strlen)
 {
 	SQLRETURN ret;
 
@@ -881,7 +881,7 @@ int sqlConnStmtCloseCursor(HSTMT stmt) {
 	return ret;
 }
 
-void* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, ssize_t *length, const char *original_command, SqlConn conn)
+void* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, SQLLEN *length, const char *original_command, SqlConn conn)
 {
 	static StuffBuff sb[SQLCONN_MAX];
 
@@ -944,5 +944,10 @@ void* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, ssize_t *length, cons
 		sb[conn].buff[sb[conn].idx] = 0;
 	}
 	return sb[conn].buff;
+}
+
+HDBC sqlConnGetConnection(SqlConn connIndex) {
+	assert(connIndex < sql.connection_count);
+	return sql.connections[connIndex];
 }
 

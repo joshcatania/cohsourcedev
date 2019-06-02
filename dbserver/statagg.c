@@ -18,6 +18,7 @@
 #include "dbrelay.h"      // For SendToServers
 #include "clientcomm.h"   // For getAttribString
 #include "servercfg.h"    // server_cfg.no_stats
+#include "dbglobals.h"
 
 #define STAT_MAX_TOPS 10
 //#define DUMP_TOPS // Define to dump HTML of initial tops at startup

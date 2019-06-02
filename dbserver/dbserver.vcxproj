@@ -234,33 +234,21 @@
     <ClCompile Include="chatrelay.c" />
     <ClCompile Include="clientcomm.c" />
     <ClCompile Include="container.c" />
-    <ClCompile Include="container_diff.c">
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
-    </ClCompile>
+    <ClCompile Include="ContainerDb.cpp" />
+    <ClCompile Include="ContainerDbMssql.cpp" />
+    <ClCompile Include="ContainerDbPostgresql.cpp" />
+    <ClCompile Include="container_diff.c" />
     <ClCompile Include="container_flatfile.c" />
-    <ClCompile Include="container_merge.c">
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
-    </ClCompile>
-    <ClCompile Include="container_sql.c">
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
-    </ClCompile>
-    <ClCompile Include="container_tplt.c">
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
-    </ClCompile>
-    <ClCompile Include="container_tplt_utils.c">
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>
-      <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
-    </ClCompile>
+    <ClCompile Include="container_merge.c" />
+    <ClCompile Include="container_sql.cpp" />
+    <ClCompile Include="container_tplt.cpp" />
+    <ClCompile Include="container_tplt_utils.cpp" />
     <ClCompile Include="..\common\container\container_util.c" />
     <ClCompile Include="..\Common\container\containerEventHistory.c" />
     <ClCompile Include="dbdispatch.c" />
     <ClCompile Include="dbEventHistory.c" />
     <ClCompile Include="dbimport.c" />
-    <ClCompile Include="dbinit.c" />
+    <ClCompile Include="dbinit.cpp" />
     <ClCompile Include="dblog.c" />
     <ClCompile Include="dbmission.c" />
     <ClCompile Include="dbmsg.c" />
@@ -308,12 +296,16 @@
     <ClInclude Include="auctionservercomm.h" />
     <ClInclude Include="beaconservercomm.h" />
     <ClInclude Include="..\Common\entity\gametypes.h" />
+    <ClInclude Include="ContainerDbMssql.hpp" />
+    <ClInclude Include="ContainerDbPostgresql.hpp" />
+    <ClInclude Include="dbglobals.h" />
     <ClInclude Include="loadBalancing.h" />
     <ClInclude Include="missionservercomm.h" />
     <ClInclude Include="overloadProtection.h" />
     <ClInclude Include="queueservercomm.h" />
     <ClInclude Include="serverAutoStart.h" />
     <ClInclude Include="statagg.h" />
+    <ClInclude Include="ContainerDb.hpp" />
     <ClInclude Include="turnstileDb.h" />
     <ClInclude Include="..\Common\auction\Xact.h" />
     <ClInclude Include="..\MapServer\entity\SgrpStats.h" />

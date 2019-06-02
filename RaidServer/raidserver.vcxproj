@@ -162,11 +162,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\dbserver\ContainerDb.cpp" />
+    <ClCompile Include="..\dbserver\ContainerDbMssql.cpp" />
     <ClCompile Include="..\dbserver\container_diff.c" />
     <ClCompile Include="..\common\container\container_server.c" />
     <ClCompile Include="..\common\container\container_store.c" />
-    <ClCompile Include="..\dbserver\container_tplt_utils.c" />
     <ClCompile Include="..\common\container\container_util.c" />
+    <ClCompile Include="..\dbserver\container_tplt_utils.cpp" />
     <ClCompile Include="..\mapserver\dbcomm\dbcomm.c" />
     <ClCompile Include="..\mapserver\dbcomm\dbcontainer.c" />
     <ClCompile Include="..\common\container\dbcontainerpack.c" />
@@ -188,6 +190,8 @@
     <ClCompile Include="..\common\gameData\raidstruct.c" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\dbserver\ContainerDb.hpp" />
+    <ClInclude Include="..\dbserver\ContainerDbMssql.hpp" />
     <ClInclude Include="..\dbserver\container_diff.h" />
     <ClInclude Include="..\common\container\container_server.h" />
     <ClInclude Include="..\common\container\container_store.h" />

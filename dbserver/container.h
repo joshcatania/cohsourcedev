@@ -3,6 +3,7 @@
 
 #include "auth/auth.h"		// for AUTH_BYTES
 #include "account/AccountTypes.h"
+#include "sql/sqlinclude.h"
 
 C_DECLARATIONS_BEGIN
 
@@ -49,7 +50,7 @@ typedef struct LineTracker
 	};
 	U32		idx : 31;
 	U32		is_str : 1;
-	size_t	size;
+	SQLLEN	size;
 } LineTracker;
 
 typedef struct
