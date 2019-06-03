@@ -39,6 +39,7 @@ void split(std::vector<std::string>& vect, const std::string& s, char delim);
 static inline std::string& ltrim(std::string& s);
 static inline std::string& rtrim(std::string& s);
 static inline std::string& trim(std::string& s);
+static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind, SqlConn conn);
 
 /**
 * Enable storing of data in SQL as binary, otherwise use an escaped string.
@@ -119,13 +120,10 @@ bool sqlCreateTable(char *name, TableType table_type)
 	//devassert(!strchr(name, '.'));
 
 	std::string query;
-
+	
 	switch(table_type) {
-		xcase TT_ATTRIBUTE : {
-			std::ostringstream ss;
-			ss << "CREATE TABLE dbo." << name << " (Id INTEGER NOT NULL PRIMARY KEY);";
-			query = ss.str();
-		}
+		xcase TT_ATTRIBUTE :
+			query = "CREATE TABLE dbo." + std::string(name) + " (Id INTEGER NOT NULL PRIMARY KEY);";
 		xcase TT_CONTAINER:
 			query = gContainerDb->createContainerTableQuery(name);
 		xcase TT_SUBCONTAINER : {
@@ -138,6 +136,7 @@ bool sqlCreateTable(char *name, TableType table_type)
 			FatalErrorf("Cannot create unknown table type for %s", name);
 	}
 
+	printf("Creating table for some reason: %s\n", query.c_str());
 	ret = sqlExecDdl(DDL_ADD, query.c_str(), SQL_NTS);
 
 	if (ret && server_cfg.change_db_owner_from[0])
@@ -268,6 +267,18 @@ void sqlDeleteContainer(ContainerTemplate *tplt, int container_id)
 	return;
 }
 
+static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind, SqlConn conn) {
+	std::string query = ss.str();
+	sqlConnStmtExecDirectMany(stmt, query.c_str(), SQL_NTS, conn, false);
+	ss.clear();
+	ss.str("");
+
+	sqlConnStmtUnbindCols(stmt);
+	sqlConnStmtUnbindParams(stmt);
+	sqlConnStmtCloseCursor(stmt);
+	*bind = 0;
+}
+
 static void sqlFlushStatement(HSTMT stmt, char **estr, unsigned *bind, SqlConn conn)
 {
 #ifdef _FULLDEBUG
@@ -285,6 +296,8 @@ static void sqlFlushStatement(HSTMT stmt, char **estr, unsigned *bind, SqlConn c
 
 static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id, LineList *diff, char **estr, unsigned *bind, HSTMT stmt, SqlConn conn)
 {
+	printf("sqlContainerAddOrDelRows cmd count: %d\n", diff->cmd_count);
+	std::ostringstream* ss = new std::ostringstream();
 	for (int i=0; i < diff->cmd_count; i++) {
 		RowAddDel *cmd = &diff->row_cmds[i];
 		SlotInfo *slot = &tplt->slots[cmd->idx];
@@ -292,19 +305,14 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 
 		if (cmd->add) {
 			switch (slot->table->table_type) {
-				xcase TT_CONTAINER:
-					switch (gDatabaseProvider) {
-						xcase DBPROV_MSSQL:
-							estrConcatf(estr, "SET IDENTITY_INSERT dbo.%s ON; INSERT INTO dbo.%s (ContainerId) VALUES (?); SET IDENTITY_INSERT dbo.%s OFF;", name, name, name);
-							bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
-						xcase DBPROV_POSTGRESQL:
-							estrConcatf(estr, "SELECT setval(pg_get_serial_sequence('dbo.%s', 'containerid'), ?); INSERT INTO dbo.%s (ContainerId) VALUES (?);", name, name);
-							bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
-							bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
-						DBPROV_XDEFAULT();
-					}					
+				xcase TT_CONTAINER : {
+					int bindsNeeded = gContainerDb->insertEmptyContainerRow(*ss, name);
+					for (int i = 0; i < bindsNeeded; i++) {
+						bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
+					}
+				}
 				xcase TT_SUBCONTAINER:
-					estrConcatf(estr, "INSERT INTO dbo.%s (ContainerId,SubId) VALUES (?,?);", name);
+					*ss << "INSERT INTO dbo." << name << " (ContainerId,SubId) VALUES (?,?);";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);					
 				xdefault:
@@ -313,10 +321,10 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 		} else {
 			switch (slot->table->table_type) {
 				xcase TT_CONTAINER:
-					estrConcatf(estr, "DELETE FROM dbo.%s WHERE ContainerId=?;", name);
+					*ss << "DELETE FROM dbo." << name << " WHERE ContainerId=?;";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 				xcase TT_SUBCONTAINER:
-					estrConcatf(estr, "DELETE FROM dbo.%s WHERE ContainerId=? AND SubId=?;", name);
+					*ss << "DELETE FROM dbo." << name << " WHERE ContainerId=? AND SubId=?;";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);
 				xdefault:
@@ -324,10 +332,11 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 			}
 		}
 
-		if (estrLength(estr) > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
-			sqlFlushStatement(stmt, estr, bind, conn);
+		if (ss->tellp() > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
+			sqlFlushStatement(stmt, *ss, bind, conn);
 		}
 	}
+	delete ss;
 }
 
 static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, LineList *diff, char **estr, unsigned *bind, HSTMT stmt, SqlConn conn, sqlBindTemp *** bind_temps)
@@ -359,7 +368,7 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 #endif
 					bindInputParameter(stmt, (*bind)++, CFTYPE_ANSISTRING, diff->text + line->str_idx, &line->size);
 					break;
-				case CFTYPE_BINARY_MAX:
+				case CFTYPE_BINARY:
 				{
 #if ACTUALLY_STORE_BINARY_AS_BINARY
 					int int_size;
@@ -369,7 +378,7 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 					bindInputParameter(stmt, (*bind)++, CFTYPE_BINARY_MAX, temp->data, &temp->bytes);
 					eaPush(bind_temps, temp);
 #else
-					bindInputParameter(stmt, (*bind)++, CFTYPE_BINARY_MAX, diff->text + line->str_idx, &line->size);
+					bindInputParameter(stmt, (*bind)++, CFTYPE_BINARY, diff->text + line->str_idx, &line->size);
 #endif
 					break;
 				}
@@ -665,7 +674,7 @@ static int readRow(HSTMT stmt, ContainerTemplate *tplt, TableInfo *table, LineLi
 				if(!(line->fval = *(float *)data))
 					continue;
 
-			xcase CFTYPE_BINARY_MAX:
+			xcase CFTYPE_BINARY:
 #if ACTUALLY_STORE_BINARY_AS_BINARY
 				if(!addMemToLine(list, line, data, results[col]))
 					continue;
@@ -693,6 +702,17 @@ static int readRow(HSTMT stmt, ContainerTemplate *tplt, TableInfo *table, LineLi
 					continue;
 				}
 				buf_len = sprintf(buf,"%04d-%02d-%02d %02d:%02d:%02d", t->year, t->month, t->day, t->hour, t->minute, t->second);
+				addStrToLine(list, line, buf, buf_len);
+			}
+			xcase CFTYPE_DATETIME_TIMEZONE :
+			{
+				SQL_SS_TIMESTAMPOFFSET_STRUCT* tsWithTz = (SQL_SS_TIMESTAMPOFFSET_STRUCT*)(data);
+#ifdef _FULLDEBUG
+				assert(results[col] == sizeof(SQL_TIMESTAMP_STRUCT));
+#endif
+				char buf[64];
+				int buf_len;
+				buf_len = sprintf(buf, "%04d-%02d-%02d %02d:%02d:%02d", tsWithTz->year, tsWithTz->month, tsWithTz->day, tsWithTz->hour, tsWithTz->minute, tsWithTz->second);
 				addStrToLine(list, line, buf, buf_len);
 			}
 
@@ -993,7 +1013,7 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 	HSTMT stmt;
 	int count;
 	ColumnInfo *columns = NULL;
-	char * schema_name = "dbo";
+	const char * schema_name = "dbo";
 
 	SQLCHAR column_name[256];
 	SQLLEN column_name_bytes;
@@ -1015,7 +1035,10 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 
 	stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 
-	if (!SQL_SUCCEEDED(SQLColumns(stmt, NULL, 0, (SQLCHAR*)schema_name, 3, (SQLCHAR*)_strdupa(table_name), SQL_NTS, NULL, 0)))
+	std::string table = table_name;
+	gContainerDb->beforeSQLMetaCalls(table);
+
+	if (!SQL_SUCCEEDED(SQLColumns(stmt, NULL, 0, (SQLCHAR*)schema_name, 3, (SQLCHAR*) table.c_str(), SQL_NTS, NULL, 0)))
 	{
 		sqlConnStmtFree(stmt);
 		return 0;
@@ -1033,6 +1056,7 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 		SQLRETURN retcode;
 
 		retcode = _sqlConnStmtFetch(stmt, SQLCONN_FOREGROUND);
+
 		if (retcode == SQL_NO_DATA)
 			break;
 
@@ -1060,7 +1084,7 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 		columns[count].data_type = CFTYPE_NULL;
 		columns[count].num_bytes = buffer_length;
 		columns[count].column_size = 0;
-		columns[count].data_type = gContainerDb->findContainerFieldType(data_type);
+		columns[count].data_type = gContainerDb->sqlTypeToContainerFieldType(data_type);
 
 		if (columns[count].data_type == CFTYPE_NULL) {
 			FatalErrorf("Unknown type '%s' (%d) for column '%s' in '%s'", type_name, data_type, column_name, table_name);
@@ -1315,7 +1339,7 @@ static char * testDataBaseValues(ContainerTemplate * tplt, bool min)
 						estrConcatf(&buf, "%s \"%s\"\n", field->name, testString(tmp, field->column_size - 1, true, min));
 					}
 				}
-				xcase CFTYPE_BINARY_MAX: {
+				xcase CFTYPE_BINARY: {
 					char escaped[16384*2+1];
 					int escaped_len = sizeof(escaped);
 					int k;

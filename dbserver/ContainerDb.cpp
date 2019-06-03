@@ -8,11 +8,11 @@ ContainerDb::ContainerDb() {
 	ormTypeToContainerFieldTypeMap["int2"] = CFTYPE_SHORT;
 	ormTypeToContainerFieldTypeMap["int4"] = CFTYPE_INT;
 	ormTypeToContainerFieldTypeMap["float4"] = CFTYPE_FLOAT;
-	ormTypeToContainerFieldTypeMap["unicodestring"] = CFTYPE_STRING;
+	ormTypeToContainerFieldTypeMap["unicodestring"] = CFTYPE_WSTRING;
 	ormTypeToContainerFieldTypeMap["ansistring"] = CFTYPE_STRING;
 	ormTypeToContainerFieldTypeMap["datetime"] = CFTYPE_DATETIME;
 	ormTypeToContainerFieldTypeMap["binary(max)"] = CFTYPE_BINARY;
-	ormTypeToContainerFieldTypeMap["unicodestring(max)"] = CFTYPE_STRING;
+	ormTypeToContainerFieldTypeMap["unicodestring(max)"] = CFTYPE_WSTRING;
 	ormTypeToContainerFieldTypeMap["ansistring(max)"] = CFTYPE_STRING;
 	ormTypeToContainerFieldTypeMap["textblob"] = CFTYPE_STRING;
 
@@ -22,10 +22,17 @@ ContainerDb::ContainerDb() {
 	sqlTypeToContainerFieldTypeMap[SQL_INTEGER] = CFTYPE_INT;
 	sqlTypeToContainerFieldTypeMap[SQL_REAL] = CFTYPE_FLOAT;
 	sqlTypeToContainerFieldTypeMap[SQL_VARCHAR] = CFTYPE_STRING;
+	sqlTypeToContainerFieldTypeMap[SQL_WVARCHAR] = CFTYPE_WSTRING;
 	sqlTypeToContainerFieldTypeMap[SQL_TYPE_TIMESTAMP] = CFTYPE_DATETIME;
+	sqlTypeToContainerFieldTypeMap[SQL_SS_TIMESTAMPOFFSET] = CFTYPE_DATETIME_TIMEZONE;
 	sqlTypeToContainerFieldTypeMap[SQL_VARBINARY] = CFTYPE_BINARY;
 	sqlTypeToContainerFieldTypeMap[SQL_LONGVARCHAR] = CFTYPE_STRING;
+	sqlTypeToContainerFieldTypeMap[SQL_WLONGVARCHAR] = CFTYPE_WSTRING;
 	sqlTypeToContainerFieldTypeMap[SQL_LONGVARBINARY] = CFTYPE_BINARY;
+}
+
+void ContainerDb::beforeSQLMetaCalls(std::string& table) {
+	// Empty
 }
 
 ContainerFieldType ContainerDb::ormTypeToContainerFieldType(const std::string& ormType) {
@@ -48,7 +55,11 @@ std::string ContainerDb::insertIntoTableFromTemp(const std::string& table, const
 	return ss.str();
 }
 
-ContainerFieldType ContainerDb::findContainerFieldType(SQLSMALLINT dataType) {
+ContainerFieldType ContainerDb::sqlTypeToContainerFieldType(SQLSMALLINT dataType) {
 	auto it = sqlTypeToContainerFieldTypeMap.find(dataType);
 	return (it == sqlTypeToContainerFieldTypeMap.end()) ? CFTYPE_NULL : it->second;
+}
+
+std::string ContainerDb::foreignKeyNameSchema(const std::string& table, const std::string& key, const std::string& foreignTable) {
+	return "FK" + '_' + table + '_' + key + '_' + foreignTable;
 }

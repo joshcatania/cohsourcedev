@@ -2,16 +2,16 @@
 #include "sql/sqlinclude.h"
 #include <sstream>
 
-const int CTRMSSQL_FIELDINFOCOUNT = 8;
-
-static ContainerFieldInfo cToSqlMappingsSqlServer[CTRMSSQL_FIELDINFOCOUNT] = {
+static ContainerFieldInfo cToSqlMappingsSqlServer[CFTYPE_COUNT] = {
 	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	NULL,		NULL			}, // CFTYPE_NULL
 	{ 1,	SQL_C_TINYINT,			SQL_TINYINT,		SQL_UNKNOWN_TYPE,	"tinyint",	NULL		}, // CFTYPE_BYTE
 	{ 2,	SQL_C_SHORT,			SQL_SMALLINT,		SQL_UNKNOWN_TYPE,	"smallint",	NULL		}, // CFTYPE_SHORT
 	{ 4,	SQL_C_LONG,				SQL_INTEGER,		SQL_UNKNOWN_TYPE,	"int",		NULL			}, // CFTYPE_INT
 	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"real",		NULL			}, // CFTYPE_FLOAT
 	{ 4,	SQL_C_CHAR,				SQL_VARCHAR,		SQL_LONGVARCHAR, 	"varchar",	"varchar(max)"	}, // CFTYPE_STRING
+	{ 4,	SQL_C_WCHAR,			SQL_WVARCHAR,		SQL_WLONGVARCHAR,	"nvarchar", "nvarchar(max)" },
 	{ 16,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"datetime",	NULL		}, // CFTYPE_DATETIME
+	{ 19,	SQL_C_BINARY,			SQL_SS_TIMESTAMPOFFSET, SQL_UNKNOWN_TYPE,"datetimeoffset", NULL	},
 	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary", "varbinary(max)"} // CFTYPE_BINARY
 };
 
@@ -19,7 +19,7 @@ ContainerDbMssql::ContainerDbMssql() {}
 
 ContainerDbMssql::~ContainerDbMssql() {}
 
-ContainerFieldInfo ContainerDbMssql::getContainerFieldInfo(ContainerFieldType type) {
+ContainerFieldInfo& ContainerDbMssql::getContainerFieldInfo(ContainerFieldType type) {
 	return cToSqlMappingsSqlServer[type];
 }
 
@@ -100,21 +100,22 @@ std::string ContainerDbMssql::createIndexIfNotExists(const std::string& indexNam
 
 std::string ContainerDbMssql::dropForeignKeyConstraintIfExists(const std::string& table, const std::string& key, const std::string& foreignTable) {
 	std::ostringstream ss;
+	std::string fk = foreignKeyNameSchema(table, key, foreignTable);
 	ss << "IF EXISTS (SELECT constraint_name FROM information_schema.table_constraints "
-		"WHERE constraint_name = 'FK_" << table << '_' << key << '_' << foreignTable << "') "
+		"WHERE constraint_name = '" << fk << "') "
 		"ALTER TABLE dbo." << table << " "
-		"DROP CONSTRAINT FK_" << table << '_' << key << '_' << foreignTable << ';';
+		"DROP CONSTRAINT " << fk << ';';
 	return ss.str();
 }
 
 std::string ContainerDbMssql::createForeignKeyConstraintIfNotExists(const std::string& table, const std::string& key, const std::string& foreignTable)
 {
 	std::ostringstream ss;
+	std::string fk = foreignKeyNameSchema(table, key, foreignTable);
 	ss << "IF NOT EXISTS (SELECT constraint_name FROM information_schema.table_constraints "
-		"WHERE constraint_name = 'FK_" << table << '_' << key << '_' << foreignTable << "') "
+		"WHERE constraint_name = '" << fk << "') "
 		"ALTER TABLE dbo." << table << " "
-		"ADD CONSTRAINT FK_" << table << '_' << key << '_' << foreignTable << " "
-		"FOREIGN KEY (" << key << ") REFERENCES " << foreignTable << ';';
+		"ADD CONSTRAINT " << fk << " FOREIGN KEY (" << key << ") REFERENCES " << foreignTable << ';';
 	return ss.str();
 }
 
@@ -122,4 +123,12 @@ std::string ContainerDbMssql::alterColumnType(const std::string& table, const st
 	std::ostringstream ss;
 	ss << "ALTER TABLE dbo." << table << " ALTER COLUMN " << column << ' ' << newType << ';';
 	return ss.str();
+}
+
+int ContainerDbMssql::insertEmptyContainerRow(std::ostringstream& ss, const std::string& table) {
+	ss <<  "SET IDENTITY_INSERT dbo." << table << " ON;"
+		"INSERT INTO dbo." << table << " (ContainerId) VALUES (?);"
+		"SET IDENTITY_INSERT dbo." << table << " OFF;";
+	// Return the number of binds needs
+	return 1;
 }

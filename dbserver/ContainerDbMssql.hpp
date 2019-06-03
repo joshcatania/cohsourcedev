@@ -9,7 +9,7 @@ public:
 	ContainerDbMssql();
 	~ContainerDbMssql();
 
-	ContainerFieldInfo getContainerFieldInfo(ContainerFieldType type);
+	ContainerFieldInfo& getContainerFieldInfo(ContainerFieldType type);
 	std::string restartContainerSequence(const std::string& table);
 	std::string truncateTempTableAndInsertInto(const std::string& table, const std::string& columns, bool hasSequence);
 	std::string insertIntoTableFromTemp(const std::string& table, const std::string& columns, bool hasSequence);
@@ -22,6 +22,7 @@ public:
 	std::string select(const std::string& schema, const std::string& table, const std::string& columns, const std::string& limit, const std::string& where);
 	bool isUnbound(ContainerFieldType cfType, const std::string& sqlTypeName, int columnSize);
 	std::string alterColumnType(const std::string& table, const std::string& column, const std::string& newType);
+	int insertEmptyContainerRow(std::ostringstream& ss, const std::string& table);
 };
 
 #endif

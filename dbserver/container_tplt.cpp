@@ -201,7 +201,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 			// ContainerId
 			field = table->columns = (ColumnInfo*)realloc(0,1 * sizeof(table->columns[0]));
 			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, gContainerDb->getContainerFieldInfo(CFTYPE_INT).db_bound_type);
-			//setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, getContainerFieldInfo(CFTYPE_INT).db_bound_type);
+
 			field->reserved_word = 1;
 			table->num_columns = 1;
 
