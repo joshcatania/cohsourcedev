@@ -2308,7 +2308,7 @@ static void sqlReqCustomDataCallback(Packet *pak_out,U8 *cols,int row_count,Colu
 				{
 					xcase CFTYPE_ANSISTRING:
 						pktSendString(pak_out,&cols[idx]);
-					xcase CFTYPE_BINARY_MAX:
+					xcase CFTYPE_BINARY:
 						assert(0); // there isn't a clean way to do this right now
 					xcase CFTYPE_INT:
 						pktSendBitsPack(pak_out,1,*(int *)(&cols[idx]));

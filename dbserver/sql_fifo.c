@@ -393,7 +393,7 @@ char *sqlReadColumnsSlow(TableInfo *table, char *limit, char *col_names, char *w
 *       made before this function to force all previous writes
 *       to complete first.
 */
-void sqlReadColumnsAsyncWithDebugDelay(TableInfo *table, char *limit, char *col_names, char *restrict, ReadColumnCallback callback, void * callbackData, Packet *pak, int container_id, int debugDelayMS)
+void sqlReadColumnsAsyncWithDebugDelay(TableInfo *table, char *limit, char *col_names, const char *restrict, ReadColumnCallback callback, void * callbackData, Packet *pak, int container_id, int debugDelayMS)
 {
 	SqlQueueEntry *entry = getQueueEntry();
 	entry->cmd = SQLCMD_READCOLUMNS;
@@ -411,7 +411,7 @@ void sqlReadColumnsAsyncWithDebugDelay(TableInfo *table, char *limit, char *col_
 	pushQueueEntry(pickQueue(container_id), entry);
 }
 
-void sqlReadColumnsAsync(TableInfo *table, char *limit, char *col_names, char *restrict, ReadColumnCallback callback, void * callbackData, Packet *pak, int container_id)
+void sqlReadColumnsAsync(TableInfo *table, char *limit, char *col_names, const char *restrict, ReadColumnCallback callback, void * callbackData, Packet *pak, int container_id)
 {
 	sqlReadColumnsAsyncWithDebugDelay(table, limit, col_names, restrict, callback, callbackData, pak, container_id, 0);
 }

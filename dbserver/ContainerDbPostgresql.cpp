@@ -102,15 +102,13 @@ std::string ContainerDbPostgresql::createForeignKeyConstraintIfNotExists(const s
 	// Can't use ADD IF NOT EXISTS because the table it refers to might not even exist
 	std::ostringstream ss;
 	std::string fk = foreignKeyNameSchema(table, key, foreignTable);
-	ss << "DO $$ "
-		"BEGIN "
+	ss << "DO $$ BEGIN "
 		"IF (SELECT dbo.constraint_exists('" << fk << "')) IS FALSE THEN "
 		"ALTER TABLE dbo." << table << " "
 		"ADD CONSTRAINT " << fk << " "
 		"FOREIGN KEY(" << key << ") REFERENCES dbo." << foreignTable << ";"
 		"END IF; "
-		"END "
-		"$$;";
+		"END $$;";
 	return ss.str();
 }
 
@@ -125,4 +123,10 @@ int ContainerDbPostgresql::insertEmptyContainerRow(std::ostringstream& ss, const
 		"INSERT INTO dbo." << table << " (ContainerId) VALUES (?);";
 	// Number of binds needed
 	return 2;
+}
+
+std::string ContainerDbPostgresql::nowMinusDays(int days) {
+	std::ostringstream ss;
+	ss << "NOW() - interval '" << days << " days'";
+	return ss.str();
 }

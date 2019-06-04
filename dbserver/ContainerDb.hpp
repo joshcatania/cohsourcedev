@@ -76,6 +76,9 @@ public:
 	
 	// Determines whether an SQL type is unbound, where unbound means a varying length field with no set columns size.
 	// A column with a separate size constraint will still read as unbound.
+	//
+	// This is only ever relevant initially when reading the table structures. After that is done, the definition
+	// of unbound in ColumnInfo is varying characters or binary with num_bytes as -1.
 	virtual bool isUnbound(ContainerFieldType cfType, const std::string& sqlTypeName, int columnSize) = 0;
 
 	// Appends query(s) to the stringstream for inserting a row to the Container table with only the container id.
@@ -83,6 +86,8 @@ public:
 	// (which would increment on the next insert without the container id value).
 	// Returns the number of binds to the container id needed.
 	virtual int insertEmptyContainerRow(std::ostringstream& ss, const std::string& table) = 0;
+
+	virtual std::string nowMinusDays(int days) = 0;
 	
 
 protected:

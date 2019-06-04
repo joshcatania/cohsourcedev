@@ -23,6 +23,7 @@ public:
 	bool isUnbound(ContainerFieldType cfType, const std::string& sqlTypeName, int columnSize);
 	std::string alterColumnType(const std::string& table, const std::string& column, const std::string& newType);
 	int insertEmptyContainerRow(std::ostringstream& ss, const std::string& table);
+	std::string nowMinusDays(int days);
 };
 
 #endif

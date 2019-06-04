@@ -132,3 +132,9 @@ int ContainerDbMssql::insertEmptyContainerRow(std::ostringstream& ss, const std:
 	// Return the number of binds needs
 	return 1;
 }
+
+std::string ContainerDbMssql::nowMinusDays(int days) {
+	std::ostringstream ss;
+	ss << "DATEADD(d, -" << days << ", GETDATE())";
+	return ss.str();
+}

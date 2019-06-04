@@ -231,7 +231,7 @@
     <ClCompile Include="accountservercomm.c" />
     <ClCompile Include="arenacomm.c" />
     <ClCompile Include="..\Common\auction\Auction.c" />
-    <ClCompile Include="auctionservercomm.c" />
+    <ClCompile Include="auctionservercomm.cpp" />
     <ClCompile Include="..\Common\auth\auth.c" />
     <ClCompile Include="authcomm.c" />
     <ClCompile Include="..\common\auth\authUserData.c" />

@@ -83,6 +83,7 @@ void	eaRemoveAndDestroy(mEArrayHandle* handle, int i, EArrayItemDestructor destr
 #define eaRemoveFastConst(handle, i)			eaRemoveFastConstDbg(cpponly_reinterpret_cast(cEArrayHandle*)(handle), i)
 #define eaFind(handle, structptr)				eaFindDbg(cccEACast(handle), structptr)
 #define eaFindAndRemove(handle, structptr)		eaFindAndRemoveDbg(cEACast(handle), structptr)
+#define eaFindAndRemoveCpp(handle, structptr)	eaFindAndRemoveDbg(handle, structptr); // Allow the caller to handle the castings
 #define eaFindAndRemoveFast(handle, structptr)	eaFindAndRemoveFastDbg(cEACast(handle), structptr)
 void	eaSwap(cEArrayHandle* handle, int i, int j);			// exchange the i'th element with the j'th element
 void	eaMove(cEArrayHandle* handle, int dest, int src);	// shift left or right to move the src'th element to dest

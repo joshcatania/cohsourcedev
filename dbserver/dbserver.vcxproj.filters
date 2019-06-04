@@ -38,9 +38,6 @@
     <ClCompile Include="..\Common\auction\Auction.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="auctionservercomm.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\Common\auth\auth.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -228,6 +225,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="container_tplt_utils.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="auctionservercomm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
