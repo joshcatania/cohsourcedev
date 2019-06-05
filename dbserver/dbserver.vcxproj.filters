@@ -59,9 +59,6 @@
     <ClCompile Include="clientcomm.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="container.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="container_diff.c">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -228,6 +225,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="auctionservercomm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="container.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

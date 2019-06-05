@@ -88,6 +88,12 @@ public:
 	virtual int insertEmptyContainerRow(std::ostringstream& ss, const std::string& table) = 0;
 
 	virtual std::string nowMinusDays(int days) = 0;
+
+	// Returns the next value that will be inserted in a column with a sequence/serial set.
+	// I don't think this should be used. Instead, without a sequence value set and let the database decide.
+	// Only here for legacy purposes.
+	// This query DOES NOT return the current highest sequence value.
+	virtual std::string nextInsertedSequenceValueQuery(const std::string& table, const std::string& column) = 0;
 	
 
 protected:

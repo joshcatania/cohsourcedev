@@ -239,7 +239,7 @@
     <ClCompile Include="beaconservercomm.c" />
     <ClCompile Include="chatrelay.c" />
     <ClCompile Include="clientcomm.c" />
-    <ClCompile Include="container.c" />
+    <ClCompile Include="container.cpp" />
     <ClCompile Include="ContainerDb.cpp" />
     <ClCompile Include="ContainerDbMssql.cpp" />
     <ClCompile Include="ContainerDbPostgresql.cpp" />

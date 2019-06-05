@@ -121,7 +121,7 @@ void sqlDeleteRowInternal(char *table, int container_id, SqlConn conn);
 
 // externally used during the main loop (sync and async)
 char *sqlContainerRead(ContainerTemplate *tplt, int container_id, SqlConn conn);
-int sqlGetSingleValue(char *expr, int str_len, BindList * bind_list, SqlConn conn);
+int sqlGetSingleValue(const char *expr, int str_len, BindList * bind_list, SqlConn conn);
 char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, char *where, int *count_ptr, ColumnInfo **field_ptrs, SqlConn conn, int debugDelayMS);
 void sqlContainerUpdateInternal(ContainerTemplate* tplt, int container_id, LineList* diff, SqlConn conn);
 

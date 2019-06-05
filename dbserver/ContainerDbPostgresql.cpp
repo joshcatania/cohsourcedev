@@ -130,3 +130,9 @@ std::string ContainerDbPostgresql::nowMinusDays(int days) {
 	ss << "NOW() - interval '" << days << " days'";
 	return ss.str();
 }
+
+std::string ContainerDbPostgresql::nextInsertedSequenceValueQuery(const std::string& table, const std::string& column) {
+	std::ostringstream ss;
+	ss << "SELECT setval(pg_get_serial_sequence('dbo." << table << "', '" << column << "'), nextval(pg_get_serial_sequence('dbo." << table << "', '" << column << "')), false);";
+	return ss.str();
+}

@@ -366,7 +366,7 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 #ifdef _FULLDEBUG
 					assert(strlen(diff->text + line->str_idx) == line->size);
 #endif
-					bindInputParameter(stmt, (*bind)++, CFTYPE_ANSISTRING, diff->text + line->str_idx, &line->size);
+					bindInputParameter(stmt, (*bind)++, CFTYPE_STRING, diff->text + line->str_idx, &line->size);
 					break;
 				case CFTYPE_BINARY:
 				{
@@ -865,7 +865,7 @@ char *sqlContainerRead(ContainerTemplate *tplt, int container_id, SqlConn conn)
 *                  binds terminated by an entry of type @ref
 *                  CFTYPE_NULL.
 */ 
-int sqlGetSingleValue(char *cmd, int cmd_len, BindList * bind_list, SqlConn conn)
+int sqlGetSingleValue(const char *cmd, int cmd_len, BindList * bind_list, SqlConn conn)
 {
 	HSTMT stmt;
 	SQLRETURN retcode;

@@ -138,3 +138,7 @@ std::string ContainerDbMssql::nowMinusDays(int days) {
 	ss << "DATEADD(d, -" << days << ", GETDATE())";
 	return ss.str();
 }
+
+std::string ContainerDbMssql::nextInsertedSequenceValueQuery(const std::string& table, const std::string& column) {
+	return "SELECT IDENT_CURRENT('" + table + "');";
+}

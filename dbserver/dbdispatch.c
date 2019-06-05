@@ -2306,7 +2306,7 @@ static void sqlReqCustomDataCallback(Packet *pak_out,U8 *cols,int row_count,Colu
 				// Otherwise, it might be one of these other primitives.
 				switch(field_ptrs[j]->data_type)
 				{
-					xcase CFTYPE_ANSISTRING:
+					xcase CFTYPE_STRING:
 						pktSendString(pak_out,&cols[idx]);
 					xcase CFTYPE_BINARY:
 						assert(0); // there isn't a clean way to do this right now

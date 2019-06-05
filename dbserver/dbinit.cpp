@@ -960,8 +960,8 @@ static void* alloc_order()
 
 SpecialColumn ent_cmds[] =
 {
-	{ "Name",						CFTYPE_ANSISTRING,		OFFSETOF(EntCon,ent_name),												},
-	{ "AuthName",					CFTYPE_ANSISTRING,		OFFSETOF(EntCon,account),												},
+	{ "Name",						CFTYPE_STRING,			OFFSETOF(EntCon,ent_name),												},
+	{ "AuthName",					CFTYPE_STRING,			OFFSETOF(EntCon,account),												},
 	{ "TeamupsId",					CFTYPE_INT,				OFFSETOF(EntCon,teamup_id),			CMD_MEMBER,	CONTAINER_TEAMUPS		},
 	{ "SupergroupsId",				CFTYPE_INT,				OFFSETOF(EntCon,supergroup_id),		CMD_MEMBER,	CONTAINER_SUPERGROUPS	},
 	{ "TaskforcesId",				CFTYPE_INT,				OFFSETOF(EntCon,taskforce_id),		CMD_MEMBER,	CONTAINER_TASKFORCES	},
@@ -972,15 +972,15 @@ SpecialColumn ent_cmds[] =
 	{ "MapId",						CFTYPE_INT,				OFFSETOF(EntCon,map_id),			CMD_SETIFNULL,						},
 	{ "AuthId",						CFTYPE_INT,				OFFSETOF(EntCon,auth_id),			CMD_SETIFNULL,						},
 	{ "Banned",						CFTYPE_INT,				OFFSETOF(EntCon,banned),												},
-	{ "Ents2[0].AccSvrLock",		CFTYPE_ANSISTRING,		OFFSETOF(EntCon,acc_svr_lock),											},
+	{ "Ents2[0].AccSvrLock",		CFTYPE_STRING,			OFFSETOF(EntCon,acc_svr_lock),											},
 	{ "Ents2[0].HideField",			CFTYPE_INT,				OFFSETOF(EntCon,hidefield),												},
 	{ "Level",						CFTYPE_INT,				OFFSETOF(EntCon,level),													},
-	{ "Class",						CFTYPE_ANSISTRING,		OFFSETOF(EntCon,archetype),												},
-	{ "Origin",						CFTYPE_ANSISTRING,		OFFSETOF(EntCon,origin),												},
+	{ "Class",						CFTYPE_STRING,			OFFSETOF(EntCon,archetype),												},
+	{ "Origin",						CFTYPE_STRING,			OFFSETOF(EntCon,origin),												},
 	{ "AccessLevel",				CFTYPE_INT,				OFFSETOF(EntCon,access_level),											},
-	{ "Ents2[0].AuthUserDataEx",	CFTYPE_ANSISTRING,		OFFSETOF(EntCon,auth_user_data),	CMD_CALLBACK, 0,	sendAuthUserData},
+	{ "Ents2[0].AuthUserDataEx",	CFTYPE_STRING,			OFFSETOF(EntCon,auth_user_data),	CMD_CALLBACK, 0,	sendAuthUserData},
 	{ "Ents2[0].LfgFlags",			CFTYPE_INT,				OFFSETOF(EntCon,lfgfield),												},
-	{ "Ents2[0].Comment",			CFTYPE_ANSISTRING,		OFFSETOF(EntCon,comment),												},
+	{ "Ents2[0].Comment",			CFTYPE_STRING,			OFFSETOF(EntCon,comment),												},
 	{ "LastActive",					CFTYPE_DATETIME,		OFFSETOF(EntCon,last_active),											},
 	{ "MemberSince",				CFTYPE_DATETIME,		OFFSETOF(EntCon,member_since),											},
 	{ "Prestige",					CFTYPE_INT,				OFFSETOF(EntCon,prestige),												},
@@ -995,8 +995,8 @@ SpecialColumn ent_cmds[] =
 	{ "CompletedOrders[%d].OrderId3",	CFTYPE_INT,			OFFSETOF(OrderId,u32[3]),	CMD_ARRAY,	OFFSETOF(EntCon,completedOrders), NULL, alloc_order	},
 	{ "Gender",						CFTYPE_BYTE,			OFFSETOF(EntCon,gender),												},
 	{ "NameGender",					CFTYPE_BYTE,			OFFSETOF(EntCon,nameGender),											},
-	{ "Ents2[0].originalPrimary",	CFTYPE_ANSISTRING,		OFFSETOF(EntCon,primarySet),											},
-	{ "Ents2[0].originalSecondary",	CFTYPE_ANSISTRING,		OFFSETOF(EntCon,secondarySet),											},
+	{ "Ents2[0].originalPrimary",	CFTYPE_STRING,			OFFSETOF(EntCon,primarySet),											},
+	{ "Ents2[0].originalSecondary",	CFTYPE_STRING,			OFFSETOF(EntCon,secondarySet),											},
 	{ 0 }
 };
 
@@ -1008,7 +1008,7 @@ static void* alloc_inventory()
 SpecialColumn shardaccount_cmds[] =
 {
 	{ "SlotCount",				CFTYPE_INT,			OFFSETOF(ShardAccountCon,slot_count),					},
-	{ "AuthName",				CFTYPE_ANSISTRING,	OFFSETOF(ShardAccountCon,account),						},
+	{ "AuthName",				CFTYPE_STRING,	OFFSETOF(ShardAccountCon,account),						},
 	{ "WasVIP",					CFTYPE_INT,			OFFSETOF(ShardAccountCon,was_vip),						},
 	{ "ShowPremiumSlotLockNag",	CFTYPE_INT,			OFFSETOF(ShardAccountCon,showPremiumSlotLockNag),		},
 
@@ -1031,7 +1031,7 @@ SpecialColumn shardaccount_cmds[] =
 
 SpecialColumn sgroup_cmds[] =
 {
-	{ "Name",			CFTYPE_UNICODESTRING,	OFFSETOF(GroupCon,name),		},
+	{ "Name",			CFTYPE_WSTRING,			OFFSETOF(GroupCon,name),		},
 	{ "MissionMapId",	CFTYPE_INT,				OFFSETOF(GroupCon,map_id),		},
 	{ "LeaderId",		CFTYPE_INT,				OFFSETOF(GroupCon,leader_id),	},
 	{ 0 }
@@ -1046,8 +1046,8 @@ SpecialColumn team_cmds[] =
 
 SpecialColumn map_cmds[] =
 {
-	{ "MapName",		CFTYPE_ANSISTRING,	OFFSETOF(MapCon,map_name)										},
-	{ "MissionInfo",	CFTYPE_ANSISTRING,	OFFSETOF(MapCon,mission_info)									},
+	{ "MapName",		CFTYPE_STRING,		OFFSETOF(MapCon,map_name)										},
+	{ "MissionInfo",	CFTYPE_STRING,		OFFSETOF(MapCon,mission_info)									},
 	{ "MapGroupsId",	CFTYPE_INT,			OFFSETOF(MapCon,mapgroup_id),	CMD_MEMBER,	CONTAINER_MAPGROUPS	},
 	{ "DontAutoStart",	CFTYPE_INT,			OFFSETOF(MapCon,dontAutoStart)									},
 	{ "Transient",		CFTYPE_INT,			OFFSETOF(MapCon,transient)										},

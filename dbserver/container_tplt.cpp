@@ -754,7 +754,7 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	ContainerFieldInfo intFieldInfo;
 
 	ZeroStruct(&table);
-	//ZeroArray(columns);
+	ZeroArray(columns);
 
 	strcpy(table.name, tablename);
 	table.table_type = TT_ATTRIBUTE;
@@ -804,7 +804,7 @@ retry:
 			stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 			cmd_len = sprintf(cmd, "INSERT INTO dbo.%s (Id, Name) VALUES (?, ?)", tablename);
 			bindInputParameter(stmt, 0, CFTYPE_INT, &prev_attr_id, NULL);
-			bindInputParameter(stmt, 1, CFTYPE_ANSISTRING, attr->names[prev_attr_id], NULL);
+			bindInputParameter(stmt, 1, CFTYPE_STRING, attr->names[prev_attr_id], NULL);
 			sqlConnStmtExecDirect(stmt, cmd, cmd_len, SQLCONN_FOREGROUND, false);
 			sqlConnStmtFree(stmt);
 		}
@@ -831,7 +831,7 @@ retry:
 
 				stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 				cmd_len = sprintf(cmd, "UPDATE dbo.%s SET Name=? WHERE Id = ?", tablename);
-				bindInputParameter(stmt, 0, CFTYPE_ANSISTRING, attr->names[attr_id], NULL);
+				bindInputParameter(stmt, 0, CFTYPE_STRING, attr->names[attr_id], NULL);
 				bindInputParameter(stmt, 1, CFTYPE_INT, &attr_id, NULL);
 				sqlConnStmtExecDirect(stmt, cmd, cmd_len, SQLCONN_FOREGROUND, false);
 				sqlConnStmtFree(stmt);
@@ -851,7 +851,7 @@ retry:
 					// Fix missing name
 					stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 					cmd_len = sprintf(cmd, "UPDATE dbo.%s SET Name=? WHERE Id = ?", tablename);
-					bindInputParameter(stmt, 0, CFTYPE_ANSISTRING, attr->names[attr_id], NULL);
+					bindInputParameter(stmt, 0, CFTYPE_STRING, attr->names[attr_id], NULL);
 					bindInputParameter(stmt, 1, CFTYPE_INT, &attr_id, NULL);
 					sqlConnStmtExecDirect(stmt, cmd, cmd_len, SQLCONN_FOREGROUND, false);
 					sqlConnStmtFree(stmt);
@@ -916,7 +916,7 @@ AttributeList *tpltLoadAttributes(char *fname, char *alt_fname, char *tablename)
 			estrConcatf(&buf, "(%d,?),", i);
 
 			rows++;
-			bindInputParameter(stmt, next++, CFTYPE_ANSISTRING, attr->names[i], NULL);
+			bindInputParameter(stmt, next++, CFTYPE_STRING, attr->names[i], NULL);
 
 			if (next >= FLUSH_BINDS || rows >= 1000)
 			{
