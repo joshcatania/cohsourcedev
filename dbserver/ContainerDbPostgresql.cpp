@@ -3,16 +3,16 @@
 #include <algorithm>
 
 static ContainerFieldInfo cToSqlMappingsPostgres[CFTYPE_COUNT] = {
-	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	NULL,			NULL		}, // CFTYPE_NULL
-	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			NULL		}, // CFTYPE_BYTE
-	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			NULL		}, // CFTYPE_SHORT
-	{ 4,	SQL_C_LONG,				SQL_INTEGER, 		SQL_UNKNOWN_TYPE,	"int4",			NULL		}, // CFTYPE_INT
-	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"float4",		NULL		}, // CFTYPE_FLOAT
-	{ 4,	SQL_C_CHAR,				SQL_VARCHAR, 		SQL_LONGVARCHAR,	"varchar",		"text"		}, // CFTYPE_STRING
-	{}, //CFTYPE_WSTRING, mapped to CFTYPE_STRING, this should never be accessed
-	{ 19,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"timestamp",	NULL	}, // CFTYPE_DATETIME
-	{ 19,	SQL_C_BINARY,			SQL_SS_TIMESTAMPOFFSET, SQL_UNKNOWN_TYPE,"timestamptz", NULL	},
-	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary",	"bytea"		}  // CFTYPE_BINARY
+	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	"",			""	}, // CFTYPE_NULL
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			""	}, // CFTYPE_BYTE
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT, 		SQL_UNKNOWN_TYPE,	"int2",			""	}, // CFTYPE_SHORT
+	{ 4,	SQL_C_LONG,				SQL_INTEGER, 		SQL_UNKNOWN_TYPE,	"int4",			""	}, // CFTYPE_INT
+	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"float4",		""	}, // CFTYPE_FLOAT
+	{ 4,	SQL_C_CHAR,				SQL_VARCHAR, 		SQL_LONGVARCHAR,	"varchar",		"text"	}, // CFTYPE_STRING
+	{ 4,	SQL_C_CHAR,				SQL_VARCHAR,		SQL_LONGVARCHAR,	"varchar",		"text"	}, //CFTYPE_WSTRING, mapped to CFTYPE_STRING, this should never be accessed
+	{ 19,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"timestamp",	""	}, // CFTYPE_DATETIME
+	{ 19,	SQL_C_BINARY,			SQL_SS_TIMESTAMPOFFSET, SQL_UNKNOWN_TYPE,"timestamptz", ""	},
+	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary",	"bytea"	}  // CFTYPE_BINARY
 };
 
 ContainerDbPostgresql::ContainerDbPostgresql() {
@@ -44,10 +44,10 @@ std::string ContainerDbPostgresql::select(const std::string& schema, const std::
 
 bool ContainerDbPostgresql::isUnbound(ContainerFieldType cfType, const std::string& sqlTypeName, int columnSize) {
 	ContainerFieldInfo info = getContainerFieldInfo(cfType);
-	if (info.db_unbound_type == NULL) {
+	if (info.db_unbound_type.empty()) {
 		return false;
 	}
-	return stricmp(info.db_unbound_type, sqlTypeName.c_str()) == 0;
+	return info.db_unbound_type == sqlTypeName;
 }
 
 void ContainerDbPostgresql::beforeSQLMetaCalls(std::string& table) {

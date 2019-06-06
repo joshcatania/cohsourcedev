@@ -243,6 +243,7 @@
     <ClCompile Include="ContainerDb.cpp" />
     <ClCompile Include="ContainerDbMssql.cpp" />
     <ClCompile Include="ContainerDbPostgresql.cpp" />
+    <ClCompile Include="ContainerField.cpp" />
     <ClCompile Include="container_diff.c" />
     <ClCompile Include="container_flatfile.c" />
     <ClCompile Include="container_merge.c" />
@@ -304,6 +305,7 @@
     <ClInclude Include="..\Common\entity\gametypes.h" />
     <ClInclude Include="ContainerDbMssql.hpp" />
     <ClInclude Include="ContainerDbPostgresql.hpp" />
+    <ClInclude Include="ContainerField.hpp" />
     <ClInclude Include="dbglobals.h" />
     <ClInclude Include="loadBalancing.h" />
     <ClInclude Include="missionservercomm.h" />

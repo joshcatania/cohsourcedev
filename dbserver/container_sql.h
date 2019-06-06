@@ -5,6 +5,11 @@
 #include "container_tplt_utils.h"
 #include "sql/sqlconn.h"
 
+#ifdef __cplusplus
+#include <string>
+#include <vector>
+#endif
+
 C_DECLARATIONS_BEGIN
 
 typedef struct StashTableImp *StashTable;
@@ -99,8 +104,6 @@ void sqlAddForeignKeyConstraintAsync(char *table, char *key, char *foreign_table
 void sqlRemoveForeignKeyConstraintAsync(char *table, char *key, char *foreign_table);
 void sqlAddIndexAsync(char *index, char *table, char *fields);
 void sqlRemoveIndexAsync(char *index, char *table);
-char **sqlReadTableNames(int *countp); // via tpltDropUnreferencedTables()
-void sqlReadTableNamesFree(char **names, int count); // via tpltDropUnreferencedTables()
 bool sqlExecDdl(DdlType ddl_type, const char *str, int str_len);
 bool sqlExecDdlf(DdlType ddl_type, const char *fmt, ...);
 
@@ -109,10 +112,10 @@ bool sqlCreateTable(char *name, TableType table_type);
 bool sqlAddField(char *table, char *name, char *type);
 bool sqlChangeFieldType(char *table, char *name, char *newtype);
 bool sqlDeleteField(char *table, char *name, char *type);
-void sqlDropForeignKeysForTable(char *tablename);
+void sqlDropForeignKeysForTable(const char *tablename);
 int sqlTableReadMulti(ContainerTemplate *tplt,TableInfo *table,int container_id,char ***multi_buf_ptr,SqlConn conn); // used to temporarily store all data while rebuilding a table
 int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr);
-int sqlDropTable(char *table); // also via tpltDropUnreferencedTables()
+int sqlDropTable(const char *table); // also via tpltDropUnreferencedTables()
 void sqlCheckDdl(DdlType type); // also in dbInit() itself
 
 // externally used during the main loop (async only)
@@ -129,5 +132,9 @@ void sqlContainerUpdateInternal(ContainerTemplate* tplt, int container_id, LineL
 void testDataBaseTypes(struct DbList * list);
 
 C_DECLARATIONS_END
+
+#ifdef __cplusplus
+std::vector<std::string> sqlReadTableNames();
+#endif
 
 #endif

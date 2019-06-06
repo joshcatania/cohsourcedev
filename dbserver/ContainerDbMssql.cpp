@@ -3,15 +3,15 @@
 #include <sstream>
 
 static ContainerFieldInfo cToSqlMappingsSqlServer[CFTYPE_COUNT] = {
-	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	NULL,		NULL			}, // CFTYPE_NULL
-	{ 1,	SQL_C_TINYINT,			SQL_TINYINT,		SQL_UNKNOWN_TYPE,	"tinyint",	NULL		}, // CFTYPE_BYTE
-	{ 2,	SQL_C_SHORT,			SQL_SMALLINT,		SQL_UNKNOWN_TYPE,	"smallint",	NULL		}, // CFTYPE_SHORT
-	{ 4,	SQL_C_LONG,				SQL_INTEGER,		SQL_UNKNOWN_TYPE,	"int",		NULL			}, // CFTYPE_INT
-	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"real",		NULL			}, // CFTYPE_FLOAT
+	{ 0,	SQL_C_DEFAULT,			SQL_UNKNOWN_TYPE,	SQL_UNKNOWN_TYPE,	"",			""			}, // CFTYPE_NULL
+	{ 1,	SQL_C_TINYINT,			SQL_TINYINT,		SQL_UNKNOWN_TYPE,	"tinyint",	""		}, // CFTYPE_BYTE
+	{ 2,	SQL_C_SHORT,			SQL_SMALLINT,		SQL_UNKNOWN_TYPE,	"smallint",	""		}, // CFTYPE_SHORT
+	{ 4,	SQL_C_LONG,				SQL_INTEGER,		SQL_UNKNOWN_TYPE,	"int",		""			}, // CFTYPE_INT
+	{ 4,	SQL_C_FLOAT,			SQL_REAL,			SQL_UNKNOWN_TYPE,	"real",		""			}, // CFTYPE_FLOAT
 	{ 4,	SQL_C_CHAR,				SQL_VARCHAR,		SQL_LONGVARCHAR, 	"varchar",	"varchar(max)"	}, // CFTYPE_STRING
 	{ 4,	SQL_C_WCHAR,			SQL_WVARCHAR,		SQL_WLONGVARCHAR,	"nvarchar", "nvarchar(max)" },
-	{ 16,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"datetime",	NULL		}, // CFTYPE_DATETIME
-	{ 19,	SQL_C_BINARY,			SQL_SS_TIMESTAMPOFFSET, SQL_UNKNOWN_TYPE,"datetimeoffset", NULL	},
+	{ 16,	SQL_C_TYPE_TIMESTAMP,	SQL_TYPE_TIMESTAMP,	SQL_UNKNOWN_TYPE,	"datetime",	""		}, // CFTYPE_DATETIME
+	{ 19,	SQL_C_BINARY,			SQL_SS_TIMESTAMPOFFSET, SQL_UNKNOWN_TYPE,"datetimeoffset", ""	},
 	{ 1,	SQL_C_BINARY,			SQL_VARBINARY,		SQL_LONGVARBINARY,	"varbinary", "varbinary(max)"} // CFTYPE_BINARY
 };
 
@@ -75,7 +75,7 @@ std::string ContainerDbMssql::select(const std::string& schema, const std::strin
 
 bool ContainerDbMssql::isUnbound(ContainerFieldType cfType, const std::string& sqlTypeName, int columnSize) {
 	ContainerFieldInfo info = getContainerFieldInfo(cfType);
-	if (info.db_unbound_type == NULL) {
+	if (info.db_unbound_type.empty()) {
 		return false;
 	}
 	return columnSize == 0;

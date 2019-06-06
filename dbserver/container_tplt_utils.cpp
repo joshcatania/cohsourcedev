@@ -16,6 +16,7 @@
 #include <assert.h>
 #include <sqlext.h>
 #include "ContainerDbMssql.hpp"
+#include "ContainerField.hpp"
 
 static int field_must_start_with_cr=1;
 
@@ -53,45 +54,6 @@ char	*s,*str,searchname[100] = "\n";
 	strncpy(buf,str,s-str);
 	buf[s-str] = 0;
 	return buf;
-}
-
-int dataType(char *str, int *column_size, int *num_bytes, char **sql_type_name)
-{
-	static char static_sql_type_name[128];
-	enum ContainerFieldType type = CFTYPE_NULL;
-	int length = 0;
-	char * type_name;
-	char * length_str;
-	ContainerFieldInfo typeMapping;
-
-	type_name = strtok(str, "[");
-	length_str = strtok(NULL, "]");
-
-	type = gContainerDb->ormTypeToContainerFieldType(type_name);
-	if (type == CFTYPE_NULL)
-		FatalErrorf("No data type associated with orm type: %s\n", type_name);
-
-	if (length_str)
-		length = atoi(length_str);
-
-	typeMapping = gContainerDb->getContainerFieldInfo(type);
-
-	if (length == 0) {
-		*column_size = 0;
-		if (CFTYPE_IS_UNBOUNDABLE(type)) {
-			*sql_type_name = typeMapping.db_unbound_type;
-			*num_bytes = -1;
-		} else {
-			*sql_type_name = typeMapping.db_bound_type;
-			*num_bytes = typeMapping.access_size;
-		}
-	} else {
-		sprintf(static_sql_type_name, "%s(%d)", typeMapping.db_bound_type, length);
-		*sql_type_name = static_sql_type_name;
-		*column_size = length;
-		*num_bytes = length * typeMapping.access_size;
-	}
-	return type;
 }
 
 void containerInitIndex(IndexedContainer *cont_lines,const char *data,int create)
@@ -290,10 +252,10 @@ void bindInputParameter(HSTMT stmt, int index, enum ContainerFieldType type, con
 {
 	SQLLEN no_data = SQL_NULL_DATA;
 	ContainerFieldInfo info = gContainerDb->getContainerFieldInfo(type);
-	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, info.access_type, info.actual_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, (data) ? size : &no_data);
+	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, info.c_type, info.sql_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, (data) ? size : &no_data);
 }
 
 void bindOutputColumn(HSTMT stmt, int index, enum ContainerFieldType type, size_t size, void * data, SQLLEN * count) {
-	sqlConnStmtBindCol(stmt, index+1, gContainerDb->getContainerFieldInfo(type).access_type, data, size, count);
+	sqlConnStmtBindCol(stmt, index+1, gContainerDb->getContainerFieldInfo(type).c_type, data, size, count);
 }
 #endif

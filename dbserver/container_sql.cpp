@@ -438,10 +438,8 @@ void sqlContainerUpdateInternal(ContainerTemplate* tplt, int container_id, LineL
 	eaDestroyEx(&bind_temps[conn], NULL);
 }
 
-static void* s_getDataAtExec(HSTMT stmt, ColumnInfo *field, int column_idx, SQLLEN *results, const char *original_command, SqlConn conn)
-{
-	
-	return sqlConnStmtGetData(stmt, column_idx+1, gContainerDb->getContainerFieldInfo(field->data_type).access_type, results, original_command, conn);
+static void* s_getDataAtExec(HSTMT stmt, ColumnInfo *field, int column_idx, SQLLEN *results, const char *original_command, SqlConn conn) {
+	return sqlConnStmtGetData(stmt, column_idx+1, gContainerDb->getContainerFieldInfo(field->data_type).c_type, results, original_command, conn);
 }
 
 static char row_data[SQLCONN_MAX][MAX_QUERY_SIZE];
@@ -1097,7 +1095,8 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 		if (CFTYPE_IS_UNBOUNDABLE(columns[count].data_type)) {
 			if (gContainerDb->isUnbound(columns[count].data_type, (char*) type_name, column_size)) {
 				columns[count].num_bytes = -1;
-				sprintf(columns[count].data_type_name, "%s", gContainerDb->getContainerFieldInfo(columns[count].data_type).db_unbound_type);
+				strncpy(columns[count].data_type_name, gContainerDb->getContainerFieldInfo(columns[count].data_type).db_unbound_type.c_str(), 31);
+				columns[count].data_type_name[32] = '\0';
 			} else {
 				// We only care to set the column size for bound string/binary columns
 				columns[count].column_size = column_size;
@@ -1115,7 +1114,7 @@ int sqlGetTableInfo(char *table_name,ColumnInfo **columns_ptr)
 }
 
 
-void sqlDropForeignKeysForTable(char *table_name)
+void sqlDropForeignKeysForTable(const char *table_name)
 {
 	SQLLEN	pktable_schem_ind,pktable_name_ind,pkcolumn_name_ind,
 			fktable_schem_ind,fktable_name_ind,fkcolumn_name_ind,
@@ -1169,7 +1168,7 @@ void sqlDropForeignKeysForTable(char *table_name)
 	free(fk_names);
 }
 
-int sqlDropTable(char *table)
+int sqlDropTable(const char *table)
 {
 	char cmd[SHORT_SQL_STRING];
 	int cmd_len;
@@ -1181,46 +1180,23 @@ int sqlDropTable(char *table)
 	return (sqlExecDdl(DDL_REBUILDTABLE, cmd, cmd_len)) ? 1 : -1;
 }
 
-void sqlReadTableNamesFree(char **names, int count)
-{
-	int i;
-	for(i=0;i<count;i++)
-	{
-		free(names[i]);
-	}
-	free(names);
-}
+std::vector<std::string> sqlReadTableNames() {
+	HSTMT stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
 
-char **sqlReadTableNames(int *countp)
-{
-	HSTMT stmt;
-	char tabQualifier[255], tabOwner[255], tabName[255], tabType[255], remarks[255];
-	SQLLEN lenTabQualifier, lenTabOwner, lenTableName, lenTableType, lenRemarks;
-	int retcode;
-	char	**table_names=0;
-	int		table_count=0,table_max=0;
+	int retcode = SQLTables(stmt, NULL, 0, (SQLCHAR*) "dbo", SQL_NTS, NULL, 0, (SQLCHAR*)"TABLE", SQL_NTS);
 
-	char * schema_name = "dbo";
+	char tabName[255];
+	SQLLEN lenTableName;
 
-	stmt = sqlConnStmtAlloc(SQLCONN_FOREGROUND);
-
-	retcode = SQLTables(stmt, NULL, 0, (SQLCHAR*)schema_name, SQL_NTS, NULL, 0, (SQLCHAR*)"TABLE", SQL_NTS);
-
-	// Bind columns in result set to storage locations
-	retcode = SQLBindCol(stmt, 1, SQL_C_CHAR, tabQualifier, 255, &lenTabQualifier);
-	retcode = SQLBindCol(stmt, 2, SQL_C_CHAR, tabOwner, 255, &lenTabOwner);
+	// Index 3 contains the table names
 	retcode = SQLBindCol(stmt, 3, SQL_C_CHAR, tabName, 255, &lenTableName);
-	retcode = SQLBindCol(stmt, 4, SQL_C_CHAR, tabType, 255, &lenTableType);
-	retcode = SQLBindCol(stmt, 5, SQL_C_CHAR, remarks, 255, &lenRemarks);
-	// print out the records in the result set
 
+	std::vector<std::string> tableNames;
 	while ((retcode = _sqlConnStmtFetch(stmt, SQLCONN_FOREGROUND)) == SQL_SUCCESS)
-		dynArrayAddp((void***)&table_names, &table_count, &table_max, _strdup(tabName));
+		tableNames.push_back(std::string(tabName, lenTableName));
 
 	sqlConnStmtFree(stmt);
-
-	*countp = table_count;
-	return table_names;
+	return tableNames;
 }
 
 /** 

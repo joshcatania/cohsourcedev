@@ -21,6 +21,7 @@
 #include "sql/sqlinclude.h" // for MS SQL 2005 HACK
 #include "dbglobals.h"
 #include <sstream>
+#include <set>
 
 typedef struct
 {
@@ -32,7 +33,7 @@ typedef struct
 ForeignKey *foreign_keys;
 int foreign_key_count,foreign_key_max;
 
-static StashTable referenced_tables;
+static std::set<std::string> referenced_tables;
 extern "C" {
 	extern AttributeList* var_attrs;
 }
@@ -160,13 +161,14 @@ void hashAllNames(ContainerTemplate *tplt, const char * fname)
 
 ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 {
-	char				*strtype,*mem;
+	char				*mem;
 	int					count,type,data_len,is_attr;
 	ContainerTemplate	*tplt;
 	ColumnInfo			*field;
 	TableInfo			*table=0;
 	CtnrLineState		state;
 	int column_size;
+	std::string sqlType;
 
 	TODO(); // Code cleanup needed to improve clarity for future audits
 
@@ -185,7 +187,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 		if (count < 1)
 			continue;
 
-		type = dataType(state.args[1], &column_size, &data_len, &strtype);
+		type = dataType(state.args[1], column_size, data_len, sqlType);
 		if (stricmp(state.args[1],"attribute")==0)
 			is_attr = 1;
 
@@ -200,7 +202,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 
 			// ContainerId
 			field = table->columns = (ColumnInfo*)realloc(0,1 * sizeof(table->columns[0]));
-			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, gContainerDb->getContainerFieldInfo(CFTYPE_INT).db_bound_type);
+			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, gContainerDb->getContainerFieldInfo(CFTYPE_INT).db_bound_type.c_str());
 
 			field->reserved_word = 1;
 			table->num_columns = 1;
@@ -245,7 +247,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 			field->num_bytes = data_len;
 
 			strcpy(field->name,state.field);
-			strcpy(field->data_type_name, strtype);
+			strcpy(field->data_type_name, sqlType.c_str());
 
 			if (is_attr)
 				field->attr = var_attrs;
@@ -630,31 +632,19 @@ static void rebuildTableDataBruteForce(ContainerTemplate *tplt,TableInfo *table)
 		free(multi_buf);
 }
 
-static void markTableReferenced(char *name)
-{
-	if (!referenced_tables)
-		referenced_tables = stashTableCreateWithStringKeys(100, StashDeepCopyKeys);
-
-	stashAddInt(referenced_tables, name, 0, false);
+static void markTableReferenced(const std::string& table) {
+	referenced_tables.insert(table);
 }
 
-void tpltDropUnreferencedTables(void)
-{
-	int i;
-	int count;
-	char **names = sqlReadTableNames(&count);
-
-	for(i=0; i<count; i++)
-	{
-		int index;
-
-		if (!stashFindInt(referenced_tables, names[i], &index))
-		{
-			printf("Dropping unreferenced table: %s\n",names[i]);
-			sqlDropTable(names[i]);
+void tpltDropUnreferencedTables(void) {
+	auto tableNames = sqlReadTableNames();
+	
+	for (auto it = tableNames.begin(); it != tableNames.end(); ++it) {
+		if (referenced_tables.find(*it) == referenced_tables.end()) {
+			printf("Dropping unreferenced table: %s\n", it->c_str());
+			sqlDropTable(it->c_str());
 		}
 	}
-	sqlReadTableNamesFree(names, count);
 }
 
 void tpltUpdateSqlcolumns(ContainerTemplate *tplt)
@@ -750,8 +740,6 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	bool retried = false;
 	int attr_id = 0;
 	int prev_attr_id;
-	ContainerFieldInfo stringFieldInfo;
-	ContainerFieldInfo intFieldInfo;
 
 	ZeroStruct(&table);
 	ZeroArray(columns);
@@ -761,12 +749,12 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	table.num_columns = 2;
 	table.columns = columns;
 
-	intFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_INT);
-	setField(&table.columns[0], "Id", CFTYPE_INT, intFieldInfo.access_size, 0, intFieldInfo.db_bound_type);
+	ContainerFieldInfo intFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_INT);
+	setField(&table.columns[0], "Id", CFTYPE_INT, intFieldInfo.access_size, 0, intFieldInfo.db_bound_type.c_str());
 	table.columns[0].reserved_word = 1;
 
-	stringFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_STRING);
-	setField(&table.columns[1], "Name", CFTYPE_STRING, stringFieldInfo.access_size * MAX_ATTRIBNAME_LEN, MAX_ATTRIBNAME_LEN, stringFieldInfo.db_bound_type);
+	ContainerFieldInfo stringFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_STRING);
+	setField(&table.columns[1], "Name", CFTYPE_STRING, stringFieldInfo.access_size * MAX_ATTRIBNAME_LEN, MAX_ATTRIBNAME_LEN, stringFieldInfo.db_bound_type.c_str());
 
 	hashColumnNames(&table);
 	updateTable(&table);

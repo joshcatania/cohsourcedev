@@ -51,6 +51,7 @@ void freeMapContainer(MapCon *container);
 void registerContainerServer(Packet *pak,NetLink *link);
 void registerContainerServerNotify(Packet* pak, NetLink* link);
 void containerServerNotify(int list_id, U32 cid, U32 dbid, int add);
+void odbcInitialSetup(void);
 // End mkproto
 
 C_DECLARATIONS_END

@@ -227,10 +227,10 @@
     <ClCompile Include="auctionservercomm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="container.c">
+    <ClCompile Include="container.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="container.cpp">
+    <ClCompile Include="ContainerField.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -452,6 +452,9 @@
       <Filter>Header Files\sql</Filter>
     </ClInclude>
     <ClInclude Include="dbglobals.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ContainerField.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
