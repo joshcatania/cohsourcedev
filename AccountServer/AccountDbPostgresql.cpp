@@ -20,6 +20,7 @@ std::string AccountDbPostgresql::mergeBinsIntoProductTypeQuery(const std::string
 void AccountDbPostgresql::formatCallStoredProcedure(std::string& proc) {
 	proc.erase(std::remove(proc.begin(), proc.end(), '{'), proc.end());
 	proc.erase(std::remove(proc.begin(), proc.end(), '}'), proc.end());
+	proc.push_back(';');
 }
 
 std::string AccountDbPostgresql::temporaryTableName(const std::string& table) {
