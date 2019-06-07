@@ -344,9 +344,7 @@ void asql_sync_product_types() {
 	}
 		
 	if (SQL_SUCCEEDED(ret)) {
-		std::string mergeQuery = "{CALL dbo.merge_product_types();}";
-		g_sqlVendor->formatCallStoredProcedure(mergeQuery);
-		ret = sqlConnStmtExecDirect(stmt, mergeQuery.c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
+		ret = sqlConnStmtExecDirect(stmt, g_sqlVendor->mergeBinsIntoProductTypeQuery(tempTableName).c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
 	}
 #endif
 
@@ -412,10 +410,11 @@ void asql_sync_products() {
 	sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, expiration_seconds, sizeof(*expiration_seconds), expiration_second_bytes);
 	sqlConnStmtEndBindParamTableValued(stmt);
 
-	ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_from_bins(?);", SQL_NTS, SQLCONN_FOREGROUND, false);
+	ret = sqlConnStmtExecDirect(stmt, "{CALL dbo.merge_product_from_bins(?)}", SQL_NTS, SQLCONN_FOREGROUND, false);
 #else
+	std::string tempTable = g_sqlVendor->temporaryTableName("product");
 	ret = sqlConnStmtExecDirect(stmt,
-		"CREATE TEMPORARY TABLE tmp_product (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);",
+		g_sqlVendor->createTemporaryTableProductQuery(tempTable).c_str(),
 		SQL_NTS, SQLCONN_FOREGROUND, false);
 
 	if (SQL_SUCCEEDED(ret)) {
@@ -426,7 +425,8 @@ void asql_sync_products() {
 		sqlConnStmtBindParam(stmt, 4, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, grant_limits, sizeof(*grant_limits), grant_limit_bytes);
 		sqlConnStmtBindParam(stmt, 5, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, expiration_seconds, sizeof(*expiration_seconds), expiration_second_bytes);
 
-		ret = sqlConnStmtExecDirect(stmt, "INSERT INTO tmp_product VALUES (?, ?, ?, ?, ?);", SQL_NTS, SQLCONN_FOREGROUND, false);
+		std::string insertQuery = "INSERT INTO " + tempTable + " VALUES (?, ?, ?, ?, ?);";
+		ret = sqlConnStmtExecDirect(stmt, insertQuery.c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
 
 		sqlConnStmtBindParamArray(stmt, 1, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtUnbindParams(stmt);
@@ -434,12 +434,7 @@ void asql_sync_products() {
 
 	if (SQL_SUCCEEDED(ret)) {
 		ret = sqlConnStmtExecDirect(stmt,
-			"MERGE INTO product AS target"
-			" USING #tmp_product AS source"
-			" ON target.sku_id = source.sku_id"
-			" WHEN MATCHED THEN UPDATE SET name = source.name, product_type_id = source.product_type_id, grant_limit = source.grant_limit, expiration_seconds = source.expiration_seconds"
-			" WHEN NOT MATCHED BY TARGET THEN INSERT (sku_id, name, product_type_id, grant_limit, expiration_seconds) VALUES (source.sku_id, source.name, source.product_type_id, source.grant_limit, source.expiration_seconds)"
-			" WHEN NOT MATCHED BY SOURCE THEN DELETE;",
+			g_sqlVendor->mergeBinsIntoProductQuery(tempTable).c_str(),
 			SQL_NTS, SQLCONN_FOREGROUND, false);
 	}
 #endif

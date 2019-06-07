@@ -90,7 +90,7 @@ CREATE TYPE dbo.TVP_product_type AS (
   name varchar(128)
 );
 
-CREATE OR REPLACE PROCEDURE dbo.merge_products_from_bins(
+CREATE OR REPLACE PROCEDURE dbo.merge_products(
 	IN bin_products dbo.TVP_product
 )
 LANGUAGE 'plpgsql'

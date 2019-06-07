@@ -8,10 +8,8 @@ public:
 
 	std::string createTemporaryTableProductQuery(const std::string& table);
 	std::string createTemporaryTableProductTypeQuery(const std::string& table);
-	SQLRETURN mergeBinsIntoProduct();
-	SQLRETURN mergeBinsIntoProductType(HDBC conn, char** product_type_ids, char** names, int num_rows);
-	void dropTemporaryTableProduct();
-	void dropTemporaryTableProductType();
+	std::string mergeBinsIntoProductQuery(const std::string& sourceTable);
+	std::string mergeBinsIntoProductTypeQuery(const std::string& sourceTable);
 	void formatCallStoredProcedure(std::string& storedProcedure);
 	std::string temporaryTableName(const std::string& table);
 };
