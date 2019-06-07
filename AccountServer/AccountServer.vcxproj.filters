@@ -91,6 +91,12 @@
     <ClCompile Include="..\Common\Playspan\JSONParser.cpp">
       <Filter>External\Playspan</Filter>
     </ClCompile>
+    <ClCompile Include="AccountSqlMssql.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="AccountSqlPostgresql.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\account\AccountCatalog.h">
@@ -170,6 +176,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\Playspan\JSONParser.h">
       <Filter>External\Playspan</Filter>
+    </ClInclude>
+    <ClInclude Include="AccountSqlVendor.hpp">
+      <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

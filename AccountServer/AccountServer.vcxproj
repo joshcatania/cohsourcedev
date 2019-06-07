@@ -203,6 +203,8 @@
     <ClCompile Include="AccountDb.cpp" />
     <ClCompile Include="AccountServer.cpp" />
     <ClCompile Include="AccountSql.cpp" />
+    <ClCompile Include="AccountSqlMssql.cpp" />
+    <ClCompile Include="AccountSqlPostgresql.cpp" />
     <ClCompile Include="account_inventory.cpp" />
     <ClCompile Include="account_loyaltyrewards.cpp" />
     <ClCompile Include="request.cpp" />
@@ -231,6 +233,7 @@
     <ClInclude Include="AccountDb.hpp" />
     <ClInclude Include="AccountServer.hpp" />
     <ClInclude Include="AccountSql.h" />
+    <ClInclude Include="AccountSqlVendor.hpp" />
     <ClInclude Include="account_inventory.h" />
     <ClInclude Include="account_loyaltyrewards.h" />
     <ClInclude Include="request.hpp" />
