@@ -28,6 +28,7 @@
 #include "log.h"
 #include "chatsqldb.h"
 #include "textparser.h"
+#include "sql/DbVendor.hpp"
 
 #define LOGID "shardnet"
 #define ENABLE_LOGGING 0

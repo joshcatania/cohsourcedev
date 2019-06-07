@@ -97,7 +97,7 @@
     <ClCompile Include="..\Common\persist\persist_sql.c">
       <Filter>External\persist</Filter>
     </ClCompile>
-    <ClCompile Include="ChatDbVendor.cpp">
+    <ClCompile Include="..\Common\sql\DbVendor.cpp">
       <Filter>Source Files\sql</Filter>
     </ClCompile>
   </ItemGroup>
@@ -177,7 +177,7 @@
     <ClInclude Include="..\Common\persist\persist_sql.h">
       <Filter>External\persist</Filter>
     </ClInclude>
-    <ClInclude Include="ChatDbVendor.hpp">
+    <ClInclude Include="..\Common\sql\DbVendor.hpp">
       <Filter>Source Files\sql</Filter>
     </ClInclude>
   </ItemGroup>

@@ -3,6 +3,7 @@
 
 #include "chatdb.h"
 #include "netio.h"
+#include "sql/DbVendor.hpp"
 
 char *getShardName(NetLink *link);
 
@@ -46,25 +47,13 @@ typedef struct {
 
 } ChatStats;
 
-typedef struct ChatServerCfg
-{
-	char sqlDbProvider[1024];
-	char sqlLogin[1024];
-	char sqlDbName[1024];
-} ChatServerCfg;
-
-typedef enum DatabaseProvider {
-	DBPROV_UNKNOWN = 0,
-	DBPROV_MSSQL,
-	DBPROV_POSTGRESQL
-} DatabaseProvider;
+typedef DatabaseConfig ChatServerCfg;
 
 C_DECLARATIONS_BEGIN
 
 extern ChatStats g_stats;
 extern int g_chatLocale;
 extern ChatServerCfg g_chatcfg;
-extern DatabaseProvider gDatabaseProvider;
 
 void updateCrossShardStats(User * from, User * to);
 void chatServerShutdown(User * unused, char * reason);

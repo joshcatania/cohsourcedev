@@ -74,8 +74,9 @@ static TokenizerParseInfo parse_AuctionServerCfg[] =
 	{ "AutoFulfillTime",	TOK_INT(AuctionServerCfg, iAutoFulfillTime, 0)	},
 	{ "AutoSellPrice",	TOK_INT(AuctionServerCfg, iAutoSellPrice, 0)	},
 	{ "AutoBuyPrice",	TOK_INT(AuctionServerCfg, iAutoBuyPrice, 0)	},
-	{ "SqlLogin",		TOK_FIXEDSTR(AuctionServerCfg, sqlLogin) },
-	{ "SqlDbName",		TOK_FIXEDSTR(AuctionServerCfg, sqlDbName) },
+	{ "SqlDbProvider",	TOK_FIXEDSTR(AuctionServerCfg, db.sqlDbProvider) },
+	{ "SqlLogin",		TOK_FIXEDSTR(AuctionServerCfg, db.sqlLogin) },
+	{ "SqlDbName",		TOK_FIXEDSTR(AuctionServerCfg, db.sqlDbName) },
 
 	{ "}",			TOK_END,         0 },
 	{ 0 },

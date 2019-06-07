@@ -2,6 +2,7 @@
 #define _CONTAINER_TPLT_UTILS_H
 
 #include "sql/sqlinclude.h"
+#include "sql/DbVendor.hpp"
 #include "ContainerField.hpp"
 
 C_DECLARATIONS_BEGIN
@@ -43,13 +44,6 @@ typedef struct
 	char	*args[100];
 	int		count;
 } CtnrLineState;
-
-typedef enum DatabaseProvider {
-	DBPROV_UNKNOWN=0,
-	DBPROV_MSSQL,
-	DBPROV_POSTGRESQL,
-	DBPROV_COUNT
-} DatabaseProvider;
 
 #define DBPROV_XDEFAULT() xdefault: FatalErrorf(__FUNCTION__ " not implemented for database provider %d", gDatabaseProvider)
 

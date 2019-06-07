@@ -103,6 +103,9 @@
     <ClCompile Include="AccountDbMssql.cpp">
       <Filter>Source Files\sql</Filter>
     </ClCompile>
+    <ClCompile Include="..\Common\sql\DbVendor.cpp">
+      <Filter>External\sql</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\account\AccountCatalog.h">
@@ -191,6 +194,9 @@
     </ClInclude>
     <ClInclude Include="AccountDbMssql.hpp">
       <Filter>Source Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Common\sql\DbVendor.hpp">
+      <Filter>External\sql</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

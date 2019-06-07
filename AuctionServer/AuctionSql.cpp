@@ -48,9 +48,9 @@ struct aucsql_globals {
 
 void aucsql_open() {
 	assert(sqlConnInit(1));
-	sqlConnSetLogin(g_auctionstate.cfg.sqlLogin);
+	sqlConnSetLogin(g_auctionstate.cfg.db.sqlLogin);
 
-	if (!sqlConnDatabaseConnect(g_auctionstate.cfg.sqlDbName, "AUCTIONSERVER"))
+	if (!sqlConnDatabaseConnect(g_auctionstate.cfg.db.sqlDbName, "AUCTIONSERVER"))
 	{
 		FatalErrorf("AuctionServer could not connect to SQL database.");
 	}

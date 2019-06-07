@@ -9,6 +9,7 @@
 
 #include "auction.h"
 #include "Xact.h"
+#include "sql/DbVendor.hpp"
 
 #define AUC_NUM_TYPES 10000 // rough estimate of the actual
 
@@ -23,8 +24,7 @@ typedef struct AuctionServerCfg
 	int iAutoBuyPrice;				// Minimum we'll take from buying players
 	U32 iAutoFulfillTime;
 
-	char sqlLogin[1024];
-	char sqlDbName[1024];
+	DatabaseConfig db;
 } AuctionServerCfg;
 
 typedef struct AuctionServerState

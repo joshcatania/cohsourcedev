@@ -53,11 +53,14 @@
 #include "accountcmds.h"
 #include "SuperAssert.h"
 #include <DbgHelp.h>
+#include "sql/DbVendor.hpp"
 
 /// Spread the authentication key generation over a period of time
 #define SHARD_RECONNECT_REAUTH_PLAYERS_PER_SECOND (100)
 
 #define MAX_FLUSH_TIME (2.0f)
+
+DatabaseProvider gDatabaseProvider = DBPROV_UNKNOWN;
 
 /* 24 hours * 60 minutes * 60 secs */
 #define DAYS_TO_SECS( _days_ )	(( _days_ ) * 24 * 60 * 60 )
@@ -112,9 +115,9 @@ static ParseTable parse_AccountServerCfg[] =
 	{ "MtxEnvironment",							TOK_FIXEDSTR(AccountServerCfg,mtxEnvironment) },
 	{ "MtxSecretKey",							TOK_FIXEDSTR(AccountServerCfg,mtxSecretKey) },
 	{ "MtxIOThreads",							TOK_INT(AccountServerCfg,mtxIOThreads,1) },
-	{ "SqlLogin",								TOK_FIXEDSTR(AccountServerCfg,sqlLogin) },
-	{ "SqlDbName",								TOK_FIXEDSTR(AccountServerCfg,sqlDbName) },
-	{ "SqlDbProvider",							TOK_FIXEDSTR(AccountServerCfg, sqlDbProvider) },
+	{ "SqlLogin",								TOK_FIXEDSTR(AccountServerCfg,db.sqlLogin) },
+	{ "SqlDbName",								TOK_FIXEDSTR(AccountServerCfg,db.sqlDbName) },
+	{ "SqlDbProvider",							TOK_FIXEDSTR(AccountServerCfg, db.sqlDbProvider) },
 	{ "PlaySpanServerRetryFreqSecs",			TOK_INT(AccountServerCfg,playSpanServerRetryFreqSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_RETRY_SECS)			},
 	{ "PlaySpanRelayServerAckAlarmSecs",		TOK_INT(AccountServerCfg,playSpanServerAckAlarmSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_ACK_ALARM_SEC)			},
 	{ "PlaySpanRelayServerAckAlarmRepeatSecs",	TOK_INT(AccountServerCfg,playSpanServerAckAlarmRepeatFregSecs,DEFAULT_PLAYSPAN_RELAY_SERVER_ACK_ALARM_REPEAT_SECS)			},
@@ -1273,10 +1276,17 @@ bool accountSvrCfgLoad(AccountServerCfg *cfg)
 		info->playSpanStoreFlags		= cfg->playSpanStoreFlags;
 		info->playSpanStoreFlags		|= cfg->auto_buy_products ? STOREFLAG_AUTO_BUY_PRODUCTS : 0;
 
-		if (stricmp(cfg->sqlDbProvider, "postgresql") == 0)
-			g_sqlVendor = new AccountDbPostgresql();
-		else
+		gDatabaseProvider = DbVendor::fromConfigString(cfg->db.sqlDbProvider);
+		switch (gDatabaseProvider) {
+		case DBPROV_MSSQL:
 			g_sqlVendor = new AccountDbMssql();
+			break;
+		case DBPROV_POSTGRESQL:
+			g_sqlVendor = new AccountDbPostgresql();
+			break;
+		default:
+			FatalErrorf("No database specified.");
+		}
 	}
 	return loadResult;
 }
@@ -1487,7 +1497,7 @@ void reloadConfig(void)
 		}
 	}
 
-	if (!g_accountServerState.cfg.sqlDbName[0] || stricmp(g_accountServerState.cfg.sqlDbName,"master")==0)
+	if (!g_accountServerState.cfg.db.sqlDbName[0] || stricmp(g_accountServerState.cfg.db.sqlDbName,"master")==0)
 	{
 		FatalErrorf("AccountServer cannot use 'master' as your SQL database.");
 	}

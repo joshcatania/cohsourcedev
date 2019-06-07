@@ -19,6 +19,7 @@
 #include "account/AccountTypes.h"
 #include "account/AccountData.h"
 #include "AccountDbVendor.hpp"
+#include "sql/DbVendor.hpp"
 
 C_DECLARATIONS_BEGIN
 
@@ -54,9 +55,7 @@ typedef struct AccountServerCfg
 	char mtxSecretKey[256];
 	
 	// SQL configuration
-	char sqlLogin[1024];
-	char sqlDbName[1024];
-	char sqlDbProvider[1024];
+	DatabaseConfig db;
 
 	U32 playSpanServerRetryFreqSecs;
 	U32 playSpanServerAckAlarmSecs;					// if we don't get a message from the relay server in this # secs, log an error.

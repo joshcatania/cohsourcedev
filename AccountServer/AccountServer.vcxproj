@@ -197,6 +197,7 @@
     <ClCompile Include="..\Common\persist\textcrcdb.c" />
     <ClCompile Include="..\Common\persist\textcrcjournal.c" />
     <ClCompile Include="..\Common\Playspan\JSONParser.cpp" />
+    <ClCompile Include="..\Common\sql\DbVendor.cpp" />
     <ClCompile Include="..\Common\sql\sqlconn.c" />
     <ClCompile Include="..\Common\sql\sqltask.cpp" />
     <ClCompile Include="accountcmds.cpp" />
@@ -228,6 +229,7 @@
     <ClInclude Include="..\Common\persist\textcrcdb.h" />
     <ClInclude Include="..\Common\persist\textcrcjournal.h" />
     <ClInclude Include="..\Common\Playspan\JSONParser.h" />
+    <ClInclude Include="..\Common\sql\DbVendor.hpp" />
     <ClInclude Include="..\Common\sql\sqlconn.h" />
     <ClInclude Include="..\Common\sql\sqltask.h" />
     <ClInclude Include="AccountCmds.h" />

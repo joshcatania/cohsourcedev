@@ -3,6 +3,7 @@
 
 #include "stdtypes.h"
 #include "auctionservercomm.h"
+#include "sql/DbVendor.hpp"
 
 C_DECLARATIONS_BEGIN
 

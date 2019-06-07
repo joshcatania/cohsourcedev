@@ -207,11 +207,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\persist\persist_sql.c" />
+    <ClCompile Include="..\Common\sql\DbVendor.cpp" />
     <ClCompile Include="..\Common\sql\sqlconn.c" />
     <ClCompile Include="..\Common\sql\sqltask.cpp" />
     <ClCompile Include="admin.c" />
     <ClCompile Include="channels.c" />
-    <ClCompile Include="ChatDbVendor.cpp" />
     <ClCompile Include="ChatSql.cpp" />
     <ClCompile Include="chatsqldb.c" />
     <ClCompile Include="csr.c" />
@@ -236,11 +236,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\Common\persist\persist_sql.h" />
+    <ClInclude Include="..\Common\sql\DbVendor.hpp" />
     <ClInclude Include="..\Common\sql\sqlconn.h" />
     <ClInclude Include="..\Common\sql\sqltask.h" />
     <ClInclude Include="admin.h" />
     <ClInclude Include="channels.h" />
-    <ClInclude Include="ChatDbVendor.hpp" />
     <ClInclude Include="ChatSql.h" />
     <ClInclude Include="chatsqldb.h" />
     <ClInclude Include="csr.h" />

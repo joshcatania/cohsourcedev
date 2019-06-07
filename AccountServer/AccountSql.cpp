@@ -165,9 +165,9 @@ void asql_open() {
 	sql_task_freeze();
 
 	assert(sqlConnInit(SQLCONN_MAX));
-	sqlConnSetLogin(g_accountServerState.cfg.sqlLogin);
+	sqlConnSetLogin(g_accountServerState.cfg.db.sqlLogin);
 	
-	if (!sqlConnDatabaseConnect(g_accountServerState.cfg.sqlDbName, "ACCOUNTSERVER"))
+	if (!sqlConnDatabaseConnect(g_accountServerState.cfg.db.sqlDbName, "ACCOUNTSERVER"))
 	{
 		FatalErrorf("AccountServer could not connect to SQL database.");
 	}
