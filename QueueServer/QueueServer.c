@@ -691,7 +691,7 @@ ServerLibConfig g_serverlibconfig =
 	queueserver_stop,
 	queueserver_http,
 	NULL,
-	kServerLibDefault,
+	kServerLibNetEncryption,
 };
 
 void queueserver_init(void)

@@ -204,6 +204,7 @@ int convertEnhancementWindow()
 	isDraggingInputValid = cursor.dragging &&
 		cursor.drag_obj.type == kTrayItemType_SpecializationInventory &&
 		cursor.drag_obj.ispec != -1 &&
+		e->pchar->aBoosts[cursor.drag_obj.ispec] && // possible null pointer if enhancement disappears before/during drag
 		e->pchar->aBoosts[cursor.drag_obj.ispec]->ppowBase->pBoostSetMember &&
 		e->pchar->aBoosts[cursor.drag_obj.ispec]->ppowBase->pBoostSetMember->ppchConversionGroups != NULL &&
 		e->pchar->aBoosts[cursor.drag_obj.ispec]->ppowBase->pBoostSetMember->ppchConversionGroups[0] != NULL; //check if this boost can be converted

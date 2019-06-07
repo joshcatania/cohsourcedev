@@ -28,8 +28,8 @@ function Invoke-BuildAll {
         [string] $Solution
     )
 
-    Invoke-Build -Solution $Solution -Configuration "Debug" -Platform "Win32"
     Invoke-Build -Solution $Solution -Configuration "Release" -Platform "Win32"
+    Invoke-Build -Solution $Solution -Configuration "Debug" -Platform "Win32"
 }
 
 Invoke-BuildAll "..\3rdparty\cryptopp\cryptlib.sln"
@@ -44,5 +44,4 @@ Invoke-BuildAll "..\AuthServer\src\AuthServer\AuthServer.sln"
 
 Invoke-Build "ArtTools.sln" -Configuration "Debug" -Platform "Win32"
 
-Invoke-Build "MasterSolution.sln" -Configuration "Opt Debug" -Platform "Win32"
-Invoke-Build "MasterSolution.sln" -Configuration "Release" -Platform "Win32"
+Invoke-BuildAll "MasterSolution.sln"

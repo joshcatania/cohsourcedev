@@ -675,10 +675,6 @@ typedef struct GameState
 		 
     UrlEnv url_env; // use live URLs in debug mode
   
-    int allegorithmic_disabled;
-    int allegorithmic_enabled;
-    int allegorithmic_debug;
-
 	int disable_two_pass_alpha_water_objects;
 
 	float waterRefractionSkewNormalScale;

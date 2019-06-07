@@ -11,6 +11,7 @@ typedef enum ServerLibFlags
 {
 	kServerLibDefault				= (1 << 0),
 	kServerLibLikePiggs				= (1 << 1),
+	kServerLibNetEncryption			= (1 << 2),
 } ServerLibFlags;
 
 typedef struct ServerLibConfig

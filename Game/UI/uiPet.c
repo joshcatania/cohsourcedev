@@ -179,7 +179,7 @@ bool entIsPlayerPet(Entity *e)
 	owner = erGetEnt(e->erOwner);
 	creator = erGetEnt(e->erCreator);
 
-	if ( !owner || !creator || ENTTYPE(owner) != ENTTYPE_PLAYER )
+	if ( !owner || !creator || (owner && (ENTTYPE(owner) != ENTTYPE_PLAYER)) )
 		return false;
 
 	if (e->pchar->iAllyID != creator->pchar->iAllyID)

@@ -514,9 +514,6 @@
     <ClCompile Include="..\Common\gameData\store_data.c">
       <Filter>gameData</Filter>
     </ClCompile>
-    <ClCompile Include="graphics\allegorithmic.c">
-      <Filter>graphics</Filter>
-    </ClCompile>
     <ClCompile Include="graphics\camera.c">
       <Filter>graphics</Filter>
     </ClCompile>
@@ -2224,9 +2221,6 @@
     </ClInclude>
     <ClInclude Include="..\Common\gameData\store_data.h">
       <Filter>gameData</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics\allegorithmic.h">
-      <Filter>graphics</Filter>
     </ClInclude>
     <ClInclude Include="graphics\camera.h">
       <Filter>graphics</Filter>
