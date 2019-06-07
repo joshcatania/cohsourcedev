@@ -8,7 +8,9 @@
 #include "AccountData.h"
 #include "AccountDb.hpp"
 #include "AccountCmds.h"
-#include "AccountSqlVendor.hpp"
+#include "AccountDbVendor.hpp"
+#include "AccountDbMssql.hpp"
+#include "AccountDbPostgresql.hpp"
 #include "CmdAccountServer.h"
 #include "crypt.h"
 #include "stringcache.h"
@@ -137,7 +139,7 @@ static ParseTable parse_AccountServerCfg[] =
 }; 
 
 AccountServerState g_accountServerState;
-AccountSqlVendor* g_sqlVendor;
+AccountDbVendor* g_sqlVendor;
 
 static StashTable s_ProductsWithUpdatesToBroadcast = NULL;
 
@@ -1272,9 +1274,9 @@ bool accountSvrCfgLoad(AccountServerCfg *cfg)
 		info->playSpanStoreFlags		|= cfg->auto_buy_products ? STOREFLAG_AUTO_BUY_PRODUCTS : 0;
 
 		if (stricmp(cfg->sqlDbProvider, "postgresql") == 0)
-			g_sqlVendor = new AccountSqlPostgresql();
+			g_sqlVendor = new AccountDbPostgresql();
 		else
-			g_sqlVendor = new AccountSqlMssql();
+			g_sqlVendor = new AccountDbMssql();
 	}
 	return loadResult;
 }

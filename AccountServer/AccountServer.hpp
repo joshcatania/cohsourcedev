@@ -18,7 +18,7 @@
 #include "net_link.h"
 #include "account/AccountTypes.h"
 #include "account/AccountData.h"
-#include "AccountSqlVendor.hpp"
+#include "AccountDbVendor.hpp"
 
 C_DECLARATIONS_BEGIN
 
@@ -102,7 +102,7 @@ typedef struct AccountServerState
 } AccountServerState;
 
 extern AccountServerState g_accountServerState;
-extern AccountSqlVendor* g_sqlVendor;
+extern AccountDbVendor* g_sqlVendor;
 
 bool AccountServer_DelayPacketUntilLater(AccountServerShard *shard, Packet *pak);
 

@@ -201,10 +201,11 @@
     <ClCompile Include="..\Common\sql\sqltask.cpp" />
     <ClCompile Include="accountcmds.cpp" />
     <ClCompile Include="AccountDb.cpp" />
+    <ClCompile Include="AccountDbVendor.cpp" />
     <ClCompile Include="AccountServer.cpp" />
     <ClCompile Include="AccountSql.cpp" />
-    <ClCompile Include="AccountSqlMssql.cpp" />
-    <ClCompile Include="AccountSqlPostgresql.cpp" />
+    <ClCompile Include="AccountDbMssql.cpp" />
+    <ClCompile Include="AccountDbPostgresql.cpp" />
     <ClCompile Include="account_inventory.cpp" />
     <ClCompile Include="account_loyaltyrewards.cpp" />
     <ClCompile Include="request.cpp" />
@@ -231,9 +232,11 @@
     <ClInclude Include="..\Common\sql\sqltask.h" />
     <ClInclude Include="AccountCmds.h" />
     <ClInclude Include="AccountDb.hpp" />
+    <ClInclude Include="AccountDbMssql.hpp" />
+    <ClInclude Include="AccountDbPostgresql.hpp" />
     <ClInclude Include="AccountServer.hpp" />
     <ClInclude Include="AccountSql.h" />
-    <ClInclude Include="AccountSqlVendor.hpp" />
+    <ClInclude Include="AccountDbVendor.hpp" />
     <ClInclude Include="account_inventory.h" />
     <ClInclude Include="account_loyaltyrewards.h" />
     <ClInclude Include="request.hpp" />

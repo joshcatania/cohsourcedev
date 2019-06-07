@@ -16,6 +16,7 @@
 #include "utils/mathutil.h"
 #include "utils/SuperAssert.h"
 #include "utils/utils.h"
+#include <string>
 
 #define ASQL_WORKERS (SQLCONN_MAX - 1)
 #define ASQL_MAX_RETRIES 30
@@ -324,27 +325,28 @@ void asql_sync_product_types() {
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAYSIZE(*names), 0, names, sizeof(*names), name_bytes);
 	sqlConnStmtEndBindParamTableValued(stmt);
 
-	ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_types_from_bins(?);", SQL_NTS, SQLCONN_FOREGROUND, false);
+	ret = sqlConnStmtExecDirect(stmt, "{CALL dbo.merge_product_types_from_bins(?);}", SQL_NTS, SQLCONN_FOREGROUND, false);
 #else
-//	ret = g_sqlVendor->mergeBinsIntoProductType(sql.conns[])
-	ret = sqlConnStmtExecDirect(stmt, g_sqlVendor->createTemporaryTableProductType(), SQL_NTS, SQLCONN_FOREGROUND, false);
+	std::string tempTableName = g_sqlVendor->temporaryTableName("product_type");
+	ret = sqlConnStmtExecDirect(stmt, g_sqlVendor->createTemporaryTableProductTypeQuery(tempTableName).c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
 
 	if (SQL_SUCCEEDED(ret)) {
-		SQLCHAR insert_query[] = "INSERT INTO tmp_product_type VALUES (?, ?);";
-		SQLPrepare(stmt, insert_query, SQL_NTS);
+		std::string insertQuery = "INSERT INTO " + tempTableName + " VALUES (?, ?);";
+		SQLPrepare(stmt, (SQLCHAR*) insertQuery.c_str(), SQL_NTS);
 		sqlConnStmtBindParamArray(stmt, kAccountInventoryType_Count, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, product_type_ids, sizeof(*product_type_ids), NULL);
 		sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAYSIZE(*names), 0, names, sizeof(*names), name_bytes);
 		
 		ret = _sqlConnStmtExecute(stmt, SQLCONN_FOREGROUND);
-		//ret = sqlConnStmtExecDirect(stmt, insert_query, SQL_NTS, SQLCONN_FOREGROUND, false);
 
 		sqlConnStmtBindParamArray(stmt, 1, SQL_PARAM_BIND_BY_COLUMN);
 		sqlConnStmtUnbindParams(stmt);
 	}
 		
 	if (SQL_SUCCEEDED(ret)) {
-		ret = sqlConnStmtExecDirect(stmt, "CALL dbo.merge_product_types();", SQL_NTS, SQLCONN_FOREGROUND, false);
+		std::string mergeQuery = "{CALL dbo.merge_product_types();}";
+		g_sqlVendor->formatCallStoredProcedure(mergeQuery);
+		ret = sqlConnStmtExecDirect(stmt, mergeQuery.c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
 	}
 #endif
 

@@ -1,14 +1,15 @@
-#include "AccountSqlVendor.hpp"
+#include <algorithm>
+#include "AccountDbPostgresql.hpp"
 
-char* AccountSqlPostgresql::createTemporaryTableProduct() {
-	return "CREATE TEMPORARY TABLE tmp_product (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);";
+std::string AccountDbPostgresql::createTemporaryTableProductQuery(const std::string& table) {
+	return "CREATE TEMPORARY TABLE " + table + " (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);";
 }
 
-char* AccountSqlPostgresql::createTemporaryTableProductType() {
-	return "CREATE TEMPORARY TABLE tmp_product_type(product_type_id int, name varchar(128));";
+std::string AccountDbPostgresql::createTemporaryTableProductTypeQuery(const std::string& table) {
+	return "CREATE TEMPORARY TABLE " + table + " tmp_product_type(product_type_id int, name varchar(128));";
 }
 
-SQLRETURN AccountSqlPostgresql::mergeBinsIntoProduct() {
+SQLRETURN AccountDbPostgresql::mergeBinsIntoProduct() {
 	return 1;
 }
 
@@ -16,7 +17,7 @@ static SQLCHAR CreateTempTableProductType[] =
 	"CREATE TEMPORARY TABLE tmp_product_type(product_type_id int, name varchar(128));";
 static SQLCHAR QueryInsertIntoProductType[] = "INSERT INTO tmp_product_type VALUES(? , ? );";
 
-SQLRETURN AccountSqlPostgresql::mergeBinsIntoProductType(HDBC conn, char** product_type_ids, char** names, int num_rows) {
+SQLRETURN AccountDbPostgresql::mergeBinsIntoProductType(HDBC conn, char** product_type_ids, char** names, int num_rows) {
 	SQLRETURN ret = 0;
 	HSTMT stmt;
 
@@ -44,11 +45,20 @@ SQLRETURN AccountSqlPostgresql::mergeBinsIntoProductType(HDBC conn, char** produ
 	sqlConnStmtFree(stmt);
 	return ret;
 }
-void AccountSqlPostgresql::dropTemporaryTableProduct() {
+void AccountDbPostgresql::dropTemporaryTableProduct() {
 
 }
-void AccountSqlPostgresql::dropTemporaryTableProductType() {
+void AccountDbPostgresql::dropTemporaryTableProductType() {
 
+}
+
+void AccountDbPostgresql::formatCallStoredProcedure(std::string& proc) {
+	proc.erase(std::remove(proc.begin(), proc.end(), '{'), proc.end());
+	proc.erase(std::remove(proc.begin(), proc.end(), '}'), proc.end());
+}
+
+std::string AccountDbPostgresql::temporaryTableName(const std::string& table) {
+	return table + "_tmp";
 }
 
 //static SQLCHAR insert_query[] = SQLCHAR insert_query[];

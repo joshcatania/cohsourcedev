@@ -1,14 +1,14 @@
-#include "AccountSqlVendor.hpp"
+#include "AccountDbMssql.hpp"
 
-char* AccountSqlMssql::createTemporaryTableProduct() {
-	return "CREATE TABLE #tmp_product (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);";
+std::string AccountDbMssql::createTemporaryTableProductQuery(const std::string& table) {
+	return "CREATE TABLE " + table + " (sku_id char(8), name varchar(128), product_type_id int, grant_limit int, expiration_seconds int);";
 }
 
-char* AccountSqlMssql::createTemporaryTableProductType() {
-	return "CREATE TABLE #tmp_product_type(product_type_id int, name varchar(128));";
+std::string AccountDbMssql::createTemporaryTableProductTypeQuery(const std::string& table) {
+	return "CREATE TABLE " + table + " (product_type_id int, name varchar(128));";
 }
 
-SQLRETURN AccountSqlMssql::mergeBinsIntoProduct() {
+SQLRETURN AccountDbMssql::mergeBinsIntoProduct() {
 	return 1;
 	//return "MERGE INTO product AS target " \
 	//	"USING ? AS source " \
@@ -18,7 +18,7 @@ SQLRETURN AccountSqlMssql::mergeBinsIntoProduct() {
 	//	"WHEN NOT MATCHED BY SOURCE THEN DELETE;";
 }
 
-SQLRETURN AccountSqlMssql::mergeBinsIntoProductType(HDBC conn, char** product_type_ids, char** names, int num_rows) {
+SQLRETURN AccountDbMssql::mergeBinsIntoProductType(HDBC conn, char** product_type_ids, char** names, int num_rows) {
 	return 1;
 	//return "MERGE INTO product_type AS target " \
 	//	"USING ? AS source " \
@@ -28,12 +28,13 @@ SQLRETURN AccountSqlMssql::mergeBinsIntoProductType(HDBC conn, char** product_ty
 	//	"WHEN NOT MATCHED BY SOURCE THEN DELETE;";
 }
 
-void AccountSqlMssql::dropTemporaryTableProduct() {
+void AccountDbMssql::dropTemporaryTableProduct() {
 
 }
-void AccountSqlMssql::dropTemporaryTableProductType() {
+void AccountDbMssql::dropTemporaryTableProductType() {
 
 }
 
-
-
+std::string AccountDbMssql::temporaryTableName(const std::string& table) {
+	return '#' + table;
+}

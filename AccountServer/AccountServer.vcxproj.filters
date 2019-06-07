@@ -14,6 +14,9 @@
     <Filter Include="External\sql">
       <UniqueIdentifier>{5d55276a-b394-4706-8d4d-dfb1926a2d8d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sql">
+      <UniqueIdentifier>{078b69a5-1bd7-4846-939a-ef89a163abe6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\Common\account\AccountCatalog.c">
@@ -91,11 +94,14 @@
     <ClCompile Include="..\Common\Playspan\JSONParser.cpp">
       <Filter>External\Playspan</Filter>
     </ClCompile>
-    <ClCompile Include="AccountSqlMssql.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AccountDbVendor.cpp">
+      <Filter>Source Files\sql</Filter>
     </ClCompile>
-    <ClCompile Include="AccountSqlPostgresql.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="AccountDbPostgresql.cpp">
+      <Filter>Source Files\sql</Filter>
+    </ClCompile>
+    <ClCompile Include="AccountDbMssql.cpp">
+      <Filter>Source Files\sql</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -177,8 +183,14 @@
     <ClInclude Include="..\Common\Playspan\JSONParser.h">
       <Filter>External\Playspan</Filter>
     </ClInclude>
-    <ClInclude Include="AccountSqlVendor.hpp">
-      <Filter>Source Files</Filter>
+    <ClInclude Include="AccountDbVendor.hpp">
+      <Filter>Source Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="AccountDbPostgresql.hpp">
+      <Filter>Source Files\sql</Filter>
+    </ClInclude>
+    <ClInclude Include="AccountDbMssql.hpp">
+      <Filter>Source Files\sql</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
