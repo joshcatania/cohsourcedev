@@ -3,6 +3,7 @@
 
 #include "sql/sqlconn.h"
 #include "sql/sqlinclude.h"
+#include "textparser.h"
 
 typedef struct User User;
 typedef struct Channel Channel;

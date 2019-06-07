@@ -13,6 +13,8 @@
 #include "utils/utils.h"
 #include "textparser.h"
 #include "shardnet.h"
+#include "ChatDbVendor.hpp"
+#include <string>
 
 #define CHANNEL_NAME_COLUMN_LENGTH 32
 
@@ -119,7 +121,9 @@ bool chatsql_read_user_gmail(ParseTable pti[], UserGmail*** hUserGmail)
 
 bool chatsql_insert_or_update_user(U32 auth_id, const char** estr_user)
 {
-	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_USER], "CALL dbo.SP_insert_or_update_user(?,?);", SQL_NTS, SQLCONN_FOREGROUND))
+	std::string proc = "{CALL dbo.SP_insert_or_update_user(?,?)}";
+	ChatDbVendor::transformCallStoredProcedure(proc);
+	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_USER], proc.c_str(), SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_USER];
@@ -133,7 +137,9 @@ bool chatsql_insert_or_update_user(U32 auth_id, const char** estr_user)
 
 bool chatsql_insert_or_update_channel(const char *name, const char** estr_channel)
 {
-	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_CHANNEL], "CALL dbo.SP_insert_or_update_channel(?,?);", SQL_NTS, SQLCONN_FOREGROUND))
+	std::string proc = "{CALL dbo.SP_insert_or_update_channel(?,?)}";
+	ChatDbVendor::transformCallStoredProcedure(proc);
+	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_CHANNEL], proc.c_str(), SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_CHANNEL];
@@ -148,7 +154,9 @@ bool chatsql_insert_or_update_channel(const char *name, const char** estr_channe
 
 bool chatsql_insert_or_update_user_gmail(U32 auth_id, const char** estr_user_gmail)
 {
-	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_USER_GMAIL], "CALL dbo.SP_insert_or_update_user_gmail(?,?);", SQL_NTS, SQLCONN_FOREGROUND))
+	std::string proc = "{CALL dbo.SP_insert_or_update_user_gmail(? , ? )}";
+	ChatDbVendor::transformCallStoredProcedure(proc);
+	if (!plSqlPrepare(&cs.proc[CHATSQL_INSERT_OR_UPDATE_USER_GMAIL], proc.c_str(), SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_INSERT_OR_UPDATE_USER_GMAIL];
@@ -162,7 +170,9 @@ bool chatsql_insert_or_update_user_gmail(U32 auth_id, const char** estr_user_gma
 
 bool chatsql_delete_channel(const char* name)
 {
-	if (!plSqlPrepare(&cs.proc[CHATSQL_DELETE_CHANNEL], "CALL dbo.SP_delete_channel(?);", SQL_NTS, SQLCONN_FOREGROUND))
+	std::string proc = "{CALL dbo.SP_delete_channel(?)}";
+	ChatDbVendor::transformCallStoredProcedure(proc);
+	if (!plSqlPrepare(&cs.proc[CHATSQL_DELETE_CHANNEL], proc.c_str(), SQL_NTS, SQLCONN_FOREGROUND))
 		return false;
 
 	HSTMT stmt = cs.proc[CHATSQL_DELETE_CHANNEL];

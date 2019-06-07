@@ -14,6 +14,9 @@
     <Filter Include="External\sql">
       <UniqueIdentifier>{91b42ccf-52f8-4b61-872a-f0ac07482a38}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\sql">
+      <UniqueIdentifier>{adfb54d5-623a-48c8-838b-15c61d943004}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="admin.c">
@@ -94,6 +97,9 @@
     <ClCompile Include="..\Common\persist\persist_sql.c">
       <Filter>External\persist</Filter>
     </ClCompile>
+    <ClCompile Include="ChatDbVendor.cpp">
+      <Filter>Source Files\sql</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="admin.h">
@@ -170,6 +176,9 @@
     </ClInclude>
     <ClInclude Include="..\Common\persist\persist_sql.h">
       <Filter>External\persist</Filter>
+    </ClInclude>
+    <ClInclude Include="ChatDbVendor.hpp">
+      <Filter>Source Files\sql</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

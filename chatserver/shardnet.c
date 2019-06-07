@@ -36,6 +36,7 @@ char	g_exe_name[MAX_PATH];
 
 int g_chatLocale;
 ChatServerCfg g_chatcfg;
+DatabaseProvider gDatabaseProvider;
 
 ChatStats g_stats;
 
@@ -869,6 +870,7 @@ static BOOL s_CtrlHandler(DWORD fdwCtrlType)
 static ParseTable parse_ChatServerCfg[] =
 {
 	{ "{",			TOK_START,       0 },
+	{ "SqlDbProvider", TOK_FIXEDSTR(ChatServerCfg,  sqlDbProvider) },
 	{ "SqlLogin",	TOK_FIXEDSTR(ChatServerCfg, sqlLogin) },
 	{ "SqlDbName",	TOK_FIXEDSTR(ChatServerCfg, sqlDbName) },
 	{ "}",			TOK_END,         0 },
@@ -941,6 +943,12 @@ int main(int argc,char **argv)
 	{
 		FatalErrorf("error loading chat config");
 		exit(1);
+	}
+
+	if (stricmp(g_chatcfg.sqlDbProvider, "postgresql")) {
+		gDatabaseProvider = DBPROV_POSTGRESQL;
+	} else {
+		gDatabaseProvider = DBPROV_MSSQL;
 	}
 
 	logSetMsgQueueSize(16 * 1024 * 1024);

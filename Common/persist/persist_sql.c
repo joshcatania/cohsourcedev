@@ -6,7 +6,7 @@
 #include "utils/log.h"
 #include "utils/mathutil.h"
 
-bool plSqlPrepare(HSTMT* stmt, char* cmd, int cmd_len, SqlConn conn)
+bool plSqlPrepare(HSTMT* stmt, const char* cmd, int cmd_len, SqlConn conn)
 {
 	int rc;
 

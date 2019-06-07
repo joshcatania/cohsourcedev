@@ -211,6 +211,7 @@
     <ClCompile Include="..\Common\sql\sqltask.cpp" />
     <ClCompile Include="admin.c" />
     <ClCompile Include="channels.c" />
+    <ClCompile Include="ChatDbVendor.cpp" />
     <ClCompile Include="ChatSql.cpp" />
     <ClCompile Include="chatsqldb.c" />
     <ClCompile Include="csr.c" />
@@ -239,6 +240,7 @@
     <ClInclude Include="..\Common\sql\sqltask.h" />
     <ClInclude Include="admin.h" />
     <ClInclude Include="channels.h" />
+    <ClInclude Include="ChatDbVendor.hpp" />
     <ClInclude Include="ChatSql.h" />
     <ClInclude Include="chatsqldb.h" />
     <ClInclude Include="csr.h" />
