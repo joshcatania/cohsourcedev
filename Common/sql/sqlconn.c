@@ -605,7 +605,7 @@ INLINEDBG int sqlConnStmtExecDirectMany(HSTMT stmt, const char *str, int str_len
 	return ret;
 }
 
-int sqlConnStmtPrepare(HSTMT stmt, char *str, int str_len, SqlConn conn)
+int sqlConnStmtPrepare(HSTMT stmt, const char *str, int str_len, SqlConn conn)
 {
 	SQLRETURN ret;
 	float since_last;
@@ -615,7 +615,7 @@ int sqlConnStmtPrepare(HSTMT stmt, char *str, int str_len, SqlConn conn)
 #endif
 
 	since_last = timerElapsedAndStart(sql.timers[conn]);
-	ret = SQLPrepareA(stmt, str, str_len);
+	ret = SQLPrepareA(stmt, (SQLCHAR*) str, str_len);
 	sqlConnTimerAddTime(conn, since_last);
 
 	if (ret != SQL_SUCCESS)

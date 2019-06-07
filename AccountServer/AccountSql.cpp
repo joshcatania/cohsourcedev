@@ -243,7 +243,7 @@ static asql_account * asql_find_account(U32 auth_id) {
 	return ret;
 }
 
-static HSTMT asql_prepare(SqlConn conn, asql_stored_proc proc, char * cmd) {
+static HSTMT asql_prepare(SqlConn conn, asql_stored_proc proc, const char * cmd) {
 	int rc;
 
 	// one time bind
@@ -325,7 +325,7 @@ void asql_sync_product_types() {
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_VARCHAR, ARRAYSIZE(*names), 0, names, sizeof(*names), name_bytes);
 	sqlConnStmtEndBindParamTableValued(stmt);
 
-	ret = sqlConnStmtExecDirect(stmt, "{CALL dbo.merge_product_types_from_bins(?);}", SQL_NTS, SQLCONN_FOREGROUND, false);
+	ret = sqlConnStmtExecDirect(stmt, "{CALL dbo.merge_product_types_from_bins(?)}", SQL_NTS, SQLCONN_FOREGROUND, false);
 #else
 	std::string tempTableName = g_sqlVendor->temporaryTableName("product_type");
 	ret = sqlConnStmtExecDirect(stmt, g_sqlVendor->createTemporaryTableProductTypeQuery(tempTableName).c_str(), SQL_NTS, SQLCONN_FOREGROUND, false);
@@ -562,7 +562,9 @@ static bool asql_find_or_create_account(SqlConn conn, asql_account * acc, asql_i
 	*inv_count = 0;
 	*inv_list = NULL;
 
-	HSTMT stmt = asql_prepare(conn, ASQL_FIND_OR_CREATE_ACCOUNT, "{CALL dbo.SP_find_or_create_account (@auth_id=?, @name=?, @loyalty_bits=?, @last_loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
+	std::string storedProcedure = "{CALL dbo.SP_find_or_create_account (?, ?, ?, ?, ?, ?, ?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(storedProcedure);
+	HSTMT stmt = asql_prepare(conn, ASQL_FIND_OR_CREATE_ACCOUNT, storedProcedure.c_str());
 
 	ssize_t name_size = acc->name[0] ? strlen(acc->name) : SQL_NULL_DATA;
 	ssize_t loyalty_bits_size = LOYALTY_SQL_BYTES;
@@ -653,8 +655,10 @@ static bool asql_update_account(SqlConn conn, asql_account * acc) {
 	ssize_t loyalty_bits_size = LOYALTY_SQL_BYTES;
 	ssize_t last_email_date_is_null = SQL_NULL_DATA;
 	ssize_t free_xfer_date_is_null = SQL_NULL_DATA;
-
-	HSTMT stmt = asql_prepare(conn, ASQL_UPDATE_ACCOUNT, "{CALL dbo.SP_update_account (@auth_id=?, @loyalty_bits=?, @loyalty_point_count=?, @loyalty_points_spent=?, @last_email_date=?, @last_num_emails_sent=?, @free_xfer_date=?)}");
+	
+	std::string proc = "{CALL dbo.SP_update_account(? , ? , ? , ? , ? , ? , ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_UPDATE_ACCOUNT, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &acc->auth_id, sizeof(acc->auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_BINARY, LOYALTY_SQL_BYTES, 0, &acc->loyalty_bits, sizeof(acc->loyalty_bits), &loyalty_bits_size);
 	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_SHORT, SQL_SMALLINT, 0, 0, &acc->last_loyalty_point_count, sizeof(acc->last_loyalty_point_count), NULL);
@@ -683,7 +687,9 @@ void asql_update_account_async(Account * account) {
 static bool asql_add_micro_transaction(SqlConn conn, asql_micro_transaction * mtx, asql_inventory * inv) {
 	ssize_t sku_bytes = sizeof(mtx->sku_id);
 
-	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MICRO_TRANSACTION, "{CALL dbo.SP_add_micro_transaction (@order_id=?, @auth_id=?, @sku_id=?, @transaction_date=?, @quantity=?, @points=?)}");
+	std::string proc = "{CALL dbo.SP_add_micro_transaction(?, ?, ?, ?, ?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MICRO_TRANSACTION, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &mtx->order_id, sizeof(mtx->order_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &mtx->auth_id, sizeof(mtx->auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_CHAR, ARRAY_SIZE(mtx->sku_id.c), 0, &mtx->sku_id.c, sizeof(mtx->sku_id), &sku_bytes);
@@ -725,7 +731,9 @@ static bool asql_add_game_transaction(SqlConn conn, asql_game_transaction * gtx,
 	ssize_t claimed_is_null = SQL_NULL_DATA;
 	ssize_t saved_is_null = SQL_NULL_DATA;
 
-	HSTMT stmt = asql_prepare(conn, ASQL_ADD_GAME_TRANSACTION, "{CALL dbo.SP_add_game_transaction (@order_id=?, @auth_id=?, @sku_id=?, @transaction_date=?, @csr_did_it=?, @shard_id=?, @ent_id=?, @granted=?, @claimed=?)}");
+	std::string proc = "{CALL dbo.SP_add_game_transaction (?, ?, ?, ?, ?, ?, ?, ?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_ADD_GAME_TRANSACTION, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &gtx->order_id, sizeof(gtx->order_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &gtx->auth_id, sizeof(gtx->auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_BINARY, SQL_CHAR, ARRAY_SIZE(gtx->sku_id.c), 0, &gtx->sku_id.c, sizeof(gtx->sku_id), &sku_bytes);
@@ -859,7 +867,9 @@ static bool asql_add_multi_game_transaction(SqlConn conn, MultiGameTransaction *
 		csr_did_its[index] = transaction->transactions[index].csr_did_it;
 	}
 
-	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MULTI_GAME_TRANSACTION, "{CALL dbo.SP_add_multi_game_transaction (@game_transactions=?, @parent_order_id=?)}");
+	std::string proc = "{CALL dbo.SP_add_multi_game_transaction (?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_ADD_MULTI_GAME_TRANSACTION, proc.c_str());
 
 	sqlConnStmtStartBindParamTableValued(stmt, 1, MAX_MULTI_GAME_TRANSACTIONS, L"TVP_game_transaction", &transaction->count);
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, order_ids, sizeof(order_ids[0]), NULL);
@@ -903,7 +913,9 @@ void asql_add_multi_game_transaction_async(MultiGameTransaction * transaction) {
 }
 
 static bool asql_save_game_transaction(SqlConn conn, U32 auth_id, OrderId order_id, asql_flexible_inventory * flex_inv) {
-	HSTMT stmt = asql_prepare(conn, ASQL_SAVE_GAME_TRANSACTION, "{CALL dbo.SP_save_game_transaction (@auth_id=?, @order_id=?)}");
+	std::string proc = "{CALL dbo.SP_save_game_transaction (?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_SAVE_GAME_TRANSACTION, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &order_id, sizeof(order_id), NULL);
 
@@ -935,7 +947,9 @@ void asql_save_game_transaction_async(Account * acc, OrderId order_id) {
 }
 
 static bool asql_revert_game_transaction(SqlConn conn, U32 auth_id, OrderId order_id, asql_flexible_inventory * flex_inv) {
-	HSTMT stmt = asql_prepare(conn, ASQL_REVERT_GAME_TRANSACTION, "{CALL dbo.SP_revert_game_transaction (@auth_id=?, @search_id=?)}");
+	std::string proc = "{CALL dbo.SP_revert_game_transaction (?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_REVERT_GAME_TRANSACTION, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_GUID, SQL_GUID, 0, 0, &order_id, sizeof(order_id), NULL);
 
@@ -1015,7 +1029,9 @@ static bool asql_read_unsaved_game_transactions(SqlConn conn, U32 auth_id, U8 sh
 	ssize_t shard_id_is_null = SQL_NULL_DATA;
 	ssize_t ent_id_is_null = SQL_NULL_DATA;
 
-	HSTMT stmt = asql_prepare(conn, ASQL_READ_UNSAVED_GAME_TRANSACTIONS, "{CALL dbo.SP_read_unsaved_game_transactions (@auth_id=?, @shard_id=?, @ent_id=?)}");
+	std::string proc = "{CALL dbo.SP_read_unsaved_game_transactions (?, ?, ?)}";
+	g_sqlVendor->formatCallStoredProcedure(proc);
+	HSTMT stmt = asql_prepare(conn, ASQL_READ_UNSAVED_GAME_TRANSACTIONS, proc.c_str());
 	sqlConnStmtBindParam(stmt, 1, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &auth_id, sizeof(auth_id), NULL);
 	sqlConnStmtBindParam(stmt, 2, SQL_PARAM_INPUT, SQL_C_TINYINT, SQL_TINYINT, 0, 0, &shard_id, sizeof(shard_id), (shard_id>0) ? NULL : &shard_id_is_null);
 	sqlConnStmtBindParam(stmt, 3, SQL_PARAM_INPUT, SQL_C_LONG, SQL_INTEGER, 0, 0, &ent_id, sizeof(ent_id), (ent_id>0) ? NULL : &ent_id_is_null);

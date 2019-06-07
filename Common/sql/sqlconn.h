@@ -25,7 +25,7 @@ void sqlConnGetTimes(int * count, long * avg_usec, long * worst_usec, float * fo
 HSTMT sqlConnStmtAlloc(SqlConn conn);
 void sqlConnStmtFree(HSTMT stmt);
 void sqlConnStmtPrintBinds(HSTMT stmt);
-int sqlConnStmtPrepare(HSTMT stmt, char *cmd, int str_len, SqlConn conn);
+int sqlConnStmtPrepare(HSTMT stmt, const char *cmd, int str_len, SqlConn conn);
 int sqlConnStmtExecDirect(HSTMT stmt, const char *cmd, int str_len, SqlConn conn, bool utf8);
 int sqlConnStmtExecDirectMany(HSTMT stmt, const char *cmd, int str_len, SqlConn conn, bool utf8);
 
