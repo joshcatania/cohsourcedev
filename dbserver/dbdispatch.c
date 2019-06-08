@@ -2306,6 +2306,10 @@ static void sqlReqCustomDataCallback(Packet *pak_out,U8 *cols,int row_count,Colu
 				// Otherwise, it might be one of these other primitives.
 				switch(field_ptrs[j]->data_type)
 				{
+					// Need to readd assert for unbound fields
+					xcase CFTYPE_WSTRING :
+						utf16ToUtf8(&cols[idx], field_ptrs[j]->num_bytes);
+						pktSendString(pak_out, &cols[idx]);
 					xcase CFTYPE_STRING:
 						pktSendString(pak_out,&cols[idx]);
 					xcase CFTYPE_BINARY:

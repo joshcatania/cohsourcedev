@@ -57,7 +57,7 @@ static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind
 * has been closed.
 */ 
 typedef struct sqlBindTemp {
-	size_t bytes;
+	SQLLEN bytes;
 	union {
 		//char data[0];
 		char* data;
@@ -390,6 +390,19 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 				case CFTYPE_FLOAT:
 					bindInputParameter(stmt, (*bind)++, CFTYPE_FLOAT, &line->fval, NULL);
 					break;
+				case CFTYPE_WSTRING:
+				{
+					sqlBindTemp* temp = (sqlBindTemp*) malloc(sizeof(sqlBindTemp) + (line->size + 1) * sizeof(wchar_t));
+					int wsize = MultiByteToWideChar(CP_UTF8, 0, diff->text + line->str_idx, line->size, temp->wdata, line->size + 1);
+					temp->wdata[wsize] = 0;
+#ifdef _FULLDEBUG
+					assert(UTF16GetLength((unsigned short*) temp->wdata) == UTF8GetLength(diff->text + line->str_idx));
+#endif
+					temp->bytes = wsize * sizeof(wchar_t);
+					bindInputParameter(stmt, (*bind)++, CFTYPE_WSTRING, temp->wdata, &temp->bytes);
+					eaPush(bind_temps, temp);
+					break;
+				}
 			}
 		}
 
@@ -682,6 +695,10 @@ static int readRow(HSTMT stmt, ContainerTemplate *tplt, TableInfo *table, LineLi
 #endif
 			xcase CFTYPE_STRING:
 				if(!addStrToLine(list, line, (char*) data, results[col]))
+					continue;
+
+			xcase CFTYPE_WSTRING:
+				if (!addWStrToLine(list, line, (wchar_t*) data, results[col] / 2))
 					continue;
 
 			xcase CFTYPE_DATETIME:

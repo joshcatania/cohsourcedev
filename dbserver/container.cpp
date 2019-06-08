@@ -237,6 +237,8 @@ static void setSpecialColumn(SpecialColumn *col, DbContainer *container, uintptr
 
 	switch (col->type)
 	{
+		case CFTYPE_WSTRING :
+			utf16ToUtf8((char*) addr, 8192); // this code does not know what size the buffer is, assume the SQL max of 8K
 		xcase CFTYPE_STRING:
 			// pass
 		xcase CFTYPE_INT:
