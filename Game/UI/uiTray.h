@@ -74,6 +74,7 @@ void tray_setSticky( CurTrayType tray, int toggle );
 void tray_toggleSticky( CurTrayType tray );
 
 void trayslot_Timer( Entity *e, TrayObj * to, float * sc );
+void trayslot_RemainingTime( Entity *e, TrayObj * to, char * remainingTime );
 int trayslot_IsActive( Entity *e,  TrayObj * to );
 void tray_Clear(void);
 

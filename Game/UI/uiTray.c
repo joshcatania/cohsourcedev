@@ -65,6 +65,7 @@
 #include "character_eval.h"
 #include "uiOptions.h"
 #include "fxutil.h"
+#include "ttFontUtil.h"
 
 U32 g_timeLastPower = 0;
 U32 g_timeLastAttack = 0;
@@ -1057,6 +1058,33 @@ void trayslot_Timer(Entity *e, TrayObj * to, float * sc)
 	}
 }
 
+void trayslot_RemainingTime(Entity *e, TrayObj * to, char * remainingTime)
+{
+	if( to && to->type == kTrayItemType_Power )
+	{
+		PowerRef ppowRef;
+		PowerRechargeTimer * prt;
+
+		ppowRef.buildNum = e->pchar->iCurBuild;
+		ppowRef.power = to->ipow;
+		ppowRef.powerSet = to->iset;
+
+		prt = powerInfo_PowerGetRechargeTimer(e->powerInfo, ppowRef);
+
+		if( prt )
+		{
+			if(prt->rechargeCountdown >= 10.f)
+			{
+				sprintf(remainingTime, "%.0f:%.0f", prt->rechargeCountdown / 60.f, fmod(prt->rechargeCountdown, 60.f));
+			}
+			else
+			{
+				sprintf(remainingTime, "%.1f", prt->rechargeCountdown);
+			}
+		}
+	}
+}
+
 //
 //
 void traySlot_fireFlash( TrayObj * ts, float x, float y, float z )
@@ -1789,12 +1817,14 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
 
 	// this icon will be gotten from differnet sources later
 	AtlasTex *ic = tray_GetIcon(ts, e);
-	int     clr = CLR_WHITE;
-	int		type;
-	int		usable = 1;
-	int     disabled = 0;
-	float	sc = 1.f;
-	CBox	box;
+	int      clr = CLR_WHITE;
+	int		 type;
+	int		 usable = 1;
+	int      disabled = 0;
+	float	 sc = 1.f;
+	bool     isCooldownActive;
+	char 	 remainingTime[20];
+	CBox	 box;
 
 	static AtlasTex * power_ring;
 	static AtlasTex * spin;
@@ -1823,6 +1853,8 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
 		ic = atlasLoadTexture( "Power_Missing.tga" );
 
 	trayslot_Timer( e, ts, &sc );
+	isCooldownActive = sc < 1.0f;
+
 	sc = sc/2 + .5f;
 
 	if( sc < ts->scale )
@@ -1873,6 +1905,17 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
 
 	// draw the normal icon
 	display_sprite( ic, xp - ic->width*ts->scale*sc*scale/2, yp - ic->width*ts->scale*sc*scale/2, zp + 2, ts->scale*scale*sc, ts->scale*scale*sc, clr );
+
+	// Draw the cooldown only if the option is enabled in the UI
+	if( isCooldownActive && optionGet(kUO_ShowTimer) )
+	{
+		trayslot_RemainingTime( e, ts, remainingTime );
+
+		// Display the remaining time on screen
+		font( &game_9 );
+		font_color( CLR_WHITE, CLR_WHITE );
+		cprntEx(xp, yp, zp, scale * 1.5, scale * 1.5, (CENTER_X), remainingTime);
+	}
 
 	if( ts->autoPower )
 	{

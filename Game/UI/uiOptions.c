@@ -645,6 +645,7 @@ static GameOptions s_optListGeneral[] =
 	{ kUO_DeclineTeamGifts,         kOptionType_Bool,   "DeclineTeamGifts",    "DeclineTeamGiftsHelp",    NULL, kOptionType_Bool,        NULL,                     NULL,                  "OptionEnabled",  "OptionDisabled" },
 	{ kUO_UseOldTeamUI,				kOptionType_Bool,   "UseOldTeamUI",		   "UseOldTeamUIHelp",		  NULL, kOptionType_Bool,        NULL,                     NULL,                  "OptionEnabled",  "OptionDisabled" },
 	{ kUO_DisableDrag,              kOptionType_Bool,   "LockPowerTray",       "LockPowerTrayHelp",       NULL, kOptionType_Bool,        NULL,                     NULL,                  "OptionEnabled",  "OptionDisabled" },
+	{ kUO_ShowTimer,                kOptionType_Bool,   "ShowTimer",           "ShowTimerHelp",           NULL, kOptionType_Bool,        NULL,                     NULL,                  "OptionEnabled",  "OptionDisabled" },
 	{ kUO_DisableLoadingTips,       kOptionType_Bool,   "DisableLoadingTip",   "DisableLoadingTipsHelp",  NULL, kOptionType_Bool,        NULL,                     NULL,                  "OptionDisabled", "OptionEnabled", },
 	{ kUO_NoXP,						kOptionType_Bool,   "NoXPPrompt",		   "NoXPHelp",	              NULL, kOptionType_Bool,        NULL,                     NULL,				  "OptionNoXP",		"OptionEarnXP" },
 	{ kUO_NoXPExemplar,				kOptionType_Bool,   "NoXPExemplarPrompt",  "NoXPExemplarHelp",	      NULL, kOptionType_Bool,        NULL,                     NULL,				  "OptionNoXPIng",  "OptionEarnXP" },

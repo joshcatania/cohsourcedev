@@ -40,6 +40,7 @@ UserOption game_options[] =
 	{ kUO_HideButtons,                 "HideButtons",                 0, 0, 0, 1 },
 	{ kUO_ClickToMove,                 "EnableClickToMove",           0, 0, 0, 1 },
 	{ kUO_DisableDrag,                 "DisableDrag",                 0, 0, 0, 1 },
+	{ kUO_ShowTimer,                   "ShowTimer",	                  0, 0, 0, 1 },
 	{ kUO_ShowPetBuffs,                "gShowPetBuffs",               0, 0, 0, 1 },
 	{ kUO_PreventPetIconDrag,          "PreventPetIconDrag",          0, 0, 0, 1 },
 	//

@@ -3630,8 +3630,8 @@ uiSetting uiSettings4[] = {
 	{OFFSET2_PTR(Entity, pl,	EntPlayer,	hideStoreAccessButton)			}, // 8
 	{OFFSET2_PTR(Entity, pl,	EntPlayer,	autoFlipSuperPackCards)			}, // 9
 	{OFFSET2_PTR(Entity, pl,	EntPlayer,	hideConvertConfirmPrompt)		}, // 10
+	{OFFSET2_PTR(Entity, pl,	EntPlayer,	showTimer)							  }, // 11
 
- // 11
  // 12
  // 13
  // 14

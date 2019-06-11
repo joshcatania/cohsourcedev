@@ -972,7 +972,7 @@ bool gLogChat = FALSE;
 bool gDisableDrag;
 bool gHideButtons = FALSE;
 bool gHideHeader = FALSE;
-bool gDisableDrag;
+bool gShowTimer;
 int gShowPetBuffs;
 int gChatDisablePetSay;
 int gChatEnablePetTeamSay;

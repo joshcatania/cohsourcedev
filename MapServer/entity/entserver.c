@@ -1367,6 +1367,7 @@ void sendCharacterToClient( Packet *pak, Entity *e)
 		pktSendBits( pak, 1, e->pl->sgHideButtons );
 		pktSendBits( pak, 1, e->pl->clicktomove );
 		pktSendBits( pak, 1, e->pl->disableDrag );
+		pktSendBits( pak, 1, e->pl->showTimer );
 		pktSendBits( pak, 1, e->pl->showPetBuffs );
 		pktSendBits( pak, 1, e->pl->preventPetIconDrag);
 		pktSendBits( pak, 1, e->pl->showPetControls);

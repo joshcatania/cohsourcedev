@@ -143,6 +143,7 @@ typedef enum EUserOptions
 //		 However you will need to take care of serverside netowrking ( entserver.c and parseClientInput.c ) and database saving ( containerloadsave.c )
 
 	kUO_OptionTotal, 
+	kUO_ShowTimer,
 }EUserOptions;
 
 

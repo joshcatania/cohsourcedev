@@ -260,6 +260,7 @@ typedef struct EntPlayer
 	int sgHideButtons;
 	int clicktomove;
 	int disableDrag;
+	int showTimer;
 	int showPetBuffs;
 	int preventPetIconDrag;
 	int showPetControls;
