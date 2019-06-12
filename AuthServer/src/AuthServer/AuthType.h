@@ -64,8 +64,7 @@ typedef struct LoginUser
 	int		ssn2;
 	int     loginflag;
 	int		warnflag; 
-	char    age; 
-	short int	cdkind;
+	char    age;
 	ServerId lastworld;
 	ServerId selectedServerid;
 	int     queueLevel;

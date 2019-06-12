@@ -73,7 +73,6 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 	char passwordLineage2[MAX_PWD_LEN+1];
 	char passwordSHA512[ENC_PWD_LEN+1];
 	char  err_msg = 0;
-	unsigned short cdkind=0;
 	
 	in_addr cip = mysocket->getaddr();
 	
@@ -111,9 +110,8 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 		assert(0);	//	not supported anymore
 	}
 	subscription = GetIntFromPacket( packet );
-	cdkind		 = GetShortFromPacket( packet );
 	
-    logger.AddLog(LOG_VERBOSE, "RCV: AQ_LOGIN,account:%s,ip:%d.%d.%d.%d,subscription:%d,cdkind:%d", name, cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2, cip.S_un.S_un_b.s_b3, cip.S_un.S_un_b.s_b4, subscription, cdkind);
+    logger.AddLog(LOG_VERBOSE, "RCV: AQ_LOGIN,account:%s,ip:%d.%d.%d.%d,subscription:%d", name, cip.S_un.S_un_b.s_b1, cip.S_un.S_un_b.s_b2, cip.S_un.S_un_b.s_b3, cip.S_un.S_un_b.s_b4, subscription);
 	logger.AddLog(LOG_DEBUG, "RCV: AQ_LOGIN,useMD5:%i, MD5Key %i", useMD5, mysocket->GetMd5Key());
 
 	err_msg = account.CheckPassword( name, passwordLineage2, passwordSHA512, mysocket->GetMd5Key(), useMD5 );
@@ -202,7 +200,6 @@ static bool LoginPacketSecure(CSocketServerEx *mysocket, const unsigned char *pa
 	loginuser->loginflag = account.login_flag;
 	loginuser->warnflag  = account.warn_flag;
 	loginuser->age       = account.age;
-	loginuser->cdkind	 = cdkind;
 	strncpy( loginuser->account, account.account, MAX_ACCOUNT_LEN+1 );
 	loginuser->account[MAX_ACCOUNT_LEN]=0;
 	loginuser->lastworld = account.lastworld;

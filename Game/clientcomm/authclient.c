@@ -52,7 +52,7 @@ static void dumpData(char *msg,const void *datav,int count)
 #endif
 }
 
-void acSendLoginMD5(const char* account_p, const char* password_p, int subscription, AuthFlags flags)
+void acSendLoginMD5(const char* account_p, const char* password_p, int subscription)
 {
 	AuthPacket	*pak=0;
 	char		RSA_plain_buf[94];
@@ -131,15 +131,14 @@ void acSendLoginMD5(const char* account_p, const char* password_p, int subscript
 	authPutU32(pak,RSA_cipher_size);
 	authPutArray(pak,RSA_cipher_buf,RSA_cipher_size);
 	authPutU32(pak,subscription);
-	authPutU16(pak,flags); // cdkind - what is it? ab: now it is mac/pc flag
 	if (auth_info.protocol == ASIA_AUTH_PROTOCOL_VERSION)
 		authPutU08(pak,game_runningCohClientCount()); // number of copies of game running
 	authSendPacket(pak);
 }
 
-void acSendLogin(const char* account, const char* password, int subscription,AuthFlags flags)
+void acSendLogin(const char* account, const char* password, int subscription)
 {
-	acSendLoginMD5(account,password,subscription,flags);
+	acSendLoginMD5(account,password,subscription);
 }
 
 void acSendServerList()
@@ -516,7 +515,7 @@ int authLogin(char *name,char *password)
 	loadend_printf("ok");
 
 	loadstart_printf("Auth:Sending password... ");
-	acSendLogin(name,password,0,IsUsingCider()?AuthFlags_MAC:AuthFlags_PC); 
+	acSendLogin(name, password, 0); 
 	if (!authWaitFor(AC_LOGIN_OK)) {
 		loadend_printf("failed");
 		return 0;

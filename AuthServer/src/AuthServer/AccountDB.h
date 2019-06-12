@@ -58,7 +58,7 @@ public:
 	bool WriteUserData( int uid );
 
 	//Adding in additional information so we can do more complete activity logging in the DB
-	bool RecordLogout( char reasoncode, int uid, time_t loginTime, time_t enteredQueueTime, ServerId lastWorld, in_addr LastIP, int LastGame, const char *account, int stat, int ssn1, int ssn2, char gender, int age, int cdkind );
+	bool RecordLogout( char reasoncode, int uid, time_t loginTime, time_t enteredQueueTime, ServerId lastWorld, in_addr LastIP, int LastGame, const char *account, int stat, int ssn1, int ssn2, char gender, int age);
 	
 	
 	char UserTimeLogin( int uid, LoginUser *lu, int *RemainTime );

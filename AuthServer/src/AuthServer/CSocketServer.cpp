@@ -496,7 +496,6 @@ static bool ServerPlayUserList( CSocketServer *mysocket, const unsigned char *pa
 		LoginUser *lu = new LoginUser; //TODO:  add queueLevel to the list packet?
 		strncpy( lu->account, account, MAX_ACCOUNT_LEN );
 		lu->account[MAX_ACCOUNT_LEN] = 0;
-		lu->cdkind = 0;
 		lu->lastworld = mysocket->serverid;
 		lu->loginflag = loginflag;
 		lu->warnflag = warnflag;

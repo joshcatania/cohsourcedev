@@ -248,7 +248,6 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 	int ssn=0, ssn2=0, stat = 0;
 	UINT warn_flag=0;
 	char age=0;
-	short int cdkind=0;
 	time_t login_time;
 	time_t queue_time;
 
@@ -270,7 +269,6 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 		login_time= it->second.logintime;
 		queue_time = it->second.queuetime;
 		age		  = it->second.age;
-		cdkind    = it->second.cdkind;
 		warn_flag = it->second.warnflag;
 		strncpy( account, it->second.account, MAX_ACCOUNT_LEN+1 );
 		usermap.erase(it);
@@ -292,7 +290,7 @@ bool AccountDB::KickAccount( int uid, char reasoncode, bool sendmsg )
 		if ( (usermode == UM_IN_GAME) || ( usermode == UM_PLAY_OK )) {
 			if ( usermode == UM_IN_GAME ) {
 				if ( serverid.IsValid() )
-					RecordLogout( reasoncode, uid, login_time, queue_time, serverid, ip, config.gameId, account, stat, ssn, ssn2, gender, age, cdkind );
+					RecordLogout( reasoncode, uid, login_time, queue_time, serverid, ip, config.gameId, account, stat, ssn, ssn2, gender, age);
 			} 
 			
 			AS_LOG_VERBOSE( "SND: SQ_KICK_ACCOUNT,%d,uid:%d, account:%s", reasoncode, uid, account );
@@ -787,7 +785,7 @@ _BEFORE
 		if ( lu.serverid.IsValid() )
 		{
 			AS_LOG_DEBUG( "quitgame, account:%s, ip:%d.%d.%d.%d, uid:%d", lu.account, lu.loginIp.S_un.S_un_b.s_b1,lu.loginIp.S_un.S_un_b.s_b2,lu.loginIp.S_un.S_un_b.s_b3,lu.loginIp.S_un.S_un_b.s_b4, uid );
-			RecordLogout( 'L', uid, lu.logintime, lu.queuetime, lu.serverid, lu.loginIp, config.gameId, lu.account, lu.stat, lu.ssn, lu.ssn2, lu.gender, lu.age, lu.cdkind );
+			RecordLogout( 'L', uid, lu.logintime, lu.queuetime, lu.serverid, lu.loginIp, config.gameId, lu.account, lu.stat, lu.ssn, lu.ssn2, lu.gender, lu.age);
 		}
 	}
 _AFTER_FIN
@@ -833,7 +831,7 @@ _AFTER_FIN
 	return S_ALL_OK;
 }
 
-bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t enteredQueueTime, ServerId lastWorldId, in_addr LastIP, int LastGame, const char *account, int stat, int ssn1, int ssn2, char gender, int age, int cdkind )
+bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t enteredQueueTime, ServerId lastWorldId, in_addr LastIP, int LastGame, const char *account, int stat, int ssn1, int ssn2, char gender, int age)
 {
 	time_t logout_time;
 	
@@ -922,62 +920,7 @@ bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t
 
 	}
 
-	{ //NEW for NCAustin version of auth server, this allows us to have a login/logout history
-	  //instead of just the last login/logout record which is also the system does normally
-
-		CDBConn conn(g_linDB);
-
-		//Add logout entry to the activity log
-		SQLLEN accountName_strLen=SQL_NTS;
-		SQLBindParameter( conn.m_stmt, 1, SQL_PARAM_INPUT, SQL_C_CHAR, SQL_CHAR, 14, 0, (SQLPOINTER)account, 14, &accountName_strLen);
-
-		SQLLEN userIdLen = 4;
-		SQLBindParameter( conn.m_stmt, 2, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)(&uid), 0, &userIdLen);
-
- 
-		SQLLEN serverIdLen = 4;
-		SQLBindParameter( conn.m_stmt, 3, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)&lastWorld, 0, &serverIdLen);
-
-
-		SQLLEN clientIPLen=SQL_NTS;
-		SQLBindParameter( conn.m_stmt, 4, SQL_PARAM_INPUT, SQL_C_TCHAR, SQL_VARCHAR, 15, 0, (SQLPOINTER)szIP, (SQLINTEGER)strlen(szIP), &clientIPLen );
-
-
-		SQLLEN lastLoginLen=0;
-		SQLBindParameter( conn.m_stmt, 5, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP,SQL_TIMESTAMP, 19, 0, (SQLPOINTER)&dblogin, 0, &lastLoginLen );
-
-		SQLLEN queueLoginLen=0;
-		SQLBindParameter( conn.m_stmt, 6, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP,SQL_TIMESTAMP, 19, 0, (SQLPOINTER)&dbqueuelogin, 0, &queueLoginLen );
-	
-		//Current system doesnt keep track of different auth logins and game logins, it just overwrites
-		//the same login value on the user account
-		SQLLEN gameLoginLen=0;
-		SQLBindParameter( conn.m_stmt, 7, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP,SQL_TIMESTAMP, 19, 0, (SQLPOINTER)&dblogin, 0, &gameLoginLen );
-	
-
-		SQLLEN lastLogoutLen=0;
-		SQLBindParameter( conn.m_stmt, 8, SQL_PARAM_INPUT, SQL_C_TYPE_TIMESTAMP,SQL_TIMESTAMP, 19, 0, (SQLPOINTER)&dblogout, 0, &lastLogoutLen );
-	
-		SQLLEN logoutTypeLen=0;
-		SQLBindParameter( conn.m_stmt, 9, SQL_PARAM_INPUT, SQL_C_CHAR,SQL_CHAR, 1, 0, (SQLPOINTER)&reasoncode, 1, &logoutTypeLen );
-
-		SQLLEN cdKindLen=0;
-		SQLBindParameter( conn.m_stmt, 10, SQL_PARAM_INPUT, SQL_C_ULONG, SQL_INTEGER, 0, 0, (SQLPOINTER)&cdkind, 1, &cdKindLen );
-
-		char buffer[256];
-		sprintf( buffer, "{CALL dbo.sp_LogAuthActivity (?,?,?,?,?,?,?,?,?,?) }" );
-		RETCODE RetCode= SQLExecDirect( conn.m_stmt, (SQLCHAR*)buffer, SQL_NTS );
-		
-		if ( RetCode == SQL_SUCCESS ) {
-			conn.ResetHtmt();
-		} else {
-			conn.Error(SQL_HANDLE_STMT, conn.m_stmt, buffer);
-			conn.ResetHtmt();
-		}
-		
-	}
-
-	filelog.AddLog( LOG_NORMAL, "%d-%d-%d %d:%d:%d,%d-%d-%d %d:%d:%d,%s,%d,%s,%d,%d,%d,%06d%07d,%d,%d,%d,%d\r\n", 
+	filelog.AddLog( LOG_NORMAL, "%d-%d-%d %d:%d:%d,%d-%d-%d %d:%d:%d,%s,%d,%s,%d,%d,%d,%06d%07d,%d,%d,%d\r\n", 
 				logoutTM.tm_year + 1900, logoutTM.tm_mon + 1, logoutTM.tm_mday,
 				logoutTM.tm_hour, logoutTM.tm_min, logoutTM.tm_sec,
 				loginTM.tm_year + 1900, loginTM.tm_mon + 1, loginTM.tm_mday,
@@ -989,7 +932,7 @@ bool AccountDB::RecordLogout( char reasoncode, int uid, time_t loginTime, time_t
 				usetime,
 				usetime,
 				ssn1, ssn2,
-				gender, logoutTM.tm_wday, age, cdkind);
+				gender, logoutTM.tm_wday, age);
 	
 	int OperationCode = (int)(( stat % 1000 ) / 100 );
 
