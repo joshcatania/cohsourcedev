@@ -16,6 +16,10 @@
 //ResumeInfo is now in the registry
 #define REG_STR_BUF_SIZE 256
 
+#define SETTINGS_DIR ".\\settings\\"
+#define SETTINGS_FILE_GFX	SETTINGS_DIR "gfx.struct"
+#define SETTINGS_FILE_MISC	SETTINGS_DIR "misc.struct"
+
 static GfxSettings gfxSettings_temp;
 
 // Load/Save these regardless of safe-mode
@@ -115,10 +119,11 @@ void saveAutoResumeInfoToRegistry(void)
 		gfxSettings_temp.advanced.worldDetailLevel = 1.0;
 	//End hack
 
-	ParserSaveToRegistry(regGetAppKey(), autoResumeRegInfoSafe, NULL, 0, 0);
+	_mkdir(SETTINGS_DIR);
+	ParserWriteTextFile(SETTINGS_FILE_MISC, autoResumeRegInfoSafe, NULL, 0, 0);
 	if (!game_state.safemode || game_state.options_have_been_saved)
 	{
-		ParserSaveToRegistry(regGetAppKey(), autoResumeRegInfo, NULL, 0, 0);
+		ParserWriteTextFile(SETTINGS_FILE_GFX, autoResumeRegInfo, NULL, 0, 0);
 	}
 }
 
@@ -127,9 +132,10 @@ int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName
 	// Determine what settings may need to be overwritten
 	bool isFirstRun = true;
 	bool isFirstRunSinceSlowUglySlider = true;
+
 	ZeroStruct(&gfxSettings_temp);
 	gfxSettings_temp.slowUglyScale = -1;
-	ParserLoadFromRegistry(regGetAppKey(), autoResumeRegInfo, NULL);
+	ParserReadTextFile(SETTINGS_FILE_GFX, autoResumeRegInfo, NULL);
 	if (gfxSettings_temp.screenX != 0)
 		isFirstRun = false;
 	if (gfxSettings_temp.slowUglyScale != -1)
@@ -138,8 +144,8 @@ int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName
 	gfxSettings_temp = *gfxSettings; // Fill in defaults 
 	gfxSettings_temp.version = 0;
 
-	ParserLoadFromRegistry(regGetAppKey(), autoResumeRegInfoSafe, NULL);
-	ParserLoadFromRegistry(regGetAppKey(), autoResumeRegInfo, NULL);
+	ParserReadTextFile(SETTINGS_FILE_MISC, autoResumeRegInfoSafe, NULL);
+	ParserReadTextFile(SETTINGS_FILE_GFX, autoResumeRegInfo, NULL);
 
 	// Ignore the auth and dbserver registry entries if we were started by the Launcher
 	// TODO: Once CohUpdater is deprecated, we should be able to remove this completely
