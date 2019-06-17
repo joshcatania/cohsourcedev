@@ -164,7 +164,7 @@
     <ClCompile Include="..\Common\LWC_common.c" />
     <ClCompile Include="clientcomm\authclient.c" />
     <ClCompile Include="..\Common\auth\authUserData.c" />
-    <ClCompile Include="clientcomm\autoResumeInfo.c" />
+    <ClCompile Include="clientcomm\autoResumeInfo.cpp" />
     <ClCompile Include="gameComm\chatClient.c" />
     <ClCompile Include="clientcomm\clientcomm.c">
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Default</BasicRuntimeChecks>

@@ -4,6 +4,7 @@
 
 char app_registry_name[128];
 
+C_DECLARATIONS_BEGIN
 
 void		regSetAppName(const char* appName);
 const char* regGetAppName(void);
@@ -20,5 +21,7 @@ char*		regGetAppString(const char *key, const char *deflt, char *dest, size_t de
 void		regPutAppString(const char *key, const char *value);
 int			regGetAppInt(const char *key, int deflt);
 void		regPutAppInt(const char *key, int value);
+
+C_DECLARATIONS_END
 
 #endif

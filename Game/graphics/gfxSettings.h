@@ -5,6 +5,8 @@
 #define WORLD_DETAIL_LIMIT 4.0f
 #define GFXSETTINGS_VERSION 5
 
+C_DECLARATIONS_BEGIN
+
 typedef enum OptionGraphicsPreset {
 	GRAPHICSPRESET_MINIMUM,				// aka Ugly
 	GRAPHICSPRESET_PERFORMANCE,			// aka Fast
@@ -246,3 +248,5 @@ OptionShaderDetail shaderDetailHighestAvailable();
 
 
 OptionWater gfxGetMaxWaterMode();
+
+C_DECLARATIONS_END

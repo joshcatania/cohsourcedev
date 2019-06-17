@@ -8,6 +8,8 @@
 #include "groupscene.h" // For DOFValues struct
 #include "gfxSettings.h" // For OptionCubemap
 
+C_DECLARATIONS_BEGIN
+
 typedef __int64 EntityRef;
 
 enum
@@ -838,6 +840,8 @@ void cfg_setNagGoingRoguePurchase(int data);
 void cfg_setIsVIPShard(int data);
 
 #define E3_SCREENSHOT 1
+
+C_DECLARATIONS_END
 
 // End mkproto
 #endif

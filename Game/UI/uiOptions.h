@@ -5,6 +5,8 @@
 
 #include "uiOptions_Type.h"
 
+C_DECLARATIONS_BEGIN
+
 int mapOptionGet(int id);
 void mapOptionSet(int id, int val);
 void mapOptionSetBitfield(int id, int val);
@@ -83,6 +85,8 @@ typedef struct GameOptions
 
 void setNewOptions();
 int optionsWindow();
+
+C_DECLARATIONS_END
 
 #endif
 

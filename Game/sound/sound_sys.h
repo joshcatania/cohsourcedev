@@ -6,6 +6,8 @@
 
 #define MAX_EVER_SOUND_CHANNELS		128
 
+C_DECLARATIONS_BEGIN
+
 typedef struct SoundFileInfo
 {
 	char	*data;
@@ -75,5 +77,8 @@ void sndSysPositionListener(Mat4 mat,Vec3 vel);
 void sndSysCommitSettings(void);
 void sndSysTick(void);
 void testCompressor(void);
+
+C_DECLARATIONS_END
+
 #endif
 

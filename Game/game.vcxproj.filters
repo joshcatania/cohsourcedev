@@ -160,7 +160,7 @@
     <ClCompile Include="..\Common\auth\authUserData.c">
       <Filter>clientcomm</Filter>
     </ClCompile>
-    <ClCompile Include="clientcomm\autoResumeInfo.c">
+    <ClCompile Include="clientcomm\autoResumeInfo.cpp">
       <Filter>clientcomm</Filter>
     </ClCompile>
     <ClCompile Include="gameComm\chatClient.c">

@@ -1,6 +1,8 @@
 #ifndef UI_LOGIN_H
 #define UI_LOGIN_H
 
+C_DECLARATIONS_BEGIN
+
 // Keep these in the order in which they occur
 typedef enum LoginStage {
 	LOGIN_STAGE_START = 0,
@@ -55,5 +57,7 @@ extern int gSelectedDbServer;
 
 char *getAccountDir(char *buff);
 void GRNagCancelledLogin(void);
+
+C_DECLARATIONS_END
 
 #endif UI_LOGIN_H
