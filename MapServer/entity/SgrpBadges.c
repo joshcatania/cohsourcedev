@@ -90,7 +90,7 @@ void sgrpbadge_ServerInit(void)
 	g_BadgeStatsSgroup.idxStatFromName = stashTableCreateWithStringKeys(128, StashDeepCopyKeys);
 	g_BadgeStatsSgroup.statnameFromId = stashTableCreateInt(128);
 	
-	g_BadgeStatsSgroup.idxStatMax = LoadBadgeStatNames(filename, "c:/coh_data/attributes/supergroup_badgestats.attribute", g_BadgeStatsSgroup.idxStatFromName, g_BadgeStatsSgroup.statnameFromId );
+	g_BadgeStatsSgroup.idxStatMax = LoadBadgeStatNames(filename, g_BadgeStatsSgroup.idxStatFromName, g_BadgeStatsSgroup.statnameFromId );
 	
 	if(g_BadgeStatsSgroup.idxStatMax >= BADGE_SG_MAX_STATS)
 	{

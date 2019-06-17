@@ -2949,7 +2949,9 @@ static void beaconServerStartupSetServerType(BeaconizerType beaconizerType){
 
 static void beaconServerStartup(BeaconizerType beaconizerType,
 								const char* masterServerName,
-								S32 noNetStart)
+								S32 noNetStart,
+								S32 onePassOnly,
+								S32 forceRebuild)
 {
 	S32 processPriority = NORMAL_PRIORITY_CLASS;
 	S32 threadPriority	= THREAD_PRIORITY_NORMAL;
@@ -2967,6 +2969,8 @@ static void beaconServerStartup(BeaconizerType beaconizerType,
 	}
 
 	beaconServerStartupSetServerType(beaconizerType);
+	beacon_server.onePassOnly = onePassOnly;
+	beacon_server.forceRebuild = forceRebuild;
 
 	if(!beacon_server.isMasterServer){
 		if(masterServerName){
@@ -5638,6 +5642,11 @@ static void beaconServerCheckForNewMap(void){
 		{
 			S32 i;
 
+			if (beacon_server.onePassOnly) {
+				beaconPrintf(COLOR_GREEN, "Finished processing all maps.  Exiting.");
+				exit(0);
+			}
+
 			beaconPrintf(COLOR_YELLOW, "Done processing maps.  Restarting self and exiting in: ");
 
 			beaconStartNewExe(	beaconServerExeName,
@@ -6637,8 +6646,8 @@ static void beaconServerTestRequestClient(void){
 	beaconRequestUpdate();
 }
 
-void beaconServer(BeaconizerType beaconizerType, const char* masterServerName, S32 noNetStart){
-	beaconServerStartup(beaconizerType, masterServerName, noNetStart);
+void beaconServer(BeaconizerType beaconizerType, const char* masterServerName, S32 noNetStart, S32 onePassOnly, S32 forceRebuild){
+	beaconServerStartup(beaconizerType, masterServerName, noNetStart, onePassOnly, forceRebuild);
 
 	while(1){
 		beaconServerMonitorNetworkOrSleep();

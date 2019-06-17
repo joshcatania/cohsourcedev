@@ -22,8 +22,6 @@ ALTER DATABASE [cohchat] SET ARITHABORT OFF
 GO
 ALTER DATABASE [cohchat] SET AUTO_CLOSE OFF 
 GO
-ALTER DATABASE [cohchat] SET AUTO_CREATE_STATISTICS ON 
-GO
 ALTER DATABASE [cohchat] SET AUTO_SHRINK OFF 
 GO
 ALTER DATABASE [cohchat] SET AUTO_UPDATE_STATISTICS ON 
@@ -64,30 +62,9 @@ ALTER DATABASE [cohchat] SET PAGE_VERIFY CHECKSUM
 GO
 ALTER DATABASE [cohchat] SET DB_CHAINING OFF 
 GO
-ALTER DATABASE [cohchat] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
-GO
-ALTER DATABASE [cohchat] SET TARGET_RECOVERY_TIME = 0 SECONDS 
-GO
 EXEC sys.sp_db_vardecimal_storage_format N'cohchat', N'ON'
 GO
 USE [cohchat]
-GO
-/****** Object:  User [dbadminuser]    Script Date: 4/19/2019 11:57:53 PM ******/
-CREATE USER [dbadminuser] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
-GO
-ALTER ROLE [db_owner] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_accessadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_securityadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_ddladmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_backupoperator] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datareader] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datawriter] ADD MEMBER [dbadminuser]
 GO
 /****** Object:  StoredProcedure [dbo].[SP_delete_channel]    Script Date: 4/19/2019 11:57:54 PM ******/
 SET ANSI_NULLS ON

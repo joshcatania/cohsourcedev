@@ -194,7 +194,7 @@ SHARED_MEMORY BadgeDefs g_SgroupBadges;
  * badge_LoadNames
  *
  */
-int badge_LoadNames(StashTable hashNames, const char *fileName, const char *altFileName)
+int badge_LoadNames(StashTable hashNames, const char *fileName)
 {
 	int max_idx=0;
 	
@@ -204,11 +204,6 @@ int badge_LoadNames(StashTable hashNames, const char *fileName, const char *altF
 		int idx,count;
 		
 		mem = fileAlloc(fileName, 0);
-		
-		if(!mem)
-		{
-			mem = fileAlloc(altFileName, 0);
-		}
 		
 		if(!mem)
 		{
@@ -485,7 +480,6 @@ void badge_ClearUpdatedAll(Entity *e)
 // load defs
 
 static const char *s_PruneBadgesAttribFilename = NULL;
-static const char *s_PruneBadgesAttribAltFilename = NULL;
 
 /**********************************************************************func*
  * load_PruneBadges
@@ -494,7 +488,7 @@ static const char *s_PruneBadgesAttribAltFilename = NULL;
 static bool load_PruneBadges(TokenizerParseInfo pti[], BadgeDefs *pdefs)
 {
 	StashTable hashBadgeNames = stashTableCreateWithStringKeys(128, StashDeepCopyKeys);
-	int maxIdx = badge_LoadNames(hashBadgeNames, s_PruneBadgesAttribFilename, s_PruneBadgesAttribAltFilename);
+	int maxIdx = badge_LoadNames(hashBadgeNames, s_PruneBadgesAttribFilename);
 
 	if(pti==ParseBadgeDefs)
 	{
@@ -596,7 +590,7 @@ static bool load_PruneBadges(TokenizerParseInfo pti[], BadgeDefs *pdefs)
  * load_Badges
  *
  */
-void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int* bNewAttribs, const char *badgesAttribFilename, const char *badgesAttribAltFilename, int idxHardMax)
+void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int* bNewAttribs, const char *badgesAttribFilename, int idxHardMax)
 {
 #if SERVER || STATSERVER
 	int flags = PARSER_SERVERONLY;
@@ -608,7 +602,6 @@ void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int*
 
 	// indirect parameter to load_pruneBadges (yuck!)
 	s_PruneBadgesAttribFilename = badgesAttribFilename;
-	s_PruneBadgesAttribAltFilename = badgesAttribAltFilename;
 	s_FinalBadgesFilename = pchFilename;
 	s_FinalBadgesIdxHardMax = idxHardMax;
 	{
@@ -616,7 +609,6 @@ void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int*
 			ParseBadgeDefs,p,sizeof(*p),NULL,NULL,load_PruneBadges,NULL,badge_FinalProcess);
 	}
 	s_PruneBadgesAttribFilename = NULL;
-	s_PruneBadgesAttribAltFilename = NULL;
 	s_FinalBadgesFilename = NULL;
 	s_FinalBadgesIdxHardMax = 0;
 }

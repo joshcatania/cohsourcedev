@@ -79,6 +79,8 @@ static struct {
 	char*	subServerName;
 	S32		noNetStart;
 	char*	beaconRequestCacheDir;
+	S32     onePassOnly;
+	S32     forceRebuild;
 } beaconizerInit;	
 	
 struct {
@@ -2744,6 +2746,12 @@ void beaconHandleCmdLine(S32 argc, char** argv){
 			HANDLER("-beaconnonetstart"){
 				beaconizerInit.noNetStart = 1;
 			}
+			HANDLER("-beacononepassonly"){
+				beaconizerInit.onePassOnly = 1;
+			}
+			HANDLER("-beaconforcerebuild"){
+				beaconizerInit.forceRebuild = 1;
+			}
 			HANDLER("-beacondatatoolsrootpath"){
 				if(HAS_PARAM){
 					beaconServerSetDataToolsRootPath(GET_NEXT_PARAM);
@@ -2843,7 +2851,9 @@ void beaconizerStart()
 		{
 			beaconServer(	beaconizerInit.clientServerType,
 							beaconizerInit.masterServerName,
-							beaconizerInit.noNetStart);
+							beaconizerInit.noNetStart,
+							beaconizerInit.onePassOnly,
+							beaconizerInit.forceRebuild);
 		}
 	}
 }

@@ -255,6 +255,7 @@ void gfxGetSettings( GfxSettings * gfxSettings )
 	gfxSettings->advanced.entityDetailLevel	= game_state.LODBias;
 	gfxSettings->gamma						= game_state.gamma;
 	gfxSettings->antialiasing				= game_state.antialiasing;
+	gfxSettings->fieldOfView				= game_state.fov_1st;
 
 	gfxSettings->advanced.shadowMode		= game_state.shadowMode;
 	gfxSettings->advanced.shadowMap.showAdvanced	= game_state.shadowMapShowAdvanced;
@@ -740,6 +741,7 @@ void gfxGetInitialSettings( GfxSettings * gfxSettings )
 	gfxGetRecommendedAdvancedSettings(gfxSettings);
 
 	gfxSettings->gamma				= 1.0;
+	gfxSettings->fieldOfView		= FIELDOFVIEW_STD;
 	gfxSettings->screenX			= 1024;
 	gfxSettings->screenY			= 768;
 	gfxSettings->refreshRate		= 60;
@@ -884,6 +886,8 @@ void gfxApplySettings( GfxSettings * gfxSettings, int pastStartUp, bool onlyDyna
 	game_state.LODBias				= gfxSettings->advanced.entityDetailLevel;
 	game_state.gamma				= gfxSettings->gamma;
 	game_state.useVSync				= gfxSettings->advanced.useVSync;
+	game_state.fov_1st				= gfxSettings->fieldOfView;
+	game_state.fov_3rd				= gfxSettings->fieldOfView;
 
 	rdrSetVSync(game_state.useVSync);
 

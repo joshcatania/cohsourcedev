@@ -37,6 +37,8 @@ void serverErrorfCallback(char* errMsg)
 	if( isDevelopmentMode() )
 		printf_stderr("%s\n", errMsg);
 
+	LOG( LOG_ERROR, LOG_LEVEL_IMPORTANT, LOG_LOCAL, "%s", errMsg);
+
 	// Put up a blocking dialog box if this is a local mapserver (not a spawned mapserver)
 	if ((dialogBoxOverride == FORCE_SHOW_DIALOG_BOX
 			// These items are overridden by FORCE_SHOW_DIALOG_BOX
@@ -44,6 +46,7 @@ void serverErrorfCallback(char* errMsg)
 		// These items are not overridden by FORCE_SHOW_DIALOG_BOX
 		&& ErrorfCount() < 5 && !server_state.create_bins && !write_templates)
 	{
+		errorDialog(compatibleGetConsoleWindow(), errMsg, 0, NULL, errorWasForceShown());
 	}
 	else
 	{

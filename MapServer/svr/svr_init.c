@@ -17,6 +17,7 @@
 #include "entsend.h"
 #include "netcomp.h"
 #include "group.h"
+#include "groupfilesave.h"
 #include "grouputil.h"
 #include "entgen.h"
 #include "fpmacros.h"
@@ -697,6 +698,15 @@ static void parseArgs1(int argc,char **argv)
 			printf("Not using shared memory due to -createbins\n");
 			sharedMemorySetMode(SMM_DISABLED);
 			sharedHeapTurnOff("disabled");
+		}
+		else if (strcmp(argv[i], "-unpackmap")==0)
+		{
+			server_state.unpack_map = 1;
+			if(i + 1 < argc) {
+				strcpy(db_state.map_name,argv[++i]);
+			} else {
+				printf("Missing argument to -unpackmap\n");
+			}
 		}
 		else if (strcmp(argv[i], "-notwostagemapxfer")==0)
 		{
@@ -2099,7 +2109,7 @@ int __cdecl main(int argc,char **argv)
 	// check if this is a TSR instance
 	checkTsr();
 
-	if(!server_state.create_bins)
+	if(!server_state.create_bins && !server_state.unpack_map)
 	{
 		cmdCfgLoad();
 		connectToDbserver(NO_TIMEOUT);
@@ -2145,6 +2155,20 @@ int __cdecl main(int argc,char **argv)
 		plaque_Load();
 		groupLoadMakeAllBin(server_state.create_bins); // make sure to do these last because they are slow, and don't tend to cause bugs
 		PERFINFO_AUTO_STOP();
+		return 0;
+	}
+
+	if (server_state.unpack_map) {
+		if (db_state.map_name[0]) {
+			loadstart_printf("loading map %s...", db_state.map_name);
+			groupLoadMap(db_state.map_name, 0, 0);
+			loadend_printf("done");
+			loadstart_printf("saving map %s...", db_state.map_name);
+			groupSave(db_state.map_name);
+			loadend_printf("done");
+		} else {
+			FatalErrorf("-unpack_map requires -map_name");
+		}
 		return 0;
 	}
 

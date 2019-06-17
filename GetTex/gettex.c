@@ -50,11 +50,12 @@
 #include "gettex.h"
 #include "texture_tools.h"
 
+#define USE_CJPEG_EXE 0
 // If GETTEX_SUPPORT_LEGACY_TEXTURE_TOOL_EXES == 1 the code can run either
 // in the legacy mode (shelling out to nvdxt.exe and dxtex.ex) or the current
 // mode (calling into the NVIDIA Texture Tools Library.
 // If 0, only the NVIDIA Texture Tools Library mode is supported.
-#define GETTEX_SUPPORT_LEGACY_TEXTURE_TOOL_EXES 1
+#define GETTEX_SUPPORT_LEGACY_TEXTURE_TOOL_EXES 0
 
 // Test function
 #define GETTEXT_PREPARE_COMPARISON_FILE(_dds_file_path_)
@@ -1345,7 +1346,7 @@ static int texAppend(const char *fname_const,char *gameName,FILE *outf,int compr
 
 			gExternalToolType = kTool_DX_DxTexExe;
 
-			strcpy(tmp_tga_name,"C:\\temp.tga");
+			strcpy(tmp_tga_name,"C:\\game\\temp.tga");
 			moveFromCRoot(tmp_tga_name); // put in approved temp directory under c:\game\scratch, will create dir if doesnt exist yet
 			if (!isPow2(width) || !isPow2(height))
 			{
@@ -2669,7 +2670,7 @@ int main(int argc,char **argv)
 			arg_offset++;
 			i++;
 			arg_offset++;
-			Strcpy(cjpeg_path, argv[1]);
+			Strcpy(cjpeg_path, argv[i]);
 		}
 		else if (stricmp(argv[i], "-scanlog")==0) {
 			arg_offset++;
@@ -2784,6 +2785,7 @@ int main(int argc,char **argv)
 	}
 	backSlashes(nvdxt_path);
 	
+	#if USE_CJPEG_EXE
 	// Detect appropriate CJPEG.EXE
 	if (!cjpeg_path[0]) {
 		CreateToolUtilPath(cjpeg_path, ARRAY_SIZE(cjpeg_path), "cjpeg.exe");
@@ -2793,6 +2795,7 @@ int main(int argc,char **argv)
 		exit(1);
 	}
 	backSlashes(cjpeg_path);
+	#endif
 
 	// dxtex path not currently configurable
 	CreateToolUtilPath(dxtex_path, ARRAY_SIZE(dxtex_path), "dxtex.exe");

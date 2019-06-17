@@ -28,6 +28,7 @@ static GfxSettings gfxSettings_temp;
 TokenizerParseInfo autoResumeRegInfoSafe[] = {
 	{ "accountName",			TOK_STRING_X, (int)&gfxSettings_temp.accountName, ARRAY_SIZE_CHECKED(gfxSettings_temp.accountName)},
 	{ "gamma",					TOK_F32_X,	(int)&gfxSettings_temp.gamma},
+	{ "fieldOfView",			TOK_INT_X,	(int)&gfxSettings_temp.fieldOfView, kSettingsDefaultValue},
 	{ "fxSoundVolume",			TOK_F32_X,	(int)&gfxSettings_temp.fxSoundVolume},
 	{ "musicSoundVolume",		TOK_F32_X,	(int)&gfxSettings_temp.musicSoundVolume},
 	{ "voiceoverSoundVolume",	TOK_F32_X,	(int)&gfxSettings_temp.voSoundVolume},
@@ -253,6 +254,10 @@ int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName
 		{
 			gfxSettings->useRenderScale=RENDERSCALE_OFF;
 		}
+	}
+
+	if (gfxSettings->fieldOfView < FIELDOFVIEW_MIN || gfxSettings->fieldOfView > FIELDOFVIEW_MAX) {
+		gfxSettings->fieldOfView = FIELDOFVIEW_STD;
 	}
 
 	if (gfxSettings->advanced.bloomMagnitude < 0.1 || gfxSettings->advanced.bloomMagnitude > 4.0)

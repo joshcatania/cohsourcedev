@@ -174,7 +174,7 @@ UserData = true
 FreeServer = false
 
 ;
-ProtocolVersion = 30810
+ProtocolVersion = 190516
 
 ;
 AutoKickAccount = true
