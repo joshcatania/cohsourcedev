@@ -243,7 +243,7 @@ typedef struct BadgeMonitorInfo
 	int iOrder;				// Ordering in UI display list
 }BadgeMonitorInfo;
 
-int badge_LoadNames(StashTable hashNames, const char *fileName, const char *altFileName);
+int badge_LoadNames(StashTable hashNames, const char *fileName);
 
 char *badge_CategoryGetName(Entity *e, CollectionType collection, BadgeType category);
 char *badge_CollectionGetName(CollectionType collection);
@@ -307,7 +307,7 @@ char* badge_setTitleId( Entity * e, int idx );
 #define BADGE_CLEAR_COMPLETION(b)  ((b)&=~BADGE_COMPLETION_MASK)
 #define BADGE_COMPLETION(b)        ((b)&BADGE_COMPLETION_MASK)
 
-void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int* bNewAttribs, const char *badgesAttribFilename, const char *badgesAttribAltFilename, int idxHardMax);
+void load_Badges(SHARED_MEMORY_PARAM BadgeDefs *p, const char *pchFilename, int* bNewAttribs, const char *badgesAttribFilename, int idxHardMax);
 
 //pop help "badges"
 // each tutorial/pop-up help window has four bits of state- didn't happen, unread, read, hidden, and dismissed. (three unused possibilities)

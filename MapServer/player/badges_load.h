@@ -10,7 +10,7 @@
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 
-int LoadBadgeStatNames(char *fileName, char *altFileName, StashTable hashBadgeStatNames, StashTable ghNameFromIdx );
+int LoadBadgeStatNames(char *fileName, StashTable hashBadgeStatNames, StashTable ghNameFromIdx );
 StashTable LoadBadgeStatUsage(StashTable hashBadgeStatUsage, const BadgeDefs *badgeDefs, char *dataFilename);
 
 

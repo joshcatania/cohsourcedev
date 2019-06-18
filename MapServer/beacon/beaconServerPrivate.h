@@ -290,6 +290,7 @@ typedef struct BeaconServer {
 	S32									forceRebuild;
 	S32									fullCRCInfo;
 	S32									generateOnly;
+	S32                                 onePassOnly;
 	S32									checkEncounterPositionsOnly;
 	S32									testRequestClient;
 	S32									symStore;

@@ -1188,7 +1188,7 @@ void badge_ServerInit(void)
 
 	filename = "server/db/templates/badgestats.attribute";
 	g_hashBadgeStatNames = stashTableCreateWithStringKeys(128, StashDeepCopyKeys);
-	g_iMaxBadgeStatIdx = LoadBadgeStatNames(filename, "c:/coh_data/attributes/badgestats.attribute", g_hashBadgeStatNames, NULL );
+	g_iMaxBadgeStatIdx = LoadBadgeStatNames(filename, g_hashBadgeStatNames, NULL );
 
 	if(g_iMaxBadgeStatIdx>=BADGE_ENT_MAX_STATS)
 	{

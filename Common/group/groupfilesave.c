@@ -461,9 +461,13 @@ static void mapSaveDef( GroupDef *def, char **filedatap, char * fname )
 static int writeToDiskAndFree(char *fname,char **filedatap)
 {
 	FILE	*real_file;
+	char*	realFilename;
+	char	buf[MAX_PATH];
 	int ret;
 
 	fileMakeLocalBackup(fname, BACKUP_TIME_TO_KEEP);
+	realFilename = fileLocateWrite(fname, buf);
+	mkdirtree(realFilename);
 	real_file = fileOpen(fname,"wb");
 	if (!real_file)
 	{

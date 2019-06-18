@@ -16,7 +16,6 @@
 typedef struct badgestat_column_desc
 {
 	const char *attribute_file;
-	const char *attribute_alt_file;
 	const char *table;
 	bool number_first_row;
 	const char *column_prefix;
@@ -32,13 +31,11 @@ badgestat_column_desc s_column_desc[BADGESTATSTYPE_MAXTYPES] =
 {
 	// BADGESTATSTYPE_ENTITY
 	{	"server/db/templates/badgestats.attribute",
-		"c:/coh_data/attributes/badgestats.attribute",
 		"Badges",			false,	"c",	true,
 		1,	861,	BADGE_ENT_MAX_STATS-1,
 		offsetof(EntPlayer, aiBadgeStats)	},
 	// BADGESTATSTYPE_SUPERGROUP
 	{	"server/db/templates/supergroup_badgestats.attribute",
-		"c:/coh_data/attributes/supergroup_badgestats.attribute",
 		"SgrpBadgeStats",	false,	"id",	false,
 		0,	999,	BADGE_SG_MAX_STATS-1,
 		offsetof(stat_SgrpStats,badgeStats.aiStats)	},
@@ -74,10 +71,6 @@ void badgestats_Subtable(BadgeStatsType type, StuffBuff *psb)
 	int i;
 	LineDesc stats[] = {{ PACKTYPE_INT, SIZE_INT32, NULL, { 0, 0, "MadeBy", "badgestat_Subtable"}, }, {0}};
 	int max_column = fileLineCount(s_column_desc[type].attribute_file);
-	if (max_column == 0)
-	{
-		max_column = fileLineCount(s_column_desc[type].attribute_alt_file);
-	}
 
 	// pad out a few columns in case the dbserver is older than its clients (for devs)
 	max_column += 16;

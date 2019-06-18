@@ -90,10 +90,11 @@ TokenizerParseInfo ParseLoadBalanceConfig[] = {
 	{ "MinPhysicalMemory",	TOK_REDUNDANTNAME | TOK_INT(LoadBalanceConfig,minAvailPhysicalMemory,0), },		// allow old names until we transition data
 	{ "MinVirtualMemory",	TOK_REDUNDANTNAME | TOK_INT(LoadBalanceConfig,minAvailVirtualMemory,0), },		// allow old names until we transition data
 	{ "SuspensionTime",		TOK_REDUNDANTNAME | TOK_INT(LoadBalanceConfig,troubleSuspensionTime,0), },		// allow old names until we transition data
+	{ "MinVirtualMemory_LowWaterMark",	TOK_REDUNDANTNAME | TOK_INT(LoadBalanceConfig,minAvailVirtualMemory_lowWaterMark,0), }, // ^
 
 	{ "MaxMapservers_LowWaterMark",			TOK_INT(LoadBalanceConfig,maxMapservers_lowWaterMark,0), },
 	{ "MaxHostUtilization_LowWaterMark",	TOK_INT(LoadBalanceConfig,maxHostUtilization_lowWaterMark,0), },
-	{ "MinVirtualMemory_LowWaterMark",		TOK_INT(LoadBalanceConfig,minAvailVirtualMemory_lowWaterMark,0), },
+	{ "MinAvailVirtualMemory_LowWaterMark",		TOK_INT(LoadBalanceConfig,minAvailVirtualMemory_lowWaterMark,0), },
 	{ "", 0, 0 }
 };
 
@@ -325,7 +326,7 @@ bool loadBalanceConfigLoad()
 
 	if (!bad && default_config.minAvailVirtualMemory_lowWaterMark > default_config.minAvailVirtualMemory)
 	{
-		LOG(LOG_ERROR, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "LoadBalanceConfig error: 'MinPhysicalMemory_LowWaterMark' is larger than 'MinVirtualMemory'");
+		LOG(LOG_ERROR, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "LoadBalanceConfig error: 'MinAvailVirtualMemory_LowWaterMark' is larger than 'MinAvailVirtualMemory'");
 		bad = true;
 	}
 

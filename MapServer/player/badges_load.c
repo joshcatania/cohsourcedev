@@ -27,16 +27,12 @@ int g_iMaxBadgeStatIdx;
  * LoadBadgeStatNames
  *
  */
-int LoadBadgeStatNames(char *fileName, char *altFileName, StashTable hashBadgeStatNames, StashTable ghNameFromIdx )
+int LoadBadgeStatNames(char *fileName, StashTable hashBadgeStatNames, StashTable ghNameFromIdx )
 {
 	char *s,*mem,*args[10];
 	int idx,max_idx=0,count;
 
 	mem = fileAlloc(fileName, 0);
-	if(!mem)
-	{
-		mem = fileAlloc(altFileName, 0);
-	}
 
 	if(!mem)
 	{

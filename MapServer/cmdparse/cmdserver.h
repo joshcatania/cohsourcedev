@@ -88,6 +88,7 @@ typedef struct ServerState
 	int		noProcess;
 	int		noKillCars;
 	int		create_bins;	// create all .bin files and then exit
+	int     unpack_map;     // write out map and then exit
 	int     map_stats;      // creat map files then exit
 	int     map_minimaps;      // creat map minimap files then exit
 

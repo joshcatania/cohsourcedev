@@ -124,7 +124,7 @@ static void loadConfigFiles()
 {
 	loadstart_printf("loading badges.. ");
 	load_Badges(&g_SgroupBadges, "defs/supergroup_badges.def", 0, "server/db/templates/supergroup_badges.attribute",
-				"c:/coh_data/attributes/supergroup_badges.attribute", BADGE_SG_MAX_BADGES);
+				BADGE_SG_MAX_BADGES);
 	sgrpbadge_ServerInit();
 	loadend_printf("done");
 

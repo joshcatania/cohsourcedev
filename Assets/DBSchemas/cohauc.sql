@@ -2,11 +2,6 @@ USE [master]
 GO
 /****** Object:  Database [cohauc]    Script Date: 4/19/2019 11:56:41 PM ******/
 CREATE DATABASE [cohauc]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'cohauc', FILENAME = N'C:\MSSQL\MSSQL14.SQLEXPRESS\MSSQL\DATA\cohauc.mdf' , SIZE = 157440KB , MAXSIZE = UNLIMITED, FILEGROWTH = 1024KB )
- LOG ON 
-( NAME = N'cohauc_log', FILENAME = N'C:\MSSQL\MSSQL14.SQLEXPRESS\MSSQL\DATA\cohauc_log.ldf' , SIZE = 353216KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)
 GO
 ALTER DATABASE [cohauc] SET COMPATIBILITY_LEVEL = 100
 GO
@@ -69,30 +64,9 @@ ALTER DATABASE [cohauc] SET PAGE_VERIFY CHECKSUM
 GO
 ALTER DATABASE [cohauc] SET DB_CHAINING OFF 
 GO
-ALTER DATABASE [cohauc] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
-GO
-ALTER DATABASE [cohauc] SET TARGET_RECOVERY_TIME = 0 SECONDS 
-GO
 EXEC sys.sp_db_vardecimal_storage_format N'cohauc', N'ON'
 GO
 USE [cohauc]
-GO
-/****** Object:  User [dbadminuser]    Script Date: 4/19/2019 11:56:41 PM ******/
-CREATE USER [dbadminuser] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
-GO
-ALTER ROLE [db_owner] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_accessadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_securityadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_ddladmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_backupoperator] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datareader] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datawriter] ADD MEMBER [dbadminuser]
 GO
 /****** Object:  StoredProcedure [dbo].[SP_delete_ent]    Script Date: 4/19/2019 11:56:41 PM ******/
 SET ANSI_NULLS ON

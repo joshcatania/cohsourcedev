@@ -2,11 +2,6 @@ USE [master]
 GO
 /****** Object:  Database [cohauth]    Script Date: 4/19/2019 11:57:18 PM ******/
 CREATE DATABASE [cohauth]
- CONTAINMENT = NONE
- ON  PRIMARY 
-( NAME = N'cohauth', FILENAME = N'C:\MSSQL\MSSQL14.SQLEXPRESS\MSSQL\DATA\cohauth.mdf' , SIZE = 5952KB , MAXSIZE = UNLIMITED, FILEGROWTH = 1024KB )
- LOG ON 
-( NAME = N'cohauth_log', FILENAME = N'C:\MSSQL\MSSQL14.SQLEXPRESS\MSSQL\DATA\cohauth_log.ldf' , SIZE = 5696KB , MAXSIZE = 2048GB , FILEGROWTH = 10%)
 GO
 ALTER DATABASE [cohauth] SET COMPATIBILITY_LEVEL = 100
 GO
@@ -26,8 +21,6 @@ GO
 ALTER DATABASE [cohauth] SET ARITHABORT OFF 
 GO
 ALTER DATABASE [cohauth] SET AUTO_CLOSE OFF 
-GO
-ALTER DATABASE [cohauth] SET AUTO_CREATE_STATISTICS ON 
 GO
 ALTER DATABASE [cohauth] SET AUTO_SHRINK OFF 
 GO
@@ -69,30 +62,9 @@ ALTER DATABASE [cohauth] SET PAGE_VERIFY CHECKSUM
 GO
 ALTER DATABASE [cohauth] SET DB_CHAINING OFF 
 GO
-ALTER DATABASE [cohauth] SET FILESTREAM( NON_TRANSACTED_ACCESS = OFF ) 
-GO
-ALTER DATABASE [cohauth] SET TARGET_RECOVERY_TIME = 0 SECONDS 
-GO
 EXEC sys.sp_db_vardecimal_storage_format N'cohauth', N'ON'
 GO
 USE [cohauth]
-GO
-/****** Object:  User [dbadminuser]    Script Date: 4/19/2019 11:57:18 PM ******/
-CREATE USER [dbadminuser] WITHOUT LOGIN WITH DEFAULT_SCHEMA=[dbo]
-GO
-ALTER ROLE [db_owner] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_accessadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_securityadmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_ddladmin] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_backupoperator] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datareader] ADD MEMBER [dbadminuser]
-GO
-ALTER ROLE [db_datawriter] ADD MEMBER [dbadminuser]
 GO
 /****** Object:  StoredProcedure [dbo].[ap_GPwd]    Script Date: 4/19/2019 11:57:18 PM ******/
 SET ANSI_NULLS ON

@@ -513,6 +513,8 @@ SliderParam s_paramToolTipScale     = { 0.01f,         .6,     1.00f,	1.0f };
 SliderParam s_paramDOF              = { 0.1f,        1.0f,     2.0f,	1.0f };
 SliderParam s_paramBloom            = { 0.1f,        1.0f,     2.0f,	1.0f };
 SliderParam s_paramRenderScale		= { 0.25f,		 1.0f,		1.0f,	1.0f};
+SliderParam s_paramFieldOfView      = { FIELDOFVIEW_MIN, FIELDOFVIEW_MAX, FIELDOFVIEW_MAX, 1.0f };
+
 
 SliderParam s_paramWhite      = { 0.004f,       1.0f,     1.0f,	1.0f };
 SliderParam s_paramBlack      = { 0.004f,       0.004f,     1.0f,	1.0f };
@@ -819,6 +821,7 @@ static GameOptions s_optListGraphics[] =
 	{ 0, kOptionType_Func,   DisplayAntialiasingOption,  "AntialiasingHelp",        NULL,				 kOptionType_IntSnapSlider,		&s_antialiasing,		&s_paramAntiAliasingScale,	NULL,				NULL,					ShouldDisplayAntialiasingOption },
 	{ 0, kOptionType_Bool,   "OptionShowAdvanced",       "OptionShowAdvancedHelp",	&s_gfx.showAdvanced, kOptionType_Bool,				&s_gfx.showAdvanced,	NULL,						"OptionEnabled",	"OptionDisabledUltra",	NULL},
 	{ 0, kOptionType_Func,   DisplaySlowUglyOption,      "OptionSlowOrUglyHelp",	NULL,	             kOptionType_SnapSliderUltra,	&s_gfx.slowUglyScale,	&s_paramSlowUglyScale,		NULL,				NULL,					ShouldNotDisplayAdvancedOption },
+	{ 0, kOptionType_String, "OptionFieldOfView",        "OptionFieldOfViewHelp",	&s_gfx.fieldOfView,  kOptionType_IntSlider,			&s_gfx.fieldOfView,		&s_paramFieldOfView,		NULL,				NULL,					NULL },
 
 	// Ultra Mode Section
 	{ 0, kOptionType_Title,  "OptionsUltraMode",				 0,								NULL,              					 kOptionType_Nop,         NULL,						NULL,                     NULL,				NULL,		 ShouldDisplayAdvancedOption },

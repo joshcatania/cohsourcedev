@@ -210,7 +210,7 @@ const char* beaconServerGetDataPath(void);
 const char* beaconServerGetToolsPath(void);
 void		beaconServerSetRequestCacheDir(const char* cacheDir);
 void		beaconServerSetSymStore(void);
-void		beaconServer(BeaconizerType beaconizerType, const char* masterServerName, S32 noNetStart);
+void		beaconServer(BeaconizerType beaconizerType, const char* masterServerName, S32 noNetStart, S32 onePassOnly, S32 forceRebuild);
 void		beaconRequestBeaconizing(const char* uniqueStorageName);
 void		beaconRequestUpdate(void);
 void		beaconRequestSetMasterServerAddress(const char* address);

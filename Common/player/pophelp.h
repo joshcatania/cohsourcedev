@@ -21,7 +21,7 @@ typedef enum PopHelpState
 
 PopHelpItem *getPopHelpItem(int event);
 int getPopHelpEvent(char *tag);
-void loadPopHelp(char *def_filename, char *attribute_filename, char *attribute_alt_filename);
+void loadPopHelp(char *def_filename, char *attribute_filename);
 int loadedPopHelp(void);
 void reloadPopHelp(void);
 char *popHelpTags(void);

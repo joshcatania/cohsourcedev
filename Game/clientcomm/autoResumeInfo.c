@@ -22,6 +22,7 @@ static GfxSettings gfxSettings_temp;
 TokenizerParseInfo autoResumeRegInfoSafe[] = {
 	{ "accountName",			TOK_STRING_X, (int)&gfxSettings_temp.accountName, ARRAY_SIZE_CHECKED(gfxSettings_temp.accountName)},
 	{ "gamma",					TOK_F32_X,	(int)&gfxSettings_temp.gamma},
+	{ "fieldOfView",			TOK_INT_X,	(int)&gfxSettings_temp.fieldOfView},
 	{ "fxSoundVolume",			TOK_F32_X,	(int)&gfxSettings_temp.fxSoundVolume},
 	{ "musicSoundVolume",		TOK_F32_X,	(int)&gfxSettings_temp.musicSoundVolume},
 	{ "voiceoverSoundVolume",	TOK_F32_X,	(int)&gfxSettings_temp.voSoundVolume},
@@ -122,7 +123,7 @@ void saveAutoResumeInfoToRegistry(void)
 	}
 }
 
-int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName, int * dontSaveName )
+int getAutoResumeInfoFromRegistry(GfxSettings* gfxSettings, char* accountName, int* dontSaveName)
 {
 	// Determine what settings may need to be overwritten
 	bool isFirstRun = true;
@@ -169,14 +170,14 @@ int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName
 		gfxSettings->advanced.worldDetailLevel = 2.0f;
 
 	if (gfxSettings->advanced.entityDetailLevel < 0.3f)
-		gfxSettings->advanced.entityDetailLevel= 0.6f;
-	else if (gfxSettings->advanced.entityDetailLevel> 2.0f)
+		gfxSettings->advanced.entityDetailLevel = 0.6f;
+	else if (gfxSettings->advanced.entityDetailLevel > 2.0f)
 		gfxSettings->advanced.entityDetailLevel = 2.0f;
 
 	g_audio_state.software = gfxSettings->forceSoftwareAudio;
 
 	if (dontSaveName)
-		*dontSaveName = gfxSettings->dontSaveName;
+		* dontSaveName = gfxSettings->dontSaveName;
 
 	g_audio_state.uisurround = gfxSettings->enable3DSound;
 
@@ -184,24 +185,30 @@ int getAutoResumeInfoFromRegistry( GfxSettings * gfxSettings, char * accountName
 
 	if (gfxSettings->useRenderScale) {
 		int effResX, effResY;
-		if (gfxSettings->useRenderScale==RENDERSCALE_FIXED) {
+		if (gfxSettings->useRenderScale == RENDERSCALE_FIXED) {
 			effResX = gfxSettings->renderScaleX;
 			effResY = gfxSettings->renderScaleY;
-		} else if (gfxSettings->useRenderScale==RENDERSCALE_SCALE) {
-			effResX = gfxSettings->renderScaleX*gfxSettings->screenX;
-			effResY = gfxSettings->renderScaleY*gfxSettings->screenY;
+		}
+		else if (gfxSettings->useRenderScale == RENDERSCALE_SCALE) {
+			effResX = gfxSettings->renderScaleX * gfxSettings->screenX;
+			effResY = gfxSettings->renderScaleY * gfxSettings->screenY;
 		}
 		if (effResX < 16 || effResX > gfxSettings->screenX ||
 			effResY < 16 || effResY > gfxSettings->screenY)
 		{
-			gfxSettings->useRenderScale=RENDERSCALE_OFF;
+			gfxSettings->useRenderScale = RENDERSCALE_OFF;
 		}
 	}
 
-	if (gfxSettings->advanced.bloomMagnitude < 0.1 || gfxSettings->advanced.bloomMagnitude > 4.0)
+	if (gfxSettings->fieldOfView < FIELDOFVIEW_MIN || gfxSettings->fieldOfView > FIELDOFVIEW_MAX) {
+		gfxSettings->fieldOfView = FIELDOFVIEW_STD;
+	}
+	if (gfxSettings->advanced.bloomMagnitude < 0.1 || gfxSettings->advanced.bloomMagnitude > 4.0) {
 		gfxSettings->advanced.bloomMagnitude = 1.0;
-	if (gfxSettings->advanced.dofMagnitude < 0.1 || gfxSettings->advanced.dofMagnitude > 4.0)
+	}
+	if (gfxSettings->advanced.dofMagnitude < 0.1 || gfxSettings->advanced.dofMagnitude > 4.0) {
 		gfxSettings->advanced.dofMagnitude = 1.0;
+	}
 
 	if (game_state.safemode)
 	{

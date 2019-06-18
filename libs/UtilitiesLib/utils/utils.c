@@ -113,7 +113,7 @@ int mkdir( const char * path )
 
 // Given a path to a file, this function makes sure that all directories
 // specified in the path exists.
-void mkdirtree(char *in_path)
+void mkdirtree(const char *in_path)
 {
     char path[MAX_PATH];
 	char	*s;

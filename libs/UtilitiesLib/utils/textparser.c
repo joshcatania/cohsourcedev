@@ -1794,6 +1794,12 @@ int ParserWriteTextFile(const char* filename, ParseTable pti[], const void* stru
 {
 	int ok = 1;
 	FILE* out;
+	char*	realFilename;
+	char	buf[MAX_PATH];
+
+	// fileLocateWrite might return a directory that does not exist. To ensure we write the file, create it.
+	realFilename = fileLocateWrite(filename, buf);
+	mkdirtree(realFilename);
 
 	// init file
 	out = fileOpen(filename, "wb");

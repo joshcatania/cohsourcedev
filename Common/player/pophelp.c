@@ -58,7 +58,7 @@ int g_num_pop_help;
 
 static int loaded_pop_help = 0;
 
-void loadPopHelp(char *def_filename, char *attribute_filename, char *attribute_alt_filename)
+void loadPopHelp(char *def_filename, char *attribute_filename)
 {
 	StashElement element;
 	PopHelpItem *phi;
@@ -79,7 +79,7 @@ void loadPopHelp(char *def_filename, char *attribute_filename, char *attribute_a
 	} 
 
 	g_popHelpTable = stashTableCreateWithStringKeys(MAX_POP_HELP, StashDeepCopyKeys);
-	g_num_pop_help = badge_LoadNames(g_popHelpTable, attribute_filename, attribute_alt_filename);
+	g_num_pop_help = badge_LoadNames(g_popHelpTable, attribute_filename);
 
 	for( j = 0; j < eaSize(&gPopHelpDictionary.items); j++)
 	{
@@ -131,7 +131,7 @@ int getPopHelpEvent(char *tag)
 void reloadPopHelp(void)
 {
 	loaded_pop_help = 0;
-	loadPopHelp("defs/PopHelp.def", "server/db/templates/pophelp.attribute", "c:/coh_data/attributes/pophelp.attribute");
+	loadPopHelp("defs/PopHelp.def", "server/db/templates/pophelp.attribute");
 }
 
 int loadedPopHelp(void)

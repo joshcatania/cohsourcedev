@@ -5,6 +5,10 @@
 #define WORLD_DETAIL_LIMIT 4.0f
 #define GFXSETTINGS_VERSION 5
 
+#define FIELDOFVIEW_MIN 40
+#define FIELDOFVIEW_STD 55
+#define FIELDOFVIEW_MAX 90
+
 typedef enum OptionGraphicsPreset {
 	GRAPHICSPRESET_MINIMUM,				// aka Ugly
 	GRAPHICSPRESET_PERFORMANCE,			// aka Fast
@@ -188,6 +192,8 @@ typedef struct GfxSettings
 
 	F32 gamma;					//0.0 = normal -0.7 = lowest 3.4 = highest  
 	int antialiasing;
+
+	int fieldOfView;
 
 	F32 fxSoundVolume;
 	F32 musicSoundVolume;

@@ -5813,19 +5813,19 @@ StructDesc auctioninv_history_desc[] =
 
 void containerWriteTemplates(char *dir)
 {
-	dbWriteAttributes("vars.attribute",attributeNames());
+	dbWriteAttributes(dir, "vars.attribute",attributeNames());
 
 	// --------------------
 	// badges
 
 	// player
-	dbWriteAttributes("badges.attribute",badge_Names(&g_BadgeDefs));
-	dbWriteAttributes("badgestats.attribute",badge_StatNames(g_hashBadgeStatUsage));
-	dbWriteAttributes("pophelp.attribute",popHelpTags());
+	dbWriteAttributes(dir, "badges.attribute",badge_Names(&g_BadgeDefs));
+	dbWriteAttributes(dir, "badgestats.attribute",badge_StatNames(g_hashBadgeStatUsage));
+	dbWriteAttributes(dir, "pophelp.attribute",popHelpTags());
 
 	// supergroup
-	dbWriteAttributes("supergroup_badges.attribute",badge_Names(&g_SgroupBadges));
-	dbWriteAttributes("supergroup_badgestats.attribute",badge_StatNames(g_BadgeStatsSgroup.aIdxBadgesFromName));
+	dbWriteAttributes(dir, "supergroup_badges.attribute",badge_Names(&g_SgroupBadges));
+	dbWriteAttributes(dir, "supergroup_badgestats.attribute",badge_StatNames(g_BadgeStatsSgroup.aIdxBadgesFromName));
 
 	// --------------------
 	// misc.

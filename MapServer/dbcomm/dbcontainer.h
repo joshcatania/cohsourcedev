@@ -85,7 +85,7 @@ void dbWriteTemplate(char *dir,char *fname,char *data);
 void dbWriteSchema(char *dir,char *fname,char *data);
 //void dbLoadAttributes();
 //bool dbAttributeId(char *name,int *idx);
-void dbWriteAttributes(char *fname,char *data);
+void dbWriteAttributes(char *dir,char *fname,char *data);
 char *dbGetMapName(int idx);
 int dbGetMapId(const char *mapname);
 void dbHandleContainerAck(Packet *pak);

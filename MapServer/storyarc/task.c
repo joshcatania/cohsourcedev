@@ -2506,9 +2506,6 @@ void UniqueTaskPreload()
 	char*		fileName = "server/db/templates/vars.attribute";
 
 	mem = fileAlloc(fileName, 0);
-	if(!mem){
-		mem = fileAlloc("c:/coh_data/attributes/vars.attribute", 0);
-	}
 
 	if(!mem){
 		printf("ERROR: Can't open %s\n", fileName);

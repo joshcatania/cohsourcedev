@@ -744,14 +744,17 @@ void dbWriteSchema(char *dir,char *fname,char *data)
 	fileClose( file );
 }
 
-void dbWriteAttributes(char *fname,char *data)
+void dbWriteAttributes(char *dir, char *fname, char *data)
 {
 	char		*s,*mem,dirslash[1000] = "",dirpath[1000],*args[10];
 	StashTable	hash_table;
 	int			idx,max_idx=0,count;
 	FILE		*file;
 
-	sprintf(dirpath,"c:/coh_data/attributes/%s",fname);
+	if (dir)
+		sprintf(dirslash,"%s/",dir);
+
+	sprintf(dirpath,"%sserver/db/templates/%s", dirslash, fname);
 	mem = fileAlloc(dirpath, 0);
 	file = fileOpen(dirpath, "wt" );
 	if(!file)
