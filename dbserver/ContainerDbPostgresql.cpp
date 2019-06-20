@@ -119,7 +119,7 @@ std::string ContainerDbPostgresql::alterColumnType(const std::string& table, con
 }
 
 int ContainerDbPostgresql::insertEmptyContainerRow(std::ostringstream& ss, const std::string& table) {
-	ss << "SELECT setval(pg_get_serial_sequence('dbo." << table << "', containerid'), ?); "
+	ss << "SELECT setval(pg_get_serial_sequence('dbo." << table << "', 'containerid'), ?); "
 		"INSERT INTO dbo." << table << " (ContainerId) VALUES (?);";
 	// Number of binds needed
 	return 2;

@@ -35,7 +35,7 @@
 #define strlwrdupa(str) strlwr(strdupa(str))
 #define struprdupa(str) strupr(strdupa(str))
 
-void split(std::vector<std::string>& vect, const std::string& s, char delim);
+std::vector<std::string> split(const std::string& s, char delim);
 static inline std::string& ltrim(std::string& s);
 static inline std::string& rtrim(std::string& s);
 static inline std::string& trim(std::string& s);
@@ -268,10 +268,7 @@ void sqlDeleteContainer(ContainerTemplate *tplt, int container_id)
 }
 
 static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind, SqlConn conn) {
-	std::string query = ss.str();
-	sqlConnStmtExecDirectMany(stmt, query.c_str(), SQL_NTS, conn, false);
-	ss.clear();
-	ss.str("");
+	sqlConnStmtExecDirectMany(stmt, ss.str().c_str(), SQL_NTS, conn, false);
 
 	sqlConnStmtUnbindCols(stmt);
 	sqlConnStmtUnbindParams(stmt);
@@ -279,25 +276,8 @@ static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind
 	*bind = 0;
 }
 
-static void sqlFlushStatement(HSTMT stmt, char **estr, unsigned *bind, SqlConn conn)
+static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id, LineList *diff, std::ostringstream& ss, unsigned *bind, HSTMT stmt, SqlConn conn)
 {
-#ifdef _FULLDEBUG
-	//assert(estrUTF8CharacterCount(estr));
-#endif
-
-	sqlConnStmtExecDirectMany(stmt, *estr, estrLength(estr), conn, false);
-	estrClear(estr);
-
-	sqlConnStmtUnbindCols(stmt);
-    sqlConnStmtUnbindParams(stmt);
-	sqlConnStmtCloseCursor(stmt);
-	*bind = 0;
-}
-
-static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id, LineList *diff, char **estr, unsigned *bind, HSTMT stmt, SqlConn conn)
-{
-	printf("sqlContainerAddOrDelRows cmd count: %d\n", diff->cmd_count);
-	std::ostringstream* ss = new std::ostringstream();
 	for (int i=0; i < diff->cmd_count; i++) {
 		RowAddDel *cmd = &diff->row_cmds[i];
 		SlotInfo *slot = &tplt->slots[cmd->idx];
@@ -306,13 +286,13 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 		if (cmd->add) {
 			switch (slot->table->table_type) {
 				xcase TT_CONTAINER : {
-					int bindsNeeded = gContainerDb->insertEmptyContainerRow(*ss, name);
+					int bindsNeeded = gContainerDb->insertEmptyContainerRow(ss, name);
 					for (int i = 0; i < bindsNeeded; i++) {
 						bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 					}
 				}
 				xcase TT_SUBCONTAINER:
-					*ss << "INSERT INTO dbo." << name << " (ContainerId,SubId) VALUES (?,?);";
+					ss << "INSERT INTO dbo." << name << " (ContainerId,SubId) VALUES (?,?);";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);					
 				xdefault:
@@ -321,10 +301,10 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 		} else {
 			switch (slot->table->table_type) {
 				xcase TT_CONTAINER:
-					*ss << "DELETE FROM dbo." << name << " WHERE ContainerId=?;";
+					ss << "DELETE FROM dbo." << name << " WHERE ContainerId=?;";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 				xcase TT_SUBCONTAINER:
-					*ss << "DELETE FROM dbo." << name << " WHERE ContainerId=? AND SubId=?;";
+					ss << "DELETE FROM dbo." << name << " WHERE ContainerId=? AND SubId=?;";
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 					bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &slot->sub_id, NULL);
 				xdefault:
@@ -332,14 +312,13 @@ static void sqlContainerAddOrDelRows(ContainerTemplate *tplt, int *container_id,
 			}
 		}
 
-		if (ss->tellp() > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
-			sqlFlushStatement(stmt, *ss, bind, conn);
+		if (ss.tellp() > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
+			sqlFlushStatement(stmt, ss, bind, conn);
 		}
 	}
-	delete ss;
 }
 
-static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, LineList *diff, char **estr, unsigned *bind, HSTMT stmt, SqlConn conn, sqlBindTemp *** bind_temps)
+static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, LineList *diff, std::ostringstream& ss, unsigned *bind, HSTMT stmt, SqlConn conn, sqlBindTemp *** bind_temps)
 {
 	unsigned i;
 	unsigned diff_count = diff->count;
@@ -347,8 +326,9 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 	for (i=0; i<diff_count; )
 	{
 		SlotInfo	*last_slot = &tplt->slots[diff->lines[i].idx];
+		ss << "UPDATE dbo." << last_slot->table->name << " SET ";
+		boolean firstColumnUpdate = true;
 
-		estrConcatf(estr, "UPDATE dbo.%s SET ", last_slot->table->name);
 		for (; i<diff_count; i++)
 		{
 			LineTracker	*line	= &diff->lines[i];
@@ -359,15 +339,21 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 			if (slot->sub_id != last_slot->sub_id || table != last_slot->table)
 				break;
 
-			estrConcatf(estr, "%s=?,", col->name);
-			switch(col->data_type)
+			if (!firstColumnUpdate) {
+				ss << ',';
+			}
+			firstColumnUpdate = false;
+			ss << col->name << "=?";
+			switch (col->data_type)
 			{
 				default:
+				{
 #ifdef _FULLDEBUG
 					assert(strlen(diff->text + line->str_idx) == line->size);
 #endif
 					bindInputParameter(stmt, (*bind)++, CFTYPE_STRING, diff->text + line->str_idx, &line->size);
 					break;
+				}
 				case CFTYPE_BINARY:
 				{
 #if ACTUALLY_STORE_BINARY_AS_BINARY
@@ -406,18 +392,17 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 			}
 		}
 
-		estrSetLength(estr, estrLength(estr)-1);
 		if (!last_slot->table->array_count) {
-			estrConcatStaticCharArray(estr, " WHERE ContainerId=?;");
+			ss << " WHERE ContainerId=?;";
 			bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 		} else {
-			estrConcatStaticCharArray(estr, " WHERE ContainerId=? AND SubId=?;");
+			ss << " WHERE ContainerId=? AND SubId=?;";
 			bindInputParameter(stmt, (*bind)++, CFTYPE_INT, container_id, NULL);
 			bindInputParameter(stmt, (*bind)++, CFTYPE_INT, &last_slot->sub_id, NULL);
 		}
 
-		if (estrLength(estr) > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
-			sqlFlushStatement(stmt, estr, bind, conn);
+		if (ss.tellp() > LONG_SQL_STRING || *bind >= FLUSH_BINDS) {
+			sqlFlushStatement(stmt, ss, bind, conn);
 		}
 	}
 }
@@ -428,23 +413,22 @@ static void sqlContainerUpdateRows(ContainerTemplate *tplt, int *container_id, L
 */
 void sqlContainerUpdateInternal(ContainerTemplate* tplt, int container_id, LineList* diff, SqlConn conn)
 {
-	static char *estrs[SQLCONN_MAX] = {0,};
 	static sqlBindTemp** bind_temps[SQLCONN_MAX] = {0,};
 	unsigned bind = 0;
 	HSTMT stmt;
 
 	stmt = sqlConnStmtAlloc(conn);
 
-	estrClear(&estrs[conn]);
-
 	if (!bind_temps[conn])
 		eaCreate(&bind_temps[conn]);
 
-	sqlContainerAddOrDelRows(tplt, &container_id, diff, &estrs[conn], &bind, stmt, conn);
-	sqlContainerUpdateRows(tplt, &container_id, diff, &estrs[conn], &bind, stmt, conn, &bind_temps[conn]);
+	std::ostringstream queryBuilder;
 
-	if (estrLength(&estrs[conn]))
-		sqlFlushStatement(stmt, &estrs[conn], &bind, conn);
+	sqlContainerAddOrDelRows(tplt, &container_id, diff, queryBuilder, &bind, stmt, conn);
+	sqlContainerUpdateRows(tplt, &container_id, diff, queryBuilder, &bind, stmt, conn, &bind_temps[conn]);
+
+	if (queryBuilder.tellp() > 0)
+		sqlFlushStatement(stmt, queryBuilder, &bind, conn);
 
 	sqlConnStmtFree(stmt);
 
@@ -938,8 +922,7 @@ char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, cha
 	TODO(); // Code cleanup needed to improve clarity for future audits
 
 	std::string columnsString = col_names;
-	std::vector<std::string> columns;
-	split(columns, columnsString, ',');
+	auto columns = split(columnsString, ',');
 	size_t num_columns = columns.size();
 	assert(num_columns <= MAX_QUERY_RESULTS);
 
@@ -1208,12 +1191,16 @@ std::vector<std::string> sqlReadTableNames() {
 	// Index 3 contains the table names
 	retcode = SQLBindCol(stmt, 3, SQL_C_CHAR, tabName, 255, &lenTableName);
 
-	std::vector<std::string> tableNames;
-	while ((retcode = _sqlConnStmtFetch(stmt, SQLCONN_FOREGROUND)) == SQL_SUCCESS)
-		tableNames.push_back(std::string(tabName, lenTableName));
+	std::vector<std::string> tables;
+	while ((retcode = _sqlConnStmtFetch(stmt, SQLCONN_FOREGROUND)) == SQL_SUCCESS) {
+		// Normalize table name to lowercase
+		auto table = std::string(tabName, lenTableName);
+		std::transform(table.begin(), table.end(), table.begin(), ::tolower);
+		tables.push_back(table);
+	}
 
 	sqlConnStmtFree(stmt);
-	return tableNames;
+	return tables;
 }
 
 /** 
@@ -1402,12 +1389,14 @@ void testDataBaseTypes(struct DbList * list)
 	loadend_printf("");
 }
 
-void split(std::vector<std::string>& vect, const std::string& s, char delim) {
+std::vector<std::string> split(const std::string& s, char delim) {
 	std::stringstream ss(s);
 	std::string item;
+	std::vector<std::string> vect;
 	while (std::getline(ss, item, delim)) {
 		vect.push_back(trim(item));
 	}
+	return vect;
 }
 
 // trim from start

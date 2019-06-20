@@ -22,6 +22,7 @@
 #include "dbglobals.h"
 #include <sstream>
 #include <set>
+#include <algorithm>
 
 typedef struct
 {
@@ -71,17 +72,18 @@ TableInfo *tpltFindTable(ContainerTemplate *tplt, char *name)
 	return 0;
 }
 
-static void setField(ColumnInfo *field, const char *name, enum ContainerFieldType data_type, int bytes, int column_size, const char *data_type_name)
+static void setField(ColumnInfo& field, const char *name, ContainerFieldType data_type, int column_size, bool isUnbound)
 {
-	memset(field, 0, sizeof(*field));
-	strcpy(field->name, name);
-	field->data_type = data_type;
-	field->num_bytes = bytes;
-	field->column_size = column_size;
+	auto& containerField = gContainerDb->getContainerFieldInfo(data_type);
+	memset(&field, 0, sizeof(field));
+	strcpy(field.name, name);
+	field.data_type = data_type;
+	field.num_bytes = containerField.access_size * ((column_size == 0) ? 1 : column_size);
+	field.column_size = column_size;
 	if (column_size)
-		sprintf(field->data_type_name, "%s(%d)", data_type_name, column_size);
+		sprintf(field.data_type_name, "%s(%d)", containerField.db_bound_type.c_str(), column_size);
 	else
-		strcpy(field->data_type_name, data_type_name);
+		strcpy(field.data_type_name, (isUnbound) ? containerField.db_unbound_type.c_str() : containerField.db_bound_type.c_str());
 }
 
 void hashColumnNames(TableInfo *table)
@@ -162,13 +164,10 @@ void hashAllNames(ContainerTemplate *tplt, const char * fname)
 ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 {
 	char				*mem;
-	int					count,type,data_len,is_attr;
 	ContainerTemplate	*tplt;
 	ColumnInfo			*field;
 	TableInfo			*table=0;
 	CtnrLineState		state;
-	int column_size;
-	std::string sqlType;
 
 	TODO(); // Code cleanup needed to improve clarity for future audits
 
@@ -182,14 +181,12 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 
 	while(ctnrLineGet(&state))
 	{
-		is_attr = 0;
-		count = state.count - 1;
-		if (count < 1)
+		if (state.count < 0)
 			continue;
 
-		type = dataType(state.args[1], column_size, data_len, sqlType);
-		if (stricmp(state.args[1],"attribute")==0)
-			is_attr = 1;
+		int column_size, data_len;
+		std::string sqlType;
+		ContainerFieldType type = dataType(state.args[1], column_size, data_len, sqlType);
 
 		table = tpltFindTable(tplt,state.table);
 		if (!table)
@@ -202,7 +199,7 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 
 			// ContainerId
 			field = table->columns = (ColumnInfo*)realloc(0,1 * sizeof(table->columns[0]));
-			setField(field, "ContainerId", CFTYPE_INT, sizeof(int), 0, gContainerDb->getContainerFieldInfo(CFTYPE_INT).db_bound_type.c_str());
+			setField(*field, "ContainerId", CFTYPE_INT, 0, false);
 
 			field->reserved_word = 1;
 			table->num_columns = 1;
@@ -242,14 +239,14 @@ ContainerTemplate *tpltLoad(int dblist_id,char *table_name,char *fname)
 			field = &table->columns[table->num_columns-1];
 			memset(field,0,sizeof(*field));
 
-			field->data_type = static_cast<ContainerFieldType>(type);
+			field->data_type = type;
 			field->column_size = column_size;
 			field->num_bytes = data_len;
 
 			strcpy(field->name,state.field);
 			strcpy(field->data_type_name, sqlType.c_str());
 
-			if (is_attr)
+			if (stricmp(state.args[1], "attribute") == 0)
 				field->attr = var_attrs;
 			if (state.count > 2 && stricmp(state.args[2],"indexed")==0)
 				field->indexed = 1;
@@ -633,13 +630,18 @@ static void rebuildTableDataBruteForce(ContainerTemplate *tplt,TableInfo *table)
 }
 
 static void markTableReferenced(const std::string& table) {
-	referenced_tables.insert(table);
+	// Normalise table name to lowercase -- to be compared against what the database tells us what
+	// the names of the tables are later, which isn't necessarily what they were created as. E.g.
+	// PostgreSQL normalizes most everything to lowercase.
+	std::string lowercaseTable = table;
+	std::transform(lowercaseTable.begin(), lowercaseTable.end(), lowercaseTable.begin(), ::tolower);
+	referenced_tables.insert(lowercaseTable);
 }
 
 void tpltDropUnreferencedTables(void) {
-	auto tableNames = sqlReadTableNames();
-	
-	for (auto it = tableNames.begin(); it != tableNames.end(); ++it) {
+	auto sqlTables = sqlReadTableNames();
+
+	for (auto it = sqlTables.begin(); it != sqlTables.end(); ++it) {
 		if (referenced_tables.find(*it) == referenced_tables.end()) {
 			printf("Dropping unreferenced table: %s\n", it->c_str());
 			sqlDropTable(it->c_str());
@@ -749,12 +751,10 @@ static int verifyAttributesTable(const char *tablename, AttributeList * attr)
 	table.num_columns = 2;
 	table.columns = columns;
 
-	ContainerFieldInfo intFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_INT);
-	setField(&table.columns[0], "Id", CFTYPE_INT, intFieldInfo.access_size, 0, intFieldInfo.db_bound_type.c_str());
+	setField(table.columns[0], "Id", CFTYPE_INT, 0, false);
 	table.columns[0].reserved_word = 1;
 
-	ContainerFieldInfo stringFieldInfo = gContainerDb->getContainerFieldInfo(CFTYPE_STRING);
-	setField(&table.columns[1], "Name", CFTYPE_STRING, stringFieldInfo.access_size * MAX_ATTRIBNAME_LEN, MAX_ATTRIBNAME_LEN, stringFieldInfo.db_bound_type.c_str());
+	setField(table.columns[1], "Name", CFTYPE_STRING, MAX_ATTRIBNAME_LEN, false);
 
 	hashColumnNames(&table);
 	updateTable(&table);

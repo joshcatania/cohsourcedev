@@ -16,25 +16,25 @@ ContainerFieldType dataType(char* str, int& outColumnSize, int& outNumBytes, std
 	if (length_str)
 		length = atoi(length_str);
 
-	ContainerFieldInfo typeMapping = gContainerDb->getContainerFieldInfo(type);
+	auto& containerField = gContainerDb->getContainerFieldInfo(type);
 
 	if (length == 0) {
 		outColumnSize = 0;
 		if (CFTYPE_IS_UNBOUNDABLE(type)) {
-			outSqlTypeName = typeMapping.db_unbound_type;
+			outSqlTypeName = containerField.db_unbound_type;
 			outNumBytes = -1;
 		}
 		else {
-			outSqlTypeName = typeMapping.db_bound_type;
-			outNumBytes = typeMapping.access_size;
+			outSqlTypeName = containerField.db_bound_type;
+			outNumBytes = containerField.access_size;
 		}
 	}
 	else {
 		std::ostringstream ss;
-		ss << typeMapping.db_bound_type << '(' << length << ')';
+		ss << containerField.db_bound_type << '(' << length << ')';
 		outSqlTypeName = ss.str();
 		outColumnSize = length;
-		outNumBytes = length * typeMapping.access_size;
+		outNumBytes = length * containerField.access_size;
 	}
 	return type;
 }

@@ -237,17 +237,6 @@ void checkEntCorrupted(char *data)
 }
 
 #ifdef DBSERVER
-void odbcInitialSetup(void)
-{
-	int timeout;
-
-	printf_stderr("SQL_GETDATA_EXTENSIONS = 0x%08x\n", sqlConnGetInfo(SQL_GETDATA_EXTENSIONS, false, SQLCONN_FOREGROUND));
-
-	// Verify connection timeout
-	timeout = sqlConnGetInfo(SQL_ATTR_QUERY_TIMEOUT, false, SQLCONN_FOREGROUND);
-	assertmsgf(!timeout, "SQL server is set to timeout after %d seconds", timeout);
-}
-
 void bindInputParameter(HSTMT stmt, int index, enum ContainerFieldType type, const void * data, SQLLEN * size)
 {
 	SQLLEN no_data = SQL_NULL_DATA;
