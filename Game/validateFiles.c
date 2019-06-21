@@ -28,6 +28,8 @@
 #include "AppLocale.h"
 #include "osdependent.h"
 
+#include <assert.h>
+
 extern void *extractFromFS(const char *name, U32 *count);
 extern HWND hlogo;
 
@@ -60,7 +62,10 @@ static CheckFiles* ParseCheckSumData(char * data)
 	char		*s,*args[100];
 	CheckFile	*file = NULL;
 
+	assert(data != NULL);
+
 	cf = (CheckFiles*)calloc(sizeof(CheckFiles), 1);
+	assert(cf != NULL);
 	s = data;
 
 	while(count = tokenize_line(s,args,&s))
@@ -108,8 +113,10 @@ exit:
 
 static int getFileSize(const char* path)
 {
-	FILE * file = fopen(path,"rb");
+	FILE* file = NULL;
 	int fsize;
+	assert(path != NULL);
+	file = fopen(path, "rb");
 	if (!file) return 0;
 	fseek(file, 0, SEEK_END);
 	fsize = ftell(file);
@@ -177,25 +184,30 @@ static bool CalculateChecksum(const char* path, int len, U32 values[4], int time
 	char	buf1[BUFLEN];
 	int		locale = locGetIDInRegistry();
 
+	assert(path != NULL);
+	assert(pCancelled != NULL);
+
 	file = fopen(path,"rb");
 	if (!file) return false;
 
 	for(i=0; i<len; i+=CHUNK_SIZE)
 	{
 		chunk_size = MIN(CHUNK_SIZE, len - i);
-		if (fread(s_chunk_mem,1,chunk_size, file) != (int)chunk_size)
+		if (fread(s_chunk_mem, 1, chunk_size, file) != (int)chunk_size) {
+			fclose(file);
 			return false;
+		}
 		cryptMD5Update(s_chunk_mem, chunk_size);
 		s_current_len += chunk_size;
 
 		if (timerElapsed(timer) > 0.1f) {
 			// update progress
 			if(locale == LOCALE_ID_GERMAN)
-				sprintf(buf1, "Datei %d / %d wird verarbeitet", s_current_file, s_total_file);
+				sprintf_s(buf1, sizeof(buf1), "Datei %d / %d wird verarbeitet", s_current_file, s_total_file);
 			else if(locale == LOCALE_ID_FRENCH)
-				sprintf(buf1, "Traitement du fichier %d / %d", s_current_file, s_total_file);
+				sprintf_s(buf1, sizeof(buf1), "Traitement du fichier %d / %d", s_current_file, s_total_file);
 			else
-				sprintf(buf1, "Processing file %d / %d", s_current_file, s_total_file);
+				sprintf_s(buf1, sizeof(buf1), "Processing file %d / %d", s_current_file, s_total_file);
 
 			wbufLen = UTF8ToWideStrConvert(buf1, wbuf1, ARRAY_SIZE(wbuf1)-1); wbuf1[wbufLen] = '\0';
 			wbufLen = UTF8ToWideStrConvert(path, wbuf2, ARRAY_SIZE(wbuf2)-1); wbuf2[wbufLen] = '\0';
@@ -243,6 +255,8 @@ bool game_validateChecksums(bool bForceFullVerify, bool *pCancelled)
 	__time32_t	modTime = 0;
 	struct _stat32 sbuf;
 	RegReader	rr;
+
+	assert(pCancelled != NULL);
 
 	*pCancelled = bCancelled = false;
 	if(!game_state.usedLauncher && !bForceFullVerify)
@@ -382,7 +396,7 @@ exit:
 		const char * version = "FailedVersion"; // generic for when fail to even parse the checksum file to get version
 		char buf[64];
 		if(checkFiles) version = checkFiles->buildVersion; // trust checksum file to have correct version
-		sprintf(buf, "%s%s", version, bCancelled ? " [SKIPPED]": "" );
+		sprintf_s(buf, sizeof(buf), "%s%s", version, bCancelled ? " [SKIPPED]": "" );
 		rrWriteString(rr, "LastPiggCorruption", buf);
 	}
 
@@ -395,4 +409,3 @@ exit:
 	*pCancelled = bCancelled;
 	return bSuccess && !bCancelled;
 }
-

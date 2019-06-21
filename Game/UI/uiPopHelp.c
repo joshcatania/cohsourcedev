@@ -43,6 +43,8 @@
 
 #include "cmdgame.h" //cfg_LockActiveForGR() for the issue 17-18 transition
 
+#include <assert.h>
+
 char *unread_texture_name = "Pop_Help_Icon_On_Alert";
 char *glow_texture_name = "Pop_Help_Icon_On_Alert_Glow";
 char *read_texture_name = "Pop_Help_Icon_Off_Blue";
@@ -86,6 +88,9 @@ static void client_translate(char *dest, int dsize, char *from)
 {
 	Entity *e;
 	ScriptVarsTable clientvars = {0};
+
+	assert(dest != NULL);
+	assert(from != NULL);
 
 	e = playerPtr();
 	if (e && e->pchar)
@@ -263,6 +268,8 @@ int popHelpEventHappened(int pop_help_event)
 int popHelpEventHappenedByTag(char *tag)
 {
 	int v;
+
+	assert(tag != NULL);
 
 	v = getPopHelpEvent(tag);
 	if (v<0)
@@ -485,7 +492,7 @@ int popHelpTextWindow()
 		strcpy(translated_text, "internal error");
 		if (isDevelopmentMode())
 		{
-			snprintf(translated_text, sizeof(translated_text), "Error - popHelp %d not found", current_pop_help );
+			sprintf_s(translated_text, sizeof(translated_text), "Error - popHelp %d not found", current_pop_help );
 		}
 	}
 	drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );

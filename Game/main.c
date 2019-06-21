@@ -30,12 +30,16 @@
 #include "process_util.h"
 #include "win_init.h"
 
+#include <assert.h>
+
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
 
 char g_GameArguments[2048];
 
 void game_beforeRegisterWinClass(int argc, char **argv)
 {
+	assert(argv != NULL);  // Hopefully pointless. - Taffer
+
 	// Make sure the app name is set properly so we access the correct registry entries
 	regSetAppName("CoH");
 	getProjectKey(argc, argv);
@@ -77,11 +81,15 @@ void quickAuthCheck(BOOL localhost)
 
 void radiosityErrorfCallback(char* errMsg)
 {
+	assert(errMsg != NULL);
+
 	printf("%s\n", errMsg);
 }
 
 void radiosityFatalErrorfCallback(char* errMsg)
 {
+	assert(errMsg != NULL);
+
 	printf("%s\n", errMsg);
 	assertmsg(0, errMsg);
 }
@@ -137,10 +145,12 @@ void SaveArguments(int argc, char **argv)
 	int i;
 	int index = 0;
 
+	assert(argv != NULL);
+
 	for (i = 0; i < argc; i++)
 	{
-		int bufUsed = sprintf(buffer, "\"%s\" ", argv[i]);
-		if (bufUsed < 0 || index + bufUsed > 204)
+		int bufUsed = sprintf_s(buffer, sizeof(buffer), "\"%s\" ", argv[i]);
+		if (bufUsed < 0 || index + bufUsed > 2048)
 			break;
 
 		strcpy(g_GameArguments + index, buffer);
@@ -173,9 +183,9 @@ int main(int argc, char **argv)
 	
 	autoTimerInitThreads();
 
-	if(0){
-		autoTimerQueueTimingStart();
-	}
+	//if(0){
+	//	autoTimerQueueTimingStart();
+	//}
 
 	autoTimerSetDepth(100);
 	
@@ -322,4 +332,3 @@ int main(int argc, char **argv)
 
 	return game_mainLoop(timer);
 }
-

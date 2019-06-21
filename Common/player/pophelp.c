@@ -17,6 +17,8 @@
 #include "comm_game.h"
 #endif
 
+#include <assert.h>
+
 #define POP_HELP_END MAX_POP_HELP
 
 // Data structures
@@ -66,6 +68,10 @@ void loadPopHelp(char *def_filename, char *attribute_filename, char *attribute_a
 	int j;
 	char *tag_name;
 	const char* bin_filename;
+
+	assert(def_filename != NULL);
+	assert(attribute_filename != NULL);
+	assert(attribute_alt_filename != NULL);
 
 	if (loaded_pop_help)
 		return;
@@ -119,6 +125,8 @@ int getPopHelpEvent(char *tag)
 {
 	StashElement element;
 
+	assert(tag != NULL);
+
 	if (stashFindElement(g_popHelpTable, tag, &element))
 		return stashElementGetInt(element);
 
@@ -166,6 +174,8 @@ PopHelpState getPopHelpState(Entity *e, unsigned int n)
 {
 	int i, shift;
 
+	assert(e != NULL);
+
 	if (!e || !e->pl)
 		return -1;
 
@@ -180,6 +190,9 @@ PopHelpState getPopHelpState(Entity *e, unsigned int n)
 
 PopHelpState getPopHelpStateByTag(Entity *e, char *tag)
 {
+	assert(e != NULL);
+	assert(tag != NULL);
+
 	return getPopHelpState(e, getPopHelpEvent(tag));
 }
 
@@ -187,6 +200,8 @@ void setPopHelpState(Entity *e, unsigned int n, PopHelpState new_state)
 {
 	int i, shift, mask;
 	U32 bv;
+
+	assert(e != NULL);
 
 	if (!e || !e->pl)
 		return;
@@ -205,6 +220,9 @@ void setPopHelpState(Entity *e, unsigned int n, PopHelpState new_state)
 #ifdef SERVER
 void triggerPopHelpEventHappenedByTag(Entity *e, const char *tag)
 {
+	assert(e != NULL);
+	assert(tag != NULL);
+
 	START_PACKET(pak, e, SERVER_POPHELP_EVENT_HAPPENED_BY_TAG);
 	pktSendString(pak, tag);
 	END_PACKET
