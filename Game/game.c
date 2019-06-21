@@ -140,6 +140,8 @@
 #include "character_eval.h"
 #include "character_combat_eval.h"
 
+#include <assert.h>
+
 extern int	g_win_ignore_popups;
 extern int do_map_xfer;
 int globMapLoadedLastTick = 0;
@@ -159,6 +161,8 @@ void parseArgs(int argc,char **argv)
 	int	i;
 	char	buf[1000];
 
+	assert(argv != NULL);
+
 	if (isDevelopmentMode())
 		cmdAccessOverride(9);
 	for(i=1;i<argc;)
@@ -172,7 +176,7 @@ void parseArgs(int argc,char **argv)
 		}
 		if (strEndsWith(argv[i],".texture") || strEndsWith(argv[i],".texture\""))
 		{
-			sprintf(buf,"texWordEditor %s",argv[i]);
+			sprintf_s(buf,sizeof(buf),"texWordEditor %s",argv[i]);
 			cmdParse(buf);
 			i++;
 			continue;
@@ -423,7 +427,7 @@ void showBranchWarning()
 {
 	if (isDevelopmentMode()) {
 		char	titleBuffer[1000];
-		sprintf(titleBuffer, "City of Heroes : PID: %d", _getpid());
+		sprintf_s(titleBuffer, sizeof(titleBuffer), "City of Heroes : PID: %d", _getpid());
 		winSetText(titleBuffer);
 	}
 }
@@ -793,6 +797,9 @@ static FileScanAction animLoadCallback(char* dir, struct _finddata32_t* data)
 	int isanm = 0;
 	int isseq = 0;
 
+	assert(dir != NULL);
+	assert(data != NULL);
+
 	if(!(data->name[0] == '_'))
 	{
 
@@ -800,11 +807,11 @@ static FileScanAction animLoadCallback(char* dir, struct _finddata32_t* data)
 		if( len > 4 && !stricmp(".geo", data->name+len-4) )
 			isanm = 1;
 
-		sprintf(buffer, "%s/%s", dir, data->name);
+		sprintf_s(buffer, sizeof(buffer), "%s/%s", dir, data->name);
 
 		if( isanm )
 		{
-			sprintf(buffer, "player_library/%s", data->name);
+			sprintf_s(buffer, sizeof(buffer), "player_library/%s", data->name);
 			//TO DO: fix this hackery
 			if(!stricmp(data->name, "male.geo") || !stricmp(data->name, "fem.geo") || !stricmp(data->name, "huge.geo"))
 				geoLoad( buffer, LOAD_HEADER, (GeoUseType)(GEO_DONT_INIT_FOR_DRAWING | GEO_USED_BY_GFXTREE));
@@ -1060,11 +1067,11 @@ void game_setAssertSystemExtraInfo(void)
 
 	if (comm_link.connected)
 	{
-		sprintf(buffer, "Map: %s\nServer IP: %s:%d\nClient IP: %s\nLWC Stage: %s", game_state.world_name, makeIpStr(comm_link.addr.sin_addr.S_un.S_addr), comm_link.addr.sin_port, makeIpStr(getHostLocalIp()), LWC_GetStageString());
+		sprintf_s(buffer, sizeof(buffer), "Map: %s\nServer IP: %s:%d\nClient IP: %s\nLWC Stage: %s", game_state.world_name, makeIpStr(comm_link.addr.sin_addr.S_un.S_addr), comm_link.addr.sin_port, makeIpStr(getHostLocalIp()), LWC_GetStageString());
 	}
 	else
 	{
-		sprintf(buffer, "Map: N/A\nServer IP: N/A\nClient IP: N/A\nLWC Stage: %s", LWC_GetStageString());
+		sprintf_s(buffer, sizeof(buffer), "Map: N/A\nServer IP: N/A\nClient IP: N/A\nLWC Stage: %s", LWC_GetStageString());
 	}
 
 	setAssertExtraInfo(buffer);
@@ -1110,6 +1117,8 @@ int getProjectKey(int argc, char **argv)
 {
 	int		i,ok_to_run=0;
 
+	assert(argv != NULL);
+
 	for(i=1;i<argc;i++)
 	{
 		if (CHECKARG("-project") && i < argc-1)
@@ -1146,6 +1155,8 @@ void parseArgsForCovFlag(int argc, char **argv)
 {
 	int		i;
 	extern char *gameDataDirOverride;
+
+	assert(argv != NULL);
 
 	for(i=1;i<argc;i++)
 	{
@@ -1242,6 +1253,8 @@ void parseArgsForCovFlag(int argc, char **argv)
 void parseArgs0(int argc, char **argv)
 {
 	int		i;
+
+	assert(argv != NULL);
 
 	// auto detect multi cpus to enable renderthread - needs to be before parseargs0 get processed so it can be disabled
  	if (getNumRealCpus() > 1)
@@ -1495,6 +1508,8 @@ void parseArgsForConsole(int argc, char **argv)
 {
 	int i;
 
+	assert(argv != NULL);
+
 	for(i=1;i<argc;i++)
 	{
 		if (CHECKARG("-console")) { // Do this early!
@@ -1548,6 +1563,8 @@ S32 game_runningCohClientCount(void)
 
 void game_beforeFolderCacheIgnore(int timer, int argc, char **argv)
 {
+	assert(argv != NULL);
+
 	parseArgsForConsole(argc, argv);
 
 	parseArgsForCovFlag(argc, argv);
@@ -1801,6 +1818,8 @@ static void finalizeRenderer(void)
 int game_loadSoundsTricksFonts(int argc, char **argv)
 {
 	int maximize;
+
+	assert(argv != NULL);
 
 	inpClear();
 
@@ -2120,7 +2139,7 @@ void checkForStartupExec()
 {
 	if (game_state.startupExec[0]) {
 		char temp[1024];
-		sprintf(temp, "exec %s", game_state.startupExec);
+		sprintf_s(temp, sizeof(temp), "exec %s", game_state.startupExec);
 		cmdParse(temp);
 	}
 }
@@ -2187,6 +2206,9 @@ void game_beforeLoop(int isCostumeCreator, int timer)
 void game_setProgressString(const char *progressString, const char *userMessageID, PROGRESSDIALOGTYPE type)
 {
 	RegReader	rr;
+
+	assert(progressString != NULL);
+	assert(userMessageID != NULL);
 
 	// Don't overwrite the previous progress strings on startup.
 	// Once we've checked for crashes, this will be enabled
@@ -2264,7 +2286,7 @@ static void endProfilingCPU()
 
 	ms = timerElapsed(profilingTimer) * 1000.0f;
 
-	snprintf(profname, MAX_PATH, "profile_%d_%dms.txt", profileNumber, (long)ms);
+	sprintf_s(profname, sizeof(profname), "profile_%d_%dms.txt", profileNumber, (long)ms);
 
 	if(game_state.profile) {
 		EndProfile(profname);
@@ -2330,7 +2352,7 @@ int game_mainLoop(int timer)
 			if (!b) {
 				char buf[1024];
 				//FILE *f;
-				sprintf(buf, "Time to load game and get into a map: %1.3gs\n", timerElapsed(timer));
+				sprintf_s(buf, sizeof(buf), "Time to load game and get into a map: %1.3gs\n", timerElapsed(timer));
 				printf("%s", buf);
 				//f=fopen("C:\\jimb.txt", "a");
 				//fprintf(f, "%s", buf);

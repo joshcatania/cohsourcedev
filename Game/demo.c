@@ -63,6 +63,8 @@
 #	include "baseparse.h"
 #endif
 
+#include <assert.h>
+
 extern Entity* current_target;
 
 static FILE *demo_file;
@@ -209,6 +211,8 @@ MP_DEFINE(EntityDemoRecordInfo);
 
 static EntityDemoRecordInfo* demoGetEntityRecordInfo(Entity* e)
 {
+	assert(e != NULL);
+
 	if(!e->demoRecordInfo)
 	{
 		MP_CREATE(EntityDemoRecordInfo, 100);
@@ -255,6 +259,8 @@ void demoRecord(char const *fmt, ...)
 	DemoRecord	*record;
 	int			i,count;
 
+	assert(fmt != NULL);
+
 	if (!demo_file)
 		return;
 	estrCreate(&str);
@@ -290,6 +296,9 @@ void demoRecord(char const *fmt, ...)
 static int __cdecl cmpDemoRecords(const DemoRecord *a,const DemoRecord *b)
 {
 	int		a_id,b_id;
+
+	assert(a != NULL);
+	assert(b != NULL);
 
 	if (a->abs_time != b->abs_time)
 		return a->abs_time - b->abs_time;
@@ -346,12 +355,16 @@ static char *bufVec3_s(const Vec3 v, char *buf, int buf_size)
 {
 	char	a[100],b[100],c[100];
 
+	assert(buf != NULL);
+
 	sprintf_s(buf, buf_size, "%s %s %s",safe_ftoa(v[0],a),safe_ftoa(v[1],b),safe_ftoa(v[2],c));
 	return buf;
 }
 
 static char *printColor(U32 color,char *buf)
 {
+	assert(buf != NULL);
+
 	if ((color >> 24) != 0xff)
 		sprintf(buf,"%08x",color);
 	else
@@ -361,7 +374,9 @@ static char *printColor(U32 color,char *buf)
 
 static U32 getColor(char *s)
 {
-	U32	color = strtoul(s,0,16);
+	U32	color = 0; 
+	assert(s != NULL);
+	color = strtoul(s, 0, 16);
 	if (!(color >> 24))
 		color |= 0xff000000;
 	return color;
@@ -389,6 +404,8 @@ void demoSetAbsTimeOffset(int abs_time_offset)
 
 void demoRecordAppearance(Entity *e)
 {
+	assert(e != NULL);
+
 	if (!demo_file)
 		return;
 	if (e->npcIndex)
@@ -408,17 +425,17 @@ void demoRecordAppearance(Entity *e)
 		char	buf[1000];
 		char*	pos = buf;
 
-		pos += sprintf(	pos,
+		pos += sprintf_s(pos, sizeof(buf),
 						"COSTUME %d %s",
 						costume->appearance.bodytype,
 						printColor(costume->appearance.colorSkin.integer,cbuf1));
 		for(i=0;i<MAX_BODY_SCALES;i++)
-			pos += sprintf(pos, " %f", costume->appearance.fScales[i]);
+			pos += sprintf_s(pos, sizeof(buf) - (pos - buf), " %f", costume->appearance.fScales[i]);
 		demoRecord("%s", buf);
 		for(i=0; i < costume->appearance.iNumParts; i++)
 		{
 			const CostumePart *part = costume->parts[i];
-			sprintf(buf, " PARTSNAME \"%s\" \"%s\" \"%s\" %s %s",
+			sprintf_s(buf, sizeof(buf), " PARTSNAME \"%s\" \"%s\" \"%s\" %s %s",
 				part->pchGeom,part->pchTex1,part->pchTex2,
 				printColor(part->color[0].integer,cbuf1),printColor(part->color[1].integer,cbuf2));
 			if (!part->pchFxName || !part->pchFxName[0] || stricmp(part->pchFxName, "none")==0) {
@@ -475,6 +492,8 @@ void demoRecordFx(NetFx *netfx)
 	if(demo_file)
 	{
 		char	*cmdname="";
+
+		assert(netfx != NULL);
 
 		if (netfx->command == CREATE_ONESHOT_FX)
 			cmdname = "OneShot";
@@ -626,7 +645,10 @@ void demoRecordDynGroups( void )
 	
 	if( dyn_group_count )
 	{
-		str = realloc( str, strSize ); 
+		char* new_str = NULL;
+		new_str = realloc( str, strSize );
+		assert(new_str != NULL);
+		str = new_str;
 		memset( str, 0, strSize );
 
 		demoSetEntIdx( DYN_GROUP_UPDATE );
@@ -634,7 +656,7 @@ void demoRecordDynGroups( void )
 		for( i = 0 ; i < dyn_group_count ; i++ )
 		{
 			char buf[100];
-			sprintf( buf, "|%d,%d", dyn_group_status[i].hp, dyn_group_status[i].repair );
+			sprintf_s( buf, sizeof(buf), "|%d,%d", dyn_group_status[i].hp, dyn_group_status[i].repair );
 			strcat_s( str, strSize, buf );
 		}
 		demoRecord( str );
@@ -647,7 +669,7 @@ void demoRecordSkyFile(int sky1, int sky2, F32 weight)
 	int strSize = 100; //arbitrarily plenty big
 	
 	demoSetEntIdx( SKY_FILE_UPDATE );
-	sprintf( str, "SKY %d %d %f", sky1, sky2, weight );
+	sprintf_s( str, sizeof(str), "SKY %d %d %f", sky1, sky2, weight );
 	demoRecord( str );
 }
 
@@ -736,6 +758,9 @@ int demoLoad(char *fname)
 	int				wasCostume = 0;
 	#define			ID_OFFSET 0
 	#define			FX_ID_OFFSET 0
+
+	assert(fname != NULL);
+	assert(enttracks != NULL);
 
 	enttrack_count = enttrack_max = 0;
 	for(i=0;i<enttrack_count;i++)
@@ -1255,6 +1280,10 @@ static int findInterpFrame(EntTrack *track,U32 abs_time,int *before,int *after)
 	int		i,count,start;
 	EntFrame *frames;
 
+	assert(track != NULL);
+	assert(before != NULL);
+	assert(after != NULL);
+
 	frames	= track->frames;
 	count	= track->count;
 	start	= track->last_frame;
@@ -1285,6 +1314,9 @@ static int findInterpFrame(EntTrack *track,U32 abs_time,int *before,int *after)
 static void setCostume(Entity *e,DemoCostume *dcostume)
 {
 	int changeCostume = 1;
+
+	assert(e != NULL);
+	assert(dcostume != NULL);
 
 	if (dcostume->seq_name)
 	{
@@ -1341,6 +1373,9 @@ static void makeInterpFrame(EntTrack *track,U32 abs_time,int before,int after,En
 	F32			ratio;
 	int			dt;
 
+	assert(track != NULL);
+	assert(interp != NULL);
+
 	a = &track->frames[before];
 	b = &track->frames[after];
 	dt = b->abs_time - a->abs_time;
@@ -1357,6 +1392,8 @@ static void fixFxTrack(EntTrack *track,int j,int k)
 {
 	int		net_id;
 	NetFx	*destroy,*create;
+
+	assert(track != NULL);
 
 	destroy = &track->frames[j].fx_list[k];
 	net_id = destroy->net_id;
@@ -1609,6 +1646,9 @@ static char *demoDir(char *fname,char *demoname, size_t demoname_size)
 {
 	char	*s,buf[1000];
 
+	assert(fname != NULL);
+	assert(demoname != NULL);
+
 	if (strncmp(fname,"\\\\",2)==0 || strchr(fname,':') || fname[0]=='.')
 	{
 		strcpy_s(demoname,demoname_size,fname);
@@ -1630,6 +1670,8 @@ void demoStartPlay(char *fname)
 {
 	char	buf[1000];
 
+	assert(fname != NULL);
+
 	demoStop();
 	sprintf(buf,"demos/%s.cohdemo",fname);
 	if (!demoLoad(buf))
@@ -1643,6 +1685,8 @@ void demoStartRecord(char *fname)
 	char	buf[1000],errmsg[1000];
 	int		i,j;
 	Entity	*e;
+
+	assert(fname != NULL);
 
 	demoStop();
 	demo.first_frame = 1;
@@ -1670,7 +1714,7 @@ void demoStartRecord(char *fname)
 		}
 		else
 		{
-			sprintf(errmsg,"couldn't convert %i base to string", g_base.supergroup_id );
+			sprintf_s(errmsg,sizeof(errmsg),"couldn't convert %i base to string", g_base.supergroup_id );
 			winMsgAlert(errmsg);
 		}
 	}
@@ -1717,6 +1761,8 @@ static char *getCpuName(char *cpu_name,int cpu_name_size)
 	int		result,namesize = cpu_name_size;
 	HKEY	hKey;
 
+	assert(cpu_name != NULL);
+
 	strcpy_s(cpu_name, cpu_name_size, "Unknown");
 	result = RegOpenKeyEx (HKEY_LOCAL_MACHINE,"Hardware\\Description\\System\\CentralProcessor\\0", 0, KEY_QUERY_VALUE, &hKey);
 	if (result != ERROR_SUCCESS)
@@ -1732,6 +1778,8 @@ static void writeSystemInfo(char *str, size_t strSize)
 {
 	char		namebuf[256];
 	GfxSettings gfxSettings = {0};
+
+	assert(str != NULL);
 
 	rdrGetSystemSpecs( &systemSpecs );
 	gfxGetSettings( &gfxSettings );
@@ -1842,7 +1890,7 @@ static void dumpPerfStats()
 	{
 		for(i=1;;i++)
 		{
-			sprintf(fname,"results/%s_%d.cohstats",getFileName(demo_state.demoname),i);
+			sprintf_s(fname,sizeof(fname),"results/%s_%d.cohstats",getFileName(demo_state.demoname),i);
 			demoDir(fname,SAFESTR(fullname));
 			if (!(file = fileOpen(fullname,"r")))
 			{

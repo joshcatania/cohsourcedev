@@ -18,6 +18,7 @@
 #include "clientcomm.h"
 #include "game.h"
 
+#include <assert.h>
 #include <windows.h>
 
 
@@ -92,6 +93,8 @@ static void LWC_InitPipe()
 
 static bool LWC_PiggFilterCB(const char *filename)
 {
+	assert(filename != NULL);
+
 	// Sanity check, this should never happen
 	assert(s_CurrentStage != LWC_STAGE_INVALID && s_CurrentStage <= LWC_STAGE_LAST);
 	if (s_CurrentStage == LWC_STAGE_INVALID || s_CurrentStage >= LWC_STAGE_LAST)
@@ -150,7 +153,7 @@ char *LWC_GetStageString()
 	if (!LWC_IsActive())
 		return "Not Active";
 
-	sprintf(stage_string, "%d", s_CurrentStage);
+	sprintf_s(stage_string, sizeof(stage_string), "%d", s_CurrentStage);
 
 	return stage_string;
 }
@@ -211,6 +214,9 @@ static void printDebugging()
 static void sendReply(const char *message)
 {
 	DWORD bytesWritten;
+
+	assert(message != NULL);
+
 	if (WriteFile(s_pipe_handle, message, strlen(message) + 1, &bytesWritten, 0))
 	{
 		if (s_debugMode > 1)
@@ -245,6 +251,8 @@ static void UpdateDownloadRate()
 
 static void handleMessage(const char *message, int msgLen)
 {
+	assert(message != NULL);
+
 	if (s_debugMode > 1)
 	{
 		printf("Received pipe message: %s\n", message);
@@ -253,7 +261,7 @@ static void handleMessage(const char *message, int msgLen)
 	if (strncmp(message, "echo ", 5) == 0)
 	{
 		char outBuffer[10000];
-		sprintf(outBuffer, "reply %s", message + 5);
+		sprintf_s(outBuffer, sizeof(outBuffer), "reply %s", message + 5);
 
 		sendReply(outBuffer);
 
@@ -608,6 +616,3 @@ LWC_DOWNLOAD_RATE LWC_GetDownloadRate()
 {
 	return s_download_rate;
 }
-
-
-

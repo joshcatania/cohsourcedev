@@ -9,8 +9,12 @@
 #include "staticMapInfo.h"
 #endif
 
+#include <assert.h>
+
 LWC_STAGE LWC_GetRequiredDataStageForMap(const char *map_name)
 {
+	assert(map_name != NULL);
+
 	// This should match data/Defs/LightweightClient/lwc_stages.def
 	if (stricmp(map_name, "N_City_00_01.txt") == 0)	// Neutral Tutorial
 	{
@@ -52,6 +56,8 @@ LWC_STAGE LWC_GetRequiredDataStageForMapID(int map_id)
 
 bool LWC_CheckMapReady(const char *map_name, LWC_STAGE current_stage, LWC_STAGE * out_required_stage)
 {
+	assert(map_name != NULL);
+
 	//printf("LWC_CheckMapReady(%s, %d)\n", map_name, current_stage);
 
 	if (current_stage == LWC_STAGE_INVALID || current_stage >= LWC_STAGE_LAST)
@@ -142,4 +148,3 @@ void LWC_SendEntityStageToMapServer(Entity *e)
 	}
 }
 #endif
-
