@@ -270,6 +270,9 @@ void sqlDeleteContainer(ContainerTemplate *tplt, int container_id)
 static void sqlFlushStatement(HSTMT stmt, std::ostringstream& ss, unsigned* bind, SqlConn conn) {
 	sqlConnStmtExecDirectMany(stmt, ss.str().c_str(), SQL_NTS, conn, false);
 
+	ss.clear();
+	ss.str("");
+
 	sqlConnStmtUnbindCols(stmt);
 	sqlConnStmtUnbindParams(stmt);
 	sqlConnStmtCloseCursor(stmt);

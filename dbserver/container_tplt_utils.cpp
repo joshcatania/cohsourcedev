@@ -239,9 +239,9 @@ void checkEntCorrupted(char *data)
 #ifdef DBSERVER
 void bindInputParameter(HSTMT stmt, int index, enum ContainerFieldType type, const void * data, SQLLEN * size)
 {
-	SQLLEN no_data = SQL_NULL_DATA;
+	static const SQLLEN no_data = SQL_NULL_DATA;
 	ContainerFieldInfo info = gContainerDb->getContainerFieldInfo(type);
-	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, info.c_type, info.sql_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, (data) ? size : &no_data);
+	sqlConnStmtBindParam(stmt, index+1, SQL_PARAM_INPUT, info.c_type, info.sql_type, 0, 0, cpp_const_cast(void*)(data), size ? *size : 0, (data) ? size : (SQLLEN*)&no_data);
 }
 
 void bindOutputColumn(HSTMT stmt, int index, enum ContainerFieldType type, size_t size, void * data, SQLLEN * count) {
