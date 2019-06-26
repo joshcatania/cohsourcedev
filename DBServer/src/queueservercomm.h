@@ -4,6 +4,8 @@
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
 
+C_DECLARATIONS_BEGIN
+
 void queueserver_commInit(void);
 int queueserver_secondsSinceUpdate(void);
 NetLink* queueserver_getLink(void);
@@ -49,3 +51,4 @@ void queueservercomm_switchgamestatus(GameClientLink *game, GameClientLoginStatu
 
 void reconnectQueueserverCommPlayersToAuth();
 
+C_DECLARATIONS_END

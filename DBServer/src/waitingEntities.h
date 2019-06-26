@@ -8,6 +8,8 @@
 typedef struct EntCon EntCon;
 typedef struct MapCon MapCon;
 
+C_DECLARATIONS_BEGIN
+
 int waitingEntitiesRemove(EntCon *ent_con); // Return 1 on unload
 void waitingEntitiesAddEnt(EntCon *ent_con, U32 dest_map_id, int is_map_xfer, MapCon *destMap);
 void waitingEntitiesCheck(void);
@@ -27,6 +29,6 @@ void doneWaitingChoosePlayerSucceded(EntCon *ent_con);
 // stats
 U32 waitingEntitiesGetPeakSize(bool bReset);
 
-
+C_DECLARATIONS_END
 
 #endif

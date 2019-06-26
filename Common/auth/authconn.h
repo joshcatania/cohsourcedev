@@ -1,6 +1,8 @@
 #ifndef _AUTHCONN_H
 #define _AUTHCONN_H
 
+C_DECLARATIONS_BEGIN
+
 // auth->dbserver
 typedef enum AuthToDbserverCmd {
 	SQ_ABOUT_TO_PLAY,                   // 0
@@ -122,5 +124,7 @@ typedef enum AuthErrorCodes {
 } AuthErrorCodes;
 
 int authdbg_printf(const char *format, ...);
+
+C_DECLARATIONS_END
 
 #endif

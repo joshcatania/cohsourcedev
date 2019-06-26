@@ -3,6 +3,10 @@
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void missionserver_commInit(void);
 int missionserver_secondsSinceUpdate(void);
 NetLink* missionserver_getLink(void);
@@ -21,6 +25,10 @@ void missionserver_db_requestAllArcs(int mapid, Packet *pak_in, NetLink *link);
 void missionserver_forceLinkReset(void);
 
 void handleMissionServerEmail( Packet * pak_in );
+
+#ifdef __cplusplus
+}
+#endif
 
 #define DB_MISSIONSERVER_MAX_SENDQUEUE_SIZE_DEFAULT            1000000
 #define DB_MISSIONSERVER_MAX_SENDQUEUEPUBLISH_SIZE_DEFAULT    500000

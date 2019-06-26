@@ -15,6 +15,7 @@
 #define IDC_EDIT_INPUT_STRING           1034
 #define IDC_OKTOALLCANCEL_EDIT            1035
 
+C_DECLARATIONS_BEGIN
 
 // handles extended functionality for generic dialog boxes
 typedef int(*GenericDialogCallback)(HWND, UINT, WPARAM, LPARAM); 
@@ -41,5 +42,7 @@ void flashWindow(HWND hWnd);
 bool startProgressDialog(HWND parent, wchar_t * title, wchar_t * cancel);
 bool updateProgressDialog(unsigned long long progress, unsigned long long total, wchar_t * text, wchar_t * path);
 void stopProgressDialog();
+
+C_DECLARATIONS_END
 
 #endif

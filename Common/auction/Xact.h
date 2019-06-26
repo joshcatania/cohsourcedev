@@ -17,6 +17,8 @@
 
 #include <utilitieslib/utils/textparser.h>
 
+C_DECLARATIONS_BEGIN
+
 typedef struct GenericHashTableImp *GenericHashTable;
 typedef struct HashTableImp *HashTable;
 typedef struct AuctionShard AuctionShard;
@@ -106,5 +108,7 @@ void AucHandleXactCmd(XactCmd *cmd);
 
 Xaction* Xaction_Create();
 void Xaction_Destroy( Xaction *hItem );
+
+C_DECLARATIONS_END
 
 #endif //XACT_H

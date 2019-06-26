@@ -4,8 +4,11 @@
 
 #include <stddef.h>
 
-char app_registry_name[128];
+#ifdef __cplusplus
+extern "C" {
+#endif
 
+extern char app_registry_name[128];
 
 void        regSetAppName(const char* appName);
 const char* regGetAppName(void);
@@ -22,5 +25,9 @@ char*        regGetAppString(const char *key, const char *deflt, char *dest, siz
 void        regPutAppString(const char *key, const char *value);
 int            regGetAppInt(const char *key, int deflt);
 void        regPutAppInt(const char *key, int value);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

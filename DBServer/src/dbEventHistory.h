@@ -1,6 +1,8 @@
 #ifndef DBEVENTHISTORY_H_
 #define DBEVENTHISTORY_H_
 
+C_DECLARATIONS_BEGIN
+
 typedef struct KarmaEventHistory KarmaEventHistory;
 typedef struct DbContainer DbContainer;
 
@@ -10,5 +12,7 @@ void dbEventHistory_UpdateCb(DbContainer *container);
 
 void handleEventHistoryFind(Packet *pak, NetLink *link);
 KarmaEventHistory **dbEventHistory_Find(U32 min_time, U32 max_time, char *auth, char *player);
+
+C_DECLARATIONS_END
 
 #endif

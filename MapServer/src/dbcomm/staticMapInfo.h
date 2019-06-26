@@ -4,6 +4,10 @@
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct
 {
     int min;
@@ -222,5 +226,9 @@ extern bool g_MapIsMissionMap;
 
 void MonorailsLoad(void);
 MonorailLine* MonorailGetLine(char* linename);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

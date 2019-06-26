@@ -3,6 +3,8 @@
 
 #include "auth/auth.h"
 
+C_DECLARATIONS_BEGIN
+
 int authValidLogin(U32 auth_id,U32 cookie,char *name,U8 user_data[AUTH_BYTES],U32 *loyalty,U32 *loyaltyLegacy,U32 *payStat);
 void authSendPlayOK(int auth_id, int one_time_pwd );
 void authSendPlayGame(int auth_id);
@@ -20,5 +22,7 @@ void authCommDisconnect(void);
 void authReconnectOnePlayer(char *account,U32 auth_id);
 void authSendShardTransfer(int auth_id, int shard);
 int handleShardTransferRequest(int auth_id, char *name, unsigned char *auth_data);
+
+C_DECLARATIONS_END
 
 #endif

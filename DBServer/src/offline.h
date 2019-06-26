@@ -11,6 +11,7 @@
 //
 #define OFFLINE_ENABLE_DELETION_LOG_IMPORT_CODE
 
+C_DECLARATIONS_BEGIN
 
 // These enum values are also written to the players.idx file.
 typedef enum
@@ -59,6 +60,8 @@ void *offlinePlayerTempLoad(int db_id);
 #ifdef OFFLINE_ENABLE_DELETION_LOG_IMPORT_CODE
     void offlineProcessDeletionLogFiles(const char* szLogFileSpec /* can include wildcards */);
 #endif
+
+C_DECLARATIONS_END
 
 #endif // _OFFLINE_H
 

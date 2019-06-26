@@ -28,6 +28,8 @@ typedef struct StringTableImp StringTableImp;
 typedef StringTableImp *StringTable;
 typedef int (*StringProcessor)(char*);
 
+C_DECLARATIONS_BEGIN
+
 /* Enum StringTableMode
  *    Defines several possible StashTable operation modes.
  *    
@@ -102,5 +104,7 @@ int WriteStringTable(SimpleBufHandle file, StringTable table);
 StringTable ReadStringTable(SimpleBufHandle file);
 
 void printStringTableMemUsage();
+
+C_DECLARATIONS_END
 
 #endif

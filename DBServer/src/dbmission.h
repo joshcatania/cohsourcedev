@@ -2,7 +2,12 @@
 #define _MISSION_H
 
 #include <utilitieslib/network/netio.h>
+
+C_DECLARATIONS_BEGIN
+
 void teamCheckLeftMission(int map_id, int team_id, char *sWhy);
 void dbClientReadyForPlayers(Packet *pak,NetLink *link);
+
+C_DECLARATIONS_END
 
 #endif

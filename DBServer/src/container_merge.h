@@ -1,6 +1,8 @@
 #ifndef _CONTAINER_MERGE_H
 #define _CONTAINER_MERGE_H
 
+C_DECLARATIONS_BEGIN
+
 typedef struct LineList LineList;
 typedef struct LineTracker LineTracker;
 typedef struct DbContainer DbContainer;
@@ -20,5 +22,7 @@ void memToLineList(void *mem_v,LineList *dst);
 void tpltFixOfflineData(char **buffer,int *bufferSize,ContainerTemplate *tplt);
 void tpltUpdateData(char **oldBuffer,int *bufferLen,char *diff,ContainerTemplate *tplt);
 const char *lineValueToText(ContainerTemplate *tplt,LineList *list,LineTracker *line);
+
+C_DECLARATIONS_END
 
 #endif

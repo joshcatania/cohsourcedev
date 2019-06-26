@@ -1,5 +1,7 @@
 #include <utilitieslib/stdtypes.h>
 
+C_DECLARATIONS_BEGIN
+
 typedef enum ServerRoles {
     ROLE_NONE =        0,
     ROLE_ZONE =        1<<0,
@@ -89,3 +91,5 @@ bool loadBalanceConfigLoad(void); // Returns FALSE if configured incorrectly
 ServerRoleDescription *getNextServerRole(ServerRoleDescription* curRole, U32 ip);
 ServerRoleDescription *getServerRole(U32 ip);
 void loadBalanceCheckReload(void);
+
+C_DECLARATIONS_END

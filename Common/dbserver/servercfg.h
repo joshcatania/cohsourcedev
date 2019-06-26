@@ -6,6 +6,10 @@
 
 #define MAX_DBSERVER 16
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct ServerCfg
 {
     char    db_server[256];
@@ -137,5 +141,9 @@ int cfg_VIPShard();
 
 void cfg_setIsBetaShard(int data);
 void cfg_setVIPShard(int data);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif

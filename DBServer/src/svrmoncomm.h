@@ -23,6 +23,8 @@ typedef struct
     U32            allow_new_container_types:1; // Whether or not it's a new client that allows more container types
 } SvrMonClientLink;
 
+C_DECLARATIONS_BEGIN
+
 void svrMonInit(void);
 void svrMonUpdate(void);
 void svrMonSendUpdates(void);
@@ -33,6 +35,8 @@ extern TokenizerParseInfo LauncherConNetInfo[];
 extern TokenizerParseInfo EntConNetInfo[];
 extern TokenizerParseInfo CrashedMapConNetInfo[];
 extern TokenizerParseInfo ServerAppConNetInfo[];
+
+C_DECLARATIONS_END
 
 
 #ifdef SVRMONCOMM_PARSE_INFO_DEFS

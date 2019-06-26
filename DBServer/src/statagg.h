@@ -6,15 +6,24 @@
 #ifndef STATAGG_H__
 #define STATAGG_H__
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void stat_ReadTable(void);
-    // Call once at startup to set up initial state of stats
+// Call once at startup to set up initial state of stats
 
 void stat_Update(void);
-    // Call in a loop, every once and a while it will update all the stats
-    // and broadcast the current tables to all servers.
+// Call in a loop, every once and a while it will update all the stats
+// and broadcast the current tables to all servers.
 
-void stat_UpdateStatsForEnt(int dbid, char *pchEnt);
-    // Update all the stats which appear in the given text ent definition.
+void stat_UpdateStatsForEnt(int dbid, char* pchEnt);
+// Update all the stats which appear in the given text ent definition.
+
+#ifdef __cplusplus
+}
+#endif
+
 
 #endif /* #ifndef STATAGG_H__ */
 

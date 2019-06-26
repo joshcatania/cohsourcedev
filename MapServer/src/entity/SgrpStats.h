@@ -9,6 +9,8 @@
 #include <utilitieslib/stdtypes.h>
 #include "entity/SgrpStatsCommon.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct NetLink NetLink;
 typedef struct Packet Packet;
 typedef struct StashTableImp *StashTable;
@@ -28,5 +30,7 @@ void sgrpstats_RelayAdjs(Packet *pak, Packet *packOut); // for relaying between 
 #if STATSERVER
 void sgrpstats_FlushToSgrps();
 #endif
+
+C_DECLARATIONS_END
 
 #endif //SGRPSTATS_H

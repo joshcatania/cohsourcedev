@@ -3,11 +3,15 @@
 
 #include <utilitieslib/network/netio.h>
 
+C_DECLARATIONS_BEGIN
+
 char *containerDiff(const char *old,const char *curr);
 void containerCacheAdd(int list_id,int container_id,const char *data);
 char *containerCacheDiff(int list_id,int container_id,const char *curr);
 void containerCacheSendDiff(Packet *pak,int list_id,int container_id,const char *data,int diff_debug);
 void checkContainerDiff(const char *ref_orig,const char *diff_orig,const char *actual_diff,const char *orig_container_data);
 void containerCacheRemoveEntry(int list_id,int container_id);
+
+C_DECLARATIONS_END
 
 #endif

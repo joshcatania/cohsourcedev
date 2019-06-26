@@ -2,6 +2,7 @@
 #ifndef BACKUP_H
 #define BACKUP_H
 
+C_DECLARATIONS_BEGIN
 
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
@@ -16,5 +17,7 @@ void backupLoadIndexFiles(void);
 void backupUnloadIndexFiles(void);
 
 void setBackupPeriod(int period);
+
+C_DECLARATIONS_END
 
 #endif

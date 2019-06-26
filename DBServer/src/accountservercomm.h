@@ -19,6 +19,8 @@
 #include "account/AccountData.h"
 #include "ClientLogin/clientcommLogin.h"
 
+C_DECLARATIONS_BEGIN
+
 typedef struct Packet Packet;
 typedef struct NetLink NetLink;
 typedef struct AccountInventorySet AccountInventorySet;
@@ -80,5 +82,7 @@ void account_handleAccountRecoverUnsaved(U32 auth_id, U32 dbid);
 void account_handleSlotTokenClaim(const char *ip_str, const char *account_name, U32 auth_id);
 void account_handleAccountSetInventory(U32 auth_id, SkuId sku_id, U32 value, bool resendInventory);
 void account_handleGetPlayNCAuthKey(U32 auth_id, int request_key, char* auth_name, char* digest_data );
+
+C_DECLARATIONS_END
 
 #endif //ACCOUNTSERVERCOMM_H

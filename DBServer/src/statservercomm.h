@@ -12,6 +12,8 @@
 typedef struct Packet Packet;
 typedef struct NetLink    NetLink;
 
+C_DECLARATIONS_BEGIN
+
 void statCommInit(void);
 int statServerCount(void);
 int statServerSecondsSinceUpdate(void);
@@ -29,5 +31,7 @@ typedef struct StatCon
     U32        lastRecvTime; // Last time we received a who update (i.e. the mapserver is in it's main loop)
 } StatCon;
 extern StatCon g_stat_con;
+
+C_DECLARATIONS_END
 
 #endif //STATSERVERCOMM_H

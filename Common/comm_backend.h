@@ -3,12 +3,14 @@
 
 #include <utilitieslib/network/netio.h>
 
-#define DBSERVER_PROTOCOL_VERSION            20110503    // DbServer<->Mapserver<->ServerMonitor protocol number
-#define DBSERVER_CLIENT_PROTOCOL_VERSION    20110614    // DbServer<->Client protocol number
-#define DBSERVER_AUCTION_PROTOCOL_VERSION    20070427    // DbServer<->AuctionServer protocol number
-#define DBSERVER_ACCOUNT_PROTOCOL_VERSION    20070925    // DbServer<->AccountServer protocol number
-#define DBSERVER_MISSION_PROTOCOL_VERSION    20090309    // DbServer<->MissionServer protocol number
-#define DBSERVER_QUEUE_PROTOCOL_VERSION    20100105    // DbServer<->QueueServer protocol number
+C_DECLARATIONS_BEGIN
+
+#define DBSERVER_PROTOCOL_VERSION			20110503	// DbServer<->Mapserver<->ServerMonitor protocol number
+#define DBSERVER_CLIENT_PROTOCOL_VERSION	20110614	// DbServer<->Client protocol number
+#define DBSERVER_AUCTION_PROTOCOL_VERSION	20070427	// DbServer<->AuctionServer protocol number
+#define DBSERVER_ACCOUNT_PROTOCOL_VERSION	20070925	// DbServer<->AccountServer protocol number
+#define DBSERVER_MISSION_PROTOCOL_VERSION	20090309	// DbServer<->MissionServer protocol number
+#define DBSERVER_QUEUE_PROTOCOL_VERSION	20100105	// DbServer<->QueueServer protocol number
 
 // add new ports up here, counting backwards
 #define DEFAULT_DBTURNSTILE_PORT                    6971    // dbserver listens for turnstile server
@@ -869,5 +871,7 @@ enum
 {
     BEACON2DB_BEACONSERVER_STATUS = COMM_MAX_CMD,
 };
+
+C_DECLARATIONS_END
 
 #endif
