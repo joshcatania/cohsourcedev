@@ -3,7 +3,7 @@
 #define RT_ALLOW_BINDTEXTURE
 #define RT_PRIVATE
 #include "rendershadowmap.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "failtext.h"
 #include "gfx.h"
 #include "mathutil.h"
@@ -78,7 +78,7 @@ static INLINEDBG int getTexture(int map_index, int fbo_index)
 	return (map->active) ? map->texture[fbo_index] : shadowDisabledTexture;
 }
 
-// get the fbo texture for the given map at the current active fbo index 
+// get the fbo texture for the given map at the current active fbo index
 static INLINEDBG int getActiveTexture(int map_index )
 {
 	assert(map_index >=0 && map_index < g_rtShadowMaps.numShadows);
@@ -165,7 +165,7 @@ static void buildFrustum( shadowFrustum* frustum, Mat4 view_to_world, float z_ne
 
 	frustum->fov_x = fov_x_rad;
 	frustum->fov_y = fov_y_rad;
-	
+
 	frustum->z_far = z_far;
 	frustum->z_near = z_near;
 
@@ -276,7 +276,7 @@ static void drawFrustum(shadowFrustum* frust)
 }
 
 static void drawShadowedViewFrustum(void)
-{	
+{
 	drawFrustum(&g_rtShadowMapOpts.viewFrustum);
 }
 
@@ -597,7 +597,7 @@ static void setupShaderConstants( void )
 		for (i=0; i<g_rtShadowMaps.numShadows; ++i)
 		{
 			z_splits[i] = fabs( g_rtShadowMaps.maps[i].csm_eye_z_split_far );
-		}		
+		}
 		WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_ShadowSplitsFP, z_splits);
 
 		if (g_rtShadowMaps.numShadows > 1)
@@ -643,11 +643,11 @@ static void setupShaderConstants( void )
 		float modulationClamp_ambient_only_obj	= LERP(g_rtShadowMapOpts.modulationClamp_ambient_only_obj, modulationClampNight_ambient_only_obj, nightPercent);
 #undef LERP
 
-		setVec4(shadowParams, modulationClamp_ambient, modulationClamp_diffuse, modulationClamp_specular, modulationClamp_vertex_lit );	
+		setVec4(shadowParams, modulationClamp_ambient, modulationClamp_diffuse, modulationClamp_specular, modulationClamp_vertex_lit );
 		WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_ShadowParamsFP, shadowParams);
 
 		// cache of the currently set shadow params so that we can override more easily (@todo kind of a hack)
-		copyVec4(shadowParams, g_rtShadowMapOpts.currentShadowParamsFP );	
+		copyVec4(shadowParams, g_rtShadowMapOpts.currentShadowParamsFP );
 		g_rtShadowMapOpts.current_modulationClamp_ambient_only_obj = modulationClamp_ambient_only_obj;
 	}
 
@@ -658,7 +658,7 @@ static void setupShaderConstants( void )
 		for (i=0; i<g_rtShadowMaps.numShadows; ++i)
 		{
 			shadowParams3[i] = game_state.shadowmap_split_overlap[i];
-		}		
+		}
 		WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_ShadowParams3FP, shadowParams3 );
 	}
 }
@@ -723,7 +723,7 @@ void rt_shadowmap_dbg_test_settings(void)
 				const int texShadowMap = getActiveTexture(0);
 				GLint t;
 				WCW_ActiveTexture(TEXLAYER_SHADOWMAP);
-				glGetIntegerv(GL_TEXTURE_BINDING_2D, &t); 
+				glGetIntegerv(GL_TEXTURE_BINDING_2D, &t);
 				if (t != texShadowMap)
 				{
 					texBind(TEXLAYER_SHADOWMAP, texShadowMap);
@@ -784,7 +784,7 @@ static void initOverrideItem( RTShadowOverrideID id, void* overriddenValue, size
 	g_SceneOverrides[id].pTargetVal		= overriddenValue;
 	g_SceneOverrides[id].targetBytes	= itemSize;
 	assert(itemSize <= sizeof(g_SceneOverrides[id].oldVal) );
-	
+
 	// grab the current value, while we're at it.
 	memmove( &g_SceneOverrides[id].oldVal, overriddenValue, itemSize );
 }
@@ -851,12 +851,12 @@ void rt_initShadowMapMenu(void)
 	static const int shadowModeValues[] = {SHADOW_OFF, SHADOW_SHADOWMAP_LOW, SHADOW_SHADOWMAP_MEDIUM, SHADOW_SHADOWMAP_HIGH, SHADOW_SHADOWMAP_HIGHEST};
 	static const char * shadowModeNames[] = {"Off", "Low", "Medium", "High", "Highest", NULL};
 	static const int stippleFadeModeValues[] = {stippleFadeNever, stippleFadeAlways, stippleFadeHQOnly};
-	static const char * stippleFadeModeNames[] = {"Off", "Always", "HQ Only", NULL};	
+	static const char * stippleFadeModeNames[] = {"Off", "Always", "HQ Only", NULL};
 	static const int shadowSplitCalcModeValues[] = {shadowSplitCalc_DynamicMaxSplits, shadowSplitCalc_Dynamic, shadowSplitCalc_StaticAssignment};
-	static const char * shadowSplitCalcModeNames[] = {"Dynamic 4 splits", "Dynamic", "Static Assignment", NULL};	
+	static const char * shadowSplitCalcModeNames[] = {"Dynamic 4 splits", "Dynamic", "Static Assignment", NULL};
 
 	initOverrideTable();
-	
+
 	g_rtShadowMapOpts.enablePCF = true;
 	g_rtShadowMapOpts.cull = cullNone;
 	g_rtShadowMapOpts.slopeBias = +8.0f;
@@ -887,7 +887,7 @@ void rt_initShadowMapMenu(void)
 	game_state.shadowDebugFlags |= orientOnView;
 	game_state.shadowDebugFlags |= quantizeLocal;
 
-	
+
 	game_state.shadowDebugFlags |= kRenderSkinnedIntoMap;
 	game_state.shadowDebugFlags |= kUseCustomRenderLoop;
 	game_state.shadowDebugFlags |= kShadowCapsuleCull;
@@ -904,7 +904,7 @@ void rt_initShadowMapMenu(void)
 	game_state.shadowSplit2 = 135.0f;
 	game_state.shadowSplit3 = 400.0f;
 	game_state.shadowSplitLambda = 0.90f;
-	game_state.shadowDirAltitude = 45.0f;	
+	game_state.shadowDirAltitude = 45.0f;
 	game_state.shadowMaxSunAngleDeg = 50.0f;
 	game_state.shadowScaleQuantLevels = 64.0f;
 	game_state.shadowViewBound = viewBoundTight;
@@ -939,7 +939,7 @@ void rt_initShadowMapMenu(void)
 	tuneFloat("Shadow Diffuse Rolloff Clamp", &g_rtShadowMapOpts.modulationClamp_NdotL_rolloff, 0.005f, 0.0f, 1.0f, NULL);
 	tuneFloat("Shadow Vertex Lit Clamp", &g_rtShadowMapOpts.modulationClamp_vertex_lit, 0.005f, 0.0f, 1.0f, NULL);
 	tuneFloat("Shadow Ambient Only Obj Clamp", &g_rtShadowMapOpts.modulationClamp_ambient_only_obj, 0.005f, 0.0f, 1.0f, NULL);
-	
+
 	tuneFloat("Shadow Strength Night Reduction", &g_rtShadowMapOpts.nightModulationReduction, 0.005f, 0.0f, 1.0f, NULL);
 
 	tuneFloat("Max Shadow Vis Z", &game_state.shadowFarMax, 10.0f, 10.0f, 20000.0f, NULL);
@@ -1043,7 +1043,7 @@ void rt_initShadowMapMenu(void)
 	tuneCallback("Reset to Defaults", rt_initShadowMapMenu);
 
 	tunePopMenu();
-	
+
 	setBaseSceneCustomizations();
 }
 
@@ -1055,7 +1055,7 @@ void rt_shadowmap_scene_customizations( void* SceneInfo_p )
 	// We don't want to carry forward the customizations from the previous scene (if any),
 	// so restore the last pre-customized values set in rt_initShadowMapMenu().
 	clearSceneCustomizations();
-	
+
 	// If the supplied value equals the default "ignore" value (e.g., -1.0f) it's not a real
 	// override and should be ignored.
 	CustomizeIfValid( kShadowMapOverride_Off,							&sceneInfo->shadowMaps_Off,								-1 );
@@ -1236,7 +1236,7 @@ void rt_shadowmap_render( void* data )
 		glEnable(GL_ALPHA_TEST); CHECKGL;
 		glAlphaFunc(GL_GREATER, 0.6); CHECKGL;
 
-		for( i = 0 ; i < pHeader->batch_count_alphatest; i++, pItem++ ) 
+		for( i = 0 ; i < pHeader->batch_count_alphatest; i++, pItem++ )
 		{
 			if (pItem->tex_id)
 			{
@@ -1273,7 +1273,7 @@ void rt_shadowmap_render( void* data )
 					mat43to44(pItem->xform, local_modelview_matrix_4x4);
 					glLoadMatrixf((F32 *)local_modelview_matrix_4x4); CHECKGL;
 				}
-				
+
 #ifndef FINAL
 				bStippleEnabled = rt_shadowmap_set_stipple( pItem->lod_alpha, bStippleEnabled );
 #endif
@@ -1315,13 +1315,13 @@ void rt_shadowmap_render( void* data )
 			identityMat44( local_modelview_matrix_4x4 );
 			glLoadMatrixf((F32 *)local_modelview_matrix_4x4); CHECKGL;
 		}
-		
+
 		// enable weight and matrix varying vertex attributes from array
 		// @todo really should change these const names as they are ARB and not NV specific any longer
 		WCW_EnableClientState( GLC_VERTEX_ATTRIB_ARRAY1_NV );	// BLENDWEIGHT, ATTR1 weights
 		WCW_EnableClientState( GLC_VERTEX_ATTRIB_ARRAY5_NV ); // bone matrix indices (use BLENDINDICES (ATTR7) instead?)
 
-		for( i = 0 ; i < pHeader->batch_count_skinned; ++i ) 
+		for( i = 0 ; i < pHeader->batch_count_skinned; ++i )
 		{
 			{
 				VBO* vbo = pItem->vbo;

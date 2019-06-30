@@ -3,7 +3,7 @@
 //
 #define RT_PRIVATE
 
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "failtext.h"
 #include "cmdgame.h"
 #include "cubemap.h"
@@ -40,7 +40,7 @@ void rt_cubemapViewportPreCallback(ViewportInfo** ppViewport)
 {
 	ViewportInfo* pViewportInfo = *ppViewport;
 	PBuffer* pbuf = viewport_GetPBuffer(pViewportInfo);
-	
+
 	rdrBeginMarker(__FUNCTION__);
 
 	// let the pbuffer know which face is current so it renders to the correct face
@@ -78,7 +78,7 @@ void rt_cubemapViewportPostCallback(ViewportInfo** ppViewport)
 		params.mode	= blurMode;
 		params.width = pViewportInfo->width;
 		params.height = pViewportInfo->height;
-		
+
 		rdrFilterRenderDirect( &params );
 	}
 
@@ -190,7 +190,7 @@ void rt_initCubeMapMenu()
 	static const int cubemapModeValues[] = {0, 1, 2, 3, 4, 5};
 	static const char * cubemapModeNames[] = {"Off", "low quality", "medium quality", "high quality", "ultra quality", "debug super HQ", NULL};
 	static const int cubemapForceFaceValues[] = {-1, 0, 1, 2, 3, 4, 5, 6};
-	static const char * cubemapForceFaceNames[] = {"All faces each frame (slow)", "One per frame", "Face 1", 
+	static const char * cubemapForceFaceNames[] = {"All faces each frame (slow)", "One per frame", "Face 1",
 							"Face 2", "Face 3", "Face 4", "Face 5", "Face 6", NULL};
 
 	static int blurModes[] = {FILTER_NO_BLUR, FILTER_FAST_BLUR, FILTER_GAUSSIAN};
@@ -228,7 +228,7 @@ void rt_initCubeMapMenu()
 	tuneFloat("Water Fresnel Power", &game_state.waterFresnelPower, 0.1f, 1.0f, 10.0f, NULL);
 	tuneFloat("Water Night Reduction", &game_state.waterReflectionNightReduction, 0.05f, 0.0f, 1.0f, NULL);
 	tuneFloat("Water Reflection Skew Scale", &game_state.waterReflectionSkewScale, 0.01f, 0.0f, 1.0f, NULL);
-	tuneFloat("Water Lod Scale", &game_state.reflection_water_lod_scale, 0.001f, 0.001f, 1, NULL);	
+	tuneFloat("Water Lod Scale", &game_state.reflection_water_lod_scale, 0.001f, 0.001f, 1, NULL);
 	tuneInteger("Water Model Lod Override", &game_state.reflection_water_lod_model_override, 1, 0, MAX_LODS, NULL);
 	tuneEnum("Water sky only reflection", &game_state.allow_simple_water_reflection, cmNoYesDebugValues, cmNoYesDebugNames, NULL);
 	tuneInteger("------------------", &separator2, 1, 0, 0, NULL);
@@ -238,11 +238,11 @@ void rt_initCubeMapMenu()
 	tuneFloat("Building Fresnel Scale", &game_state.buildingFresnelScale, 0.01f, 0.0, 10.0f, NULL);
 	tuneFloat("Building Fresnel Power", &game_state.buildingFresnelPower, 0.1f, 1.0f, 10.0f, NULL);
 	tuneFloat("Building Night Reduction", &game_state.buildingReflectionNightReduction, 0.05f, 0.0f, 1.0f, NULL);
-	tuneFloat("Building Lod Scale", &game_state.reflection_planar_lod_scale, 0.0001f, 0.0f, 1, NULL);	
+	tuneFloat("Building Lod Scale", &game_state.reflection_planar_lod_scale, 0.0001f, 0.0f, 1, NULL);
 	tuneInteger("Building Model Lod Override", &game_state.reflection_planar_lod_model_override, 1, 0, MAX_LODS, NULL);
-	tuneFloat("Building reflect fade begin", &game_state.reflection_planar_fade_begin, 0.5, 0.0f, 500.0f, NULL);	
-	tuneFloat("Building reflect fade end", &game_state.reflection_planar_fade_end, 0.5, 0.0f, 1000.0f, NULL);	
-	//tuneFloat("Planar reflection MIP bias", &game_state.planar_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);	
+	tuneFloat("Building reflect fade begin", &game_state.reflection_planar_fade_begin, 0.5, 0.0f, 500.0f, NULL);
+	tuneFloat("Building reflect fade end", &game_state.reflection_planar_fade_end, 0.5, 0.0f, 1000.0f, NULL);
+	//tuneFloat("Planar reflection MIP bias", &game_state.planar_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);
 	tuneFloat("Entity Visible Dist From Player)", &game_state.reflection_planar_entity_vis_limit_dist_from_player, 1.0f, 0.0f, 1000.0f, NULL);
 	tuneEnum("Reflection Debug", &game_state.reflectionDebug, cmReflectionDebugValues, cmReflectionDebugNames, NULL);
 	tuneEnum("Blur Filter", &g_rt_PlanarRefOpts.blurMode, blurModesPlanar, blurNamesPlanar, NULL);
@@ -276,7 +276,7 @@ void rt_initCubeMapMenu()
 	tuneEnum("Enable 3 face update cycle", &game_state.cubemapUpdate3Faces, cmNoYesDebugValues, cmNoYesDebugNames, NULL);
 	tuneBit("Render chars in cubemap", &game_state.charsInCubemap, 1, NULL);
 	tuneFloat("Entity Visible Dist From Player)", &game_state.reflection_cubemap_entity_vis_limit_dist_from_player, 1.0f, 0.0f, 1000.0f, NULL);
-	tuneInteger("Lod Model Bias", &game_state.reflection_cubemap_lod_model_override, 1, 0, 300, NULL);	
+	tuneInteger("Lod Model Bias", &game_state.reflection_cubemap_lod_model_override, 1, 0, 300, NULL);
 	tuneBit("Enable Reflectivity Override", &game_state.reflectivityOverride, 1, NULL);
 	tuneFloat("Building Fresnel Bias", &game_state.buildingFresnelBias, 0.01f, 0.0f, 1.0f, NULL);
 	tuneFloat("Building Fresnel Scale", &game_state.buildingFresnelScale, 0.01f, 0.0, 10.0f, NULL);
@@ -284,8 +284,8 @@ void rt_initCubeMapMenu()
 	tuneFloat("Skinned Fresnel Bias", &game_state.skinnedFresnelBias, 0.01f, 0.0f, 1.0f, NULL);
 	tuneFloat("Skinned Fresnel Scale", &game_state.skinnedFresnelScale, 0.01f, 0.0, 10.0f, NULL);
 	tuneFloat("Skinned Fresnel Power", &game_state.skinnedFresnelPower, 0.1f, 1.0f, 10.0f, NULL);
-	tuneFloat("Cubemap reflection MIP bias", &game_state.cubemap_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);	
-	//tuneFloat("Planar reflection MIP bias", &game_state.planar_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);	
+	tuneFloat("Cubemap reflection MIP bias", &game_state.cubemap_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);
+	//tuneFloat("Planar reflection MIP bias", &game_state.planar_reflection_mip_bias, 0.1f, 0.0f, 4.0f, NULL);
 	tuneFloat("Reflection Attenuation Start", &game_state.cubemapAttenuationStart, 0.1f, 0.0f, 100.0f, NULL);
 	tuneFloat("Reflection Attenuation End", &game_state.cubemapAttenuationEnd, 0.1f, 0.1f, 100.0f, NULL);
 	tuneFloat("Reflection Attenuation Skin Start", &game_state.cubemapAttenuationSkinStart, 0.1f, 0.0f, 100.0f, NULL);

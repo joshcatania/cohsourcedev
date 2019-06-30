@@ -63,7 +63,7 @@
 #	include "baseparse.h"
 #endif
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 extern Entity* current_target;
 

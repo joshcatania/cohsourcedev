@@ -18,7 +18,7 @@
 #include "clientcomm.h"
 #include "game.h"
 
-#include <assert.h>
+#include "SuperAssert.h"
 #include <windows.h>
 
 

@@ -28,8 +28,6 @@
 #include "AppLocale.h"
 #include "osdependent.h"
 
-#include <assert.h>
-
 extern void *extractFromFS(const char *name, U32 *count);
 extern HWND hlogo;
 

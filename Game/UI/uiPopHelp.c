@@ -43,7 +43,7 @@
 
 #include "cmdgame.h" //cfg_LockActiveForGR() for the issue 17-18 transition
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 char *unread_texture_name = "Pop_Help_Icon_On_Alert";
 char *glow_texture_name = "Pop_Help_Icon_On_Alert_Glow";

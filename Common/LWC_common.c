@@ -9,7 +9,7 @@
 #include "staticMapInfo.h"
 #endif
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 LWC_STAGE LWC_GetRequiredDataStageForMap(const char *map_name)
 {

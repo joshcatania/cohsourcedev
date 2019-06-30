@@ -17,7 +17,7 @@
 #include "comm_game.h"
 #endif
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 #define POP_HELP_END MAX_POP_HELP
 
@@ -71,7 +71,6 @@ void loadPopHelp(char *def_filename, char *attribute_filename)
 
 	assert(def_filename != NULL);
 	assert(attribute_filename != NULL);
-	assert(attribute_alt_filename != NULL);
 
 	if (loaded_pop_help)
 		return;

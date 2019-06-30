@@ -140,7 +140,7 @@
 #include "character_eval.h"
 #include "character_combat_eval.h"
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 extern int	g_win_ignore_popups;
 extern int do_map_xfer;

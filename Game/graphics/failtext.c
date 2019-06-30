@@ -2,7 +2,7 @@
 #include "stdtypes.h"
 #include "font.h"
 #include "mathutil.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "file.h" // for isDevelopmentOrQAMode
 #include <time.h>
 #include <windows.h>
@@ -111,7 +111,7 @@ void failText(const char * msg, ...)
 int failTextGetDisplayHt()
 {
 	// return height of display (for others who want to draw under us)
-	return( globals.count * 8); 
+	return( globals.count * 8);
 }
 
 void failTextDisplay()
@@ -142,7 +142,7 @@ void failTextDisplay()
 		elapsed = (float)(curTicks - entry->ticks) / (float)CLOCKS_PER_SEC;
 
 		// Find the color for the tick count of this object
-		for (j = sizeof(colors)/sizeof(colors[0])-1; j >= 0; j--) {			
+		for (j = sizeof(colors)/sizeof(colors[0])-1; j >= 0; j--) {
 			if(elapsed > colors[j].elapsed) {
 				copyVec3(colors[j].color, color);
 				break;
@@ -162,7 +162,7 @@ void failTextDisplay()
 		if(globals.entries[i].ticks == 0xFFFFFFFF) {
 			memmove(globals.entries + i, globals.entries + i + 1, globals.count - i - 1);
 			globals.count--;
-		}		
+		}
 	}
 
 	LeaveCriticalSection(&globals.lock);

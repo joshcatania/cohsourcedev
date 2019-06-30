@@ -30,8 +30,6 @@
 #include "process_util.h"
 #include "win_init.h"
 
-#include <assert.h>
-
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
 
 char g_GameArguments[2048];

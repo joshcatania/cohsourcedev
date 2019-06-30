@@ -1,7 +1,7 @@
 #include "rt_tune.h"
 #include "mathutil.h"
 #include "font.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "failtext.h"
 
 #define TUNE_MAX_DEPTH 5
@@ -273,7 +273,7 @@ static tuneVar * tuneAdd(const char * name)
 		}
 	}
 	if(i == menu->count) {
-		menu->vars = realloc(menu->vars, ++menu->count * sizeof(tuneVar));		
+		menu->vars = realloc(menu->vars, ++menu->count * sizeof(tuneVar));
 		memset(menu->vars + i, 0, sizeof(tuneVar));
 		menu->vars[i].name = name;
 	}

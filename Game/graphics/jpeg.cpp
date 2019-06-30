@@ -6,6 +6,8 @@ extern "C" {
 #include "tex.h"
 #include "ogl.h"
 #include "stdtypes.h"
+
+#include "SuperAssert.h"
 }
 
 extern "C" {
@@ -107,7 +109,7 @@ fail_exit:
  * conjunction with the documentation file libjpeg.doc.
  *
  * This code will not do anything useful as-is, but it may be helpful as a
- * skeleton for constructing routines that call the JPEG library.  
+ * skeleton for constructing routines that call the JPEG library.
  *
  * We present these routines in the same coding style used in the JPEG code
  * (ANSI function definitions, etc); but you are of course free to code your
@@ -408,14 +410,14 @@ void jpgSaveEx( char * name, U8 * pixbuf, int bpp, int sizeOfPictureX, int sizeO
 	}
 
 	//globals, I don't know why
-	image_buffer = jpegbuf;			// Points to large array of R,G,B-order data 
-	image_height = sizeOfPictureY;	// Number of rows in image 
-	image_width  = sizeOfPictureX;	// Number of columns in image 
+	image_buffer = jpegbuf;			// Points to large array of R,G,B-order data
+	image_height = sizeOfPictureY;	// Number of rows in image
+	image_width  = sizeOfPictureX;	// Number of columns in image
 
 	write_JPEG_file(name, 95, extraJpegData, extraJpegDatalen); //Quality 1 - 100, 85 = 17k ish file
 
 	free(jpegbuf);
-}//*/	
+}//*/
 
 } // extern "C"
 

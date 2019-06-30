@@ -1,7 +1,7 @@
 #define EXCLUDE_LIBS
 #include "dxtlib.h"
 #include <stdio.h>
-#include "assert.h"
+#include "SuperAssert.h"
 
 extern "C" {
 

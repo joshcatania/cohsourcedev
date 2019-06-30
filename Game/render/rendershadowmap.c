@@ -1,5 +1,5 @@
 #include "rendershadowmap.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "failtext.h"
 #include "viewport.h"
 #include "camera.h"
@@ -162,10 +162,10 @@ void updateShadowMap(shadowMap * map, bool active, const char * name, const Mat4
 	}
 
 	map->index = (int)(map - g_ShadowMaps.maps);
-	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, name);	
-	
+	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, name);
+
 	copyMat4(mat, map->viewport->cameraMatrix);
-		
+
 	map->viewport->bottom = map->viewport->left = -0.5f * size;
 	map->viewport->top = map->viewport->right = 0.5f * size;
 	if(coneAngle) {
@@ -217,7 +217,7 @@ void updateCascadedShadowMap(shadowMap * map, bool active, const char * name, co
 	}
 
 	map->index = (int)(map - g_ShadowMaps.maps);
-	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, name);	
+	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, name);
 
 	copyMat4(mat, map->viewport->cameraMatrix);
 
@@ -253,7 +253,7 @@ void updateCascadedShadowMap(shadowMap * map, bool active, const char * name, co
 }
 
 void updateUnusedShadowMap(shadowMap * map)
-{	
+{
 	updateShadowMap(map, false, "unused", unitmat, 0, 1, 1);
 }
 
@@ -369,7 +369,7 @@ static void getShadlowLightDir( Vec3 shadowDir )
 {
 	#define SHADOWMAP_MAX_ANGLE_DEBUG 0
 	int dirType = game_state.shadowDirType;
-	
+
 	switch (dirType)
 	{
 	case dirSun:
@@ -384,7 +384,7 @@ static void getShadlowLightDir( Vec3 shadowDir )
 			bool bClamped = false;
 
 			copyVec3( g_sun.direction, testSunVec );
-		
+
 				// Vector at maximum sun angle on the x-y plane
 			setVec3(maxVec, cosf(maxAngle), sinf(maxAngle), 0.0f );
 				// Actual angle of the sun from straight up
@@ -405,14 +405,14 @@ static void getShadlowLightDir( Vec3 shadowDir )
 				copyVec3( newSunVec, shadowDir );
 				bClamped = true;
 			}
-		
+
 			//------------------------------------------------------------------------
 			#if SHADOWMAP_MAX_ANGLE_DEBUG
 			//------------------------------------------------------------------------
 			{
 				static bWasClamped = false;
 				F32 sunAngleDeg = DEG(acosf( sunAngleDot ));
-				F32 sunLimitDeg = DEG(acosf( sunLimitDot ));		
+				F32 sunLimitDeg = DEG(acosf( sunLimitDot ));
 				if (( ! bWasClamped ) && ( bClamped ))
 				{
 					F32 sunVecOfsAngle2 = DEG(acosf( dotVec3( testSunVec, upvec3 ) ));
@@ -440,7 +440,7 @@ static void getShadlowLightDir( Vec3 shadowDir )
 			//------------------------------------------------------------------------
 			#endif
 			//------------------------------------------------------------------------
-		}		
+		}
 		break;
 	}
 	case dirY:
@@ -622,13 +622,13 @@ static void csmCalcFrustumBoundingSphere( Vec3 rCenter, float* rRadius, Mat4 vie
 
 	// calculate the center point of the frustum (assumes symmetric)
 	scaleAddVec3( view_to_world[2], (z_far-z_near)*0.5f, view_to_world[3], rCenter );
-	
+
 	// from center to a far plane corner is a radius length
 	// Far Corner Point - Center Point simplifies to the following:
 	// Rv = far_width*U + far_height*V + (z_far + z_near)/2*N
 	setVec3(extrema, 0.0f, 0.0f, 0.0f );
 	scaleAddVec3( view_to_world[0], far_width, extrema, extrema );
-	scaleAddVec3( view_to_world[1], far_height, extrema, extrema );	
+	scaleAddVec3( view_to_world[1], far_height, extrema, extrema );
 	scaleAddVec3( view_to_world[2], (z_far+z_near)*0.5f, extrema, extrema );
 
 	*rRadius = lengthVec3(extrema);
@@ -661,7 +661,7 @@ static void csmPrepareShadowMap( shadowMap * map, Vec3 lightDir, Vec3 lightOrigi
 
 	// setup shadowMap record
 	map->index = (int)(map - g_ShadowMaps.maps);
-	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, "csm");	
+	snprintf(map->name, sizeof(map->name), "shadowmap_%d_%s", map->index, "csm");
 
 	map->viewport->left		= tmin[0];
 	map->viewport->right		= tmax[0];
@@ -773,7 +773,7 @@ static void csmUpdate(void)
 	// how many cascades are active?
 	int iNumCascades = MIN(game_state.shadowmap_num_cascades, SHADOWMAP_MAX_SHADOWS);
 	iNumCascades = MIN(iNumCascades, g_ShadowMaps.numShadows);
-	
+
 	// the current main camera eye viewport 'frustum' data is contained in the gfx_window
 	// calculate practical split z values for our shadow cascades
 	// engine uses -z as into eye view along view direction (gl convention)
@@ -798,7 +798,7 @@ static void csmUpdate(void)
 		float fNear=splits[iSplit];
 		float fFar=splits[iSplit+1];
 
-		// for splits past the first we move back the near plane in order to 
+		// for splits past the first we move back the near plane in order to
 		// have a little overlap between cascades in the shadowmaps that we can blend
 		// between if desired
 		if (iSplit>0)
@@ -862,7 +862,7 @@ static void csmUpdate(void)
 		}
 		else if (game_state.shadowViewBound == viewBoundSphere)
 		{
-		
+
 			// use bounding sphere to avoid dynamic swimming (view and light changes)
 			// the world space to texel space scaling remains constant
 			// as the view changes (eliminating the flicker that occurs)
@@ -945,7 +945,7 @@ static void csmUpdate(void)
 			// quantize those distances to reduce scale flicker
 			dx = ceilf(dx*quantDensity)/quantDensity;
 			dy = ceilf(dy*quantDensity)/quantDensity;
-	
+
 			// light space extent midpoint
 			mx = (light_frust_max[0] + light_frust_min[0])*0.5f;
 			my = (light_frust_max[1] + light_frust_min[1])*0.5f;
@@ -1020,7 +1020,7 @@ void rdrShadowMapUpdate(void)
 	{
 		return;
 	}
-	
+
 	// if shadows are disabled then remove buffers and map rendering
 	if (game_state.shadowMode < SHADOW_SHADOWMAP_LOW || editMode() /* || isIndoors() */ || isBaseMap())
 	{
@@ -1039,7 +1039,7 @@ void rdrShadowMapUpdate(void)
 	// update the cascade shadow maps
 	csmUpdate();
 
-	
+
 	rdrQueue(DRAWCMD_REFRESHSHADOWMAPS,&g_ShadowMaps,sizeof(g_ShadowMaps) );
 
 }
@@ -1167,7 +1167,7 @@ static void groupDrawRefs_Shadowmap(Mat4 cam_mat, Mat4 inv_cam_mat)
 
 	vis = VIS_NORMAL;
 	if (group_draw.see_everything)
-		vis = VIS_DRAWALL; 
+		vis = VIS_DRAWALL;
 
 	//Assorted inits
 	group_draw.see_outside = 1;		//Just draw visible portals, or outside, too?
@@ -1175,7 +1175,7 @@ static void groupDrawRefs_Shadowmap(Mat4 cam_mat, Mat4 inv_cam_mat)
 
 	copyMat4(inv_cam_mat, group_draw.inv_cam_mat);
 
-	group_draw.zocclusion = false;	// currently no occlusion on shadow maps 
+	group_draw.zocclusion = false;	// currently no occlusion on shadow maps
 
 	group_draw.do_welding = !game_state.no_welding && !game_state.edit_base && vis != VIS_DRAWALL;
 
@@ -1270,34 +1270,34 @@ static void gfxTreeDrawNode_shadowmap(GfxNode *node,Mat4 parent_mat)
 
 	for(;node;node = node->next)
 	{
-		if( ( node->flags & GFXNODE_HIDE ) || ( node->seqHandle && !node->useFlags ) ) 
-			continue; 
+		if( ( node->flags & GFXNODE_HIDE ) || ( node->seqHandle && !node->useFlags ) )
+			continue;
 
 		//gfxGetAnimMatrices
-		if( bone_IdIsValid(node->anim_id) && node->seqHandle ) 
-		{	
-			Mat4Ptr viewspace_scaled; //will be the 
+		if( bone_IdIsValid(node->anim_id) && node->seqHandle )
+		{
+			Mat4Ptr viewspace_scaled; //will be the
 			Vec3 xlate_to_hips;
 			Mat4 scaled_xform;
 
-			seqGfxData = node->seqGfxData; 
-			assert( seqGfxData ); 
+			seqGfxData = node->seqGfxData;
+			assert( seqGfxData );
 			assert( bone_IdIsValid(node->anim_id) );
 
 			viewspace_scaled = seqGfxData->bpt[node->anim_id];
 
-			//TO DO : I thought this optimization was good, but it messed up scaling.  
+			//TO DO : I thought this optimization was good, but it messed up scaling.
 			//But now it's slow, so figure out a new optimized version
 			// (above is an old Cryptic comment...investigate)
 			if(0)
-			{ 
+			{
 				copyVec3(node->mat[3], scaled_xform[3]);
-				scaleMat3Vec3Xfer( node->mat, node->bonescale, scaled_xform ); 
+				scaleMat3Vec3Xfer( node->mat, node->bonescale, scaled_xform );
 			}
 			else
-			{	
+			{
 				Mat4 scale_mat;
-				copyMat4(unitmat, scale_mat); 
+				copyMat4(unitmat, scale_mat);
 				scaleMat3Vec3(scale_mat,node->bonescale); //I think just Mat4 transfer will fix??
 				mulMat4(node->mat, scale_mat, scaled_xform);
 
@@ -1314,7 +1314,7 @@ static void gfxTreeDrawNode_shadowmap(GfxNode *node,Mat4 parent_mat)
 		if( !node->child && !node->model )
 			continue;
 
-		node->viewspace = viewspace;  //Just use the local cuz it's not used after this stack unwinds 
+		node->viewspace = viewspace;  //Just use the local cuz it's not used after this stack unwinds
 
 		mulMat4( parent_mat, node->mat, node->viewspace );
 
@@ -1329,7 +1329,7 @@ static void gfxTreeDrawNode_shadowmap(GfxNode *node,Mat4 parent_mat)
 				if (0 && ViewCache_InUse())
 				{
 					if (!node->clothobj->GameData->system) {
-					
+
 						avsn_params.node = node;
 						avsn_params.mid = node->viewspace[3];
 						avsn_params.alpha = node->alpha;
@@ -1350,7 +1350,7 @@ static void gfxTreeDrawNode_shadowmap(GfxNode *node,Mat4 parent_mat)
 				// @todo need a screen space size metric to decide if we want character to draw into shadow or not
 				// We need huge/boss characters to draw into the distant cascades
 				F32 getScaleBounds(Mat3 mat);
-				
+
 				F32 scale = getScaleBounds(node->viewspace);
 
 				if (/*!(node->flags & GFXNODE_NEEDSVISCHECK) || */isShadowExtrusionVisible(node->viewspace[3], scale * node->model->radius ))
@@ -1423,7 +1423,7 @@ static void gfxRenderViewport_shadowmap(ViewportInfo *viewport)
 	// @todo we will need to sweep bounding volumes along the light direction for
 	// visibility culling and finally adjust the view matrices to the light
 	// when we finally render the batches.
-	// We just need to adjust the z near/far planes of the main view frustum for each 
+	// We just need to adjust the z near/far planes of the main view frustum for each
 	// cascade so we only consider the objects in the cascade's slice
 
 	// setup the state we need for rendering with main camera view
@@ -1438,8 +1438,8 @@ static void gfxRenderViewport_shadowmap(ViewportInfo *viewport)
 	copyMat4(gfx_state.main_viewport_info->cameraMatrix, cam_info.cammat);
 	gfxSetViewMat(cam_info.cammat, cam_info.viewmat, cam_info.inv_viewmat);
 
-	mulVecMat3(g_sun.direction, M_view_main, g_sun.direction_in_viewspace); 
-	mulVecMat3(gfx_state.shadowmap_light_direction_ws, M_view_main, gfx_state.shadowmap_light_direction_vs); 
+	mulVecMat3(g_sun.direction, M_view_main, g_sun.direction_in_viewspace);
+	mulVecMat3(gfx_state.shadowmap_light_direction_ws, M_view_main, gfx_state.shadowmap_light_direction_vs);
 	sunGlareDisable(); // Must be before gfxTreeDrawNode?
 
 	{
@@ -1563,7 +1563,7 @@ static void gfxRenderViewport_shadowmap(ViewportInfo *viewport)
 				PERFINFO_AUTO_START("shadowmap traverse ent gfxtree",1);
 
 				{
-					Mat4 M_shadow_node_traversal_view; 
+					Mat4 M_shadow_node_traversal_view;
 
 					if (1)
 					{
@@ -1589,7 +1589,7 @@ static void gfxRenderViewport_shadowmap(ViewportInfo *viewport)
 						gfxSetViewMat(viewport->cameraMatrix, M_shadow_node_traversal_view, NULL);
 					}
 
-					gfxTreeDrawNode_shadowmap( gfx_tree_root, M_shadow_node_traversal_view); 
+					gfxTreeDrawNode_shadowmap( gfx_tree_root, M_shadow_node_traversal_view);
 				}
 				PERFINFO_AUTO_STOP();
 			}
@@ -1616,7 +1616,7 @@ static void gfxRenderViewport_shadowmap(ViewportInfo *viewport)
 	// command which encapsulates all of the data
 	PERFINFO_AUTO_STOP_START("Send RT Cmds-Shadowmap Start", 1);
 	{
-		Mat4 M_view; 
+		Mat4 M_view;
 		Mat4 M_inv_view;
 
 		assert(viewport && viewport->isRenderToTexture);
@@ -1669,7 +1669,7 @@ bool shadowViewportCustomRenderCallback(ViewportInfo *viewport)
 		gfxRenderViewport_shadowmap(viewport);			// leaner
 	}
 	else
-	{		
+	{
 		gfxRenderViewport(viewport);			// use default
 	}
 	return true;
@@ -1682,7 +1682,7 @@ unsigned int rdrShadowMapCanWorldRenderWithShadows(void)
 {
 	if ( game_state.shadowMode < SHADOW_SHADOWMAP_LOW )
 		return false;
-	
+
 	if ( gfx_state.renderPass != RENDERPASS_COLOR )
 		return false;	// only do lookups on main viewport (i.e., not on reflections)
 
@@ -1710,12 +1710,12 @@ unsigned int rdrShadowMapCanEntityRenderWithShadows(void)
 	// @todo - a more precise test would be to test each entity if it
 	// is in a tray when setting the render params. This is more expedient
 	// at the moment though.
-	// It can be a noticeable limitation, see TTP #21110 
+	// It can be a noticeable limitation, see TTP #21110
 	// For example, you are inside Architect Entertainment building and looking
 	// outside. None of the entities on the outside will cast shadows though the
 	// outside world geometry will render shadows.
 	if ( isIndoors() )
-		return false;	
+		return false;
 
 	return true;	// ok to render with shadowmap lookups
 }

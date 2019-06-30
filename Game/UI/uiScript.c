@@ -23,7 +23,7 @@
 #include "wdwbase.h"
 #include "applocale.h"
 #include "messagestoreutil.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "uiInput.h"
 #include "uiCursor.h"
 #include "entclient.h"
@@ -45,7 +45,7 @@ static int atox(char *s)
 	return value;
 }
 
-static void	scriptUIDrawColoredMeter(float x, float y, float z, float wd, float sc, float filled, 
+static void	scriptUIDrawColoredMeter(float x, float y, float z, float wd, float sc, float filled,
 										AtlasTex *default_L, AtlasTex *default_M, AtlasTex *default_R,
 										AtlasTex *glow_L, AtlasTex *glow_M, AtlasTex *glow_R, AtlasTex *edge)
 {
@@ -236,7 +236,7 @@ static float scriptUIDrawDetachedDistance(ScriptUIClientWidget* widget, float x,
 		playerPos[0] = ENTPOSX(player);
 		playerPos[1] = ENTPOSY(player);
 		playerPos[2] = ENTPOSZ(player);
-		
+
 		dist = distance3(playerPos, targetPos);
 	}
 	else
@@ -581,7 +581,7 @@ int scriptUIWindow()
 		assert(0);	//	undefined
 		break;
 	}
-	
+
 	if (!window_getDims(gCurrentWindefIndex, &x, &y, &z, &wd, &ht, &sc, &color, &back_color))
 	{
 		if (window_getMode(gCurrentWindefIndex) == WINDOW_DOCKED && eaSize(&widgetList) >= 3)
@@ -774,7 +774,7 @@ int scriptUIWindow()
 				drawHt += scriptUIDrawDetachedText(widget, x, y + drawHt, z, wd, sc, showLarge);
 			xcase KarmaWidget:
 				drawHt += scriptUIDrawDetachedKarma(widget, x, y + drawHt, z, wd, sc, showLarge);
-		}			
+		}
 	}
 
 	window_setDims(gCurrentWindefIndex, -1, -1, wd, drawHt + 10.0f);

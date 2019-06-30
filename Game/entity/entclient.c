@@ -8,7 +8,7 @@
 #include "cmdgame.h"
 #include "fx.h"
 #include "error.h"
-#include "superassert.h"
+#include "SuperAssert.h"
 #include "entclient.h"
 #include "error.h"
 #include "motion.h"
@@ -276,7 +276,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 	fxInitFxParams(&fxp);
 
 	entTarget = entFromId( netfx->targetEnt );
-	if(entTarget && entTarget->seq) 
+	if(entTarget && entTarget->seq)
 		fxp.targetSeqHandle = entTarget->seq->handle;
 
 	//Get Origin (either the spawning Ent or an XYX position )
@@ -315,9 +315,9 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 	{
 		if( netfx->targetEnt )
 		{
-			if( entTarget && entTarget->seq ) 
+			if( entTarget && entTarget->seq )
 			{
-				fxp.keys[fxp.keycount].seq	= entTarget->seq;  
+				fxp.keys[fxp.keycount].seq	= entTarget->seq;
 				fxp.keys[fxp.keycount].bone = 2; //Made it Chest. I don't know why I took this out?
 
 				fxp.keycount++;
@@ -359,7 +359,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 	{
 		int i;
 		fxp.numColors = 2;
-		for (i=0; i<4; i++) 
+		for (i=0; i<4; i++)
 		{
 			fxp.colors[0][i] = netfx->colorTint.primary.rgba[i];
 			fxp.colors[1][i] = netfx->colorTint.secondary.rgba[i];
@@ -389,7 +389,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 
 	fxp.duration   = netfx->duration;
 	fxp.radius	   = netfx->radius;
-	fxp.power	   = netfx->power; 
+	fxp.power	   = netfx->power;
 	fxp.net_id	   = netfx->net_id;
 	fxp.isPlayer   = e==playerPtr();
 	fxp.isPersonal = netfx->command == CREATE_MAINTAINED_FX;
@@ -409,7 +409,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 			( // Neither target nor source are on my team
 				!team_IsMember(playerPtr(), entOrigin->db_id) &&
 				!team_IsMember(playerPtr(), entTarget->db_id)
-			) 
+			)
 			)
 		{
 			if (game_state.tintFxByType) {
@@ -425,7 +425,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 	}
 
 	//For Oil Slick.  It shouldn't show buffs or debuffs. Something of a hack
-	if( netfx->command == CREATE_MAINTAINED_FX && 
+	if( netfx->command == CREATE_MAINTAINED_FX &&
 		(e->seq->type->rejectContinuingFX == SEQ_REJECTCONTFX_ALL  ||
 		 e->seq->type->rejectContinuingFX == SEQ_REJECTCONTFX_EXTERNAL && entOrigin != e) )
 	{
@@ -443,7 +443,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
 	{
 		fxid = fxCreate( fxname, &fxp );
 
-		//Debug 
+		//Debug
 		if( isDevelopmentMode() && fxid && (netfx->command == CREATE_ONESHOT_FX) )
 		{
 			FxDebugAttributes attribs;
@@ -496,7 +496,7 @@ static void entCheckFxTriggers(Entity * e)
 			//Error checking
 			if( fxtracker->netfx.clientTriggerFx && fxtracker->age > 300 ) //ten seconds
 			{
-				if( game_state.fxdebug & FX_DEBUG_BASIC ) 
+				if( game_state.fxdebug & FX_DEBUG_BASIC )
 					Errorf( "NETFX ERROR: The server told you to play the FX %s when the travelling FX hit it's target.  It's been 10 seconds and it still hasn't happened. Probably, the person who set up the travelling effect didn't tag it as DelayedHit in the PFX file. Tell Doug.",
 					stringFromReference( fxtracker->netfx.handle ) );
 				trigger = 1;
@@ -608,12 +608,12 @@ static void entManageEntityNetFx(Entity * e)
 		if( netfx->command == CREATE_ONESHOT_FX || netfx->command == CREATE_MAINTAINED_FX )
 		{
 			int alreadyDestroyed;
-  
-			//Not debug: seems to be cropping up for mission objectives when you first create a mission 
+
+			//Not debug: seems to be cropping up for mission objectives when you first create a mission
 			//map.  I don't know why.  Fix this sometime.
 			assert(e && e->seq && netfx && netfx->handle && netfx->net_id);
 
-			if( netfx->command == CREATE_MAINTAINED_FX ) 
+			if( netfx->command == CREATE_MAINTAINED_FX )
 			{
 				int passOnThisOne = 0;
 				for( j = 0 ; j < e->maxTrackerIdxPlusOne  ; j++ )
@@ -624,7 +624,7 @@ static void entManageEntityNetFx(Entity * e)
 						passOnThisOne = 1;
 						continue;  //skip this fx
 					}
-				} 
+				}
 				if( passOnThisOne )
 					continue;
 			}
@@ -678,7 +678,7 @@ static void entManageEntityNetFx(Entity * e)
 			}
 		}
 		//If it's a destroy command
-		else if( netfx->command == DESTROY_FX ) 
+		else if( netfx->command == DESTROY_FX )
 		{
 			int fxFound = 0;
 
@@ -692,7 +692,7 @@ static void entManageEntityNetFx(Entity * e)
 			{
 				fxtracker = &(e->fxtrackers[j]);
 
-				//TO DO : what if the tracker is 
+				//TO DO : what if the tracker is
 				if( fxtracker->netfx.net_id == netfx->net_id )
 				{
 					//(not guaranteed there even is an fx yet, it could have come this frame,
@@ -705,7 +705,7 @@ static void entManageEntityNetFx(Entity * e)
 			}
 
 			//Missed a packet
-			if( !fxFound ) 
+			if( !fxFound )
 			{
 				NetFx * oofxdestroy;
 				oofxdestroy = dynArrayAdd(&e->outOfOrderFxDestroy,sizeof(e->outOfOrderFxDestroy[0]),&e->outOfOrderFxDestroyCount,&e->outOfOrderFxDestroyMax,1);
@@ -724,7 +724,7 @@ static void entManageEntityNetFx(Entity * e)
 
 	//After all newly received netFx have been handled, clear the list
 	memset( e->netfx_list, 0, sizeof( NetFx ) * e->netfx_count );
-	e->netfx_count = 0; 
+	e->netfx_count = 0;
 
 	if( game_state.netfxdebug && e == SELECTED_ENT )
 		debugCheckFxTrackers( e );
@@ -736,7 +736,7 @@ static void entManageEntityNetFx(Entity * e)
 static void calculatePlayerMoveThisFrame()
 {
 	Entity * e;
-	e = playerPtr(); 
+	e = playerPtr();
 	if( e )
 	{
 		Vec3 velocity;
@@ -749,7 +749,7 @@ static void calculatePlayerMoveThisFrame()
 }
 
 //float	combat_transition_vec;
-static void handleEntityFading( Entity * e )	
+static void handleEntityFading( Entity * e )
 {
 	int	doSmoothXlucencyFade;
 
@@ -763,17 +763,17 @@ static void handleEntityFading( Entity * e )
 	else
 		doSmoothXlucencyFade = 0;
 
-	//System 1 for fading a character into and out of existence 
-	if( e->fadedirection == ENT_FADING_IN )      
+	//System 1 for fading a character into and out of existence
+	if( e->fadedirection == ENT_FADING_IN )
 	{
 		if( e->currfade < 255 ) //TO DO PERF I MY HAVE MESSED THIS UP, BUT IT DIDN'T WORK RIGHT BEFORE
 		{
 			F32 fadeInAmount;
-			fadeInAmount = ceil(TIMESTEP * ENT_FADE_IN_RATE);  
+			fadeInAmount = ceil(TIMESTEP * ENT_FADE_IN_RATE);
 
 			//This little trick says that if the player is booking along, guys should fade in faster so they don't fade in past you
 			if( g_playerMoveRateThisFrame > 1.0 )
-				fadeInAmount *= g_playerMoveRateThisFrame * 3; 
+				fadeInAmount *= g_playerMoveRateThisFrame * 3;
 
 			e->currfade = MIN(255, (e->currfade + (U8)fadeInAmount));
 		}
@@ -924,19 +924,19 @@ static void calcSurfaceEntityIsStandingOn(Entity *e)
 	if (dpossquared < SQR(0.01)) {
 		// just use last frame's data
 		seqSetState( e->seq->state, 1, e->seq->surface );
-		
+
 	} else {
 		int hit;
-		
+
 		copyVec3(ENTPOS(e),start);
 		copyVec3(start,end);
 		start[1] += 1;
 		end[1] -= 1;
-		
+
 		PERFINFO_AUTO_START("collGrid", 1);
 			hit = collGrid(0,start,end,&coll,0,COLL_DISTFROMSTART);
 		PERFINFO_AUTO_STOP();
-		
+
 		if (hit)
 		{
 			if (coll.surfTex) {
@@ -956,7 +956,7 @@ static void calcSurfaceEntityIsStandingOn(Entity *e)
 			if( !e->seq->surface )
 				e->seq->surface = STATE_CONCRETE; //Default surface
 			seqSetState( e->seq->state, 1, e->seq->surface );
-			
+
 			// fpe 11/13/09 -- added GROUND state to indicate on ANY surface.
 			//	FX scripts check for an exact match on bits, so can't OR together
 			//	state bits in the script since all must be set.  Thus we have GROUND
@@ -1030,13 +1030,13 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 	splatParams = &sp;
 
 	{
-		//Make sure you have a good node   
+		//Make sure you have a good node
 		if( !gfxTreeNodeIsValid(seq->simpleShadow, seq->simpleShadowUniqueId ) )
-		{ 
+		{
 			seq->simpleShadow = initSplatNode( &seq->simpleShadowUniqueId, seq->type->shadowTexture?seq->type->shadowTexture:SEQ_DEFAULT_SHADOW_TEXTURE, "white", 0 );
-		}  
+		}
 		assert( gfxTreeNodeIsValid( seq->simpleShadow, seq->simpleShadowUniqueId ) );
-		splatParams->node = seq->simpleShadow;  
+		splatParams->node = seq->simpleShadow;
 	}
 
 	//node+uniqueID + shadowParams
@@ -1049,22 +1049,22 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 		F32 distAlpha;
 		F32 drawDist;
 		U8 maxAlpha; //maxAlpha possible under the circumstances
-		
+
 		drawDist = SHADOW_BASE_DRAW_DIST * ( splatParams->shadowSize[0] / SEQ_DEFAULT_SHADOW_SIZE );
- 
+
 		//If you are outside of your comfort zome, fade out over 30 feet
-		distAlpha = (1.0 - (( distFromCamera - drawDist ) / SHADOW_FADE_OUT_DIST )) ; 
+		distAlpha = (1.0 - (( distFromCamera - drawDist ) / SHADOW_FADE_OUT_DIST )) ;
 		distAlpha = MINMAX( distAlpha, 0, 1.0 );
 
 		//Find MaxAlpha
 		maxAlpha = seq->seqGfxData.alpha;							//Character's alpha
 		maxAlpha = MIN( maxAlpha, (U8)(g_sun.shadowcolor[3] * 255) );	//Time of Day alpha
-		maxAlpha = MIN( maxAlpha, (U8)(distAlpha * 255) ); 	 		//Distance from camera 
+		maxAlpha = MIN( maxAlpha, (U8)(distAlpha * 255) ); 	 		//Distance from camera
 		maxAlpha = MIN( maxAlpha, (U8)(maxDeathAlpha * 255) );		//Death alpha
 
 		splatParams->maxAlpha = maxAlpha;
 	}
-	
+
 	//Use hips if available...
 	if( seq->gfx_root->child )
 	{
@@ -1072,12 +1072,12 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 		F32 diff;
 		gfxTreeFindWorldSpaceMat( hipsMat, seq->gfx_root->child );
 		diff = hipsMat[3][1] - seq->gfx_root->mat[3][1];
-		copyVec3( hipsMat[3], splatParams->projectionStart ); 
-		splatParams->projectionStart[1] -= diff;  
+		copyVec3( hipsMat[3], splatParams->projectionStart );
+		splatParams->projectionStart[1] -= diff;
 	}
 	else
 	{
-		copyVec3( seq->gfx_root->mat[3], splatParams->projectionStart );   //Get Projection Start   
+		copyVec3( seq->gfx_root->mat[3], splatParams->projectionStart );   //Get Projection Start
 	}
 
 	//DO ShadowOffset, kind of a hack so artists can twiddle exactly where they want the shadow
@@ -1090,7 +1090,7 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 		copyVec3(seq->gfx_root->mat[3], mCorrectedGfxRootMat[3]);
 		copyMat3(unitmat, mCorrectedGfxRootMat);
 
-		mulMat4( mCorrectedGfxRootMat, mat, splatParams->mat ); 
+		mulMat4( mCorrectedGfxRootMat, mat, splatParams->mat );
 
 		{
 			Vec3 tv;
@@ -1099,19 +1099,19 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 		}
 	}
 
-	
 
-	splatParams->projectionStart[1]+= SHADOW_SPLAT_OFFSET; //won't work for longerstuff maybe should be scaled like fxbhvr setBack?  
+
+	splatParams->projectionStart[1]+= SHADOW_SPLAT_OFFSET; //won't work for longerstuff maybe should be scaled like fxbhvr setBack?
 
 	shadowStartScene(); //Just calculates light direction of sun
-	copyVec3( g_sun.shadow_direction, splatParams->projectionDirection );  //Get Light Direction 
+	copyVec3( g_sun.shadow_direction, splatParams->projectionDirection );  //Get Light Direction
 	splatParams->projectionDirection[0] = 0;
 	splatParams->projectionDirection[1] = -1;
 	splatParams->projectionDirection[2] = 0;
 
 	//splatParams->up = ??
 
-	
+
 
 	//Set the Collision Density Rejection Coefficient
 	switch(seq->type->shadowQuality)
@@ -1124,7 +1124,7 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 			splatParams->max_density = SPLAT_HIGH_DENSITY_REJECTION;
 	}
 
-	splatParams->rgb[0] = 0;  
+	splatParams->rgb[0] = 0;
 	splatParams->rgb[1] = 0;
 	splatParams->rgb[2] = 0;
 
@@ -1135,16 +1135,16 @@ static void updateSimpleShadow( SeqInst * seq, F32 distFromCamera, F32 maxDeathA
 		Splat* splat = splatParams->node->splat;
 		Vec3 vMovement;
 		subVec3(splat->previousStart, splatParams->projectionStart, vMovement);
-		
-		if ( game_state.simpleShadowDebug 
+
+		if ( game_state.simpleShadowDebug
 			|| lengthVec3Squared(vMovement) > 0.001f
 			|| fabsf(splat->width - splatParams->shadowSize[0]) > 0.001f
 			|| fabsf(splat->height - splatParams->shadowSize[2]) > 0.001f
 			|| fabsf(splat->depth - splatParams->shadowSize[1]) > 0.001f
 			)
 		{
-			updateASplat( splatParams ); 
-		
+			updateASplat( splatParams );
+
 		}
 
 		updateSplatTextureAndColors(splatParams, 2.0f * splatParams->shadowSize[0], 2.0f * splatParams->shadowSize[2]);
@@ -1159,10 +1159,10 @@ static F32 seqGetMovementSpeedAnimScale( SeqInst * seq, const Vec3 pos, const Ve
 	Vec3 velocity;
 	F32 moveDist,actualMoveRate,targetMoveRate,moveScale, cappedMoveScale;
 	const SeqMove * currmove;
-		
-	currmove = seq->animation.move;    
 
-	if( !currmove || !(currmove->flags & SEQMOVE_MOVESCALE) )          
+	currmove = seq->animation.move;
+
+	if( !currmove || !(currmove->flags & SEQMOVE_MOVESCALE) )
 		return 1.0;
 
 	//TO DO clear moved instantly somewhere else after fx use it
@@ -1170,47 +1170,47 @@ static F32 seqGetMovementSpeedAnimScale( SeqInst * seq, const Vec3 pos, const Ve
 		return 1.0;
 
 	if( seq->animation.typeGfx->moveRate )
-		targetMoveRate = seq->animation.typeGfx->moveRate; 
+		targetMoveRate = seq->animation.typeGfx->moveRate;
 	else if( currmove->moveRate )
 		targetMoveRate = currmove->moveRate;
 	else if ( isDevelopmentMode() )
-		Errorf( "Error in Sequencer %s Move %s Type %s : You set moveScale flag, but gave me no moveRate to do it with.", seq->type->seqname, currmove->name, seq->animation.typeGfx->type );   
-	
+		Errorf( "Error in Sequencer %s Move %s Type %s : You set moveScale flag, but gave me no moveRate to do it with.", seq->type->seqname, currmove->name, seq->animation.typeGfx->type );
+
 
 	subVec3( pos, posLastFrame, velocity );
 	moveDist = lengthVec3( velocity );
 
 	actualMoveRate = moveDist / (TIMESTEP?TIMESTEP:1);
 
-	moveScale = actualMoveRate / targetMoveRate;    
+	moveScale = actualMoveRate / targetMoveRate;
 
 	//Cap the move scaler so hitting a wall won't freeze you and going super fast wont be ridiculous
-	cappedMoveScale = MAX( 0.25, moveScale ); //Cap at half speed 
+	cappedMoveScale = MAX( 0.25, moveScale ); //Cap at half speed
 	cappedMoveScale = MIN( 2.0, cappedMoveScale );  //Cap at 2x speed
 
-	//Debug 
+	//Debug
 	if( (game_state.seq_info == 2) && current_target && seq == current_target->seq )
 	{
-		xyprintf( 50,49, "TIMESTEP  %f", TIMESTEP );  
-		xyprintf( 50,50, "actualMoveRate  %f", actualMoveRate );  
-		xyprintf( 50,51, "targetMoveRate  %f", targetMoveRate );  
+		xyprintf( 50,49, "TIMESTEP  %f", TIMESTEP );
+		xyprintf( 50,50, "actualMoveRate  %f", actualMoveRate );
+		xyprintf( 50,51, "targetMoveRate  %f", targetMoveRate );
 		xyprintf( 50,52, "movescale %f", moveScale );
 		xyprintf( 50,53, "capped movescale  %f", cappedMoveScale );
 		xyprintf( 50,54, "movestep  %f", moveScale * TIMESTEP );
 		xyprintf( 50,55, "diff      %f", TIMESTEP - (moveScale * TIMESTEP) );
 	}
 
-	return cappedMoveScale; 
+	return cappedMoveScale;
 }
 
 static void smoothSprintAnimation( SeqInst * seq, F32 moveRateAnimScale )
 {
-	GfxNode * node; 
+	GfxNode * node;
 	F32 base, modifier;
 
 	modifier = moveRateAnimScale*moveRateAnimScale;//this seems like the best mod
 
-	base = seq->animation.typeGfx->smoothSprint; 
+	base = seq->animation.typeGfx->smoothSprint;
 
 	if( base )
 	{
@@ -1223,9 +1223,9 @@ static void smoothSprintAnimation( SeqInst * seq, F32 moveRateAnimScale )
 	static F32 moveHistory[100];
 	static int line;
 	int i;
-	moveHistory[line] = modifier;   
+	moveHistory[line] = modifier;
 	for( i = 0 ; i < 100 ; i++ )
-	{	
+	{
 	if( i == line )
 	xyprintfcolor( 30, 1+i, 255, 255, 255, "%f", moveHistory[i] );
 	else
@@ -1285,7 +1285,7 @@ static void entUpdateNovodex( Entity* e, F32 entDistance)
 			// Need to create it
 			e->nxCapsuleKinematic = nwPushCapsuleActor(mCapsuleMat, e->motion->capsule.radius, fLength, nxGroupKinematic, -1.0f, NX_CLIENT_SCENE );
 		}
-		else 
+		else
 		{
 			// already exists, just update it
 			if ( pData->pActor )
@@ -1302,11 +1302,11 @@ static void entUpdateNovodex( Entity* e, F32 entDistance)
 #endif
 
 //AIMPITCH calculate the pitch to be used
-//TO DO a smoother system than feeding off fx. Knowing better when you are dont, so it doesn't rely on 
+//TO DO a smoother system than feeding off fx. Knowing better when you are dont, so it doesn't rely on
 //      the data from the power and the seqeucner to all be just right
 //      Happen for a few frames, but you don't want it sticking around to invade a new move
-//      Shouldn't ever happen, since any move with the flag also comes down with a target, but 
-//      still, it seems a little shakey.  Maybe say once it's been used at all, it can't be used 
+//      Shouldn't ever happen, since any move with the flag also comes down with a target, but
+//      still, it seems a little shakey.  Maybe say once it's been used at all, it can't be used
 //      again till reset.
 static void seqDoAnimationPitching( SeqInst * seq )
 {
@@ -1319,9 +1319,9 @@ static void seqDoAnimationPitching( SeqInst * seq )
 
 	F32 goalTargetingPitch;
 	int doPitching;
- 
+
 	//### calculate seq->goalTargetingPitch
-	
+
 	//Should I do pitching at all? Only in moves tagged as pitching moves, and only
 	//if they are in the part of the move tagged as pitching
 	doPitching = ( seq->animation.move && seq->animation.move->flags & SEQMOVE_PITCHTOTARGET );
@@ -1339,18 +1339,18 @@ static void seqDoAnimationPitching( SeqInst * seq )
 			doPitching = 0;
 	}
 
-	
-	if( doPitching ) //Then get goal targeting pitch         
+
+	if( doPitching ) //Then get goal targeting pitch
 	{
-		Vec3 targetPos, myPos; 
+		Vec3 targetPos, myPos;
 		int whatTargetPositionIs = IS_NOTHING;
 
 		//HACKY method to get targetPos
-		if( seq->powerTargetEntId )  
+		if( seq->powerTargetEntId )
 		{
 			Entity * e2 = entFromId( seq->powerTargetEntId );
 
-			if( e2 ) 
+			if( e2 )
 			{
 				GfxNode *chestNode = seqFindGfxNodeGivenBoneNum(e2->seq, BONEID_CHEST);
 				if( chestNode )
@@ -1374,7 +1374,7 @@ static void seqDoAnimationPitching( SeqInst * seq )
 		}
 		else
 		{
-			//Very occasionally, powerTargetPos is empty, but I don't know why.  
+			//Very occasionally, powerTargetPos is empty, but I don't know why.
 			//This check prevents it from pitching wildly, anyway.
 			Vec3 zero;
 			zeroVec3(zero);
@@ -1383,12 +1383,12 @@ static void seqDoAnimationPitching( SeqInst * seq )
 				copyVec3( seq->powerTargetPos, targetPos );
 				whatTargetPositionIs = IS_ROOT; //Power miss postion
 			}
-		} 
+		}
 		//End Hacky method of finding targetPos
 
 
 		//Find pitch
-		if( whatTargetPositionIs != IS_NOTHING ) 
+		if( whatTargetPositionIs != IS_NOTHING )
 		{
 			Vec3 dv;
 			F32 len;
@@ -1441,8 +1441,8 @@ static void seqDoAnimationPitching( SeqInst * seq )
 		goalTargetingPitch = 0;
 	}
 
-	///$####################################################################### 
-	//use the pitchAngle in the move to divide seq->goalTargetingPitch into pitch and roll, 
+	///$#######################################################################
+	//use the pitchAngle in the move to divide seq->goalTargetingPitch into pitch and roll,
 	//-1.0 means all roll left, -1.0 = all roll right, 0 = all pitch backwards (Default value for pitchAngle is 0, all pitch)
 	{
 		Vec2 goalTargetingPitchVec;
@@ -1452,8 +1452,8 @@ static void seqDoAnimationPitching( SeqInst * seq )
 		int i;
 		F32 roll;
 
-		roll= seq->animation.typeGfx->pitchAngle; 
-		goalTargetingPitchVec[0] = goalTargetingPitch * ( 1.0 - ABS( roll ) ); 
+		roll= seq->animation.typeGfx->pitchAngle;
+		goalTargetingPitchVec[0] = goalTargetingPitch * ( 1.0 - ABS( roll ) );
 		goalTargetingPitchVec[1] = goalTargetingPitch * roll;
 
 		//Divide the rate based on progress needed
@@ -1482,16 +1482,16 @@ static void seqDoAnimationPitching( SeqInst * seq )
 		}
 
 		//### calculate currTargetingPitchVec to smoothly go into and out of the pitch.
-		for( i = 0 ; i < 2 ; i++ ) 
+		for( i = 0 ; i < 2 ; i++ )
 		{
-			if( seq->currTargetingPitchVec[i] > goalTargetingPitchVec[i] )         
+			if( seq->currTargetingPitchVec[i] > goalTargetingPitchVec[i] )
 			{
 				seq->currTargetingPitchVec[i] = seq->currTargetingPitchVec[i] - ( pitchRateVec[i] * TIMESTEP );
 				if( seq->currTargetingPitchVec[i] < goalTargetingPitchVec[i] )
 					seq->currTargetingPitchVec[i] = goalTargetingPitchVec[i];
 			}
 			else if( seq->currTargetingPitchVec[i] < goalTargetingPitchVec[i] )
-			{			
+			{
 				seq->currTargetingPitchVec[i] = seq->currTargetingPitchVec[i] + ( pitchRateVec[i] * TIMESTEP );
 				if( seq->currTargetingPitchVec[i] > goalTargetingPitchVec[i] )
 					seq->currTargetingPitchVec[i] = goalTargetingPitchVec[i];
@@ -1520,7 +1520,7 @@ static void updateSkeletonFromRagdoll(Entity *e)
 	else
 	*/
 	{
-		if (firstValidRagdollTimestamp( e->ragdoll ) < global_state.client_abs 
+		if (firstValidRagdollTimestamp( e->ragdoll ) < global_state.client_abs
             && !control_state.no_ragdoll )
 		{
 			Vec3 vScale;
@@ -1531,7 +1531,7 @@ static void updateSkeletonFromRagdoll(Entity *e)
 			copyMat4(ENTMAT(e), e->seq->gfx_root->mat );
 			scaleMat3Vec3(e->seq->gfx_root->mat,vScale);
 
-			/*		
+			/*
 			if ( secondValidRagdollTimestamp(e->ragdoll) > global_state.client_abs )
 			{
 				Mat4 mSeqGfxRootMat;
@@ -1541,7 +1541,7 @@ static void updateSkeletonFromRagdoll(Entity *e)
 				// multiply by offset rotation
 				quatToMat(e->ragdoll_offset_qrot, mOffsetMat);
 				mulMat3(mOffsetMat, e->mat, mSeqGfxRootMat);
-				
+
 				copyMat4(mSeqGfxRootMat, e->seq->gfx_root->mat);
 			}
 			else
@@ -1562,7 +1562,7 @@ static void updateSkeletonFromRagdoll(Entity *e)
 int g_EntsUpdatedByClient;
 int g_EntsProcessedForDrawing;
 
-static int testSphereVisibility(Vec3 pos, F32 rad) 
+static int testSphereVisibility(Vec3 pos, F32 rad)
 {
 	int clip = CLIP_NONE;
 #ifndef TEST_CLIENT
@@ -1589,7 +1589,7 @@ static int isGroupDefVisible( GroupDef * def, Mat4 worldMat )
 	int clip;
 	bool visible;
 
-	if( !def || !worldMat ) 
+	if( !def || !worldMat )
 		return 0;
 
 	mulMat4( cam_info.viewmat, worldMat, matx );
@@ -1622,7 +1622,7 @@ static void entDebugShowVolumeInfo( Entity * e )
 	xyprintf( x, y++, " Material     %p %p ", vl->materialVolume->volumeTracker, vl->materialVolume->volumePropertiesTracker );
 	xyprintf( x, y++, " Neighborhood %p %p ", vl->neighborhoodVolume->volumeTracker, vl->neighborhoodVolume->volumePropertiesTracker );
 	y++;
-	for( i = 0 ; i < vl->volumeCount ; i++)    
+	for( i = 0 ; i < vl->volumeCount ; i++)
 	{
 		char * name = 0;
 		char * namep = 0;
@@ -1630,8 +1630,8 @@ static void entDebugShowVolumeInfo( Entity * e )
 		int villainMin = 0, villainMax = 0, minTeam = 0, maxTeam = 0;
 
 		//Volume
-		xyprintf( x, y, "%d ", i );  
-		xyprintf( x + 5, y, "Volume %p", vl->volumes[i].volumeTracker); 
+		xyprintf( x, y, "%d ", i );
+		xyprintf( x + 5, y, "Volume %p", vl->volumes[i].volumeTracker);
 
 		xyprintf( x + 22 , y, "PropertyTracker %p: ", vl->volumes[i].volumePropertiesTracker );
 
@@ -1667,8 +1667,8 @@ static void handleEntityVolumeChecks( Entity * e )
 	{
 		PERFINFO_AUTO_START("pmotionCheckVolumeTrigger", 1);
 		pmotionCheckVolumeTrigger(e);
-		if( (game_state.checkVolume && e == playerPtr() ) )// TO DO make selection option isThisDebugEnt( SeqInst * seq )   ) 
-			entDebugShowVolumeInfo( e ); //Debugging 
+		if( (game_state.checkVolume && e == playerPtr() ) )// TO DO make selection option isThisDebugEnt( SeqInst * seq )   )
+			entDebugShowVolumeInfo( e ); //Debugging
 		PERFINFO_AUTO_STOP();
 	}
 
@@ -1684,22 +1684,22 @@ static void handleStickingFeet( Entity * e )
 {
 	SeqInst * seq = e->seq;
 
-	if( game_state.viewCutScene )//&&  ENTTYPE(e) == ENTTYPE_PLAYER)          
+	if( game_state.viewCutScene )//&&  ENTTYPE(e) == ENTTYPE_PLAYER)
 	{
 #define MAX_STICKY_YAW RAD(90)
-		Vec3 currpyr; 
+		Vec3 currpyr;
 		F32 backYaw;
 		int feetWereStuck;
 
-		getMat3YPR(seq->gfx_root->mat, currpyr);   
+		getMat3YPR(seq->gfx_root->mat, currpyr);
 		currpyr[1] = fixAngle( currpyr[1] );
 
-		feetWereStuck = seq->feetAreStuck; 
-		seq->feetAreStuck++;    
+		feetWereStuck = seq->feetAreStuck;
+		seq->feetAreStuck++;
 
 		//////////////////// Figure out if you are currently stuck
 		//Turn off stuck feet if you are moving
-		if( !nearSameVec3Tol(seq->gfx_root->mat[3], e->posLastFrame, 0.01 ) ) 
+		if( !nearSameVec3Tol(seq->gfx_root->mat[3], e->posLastFrame, 0.01 ) )
 			seq->feetAreStuck = 0;
 
 		//########### New
@@ -1725,7 +1725,7 @@ static void handleStickingFeet( Entity * e )
 
 
 		///////////////////If you are still coming out of being stuck, interpolate back to currpyr
-		if( !seq->feetAreStuck && backYaw  )   
+		if( !seq->feetAreStuck && backYaw  )
 		{
 			if( 0 )
 			{
@@ -1748,29 +1748,29 @@ static void handleStickingFeet( Entity * e )
 		/////////////////If you have any stuckFeetPyr, spread it over the head and chest
 		//xyprintf( 10, 10, "currPyr      %f %f %f", currpyr[0], currpyr[1], currpyr[2] );
 		//xyprintf( 10, 11, "stuckFeetPyr %f %f %f", seq->stuckFeetPyr[0], seq->stuckFeetPyr[1], seq->stuckFeetPyr[2] );
-		//xyprintf( 10, 12, "backYaw %f", backYaw );	
-		if( seq->stuckFeetPyr[1] != currpyr[1] )   
+		//xyprintf( 10, 12, "backYaw %f", backYaw );
+		if( seq->stuckFeetPyr[1] != currpyr[1] )
 		{
 			F32 headPercent;
 			F32 chestPercent;
-			F32 percentTurn;   
-			//createMat3YPR(seq->gfx_root->mat, seq->stuckFeetPyr);  
-			yawMat3(fixAngle(backYaw), seq->gfx_root->mat); 
+			F32 percentTurn;
+			//createMat3YPR(seq->gfx_root->mat, seq->stuckFeetPyr);
+			yawMat3(fixAngle(backYaw), seq->gfx_root->mat);
 			percentTurn = ABS(backYaw/MAX_STICKY_YAW);
 
 			if( 1 || (seq->info->moves[e->move_idx]->flags & SEQMOVE_PREDICTABLE) )
-				headPercent = 0.33 + ((1.0-percentTurn)*0.66);   
+				headPercent = 0.33 + ((1.0-percentTurn)*0.66);
 			else
 				headPercent = 0;
 
 			chestPercent = (1-headPercent);
 
 			seq->chestYaw = -backYaw * chestPercent;     //gives head more turn early on
-			seq->headYaw =  -backYaw * headPercent;  
+			seq->headYaw =  -backYaw * headPercent;
 
 			//xyprintf( 10, 14, "headPercent   %f", headPercent );
 			//xyprintf( 10, 15, "seq->headYaw  %f", seq->headYaw );
-			//xyprintf( 10, 16, "chestPercent %f", chestPercent );	
+			//xyprintf( 10, 16, "chestPercent %f", chestPercent );
 			//xyprintf( 10, 17, "seq->chestYaw %f", seq->chestYaw );
 		}
 		else
@@ -1782,8 +1782,8 @@ static void handleStickingFeet( Entity * e )
 	else
 	{
 		//copyVec3( currpyr, seq->stuckFeetPyr  );
-		seq->chestYaw = 0;      
-		seq->headYaw = 0;  
+		seq->chestYaw = 0;
+		seq->headYaw = 0;
 		seq->feetAreStuck = 0;
 	}
 }
@@ -1794,7 +1794,7 @@ static bool isEntityInVisibleTray( Entity * e )
 	SeqInst * seq = e->seq;
 
 	if (game_state.game_mode == SHOW_GAME && !e->ragdoll )
-	{ 
+	{
 		Vec3 trayVisCheckPos;
 		copyVec3( ENTPOS(e), trayVisCheckPos );
 		trayVisCheckPos[1] += 1.1;  //to do : use ent's mat to xform this?
@@ -1829,7 +1829,7 @@ static bool isEntityInVisibleTray( Entity * e )
 
 	return true;
 
-	//Don't do the tray check when you are not in the game.  It doesn't work right. 
+	//Don't do the tray check when you are not in the game.  It doesn't work right.
 }
 
 bool isEntityIntentionallyHidden( Entity * e )
@@ -1869,10 +1869,10 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 	}
 
 	//////// Check Distance
-	
+
 #if !defined(TEST_CLIENT)
 	// Viewports may only want characters within a limited radius of the player or the character (e.g. reflections)
-	if( ent_dist_from_player > gfx_state.vis_limit_entity_dist_from_player ) 
+	if( ent_dist_from_player > gfx_state.vis_limit_entity_dist_from_player )
 	{
 		visible = false;
 		return visible;
@@ -1880,7 +1880,7 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 #endif
 
 	// (Is this ent's pos too far away to be seen? (vs player's position, not camera -- it feels better ))
-	if( ent_dist_from_player > seq->type->fade[1] ) 
+	if( ent_dist_from_player > seq->type->fade[1] )
 	{
 		visible = false;
 		return visible;
@@ -1893,7 +1893,7 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 		return visible;
 	}
 
-	////// Check View Frustum and Occlusion 
+	////// Check View Frustum and Occlusion
 	///If any of the Entities graphics or its capsule are visible, it's visible
 
 	//Check Library Piece
@@ -1901,7 +1901,7 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 		visible = true;
 
 	//Check Animation If not, check the animation and the capsule
-	if( !visible ) 
+	if( !visible )
 	{
 		int clip;
 		int animVisible = 1;
@@ -1910,7 +1910,7 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 		//Old Vissphere radius calc -- a little clunky, but I don't want to change it
 		animRadius = seq->type->vissphereradius * seq->currgeomscale[0] * 1.1f; //If the enttype is specific, use that
 
-		//// Is the Animation visible? 
+		//// Is the Animation visible?
 		clip = testSphereVisibility( gfx_pos_vs_camera, animRadius );
 		if (!clip )
 		{
@@ -1944,8 +1944,8 @@ static bool isEntityOnCamera( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos
 		int clip;
 
 		//Get Capsule
-		getCapsule(e->seq, &cap ); 
-		positionCapsule( ENTMAT(e), &cap, collMat ); 
+		getCapsule(e->seq, &cap );
+		positionCapsule( ENTMAT(e), &cap, collMat );
 
 		//Find the center of the Entity's capsule
 		p[0] = 0;
@@ -1996,13 +1996,13 @@ static F32 setEntityAlpha( Entity * e, F32 ent_dist_from_player )
 			alpha = 1.f - ( (ent_dist_from_player - seq->type->fade[0]) / (seq->type->fade[1] - seq->type->fade[0]) );
 			alpha = MINMAX(alpha,0,1);
 		}
-		entSetAlpha( e, (int)(alpha * 255), SET_BY_DISTANCE ); 
+		entSetAlpha( e, (int)(alpha * 255), SET_BY_DISTANCE );
 	}
 
 	entSetAlpha( e, (int)(e->curr_xlucency * 255), SET_BY_SERVER );
-	entSetAlpha( e, e->currfade, SET_BY_BIRTH_OR_DEATH ); 
+	entSetAlpha( e, e->currfade, SET_BY_BIRTH_OR_DEATH );
 
-	alpha = 255; 
+	alpha = 255;
 	alpha = MIN(alpha, seq->alphadist);
 	alpha = MIN(alpha, seq->alphacam);
 	alpha = MIN(alpha, seq->alphasvr);
@@ -2122,14 +2122,14 @@ static void manageEntitySimpleSplatShadows( Entity * e, F32 gfx_dist_from_camera
 	if( seq->type->shadowType == SEQ_SPLAT_SHADOW && !game_state.disableSimpleShadows && game_state.game_mode == SHOW_GAME)
 	{
 		//Trick to fade out Shadow on dead guys.
-		if( getMoveFlags( seq, SEQMOVE_NOCOLLISION ) )   
+		if( getMoveFlags( seq, SEQMOVE_NOCOLLISION ) )
 		{
 			if( seq->maxDeathAlpha > 0.0 )
 				seq->maxDeathAlpha -= DEATH_SHADOW_FADE_RATE * TIMESTEP;
 		}
 		else if( seq->maxDeathAlpha < 1.0 )
 			seq->maxDeathAlpha += DEATH_SHADOW_FADE_RATE * TIMESTEP;
-		seq->maxDeathAlpha = MINMAX( seq->maxDeathAlpha, 0, 1.0 ); 
+		seq->maxDeathAlpha = MINMAX( seq->maxDeathAlpha, 0, 1.0 );
 		//End Death trick
 
 		//xyprintf( 20, 20, "%f", seq->maxDeathAlpha );
@@ -2173,14 +2173,14 @@ static void printEntClientUpdateDebugInfo( Entity * e )
 	}
 
 	if( ( game_state.checklod == 1 && e == current_target ) ||
-		( game_state.checklod == 2 && e == playerPtr() ) ) 
+		( game_state.checklod == 2 && e == playerPtr() ) )
 	{
 		printLod(seq);
 	}
 
 
-	//if ( visible && (e == playerPtr() || strstri(seq->type->name, "Thug")) && game_state.seq_info )   
-	if ( game_state.seq_info )   
+	//if ( visible && (e == playerPtr() || strstri(seq->type->name, "Thug")) && game_state.seq_info )
+	if ( game_state.seq_info )
 	{
 		static int glob_currseqdebugline = 0; //quick fix to make this debug stuff work after I ditched seq->owner
 		Entity * e2 = current_target;
@@ -2200,7 +2200,7 @@ static void printEntClientUpdateDebugInfo( Entity * e )
 			int r = 255, g = 255, b = 255;
 
 			glob_currseqdebugline++;
-			if(e == playerPtr())  //added advantage that the player is always on top 
+			if(e == playerPtr())  //added advantage that the player is always on top
 			{
 				glob_currseqdebugline = 0;
 				b = 0;
@@ -2213,17 +2213,17 @@ static void printEntClientUpdateDebugInfo( Entity * e )
 			xyprintfcolor(25,10 + glob_currseqdebugline *1, r, g, b,
 				"%3i %10.30s: FRAME % -5.1f  SEQ: %s LOD: %d VIS: %s ALPHA: %d CURRX: %3.2f X: %3.2f TRAY: %d",
 				e->owner,
-				seq->type->name, 
+				seq->type->name,
 				seq->animation.frame,
-				seq->animation.move->name, 
-				seq->lod_level, 
+				seq->animation.move->name,
+				seq->lod_level,
 				visString,
-				e->seq->seqGfxData.alpha, 
-				e->curr_xlucency, 
-				e->xlucency, 
+				e->seq->seqGfxData.alpha,
+				e->curr_xlucency,
+				e->xlucency,
 				(int)e->seq->seqGfxData.tray);
 
-			//xyprintf( 80, (10 + (int)(seq->animation.frame)), "%f", seq->animation.frame ); 
+			//xyprintf( 80, (10 + (int)(seq->animation.frame)), "%f", seq->animation.frame );
 
 			//Print selected entity's state to the screen
 			if( e == e2 ) //Debug
@@ -2231,7 +2231,7 @@ static void printEntClientUpdateDebugInfo( Entity * e )
 				int allstates[MAXSTATES];
 				int allcnt, i;
 				seqListAllSetStates( allstates, &allcnt, seq->state );
-				for(i = 0 ; i < allcnt ; i++)  
+				for(i = 0 ; i < allcnt ; i++)
 					xyprintf(10, 14+i , "%s", seqGetStateNameFromNumber( allstates[i] ) );
 			}
 		}
@@ -2255,7 +2255,7 @@ static void entDoStaticLighting( SeqInst * seq )
 static void handleHitReactHack( SeqInst * seq )
 {
 	//HIT REACT HACK
-	//if we were just in hit react, and this move is ready, instead go back to 
+	//if we were just in hit react, and this move is ready, instead go back to
 	//what you were doing before the hit react
 	//TO DO use the HITREACT flag, and make sure it works for cycle moves
 	if( seq->animation.lastMoveBeforeTriggeredMove && seq->animation.prev_move )
@@ -2268,7 +2268,7 @@ static void handleHitReactHack( SeqInst * seq )
 
 		//You have arrived here because the hit react fell gently through to here.
 
-		//If we are done with the hit react, restore the pre-hit-react move then back calculate where the 
+		//If we are done with the hit react, restore the pre-hit-react move then back calculate where the
 		//move whould be if the hit react hadn't happened
 		//All hit reacts resolve to here one of these two types of moves
 		if( strstriConst( newMove->name, "Ready" ) || strstriConst( newMove->name, "hit_cycle" ) )
@@ -2309,7 +2309,7 @@ static void findTriggeredMoves( Entity * e )
 	int triggermove;
 
 	//Check any extant triggered moves
-	triggermove = seqCheckMoveTriggers( seq->futuremovetrackers );  
+	triggermove = seqCheckMoveTriggers( seq->futuremovetrackers );
 
 	if(EAINRANGE(triggermove, seq->info->moves)) // Sanity check
 	{
@@ -2328,7 +2328,7 @@ static void findTriggeredMoves( Entity * e )
 				seq->animation.triggeredMoveStartTime = ABS_TIME;
 			}
 
-			//Debug 
+			//Debug
 			if( game_state.show_entity_state && isThisDebugEnt( seq ) && e->move_updated )
 			{
 				consoleSetFGColor( COLOR_BLUE | COLOR_RED | COLOR_BRIGHT );
@@ -2340,7 +2340,7 @@ static void findTriggeredMoves( Entity * e )
 	}
 }
 
-static void setMoveStickyStateBits(U32* state, U32 move_bits) 
+static void setMoveStickyStateBits(U32* state, U32 move_bits)
 {
 	if (move_bits & (NEXTMOVEBIT_RIGHTHAND | NEXTMOVEBIT_LEFTHAND | NEXTMOVEBIT_TWOHAND |
 		NEXTMOVEBIT_DUALHAND | NEXTMOVEBIT_EPICRIGHTHAND))
@@ -2372,10 +2372,10 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	SeqInst * seq = e->seq;
 	seqSynchCycles(seq, e->owner);
 
-	//If something is broken and the server told you to do something you don't 
+	//If something is broken and the server told you to do something you don't
 	//know how to do, go to ready.  In the past, this has always been because of bad data
-	//But for some reason we really should figure out, this has been happening with 
-	//the polymorph power, too    
+	//But for some reason we really should figure out, this has been happening with
+	//the polymorph power, too
 	if( e->next_move_idx >= eaSize(&e->seq->info->moves) )
 	{
 		e->next_move_idx = 0;
@@ -2384,13 +2384,13 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	}
 
 	//Run out of door has this flag so even if it comes before or after the position change, it will know to play as soon as it arrives
-	if( e->move_change_timer > 0 && e->seq->info->moves[e->next_move_idx]->flags & SEQMOVE_DONOTDELAY )  
+	if( e->move_change_timer > 0 && e->seq->info->moves[e->next_move_idx]->flags & SEQMOVE_DONOTDELAY )
 	{
 		e->move_change_timer = 0;
 	}
 
 	//Set any newly received triggered moves
-	if( e->triggered_move_count )  
+	if( e->triggered_move_count )
 		seqSetMoveTrigger( seq->futuremovetrackers, e->triggered_moves, &e->triggered_move_count );
 
 	//Check if it's time to switch the net move.
@@ -2398,8 +2398,8 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	{
 		e->move_change_timer -= TIMESTEP;
 		//if(e == playerPtr()) printf("FRAME %d next move %s @ %d in (%1.3f)\n", game_state.client_frame, e->seq->info->moves[e->next_move_idx]->name, e->net_move_change_time, e->move_change_timer);
-		if(e->move_change_timer <= 0) 
-		{	
+		if(e->move_change_timer <= 0)
+		{
 			e->move_updated = 1;
 			e->move_idx = e->next_move_idx;
 			e->move_bits = e->next_move_bits;
@@ -2409,20 +2409,20 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	///Special Trickiness/////
 	//To support the whole delayed-animations so they fit with movement thing,
 	//Predicted mode bits set by powers need to be delayed when a move has been sent
-	//down because otherwise the predictor will send you to a move that this move might 
+	//down because otherwise the predictor will send you to a move that this move might
 	//not match, and you get the hiccup as it starts one anim then a couple frames later
-	//it goes to the one the server sent down.  (If we want to be extry crazy, we could check and see if 
-	//the predicted move matches the sent down move, and if it does go ahead and play it, but 
+	//it goes to the one the server sent down.  (If we want to be extry crazy, we could check and see if
+	//the predicted move matches the sent down move, and if it does go ahead and play it, but
 	//I think the predictor will be wrong usually because it doesn't know about attack and
 	//activation bits, so it wouldn't be worth it.)
 
 	//// While move is in the hopper, wait on setting any *new* sticky bits
 	if( e->move_change_timer > 0 && (e->move_idx != e->next_move_idx) )
 	{
-		int i; 
+		int i;
 		//Check each bit, only play the sticky bit if it was played last frame also.
 		for( i = 0 ; i < STATE_ARRAY_SIZE ; i++ )
-			seq->state[i] |= seq->state_lastframe[i] & seq->stance_state[i];	
+			seq->state[i] |= seq->state_lastframe[i] & seq->stance_state[i];
 	}
 	else //just do it
 	{
@@ -2434,19 +2434,19 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 
 	setMoveStickyStateBits(seq->state, e->move_bits);
 
-	//If something is broken and the server told you to do something you don't 
+	//If something is broken and the server told you to do something you don't
 	//know how to do, go to ready.  In the past, this has always been because of bad data
-	//But for soime reason we really should figure out, this has been happening whith 
-	//the polymorph power, too    
+	//But for soime reason we really should figure out, this has been happening whith
+	//the polymorph power, too
 	if( e->move_idx >= eaSize(&e->seq->info->moves) )
 		e->move_idx = 0;
 
 #ifndef FINAL
 	//{ F32 delta3 = distance3Squared(e->mat[3], e->posLastFrame);
 	//if( delta3 > 10.0 )
-	//	printf( "\nXPORT moveImIn %s frame %d, clientabs %d moved %f", e->seq->info->moves[e->move_idx]->name, game_state.client_frame, global_state.client_abs, delta3);  
+	//	printf( "\nXPORT moveImIn %s frame %d, clientabs %d moved %f", e->seq->info->moves[e->move_idx]->name, game_state.client_frame, global_state.client_abs, delta3);
 	//}
-	if( game_state.show_entity_state && isThisDebugEnt( seq ) && e->move_updated )  
+	if( game_state.show_entity_state && isThisDebugEnt( seq ) && e->move_updated )
 	{
 		F32 delta = distance3Squared(ENTPOS(e), e->posLastFrame);
 		consoleSetFGColor( COLOR_GREEN | COLOR_RED | COLOR_BRIGHT );
@@ -2462,24 +2462,24 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	if( e->move_updated ) //HIT REACT HACK
 	{
 		//if( seq->animation.lastMoveBeforeTriggeredMove )
-		//	printf( "clearing interesting move %s because I received %s from the server\n", seq->animation.lastMoveBeforeTriggeredMove->name, seq->info->moves[e->move_idx]->name ); 
+		//	printf( "clearing interesting move %s because I received %s from the server\n", seq->animation.lastMoveBeforeTriggeredMove->name, seq->info->moves[e->move_idx]->name );
 		seq->animation.lastMoveBeforeTriggeredMove = 0;
 	}
 
-	//See if any of the moves the server sent down are ready to play yet (All server sent moves go through this queue 
+	//See if any of the moves the server sent down are ready to play yet (All server sent moves go through this queue
 	//and most been given a time delay by networking code and/or powers code or a wait till-some-fx-hits command)
 	//Also, more dubiously, if this is a hit or block, we record the move you were in before because hits and blocks aren't
 	//played on the server and we need to be able to return to the old move without the server's help
-	findTriggeredMoves( e ); 
+	findTriggeredMoves( e );
 
 	{
 		F32 animSpeedTimestep;
-		int moveIsPredictable = 0; 
+		int moveIsPredictable = 0;
 
-		//This bit of craziness is designed to solve the problem where the server chooses a predictable move, but the 
+		//This bit of craziness is designed to solve the problem where the server chooses a predictable move, but the
 		//client is in a state where it predicting the move will result in it predicting not just the wrong move,
 		//but a wrong move that is itself not predictable and cycles.  The client is now waiting for the server to tell
-		//it to exit that move, but the call will never come.  TO DO move this to getSeq, or just make sure this fully 
+		//it to exit that move, but the call will never come.  TO DO move this to getSeq, or just make sure this fully
 		//solv es the problem.
 		{
 			const SeqMove * currmove = 0;
@@ -2488,7 +2488,7 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 			nextmove = seq->info->moves[currmove->raw.nextMove[0]]; //SEQPARSE nextmove
 			assert( nextmove );
 			//If the current move's nextmove is a cycling not predictable move, don't be trying to predict it.
-			if(  (nextmove->flags & (SEQMOVE_CYCLE | SEQMOVE_REQINPUTS) ) && 
+			if(  (nextmove->flags & (SEQMOVE_CYCLE | SEQMOVE_REQINPUTS) ) &&
 				!(nextmove->flags &  SEQMOVE_PREDICTABLE) 				)
 			{
 				moveIsPredictable = 0;
@@ -2497,12 +2497,12 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 			}
 			else
 			{
-				moveIsPredictable = (seq->info->moves[e->move_idx]->flags & SEQMOVE_PREDICTABLE); 
+				moveIsPredictable = (seq->info->moves[e->move_idx]->flags & SEQMOVE_PREDICTABLE);
 			}
 		}
 
 		//If you are a BLOCK and you have already gone off, go into predictable mode so you can be properly interrupted by new stuff.
-		if( !e->move_updated )  
+		if( !e->move_updated )
 		{
 			if( ( testSparseBit( &seq->info->moves[e->move_idx]->raw.requires, STATE_BLOCK ) && !e->move_updated ) ||
 				( testSparseBit( &seq->info->moves[e->move_idx]->raw.requires, STATE_HIT   ) && !e->move_updated ) )
@@ -2531,7 +2531,7 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 
 		if( ( e == playerPtr() && moveIsPredictable && control_state.predict && !game_state.nopredictplayerseq )
 			|| (game_state.game_mode == SHOW_TEMPLATE && (e == playerPtrForShell(0) || e->showInMenu))) //shellMenu() means do what CW says, not what the server tells you
-		{	
+		{
 #ifndef FINAL
 			if( game_state.show_entity_state && isThisDebugEnt( seq ) && e->move_updated )
 			{
@@ -2546,7 +2546,7 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 			seq->animation.lastMoveBeforeTriggeredMove = 0; //if anything interesting has happened here, cancel the restoration
 		}
 		else
-		{		
+		{
 #ifndef FINAL
 			if( game_state.show_entity_state && isThisDebugEnt( seq ) && e->move_updated )
 			{
@@ -2563,7 +2563,7 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 			//if(strlen(e->name)) printf("runSequencerMoveUpdate: entity \"%s\" has new move \"%s\"\n", e->name, newMove->name);
 #if 0 //def CLIENT // fpe for testing
 			if( e->name[0] && !strstr(e->name, "Dr") )
-			{				
+			{
 				int allstates[MAXSTATES];
 				int allcnt;
 				int i,printstate = 0;
@@ -2573,19 +2573,19 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 				// bunch of code to print statebits
 				if( 0 )
 				{
-					seqListAllSetStates( allstates, &allcnt, seq->state ); 
+					seqListAllSetStates( allstates, &allcnt, seq->state );
 
 					for(i = 0 ; i < allcnt ; i++)
 					{
-						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_BRIGHT );           
-						printf("   %s \n", seqGetStateNameFromNumber( allstates[i] ) );  
-						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_GREEN);   
+						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_BRIGHT );
+						printf("   %s \n", seqGetStateNameFromNumber( allstates[i] ) );
+						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_GREEN);
 					}
 					if(!allcnt)
 					{
-						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_BRIGHT );           
-						printf("   NO BITS SET \n" );  
-						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_GREEN); 
+						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_BRIGHT );
+						printf("   NO BITS SET \n" );
+						consoleSetFGColor( COLOR_RED | COLOR_BLUE | COLOR_GREEN);
 					}
 				}
 			}
@@ -2649,7 +2649,7 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
 	return newMove;
 }
 
-//You have to be off camera for a time before you aren't drawn -- 
+//You have to be off camera for a time before you aren't drawn --
 //otherwise the occluder's jittering is intolerable
 static bool doOccluderDelay( Entity * e, bool visible, int isOccluded )
 {
@@ -2661,7 +2661,7 @@ static bool doOccluderDelay( Entity * e, bool visible, int isOccluded )
 	if( isOccluded )
 	{
 		//If you've been on camera before and you have only been briefly occluded, you aren't occluded
-		//Otherwise 
+		//Otherwise
 		if( seq->hasBeenOnCamera && seq->framesOccluded < FRAMES_ENTITY_MUST_BE_OCCLUDED_BEFORE_WE_STOP_DRAWING_HIM )
 			newVisible = true;
 
@@ -2678,14 +2678,14 @@ static bool doOccluderDelay( Entity * e, bool visible, int isOccluded )
 	return newVisible;
 }
 
-static eVisStatus setEntityVisibility( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos_vs_camera, bool isPlayer ) 
+static eVisStatus setEntityVisibility( Entity * e, F32 ent_dist_from_player, Vec3 gfx_pos_vs_camera, bool isPlayer )
 {
 	eVisStatus visStatus = ENT_VISIBLE;
 	bool visible = ENT_VISIBLE;
 
 	if( isEntityIntentionallyHidden( e ) )
 		visStatus = ENT_INTENTIONALLY_HIDDEN;
-	
+
 	if( visStatus == ENT_VISIBLE )
 	{
 		int isOccluded = 0;
@@ -2695,7 +2695,7 @@ static eVisStatus setEntityVisibility( Entity * e, F32 ent_dist_from_player, Vec
 		///To prevent occluder jitter, you must be occluded for a time before you aren't drawn
 		if (game_state.zocclusion)
 			isVisible = doOccluderDelay( e, isVisible, isOccluded );
-		
+
 		if( !isVisible )
 		{
 			if( isOccluded )
@@ -2726,7 +2726,7 @@ static eVisStatus setEntityVisibility( Entity * e, F32 ent_dist_from_player, Vec
 }
 
 //This might have been tuned down to a total waste of time
-static void addYSpringToCharacterGraphics( SeqInst * seq )      
+static void addYSpringToCharacterGraphics( SeqInst * seq )
 {
 #define MAX_SPRING_LENGTH 1.0
 #define MAX_LATERAL_MOVE_DIST_TO_APPLY_Y_SPRING 2.0
@@ -2736,7 +2736,7 @@ static void addYSpringToCharacterGraphics( SeqInst * seq )
 	F32 idealDelta;
 	F32 ySpringScale;
 
-	idealDelta = tgt - curr;      
+	idealDelta = tgt - curr;
 
 	{
 		Vec3 t;
@@ -2754,7 +2754,7 @@ static void addYSpringToCharacterGraphics( SeqInst * seq )
 
 	if( idealDelta > 0 )
 	{
-		realDelta = idealDelta * 0.33 * TIMESTEP; 
+		realDelta = idealDelta * 0.33 * TIMESTEP;
 
 		// Clamp real delta to ideal delta in case timestep is large.
 		if(fabs(realDelta) > fabs(idealDelta))
@@ -2807,7 +2807,7 @@ PERFINFO_AUTO_START("Top of Ent Client Update",1);
 
 	////// Set GFX_ROOT mat (pos, orientation and scale)
 	copyMat4(seq->gfx_root->mat, seq->oldSeqRoot);
-	if(ENTTYPE(e) == ENTTYPE_PLAYER)	
+	if(ENTTYPE(e) == ENTTYPE_PLAYER)
 	{
 		Mat4 matx;
 		copyMat4(ENTMAT(e), matx);
@@ -2820,7 +2820,7 @@ PERFINFO_AUTO_START("Top of Ent Client Update",1);
 	{
 		copyMat4(ENTMAT(e), seq->gfx_root->mat);
 	}
-	scaleMat3Vec3( seq->gfx_root->mat, seq->currgeomscale ); 
+	scaleMat3Vec3( seq->gfx_root->mat, seq->currgeomscale );
 #ifndef TEST_CLIENT
 	if(seq->legScale) // legscale is applied to root node, do this once here
 		scaleBone(seq->gfx_root, 1, (1.0 + (seq->type->legScaleRatio * seq->legScale)), 1);
@@ -2841,14 +2841,14 @@ PERFINFO_AUTO_START("Top of Ent Client Update",1);
 	/*if(!game_state.test7)*/
 	{
 	//Cushion Y changes
-	addYSpringToCharacterGraphics( seq );// Adds a little spring to the gfx_root->mat[3][1] to ease you character going over little rocks 
+	addYSpringToCharacterGraphics( seq );// Adds a little spring to the gfx_root->mat[3][1] to ease you character going over little rocks
 	}
 
 	////// Record Position Last Frame for Run Animation scaling
-	copyVec3( seq->gfx_root->mat[3], seq->posLastFrame ); 
-		
+	copyVec3( seq->gfx_root->mat[3], seq->posLastFrame );
+
 	////// Surface calculation
-	calcSurfaceEntityIsStandingOn(e); 
+	calcSurfaceEntityIsStandingOn(e);
 
 	////// Volume Check (Set volume fx) TO DO (may be wrong to use visibility cuz of sound)
 	handleEntityVolumeChecks( e );
@@ -2879,7 +2879,7 @@ PERFINFO_AUTO_START("Top of Ent Client Update",1);
 #endif
 
 	////// Set Constantly Reset States (TO DO combine with constantStates)
-	if( seq->type->constantStateStr ) 
+	if( seq->type->constantStateStr )
 		seqAddState( seq->state, seq->type->constantState );
 	if( e->favoriteWeaponAnimList )
 		seqAddState( seq->state, e->favoriteWeaponAnimListState );
@@ -2890,12 +2890,12 @@ PERFINFO_AUTO_START("Top of Ent Client Update",1);
 		seqSetState( seq->state, 1, STATE_PLAYER );
 
 
-	///////////  Run Sequencer 
+	///////////  Run Sequencer
 PERFINFO_AUTO_STOP_START("Sequencer",1);
 
 	needCostumeApply = 0;
 	isNewMove = runSequencerMoveUpdate( e, &needCostumeApply ) != NULL ? 1 : 0;
-	seq->updated_appearance |= isNewMove;  
+	seq->updated_appearance |= isNewMove;
 
 	/////////// Reset Graphics, and manage fx as needed
 PERFINFO_AUTO_STOP_START("Anim Set Header",1);
@@ -2903,7 +2903,7 @@ PERFINFO_AUTO_STOP_START("Anim Set Header",1);
 	//Reset gfx if you just finished loading geometry (because you need bone_info from fully loaded object)
 	if( seq->loadingObjects == OBJECT_LOADING_IN_PROGRESS )
 	{
-		seq->loadingObjects = animCheckForLoadingObjects( seq->gfx_root->child, seq->handle ); 
+		seq->loadingObjects = animCheckForLoadingObjects( seq->gfx_root->child, seq->handle );
 		if( seq->loadingObjects == OBJECT_LOADING_COMPLETE )
 			seq->updated_appearance = 1;
 	}
@@ -2926,17 +2926,17 @@ PERFINFO_AUTO_STOP_START("NetFx, Updating Collision Grid, and Static Lighting Ch
 
 	////// Generate or kill any fx as e->fxlist indicates
 	entManageEntityNetFx(e);  //in this order and after PlayInst
-	entCheckFxTriggers(e); 
+	entCheckFxTriggers(e);
 
 	entDoStaticLighting( seq );
 
 	////// If this seq was changed by an fx attached to it, clear the changes.  The fx must refresh it's changes each frame
 	seq->alphafx = 255;
-	seq->fxSetGeomScale[0] = 1; 
-	seq->fxSetGeomScale[1] = 1;  
-	seq->fxSetGeomScale[2] = 1;  
+	seq->fxSetGeomScale[0] = 1;
+	seq->fxSetGeomScale[1] = 1;
+	seq->fxSetGeomScale[2] = 1;
 
-	////// Insert self into the Collision Grid if needed 
+	////// Insert self into the Collision Grid if needed
 	if( e->seq->type->collisionType == SEQ_ENTCOLL_DOOR || e->seq->type->collisionType == SEQ_ENTCOLL_LIBRARYPIECE )
 	{
 		if(	!e->checked_coll_tracker || e->coll_tracker )
@@ -2984,7 +2984,7 @@ PERFINFO_AUTO_STOP_START("NetFx, Updating Collision Grid, and Static Lighting Ch
 	////// Debug info
 	printEntClientUpdateDebugInfo( e );
 
-PERFINFO_AUTO_STOP(); 
+PERFINFO_AUTO_STOP();
 }
 
 static void entClientUpdateVisibility(Entity *e)
@@ -2995,7 +2995,7 @@ static void entClientUpdateVisibility(Entity *e)
 	Vec3 gfx_pos;					//Position of this entities graphics (can be different from entity position)
 	Vec3 gfx_pos_vs_camera;			//pos of this ent's gfx relative to camera
 	F32 gfx_dist_from_camera;		//distance from ent's gfx to camera
-	
+
 	Entity * player;
 
 	if(e->waitingForFadeOut && 0 == e->currfade)
@@ -3043,7 +3043,7 @@ PERFINFO_AUTO_STOP_START("Test Entity Visibility and Occlusion",1);
 	seq->visStatus = setEntityVisibility( e, ent_dist_from_player, gfx_pos_vs_camera, ((e == player)? true : false) );
 
 	////////// If Visible, play animation, do lighting, alpha, ragdoll.
-PERFINFO_AUTO_STOP_START("graphics",1); 
+PERFINFO_AUTO_STOP_START("graphics",1);
 	if( seq->visStatus == ENT_VISIBLE )
 	{
 		g_EntsProcessedForDrawing++; //Debug
@@ -3053,14 +3053,14 @@ PERFINFO_AUTO_STOP_START("graphics",1);
 
 		////// Set Light
 		{
-			Vec3 lightPos; 
+			Vec3 lightPos;
 
 			if( globMapLoadedLastTick ) //We've finished loading the map, and can do static lighting now
 				memset( &seq->seqGfxData.light, 0, sizeof( EntLight ) );
 
-			copyVec3( gfx_pos, lightPos );           
+			copyVec3( gfx_pos, lightPos );
 			lightPos[1] += 0.1;  //add a trivial amount so you're sure to be inside the tray
-			lightEnt(&e->seq->seqGfxData.light, lightPos, e->seq->type->minimumambient, 
+			lightEnt(&e->seq->seqGfxData.light, lightPos, e->seq->type->minimumambient,
 				(game_state.maxEntAmbient <= 0.0f) ? 0.2f : game_state.maxEntAmbient);
 		}
 
@@ -3084,8 +3084,8 @@ PERFINFO_AUTO_STOP_START("graphics",1);
 
 				animPlayInst( seq );
 
-				if( seq->moveRateAnimScale > 1.05 && ( seq->animation.move->flags & SEQMOVE_SMOOTHSPRINT ) ) 
-					smoothSprintAnimation( seq, seq->moveRateAnimScale );  //Mild hack smooth out the sprint animations 
+				if( seq->moveRateAnimScale > 1.05 && ( seq->animation.move->flags & SEQMOVE_SMOOTHSPRINT ) )
+					smoothSprintAnimation( seq, seq->moveRateAnimScale );  //Mild hack smooth out the sprint animations
 
 				doEntityRagdollFrames( e, seq->oldSeqRoot );
 			}
@@ -3102,13 +3102,13 @@ PERFINFO_AUTO_STOP_START("graphics",1);
 
 		////// Splat Shadows
 		manageEntitySimpleSplatShadows( e, gfx_dist_from_camera );
-	} 
+	}
 	else if( e->ragdoll )
 	{
 		// Hold off on running this until we reach the last viewport and we still are not visible
 		if (
-#if !defined(TEST_CLIENT)			
-			gfx_state.renderPass == RENDERPASS_COLOR && 
+#if !defined(TEST_CLIENT)
+			gfx_state.renderPass == RENDERPASS_COLOR &&
 #endif
 			seq->lastFrameUpdate != game_state.client_frame)
 		{
@@ -3125,7 +3125,7 @@ PERFINFO_AUTO_STOP_START("graphics",1);
 	////// Debug info
 	printEntClientUpdateDebugInfo( e );
 
-PERFINFO_AUTO_STOP(); 
+PERFINFO_AUTO_STOP();
 }
 
 // This should only be called once a frame to update the simulation
@@ -3139,10 +3139,10 @@ void entClientProcess()
 	PERFINFO_AUTO_START("entClientUpdate",1);
 
 	//Get this for an obsure fading reason
-	calculatePlayerMoveThisFrame(); 
+	calculatePlayerMoveThisFrame();
 
 	updateClothFrame();
-	
+
 	// Update the clients
 	if(game_state.fixRegDbg)
 	{
@@ -3150,7 +3150,7 @@ void entClientProcess()
 		xyprintf(10,21, "Arm Fix %s",			(game_state.fixArmReg ? "On" : "OFF"));
  		xyprintf(10,22, "Leg Fix %s",			(game_state.fixLegReg ? "On" : "OFF"));
 	}
- 
+
 	for(i=1;i<entities_max;i++)
 	{
 		if (entity_state[i] & ENTITY_IN_USE )
@@ -3264,7 +3264,7 @@ void changeBody(Entity * e, const char * type)
 	// Otherwise ditch the old seq, and assign the new onw
 	if( e->seq )
 	{
-		if(stricmp(e->seq->type->name, type) == 0 
+		if(stricmp(e->seq->type->name, type) == 0
 			&& !( e->seq->type->flags & SEQ_USE_DYNAMIC_LIBRARY_PIECE ) )
 			return;
 	}
@@ -3507,12 +3507,12 @@ void entReloadSequencersClient()
 {
 	int i;
 
-	if( !game_state.local_map_server )  
+	if( !game_state.local_map_server )
 		Errorf( "Client is not in localmapserver mode, so reloading sequencers is a bad idea. (But I'll do it anyway)" );
 
 	seqPrepForReinit();
 	//TO DO (sometime) check file dates and only reload if something has changed
-	for(i=1;i<entities_max;i++) 
+	for(i=1;i<entities_max;i++)
 	{
 		if (entity_state[i] & ENTITY_IN_USE && entities[i]->seq ) //to do: better validating?
 		{
@@ -3524,7 +3524,7 @@ void entReloadSequencersClient()
 	}
 }
 
-// 
+//
 //-------------------------------------------------------------------------------------------------------------
 
 
@@ -3678,7 +3678,7 @@ void entFree(Entity *ent)
 	entity_state[ent->owner] = 0;//ENTITY_UNAVAILABLE | ENTITY_RELEASE_TIMER;	//ies_used[idx] = 0;
 
 	playerVarFree(ent);
-	
+
 	demoFreeEntityRecordInfo(ent);
 
 #if NOVODEX
@@ -3695,7 +3695,7 @@ static void clearBonesWithStaticLights(GfxNode *node, int seqHandle)
 		if( node->seqHandle == seqHandle )
 		{
 			if( bone_IdIsValid(node->anim_id) && node->model && (node->model->flags & OBJ_STATICFX) )
-			{	
+			{
 				node->rgbs = NULL;
 			}
 			if(node->child)
