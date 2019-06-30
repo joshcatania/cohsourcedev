@@ -1,11 +1,11 @@
 #include "model.h"
 #include <stdio.h>
 #include "gfxwindow.h"
-#include "memcheck.h" 
+#include "memcheck.h"
 #include "render.h"
 #include "camera.h"
 #include "rendershadow.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "model.h"
 #include "model_cache.h"
@@ -57,10 +57,10 @@ void modelDrawShadowVolume(Model *model,Mat4 mat,int alpha,int shadow_mask, GfxN
 	}
 	rs = rdrQueueAlloc(DRAWCMD_STENCILSHADOW,sizeof(*rs));
 	//##### Extrude the shadow model
-	if (model->trick && model->trick->flags2 & TRICK2_CASTSHADOW) 
+	if (model->trick && model->trick->flags2 & TRICK2_CASTSHADOW)
 		rs->dist = model->trick->info->shadow_dist;
 	else
-		rs->dist = 2.0 * model->radius; 
+		rs->dist = 2.0 * model->radius;
 
 	{
 		Mat4	matx;
@@ -150,13 +150,13 @@ void modelDrawShadowObject( Mat4 viewspace, Splat * splat )
 #ifndef FINAL
 	if( game_state.simpleShadowDebug )
 	{
-		xyprintf( 40, splatShadowsDrawn + 10, "Tris %d", splat->triCnt ); 
-		xyprintf( 55, splatShadowsDrawn + 10, "Verts %d", splat->vertCnt );  
+		xyprintf( 40, splatShadowsDrawn + 10, "Tris %d", splat->triCnt );
+		xyprintf( 55, splatShadowsDrawn + 10, "Verts %d", splat->vertCnt );
 	}
 #endif
 
 	if( splat->invertedSplat )
-	{	
+	{
 		modelDrawShadowObject( viewspace, splat->invertedSplat );
 	}
 	tri_bytes	= splat->triCnt * sizeof(splat->tris[0]);

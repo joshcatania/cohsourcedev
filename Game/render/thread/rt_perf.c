@@ -6,7 +6,7 @@
 #include "rt_model.h"
 #include "rt_tex.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "wcw_statemgmt.h"
 #include "rt_shaderMgr.h"
 #include "rt_win_init.h"
@@ -116,7 +116,7 @@ void rtPerfTest(RdrPerfInfo *info)
 	copyMat4(unitmat,mat);
 	mat[3][1] = 0;
 	mat[3][2] = -900;
-	mat43to44(mat,mat44); 
+	mat43to44(mat,mat44);
 
 	for (i = info->num_models-1; i >= 0; i--)
 	{

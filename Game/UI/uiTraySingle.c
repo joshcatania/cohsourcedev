@@ -21,7 +21,7 @@
 #include "uiUtilMenu.h"
 #include "uiDialog.h"
 #include "entclient.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "uiInput.h"
 #include "cmdgame.h"
 #include "language/langClientUtil.h"
@@ -201,8 +201,8 @@ static void traySingle_Fill( Entity *e, int tray, float x, float y, float z, flo
 	else
 		traySingle_drawArrows( e, tray, gCurrentWindefIndex, xp, yp, z, wd, ht, scale, color, 0 );
 
-	// draw the tray slots  
-	for( i = 0; i < TRAY_SLOTS; i++ )  
+	// draw the tray slots
+	for( i = 0; i < TRAY_SLOTS; i++ )
 	{
 		if( type < 0 ) // square fill
 		{
@@ -218,7 +218,7 @@ static void traySingle_Fill( Entity *e, int tray, float x, float y, float z, flo
 			xp += 40*scale;
 			if( xp > x + wd - 20*scale )
 			{
-				xp = x + wd - 25*scale; 
+				xp = x + wd - 25*scale;
 				yp += 40*scale;
 			}
 		}
@@ -245,7 +245,7 @@ static void traySingle_Fill( Entity *e, int tray, float x, float y, float z, flo
 			xp += 40*scale;
 			if( xp > x + wd - 20*scale )
 			{
-				xp = x + wd - 25*scale; 
+				xp = x + wd - 25*scale;
 				yp -= 40*scale;
 			}
 		}
@@ -260,7 +260,7 @@ static void traySingle_Fill( Entity *e, int tray, float x, float y, float z, flo
 		xp += 40*1.5f*scale;
 		if( xp > x + wd - 20*scale )
 		{
-			xp = x + wd - 25*scale; 
+			xp = x + wd - 25*scale;
 			yp -= 40*scale;
 		}
 
@@ -283,7 +283,7 @@ void traySingle_getDims( int wdw, float * xout, float * yout, float *wdout, floa
 
 	if (ht <= 50*scale + 1) // only straight trays can bend
 	{
-		if( x < 0 ) 
+		if( x < 0 )
 		{
 			tail = MIN(10,(int)ceilf(ABS(x)/(40.f*scale)))*40*scale;
 
@@ -300,7 +300,7 @@ void traySingle_getDims( int wdw, float * xout, float * yout, float *wdout, floa
 			{
 				bend_type = kBend_UL;
 				BuildCBox( box, 0, yp+50*scale, 50*scale, tail );
-			}		
+			}
 		}
 		else if ( x > w-wd )
 		{
@@ -362,7 +362,7 @@ void traySingle_getDims( int wdw, float * xout, float * yout, float *wdout, floa
 			}
 			else
 			{
-				bend_type = kBend_LL; 
+				bend_type = kBend_LL;
 				BuildCBox( box, x+50*scale, h-50*scale, tail, 50*scale );
 			}
 		}

@@ -2,7 +2,7 @@
 #include "Color.h"
 #include "camera.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "player.h"
 #include <stdlib.h>
 #include "utils.h"
@@ -20,10 +20,10 @@ void fxFindWSMWithOffset(Mat4 result, GfxNode * node, Vec3 offset)
 
 	copyMat4(node->mat, result);
 	addVec3(result[3], offset, result[3]);
-	
+
 	while(node->parent)
-	{		
-		copyMat4(result, old_result); 
+	{
+		copyMat4(result, old_result);
 		mulMat4(node->parent->mat, old_result, result);
 		node = node->parent;
 	}
@@ -35,18 +35,18 @@ F32 fxLookAt(const Vec3 eye, const Vec3 target, Mat3 result)
 	Vec3 viewVec;
 	Vec3 pyr;
 
-	subVec3( target, eye, viewVec );    
-	
+	subVec3( target, eye, viewVec );
+
 	if( viewVec[0] == 0.0 && viewVec[1] == 0.0 && viewVec[2] == 0.0 )
 	{
 		copyMat4( unitmat, result );
-		return 0; 
+		return 0;
 	}
 
-	normalVec3( viewVec );     
+	normalVec3( viewVec );
 	pyr[2] = 0;
-	getVec3YP( viewVec, &pyr[1], &pyr[0] );  
-	createMat3RYP(result,pyr); 
+	getVec3YP( viewVec, &pyr[1], &pyr[0] );
+	createMat3RYP(result,pyr);
 	return 1;
 }
 
@@ -64,10 +64,10 @@ F32 fxFaceTheCamera(Vec3 location, Mat4 result)
 //needs new place? gfxtree?
 /*GfxNode * fxGetGfxNode(SeqInst * seq, char * object)
 {
-	if(!seq || !seq->gfx_root || !object) 
+	if(!seq || !seq->gfx_root || !object)
 		return 0;
-	
-	return gfxTreeFindRecur(object, seq->gfx_root); 	
+
+	return gfxTreeFindRecur(object, seq->gfx_root);
 }*/
 
 //Tools #############################################################
@@ -128,14 +128,14 @@ F32 findAngle(Vec3 start, Vec3 end)
 		return 64;
 	tan = end2[1] / end2[0];
 
-	//If |x| <= 1 we can use the approximation x/(1 + 0.28 * x^2), For |x|>=1 we can use the approximation pi/2 - x/(x^2 + 0.28). 
+	//If |x| <= 1 we can use the approximation x/(1 + 0.28 * x^2), For |x|>=1 we can use the approximation pi/2 - x/(x^2 + 0.28).
 	if(tan < 0) { tan *= -1; flag = -1;} //mm monkey with this
 	if( tan > 1 )
 		rads = 3.14159/2 - tan/(tan * tan + 0.280872);
 	else
-		rads = tan /(1.0 + 0.280872 * tan * tan); 
+		rads = tan /(1.0 + 0.280872 * tan * tan);
 	rads *= flag;	//mm monkey with this
-	//rads = atan(tan); 
+	//rads = atan(tan);
 	angle = rads * 40.743679999;//(DEGREES_IN_CIRCLE * 0.5 * 1 / 3.14159)
 	if(end2[0] < 0) //mm monkey with this
 		angle = angle + 128; //DEGREES_IN_CIRCLE * 0.5
@@ -178,7 +178,7 @@ static void calculateCustomColor(Vec3* result, ColorNavPoint const* navpoint,
 		p*custom->primary.rgb[2] + s*custom->secondary.rgb[2] + b*navpoint->rgb[2]);
 }
 
-Color sampleColorPath(ColorNavPoint const* navPoints, 
+Color sampleColorPath(ColorNavPoint const* navPoints,
 					  ColorPair const* customColors, F32 time)
 {
 	Color result;
@@ -188,8 +188,8 @@ Color sampleColorPath(ColorNavPoint const* navPoints,
 
 	time = max(0.0f, time);
 
-	while (lower < MAX_COLOR_NAV_POINTS - 1 && 
-			navPoints[lower].time < navPoints[lower + 1].time && 
+	while (lower < MAX_COLOR_NAV_POINTS - 1 &&
+			navPoints[lower].time < navPoints[lower + 1].time &&
 			time <= navPoints[lower + 1].time)
 	{
 		++lower;
@@ -198,7 +198,7 @@ Color sampleColorPath(ColorNavPoint const* navPoints,
 	if (time >= navPoints[lower].time)
 	{
 		Vec3 vResult;
-			
+
 		calculateCustomColor(&vResult, &navPoints[lower], customColors);
 		result.r = vResult[0];
 		result.g = vResult[1];
@@ -209,7 +209,7 @@ Color sampleColorPath(ColorNavPoint const* navPoints,
 
 	calculateCustomColor(&vLower, &navPoints[lower], customColors);
 	calculateCustomColor(&vUpper, &navPoints[lower + 1], customColors);
-	t = (time - navPoints[lower].time) / 
+	t = (time - navPoints[lower].time) /
 		(navPoints[lower + 1].time - navPoints[lower].time);
 	result.r = vLower[0] + (vUpper[0] - vLower[0]) * t;
 	result.g = vLower[1] + (vUpper[1] - vLower[1]) * t;
@@ -218,16 +218,16 @@ Color sampleColorPath(ColorNavPoint const* navPoints,
 	return result;
 }
 
-void partBuildColorPath(ColorPath * colorpath, ColorNavPoint const navpoint[], 
+void partBuildColorPath(ColorPath * colorpath, ColorNavPoint const navpoint[],
 						ColorPair const* customColors, bool invertTint)
 {
 	int timeidx = 0, i, lastpoint = 0;
 	F32 curr[3];
-	F32 dv[3]; 
+	F32 dv[3];
 	F32 timedelta;
 	U8 * path;
 	Vec3 lastNav;
-	
+
 	colorpath->length = 0;
 
 	//Get the length the highest time mentioned + 1
@@ -269,7 +269,7 @@ void partBuildColorPath(ColorPath * colorpath, ColorNavPoint const navpoint[],
 		path[ timeidx * 3 + 2] = curr[2] = nav0[2];
 
 		timeidx++;
-		//Chug through 
+		//Chug through
 		while( timeidx <= navpoint[i+1].time )
 		{
 			path[ timeidx * 3 + 0 ] = curr[0] = curr[0] + dv[0];
@@ -282,7 +282,7 @@ void partBuildColorPath(ColorPath * colorpath, ColorNavPoint const navpoint[],
 	}
 
 	calculateCustomColor(&lastNav, &navpoint[lastpoint], customColors);
-	while (timeidx < colorpath->length) 
+	while (timeidx < colorpath->length)
 	{
 		if (invertTint)
 		{
@@ -409,7 +409,7 @@ int fxHasAValue( char * string )
 
 //Given a magniitude and a value representing what power 1.0 should be and what 10.0 should be,
 //generate a power value between 1 and 10 for that magnitude
-//(This is not perfect because it really scopes from 0 to 10 though 0 is not a valid power level, and that is 
+//(This is not perfect because it really scopes from 0 to 10 though 0 is not a valid power level, and that is
 //bumped to 1
 U32 magnitudeToFxPower( F32 magnitude, F32 min_value, F32 max_value )
 {
@@ -419,13 +419,13 @@ U32 magnitudeToFxPower( F32 magnitude, F32 min_value, F32 max_value )
 	relative_value = magnitude - min_value;
 	power = (relative_value * multiplier);
 
-	power =	MAX(1.0, power); 
+	power =	MAX(1.0, power);
 	power = MIN(FX_POWER_RANGE, power );
 	return (U32)(power+0.5);
 }
 
 
-void partCreateHueShiftedPath(ParticleSystemInfo *sysInfo, Vec3 hsvShift, 
+void partCreateHueShiftedPath(ParticleSystemInfo *sysInfo, Vec3 hsvShift,
 							  ColorPath* colorPath)
 {
 	static const F32 oneOver255 = 1.0/255.;

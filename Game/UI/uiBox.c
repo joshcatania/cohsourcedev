@@ -1,6 +1,6 @@
 #include "uiBox.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "wdwbase.h"
 #include "uiInput.h"
 #include "uiUtilGame.h"

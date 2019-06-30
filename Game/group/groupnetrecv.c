@@ -19,7 +19,7 @@
 #include "groupMiniTrackers.h"
 #include "cmdgame.h"
 #include <process.h>
-#include "assert.h"
+#include "SuperAssert.h"
 #include "edit_cmd.h"
 #include "clientcomm.h"
 #include "groupdraw.h"
@@ -31,8 +31,8 @@
 #include "earray.h"
 #include "groupgrid.h"
 #include "vistray.h"
-#include "NwWrapper.h" 
-#include "basefromgroup.h" 
+#include "NwWrapper.h"
+#include "basefromgroup.h"
 #include "zOcclusion.h"
 #include "groupnovodex.h"
 #include "baseclientrecv.h"
@@ -147,7 +147,7 @@ void setClientFlags(GroupDef *def, const char *blameFileName)
 		BasicTexture *bind = texLoadBasic(def->tex_names[1],TEX_LOAD_DONT_ACTUALLY_LOAD, TEX_FOR_WORLD);
 		def->tex_binds.generic = bind;
 	}
-	
+
 	PERFINFO_AUTO_STOP();
 }
 
@@ -267,10 +267,10 @@ void clientLoadMapStart(char *mapname)
 	else
 		strcpy(gMapName,mapname);
 	forwardSlashes(gMapName);
-	gfxSetBGMapname(gMapName);    
+	gfxSetBGMapname(gMapName);
 	showBgAdd(2);
-  
-	strcpy(game_state.world_name,mapname); 
+
+	strcpy(game_state.world_name,mapname);
 
 	game_setAssertSystemExtraInfo();
 
@@ -293,11 +293,11 @@ void finishLoadMap(bool tray_link_all, bool do_auto_weld, bool do_demo_fixup)
 		sceneLoad(group_info.scenefile);
 
 	PERFINFO_AUTO_START("automap_init", 1);
-	
+
 		automap_init();
-	
+
 	PERFINFO_AUTO_STOP_START("texCheckSwapList", 1);
-	
+
 		//texLoadQueueFinish();
 		//texDynamicUnload(1);
 
@@ -340,7 +340,7 @@ void finishLoadMap(bool tray_link_all, bool do_auto_weld, bool do_demo_fixup)
 	}
 
 	PERFINFO_AUTO_STOP_START("groupDrawBuildMiniTrackers", 1);
-	groupDrawBuildMiniTrackers(); 
+	groupDrawBuildMiniTrackers();
 
 	PERFINFO_AUTO_STOP_START("ZowieLoad", 1);
 	clientZowie_Load();
@@ -535,7 +535,7 @@ int receiveDef(Packet *pak,int id,GroupFile *file)
 			for(j=0;j<8;j++)
 				def->color[0][j] = pktGetBits(pak,8);
 		}
-		
+
 		def->has_cubemap = pktGetBits(pak,1);
 		if (def->has_cubemap)
 		{
@@ -796,7 +796,7 @@ void worldReceiveGroups(Packet *pak)
 			nx_state.gameInPhysicsPossibleState = 0;
 			nwDeinitializeNovodex();
 		#endif
-	
+
 		zoClearOccluders();
 
 
@@ -844,7 +844,7 @@ void worldReceiveGroups(Packet *pak)
 		if (new_world)
 		{
 			char	*fname;
-			
+
 			game_state.mission_map = pktGetBits(pak,2);
 			game_state.map_instance_id = pktGetBitsPack(pak,1);
 			game_state.doNotAutoGroup = pktGetBitsPack(pak,1); //MW added
@@ -864,7 +864,7 @@ void worldReceiveGroups(Packet *pak)
 				if (game_state.edit_base != kBaseEdit_None)
 					baseSetLocalMode(kBaseEdit_None);
 			}
-			
+
 			strncpy(group_info.loadscreen, pktGetString(pak), MAX_PATH);
 
 			fname = pktGetString(pak);
@@ -928,8 +928,8 @@ void worldReceiveGroups(Packet *pak)
 						// auto fix it and leave this function
 						fixClientServerOutOfSync();
 						return;
-					} 
-					else if (action == ACTION_EXIT) 
+					}
+					else if (action == ACTION_EXIT)
 					{
 						quitToLogin(0);
 						return;
@@ -967,27 +967,27 @@ void worldReceiveGroups(Packet *pak)
 			U32 defsCRC = pktGetBits(pak, 32);
 			U32 refsCRC = pktGetBits(pak, 32);
 			OOS_Action action = ACTION_IGNORE;
-			if (new_world && isDevelopmentMode() && game_state.local_map_server) 
+			if (new_world && isDevelopmentMode() && game_state.local_map_server)
 			{
 				#if 0
 					if (defsCRC != groupInfoCrcDefs()) {
 						action = clientServerOutOfSync("Defs CRCs don't match");
 					}
 				#endif
-				
+
 				if (action == ACTION_IGNORE && refsCRC != groupInfoCrcRefs()) {
 					action = clientServerOutOfSync("Refs CRCs don't match");
 				}
 				if (action == ACTION_IGNORE && refCount != groupInfoRefCount()) {
 					action = clientServerOutOfSync("Ref count doesn't match");
 				}
-				if (action == ACTION_RELOAD) 
+				if (action == ACTION_RELOAD)
 				{
 					// auto fix it and leave this function
 					fixClientServerOutOfSync();
 					return;
-				} 
-				else if (action == ACTION_EXIT) 
+				}
+				else if (action == ACTION_EXIT)
 				{
 					quitToLogin(0);
 					return;
@@ -1027,7 +1027,7 @@ void worldReceiveGroups(Packet *pak)
 			}
 			sel.parent=temp;
 			selCopy(NULL);
-			
+
 			//fill the lightHandle back in with the updated Name information.
 			lightTracker = trackerFromHandle(edit_state.lightHandle);
 			if(lightTracker)
@@ -1068,7 +1068,7 @@ void worldReceiveGroups(Packet *pak)
 			groupDrawBuildMiniTrackers();
 		}
 
-		updateCutSceneCameras(); 
+		updateCutSceneCameras();
 
 	PERFINFO_AUTO_STOP();
 }
@@ -1203,7 +1203,7 @@ void dumpDebugGroupTree(void)
 		i = pktGetBitsPack(pak,1);
 		assert(file_idx < group_info.file_count && group_info.files[file_idx]);
 		file = group_info.files[file_idx];
-			
+
 		//i += last_def_idx + 1;
 		def = groupDefPtr(file,i);
 		receiveDef(pak,def,i,file);

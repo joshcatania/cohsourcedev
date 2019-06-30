@@ -15,7 +15,7 @@
 #include "uiNet.h"
 #include "uiToolTip.h"
 #include "uiContextMenu.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "chatClient.h"
 #include "uiChatUtil.h"
 #include "earray.h"
@@ -91,7 +91,7 @@ void dockwindow_launch( void * data )
 
 void addChannelWindowToMenu(ContextMenu *menu)
 {
-	contextMenu_addCode(menu, dockwindow_usingChatServer, NULL,	channelWindowOpen, NULL, "CMChannelWindow", NULL );	
+	contextMenu_addCode(menu, dockwindow_usingChatServer, NULL,	channelWindowOpen, NULL, "CMChannelWindow", NULL );
 	contextMenu_addCode(menu, dockwindow_usingChatServer, NULL,	dockwindow_open, &windowNums[WDW_CHANNEL_SEARCH], "CMChanSearchWindow", NULL );
 }
 
@@ -141,7 +141,7 @@ static void initDock()
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				&windowNums[WDW_ARENA_LIST],		cmdParse,					"arena_list",		"CMArenaWindow",	0);
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				&menuNums[MENU_REGISTER],			dockwindow_launch,			&menuNums[MENU_REGISTER],			"CMIDCard",			0);
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				0,									dockwindow_selfInfo,		0,									"CMPersonalInfo",	0);
-	contextMenu_addCode(	 dockContext, dockwindow_usingChatServer,	0,									displayChatHandleDialog,	0,									"CMChatHandle",		0);	
+	contextMenu_addCode(	 dockContext, dockwindow_usingChatServer,	0,									displayChatHandleDialog,	0,									"CMChatHandle",		0);
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				&windowNums[WDW_LOYALTY_TREE],		dockwindow_open,			&windowNums[WDW_LOYALTY_TREE],		"CMLoyaltyTreeWindow",	0);
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				&windowNums[WDW_OPTIONS],			dockwindow_open,			&windowNums[WDW_OPTIONS],			"CMOptionsMenu",	0);
 	contextMenu_addCode(	 dockContext, alwaysAvailable,				&windowNums[WDW_PETITION],			dockwindow_open,			&windowNums[WDW_PETITION],			"CMSupport",		0);

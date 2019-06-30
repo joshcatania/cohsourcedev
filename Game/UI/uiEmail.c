@@ -23,7 +23,7 @@
 #include "timing.h"
 #include "cmdgame.h"
 #include "ttfont.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "utils.h"
 #include "uiDialog.h"
@@ -181,7 +181,7 @@ static void attachment_claim(void *data)
 	char * cmd=0;
 	estrPrintf(&cmd, "account_certification_claim %s", s_attachmentPtr);
 	cmdParse(cmd);
-	estrDestroy(&cmd);	
+	estrDestroy(&cmd);
 	s_claim_delay = timerSecondsSince2000();
 }
 
@@ -316,12 +316,12 @@ void emailResetHeaders(int quit_to_login)
 	{
 		if ( message_hashes[i] )
 		{
-			stashTableClear(message_hashes[i]); 
+			stashTableClear(message_hashes[i]);
 			stashTableClearEx(message_hashes[i], 0, emailMessageFree);
 		}
 		message_hashes[i] = 0;
 	}
-	
+
 	uiLVClear(playerEmailListView);
 	uiLVClear(certVoucherEmailListView);
 	if (quit_to_login)
@@ -395,7 +395,7 @@ void emailAddHeaderGlobal(const char * sender, int sender_id, const char * subj,
 
 	header = emailHeaderGet(id,type,subType);
 
-	header->message_id	= id; 
+	header->message_id	= id;
 	header->auth_id     = sender_id;
 	header->sent		= sent;
 	SAFE_FREE(header->sender);
@@ -449,9 +449,9 @@ void emailAddHeaderGlobal(const char * sender, int sender_id, const char * subj,
 		ReplaceAnyWordProfane(header->subject);
 
 	email = emailPrepareCacheMessage(&header->message_id, header->type);
-	
+
 	SAFE_FREE(email->body);
-	email->body = strdup(msg); 
+	email->body = strdup(msg);
 
 	SAFE_FREE(email->recipients);
  	email->recipients = strdup(unescapeString(header->sender));
@@ -592,8 +592,8 @@ void updateCertifications(int fromMap)
 				emailAddHeaderGlobal(textStd("SystemMail"), 0, textStd(name), estr, pItem->recipe, 0, pItem->sku_id.u64, refundable, pItem->granted_total - pItem->claimed_total, (pItem->invType == kAccountInventoryType_Voucher) ? MVM_VOUCHER : MVM_CERTIFICATION  );
 			}
 			estrDestroy(&estr);
-		} 
-		else 
+		}
+		else
 		{
 			addSuccess = 0;
 		}
@@ -631,7 +631,7 @@ void emailAddHeader(U64 message_id, int auth_id, char *sender,char *subject,int 
 	header->influence	= influence;
 	header->attachment	= attachment;
 	header->type = kEmail_Local;
-	
+
 	if( !optionGet(kUO_AllowProfanity)  )
 		ReplaceAnyWordProfane(subject);
 	header->subject		= subject;
@@ -961,7 +961,7 @@ static void emailDrawHeaderPane(UIBox drawArea, float z, float scale)
 	PointFloatXYZ pen;
 	UIListView* list;
 
-	font( &game_12 ); 
+	font( &game_12 );
 	emailInitHeaderListView(&playerEmailListView, 1);
 	emailInitHeaderListView(&certVoucherEmailListView, 0);
 
@@ -974,7 +974,7 @@ static void emailDrawHeaderPane(UIBox drawArea, float z, float scale)
 	list = emailListView;
 	pen.x = drawArea.x;
 	pen.y = drawArea.y;
-	pen.z = z; 
+	pen.z = z;
 
 	if(listRebuildRequired)
 		emailHeaderRebuildListView(emailListView);
@@ -1017,7 +1017,7 @@ static int check_inventory_space(Character *pchar, char *attachment)
 	switch( pItem->type )
 	{
 		xcase kTrayItemType_None: // ok
-		xcase kTrayItemType_SpecializationInventory: 
+		xcase kTrayItemType_SpecializationInventory:
 		{
 			if (character_BoostInventoryFull(pchar))
 			{
@@ -1082,7 +1082,7 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
 			fieldLabelWidth = max(str_wd(font_grp, sc, sc, fromLabel), str_wd(font_grp, sc, sc, subjectLabel)) + 3*sc;
 
 			clipBox = drawArea;
-			
+
 
 			// Reset the scrollbar when opening a message.
 			if(list->newlySelectedItem || !textBox || message->reparse)
@@ -1090,7 +1090,7 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
 				readMessageBar.offset = 0;
 				list->newlySelectedItem = 0;
 
-				if(!textBox) 
+				if(!textBox)
 					textBox = smfBlock_Create();
 
 				if( !optionGet(kUO_AllowProfanity)  )
@@ -1101,7 +1101,7 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
 
 			if( header->claim_availible || header->influence || (header->attachment && header->type != kEmail_Certification) )
 			{
-				F32 ty = pen.y;		
+				F32 ty = pen.y;
 
 				if( header->type == kEmail_Certification )
 				{
@@ -1184,7 +1184,7 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
 							char * cmd=0;
 							estrPrintf(&cmd, "gmail_claim %i", (int)header->message_id);
 							cmdParse(cmd);
-							estrDestroy(&cmd);	
+							estrDestroy(&cmd);
 						}
 					}
 				}
@@ -1238,9 +1238,9 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
 
 			smf_SetScissorsBox(textBox, clipBox.x, clipBox.y, clipBox.width, clipBox.height );
 			smf_SetFlags(textBox, SMFEditMode_ReadOnly, SMFLineBreakMode_None, SMFInputMode_None,
-				MAX_BODY, SMFScrollMode_InternalScrolling, SMFOutputMode_StripAllTags, 
+				MAX_BODY, SMFScrollMode_InternalScrolling, SMFOutputMode_StripAllTags,
 				SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0,
-				"EmailTabNavigationSet", -1); 
+				"EmailTabNavigationSet", -1);
 			smf_Display(textBox, clipBox.x, clipBox.y, z,  clipBox.width, clipBox.height, message->reparse, message->reparse, &s_tEmailText, 0);
 			message->reparse = 0;
 			clipperPop();
@@ -1310,7 +1310,7 @@ static EmailButtonCommands emailReadWindwDrawCommandButtons(UIBox drawArea, floa
 				forceDisplayToolTip( &warning, &box, textStd("EmailUnlockedAtLevel10"), MENU_GAME, WDW_EMAIL );
 			}
 		}
-	} else { 
+	} else {
 		removeToolTip( &warning );
 	}
 
@@ -1419,7 +1419,7 @@ static void emailHandleButtonCommands(EmailButtonCommands command)
 			EmailHeader*	header = (EmailHeader*)emailListView->selectedItem;
 			EmailMessage*	message = emailPrepareCacheMessage(&header->message_id, header->type);
 			char	*chop = strdup(message->body);
-			
+
 			smf_SetRawText(edits[ECF_RECIPIENTS], header->sender, 0);
 			estrPrintf(&edits[ECF_SUBJECT]->rawString, "Re: %s", emailRemoveSubjectPrefix(header->subject));
 			if (strlen(chop) > MAX_BODY/2)
@@ -1438,7 +1438,7 @@ static void emailHandleButtonCommands(EmailButtonCommands command)
 			char	*chop = strdup(message->body);
 
 			smf_SetRawText(edits[ECF_RECIPIENTS], message->recipients, 1 );
-			
+
 			if (!strstri(message->recipients, header->sender) && (strlen(header->sender) + strlen(message->recipients) + 1 < MAX_RECIPIENTS))
 				estrPrintf(&edits[ECF_RECIPIENTS]->rawString, "%s; %s", header->sender, message->recipients);
 
@@ -1482,9 +1482,9 @@ static void emailHandleButtonCommands(EmailButtonCommands command)
 			if( command == EBC_SPAM )
 			{
 				if( header->auth_id )
-					cmdParsef("ignore_spammer_auth %i, %s", header->auth_id, header->sender); 
+					cmdParsef("ignore_spammer_auth %i, %s", header->auth_id, header->sender);
 				else
-					cmdParsef("ignore_spammer %s", header->sender); 
+					cmdParsef("ignore_spammer %s", header->sender);
 			}
 
 			// Delete the selected message.
@@ -1711,7 +1711,7 @@ static void trayobj_DrawIcon( TrayObj * pObj, F32 x, F32 y, F32 z, F32 sc )
 					toolTipEnhancement = enhancement;
 				}
 				else
-					uiEnhancementFree(&enhancement); 
+					uiEnhancementFree(&enhancement);
 			}
 		}
 		xcase kTrayItemType_Salvage:
@@ -1724,7 +1724,7 @@ static void trayobj_DrawIcon( TrayObj * pObj, F32 x, F32 y, F32 z, F32 sc )
 			}
 		}
 		xcase kTrayItemType_Inspiration:
-		{					
+		{
 			if ( e->pchar->aInspirations[pObj->iset][pObj->ipow] )
 			{
  				icon = atlasLoadTexture(e->pchar->aInspirations[pObj->iset][pObj->ipow]->pchIconName);
@@ -1738,12 +1738,12 @@ static void trayobj_DrawIcon( TrayObj * pObj, F32 x, F32 y, F32 z, F32 sc )
 		setCursor( "cursor_hand_open.tga", NULL, FALSE, 2, 2 );
 	if( mouseLeftDrag(&box) )
 	{
-		trayobj_startDragging( pObj, icon, icon2 ); 
+		trayobj_startDragging( pObj, icon, icon2 );
 	}
 
 }
 
-static void dragReceiveBoost( Entity * e ) 
+static void dragReceiveBoost( Entity * e )
 {
 	if ( e->pchar->aBoosts[cursor.drag_obj.ispec] )
 	{
@@ -1751,12 +1751,12 @@ static void dragReceiveBoost( Entity * e )
 		if (!detailrecipedict_IsBoostTradeable(ppow, e->pchar->aBoosts[cursor.drag_obj.ispec]->iLevel, "", ""))
 		{
 			addSystemChatMsg( textStd("CannotTradeEnhancement"), INFO_USER_ERROR, 0 );
-		} 
-		else if (e->pchar->aBoosts[cursor.drag_obj.ispec]->iNumCombines > 0) 
+		}
+		else if (e->pchar->aBoosts[cursor.drag_obj.ispec]->iNumCombines > 0)
 		{
 			addSystemChatMsg( textStd("CantEmailCombined"), INFO_USER_ERROR, 0 );
-		} 
-		else 
+		}
+		else
 		{
 			trayobj_copy(&g_attachment, &cursor.drag_obj, 0);
 			if( !edits[ECF_SUBJECT]->rawString || !strlen(edits[ECF_SUBJECT]->rawString) )
@@ -1779,7 +1779,7 @@ static void emailDragRecieve(CBox *box)
 {
 	Entity * e = playerPtr();
 
-	if ( cursor.dragging  ) 
+	if ( cursor.dragging  )
 	{
 		if( !isDown( MS_LEFT ) && mouseCollision(box) )
 		{
@@ -1812,8 +1812,8 @@ static void emailDragRecieve(CBox *box)
 							if (salvage->flags & SALVAGE_NOTRADE)
 							{
 								addSystemChatMsg( textStd("CannotTradeSalvage"), INFO_USER_ERROR, 0 );
-							} 
-							else 
+							}
+							else
 							{
 								trayobj_copy(&g_attachment, &cursor.drag_obj, 0);
 								if( !edits[ECF_SUBJECT]->rawString || !strlen(edits[ECF_SUBJECT]->rawString) )
@@ -1868,9 +1868,9 @@ void emailDrawComposeMessagePane(UIBox drawAreaIn, float z, float sc)
 	CreateEditsIfNoneExist();
 
 	// this needs to happen before we set the cursor.
- 	smf_SetFlags(edits[ECF_RECIPIENTS], SMFEditMode_ReadWrite, SMFLineBreakMode_None, 
+ 	smf_SetFlags(edits[ECF_RECIPIENTS], SMFEditMode_ReadWrite, SMFLineBreakMode_None,
 		SMFInputMode_None, MAX_RECIPIENTS, SMFScrollMode_ExternalOnly, SMFOutputMode_StripAllTags,
-		SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, "EmailTabNavigationSet", -1); 
+		SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, "EmailTabNavigationSet", -1);
 
 	// Initialize all the edit boxes
 	if (!composeWindowInit)
@@ -1920,9 +1920,9 @@ void emailDrawComposeMessagePane(UIBox drawAreaIn, float z, float sc)
   	ty += text_ht + 17*sc;
 	prnt(tx, ty + 20*sc, z, sc, sc, subjectLabel);
 	smf_SetFlags(edits[ECF_SUBJECT], SMFEditMode_ReadWrite, SMFLineBreakMode_None,
-		SMFInputMode_None, MAX_SUBJECT, SMFScrollMode_ExternalOnly, SMFOutputMode_StripAllTags, 
-		SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 
-		"EmailTabNavigationSet", -1); 
+		SMFInputMode_None, MAX_SUBJECT, SMFScrollMode_ExternalOnly, SMFOutputMode_StripAllTags,
+		SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0,
+		"EmailTabNavigationSet", -1);
    	text_ht = smf_Display(edits[ECF_SUBJECT], tx + fieldLabelWidth[1] + 5*sc, ty + 4*sc, z+1, twd - fieldLabelWidth[1] - attachment_wd - influence_wd- 30*sc, 0, 0, 0, &s_tEmail, 0);
 	drawTextEntryFrame( tx + fieldLabelWidth[1], ty, z, twd - fieldLabelWidth[1] - attachment_wd - influence_wd - 20*sc, text_ht +6*sc, sc, 2);
 
@@ -1935,10 +1935,10 @@ void emailDrawComposeMessagePane(UIBox drawAreaIn, float z, float sc)
 		font_outl(1);
 		font_ital(0);
 	}
- 	smf_SetFlags(edits[ECF_INFLUENCE], SMFEditMode_ReadWrite, SMFLineBreakMode_None, 
+ 	smf_SetFlags(edits[ECF_INFLUENCE], SMFEditMode_ReadWrite, SMFLineBreakMode_None,
 		SMFInputMode_NonnegativeIntegers, 0, SMFScrollMode_ExternalOnly, SMFOutputMode_None,
-		SMFDisplayMode_NumbersWithCommas, SMFContextMenuMode_None, SMAlignment_Left, 0, 
-		"EmailTabNavigationSet", -1); 
+		SMFDisplayMode_NumbersWithCommas, SMFContextMenuMode_None, SMAlignment_Left, 0,
+		"EmailTabNavigationSet", -1);
  	smf_Display(edits[ECF_INFLUENCE], tx + twd - attachment_wd - influence_wd - 5*sc, ty + 4*sc, z+1, influence_wd, 0, 0, 0, &s_tEmail, 0);
 	drawTextEntryFrame( tx + twd - attachment_wd - influence_wd - 10*sc, ty, z, influence_wd, 22*sc, sc, 2 );
 
@@ -1948,10 +1948,10 @@ void emailDrawComposeMessagePane(UIBox drawAreaIn, float z, float sc)
 
 	// Writing Area
 	smf_SetScissorsBox(edits[ECF_BODY], tx, ty+2*sc, twd, drawArea.height - (ty - drawArea.y)-4*sc);
- 	smf_SetFlags(edits[ECF_BODY], SMFEditMode_ReadWrite, SMFLineBreakMode_None, 
+ 	smf_SetFlags(edits[ECF_BODY], SMFEditMode_ReadWrite, SMFLineBreakMode_None,
 		SMFInputMode_None, MAX_BODY, SMFScrollMode_InternalScrolling, SMFOutputMode_StripAllTags,
 		SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0,
-		"EmailTabNavigationSet", -1); 
+		"EmailTabNavigationSet", -1);
   	smf_Display(edits[ECF_BODY], tx + 5*sc, ty + 4*sc, z+1, twd - 10*sc, drawArea.height - (ty - drawArea.y) - 10*sc, 0, 0, &s_tEmail, 0);
  	drawTextEntryFrame( tx, ty, z, twd, drawArea.height - (ty - drawArea.y), sc, 2 );
 
@@ -2020,7 +2020,7 @@ void emailSendToServer(char* recipients, char* subject, char* message, int influ
 
 int globalEmailIsFull()
 {
-	return eaSize(&g_ppHeader[MVM_MAIL]) >= MAX_GMAIL; 
+	return eaSize(&g_ppHeader[MVM_MAIL]) >= MAX_GMAIL;
 }
 
 static void emailComposeHandleSendButton()
@@ -2050,7 +2050,7 @@ static void emailComposeHandleSendButton()
 	{
 		dialogStd(DIALOG_OK,"EmailInfluenceCap", NULL, NULL,0,0,1);
 		return;
-		
+
 	}
 
 	if( influence < 0 || influence > e->pchar->iInfluencePoints )
@@ -2096,7 +2096,7 @@ static void emailComposeHandleSendButton()
 	}
 
 	estrPrintCharString(&recips, (char*)escapeString(recip_buf));
-	
+
 	fieldLength += estrLength(&recips);
 	if(estrLength(&recips) >= MAX_RECIPIENTS)
 	{

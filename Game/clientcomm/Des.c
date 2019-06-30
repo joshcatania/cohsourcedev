@@ -42,7 +42,7 @@
 #include <sys/types.h>                  /* for local timer */
 #include <sys/timeb.h>                  /* ditto */
 #endif	// _WIN32
-#include <assert.h>
+#include "SuperAssert.h"
 #include <string.h>
 #include "Des.h"
 

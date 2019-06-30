@@ -8,7 +8,7 @@
 
 #include "sprite_font.h"
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "file.h"
 #include "cmdgame.h"
@@ -35,8 +35,8 @@ TTDrawContext game_9;
 TTDrawContext game_9_dynamic;
 TTDrawContext game_10;
 TTDrawContext game_10_dynamic;
-TTDrawContext game_12; 
-TTDrawContext game_12_dynamic; 
+TTDrawContext game_12;
+TTDrawContext game_12_dynamic;
 TTDrawContext game_14;
 TTDrawContext game_18;
 
@@ -195,98 +195,98 @@ void loadFonts()
 
 	// Configure composite fonts.
 	gameTextFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(gameTextFont, ttAsiaPFB);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(gameTextFont, ttAsiaPFB);
 	ttFontAddFallback(gameTextFont, ttMont);
 	ttFontAddFallback(gameTextFont, ttVerdanab);
-	ttFontAddFallback(gameTextFont, ttMingLiu); 
-	ttFontAddFallback(gameTextFont, ttAsiaPFB);	
-	ttFontAddFallback(gameTextFont, ttGulim);	
+	ttFontAddFallback(gameTextFont, ttMingLiu);
+	ttFontAddFallback(gameTextFont, ttAsiaPFB);
+	ttFontAddFallback(gameTextFont, ttGulim);
 
 	// for profile strip out the mingliu fallback so missing
 	// composition characters don't show up. This is an experiment by
 	// NCSeoul because they don't want to buy the complete ttYGO230
 	// font.
 	smfProfileNameFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(smfProfileNameFont, ttAsiaPFB);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(smfProfileNameFont, ttAsiaPFB);
 	ttFontAddFallback(smfProfileNameFont, ttMont);
 	ttFontAddFallback(smfProfileNameFont, ttVerdanab);
-	ttFontAddFallback(smfProfileNameFont, ttMingLiu); 
-	ttFontAddFallback(smfProfileNameFont, ttAsiaPFB);	
+	ttFontAddFallback(smfProfileNameFont, ttMingLiu);
+	ttFontAddFallback(smfProfileNameFont, ttAsiaPFB);
 
 	gameBoldFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(gameBoldFont, ttAsiaPFB);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(gameBoldFont, ttAsiaPFB);
 	ttFontAddFallback(gameBoldFont, ttMontBold);
 	//ttFontAddFallback(gameBoldFont, ttMont);
 	ttFontAddFallback(gameBoldFont, ttMingLiu);
 	ttFontAddFallback(gameBoldFont, ttAsiaPFB);
-	ttFontAddFallback(gameBoldFont, ttGulim);	
+	ttFontAddFallback(gameBoldFont, ttGulim);
 
 	titleTextFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(titleTextFont, ttAsiaPFB);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(titleTextFont, ttAsiaPFB);
 	ttFontAddFallback(titleTextFont, ttRedCircle);
 	ttFontAddFallback(titleTextFont, ttMontBold);
 	ttFontAddFallback(titleTextFont, ttMingLiu);
 	ttFontAddFallback(titleTextFont, ttAsiaPFB);
-	ttFontAddFallback(titleTextFont, ttGulim);	
+	ttFontAddFallback(titleTextFont, ttGulim);
 
 	chatThinFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(chatThinFont, ttYGO230);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(chatThinFont, ttYGO230);
 	ttFontAddFallback(chatThinFont, ttVerdana);
 	ttFontAddFallback(chatThinFont, ttMingLiu);
-	ttFontAddFallback(chatThinFont, ttYGO230);	
+	ttFontAddFallback(chatThinFont, ttYGO230);
 
 	chatTextFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(chatTextFont, ttGulim);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(chatTextFont, ttGulim);
 	ttFontAddFallback(chatTextFont, ttMont);
 	ttFontAddFallback(chatTextFont, ttVerdana);
 	ttFontAddFallback(chatTextFont, ttMingLiu);
 	ttFontAddFallback(chatTextFont, ttGulim);
 
 	chatBoldFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(chatBoldFont, ttGulim);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(chatBoldFont, ttGulim);
 	ttFontAddFallback(chatBoldFont, ttVerdanab);
 	ttFontAddFallback(chatBoldFont, ttVerdana);
 	ttFontAddFallback(chatBoldFont, ttMingLiu);
-	ttFontAddFallback(chatBoldFont, ttGulim);	
+	ttFontAddFallback(chatBoldFont, ttGulim);
 
 	referenceTextFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(referenceTextFont, ttGulim);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(referenceTextFont, ttGulim);
 	ttFontAddFallback(referenceTextFont, ttTahomaBD);
 	ttFontAddFallback(referenceTextFont, ttMingLiu);
 	ttFontAddFallback(referenceTextFont, ttGulim);
 
 	smfMonoFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(smfMonoFont, ttGulim);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(smfMonoFont, ttGulim);
 	ttFontAddFallback(smfMonoFont, ttCourier);
 	ttFontAddFallback(smfMonoFont, ttMingLiu);
-	ttFontAddFallback(smfMonoFont, ttGulim);	
+	ttFontAddFallback(smfMonoFont, ttGulim);
 
 	smfComputerFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(smfComputerFont, ttYGO230);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(smfComputerFont, ttYGO230);
 	ttFontAddFallback(smfComputerFont, ttDigitalb);
 	ttFontAddFallback(smfComputerFont, ttMingLiu);
-	ttFontAddFallback(smfComputerFont, ttYGO230);	
+	ttFontAddFallback(smfComputerFont, ttYGO230);
 
 	smfLargeFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(smfLargeFont, ttYGO230);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(smfLargeFont, ttYGO230);
 	ttFontAddFallback(smfLargeFont, ttMont);
 	ttFontAddFallback(smfLargeFont, ttVerdanab);
 	ttFontAddFallback(smfLargeFont, ttMingLiu);
 	ttFontAddFallback(smfLargeFont, ttYGO230);
 
 	smfSmallFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(smfSmallFont, ttAsiaPFB);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(smfSmallFont, ttAsiaPFB);
 	ttFontAddFallback(smfSmallFont, ttMont);
 	ttFontAddFallback(smfSmallFont, ttVerdana);
 	ttFontAddFallback(smfSmallFont, ttMingLiu);
-	ttFontAddFallback(smfSmallFont, ttAsiaPFB);	
-	ttFontAddFallback(smfSmallFont, ttGulim);	
+	ttFontAddFallback(smfSmallFont, ttAsiaPFB);
+	ttFontAddFallback(smfSmallFont, ttGulim);
 
 	tinyTextFont = createTTCompositeFont();
-	if (getCurrentLocale() == 3) ttFontAddFallback(tinyTextFont, ttGulim);	
+	if (getCurrentLocale() == 3) ttFontAddFallback(tinyTextFont, ttGulim);
 	ttFontAddFallback(tinyTextFont, ttTiny);
 	ttFontAddFallback(tinyTextFont, ttMingLiu);
-	ttFontAddFallback(tinyTextFont, ttGulim);	
+	ttFontAddFallback(tinyTextFont, ttGulim);
 
 	editorCFont = createTTCompositeFont();
 	ttFontAddFallback(editorCFont, ttTahoma);

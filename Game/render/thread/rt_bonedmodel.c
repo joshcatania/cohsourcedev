@@ -13,7 +13,7 @@
 #include "model_cache.h"
 #include "rt_stats.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "rt_shadow.h"
 #include "cmdgame.h"
 #include "tex.h"
@@ -88,7 +88,7 @@ static INLINEDBG void drawWireframeSeam(VBO *vbo, Vec3 * verts, int a, int b)
 {
 	F32		*v;
 
-	if (isBorder(vbo, vbo->tris[a], vbo->tris[b])){ 
+	if (isBorder(vbo, vbo->tris[a], vbo->tris[b])){
 		WCW_Color4(100,255,128,255);
 	} else {
 		WCW_Color4(100,128,255,255);
@@ -106,7 +106,7 @@ static INLINEDBG void drawWireframeSeam(VBO *vbo, Vec3 * verts, int a, int b)
 static void modelDrawBonedWireframeSeams( VBO *vbo, Vec3 * verts )
 {
 	int		i,count;
-	
+
 	modelDrawState(DRAWMODE_COLORONLY, FORCE_SET);
 	modelBlendState(BlendMode(BLENDMODE_MODULATE, 0), ONLY_IF_NOT_ALREADY);
 	WCW_PrepareToDraw();
@@ -197,34 +197,34 @@ void fitVec3dynarray(Vec3dynarray *v3da, int size)
 void loadBoneMatrices(SkinModel *skin)
 {
 	int		j,k;
-	
+
 	static const size_t kNumFloatsPerVec4 = 4;
 	static const int kNumFloat4sPerMatrix = 3;
-	
+
 	GLuint tempVec4ArrNumItems = ( skin->bone_count * kNumFloat4sPerMatrix );
 	size_t nTempArrayBytes =  ( tempVec4ArrNumItems * sizeof(Vec4) );
 	float* tempVec4Arr = (float*)_alloca( nTempArrayBytes );
 	float* pDestArrLoc = tempVec4Arr;
-	
+
 	for(j=0;j<skin->bone_count;j++)
 	{
 		Mat4Ptr	mp = skin->bone_mats[j];
-		for (k = 0; k < kNumFloat4sPerMatrix; ++k)     
+		for (k = 0; k < kNumFloat4sPerMatrix; ++k)
 		{
 			Vec4	col;
 			int nIndex = (16 + (( j * 3 ) + k ));
 
-			col[0] = mp[0][k];    
-			col[1] = mp[1][k]; 
+			col[0] = mp[0][k];
+			col[1] = mp[1][k];
 			col[2] = mp[2][k];
 			col[3] = mp[3][k];
-			
+
 			//WCW_SetCgShaderParamArray4fv(kShaderPgmType_VERTEX, kShaderParam_BoneMatrixArrVP, j * 3 + k, col );
 			copyVec4( col, pDestArrLoc );
 			pDestArrLoc += kNumFloatsPerVec4;
 		}
 	}
-	
+
 	assert( (unsigned int)pDestArrLoc == ( (unsigned int)tempVec4Arr + nTempArrayBytes ) );
 	WCW_SetCgShaderParamArray4fv(kShaderPgmType_VERTEX, kShaderParam_BoneMatrixArrVP, tempVec4Arr, tempVec4ArrNumItems );
 }
@@ -272,10 +272,10 @@ static void setupVertexLighting(SkinModel *skin)
 
 	skin->lightdir[3] = 0.0; //this means directional lighting, please (GL is so dumb)
 
-	WCW_Light(GL_LIGHT0, GL_AMBIENT, skin->ambient);  
-	WCW_Light(GL_LIGHT0, GL_DIFFUSE, skin->diffuse);  
+	WCW_Light(GL_LIGHT0, GL_AMBIENT, skin->ambient);
+	WCW_Light(GL_LIGHT0, GL_DIFFUSE, skin->diffuse);
 
-	WCW_LightPosition(skin->lightdir, NULL); 
+	WCW_LightPosition(skin->lightdir, NULL);
 }
 
 void drawLoopBoned(SkinModel *skin,RdrTexList *texlists,int tex_index)
@@ -283,12 +283,12 @@ void drawLoopBoned(SkinModel *skin,RdrTexList *texlists,int tex_index)
 	int					i,j,ele_base=0;
 	VBO					*vbo = skin->vbo;
 
-	for(i = 0 ; i < vbo->tex_count ; i++) 
+	for(i = 0 ; i < vbo->tex_count ; i++)
 	{
 		if (tex_index==-1 || tex_index==i)
 		{
 			RdrTexList *texlist = &texlists[(tex_index==-1)?i:0];
-				
+
 			rdrBeginMarker("%s: TEX %d, model \"%s\"", __FUNCTION__, tex_index, ((skin->debug_model_backpointer && skin->debug_model_backpointer->name) ? skin->debug_model_backpointer->name:"NO_NAME") );
 
 			// Vert shader inputs
@@ -309,12 +309,12 @@ void drawLoopBoned(SkinModel *skin,RdrTexList *texlists,int tex_index)
 					glVertexAttribPointerARB(7, 4, GL_FLOAT, GL_FALSE, 0, vbo->tangents); CHECKGL;
 				}
 				else if (texlist->blend_mode.shader == BLENDMODE_COLORBLEND_DUAL)
-				{	
+				{
 					skin->ambient[3] = 0;
 					modelDrawState( DRAWMODE_HW_SKINNED, ONLY_IF_NOT_ALREADY);
-					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_AmbientParameterVP, skin->ambient ); 
-					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_DiffuseParameterVP, skin->diffuse ); 
-					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_LightDirVP, skin->lightdir );            
+					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_AmbientParameterVP, skin->ambient );
+					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_DiffuseParameterVP, skin->diffuse );
+					WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_LightDirVP, skin->lightdir );
 				}
 				else
 					assert(0);
@@ -355,9 +355,9 @@ void drawLoopBoned(SkinModel *skin,RdrTexList *texlists,int tex_index)
 				setupBumpMultiVertShader(texlist, skin->lightdir);
 				setupBumpMultiPixelShader(skin->ambient, skin->diffuse, skin->lightdir, texlist, texlist->blend_mode, false, true, true, 1.0f);
 			}
-			
+
 			WCW_PrepareToDraw();
-	
+
 			glDrawElements(GL_TRIANGLES, vbo->tex_ids[i].count*3,GL_UNSIGNED_INT,&vbo->tris[ele_base]); CHECKGL;
 
 			RT_STAT_DRAW_TRIS(vbo->tex_ids[i].count)
@@ -377,9 +377,9 @@ void drawLoopBonedWireframe(SkinModel *skin)
 		Vec4 diffuse = {0,0,0,0};
 		Vec4 lightdir = {0,-1,0,0};
 		modelDrawState( DRAWMODE_HW_SKINNED, ONLY_IF_NOT_ALREADY);
-		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_AmbientParameterVP, ambient ); 
-		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_DiffuseParameterVP, diffuse ); 
-		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_LightDirVP, lightdir );            
+		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_AmbientParameterVP, ambient );
+		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_DiffuseParameterVP, diffuse );
+		WCW_SetCgShaderParam4fv(kShaderPgmType_VERTEX, kShaderParam_LightDirVP, lightdir );
 		loadBoneMatrices(skin);
 	} else {
 		glDisable(GL_LIGHTING); CHECKGL;
@@ -477,12 +477,12 @@ void modelDrawBonedNodeDirect(SkinModel *skin)
 		trick = (TrickNode*) (texlist + tex_count);
 	else
 		trick = 0;
-	skin->ambient[3] = 1.0;  
-	skin->diffuse[3] = 1.0;  
+	skin->ambient[3] = 1.0;
+	skin->diffuse[3] = 1.0;
 
-	modelBindBuffer(skin->vbo); 
+	modelBindBuffer(skin->vbo);
 
-	WCW_TexLODBias(0, -2.0); 
+	WCW_TexLODBias(0, -2.0);
 	WCW_TexLODBias(1, -2.0);
 
 	if( !(rdr_caps.features & GFXF_BUMPMAPS) ) //should I do full check for bumpmapped thing?
@@ -494,7 +494,7 @@ void modelDrawBonedNodeDirect(SkinModel *skin)
 	constColor1[3] = 1;
 
 	//This is before CUSTOM COLORS because custom colors should take precedence
-	gfxNodeTricks( trick, vbo, NULL, texlist[0].blend_mode, false ); 
+	gfxNodeTricks( trick, vbo, NULL, texlist[0].blend_mode, false );
 	setupCustomColors(skin);
 
 	if ( !rdr_caps.use_vertshaders )

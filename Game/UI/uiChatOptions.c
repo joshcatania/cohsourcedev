@@ -9,7 +9,7 @@
 #include "sprite_text.h"
 #include "sprite_font.h"
 #include "ttFontUtil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "uiEdit.h"
 #include "uiFocus.h"
 #include "cmdcommon.h"
@@ -35,7 +35,7 @@
 #include "MessageStoreUtil.h"
 #include "bitfield.h"
 
-  
+
 #define NAME_HEADER		10
 #define NAME_WIDTH		175
 #define	NAME_HEIGHT		24
@@ -73,7 +73,7 @@ static ChatTabData gTabData;
 
 bool canAddChannel()
 {
-	int count =   eaSize(&gChatChannels) 
+	int count =   eaSize(&gChatChannels)
 				+ eaSize(&gReservedChatChannels)
 				- eaSize(&gTabData.leaveQueue);
 
@@ -82,7 +82,7 @@ bool canAddChannel()
 
 
 typedef struct SystemChannel
-{	
+{
 	char * name;
 	int colorIdx;
 	BOOL canSetDefault;
@@ -90,7 +90,7 @@ typedef struct SystemChannel
 
 } SystemChannel;
 
-SystemChannel gSystemChannels[] = 
+SystemChannel gSystemChannels[] =
 {
 	{ "DamageFilter",		INFO_DAMAGE,			FALSE,	{INFO_DAMAGE,}  },
 	{ "CombatFilter",		INFO_COMBAT,			FALSE,	{INFO_COMBAT,} },
@@ -140,7 +140,7 @@ SystemChannel gSystemChannels[] =
 typedef struct AvailableChannel
 {
 
-	bool 					highlighted;	
+	bool 					highlighted;
 	bool 					selected;
 	bool 					defaultChannel;
 	ChannelType	type;
@@ -181,7 +181,7 @@ void AvailableChannelDestroy(AvailableChannel * ac)
 }
 
 int sortAvailableChannelFunc(const AvailableChannel** pp1, const AvailableChannel** pp2)
-{	
+{
    	const AvailableChannel * ac1 = *pp1;
   	const AvailableChannel * ac2 = *pp2;
 
@@ -277,7 +277,7 @@ void channelDeleteNofication(ChatChannel * channel)
 			AvailableChannel * ac = gTabData.available[i];
 			if(   ac->type == ChannelType_User
 			   && ac->user == channel)
-			{	
+			{
  				if(gTabData.defaultChannel == ac)
 					setDefaultChannel(0);
 
@@ -325,7 +325,7 @@ void AddAvailableSystemChannel(int systemIdx)
 {
 	AvailableChannel * ac = AvailableChannelCreate(ChannelType_System, 0, systemIdx);
 	int i;
-	
+
 	eaPush(&gTabData.available, ac);
 	for( i = 0; i < 8; i++ )
 	{
@@ -402,9 +402,9 @@ void UpdateUserChannels(ChatChannel *** list)
 static int channelCount()
 {
 	return (  eaSize(&gChatChannels)
-			+ eaSize(&gReservedChatChannels) 
-			+ ARRAY_SIZE(gSystemChannels) 
-			- eaSize(&gTabData.leaveQueue) 
+			+ eaSize(&gReservedChatChannels)
+			+ ARRAY_SIZE(gSystemChannels)
+			- eaSize(&gTabData.leaveQueue)
 			- 1);
 }
 
@@ -412,7 +412,7 @@ static int channelCount()
 void createAvailableChannelList()
 {
   	if(!gTabData.available)
-	{	
+	{
 		// new filter -- full update
 
 		int i=0;
@@ -452,7 +452,7 @@ void chatTabOpen(ChatFilter * filter, ChatWindow * newWindow)
 
 	winDefs[WDW_CHAT_OPTIONS].loc.locked = 0;
 
- 	if(!gTabData.init) 
+ 	if(!gTabData.init)
 	{
 		int dbgCount = 0;
 
@@ -466,7 +466,7 @@ void chatTabOpen(ChatFilter * filter, ChatWindow * newWindow)
 
 		gTabData.nameEdit->cursor.characterIndex = INT_MAX;	// move to end of box
 
-		gTabData.init = TRUE;	
+		gTabData.init = TRUE;
 
 		if(newWindow)
 			uiEditTakeFocus(gTabData.nameEdit);
@@ -492,7 +492,7 @@ char * generateDefaultTabName(char * base)
 	strncpyt(buf, base, MAX_TAB_NAME_LEN-3); // room for 2 digits & a space
 
 	do {
-		sprintf(name, "%s %d", buf, i++); 
+		sprintf(name, "%s %d", buf, i++);
 	} while(GetChatFilter(name) && (i<=MAX_CHAT_TABS));
 
 	assert(!GetChatFilter(name));
@@ -538,7 +538,7 @@ void chatTabClose(bool save)
 	int i;
 
   	if(save)
-	{	
+	{
 		char *name = uiEditGetUTF8Text(gTabData.nameEdit);
 		if(name)
 			ChatFilterRename(gTabData.filter, name);
@@ -569,7 +569,7 @@ void chatTabClose(bool save)
 					{
  						assert(filter->defaultChannel.type == ChannelType_None);
 						filter->defaultChannel.type = ChannelType_System;
-						filter->defaultChannel.system = ac->system->colorIdx;	
+						filter->defaultChannel.system = ac->system->colorIdx;
 					}
 				}
 				else if(ac->type == ChannelType_User)
@@ -577,10 +577,10 @@ void chatTabClose(bool save)
 					assert(ac->user);
 					ChatFilterAddChannel(filter, ac->user);
 
-					// officially join channel 
+					// officially join channel
 					if(ac->user->isReserved)
 						addChannelSlashCmd("join", ac->user->name, 0, filter);
-				
+
 					if(ac->defaultChannel)
 					{
  						assert(filter->defaultChannel.type == ChannelType_None);
@@ -596,7 +596,7 @@ void chatTabClose(bool save)
 		if(gTabData.newWindow)
 			ChatWindowAddFilter(gTabData.newWindow, filter, gTabData.newWindow->contextPane);
 
-		sendChatSettingsToServer();	
+		sendChatSettingsToServer();
 	}
 	else
 	{
@@ -622,7 +622,7 @@ void chatTabClose(bool save)
 		}
 	}
 
-	
+
 	// clean up window...
 	uiEditReturnFocus(gTabData.nameEdit);
 	if(gTabData.nameEdit)
@@ -692,7 +692,7 @@ void handleNameEditBox(CBox * box, float scale)
 			{
 				stripNonRegionChars(text, getCurrentLocale());
 			}
- 
+
  			len = strlen(text);
 			// if the string is only whitespace, delete it
 			if( strspn(text, space ) == len )
@@ -749,7 +749,7 @@ AvailableChannel * selectedUserChannel()
 	for(i=0;i<eaSize(&gTabData.available);i++)
 	{
 		AvailableChannel * ac = gTabData.available[i];
-		if(   ac->highlighted 
+		if(   ac->highlighted
 		   && ac->type == ChannelType_User)
 		{
 			return ac;
@@ -803,7 +803,7 @@ void clearHighlighted()
 
 // auto suggest name -- use the first channel name in the 'selected' list
 void autoSuggestName()
-{	
+{
 	int i;
 	for(i=0;i<eaSize(&gTabData.available);i++)
 	{
@@ -832,7 +832,7 @@ void moveHighlightedChannels(bool selected)
 	for(i=0;i<eaSize(&gTabData.available);i++)
 	{
 		AvailableChannel * ac = gTabData.available[i];
-		if(   ac->highlighted 
+		if(   ac->highlighted
 			&& ac->selected == selected)
 		{
 			ac->selected = !selected;
@@ -900,10 +900,10 @@ void drawChannel(float x, float* yp, float z, float scale, float wd, AvailableCh
  	font(&game_12);
 	cprntEx(x + R6*scale, y+15*scale, z+1, scale, scale, (NO_MSPRINT), name);
 	BuildCBox( &box, x, y, wd, ht);
-  
+
 	if(ac->highlighted && mouseDoubleClickHit(&box, MS_LEFT))
 	{
-		clearHighlighted();	
+		clearHighlighted();
 		ac->highlighted = true;
 		moveHighlightedChannels(ac->selected);
 	}
@@ -922,7 +922,7 @@ void drawChannel(float x, float* yp, float z, float scale, float wd, AvailableCh
 	{
    		drawFlatFrame( PIX2, R6, x, y, z+20, wd, (ENTRY_SPACE)*scale, scale, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
 	}
- 	
+
   	*yp += ENTRY_SPACE*scale;
 }
 
@@ -939,7 +939,7 @@ void drawChannelList(float x, float y, float z, float scale, float wd, float ht,
 	CBox box;
 
  	drawFrame( PIX3, R10, x, y, z+1, wd, ht, scale, color, bcolor );
-	
+
 	startY = y;
  	y += PIX3*scale;
 
@@ -1037,7 +1037,7 @@ int chatTabWindow()
 {
 	float x, y, z, wd, ht, scale;
 	int color, bcolor;
- 
+
 	static ScrollBar current_sb = {0};
  	static ScrollBar available_sb = {0};
 	AvailableChannel * validChannel;
@@ -1045,8 +1045,8 @@ int chatTabWindow()
 	CBox box;
  	int locked, valid;
 	float listWidth, listHeight, buttonCenterY;
- 
-	
+
+
 	// did somebody close me? (one example is during a mapmove, window will always be saved as "closed" since it's mode is ALWAYS_CLOSED)
 	if(gTabData.filter && ! windowUp(WDW_CHAT_OPTIONS))
 	{
@@ -1073,7 +1073,7 @@ int chatTabWindow()
 
 	gTabData.nameEdit->z = z + 10;
 	uiEditSetFontScale(gTabData.nameEdit, 1.25*scale);
-  
+
 	assert(gTabData.filter);
 
 
@@ -1084,8 +1084,8 @@ int chatTabWindow()
   	cprntEx( x + wd/2 - (LIST_SPACE/2*scale + listWidth/2), y + (LIST_HEADER - 10)*scale, z, scale, scale, (CENTER_X | CENTER_Y), "SelectedChannels" );
   	cprntEx( x + wd/2 + (LIST_SPACE/2*scale + listWidth/2), y + (LIST_HEADER - 10)*scale, z, scale, scale, (CENTER_X | CENTER_Y), "AvailableChannels" );
 
- 
- 
+
+
 	// name edit box
 	uiBoxDefine(&bounds,	x + wd/2 - (NAME_WIDTH / 2)*scale,
 							y + NAME_HEADER*scale,
@@ -1104,7 +1104,7 @@ int chatTabWindow()
 		font_color( CLR_RED, CLR_RED );
   	    cprntEx( x + wd/2, y + (LIST_HEADER - 26)*scale, z, scale, scale, (CENTER_X | CENTER_Y), "ChatTabNameAlreadyInUse" );
 	}
-	
+
 	// channel filter categories
  	createAvailableChannelList();
    	drawChannelList(x + wd/2 - (listWidth + LIST_SPACE/2*scale),  y + LIST_HEADER*scale, z+1, scale, listWidth, listHeight, color, bcolor, &gTabData.selectedSB,  true);
@@ -1135,7 +1135,7 @@ int chatTabWindow()
 		}
 	}
 	else
-	{ 	
+	{
 		// ADD Button
     		if( D_MOUSEHIT == drawStdButton( x + wd/2, y + buttonCenterY - 5*BUTTON_SPACE/2*scale, z, BUTTON_WIDTH*scale, BUTTON_HEIGHT*scale, CLR_BLUE, "AddChannelToTab", scale, !isChannelHighlighted(false) ) )
 		{
@@ -1193,7 +1193,7 @@ int chatTabWindow()
 		// LEAVE CHANNEL Button -- must be done last, as it might destroy/free a AvailableChannel in the list
 		locked = ! (validChannel = selectedUserChannel());
 		if( D_MOUSEHIT == drawStdButton( x + wd/2, y + buttonCenterY + 3*BUTTON_SPACE/2*scale, z, BUTTON_WIDTH*scale, BUTTON_HEIGHT*scale, CLR_BLUE, "LeaveChatChannelButton", scale, locked ) )
-		{			
+		{
 			// immediately leave "reserved" channels, as we haven't even officially joined yet.
 			// Otherwise, add the channel to the leave queue (will only leave if user clicks OK)
 			if(validChannel->user->isReserved)

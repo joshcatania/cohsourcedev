@@ -1,4 +1,4 @@
-// support functions for main.c 
+// support functions for main.c
 
 #include "win_init.h"
 #include "winutil.h"
@@ -18,7 +18,7 @@
 #include "fx.h"
 #include "render.h"
 #include "error.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "uiGame.h"
 #include "uiQuit.h"
 #include "utils.h"
@@ -200,7 +200,7 @@ void parseArgs(int argc,char **argv)
 			//{
 			//	continue;
 			//}
-				
+
 			strcat(buf," 1");
 		}
 		printf("%s\n",buf);
@@ -475,7 +475,7 @@ static void updateDesaturateSetting()
 	if (game_state.desaturateDelay > 0.0f)
 	{
 		game_state.desaturateDelay -= dt;
-	} 
+	}
 	else if (game_state.desaturateWeightTarget != game_state.desaturateWeight )
 	{
 		if (game_state.desaturateFadeTime <= 0.0f)
@@ -570,11 +570,11 @@ void engine_update()
 		runServeMenus();
 
 		// Check background loaders and tag loaded stuff as ready for use. This function times itself.
-		
+
 		texCheckThreadLoader();
-		
+
 		// texUnloadTexturesToFitMemory();
-		
+
 		PERFINFO_AUTO_START("texGatherStatistics",1);
 			if (game_state.info || window_getMode(WDW_RENDER_STATS) == WINDOW_DISPLAYING)
 				texGatherStatistics();
@@ -675,7 +675,7 @@ void engine_update()
 
 			PERFINFO_AUTO_START("sndUpdate - game",1);
 
-			copyMat3(cam_info.cammat, sound_mat); 
+			copyMat3(cam_info.cammat, sound_mat);
 			scaleMat3(sound_mat, sound_mat, -1);
 
 			if( game_state.viewCutScene )
@@ -698,7 +698,7 @@ void engine_update()
 		PERFINFO_AUTO_START("conProcess",1);
 		conProcess(); //Handle the in-game ~ console
 		PERFINFO_AUTO_STOP();
-	
+
 	PERFINFO_AUTO_STOP();// Ends "top"
 
 #if NOVODEX
@@ -905,7 +905,7 @@ void checkFullScreenToggle(void)
 		doResize = true;
 
 	if (game_state.fullscreen_toggle && (game_state.refresh_rate != cur_refreshRate ||
-										 game_state.screen_x != cur_screenX || 
+										 game_state.screen_x != cur_screenX ||
 										 game_state.screen_y != cur_screenY))
 		doResize = true;
 
@@ -944,7 +944,7 @@ void checkOddball()
 		fxReloadSequencers();
 		game_state.reloadSequencers = 0;
 	}
-	
+
 	// disabled 10/27/09, shouldn't need this -- checkForCorruptTexturesATI();
 
 	mpCompactPools();
@@ -1124,7 +1124,7 @@ int getProjectKey(int argc, char **argv)
 		if (CHECKARG("-project") && i < argc-1)
 		{
 			char* projName = argv[i+1];
-			
+
 			if (projName[0]=='\"') {
 				strcpy(projName, projName+1);
 			}
@@ -1428,7 +1428,7 @@ static DWORD WINAPI keepMemoryThread(void* unusedParam){
 	//     Games are supposed to be responsive, right?
 
 	SYSTEM_INFO systemInfo;
-	
+
 	GetSystemInfo(&systemInfo);
 
 	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL - 2);
@@ -1452,11 +1452,11 @@ static DWORD WINAPI keepMemoryThread(void* unusedParam){
 				Sleep(100);
 				startTimer = 1;
 			}
-			
+
 			if(startTimer){
 				startTimer = 0;
 			}
-		
+
 			VirtualQuery(address, &mbi, sizeof(mbi));
 
 			if(address != ((char*)mbi.BaseAddress)){
@@ -1480,9 +1480,9 @@ static DWORD WINAPI keepMemoryThread(void* unusedParam){
 					address += systemInfo.dwPageSize;
 					acc += systemInfo.dwPageSize;
 				}
-				
+
 				PERFINFO_AUTO_STOP();
-				
+
 				Sleep(0);
 			}else{
 				address = nextAddress;
@@ -1549,7 +1549,7 @@ static void acquireCountMutex()
 {
 	if(!acquireMutexHandleByPID(cohCountMutexName, -1, NULL)){
 		Sleep(1000);
-		
+
 		if(!acquireMutexHandleByPID(cohCountMutexName, -1, NULL)){
 			assert(0);
 		}
@@ -1573,7 +1573,7 @@ void game_beforeFolderCacheIgnore(int timer, int argc, char **argv)
 	printf("Running %s\n", argv[0]);
 
 	acquireCountMutex();
-	
+
 	timeBeginPeriod(1);
 	timerStart(timer);
 
@@ -1652,8 +1652,8 @@ void game_beforeParseArgs(int doLogging)
 		disableRtlHeapChecking(NULL);
 		setAssertMode((!IsDebuggerPresent()? ASSERTMODE_MINIDUMP : 0) |
 			ASSERTMODE_DEBUGBUTTONS);
-	} 
-	else 
+	}
+	else
 	{
 		// Production mode
 		setAssertMode( ASSERTMODE_MINIDUMP | ASSERTMODE_ERRORREPORT | ASSERTMODE_CALLBACK );
@@ -1722,7 +1722,7 @@ void game_beforeParseArgs(int doLogging)
 		//Make sure the gfx settings are valid (TO DO do more validating...)
 		if( gfxSettings.advanced.worldDetailLevel < 0.01f || gfxSettings.advanced.worldDetailLevel > 2.0f ||
 			gfxSettings.advanced.entityDetailLevel < 0.01f || gfxSettings.advanced.entityDetailLevel > 2.0f ||
-			gfxSettings.screenX == 0 || gfxSettings.screenY == 0 || 
+			gfxSettings.screenX == 0 || gfxSettings.screenY == 0 ||
 			gfxSettings.advanced.mipLevel > 3 || gfxSettings.advanced.mipLevel < -1 ||
 			gfxSettings.advanced.entityMipLevel > 4 || gfxSettings.advanced.entityMipLevel < 0 ||
 			gfxSettings.gamma == 0)
@@ -1766,14 +1766,14 @@ static void finalizeRenderer(void)
 
 	// At this point rdr_caps are for the most part finalized. However, if some
 	// shaders fail to load then capabilities will be removed from rdr_caps.allowed_features
-	// So, it is a good time to log the system specs and to update the data used by 
+	// So, it is a good time to log the system specs and to update the data used by
 	// error/crash reporting in case we have any serious problems during the completion
 	// of the renderer initialization.
 	rdrPrintSystemSpecs(&systemSpecs);
 	expected_allowed = rdr_caps.allowed_features; // save this so we can detect if options changed
 
 	// Tell the render thread to complete initialization of the rendering system.
-	// Initialization and fundamental extension collection etc was began during 
+	// Initialization and fundamental extension collection etc was began during
 	// renderThreadStart which issued a DRAWCMD_RDRSETUP and blocked on completion
 	// This will also compile and load shaders as appropriate.
 	rdrQueueCmd(DRAWCMD_INIT);
@@ -1782,7 +1782,7 @@ static void finalizeRenderer(void)
 	// DRAWCMD_INIT will finalize and set rdr_caps.filled_in and we want
 	// subsequent access to that data to be sure to use the finalized data
 	// (e.g. logged system specs and gfxSetting preset adjustments)
-	
+
 	// In addition, blocking is required when the game is using TEX_ENV_COMBINE mode.
 	// If the OpenGL vanilla Tex Env Combiner stages are being used
 	// the setup descriptors are stored in custom '.tec' text files
@@ -1886,7 +1886,7 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
 		loadFonts();
 		loadend_printf("");
 	}
-	
+
 	fontInitCriticalSection();
 
 	return maximize;
@@ -1954,9 +1954,9 @@ void game_networkStart(void)
 
 void game_loadData(int isCostumeCreator)
 {
-	bool bNewAttribs = 0; 
+	bool bNewAttribs = 0;
 	PERFINFO_AUTO_START("top", 1);
-	
+
 	chareval_Init();
 	combateval_Init();
 
@@ -2055,7 +2055,7 @@ void game_loadData(int isCostumeCreator)
 		// Load menu definitions
 		load_MenuDefs();
 		load_MenuAnimations();
-		
+
 		if (!isCostumeCreator)
 		{
 			PERFINFO_AUTO_STOP_START("middle14", 1);
@@ -2132,7 +2132,7 @@ void someFilesHaveChanged(const char *relpath, int when)
 	if( isDevelopmentMode() && global_state.no_file_change_check_cmd_set != 1 )
 	{
 		global_state.no_file_change_check = 0;
-	}	
+	}
 }
 
 void checkForStartupExec()
@@ -2316,7 +2316,7 @@ static void game_updateThreadPriority()
 	{
 		if(GetForegroundWindow() == hwnd)
 		{
-			SetPriorityClass(GetCurrentProcess(), 
+			SetPriorityClass(GetCurrentProcess(),
 				game_state.priorityBoost ? ABOVE_NORMAL_PRIORITY_CLASS : NORMAL_PRIORITY_CLASS);
 		}
 		else
@@ -2379,7 +2379,7 @@ int game_mainLoop(int timer)
 		PERFINFO_AUTO_START("engine_update", 1);
 			engine_update();
 		PERFINFO_AUTO_STOP_CHECKED("engine_update");
-		
+
 		demoRecordClientInfo();
 
 		setAssertEntityName(controlledPlayerPtr() ? controlledPlayerPtr()->name : NULL);
@@ -2387,25 +2387,25 @@ int game_mainLoop(int timer)
 
 		PERFINFO_AUTO_START("others", 1);
 			PERFINFO_AUTO_START("FolderCacheQuery", 1);
-			
+
 				FolderCacheDoCallbacks(); // Check for directory changes
 				fileFreeOldZippedBuffers();
-			
+
 			PERFINFO_AUTO_STOP_START("checkOddball", 1);
-				
+
 				//odd ball things that never happen
  				checkOddball();
-				
+
 			PERFINFO_AUTO_STOP_START("checkLogoutProgress", 1);
-				
+
 				checkLogoutProgress();
-				
+
 			PERFINFO_AUTO_STOP_START("LWC_Tick", 1);
-				
+
 				LWC_Tick();
-				
+
 		PERFINFO_AUTO_STOP_CHECKED("others");
-		
+
 		// HEY YOU: Don't put anything after autoTimerTickEnd()!!!!!!
 
 // 		if(isDevelopmentMode())
@@ -2414,7 +2414,7 @@ int game_mainLoop(int timer)
 		endProfilingCPU();
 
 		autoTimerTickEnd();
-		
+
 		// Only do a forced full relight for one frame
 		game_state.forceFullRelight = 0;
 

@@ -3,7 +3,7 @@
 #include "ogl.h"
 #include "shadersATI.h"
 #include "renderUtil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "mathutil.h"
 
 	//
@@ -32,7 +32,7 @@
 
 	void atiFSColorBlendDual(void)
 	{
-		
+
 		fsColorBlendDual = glGenFragmentShadersATI(1); CHECKGL;
 		glBindFragmentShaderATI(fsColorBlendDual); CHECKGL;
 		glBeginFragmentShaderATI(); CHECKGL;
@@ -68,7 +68,7 @@
 											GL_REG_1_ATI, GL_NONE, GL_NONE); CHECKGL;
 
 		}
-	
+
 		glEndFragmentShaderATI(); CHECKGL;
 	}
 
@@ -77,7 +77,7 @@
 		fsAddGlow = glGenFragmentShadersATI(1); CHECKGL;
 		glBindFragmentShaderATI(fsAddGlow); CHECKGL;
 		glBeginFragmentShaderATI(); CHECKGL;
-		
+
 		if (0) {
 			atiFSGrey();
 		} else {
@@ -106,7 +106,7 @@
 			glAlphaFragmentOp1ATI(GL_MOV_ATI, GL_REG_0_ATI, GL_NONE,
 											GL_CON_3_ATI, GL_NONE, GL_NONE); CHECKGL;
 		}
-	
+
 		glEndFragmentShaderATI(); CHECKGL;
 	}
 
@@ -176,7 +176,7 @@
 											GL_ONE, GL_NONE, GL_NONE); CHECKGL;
 #endif
 		}
-		
+
 		glEndFragmentShaderATI(); CHECKGL;
 	}
 
@@ -191,7 +191,7 @@
 			atiFSGrey();
 		} else {
 			glSampleMapATI(GL_REG_2_ATI, GL_TEXTURE2, GL_SWIZZLE_STQ_ATI); CHECKGL; // bumpmap
-			glPassTexCoordATI(GL_REG_5_ATI, GL_TEXTURE3, GL_SWIZZLE_STR_ATI); CHECKGL; // halfway vector 
+			glPassTexCoordATI(GL_REG_5_ATI, GL_TEXTURE3, GL_SWIZZLE_STR_ATI); CHECKGL; // halfway vector
 
 			// H.H
 			glColorFragmentOp2ATI(GL_DOT3_ATI, GL_REG_0_ATI, GL_NONE, GL_SATURATE_BIT_ATI,
@@ -287,7 +287,7 @@
 			glColorFragmentOp2ATI(GL_MUL_ATI, GL_REG_3_ATI, GL_NONE, GL_NONE,
 											GL_REG_4_ATI, GL_RED, GL_NONE,
 											GL_REG_2_ATI, GL_ALPHA, GL_NONE); CHECKGL;
-		
+
 			glColorFragmentOp2ATI(GL_MUL_ATI, GL_REG_2_ATI, GL_NONE, GL_2X_BIT_ATI,
 											GL_REG_0_ATI, GL_NONE, GL_NONE,
 											GL_REG_1_ATI, GL_NONE, GL_NONE); CHECKGL;
@@ -308,7 +308,7 @@
 			//glColorFragmentOp2ATI(GL_MUL_ATI, GL_REG_0_ATI, GL_NONE, GL_SATURATE_BIT_ATI,
 			//	                              GL_REG_2_ATI, GL_NONE, GL_2X_BIT_ATI,
 			//								  GL_PRIMARY_COLOR_EXT, GL_NONE, GL_2X_BIT_ATI); CHECKGL;
-											  
+
 
 			glAlphaFragmentOp2ATI(GL_MUL_ATI, GL_REG_0_ATI, GL_NONE,
 											GL_REG_2_ATI, GL_NONE, GL_NONE,
@@ -349,8 +349,8 @@
 	// r0 = H.H
 	glColorFragmentOp2ATI(GL_DOT3_ATI, GL_REG_0_ATI, GL_NONE, GL_SATURATE_BIT_ATI,
 									GL_REG_5_ATI, GL_NONE, GL_NONE,
-									GL_REG_5_ATI, GL_NONE, GL_NONE); CHECKGL;   //halfWayTS 
-	
+									GL_REG_5_ATI, GL_NONE, GL_NONE); CHECKGL;   //halfWayTS
+
 	//A: r0 = (r4.b * r4.b) * 4   -> 4Lz^2
 	glAlphaFragmentOp2ATI(GL_MUL_ATI, GL_REG_0_ATI, GL_4X_BIT_ATI | GL_SATURATE_BIT_ATI,
 									GL_REG_4_ATI, GL_BLUE, GL_NONE,     //lightDirTS
@@ -361,7 +361,7 @@
 									GL_REG_5_ATI, GL_NONE, GL_NONE,			 //halfWayTS
 									GL_REG_0_ATI, GL_NONE, GL_COMP_BIT_ATI,
 									GL_REG_5_ATI, GL_NONE, GL_2X_BIT_ATI); CHECKGL;   //halfWayTS
-	
+
 	//A: r1 = r0 * c0 -> 4Lz^2 * gloss
 	glAlphaFragmentOp2ATI(GL_MUL_ATI, GL_REG_1_ATI, GL_NONE,
 									GL_REG_0_ATI, GL_NONE, GL_NONE,
@@ -376,7 +376,7 @@
 	glColorFragmentOp2ATI(GL_DOT3_ATI, GL_REG_1_ATI, GL_NONE, GL_SATURATE_BIT_ATI,
 									GL_REG_1_ATI, GL_NONE, GL_NONE,
 									GL_REG_2_ATI, GL_NONE, GL_BIAS_BIT_ATI | GL_2X_BIT_ATI); CHECKGL;
-	
+
 	//A: r1 = r1 * r2 -> 4Lz^2 * gloss * bumpmap.w
 	glAlphaFragmentOp2ATI(GL_MUL_ATI, GL_REG_1_ATI, GL_NONE,
 									GL_REG_1_ATI, GL_NONE, GL_NONE,
@@ -408,12 +408,12 @@
 									GL_REG_0_ATI, GL_NONE, GL_NONE,
 									GL_REG_0_ATI, GL_ALPHA, GL_NONE); CHECKGL;
 
-	glSampleMapATI(GL_REG_0_ATI, GL_TEXTURE0, GL_SWIZZLE_STQ_ATI); CHECKGL; //Bizarrely doesn't care which texture you declare 
+	glSampleMapATI(GL_REG_0_ATI, GL_TEXTURE0, GL_SWIZZLE_STQ_ATI); CHECKGL; //Bizarrely doesn't care which texture you declare
 	// JE: the texture arguments specifie the texture *coordinates* not the texture value (which is implicty from the GL_REGx parameter)
 	glSampleMapATI(GL_REG_1_ATI, GL_TEXTURE1, GL_SWIZZLE_STQ_ATI); CHECKGL; //""
 	glPassTexCoordATI(GL_REG_3_ATI, GL_REG_3_ATI, GL_SWIZZLE_STR_ATI); CHECKGL; //Preserves register contents across passes
 	glPassTexCoordATI(GL_REG_4_ATI, GL_REG_4_ATI, GL_SWIZZLE_STR_ATI); CHECKGL; //""
-	
+
 	// r2 = lerp(r1, c3, c4)
 	glColorFragmentOp3ATI(GL_LERP_ATI, GL_REG_2_ATI, GL_NONE, GL_NONE,
 									GL_REG_1_ATI, GL_NONE, GL_NONE,
@@ -440,7 +440,7 @@
 									GL_REG_0_ATI, GL_ALPHA, GL_NONE,
 									GL_REG_3_ATI, GL_NONE, GL_NONE,
 									GL_REG_2_ATI, GL_NONE, GL_NONE); CHECKGL;
-	
+
 	// r0 = r0 + r4
 	glColorFragmentOp2ATI(GL_ADD_ATI, GL_REG_0_ATI, GL_NONE, GL_NONE,
 									GL_REG_0_ATI, GL_NONE, GL_NONE,
@@ -449,13 +449,13 @@
 	//A: r0 = c3 * r1
 	glAlphaFragmentOp2ATI(GL_MUL_ATI, GL_REG_0_ATI, GL_NONE,
 									GL_CON_3_ATI, GL_NONE, GL_NONE, //Color0
-									GL_REG_1_ATI, GL_NONE, GL_NONE); CHECKGL;								
+									GL_REG_1_ATI, GL_NONE, GL_NONE); CHECKGL;
 		}
-	
+
 		glEndFragmentShaderATI(); CHECKGL;
 	}
 
-	
+
 
 	F32 atiAmbientColorScaleFloat(F32 x) {
 		// From empirical data:

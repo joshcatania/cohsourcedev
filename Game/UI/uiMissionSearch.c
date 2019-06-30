@@ -2,7 +2,7 @@
 #include "MissionSearch.h"
 #include "MissionServer/missionserver_meta.h"
 
-#include "assert.h"
+#include "SuperAssert.h"
 #include "timing.h"
 #include "earray.h"
 #include "EString.h"
@@ -23,7 +23,7 @@
 #include "uiMissionComment.h"
 
 #include "entity.h"
-#include "player.h" 
+#include "player.h"
 #include "entPlayer.h"
 #include "cmdgame.h"
 #include "BodyPart.h"
@@ -94,7 +94,7 @@ typedef struct MissionSearchLine
 	PlayerCreatedStoryArc *arc;	// for owned  arcs
 
 	MissionRating myVote;		//how I voted on this arc
-	
+
 	MissionSearchInfo rating;
 	int total_votes;
 	int keyword_votes;
@@ -122,11 +122,11 @@ typedef struct MissionSearchLine
 	char *formattedAuthor;
 	char *formattedSummary;
 	char *formattedVillains;
-	
+
 
 	SMFBlock *pBlock;
 	MissionSearchGuestBio bio;
-	
+
 	char *section_header;		// this line is not a story arc, used for special cs searches
 
 } MissionSearchLine;
@@ -244,7 +244,7 @@ int MissionSearch_publishWait()
 	int now;
 	int secondsLeft=0;
 
-	now = timerSecondsSince2000();	
+	now = timerSecondsSince2000();
 	for(i = 0; i <MISSIONSEARCH_PUBLISHREQUESTS; i++)
 	{
 		int left = MISSIONSEARCH_PUBLISHPERIOD-(now-s_publishRecentRequests[i]);
@@ -280,15 +280,15 @@ static void MissionSearch_searchRequestUpdate()
 {
 	//only send if we've got something and it's time.
 	if(!s_searchWaiting
-		|| !playerCreatedStoryArc_rateLimiter(s_searchRecentRequests, 
+		|| !playerCreatedStoryArc_rateLimiter(s_searchRecentRequests,
 									MISSIONSEARCH_SEARCHREQUESTS,
 									MISSIONSEARCH_SEARCHPERIOD,
 									timerSecondsSince2000()))
 		return;
 
-	missionserver_game_requestSearchPage(s_searchRequest.category, 
-											s_searchRequest.context, 
-											s_searchRequest.page, 
+	missionserver_game_requestSearchPage(s_searchRequest.category,
+											s_searchRequest.context,
+											s_searchRequest.page,
 											s_searchRequest.playedFilter,
 											s_searchRequest.levelFilter,
 											s_searchRequest.arc_author );
@@ -298,8 +298,8 @@ static void MissionSearch_searchRequestUpdate()
 void MissionSearch_publishRequestUpdate()
 {
 	//only send if we've got something and it's time.
-	if(!s_publishWaiting 
-		|| !playerCreatedStoryArc_rateLimiter(s_publishRecentRequests, 
+	if(!s_publishWaiting
+		|| !playerCreatedStoryArc_rateLimiter(s_publishRecentRequests,
 									MISSIONSEARCH_PUBLISHREQUESTS,
 									MISSIONSEARCH_PUBLISHPERIOD,
 									timerSecondsSince2000()))
@@ -351,7 +351,7 @@ void MissionSearch_pageNavPosition(PageNavigator *p, F32 x, F32 y, F32 z)
 #define MSSEARCH_PNAV_MAXPAGEDISPLAY 30
 F32 MissionSearch_pageNavNumber(int number, F32 x, F32 y, F32 z, CBox *box, F32 sc, F32 wd, F32 ht, int selected)
 {
-	
+
 	if(selected)
 		font_color(CLR_MM_TITLE_OPEN, CLR_MM_TITLE_OPEN);
 	else
@@ -381,7 +381,7 @@ int MissionSearch_pageNavDisplay(PageNavigator *p, F32 sc)
 	if(!p || p->nPages < 2)
 		return 0;
 
- 	p->changed = 0; 
+ 	p->changed = 0;
 
 	font(&game_12);
 	font_color(CLR_MM_TITLE_OPEN&0xffffff88, CLR_MM_TITLE_OPEN&0xffffff88);
@@ -396,7 +396,7 @@ int MissionSearch_pageNavDisplay(PageNavigator *p, F32 sc)
 		}
 		totalDisplayWidth+=charWidths[i];
 	}
-	
+
 
 	//estimate the number of pages we can show on the screen
 	totalDisplayWidth += str_wd(&game_12, sc, sc, "MissionSearchPages") +2*PIX3;
@@ -410,7 +410,7 @@ int MissionSearch_pageNavDisplay(PageNavigator *p, F32 sc)
 	cprntEx( x , p->y+p->ht+ 2*PIX3, p->z, sc, sc, 0, "MissionSearchPages" );
 	x += str_wd(&game_12, sc, sc, "MissionSearchPages") +2*PIX3;
 
-	if(p->page >= 4) 
+	if(p->page >= 4)
 	{
 		F32 width;
 		cprntEx( x , p->y+p->ht+ 2*PIX3, p->z, sc, sc, 0, PAGENAV_PREVTEXT );
@@ -428,7 +428,7 @@ int MissionSearch_pageNavDisplay(PageNavigator *p, F32 sc)
 		}
 	}
 
-	
+
 	for(i = 0; i < ARRAY_SIZE(page_offset); i++)
 	{
 		if( charWidths[i] )
@@ -481,7 +481,7 @@ static MissionSearchComboItem s_alignmentList[] = {
 	{ kMorality_Rogue,		"MissionSearchRogue"		},
 	{ kMorality_Neutral,	"MissionSearchNeutral"	},
 	{ kMorality_Vigilante,	"MissionSearchVigilante"		},
-	{ kMorality_Good,		"MissionSearchGood"	},	
+	{ kMorality_Good,		"MissionSearchGood"	},
 };
 
 static MissionSearchComboItem s_playedFilterList[] = {
@@ -814,7 +814,7 @@ void missionsearch_UpdateSearchParams(int clear)
 			}
 			estrConcatStaticCharArray(&s_searchSummary, "; ");
 			//FIXUP FOR LOGICAL RESULTS FROM MISSION SERVER
-			if( s_MissionSearch.honors & (1 << MISSIONHONORS_DEVCHOICE) || s_MissionSearch.honors & (1 << MISSIONHONORS_HALLOFFAME ) ) 
+			if( s_MissionSearch.honors & (1 << MISSIONHONORS_DEVCHOICE) || s_MissionSearch.honors & (1 << MISSIONHONORS_HALLOFFAME ) )
 				s_MissionSearch.honors |= (1 << MISSIONHONORS_DC_AND_HOF);
 			if(s_MissionSearch.honors & ~(1 << MISSIONHONORS_FORMER_DC))
 				s_MissionSearch.rating |= (1 << MISSIONRATING_MAX_STARS_PROMOTED);
@@ -1002,7 +1002,7 @@ void missionsearch_UpdateSearchParams(int clear)
 	}
 
 
-	if(s_viewedFilter) 
+	if(s_viewedFilter)
 	{
 		if(clear)
 			s_viewedFilter = 0;
@@ -1137,7 +1137,7 @@ static int s_replaceCharWithWord(char **estr, char charIn, char *wordOut)
 		int nextLetterIndex = currentLetterIndex+ strlen(wordOut) ;
 		estrRemove(estr, currentLetterIndex, 1);
 		estrInsert(estr, currentLetterIndex, wordOut, strlen(wordOut));
-		
+
 		position = strchr(&((*estr)[nextLetterIndex]), charIn);
 	}
 	return found;
@@ -1183,7 +1183,7 @@ static void s_highlightWord(char **estr, char * positions, char mark, char *star
 			while(positions[i] ==mark && i < length)
 			{
 				i++;
-				
+
 			}
 			estrInsert(estr, i+charactersInserted, end, endLength);
 			charactersInserted += endLength;
@@ -1196,8 +1196,8 @@ void missionsearch_CheckLineAgainstSearch(MissionSearchLine *line)
 	U32 tempVGroups[MISSIONSEARCH_VG_BITFIELDSIZE] = {0};
 	line->show = 1;
 	if(!line->estrFull)
-		estrCreate(&line->estrFull); 
-	estrClear(&line->estrFull); 
+		estrCreate(&line->estrFull);
+	estrClear(&line->estrFull);
 	line->idMatch= line->authorMatch= line->titleMatch= line->villainMatch= line->summaryMatch= 0;
 
 
@@ -1214,22 +1214,22 @@ void missionsearch_CheckLineAgainstSearch(MissionSearchLine *line)
 		if(!line->formattedTitle)
 			estrCreate(&line->formattedTitle);
 		else
-			estrClear(&line->formattedTitle); 
+			estrClear(&line->formattedTitle);
 		if(!line->formattedAuthor)
 			estrCreate(&line->formattedAuthor);
 		else
-			estrClear(&line->formattedAuthor); 
+			estrClear(&line->formattedAuthor);
 		if(!line->formattedSummary)
 			estrCreate(&line->formattedSummary);
 		else
-			estrClear(&line->formattedSummary); 
+			estrClear(&line->formattedSummary);
 		if(!line->formattedVillains)
 			estrCreate(&line->formattedVillains);
 		else
-			estrClear(&line->formattedVillains); 
+			estrClear(&line->formattedVillains);
 
 		estrPrintEString(&temp, s_searchTextRequested ? s_searchTextRequested : smf_DecodeAllCharactersGet(smfSearch->outputString));
-		n = temp; 
+		n = temp;
 		estrPrintEString(&line->formattedAuthor, smf_DecodeAllCharactersGet(line->header.author));
 		estrPrintEString(&tempAuthor, line->formattedAuthor);
 		estrPrintEString(&line->formattedTitle, smf_DecodeAllCharactersGet(line->header.title));
@@ -1258,7 +1258,7 @@ void missionsearch_CheckLineAgainstSearch(MissionSearchLine *line)
 				quote = !quote;
 				if(!n[1])
 				{
-					n = NULL; 
+					n = NULL;
 					break;
 				}
 			}
@@ -1308,19 +1308,19 @@ void missionsearch_CheckLineAgainstSearch(MissionSearchLine *line)
 		line->show = 1;
 	}
 
-	if( s_MissionSearch.morality && 
+	if( s_MissionSearch.morality &&
 		!(line->header.morality&s_MissionSearch.morality) )
 	{
 		line->show = 0;
-	}		
+	}
 
-	if( s_MissionSearch.rating && 
+	if( s_MissionSearch.rating &&
 		!(s_MissionSearch.rating & (1 << line->rating.rating)) )
 	{
 		line->show = 0;
 	}
 
-	if( s_MissionSearch.honors && 
+	if( s_MissionSearch.honors &&
 		!(s_MissionSearch.honors & (1 << line->rating.honors)) )
 	{
 		line->show = 0;
@@ -1332,19 +1332,19 @@ void missionsearch_CheckLineAgainstSearch(MissionSearchLine *line)
 		//continue;
 	}
 
-	if( s_MissionSearch.arcLength && 
+	if( s_MissionSearch.arcLength &&
 		!BitFieldAnyAnd( &s_MissionSearch.arcLength, &line->header.arcLength, 1))
 	{
 		line->show = 0;
 	}
 
-	if( s_MissionSearch.missionTypes && 
+	if( s_MissionSearch.missionTypes &&
 		!BitFieldAnyAnd( &s_MissionSearch.missionTypes, &line->header.missionType, 1))
 	{
 		line->show = 0;
 	}
 
-	if( BitFieldCount( s_MissionSearch.villainGroups , MISSIONSEARCH_VG_BITFIELDSIZE, 1 ) && 
+	if( BitFieldCount( s_MissionSearch.villainGroups , MISSIONSEARCH_VG_BITFIELDSIZE, 1 ) &&
 		BitFieldAnyAnd( s_MissionSearch.villainGroups, line->header.villaingroups, MISSIONSEARCH_VG_BITFIELDSIZE) )
 	{
 		line->show = 1;
@@ -1361,7 +1361,7 @@ void missionsearch_RefineSearch(MissionSearchLine **lines)
 	int i;
 	MissionSearchLine *line;
 	int size = eaSize(&lines);
-	
+
 
 	for(i = 0; i < size; i++)
 	{
@@ -1438,7 +1438,7 @@ static MissionSearchLine* s_findCachedSearchLine(int id)
 static void updateMissionSearchLine( MissionSearchLine *pLine )
 {
 	int i, bit_cursor = -1, first=1;
-	char * pchText; 
+	char * pchText;
 
 	if(!pLine->estrHeader)
 		estrCreate(&pLine->estrHeader);
@@ -1485,7 +1485,7 @@ static void updateMissionSearchLine( MissionSearchLine *pLine )
 	{
 		char * word[3];
 		int num = 0;
-		
+
 		for( i = 0; i < 32 && num < 3; i++ )
 		{
 			if( pLine->keyword_votes & (1<<i) )
@@ -1528,8 +1528,8 @@ static void updateMissionSearchLine( MissionSearchLine *pLine )
 	if(pLine->id && pLine->date_created)
 	{
 		//first published
-		estrConcatf(&pLine->estrFull, 
-			"<font outline=1 color=ArchitectTitle>%s: </font><font outline=0 color=architect>%s</font><br>", 
+		estrConcatf(&pLine->estrFull,
+			"<font outline=1 color=ArchitectTitle>%s: </font><font outline=0 color=architect>%s</font><br>",
 			textStd("MissionSearchDate"),
 			timerMakeDateStringFromSecondsSince2000NoSeconds(pLine->date_created));
 	}
@@ -1544,7 +1544,7 @@ static void updateMissionSearchLine( MissionSearchLine *pLine )
 	estrConcatf( &pLine->estrFull, "<font outline=1 color=ArchitectTitle>%s: </font><font outline=0 color=architect>%s</font><br>", textStd("MissionSearchAlignment"), pchText  );
 
 	//missions
-	for( i = 0; i < eaSize(&pLine->header.missionDesc); i++ ) 
+	for( i = 0; i < eaSize(&pLine->header.missionDesc); i++ )
 	{
 		estrConcatf( &pLine->estrFull, "<font outline=1 color=ArchitectTitle>%s: </font>",textStd("MissionSearchMissionNum", i+1) );
 		if( !pLine->header.missionDesc[i]->size )
@@ -1553,7 +1553,7 @@ static void updateMissionSearchLine( MissionSearchLine *pLine )
 		}
 		else
 		{
-			estrConcatf( &pLine->estrFull, "<font outline=0 color=architect>%s </font>", 
+			estrConcatf( &pLine->estrFull, "<font outline=0 color=architect>%s </font>",
 				textStd("MissionSearchDesc", StaticDefineIntRevLookupDisplay(MapLengthEnum, pLine->header.missionDesc[i]->size), pLine->header.missionDesc[i]->min, pLine->header.missionDesc[i]->max  )  );
 		}
 		if( pLine->header.missionDesc[i]->detailTypes )
@@ -1601,12 +1601,12 @@ static void updateMissionSearchLine( MissionSearchLine *pLine )
 
 	//description
  	estrConcatf( &pLine->estrFull, "<font outline=1 color=ArchitectTitle>%s: </font><font outline=0 color=architect>%s</font>", textStd("MissionSearchSummary"), (pLine->formattedSummary)?(pLine->formattedSummary):smf_EncodeAllCharactersGet(pLine->header.summary) );
-		
-	// Status 
+
+	// Status
  	estrConcatf(&pLine->estrFull, "<br><font outline=1 color=ArchitectTitle>%s: </font><font outline=0 color=architect>%s</font>", textStd("MissionSearchStatus"), textStd(StaticDefineIntRevLookupDisplay(ArcStatusEnum, pLine->header.arcStatus)) );
 
 	// Warnings
-	if( pLine->header.hazards ) 
+	if( pLine->header.hazards )
 	{
 		int comma = 0;
 
@@ -1696,7 +1696,7 @@ static MissionSearchTab* s_myArcsTab(void)
 }
 
 int missionsearch_sort( const MissionSearchLine ** p1, const MissionSearchLine **p2 )
-{ 
+{
 	int reverser = 1;
 	int sort_type = ABS(s_sort_idx);
 
@@ -1710,13 +1710,13 @@ int missionsearch_sort( const MissionSearchLine ** p1, const MissionSearchLine *
 
 	switch( sort_type)
 	{
-		xcase kMissionSearchSort_Name:	
+		xcase kMissionSearchSort_Name:
 	{
 		int val = strcmp( (*p1)->header.title, (*p2)->header.title );
 		if( val )
 			return reverser*val;
 	}
-	xcase kMissionSearchSort_ArcID:	
+	xcase kMissionSearchSort_ArcID:
 	{
 		if( (*p1)->id != (*p2)->id )
 			return (-1*reverser*( (*p2)->id - (*p1)->id ) );
@@ -1745,7 +1745,7 @@ int missionsearch_sort( const MissionSearchLine ** p1, const MissionSearchLine *
 		if( (*p1)->header.missionType != (*p2)->header.missionType )
 			return (reverser*( (*p2)->header.missionType - (*p1)->header.missionType ) );
 	}
-	case kMissionSearchSort_Date:	
+	case kMissionSearchSort_Date:
 	default:
 		{
 			if( (*p1)->id != (*p2)->id )
@@ -2152,10 +2152,10 @@ void missionsearch_requestTab(MissionSearchTab *tab)
 	int pageIdx = tab->page;	//we may send the idx as a negative if we've flipped the sort
 	U32 oldBan;
 	estrClear(&tab->context);
-	s_setSearchSort(&s_MissionSearch); 
+	s_setSearchSort(&s_MissionSearch);
 	if(s_sort_idx < 0)
 	{
-		pageIdx = -1*(tab->page+1);	
+		pageIdx = -1*(tab->page+1);
 	}
 	oldBan = s_MissionSearch.ban;
 	if(!playerPtr()->access_level)
@@ -2226,7 +2226,7 @@ static F32 missionsearch_sortButton( F32 x, F32 y, F32 z, F32 sc, MissionSearchS
 		ty = y - 12*sc;
 		//wd += 12*sc;
 	}
-	else if( s_sort_idx == eSort) 
+	else if( s_sort_idx == eSort)
 	{
 		arrow = atlasLoadTexture( "chat_separator_arrow_up.tga" );
 		ty = y - 14*sc;
@@ -2287,7 +2287,7 @@ int missionsearch_MissionLineBreak(char *title, float x, float y, float z, float
 	int ret = D_NONE;
 
 	y += 18*sc;
- 
+
 	if(title)
 	{
  		font(&game_18);
@@ -2304,7 +2304,7 @@ int missionsearch_MissionLineBreak(char *title, float x, float y, float z, float
 
 		font(&gamebold_12);
 		font_color(CLR_MM_TEXT ,CLR_MM_TEXT);
- 		cprntEx(x + twd - str_wd(font_grp,sc,sc,"MMSortBy") - 2*PIX3*sc, y, z+1, sc, sc, 0, "MMSortBy" );	
+ 		cprntEx(x + twd - str_wd(font_grp,sc,sc,"MMSortBy") - 2*PIX3*sc, y, z+1, sc, sc, 0, "MMSortBy" );
 	}
 
 
@@ -2320,7 +2320,7 @@ static void s_unpublishArc(void *arcid)
 	{
 		missionserver_game_unpublishArc(line->id);
 		line->deleteme = 1;
-		
+
 	}
 }
 
@@ -2345,7 +2345,7 @@ float missionsearch_LineButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F3
 		AtlasTex *honor = 0, *honor2 = 0;
 		int found = 0;
 		char * text = 0;
-		
+
 		if(line->id)
 		{
 			if(line->rating.invalidated || (line->owned && line->rating.playableErrors))
@@ -2385,7 +2385,7 @@ float missionsearch_LineButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F3
 			found++;
 		else
 			honor = atlasLoadTexture("Dev_Choice_Icon.tga");
-			
+
  		if( honor2 )
 		{
 			origX = x;
@@ -2393,7 +2393,7 @@ float missionsearch_LineButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F3
 			display_sprite( honor2, x, y+2*PIX3*sc , z, sc, sc, 0xffffffff );
 			x = origX;
 		}
-		 
+
  		if(honor)
  		{
  			x +=wd - buttonwd - (honor2?2:1)*honor->width*sc - (honor2?2:1)*PIX3*sc;
@@ -2506,7 +2506,7 @@ float missionsearch_LineButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F3
 	if(selected && (tab->category == MISSIONSEARCH_MYARCS || playerPtr()->access_level))
 	{
 		int disabled = 0;
-		
+
 		if(tab->category == MISSIONSEARCH_MYARCS)
 			disabled = !((line->arc) || line->id);
 		else
@@ -2716,7 +2716,7 @@ F32 missionsearch_AdminButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F32
 		}
 		x += buttonwd + PIX3*sc;
 
-		if(D_MOUSEHIT == drawStdButtonTopLeft(x, y, z+1, buttonwd, buttonht, 0x222222ff, "MissionSearchDevChoice", sc, 
+		if(D_MOUSEHIT == drawStdButtonTopLeft(x, y, z+1, buttonwd, buttonht, 0x222222ff, "MissionSearchDevChoice", sc,
 			line->rating.honors == MISSIONHONORS_DEVCHOICE || line->rating.honors == MISSIONHONORS_DC_AND_HOF ) )
 		{
 			missionserver_changeHonors(line->id, MISSIONHONORS_DEVCHOICE );
@@ -2724,8 +2724,8 @@ F32 missionsearch_AdminButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F32
 			missionserver_game_requestArcInfo(line->id);
 		}
 		x += buttonwd + PIX3*sc;
-		
-		if(D_MOUSEHIT == drawStdButtonTopLeft(x, y, z+1, buttonwd, buttonht, 0x222222ff, "MissionSaveToLocal", sc, 
+
+		if(D_MOUSEHIT == drawStdButtonTopLeft(x, y, z+1, buttonwd, buttonht, 0x222222ff, "MissionSaveToLocal", sc,
 			0 ) )
 		{
 			line->saveLocally = 1;
@@ -2774,9 +2774,9 @@ static F32 s_drawLineFlags(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 wd
 	if(!hover)
 		alphaMask = 0xffffff99;
 
-	
+
 	//first line: title
-	//first line: title 
+	//first line: title
 	font(&game_14);
 	font_color(CLR_MM_TITLE_OPEN,CLR_MM_TITLE_OPEN);
 	sprintf(buffer, "%s ", pLine->header.title);
@@ -2883,7 +2883,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 
 	if(!block)
 		block = smfBlock_Create();
-	
+
 	font(&game_14);
 	font_color(CLR_MM_TITLE_OPEN,CLR_MM_TITLE_OPEN);
 
@@ -2904,7 +2904,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 		cprntEx( x, y +height, z, sc, sc, 0, buffer );
 	}
 	clipperPop();
-	
+
 	font(&game_12);
 	font_outl(0);
 	if(open)
@@ -2950,7 +2950,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 		byWidth = str_wd(&game_12, sc, sc, buffer);
 	}
 
-   	BuildCBox( &author_box, x, y+height-15*sc, byWidth-5*sc, 15*sc ); 
+   	BuildCBox( &author_box, x, y+height-15*sc, byWidth-5*sc, 15*sc );
 	//drawBox(&author_box, z, CLR_RED, 0 );
 	if( mouseCollision(&author_box) && pLine->id )
 	{
@@ -2975,7 +2975,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 		char *pchText = 0;
 		F32 tempWd = 0;
 		AtlasTex *flag = 0;
-		
+
 		for( i = ARRAY_SIZE(s_lengthList)-1; i >=0; i-- )
 		{
 			if( pLine->header.arcLength & (1<<s_lengthList[i].ID) )
@@ -3011,7 +3011,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 		{
 			smfTitle = smfBlock_Create();
 		}
-		smf_SetFlags(smfTitle, SMFEditMode_ReadWrite, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 128, SMFScrollMode_InternalScrolling, 
+		smf_SetFlags(smfTitle, SMFEditMode_ReadWrite, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 128, SMFScrollMode_InternalScrolling,
 			SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 
 		//check for the actual image.  If it's there, use it.  Otherwise...
@@ -3027,7 +3027,7 @@ static int s_drawLineHeader(MissionSearchLine *pLine, F32 x, F32 y, F32 z, F32 w
 		height +=MAX(smf_Display(smfTitle, x+(bioImage->width+2*PIX3)*sc, y+height+PIX3*sc, z, wd-(bioImage->width+PIX3)*sc, 0, 0, 0, &s_taMissionSearch, 0),
 						(bioImage->height+2*PIX3)*sc);
 	}
-		
+
 	return height+PIX3*sc;
 }
 
@@ -3060,7 +3060,7 @@ static F32 s_drawMatches(MissionSearchLine *line,F32 x,F32 y,F32 z,F32 sc)
 	x+=str_wd(&game_9, sc, sc, textStd("MissionSearchMatches"))+PIX3*sc;
 	//Title,
 	x = s_drawMatch(line,x,y, z, sc, textStd("MissionSearchMatchesTitle"), line->titleMatch, 1);
-	
+
 	//Author,
 	x = s_drawMatch(line,x,y, z, sc, textStd("MissionSearchMatchesAuthor"), line->authorMatch, 1);
 
@@ -3096,23 +3096,23 @@ F32 missionsearch_SetGuestAuthorUi(MissionSearchLine *line, F32 x, F32 y, F32 z,
 	titleWd = MAX(titleWd, str_wd(&game_12, sc, sc, "GuestAuthorImage"));
 	titleWd = MAX(titleWd, str_wd(&game_12, sc, sc, "GuestAuthorBio"));
 	titleWd += PIX3;
-	
+
 	//Name
 	cprntEx( x, y+20, z+2, sc, sc, 0, "GuestAuthorName");
 	drawTextEntryFrame(titleWd+ x+PIX3, y, z+2, wd-PIX3-titleWd, 20, sc, 0 );
-	smf_SetFlags(smfAuthorName, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling, 
-		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1); 
+	smf_SetFlags(smfAuthorName, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling,
+		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 	smf_SetScissorsBox(smfAuthorName, titleWd+x+PIX3, y, wd-titleWd-PIX3, 20 );
 	smf_Display(smfAuthorName, titleWd+x+PIX3, y, z+2, wd-PIX3-titleWd, 0, 0, 0, &s_taMissionSearchInput, 0);
 	smf_ClearScissorsBox(smfAuthorName);
 	y+= 20 + PIX3;
 
 	//Image
-	
+
 	cprntEx( x, y+20, z+2, sc, sc, 0, "GuestAuthorImage");
 	drawTextEntryFrame( x+PIX3+titleWd, y, z+2, wd-PIX3-titleWd, 20, sc, 0 );
-	smf_SetFlags(smfAuthorImage, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling, 
-		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1); 
+	smf_SetFlags(smfAuthorImage, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling,
+		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 	smf_SetScissorsBox(smfAuthorImage, titleWd+x+PIX3, y, wd-titleWd-PIX3, 20 );
 	smf_Display(smfAuthorImage, x+PIX3+titleWd, y, z+2, wd-PIX3-titleWd, 0, 0, 0, &s_taMissionSearchInput, 0);
 	smf_ClearScissorsBox(smfAuthorImage);
@@ -3121,8 +3121,8 @@ F32 missionsearch_SetGuestAuthorUi(MissionSearchLine *line, F32 x, F32 y, F32 z,
 	//Bio
 	cprntEx( x, y+20, z+2, sc, sc, 0, "GuestAuthorBio");
 	drawTextEntryFrame( x+PIX3+titleWd, y, z+2, wd-PIX3-titleWd, 100, sc, 0 );
-	smf_SetFlags(smfAuthorBio, SMFEditMode_ReadWrite, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 99999999, SMFScrollMode_InternalScrolling, 
-		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1); 
+	smf_SetFlags(smfAuthorBio, SMFEditMode_ReadWrite, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 99999999, SMFScrollMode_InternalScrolling,
+		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 	smf_SetScissorsBox(smfAuthorBio, titleWd+x+PIX3, y, wd-titleWd-PIX3, 100 );
 	smf_Display(smfAuthorBio, x+PIX3+titleWd, y, z+2, wd-PIX3-titleWd, 100, 0, 0, &s_taMissionSearchInput, 0);
 	smf_ClearScissorsBox(smfAuthorBio);
@@ -3191,7 +3191,7 @@ int missionsearch_MissionLine(MissionSearchLine *line, int selected, float x, fl
 	{
 		F32 yOffset = s_drawLineHeader(line, x+20*sc, matchHeight +*y+PIX3*sc, z+2, wd-220*sc, sc, selected);
  		ht += PIX3*sc + yOffset + smf_ParseAndDisplay( line->pBlock, str, x+20*sc, matchHeight+*y+ yOffset+PIX3*sc, z+2, wd-220*sc, 0, 0, 0, &s_taMissionSearch, NULL, 0, 0);
-		
+
 	}
 	else
 		ht += PIX3*sc + s_drawLineHeader(line, x+20*sc, ht+*y+PIX3*sc, z+2, wd-220*sc, sc, selected);
@@ -3220,12 +3220,12 @@ int missionsearch_MissionLine(MissionSearchLine *line, int selected, float x, fl
 		float ht_butt = matchHeight+ missionsearch_LineButtons(line, x + wd - 220*sc, matchHeight+*y, z, 200*sc, ht, sc, selected );
 		MAX1(ht, ht_butt);
 		if(selected)
-			ht += htadmin = missionsearch_AdminButtons( line, x+10*sc, *y+ht, z, wd-2*10*sc, ht, sc ); 
+			ht += htadmin = missionsearch_AdminButtons( line, x+10*sc, *y+ht, z, wd-2*10*sc, ht, sc );
 	}
 	ht += sc*PIX3;
 	if(line->settingGuestAuthor)
 	{
-		ht+= sc*PIX3 + missionsearch_SetGuestAuthorUi( line, x+10*sc, *y+ht, z, wd-2*10*sc, ht, sc ); 
+		ht+= sc*PIX3 + missionsearch_SetGuestAuthorUi( line, x+10*sc, *y+ht, z, wd-2*10*sc, ht, sc );
 	}
 
 
@@ -3241,13 +3241,13 @@ int missionsearch_MissionLine(MissionSearchLine *line, int selected, float x, fl
 		borderColor = CLR_MM_SEARCH_HALLOFFAME;
 	else if(line->rating.unpublished)
 		borderColor = 0x00000088;
-	
+
 
 	BuildCBox(&box, x, *y, wd, ht);
 	hover = mouseCollision(&box);
 	if(selected || hover)
 	{
-		if( color == 0x224e4eff ) 
+		if( color == 0x224e4eff )
 			color = 0x2d5f5fff;
 		else
 			color |= 0x99;
@@ -3292,7 +3292,7 @@ static int missionsearc_NavTab( MissionSearchTab *tab, F32 x, F32 y, F32 z, F32 
 
  	if(!smfTitle)
 	{
-		smfTitle = smfBlock_Create(); 
+		smfTitle = smfBlock_Create();
 	}
 	smf_SetFlags(smfTitle, SMFEditMode_Unselectable, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
@@ -3316,7 +3316,7 @@ static int missionsearc_NavTab( MissionSearchTab *tab, F32 x, F32 y, F32 z, F32 
 		frame_side = atlasLoadTexture("TabOverlap_36px_frame_mid_side");
 		frame_top = atlasLoadTexture("TabOverlap_36px_frame_mid_top");
 		side = atlasLoadTexture("TabOverlap_36px_mid_side");
-		top = atlasLoadTexture("TabOverlap_36px_mid_top"); 
+		top = atlasLoadTexture("TabOverlap_36px_mid_top");
 		back = atlasLoadTexture("white.tga");
 	}
 
@@ -3421,7 +3421,7 @@ static F32 s_drawSingleToggleCheckBox(float x, float y, float z, float sc, Missi
 	drawMMCheckBox(x, y, z+1, sc, textStd(item1->name), &selected, CLR_MM_TITLE_OPEN, CLR_MM_BUTTON,
 		CLR_MM_TITLE_LIT, CLR_MM_BUTTON_LIT, &wd, &ht);
 	x+=wd+sc*PIX3;
-	
+
 	(*filter)&=~mask;
 	if(selected)
 	{
@@ -3451,8 +3451,8 @@ static int missionsearch_displayRefinements( float *x, float *y, float z, float 
 	if(availableSpace < searchInputWd)
 		searchInputWd = availableSpace;
 	refinementEntryX = (*box).lx + PIX3*sc + 10*sc;
-	smf_SetFlags(smfSearch, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling, 
-		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1); 
+	smf_SetFlags(smfSearch, SMFEditMode_ReadWrite, SMFLineBreakMode_SingleLine, 0, 128, SMFScrollMode_InternalScrolling,
+		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 	smf_SetScissorsBox(smfSearch, refinementEntryX+PIX3, *y+*descHt-REFINE_B_HT/2, searchInputWd, text_ht );
 	smf_Display(smfSearch, refinementEntryX+PIX3, *y+*descHt+text_ht-REFINE_B_HT - 2*sc, z+2, searchInputWd, 0, 0, 0, &s_taMissionSearchInput, 0);
 	if(smfBlock_HasFocus(smfSearch))
@@ -3536,7 +3536,7 @@ static int missionsearch_displayRefinements( float *x, float *y, float z, float 
 			s_alignmentCombo.architect =COMBOBOX_ARCHITECT_UNSELECTED;
 		else
 			s_alignmentCombo.architect =COMBOBOX_ARCHITECT_SELECTED;
-		combobox_display(&s_alignmentCombo); 
+		combobox_display(&s_alignmentCombo);
 
 		s_localeCombo.x = s_alignmentCombo.wd + s_alignmentCombo.x + 2*PIX3;
 		s_localeCombo.y = 110+(*descHt-REFINE_B_HT/2)/sc;
@@ -3668,8 +3668,8 @@ static int missionsearch_displayRefinements( float *x, float *y, float z, float 
 			float tempY = *y + 31*sc+*descHt-REFINE_B_HT/2+PIX3*sc;
 			float tempWd, tempHt;
 			F32 tempExtend = 0;
-			
-			
+
+
 			tempX += PIX3*2 + s_drawSingleToggleCheckBox(tempX, tempY, z+1, sc, &s_playedFilterList[4], (U32 *)&s_viewedFilter, (1<<s_playedFilterList[4].ID) | (1<<s_playedFilterList[3].ID));
 			//tempX += PIX3*2 + s_drawToggleCheckBox(tempX, tempY, z+1, sc, &s_playedFilterList[3], &s_playedFilterList[4], (U32 *)&s_viewedFilter, (U32 *)&s_currentVotedOption);
 			//search by level range.
@@ -3691,7 +3691,7 @@ static int missionsearch_displayRefinements( float *x, float *y, float z, float 
 		}
 		*expandibleHeight += 30*sc;
 	}
-	drawFlatSectionFrame( PIX3, R10, (*box).lx-1*sc, (*box).ly, z, refinementTabWidth, 60*sc+*descHt-REFINE_B_HT/2+*expandibleHeight, sc, 0x00ffff11, 
+	drawFlatSectionFrame( PIX3, R10, (*box).lx-1*sc, (*box).ly, z, refinementTabWidth, 60*sc+*descHt-REFINE_B_HT/2+*expandibleHeight, sc, 0x00ffff11,
 		FRAMEPARTS_ALL & ~(kFramePart_UpL|kFramePart_UpC|kFramePart_UpR));
 	*ty= (TAB_HT+70)*sc+(*expandibleHeight) + PIX3*sc;
 	return update;
@@ -3722,8 +3722,8 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
 		search_out = atlasLoadTexture("Search_Button_outside");
 
  	z+=1;
-	font( &title_18 );   
-	
+	font( &title_18 );
+
    	for(i = 0; i < ARRAY_SIZE(s_categoriesList); i++)
 	{
    		if( missionsearc_NavTab(&s_categoriesList[i], tx, y + R10*sc, z, tabwd, 36*sc, sc, s_categoryCurrent==i ) )
@@ -3741,15 +3741,15 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
 	{
 		MMtoggleArchitectLocalValidation(0);
 		missionMakerOpenWithArc(NULL, NULL, 0, 0);
-		window_setMode(WDW_MISSIONSEARCH, WINDOW_SHRINKING); 
+		window_setMode(WDW_MISSIONSEARCH, WINDOW_SHRINKING);
 	}
 
  	y += 50*sc;
 
 	///Display Refinements button
 	BuildCBox( &box, x + PIX3*sc + R10*sc, y, REFINE_B_WD + search_in->width*sc, REFINE_B_HT);
- 	
- 	if( s_allowSearch )  
+
+ 	if( s_allowSearch )
 	{
 		if(s_displayRefinements )
 			search_clr = CLR_MM_TITLE_OPEN;
@@ -3777,8 +3777,8 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
 	descY = y+5*sc;
 	descWd = wd -(descX-x) - PIX3*4;
 
-	smf_SetFlags(smfSearchDescription, SMFEditMode_ReadOnly, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 128, SMFScrollMode_None, 
-		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1); 
+	smf_SetFlags(smfSearchDescription, SMFEditMode_ReadOnly, SMFLineBreakMode_MultiLineBreakOnWhitespace, 0, 128, SMFScrollMode_None,
+		SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 0, 0, -1);
 	//smf_SetScissorsBox(smfSearchDescription, descX, descY, searchInputWd, text_ht );
   	descHt = smf_Display(smfSearchDescription, descX, descY, z+2, descWd, 0, 0, 0, &s_taMissionSearchInput, 0);
 
@@ -3892,7 +3892,7 @@ void missionsearch_DrawArcLines(MissionSearchTab *tab, int category, F32 x, F32 
 			int invalidSearch = 0;
 			view_ht = ht - (y-starty);
  			uiBoxDefine(&uibox, x, y - 5*sc, wd, view_ht-5*sc);
-			clipperPush(&uibox); 
+			clipperPush(&uibox);
 			starty = y;
 			ty = y - tab->list_scroll.offset;
 
@@ -3902,7 +3902,7 @@ void missionsearch_DrawArcLines(MissionSearchTab *tab, int category, F32 x, F32 
 				y += 5*sc;
 				s_taMissionSearch.piScale = (int *)((int)(1.5f*sc*SMF_FONT_SCALE));
 				smf_SetRawText( smfError, textStd("MissionSearchNoArcsPublished"), false );
-				y += smf_Display(smfError, x + 30*sc, y+30*sc, z+2, wd-60*sc, 0, 0, 0, &s_taMissionSearch, 0);		
+				y += smf_Display(smfError, x + 30*sc, y+30*sc, z+2, wd-60*sc, 0, 0, 0, &s_taMissionSearch, 0);
 				linesDrawn = 1;
 			}
 			else
@@ -3914,7 +3914,7 @@ void missionsearch_DrawArcLines(MissionSearchTab *tab, int category, F32 x, F32 
 						linesDrawn++;
 						if(missionsearch_MissionLine(tab->lines[i], tab->lines[i] == tab->selected, x, &ty, z+1, wd, sc))
 						{
-							selectedLine = tab->lines[i];	
+							selectedLine = tab->lines[i];
 						}
 						invalidSearch |= tab->lines[i]->rating.invalidated;
 					}
@@ -3928,7 +3928,7 @@ void missionsearch_DrawArcLines(MissionSearchTab *tab, int category, F32 x, F32 
 					smf_SetRawText( smfError, textStd("MissionSearchInvalidArcExplanation"), false );
 				ty += smf_Display(smfError, x + 15*sc, ty, z+2, wd-20*sc, 0, 0, 0, &s_taMissionSearch, 0);
 			}
-			
+
 		}
 		if(!linesDrawn)
 		{
@@ -4029,12 +4029,12 @@ static int missionsearch_Line(char *pchText, int selected, F32 x, F32 *y, F32 z,
 
 	if(!block)
 		block = smfBlock_Create();
-	
+
  	s_taMissionSearch.piScale = (int *)((int)(1.0f*sc*SMF_FONT_SCALE));
 	smf_SetFlags(block, SMFEditMode_Unselectable, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
   	ht = MAX(selected?100*sc:0, 2*PIX3*sc + smf_ParseAndDisplay( block, pchText, x+20*sc, *y, z+2, wd-220*sc, 0, 0, 0, &s_taMissionSearch, NULL, 0, 0));
 
- 	if( selected ) 
+ 	if( selected )
 	{
 		// edit
    	 	if( drawMMButton( "MissionSearchEdit","Edit_Button_inside", "Edit_Button_outside", x + wd - 120*sc, *y + ht/2 - 20*sc, z+1, 150*sc, sc, 0, 0 ) )
@@ -4042,7 +4042,7 @@ static int missionsearch_Line(char *pchText, int selected, F32 x, F32 *y, F32 z,
 			collisions_off_for_rest_of_frame = 1;
 			ret |= LINE_EDIT;
 		}
-		//if(drawCloseButton(x + +12*sc, *y + 12*sc, z, sc, color) ) 
+		//if(drawCloseButton(x + +12*sc, *y + 12*sc, z, sc, color) )
 		if (allowDelete)
 		{
 		if( drawMMButton( "DeleteString", "delete_button_inside", "delete_button_outside",  x + wd - 120*sc, *y + ht/2 + 20*sc, z+1, 110*sc, sc, MMBUTTON_ERROR|MMBUTTON_SMALL, 0  ))
@@ -4056,7 +4056,7 @@ static int missionsearch_Line(char *pchText, int selected, F32 x, F32 *y, F32 z,
 	BuildCBox(&box, x, *y, wd, ht);
 	if(selected || mouseCollision(&box))
 	{
-		if( color == 0x224e4eff ) 
+		if( color == 0x224e4eff )
 			color = 0x2d5f5fff;
 		else
 			color |= 0x99;
@@ -4101,7 +4101,7 @@ static void missionsearch_DrawVGLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
 
 		if( iSelected == i )
 		{
-			
+
 			for( j = 0; j < eaSize(&pvg->customVillainList); j++ )
 			{
 				if( first )
@@ -4112,7 +4112,7 @@ static void missionsearch_DrawVGLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
 			}
 			if(!first)
 				estrConcatStaticCharArray(&estr, "</font><br>");
-			
+
 			first = 1;
 			for( j = 0; j < eaSize(&pvg->existingVillainList); j++ )
 			{
@@ -4204,7 +4204,7 @@ void missionsearch_DrawCharacterLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
 
  	uiBoxDefine(&box, x, y, wd, ht - 90*sc );
 	clipperPush(&box);
-	
+
 	for (i = 0; i < eaSize(&g_CustomVillainGroups); i++)
 	{
 		if (stricmp(g_CustomVillainGroups[i]->displayName, textStd("AllCritterListText")) == 0)
@@ -4275,8 +4275,8 @@ void missionsearch_DrawCharacterLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
 				previousSelected = -1;
 			}
 			estrDestroy(&estr);
-		}		
-	} 
+		}
+	}
 	else
 	{
 		y += 5*sc;
@@ -4313,7 +4313,7 @@ void missionsearch_DrawTab(float x, float y, float z, float wd, float ht, float 
 	if(!tab->loaded && tab->requested + 60 < timerSecondsSince2000())
 		missionsearch_requestTab(tab);
 	s_allowSearch = 1;
-	
+
    	if(tab->category == MISSIONSEARCH_MYARCS)
  	{
 		static int my_category = 0;
@@ -4364,10 +4364,10 @@ int missionsearch_Window(void)
 	float x, y, z, wd, ht, sc, nav_ht;
 	int color, bcolor;
 
-	if(!window_getDims(WDW_MISSIONSEARCH, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor) ) 
+	if(!window_getDims(WDW_MISSIONSEARCH, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor) )
 		return 0;
 
-	PERFINFO_AUTO_START("missionsearch_Window", 1); 
+	PERFINFO_AUTO_START("missionsearch_Window", 1);
 
 	MissionSearch_searchRequestUpdate();
 	MissionSearch_publishRequestUpdate();
@@ -4392,7 +4392,7 @@ int missionsearch_Window(void)
 		combobox_setId( &s_localeCombo, locale, 1 );
 		s_localeCombo.elements[0]->selected = 0;
 		s_MissionSearch.locale_id = 1<<locale;
-		
+
 
 		// this is mostly for QA
 		for(i = 0; i < ARRAY_SIZE(s_categoriesList); i++)

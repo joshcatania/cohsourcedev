@@ -7,11 +7,11 @@
 #include "error.h"
 #include "file.h"
 #include "cmdcommon.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "memcheck.h"
 #include "gfxtree.h"
-#include "camera.h" 
-#include "cmdgame.h" 
+#include "camera.h"
+#include "cmdgame.h"
 #include "font.h"
 #include "seq.h"
 #include "render.h"
@@ -60,25 +60,25 @@ static const U8 tintColors[TINT_COUNT][4] =
 };
 #endif
 
-int num_anim_mults;//mm$$temp 
+int num_anim_mults;//mm$$temp
 int drawGfxNodeCalls;
 
 
-//Debug 
+//Debug
 int sortedByDist;
 int sortedByType;
 extern int call, drawCall;
 int startTypeDrawing;
-int startDistDrawing; 
-int startAUWDrawing; 
-int startShadowDrawing; 
+int startDistDrawing;
+int startAUWDrawing;
+int startShadowDrawing;
 int endDrawModels;
 int drawStartTypeDrawing;
-int drawStartDistDrawing; 
-int drawStartAUWDrawing; 
-int drawStartShadowDrawing; 
+int drawStartDistDrawing;
+int drawStartAUWDrawing;
+int drawStartShadowDrawing;
 int drawEndDrawModels;
-//End Debug 
+//End Debug
 
 #define MIN_GFXNODE_ALPHA_TO_BOTHER_WITH 5
 
@@ -222,7 +222,7 @@ void dbg_LogBatchPass(SortThing sortThings[], int sortThingCount, ViewportInfo* 
 								the_date, s_bBatchLogFrameStart, s_bBatchLogPass, nameSuffix, viewport->name);
 			file = fopen( filename, "wt");
 			fprintf( file, "   #\ttree?,\talpha test?,\talpha,\tdraw white,\tShader,\tBlend bits,\tTexBind,\tModel,\t\tTex_index(sub-obj),\tsubobj tris,\tsubobj count,\ttris,\tverts,\tmatrix,\ttexbind name,\tname,\tfile,\tnode,\tbones\n");
-			for( i = 0 ; i < sortThingCount; i++ ) 
+			for( i = 0 ; i < sortThingCount; i++ )
 			{
 				SortThing* st;
 				static char buf[512];
@@ -369,7 +369,7 @@ void gfxTreeSetCustomColors( GfxNode * gfx_node, const char rgba[], const char r
 	int i;
 	gfx_node->flags |= gfxNodeFlag; // GFXNODE_CUSTOMCOLOR or GFXNODE_TINTCOLOR
 	for(i = 0 ; i < 3 ; i++)
-	{		
+	{
 		gfx_node->rgba[i]  = rgba[i];
 		gfx_node->rgba2[i] = rgba2[i];
 	}
@@ -389,7 +389,7 @@ void gfxNodeSetScale(GfxNode * node, F32 scale, int root )
 	for(;node;node = node->next)
 	{
 		node->scale = scale;
-		
+
 		if (node->child)
 			gfxNodeSetScale(node->child, scale,0);
 		if (root)
@@ -531,7 +531,7 @@ static INLINEDBG BlendModeType nodeBlendMode(GfxNode *node, Model *model, int te
 		} else {
 			blend_mode = BlendMode(BLENDMODE_COLORBLEND_DUAL,0);
 		}
-		
+
 		// set cubemap blend_bits flag if this model includes reflection and we support cubemaps on this render pass
 		if (bUsesCubemap)
 		{
@@ -650,13 +650,13 @@ static INLINEDBG BlendModeType modelBlendMode(Model *model, int tex_index, F32 d
 		// force high quality mode for non-skinned character parts.
 		if (blend_mode.shader == BLENDMODE_BUMPMAP_COLORBLEND_DUAL &&
 			(rdr_caps.features & GFXF_HQBUMP) &&
-			rdr_view_state.renderPass == RENDERPASS_COLOR && 
+			rdr_view_state.renderPass == RENDERPASS_COLOR &&
 			!(blend_mode.blend_bits&BMB_HIGH_QUALITY))
 		{
 			blend_mode.blend_bits |= BMB_HIGH_QUALITY;
 		}
 
-		// special case for non-skinned character parts (eg shield).  Still want to use high_quality mode 
+		// special case for non-skinned character parts (eg shield).  Still want to use high_quality mode
 		//	when close, same as we do for skinned objects.
 		if( gfx_state.mainViewport &&
 				(blend_mode.shader == BLENDMODE_BUMPMAP_COLORBLEND_DUAL && /*ABS(dist) < HQ_BUMP_DIST &&*/ (rdr_caps.features & GFXF_HQBUMP)) ||
@@ -698,7 +698,7 @@ static INLINEDBG bool modelAlphaSortEx(Model *model, TexBind **binds)
 		return true;
 	if (model->flags & (OBJ_FORCEOPAQUE|OBJ_TREEDRAW))
 		return false;
-	for (i=0; i<model->tex_count; i++) 
+	for (i=0; i<model->tex_count; i++)
 		if (binds[i]->needs_alphasort)
 			return true;
 	return false;
@@ -915,7 +915,7 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
 	F32 score;
 
 	assert(waterModel && (waterModel->flags & OBJ_FANCYWATER));
-	
+
 	// Reset the blend mode if the water mode changed
 	if ((game_state.waterMode >  WATER_OFF && waterModel->tex_binds[0]->bind_blend_mode.shader != BLENDMODE_WATER) ||
 		(game_state.waterMode == WATER_OFF && waterModel->tex_binds[0]->bind_blend_mode.shader == BLENDMODE_WATER))
@@ -935,7 +935,7 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
 
 	// See if the water is not level
 	mulMat4Inline(cam_info.inv_viewmat, avsn_params.mat, matModelToWorld);
-	
+
 	mulVecMat4(min, matModelToWorld, min_ws);
 	mulVecMat4(max, matModelToWorld, max_ws);
 
@@ -973,7 +973,7 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
 		{
 			mulVecMat4(eye_bounds[i], cam_info.inv_viewmat, temp1);
 
-			// Move the vert slightly closer to the camera so they 
+			// Move the vert slightly closer to the camera so they
 			// show up on top of water
 			subVec3(cam_info.cammat[3], temp1, temp2);
 			normalVec3(temp2);
@@ -1061,8 +1061,8 @@ INLINEDBG U32 processReflectors(Model *model, const Mat4 mat, const Vec3 * refle
 
 		if (numQuads > MAX_REFLECTION_QUADS_PER_MODEL)
 		{
-			ErrorFilenamef(model->filename, 
-				"Too many visible reflection quads in model: %s. Maximum is %d.", model->name, 
+			ErrorFilenamef(model->filename,
+				"Too many visible reflection quads in model: %s. Maximum is %d.", model->name,
 				MAX_REFLECTION_QUADS_PER_MODEL);
 			return 0;
 		}
@@ -1110,7 +1110,7 @@ INLINEDBG U32 processReflectors(Model *model, const Mat4 mat, const Vec3 * refle
 		copyVec3(quad_verts_ws[best_reflector_index*4+2], gfx_state.reflectionQuadVerts[2]);
 		copyVec3(quad_verts_ws[best_reflector_index*4+3], gfx_state.reflectionQuadVerts[3]);
 	}
-	
+
 	// Debugging
 	if (game_state.reflectionDebug == 1 || game_state.reflectionDebug == 100)
 	{
@@ -1122,8 +1122,8 @@ INLINEDBG U32 processReflectors(Model *model, const Mat4 mat, const Vec3 * refle
 		{
 			Vec3 p0_ws, p1_ws, p2_ws, p3_ws;
 			Vec3 temp;
-			
-			// Move the vert slightly closer to the camera so they 
+
+			// Move the vert slightly closer to the camera so they
 			// show up on top of walls
 			subVec3(cam_info.cammat[3], current_quad_vert_ws[0], temp);
 			normalVec3(temp);
@@ -1192,7 +1192,7 @@ void checkLowestPoint(Model *model, const Mat4 mat)
 	Mat4 matModelToWorld;
 
 	assert(model);
-	
+
 	// Only do this on main viewport
 	// TODO: don't do if shadow maps are not enabled?
 	if (!gfx_state.mainViewport)
@@ -1248,7 +1248,7 @@ void addViewSortNodeSkinned(void)
 			goto avsn_exit;
 	}
 
-	//Figure out how this node will be sorted: 
+	//Figure out how this node will be sorted:
 	if (model && model->flags & OBJ_FANCYWATER) {
 		addViewSortNode_Water(model, avsn_params.mat);
 		water = true;
@@ -1262,7 +1262,7 @@ void addViewSortNodeSkinned(void)
 	}
 	else if (avsn_params.alpha == 255 && !needs_alpha)
 	{
-		sortType = SORT_BY_TYPE;	
+		sortType = SORT_BY_TYPE;
 	}
 	else
 	{
@@ -1294,7 +1294,7 @@ void addViewSortNodeSkinned(void)
 	if (draw_white)
 		okToSplit=false;
 
-	// Toss yourself into the right bin 
+	// Toss yourself into the right bin
 	{
 		F32 dist = avsn_params.mid[2];
 		SortThing st={0}, *stp;
@@ -1318,7 +1318,7 @@ void addViewSortNodeSkinned(void)
 						useRadius = 0;
 				}
 				if( useRadius )
-					dist -=  model->radius * 2.f; 
+					dist -=  model->radius * 2.f;
 			}
 		}
 		st.dist = dist;
@@ -1401,7 +1401,7 @@ void addViewSortNodeSkinned(void)
 				stp->was_type_sorted = mySortType==SORT_BY_TYPE;
 				stp->alpha_test = stp->was_type_sorted && (avsn_params.node->tricks && (avsn_params.node->tricks->flags1 & TRICK_ALPHACUTOUT));
 				stp->is_tree = false;
-				
+
 				stp->tint = TINT_NONE;
 
 #ifndef FINAL
@@ -1497,7 +1497,7 @@ void addViewSortNodeWorldModel(void)
 			goto avsn2_exit;
 	}
 
-	//Figure out how this node will be sorted: 
+	//Figure out how this node will be sorted:
 	if (model && model->flags & OBJ_FANCYWATER) {
 		addViewSortNode_Water(model, avsn_params.mat);
 		water = true;
@@ -1518,7 +1518,7 @@ void addViewSortNodeWorldModel(void)
 	}
 	else if (avsn_params.alpha == 255 && !needs_alpha)
 	{
-		sortType = SORT_BY_TYPE;	
+		sortType = SORT_BY_TYPE;
 	}
 	else
 	{
@@ -1573,7 +1573,7 @@ void addViewSortNodeWorldModel(void)
 
 	// Need to know if any sub is going to need SORT_BY_DIST by this point
 
-	// Toss yourself into the right bin 
+	// Toss yourself into the right bin
 	{
 		F32 dist = avsn_params.mid[2];
 		SortThing st={0}, *stp;
@@ -1597,7 +1597,7 @@ void addViewSortNodeWorldModel(void)
 						useRadius = 0;
 				}
 				if( useRadius )
-					dist -=  model->radius * 2.f; 
+					dist -=  model->radius * 2.f;
 			}
 		}
 		st.dist = dist;
@@ -1605,7 +1605,7 @@ void addViewSortNodeWorldModel(void)
 		st.alpha = avsn_params.alpha;
 		st.draw_white = draw_white;
 		st.is_gfxnode = avsn_params.is_gfxnode;
-		
+
 		copyMat4(avsn_params.mat, st.viewMat);
 
 		st.modelSource	= SORTTHING_WORLDMODEL;
@@ -1762,7 +1762,7 @@ static int cmpSortThingsType(SortThing *sta,SortThing *stb)
 	t = sta->tex_bind - stb->tex_bind;
 	if (t)
 		return t;
-	
+
 	return sta->model - stb->model;
 }
 
@@ -1774,11 +1774,11 @@ static int cmpSortThingsModel(SortThing *sta,SortThing *stb)
 static int cmpSortThingsShadows(SortThing *sta,SortThing *stb)
 {
 	int t;
-	
+
 	// shadows will draw with either depth or depthalpha shader, depending
-	//	on whether alphatest is set.  So we only need to sort into these 
+	//	on whether alphatest is set.  So we only need to sort into these
 	//	two groups.  For now also sort trees separately since they use
-	//	the full color shader.	
+	//	the full color shader.
 	t = sta->is_tree - stb->is_tree;
 	if (t)
 		return t;
@@ -1788,7 +1788,7 @@ static int cmpSortThingsShadows(SortThing *sta,SortThing *stb)
 		// both are trees, use regular type sort
 		return cmpSortThingsType(sta, stb);
 	}
-	
+
 	// non-tree, only need to sort by alpha test
 	t = sta->alpha_test - stb->alpha_test;
 	if (t)
@@ -1890,7 +1890,7 @@ void modelAddShadow( Mat4 mat, U8 alpha, Model *shadowModel, U8 shadowMask )
 
 	sn = dynArrayAdd(&fg_list->shadow_nodes,sizeof(ShadowNode),&fg_list->shadow_node_count,&fg_list->shadow_node_max,1);
 	copyMat4(  mat, sn->mat );//			= mat;
-	sn->alpha		= alpha; 
+	sn->alpha		= alpha;
 	sn->model		= shadowModel;
 	sn->shadowMask	= shadowMask;
 }
@@ -1902,17 +1902,17 @@ void modelDrawGfxNode( GfxNode * node, BlendModeType blend_mode, int tex_index, 
 	assert( node && node->model );
 	assert( node->model->loadstate == LOADED );
 
-PERFINFO_AUTO_START("modelDrawGfxNode",1); 
+PERFINFO_AUTO_START("modelDrawGfxNode",1);
 	drawGfxNodeCalls++;
 	if( !(game_state.shadowvol == 2 || scene_info.stippleFadeMode) )
 	{
-		if ( node->seqHandle ) 
+		if ( node->seqHandle )
 			rdrSetStencil(1,STENCILOP_KEEP,128);
 		else
 			rdrSetStencil(0,0,0);
 	}
 
-	if( node->splat )  
+	if( node->splat )
 	{
 		assert(tex_index<1); // 0 or -1
 		if( ((Splat*)node->splat)->drawMe == global_state.global_frame_count )
@@ -1957,10 +1957,10 @@ PERFINFO_AUTO_START("modelDrawGfxNode",1);
 #else
 		modelDrawBonedNode( node, blend_mode, tex_index, viewMatrix );
 #endif
-		
+
 
 	}
-PERFINFO_AUTO_STOP(); 
+PERFINFO_AUTO_STOP();
 }
 
 
@@ -1993,7 +1993,7 @@ static void drawList_ex(SortThing sortThings[], int sortThingCount, int headshot
 #endif
 
 	//assert(heapValidateAll());
-	for( i = 0 ; i < sortThingCount; i++ ) 
+	for( i = 0 ; i < sortThingCount; i++ )
 	{
 		bool isCostumePiece = false;
 		bool needClipping = false;
@@ -2003,7 +2003,7 @@ static void drawList_ex(SortThing sortThings[], int sortThingCount, int headshot
 #ifndef FINAL
 		if( iKillItem == i )
 			continue;
-		if( game_state.meshIndex != -1 ) 
+		if( game_state.meshIndex != -1 )
 		{
 			// draw only a single mesh from the list, useful for debugging rendering issues
 			if(i != game_state.meshIndex )
@@ -2048,7 +2048,7 @@ static void drawList_ex(SortThing sortThings[], int sortThingCount, int headshot
 				bool culled = false;
 				Mat4 matModelToWorld;
 				Vec3 mid, midw;
-				
+
 				mulMat4Inline(cam_info.inv_viewmat, st->viewMat, matModelToWorld);
 
 #if 0
@@ -2174,8 +2174,8 @@ static void drawList_ex(SortThing sortThings[], int sortThingCount, int headshot
 			clippingInUse = false;
 		}
 
-		//xyprintfcolor( X_HEIGHT * (xx/Y_HEIGHT), xx%Y_HEIGHT, 255, 255, 10," %d ", xx );          
-		if ( st->modelSource == SORTTHING_GFXTREENODE )	    
+		//xyprintfcolor( X_HEIGHT * (xx/Y_HEIGHT), xx%Y_HEIGHT, 255, 255, 10," %d ", xx );
+		if ( st->modelSource == SORTTHING_GFXTREENODE )
 		{
 			//onlydevassert( st->gfxnode );
 
@@ -2215,13 +2215,13 @@ void drawShadows()
 	ShadowNode	* sn;
 	int			i;
 
-	//if( game_state.fxdebug == 1 ) 
+	//if( game_state.fxdebug == 1 )
 	//	xyprintf( 20, 20, "Shadow Node Count: %d", shadow_node_count );
 
 	CHECKNOTGLTHREAD;
-	for(i = 0 ; i < bg_list->shadow_node_count ; i++ ) 
+	for(i = 0 ; i < bg_list->shadow_node_count ; i++ )
 	{
-		sn = &bg_list->shadow_nodes[i]; 
+		sn = &bg_list->shadow_nodes[i];
 		if (sn->model)
 			modelDrawShadowVolume(sn->model,sn->mat,sn->alpha,sn->shadowMask, 0 ); //node removed to make the drawing be the old way
 	}
@@ -2238,10 +2238,10 @@ void gfxTreeFrameFinishQueueing()
 
 void sortModels(int opaque, int alpha)
 {
-	PERFINFO_AUTO_START("sortModels",1); 
+	PERFINFO_AUTO_START("sortModels",1);
 	if(opaque) {
 		cmp_func_type cmpFunc = (gfx_state.renderPass >= RENDERPASS_SHADOW_CASCADE1 && gfx_state.renderPass <= RENDERPASS_SHADOW_CASCADE_LAST)
-			? cmpSortThingsModel : cmpSortThingsType; 
+			? cmpSortThingsModel : cmpSortThingsType;
 #ifndef FINAL
 		if( game_state.perf & GFXDEBUG_PERF_SORT_BY_REVERSE_DIST )
 			cmpFunc = cmpSortThingsRevDist;
@@ -2278,7 +2278,7 @@ void drawSortedModels_ex(DrawSortMode mode, int headshot, ViewportInfo *viewport
 
 	if (drawOpaque)
 	{
-		PERFINFO_AUTO_START("drawTypeSortedModels opaque",1); 
+		PERFINFO_AUTO_START("drawTypeSortedModels opaque",1);
 		rdrBeginMarker("drawTypeSortedModels");
 		startTypeDrawing = call; //DEBUG
 		drawStartTypeDrawing = drawCall; //DEBUG
@@ -2293,7 +2293,7 @@ void drawSortedModels_ex(DrawSortMode mode, int headshot, ViewportInfo *viewport
 
 	if (drawAlphaUnderwater)
 	{
-		PERFINFO_AUTO_START("drawDistSortedModelsUnderwater",1); 
+		PERFINFO_AUTO_START("drawDistSortedModelsUnderwater",1);
 		rdrBeginMarker("drawDistSortedModelsUnderwater");
 		startAUWDrawing = call; //DEBUG
 		drawStartAUWDrawing = drawCall; //DEBUG
@@ -2308,7 +2308,7 @@ void drawSortedModels_ex(DrawSortMode mode, int headshot, ViewportInfo *viewport
 
 	if (drawAlpha)
 	{
-		PERFINFO_AUTO_START("drawDistSortedModels",1); 
+		PERFINFO_AUTO_START("drawDistSortedModels",1);
 		rdrBeginMarker("drawDistSortedModels alpha");
 		startDistDrawing = call; //DEBUG
 		drawStartDistDrawing = drawCall; //DEBUG
@@ -2323,7 +2323,7 @@ void drawSortedModels_ex(DrawSortMode mode, int headshot, ViewportInfo *viewport
 
 	if (drawShadowVolumes)
 	{
-		PERFINFO_AUTO_START("drawShadowVolumes",1); 
+		PERFINFO_AUTO_START("drawShadowVolumes",1);
 		rdrBeginMarker("drawShadowVolumes");
 		startShadowDrawing = call; //DEBUG
 		drawStartShadowDrawing = drawCall; //DEBUG
@@ -2358,7 +2358,7 @@ void printNodesProcessed( int seqHandle, GfxNode * node, int type)
 	SeqInst * mySeq = 0;
 
 
-	if( game_state.animdebug & ANIM_SHOW_MY_ANIM_USE ) 
+	if( game_state.animdebug & ANIM_SHOW_MY_ANIM_USE )
 	{
 		mySeq = playerPtr()->seq;
 	}
@@ -2369,7 +2369,7 @@ void printNodesProcessed( int seqHandle, GfxNode * node, int type)
 			mySeq = e->seq;
 	}
 
-	if( mySeq && seqHandle == mySeq->handle ) 
+	if( mySeq && seqHandle == mySeq->handle )
 	{
 		if( type == NODE_PROCESSED )
 			xyprintfcolor( 40, 2+node->anim_id, 255, 255, 255, "NodeProcessed: %d %s", node->anim_id, bone_NameFromId(node->anim_id) );
@@ -2385,7 +2385,7 @@ void printNodesProcessed( int seqHandle, GfxNode * node, int type)
 static int countNonHidChildrenGfx(GfxNode * pNode, int seqHandle)
 {
 	GfxNode * node;
-	int total = 0; 
+	int total = 0;
 	for( node = pNode ; node ; node = node->next )
 	{
 		assert( node->seqHandle == seqHandle );
@@ -2426,20 +2426,20 @@ void gfxTreeDrawNodeSky(GfxNode *node,Mat4 parent_mat)
 	int x = 10;
 
 	rdrBeginMarker(__FUNCTION__);
-	for(;node;node = node->next)   
+	for(;node;node = node->next)
 	{
 		mulMat4(parent_mat, node->mat, mat);
 		model = node->model;
-		if( model												&& 
-			node->alpha	>= MIN_GFXNODE_ALPHA_TO_BOTHER_WITH	&& 
+		if( model												&&
+			node->alpha	>= MIN_GFXNODE_ALPHA_TO_BOTHER_WITH	&&
 			(model->loadstate & LOADED)						&&
 			(!(node->flags & GFXNODE_HIDESINGLE))			)
 		{
 			int i;
 			ViewSortNode vs={0};
 			//Debug
-			if( game_state.wireframe && !editMode() ) 
-				xyprintf( 10, x++, "%s %d", model->name, node->alpha  ); 
+			if( game_state.wireframe && !editMode() )
+				xyprintf( 10, x++, "%s %d", model->name, node->alpha  );
 			//End debug
 
 			vs.alpha = node->alpha;
@@ -2453,13 +2453,13 @@ void gfxTreeDrawNodeSky(GfxNode *node,Mat4 parent_mat)
 			vs.materials = model->tex_binds;
 			vs.uid = -1;
 			vs.brightScale = 1.f;
-			for (i=0; i<model->tex_count; i++) 
+			for (i=0; i<model->tex_count; i++)
 				modelDrawWorldModel(&vs, model->tex_binds[i]->bind_blend_mode, i);
 		}
 
 		if (node->child)
 			gfxTreeDrawNodeSky(node->child, mat);
-	
+
 	}
 	rdrEndMarker();
 }
@@ -2598,8 +2598,8 @@ void gfxTreeDrawNode(GfxNode *node,Mat4 parent_mat)
 			animDebugInfo( node );
 #endif
 
-		if( ( node->flags & GFXNODE_HIDE ) || ( node->seqHandle && !node->useFlags ) ) 
-			continue; 
+		if( ( node->flags & GFXNODE_HIDE ) || ( node->seqHandle && !node->useFlags ) )
+			continue;
 
 #ifndef FINAL
 		if (game_state.reflectionDebug == 100)
@@ -2616,25 +2616,25 @@ void gfxTreeDrawNode(GfxNode *node,Mat4 parent_mat)
 		{
 			xyprintf( 10, 55, "Drawing %s (node 0x%08x, parentx4 0x%08x {%.2f,%.2f,%.2f}",
 				node->model->filename, node, node->parent->parent->parent->parent, node->parent->parent->parent->parent->mat[3][0],
-				node->parent->parent->parent->parent->mat[3][1], node->parent->parent->parent->parent->mat[3][2]);		
+				node->parent->parent->parent->parent->mat[3][1], node->parent->parent->parent->parent->mat[3][2]);
 		}
 #endif
 #endif
 
 		//gfxGetAnimMatrices
-		if( bone_IdIsValid(node->anim_id) && node->seqHandle ) 
-		{	
-			Mat4Ptr viewspace_scaled; //will be the 
+		if( bone_IdIsValid(node->anim_id) && node->seqHandle )
+		{
+			Mat4Ptr viewspace_scaled; //will be the
 			Vec3 xlate_to_hips;
 			Mat4 scaled_xform, scale_mat;
-			
-			seqGfxData = node->seqGfxData; 
-			assert( seqGfxData ); 
+
+			seqGfxData = node->seqGfxData;
+			assert( seqGfxData );
 			assert( bone_IdIsValid(node->anim_id) );
 
 			viewspace_scaled = seqGfxData->bpt[node->anim_id];
-	
-			copyMat4(unitmat, scale_mat); 
+
+			copyMat4(unitmat, scale_mat);
 			scaleMat3Vec3(scale_mat, node->bonescale);
 			mulMat4(node->mat, scale_mat, scaled_xform);
 
@@ -2653,15 +2653,15 @@ void gfxTreeDrawNode(GfxNode *node,Mat4 parent_mat)
 		if( node->model && (node->clothobj || node->splat) )
 			node->viewspace = getAMatForThisFrame(); //Need a global cuz the rendering code will use this
 		else
-			node->viewspace = viewspace;  //Just use the local cuz it's not used after this stack unwinds 
+			node->viewspace = viewspace;  //Just use the local cuz it's not used after this stack unwinds
 
 		if(node->model && node->flags & GFXNODE_APPLYBONESCALE) {
 			Mat4 scale_mat, scaled_xform;
 			// tbd, ideally would just set gfx_node->bonscale directly and use that here, but that won't work for char creator where parent scale can change each frame
-			assert(node->parent && node->parent->parent); 
+			assert(node->parent && node->parent->parent);
 			assert(!vec3IsZero(node->parent->parent->bonescale));
 			assert( !(node->model->flags & OBJ_DRAWBONED || node->flags & GFXNODE_SEQUENCER || node->clothobj || node->splat) );
-			copyMat4(unitmat, scale_mat); 
+			copyMat4(unitmat, scale_mat);
 			scaleMat3Vec3Correct(scale_mat, node->parent->parent->bonescale);
 			mulMat4(node->mat, scale_mat, scaled_xform);
 			mulMat4( parent_mat, scaled_xform, node->viewspace );
@@ -2881,7 +2881,7 @@ void addViewSortNodeWorldModel_Shadowmap(void)
 	the subobjects until we hit the first alpha batch and render those as one batch
 	into the shadowmap.
 
-	note: Alpha test is explicitly indicated by either TRICK_ALPHACUTOUT or TRICK2_ALPHAREF. 
+	note: Alpha test is explicitly indicated by either TRICK_ALPHACUTOUT or TRICK2_ALPHAREF.
 	TRICK2_ALPHAREF explicitly sets the alpha ref used while TRICK_ALPHACUTOUT uses a preset 0.6 alpharef.
 	OBJ_TREEDRAW also implies alpha cutout with the 0.6 alpha ref (used by legacy trees)
 */
@@ -2940,7 +2940,7 @@ void addViewSortNodeWorldModel_Shadowmap(void)
 	st.vsIdx		= vsIndex;
 	st.draw_white	= true;
 	st.blendMode.intval = 0;
-	
+
 	// TreeDraw and alpha cutout need to be handled specially since we need to setup texture stage
 	// with the correct alpha channel
 	st.is_tree = (model->flags & OBJ_TREEDRAW) != 0;
@@ -3075,11 +3075,11 @@ void addViewSortNodeSkinned_Shadowmap(void)
 	if (model->flags & OBJ_DONTCASTSHADOWMAP)
 		return;
 
-	sortType = SORT_BY_TYPE;	
+	sortType = SORT_BY_TYPE;
 
 	assert( model && model->loadstate & LOADED );
 
-	// Toss yourself into the right bin 
+	// Toss yourself into the right bin
 	{
 		F32 dist = avsn_params.mid[2];
 		SortThing st={0}, *stp;
@@ -3169,9 +3169,9 @@ static void rdr_shadowmap_populate_bone_xforms( void* dst, GfxNode *node, Mat4 s
 	boneinfo			= node->model->boneinfo;
 	offset				= seqGfxData->btt[node->anim_id];
 	idx_table			= boneinfo->bone_ID;
-	bone_table		= seqGfxData->bpt;					
+	bone_table		= seqGfxData->bpt;
 
-	for(j = 0 ; j < boneinfo->numbones ; j++)     
+	for(j = 0 ; j < boneinfo->numbones ; j++)
 	{
 		Mat4*	pSrcBoneXfm = (Mat4*)(&bone_table[idx_table[j]]);
 		Mat4 bonemat;
@@ -3221,7 +3221,7 @@ static void rdr_shadowmap_populate_bone_xforms( void* dst, GfxNode *node, Mat4 s
 #include "rt_shadowmap.h"	// for RdrShadowmapModel,etc types
 
 static bool isValidAlphaTestWorldModel(SortThing* st) {
-	return st->modelSource == SORTTHING_WORLDMODEL && 
+	return st->modelSource == SORTTHING_WORLDMODEL &&
 		(st->tint ? st->model->vbo->sts2 : st->model->vbo->sts);
 }
 
@@ -3238,7 +3238,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 	int num_static = 0, num_skinned = 0, num_alphatest = 0;
 	int bone_memory = 0;
 
-	PERFINFO_AUTO_START("drawSortedModels_shadowmap_new",1); 
+	PERFINFO_AUTO_START("drawSortedModels_shadowmap_new",1);
 
 	count_opaque = bg_list->typeSortThingsCount;
 	batches_opaque = bg_list->typeSortThings;
@@ -3253,11 +3253,11 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 	// versus skinned models
 	// @todo when we have our own sorting lists we will do this there in advance
 	{
-		for( i = 0 ; i < count_opaque; i++ ) 
+		for( i = 0 ; i < count_opaque; i++ )
 		{
 			SortThing	*st = &batches_opaque[i];
 
-			if ( st->modelSource == SORTTHING_GFXTREENODE )	    
+			if ( st->modelSource == SORTTHING_GFXTREENODE )
 			{
 				assert( st->gfxnode );
 				if (st->gfxnode->model->boneinfo)
@@ -3272,7 +3272,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 			}
 		}
 
-		for( i = 0 ; i < count_alphatest; i++ ) 
+		for( i = 0 ; i < count_alphatest; i++ )
 		{
 			SortThing	*st = &batches_alphatest[i];
 
@@ -3283,7 +3283,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 #ifndef FINAL
 			else if (st->modelSource == SORTTHING_WORLDMODEL)
 			{
-				ErrorFilenamef(st->model->filename, "Missing alpha UVs in model %s\n", 
+				ErrorFilenamef(st->model->filename, "Missing alpha UVs in model %s\n",
 							   st->model->name);
 			}
 #endif
@@ -3324,7 +3324,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 	{
 		RdrShadowmapModelOpaque* pItem = (RdrShadowmapModelOpaque*)(pHeader+1);
 
-		for( i = 0 ; i < count_opaque; i++ ) 
+		for( i = 0 ; i < count_opaque; i++ )
 		{
 			SortThing	*st = &batches_opaque[i];
 			VBO* pNewVBO = NULL;
@@ -3335,7 +3335,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 			{
 				ViewSortNode *vs = &bg_list->vsList[st->vsIdx];
 				VBO* pThisVBO = vs->model->vbo;
-				
+
 				// recall that we generally just draw the entire model as one
 				// batch an ignore sub-objects for shadows. However, if the model
 				// had some alpha sub objects at the end we only draw the tris in
@@ -3388,7 +3388,7 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 	{
 		RdrShadowmapModelAlphaTest* pItem = (RdrShadowmapModelAlphaTest*)((RdrShadowmapModelOpaque*)(pHeader+1) + pHeader->batch_count_opaque);
 
-		for( i = 0 ; i < count_alphatest; i++ ) 
+		for( i = 0 ; i < count_alphatest; i++ )
 		{
 			SortThing	*st = &batches_alphatest[i];
 
@@ -3423,11 +3423,11 @@ void drawSortedModels_shadowmap_new( ViewportInfo* viewport )
 		RdrShadowmapModelAlphaTest* pItemAT = (RdrShadowmapModelAlphaTest*)((RdrShadowmapModelOpaque*)(pHeader+1) + pHeader->batch_count_opaque);
 		RdrShadowmapModelSkinned*		pItem = (RdrShadowmapModelSkinned*)(pItemAT + pHeader->batch_count_alphatest);
 
-		for( i = 0 ; i < count_opaque; i++ ) 
+		for( i = 0 ; i < count_opaque; i++ )
 		{
 			SortThing	*st = &batches_opaque[i];
 
-			if ( st->modelSource == SORTTHING_GFXTREENODE )	    
+			if ( st->modelSource == SORTTHING_GFXTREENODE )
 			{
 				assert( st->gfxnode );
 				if (st->gfxnode->model->boneinfo)

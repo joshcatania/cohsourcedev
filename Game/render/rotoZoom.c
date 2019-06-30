@@ -2,7 +2,7 @@
 #include "stdtypes.h"
 #include "wininclude.h"
 #include <math.h>
-#include "assert.h"
+#include "SuperAssert.h"
 
 unsigned char charmax_tempa, charmax_tempb;
 #define CHARMAX(a,b) ((charmax_tempa=((unsigned char)a))>(charmax_tempb=((unsigned char)b))?charmax_tempa:charmax_tempb)

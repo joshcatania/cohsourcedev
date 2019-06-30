@@ -11,7 +11,7 @@
 #include "win_init.h"
 #include "utils.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "earray.h"
 #include "EString.h"
 #include "ttFontUtil.h"
@@ -33,7 +33,7 @@ typedef enum InputOrientation
 {
 	kInputOrientation_Vertical,
 	kInputOrientation_Horizontal,
-	kInputOrientation_Count	
+	kInputOrientation_Count
 } InputOrientation;
 
 bool inputorientation_Valid( InputOrientation e )
@@ -42,11 +42,11 @@ bool inputorientation_Valid( InputOrientation e )
 }
 
 typedef enum IndicatorType
-{ 
-	INDICATOR_NON_IME, 
-	INDICATOR_CHS, 
-	INDICATOR_CHT, 
-	INDICATOR_KOREAN, 
+{
+	INDICATOR_NON_IME,
+	INDICATOR_CHS,
+	INDICATOR_CHT,
+	INDICATOR_KOREAN,
 	INDICATOR_JAPANESE,
 	kIndicatorType_Count
 } IndicatorType;
@@ -128,7 +128,7 @@ typedef struct uiIMECandidateReading
 	// candidate info only
 
 	DWORD selection; // current selection
-	DWORD count; // the total number of candidates (including those not displayed). 	
+	DWORD count; // the total number of candidates (including those not displayed).
 } uiIMECandidateReading;
 
 static void uiimecandidate_Reset(uiIMECandidateReading *cd)
@@ -172,14 +172,14 @@ STATIC_ASSERT( ARRAY_SIZE( s_wszIndicator ) == kIndicatorType_Count );
 // functions
 // ------------------------------------------------------------
 
-static WORD GetPrimaryLanguage( HKL kl ) 
-{ 
-	return PRIMARYLANGID( LOWORD( kl ) ); 
+static WORD GetPrimaryLanguage( HKL kl )
+{
+	return PRIMARYLANGID( LOWORD( kl ) );
 }
 
-static WORD GetSubLanguage( HKL kl ) 
-{ 
-	return SUBLANGID( LOWORD( kl ) ); 
+static WORD GetSubLanguage( HKL kl )
+{
+	return SUBLANGID( LOWORD( kl ) );
 }
 
 
@@ -196,12 +196,12 @@ static bool s_HandleInputLangChange( uiIMEState *s, HWND hWnd, int charsetLocale
 		UINT uLang = GetPrimaryLanguage( idLocale );
 		UINT uSublang = GetSubLanguage( idLocale );
 		HIMC hImc = NULL;
-		
+
 		//ab: what is this character set? is it the same as the code page?
 		// yes, I think it is.
-		s->input.langCharset = charsetLocale; 
-		s->input.keyboardLayout = idLocale;		
-		
+		s->input.langCharset = charsetLocale;
+		s->input.keyboardLayout = idLocale;
+
 		// get the conversion status
 		hImc = ImmGetContext(hWnd);
 		if( hImc)
@@ -211,7 +211,7 @@ static bool s_HandleInputLangChange( uiIMEState *s, HWND hWnd, int charsetLocale
 
 			ImmReleaseContext( hWnd, hImc );
 		}
-		
+
 		// --------------------
 		// set thec string, candidate orientation, etc.
 
@@ -261,7 +261,7 @@ static bool s_HandleInputLangChange( uiIMEState *s, HWND hWnd, int charsetLocale
 			s->input.indicator = s_wszIndicator[INDICATOR_NON_IME];
 		}
 
-		
+
 		// reset the unscaled dims of the string
 		s->input.indicatorDims.usWd = 0.f;
 		s->input.indicatorDims.usHt = 0.f;
@@ -270,7 +270,7 @@ static bool s_HandleInputLangChange( uiIMEState *s, HWND hWnd, int charsetLocale
 		// show the window
 		s->input.visible = isIme;
 	}
-	
+
 	// --------------------
 	// finally
 
@@ -295,13 +295,13 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 			// extract the string the user has entered.
 			int stringSize;
 			WCHAR* str;
-			
+
 			// Find out how long the string is so we can have an buffer ready for the input.
 			stringSize = ImmGetCompositionStringW(hImc, GCS_RESULTSTR, NULL, 0);
-			
+
 			// Allocate a buffer of the appropriate length
 			str = (WCHAR*)malloc(stringSize + sizeof(WCHAR));
-			if(str){				
+			if(str){
 				UIEdit *edit = s->pUIEdit;
 				LONG iStrEnd = stringSize/sizeof(WCHAR);
 
@@ -314,7 +314,7 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 					// remove the composition string
 
 					uiedit_Backspace( s->pUIEdit, c->lenStr );
-				
+
 					// --------------------
 					// insert the string
 
@@ -329,10 +329,10 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 				free(str);
 			}
 		}
-		
+
 		// --------------------
 		// composition string change
-		
+
 		if( flgGcsType & GCS_COMPSTR )
 		{
 			LONG bytecountLen = 0;
@@ -341,23 +341,23 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 			// --------------------
 			// get the string
 
-			bytecountLen = ImmGetCompositionStringW( 
-				hImc, 
-				GCS_COMPSTR, 
+			bytecountLen = ImmGetCompositionStringW(
+				hImc,
+				GCS_COMPSTR,
 				NULL, 0 );
-			
+
 			wbuf = malloc(bytecountLen + sizeof(*wbuf)); // alloc extra for NULL
 			if( verify( wbuf ))
 			{
 				LONG iStrEnd;
-				bytecountLen = ImmGetCompositionStringW( 
-					hImc, 
-					GCS_COMPSTR, 
+				bytecountLen = ImmGetCompositionStringW(
+					hImc,
+					GCS_COMPSTR,
 					wbuf,
 					bytecountLen
 					);
 				iStrEnd = bytecountLen / sizeof( wbuf[0]);
-				
+
 				// ab: are the strings really not NULL terminated?
 				// yes, yes they aren't.
 				wbuf[iStrEnd] = 0;
@@ -370,14 +370,14 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 
 					uiedit_Backspace( edit, c->lenStr );
 					c->lenStr = iStrEnd;
-					
+
 					uiEditInsertUnicodeStr( edit, wbuf, iStrEnd );
 					uiEditSetUnderlineStateCurLine( edit, true, kuiEditAction_ToCursor, c->lenStr );
 				}
 
 				free(wbuf);
 			}
-			
+
 
 			// --------------------
 			// get the attributes
@@ -391,7 +391,7 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 			if( verify( bytecountLen >= 0 ))
 			{
 				c->attributes[bytecountLen] = 0;
-			}			
+			}
 		}
 
 		if( flgGcsType & GCS_COMPREADSTR )
@@ -399,18 +399,18 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 			// update the reading string
 			wchar_t buf[MAX_UIIMESTRING_LEN] = {0};
 			LONG bcLenStr = ImmGetCompositionStringW(
-				hImc, 
-				GCS_COMPREADSTR, 
-				buf, 
+				hImc,
+				GCS_COMPREADSTR,
+				buf,
 				sizeof(buf));
 			int i;
 			for( i = 0x1; i & 0x1fff; i <<=	1 )
 			{
 				ZeroArray(buf);
 				bcLenStr = ImmGetCompositionStringW(
-					hImc, 
-					i, 
-					buf, 
+					hImc,
+					i,
+					buf,
 					sizeof(buf));
 			}
 
@@ -424,7 +424,7 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 
 				// copy the characters to the entries
 				// for the reading string, each character is an entry.
-				for( i = 0; i < c->candidatesSize; ++i ) 
+				for( i = 0; i < c->candidatesSize; ++i )
 				{
 					char *tmp = WideToUTF8CharConvert(buf[i]);
 					if( verify( tmp ))
@@ -440,8 +440,8 @@ static bool s_HandleImeComposition( uiIMEState *s, HWND hWnd, DWORD dbcsChar, DW
 
 		if( flgGcsType & GCS_COMPCLAUSE )
 		{
-			LONG bytecountLen = ImmGetCompositionStringW( 
-				hImc, 
+			LONG bytecountLen = ImmGetCompositionStringW(
+				hImc,
 				GCS_COMPCLAUSE,
 				c->clauses,
 				sizeof(c->clauses));
@@ -474,7 +474,7 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 	DWORD bcSizeCandList = 0;
 	LPCANDIDATELIST lpCandList = NULL;
 	uiIMECandidateReading *c;
-	
+
 	if( !verify( s && hImc ) )
 	{
 		return res;
@@ -486,23 +486,23 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 	// show candidate, hide reading
 
 	c->visible = kCandidateWindowVisibility_Candidate;
-	
+
 	// --------------------
 	// parse the candidate list
-	
+
 	bcSizeCandList = ImmGetCandidateListW(hImc, 0, NULL, 0);
 	if( bcSizeCandList > 0 )
 	{
 		// --------------------
 		// alloc the candidate list
-		
+
 		lpCandList = malloc( bcSizeCandList );
-		
+
 		if( verify( lpCandList && c ))
 		{
 			int nPageTopIndex = 0;
 			U32 i, j;
-			
+
 			ImmGetCandidateListW( hImc, 0, lpCandList, bcSizeCandList );
 
 			// --------------------
@@ -518,7 +518,7 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 			}
 			break;
 			case LANG_CHINESE:
-			case LANG_JAPANESE: 
+			case LANG_JAPANESE:
 			default:
 				c->selection = lpCandList->dwSelection;
 			};
@@ -533,7 +533,7 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 
 			c->count = lpCandList->dwCount;
 			c->candidatesSize = MIN(c->count, MAX_CANDLIST ); //MIN( lpCandList->dwPageSize, MAX_CANDLIST );
-			
+
 			if( GetPrimaryLanguage(s->input.keyboardLayout) == LANG_JAPANESE )
 			{
 				// Japanese IME organizes its candidate list a little
@@ -542,12 +542,12 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 			}
 			else
 				nPageTopIndex = lpCandList->dwPageStart;
-			
+
 			ZeroArray(c->pszCandidates);
-			
+
 			// parse the candidate list
 			for( i = nPageTopIndex, j = 0;
-				 (DWORD)i < lpCandList->dwCount 
+				 (DWORD)i < lpCandList->dwCount
 					 && j < c->candidatesSize;
 				 i++, j++ )
 			{
@@ -565,7 +565,7 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 // 				{
 // 					*psz++ = ' ';
 // 				}
-				
+
 				pwszNewCand = (LPWSTR)( (LPBYTE)lpCandList + lpCandList->dwOffset[i] );
 				convertedTmp = WideToUTF8StrTempConvert( pwszNewCand, &lenTemp );
 
@@ -573,16 +573,16 @@ static bool s_HandleImeNotify_OpenChangeCandidate(uiIMEState *s, HIMC hImc)
 				strncpy(psz, convertedTmp, lenTemp);
 			}
 		}
-		
+
 		// --------------------
 		// finally
-		
+
 		if( lpCandList )
 		{
 			free(lpCandList);
 		}
 	}
-	
+
 	// --------------------
 	// finally
 
@@ -630,7 +630,7 @@ static uiIMEState s_IMEState = {0};
 
 //--------------------------------------------------------------------------------------
 //	GetImeId( UINT uIndex )
-//		returns 
+//		returns
 //	returned value:
 //	0: In the following cases
 //		- Non Chinese IME input locale
@@ -646,7 +646,7 @@ static uiIMEState s_IMEState = {0};
 //			pVerFixedInfo->dwFileVersionLS
 //
 //	Use IMEID_VER and IMEID_LANG macro to extract version and language information.
-//	
+//
 
 // We define the locale-invariant ID ourselves since it doesn't exist prior to WinXP
 // For more information, see the CompareString() reference.
@@ -656,7 +656,7 @@ static DWORD GetImeId( UINT uIndex )
 {
     static HKL hklPrev = 0;
     static DWORD dwID[2] = { 0, 0 };  // Cache the result
-    
+
     DWORD   dwVerSize;
     DWORD   dwVerHandle;
     LPVOID  lpVerBuffer;
@@ -711,11 +711,11 @@ static DWORD GetImeId( UINT uIndex )
                 {
                     DWORD dwVer = ( (VS_FIXEDFILEINFO*)lpVerData )->dwFileVersionMS;
                     dwVer = ( dwVer & 0x00ff0000 ) << 8 | ( dwVer & 0x000000ff ) << 16;
-                    if( 
+                    if(
                         ( LOWORD(s_IMEState.input.keyboardLayout) == LANG_CHT &&
-                          ( dwVer == MAKEIMEVERSION(4, 2) || 
-                            dwVer == MAKEIMEVERSION(4, 3) || 
-                            dwVer == MAKEIMEVERSION(4, 4) || 
+                          ( dwVer == MAKEIMEVERSION(4, 2) ||
+                            dwVer == MAKEIMEVERSION(4, 3) ||
+                            dwVer == MAKEIMEVERSION(4, 4) ||
                             dwVer == MAKEIMEVERSION(5, 0) ||
                             dwVer == MAKEIMEVERSION(5, 1) ||
                             dwVer == MAKEIMEVERSION(5, 2) ||
@@ -790,7 +790,7 @@ static void GetPrivateReadingString(HWND hWnd, uiIMEState *s )
 		}
 
         lpIC = _ImmLockIMC( hImc );
-        
+
         switch( dwId )
         {
             case IMEID_CHT_VER42: // New(Phonetic/ChanJie)IME98  : 4.2.x.x // Win98
@@ -887,7 +887,7 @@ static void GetPrivateReadingString(HWND hWnd, uiIMEState *s )
 
 			strncpy( c->pszCandidates[i], WideToUTF8CharConvert(wstr[i]), ARRAY_SIZE(c->pszCandidates[i]) );
         }
-		
+
     }
     else
     {
@@ -922,22 +922,22 @@ static void GetPrivateReadingString(HWND hWnd, uiIMEState *s )
 	}
 }
 
-//#endif 
+//#endif
 
 //------------------------------------------------------------
 //  from international_ime microsoft example
 //----------------------------------------------------------
-static void s_SetCandidateWindowPos(uiIMEState * s, HWND hWnd, LONG x_cursor, LONG y_cursor) 
+static void s_SetCandidateWindowPos(uiIMEState * s, HWND hWnd, LONG x_cursor, LONG y_cursor)
 {
 	HIMC		hIMC;
 	CANDIDATEFORM Candidate;
 
-	if ( hIMC = ImmGetContext(hWnd) ) 
-	{		
+	if ( hIMC = ImmGetContext(hWnd) )
+	{
 		Candidate.dwIndex = 0;
 		Candidate.dwStyle = CFS_FORCE_POSITION;
 
-		if ( GetPrimaryLanguage( s->input.keyboardLayout ) == LANG_JAPANESE) 
+		if ( GetPrimaryLanguage( s->input.keyboardLayout ) == LANG_JAPANESE)
 		{
 			Candidate.ptCurrentPos.x = x_cursor;
 		}
@@ -956,12 +956,12 @@ static void s_SetCandidateWindowPos(uiIMEState * s, HWND hWnd, LONG x_cursor, LO
 // ================================================================================
 
 // just let the ime api know where the caret is
-static void SetCompositionWindowPos(HWND hWnd, F32 x, F32 y) 
+static void SetCompositionWindowPos(HWND hWnd, F32 x, F32 y)
 {
 	HIMC		hIMC;
     COMPOSITIONFORM Composition;
 
-	if ( hIMC = ImmGetContext(hWnd) ) 
+	if ( hIMC = ImmGetContext(hWnd) )
 	{
 		// Set composition window position near caret position
 		Composition.dwStyle = CFS_POINT;
@@ -980,7 +980,7 @@ static bool s_HandleImeNotify( uiIMEState * s, HWND hWnd, DWORD imnCmd, DWORD da
 	if( verify( s && hImc ))
 	{
 		uiIMECandidateReading *c = &s->candidate;
-		
+
 		switch ( imnCmd )
 		{
 		case IMN_SETOPENSTATUS:
@@ -1000,30 +1000,30 @@ static bool s_HandleImeNotify( uiIMEState * s, HWND hWnd, DWORD imnCmd, DWORD da
 			}
 			break;
 		case IMN_PRIVATE:
-		{			
+		{
 			// --------------------
 			// kooky plan: hack into memory and see if that works
 
 			{
 				GetPrivateReadingString( hWnd, &s_IMEState );
 			}
-				
+
 			// --------------------
 			// kooky plan 1: set the window position and use the windows window
 
-// 			if(0)	
+// 			if(0)
 // 			{
 // 				UIEdit const *edit = s->pUIEdit;
 // 				//edit->cursor.lastXPos, edit->bounds.y
 // 				s_SetCandidateWindowPos( s, hWnd, edit->cursor.lastXPos + edit->bounds.x, edit->bounds.y ); // hacking this in for now
 // 				printf("cursor lastxpos:%d\n",edit->cursor.lastXPos);
-				
-// 				// 'handle' the message if we don't have 
+
+// 				// 'handle' the message if we don't have
 // 				// an edit control active
 // 				//res = false; //s->composing;
 // 				//printf(res ? "intercepting private\n" : "");
 // 			}
-			
+
 			// --------------------
 			// not so kooky plan: try getting the reading string using the published api
 			// doesn't work for some reason though.
@@ -1033,22 +1033,22 @@ static bool s_HandleImeNotify( uiIMEState * s, HWND hWnd, DWORD imnCmd, DWORD da
 // 				// update the reading string
 // 				wchar_t buf[MAX_UIIMESTRING_LEN] = {0};
 // 				LONG bcLenStr = ImmGetCompositionStringW(
-// 					hImc, 
-// 					GCS_RESULTREADSTR, 
-// 					buf, 
+// 					hImc,
+// 					GCS_RESULTREADSTR,
+// 					buf,
 // 					sizeof(buf));
-				
+
 // 				if( verify( INRANGE0( bcLenStr, ARRAY_SIZE( buf ) )))
 // 				{
 // 					U32 i;
-					
-					
+
+
 // 					c->candidatesSize = MIN(bcLenStr/sizeof(buf[0]), ARRAY_SIZE(c->pszCandidates));
 // 					ZeroArray(c->pszCandidates);
-					
+
 // 					// copy the characters to the entries
 // 					// for the reading string, each character is an entry.
-// 					for( i = 0; i < c->candidatesSize; ++i ) 
+// 					for( i = 0; i < c->candidatesSize; ++i )
 // 					{
 // 						char *tmp = WideToUTF8CharConvert(buf[i]);
 // 						if( verify( tmp ))
@@ -1057,18 +1057,18 @@ static bool s_HandleImeNotify( uiIMEState * s, HWND hWnd, DWORD imnCmd, DWORD da
 // 						}
 // 					}
 // 				}
-				
+
 // 				// set the reading to visible ...
 // 				c->visible = bcLenStr > 0 ? kCandidateWindowVisibility_Reading : 0;
 // 			}
-		}	
+		}
 		break;
 		default:
 			// do nothing
 			break;
 		};
 	}
-	
+
 
 	// --------------------
 	// finally
@@ -1088,28 +1088,28 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 #define HDR() printf("%d:\t", cnt)
 	switch(uMsg)
 	{
-	case WM_INPUTLANGCHANGE: 
+	case WM_INPUTLANGCHANGE:
 		HDR();
 		{
 			printf("WM_INPUTLANGCHANGE\n");
 		}
 		break;
-	case WM_IME_CHAR: 
+	case WM_IME_CHAR:
 		HDR();
 		printf("WM_IME_CHAR\n");
 		break;
-	case WM_IME_COMPOSITION: 
+	case WM_IME_COMPOSITION:
 		HDR();
 		printf("WM_IME_COMPOSITION wParam(0x%x) ", wParam);
-		
+
 		{
 			struct GCSPairs
 			{
 				DWORD id;
 				char const *str;
-			} ids[] = 
+			} ids[] =
 				{
-					
+
 					{ GCS_COMPATTR, "GCS_COMPATTR" },
 					{ GCS_COMPCLAUSE, "GCS_COMPCLAUSE" },
 					{ GCS_COMPREADSTR, "GCS_COMPREADSTR" },
@@ -1124,9 +1124,9 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 					{ GCS_RESULTSTR, "GCS_RESULTSTR" },
 				};
 			int i;
-			
+
 			printf("lParam(");
-			for( i = 0; i < ARRAY_SIZE( ids ); ++i ) 
+			for( i = 0; i < ARRAY_SIZE( ids ); ++i )
 			{
 				if( ids[i].id & lParam )
 				{
@@ -1137,7 +1137,7 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 		}
 
 		break;
-	case WM_IME_COMPOSITIONFULL: 
+	case WM_IME_COMPOSITIONFULL:
 		HDR();
 		{
 			printf("WM_IME_COMPOSITIONFULL\n");
@@ -1161,7 +1161,7 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 				{IMC_SETCOMPOSITIONFONT,"IMC_SETCOMPOSITIONFONT"},
 				{IMC_SETCOMPOSITIONWINDOW,"IMC_SETCOMPOSITIONWINDOW"},
 				{IMC_SETSTATUSWINDOWPOS ,"IMC_SETSTATUSWINDOWPOS "},
-			};	
+			};
 			int i;
 
 			printf("WM_IME_CONTROL:");
@@ -1199,7 +1199,7 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 				{ISC_SHOWUICANDIDATEWINDOW << 2,"ISC_SHOWUICANDIDATEWINDOW 2"},
 				{ISC_SHOWUICANDIDATEWINDOW << 3,"ISC_SHOWUICANDIDATEWINDOW 3"},
 				{ISC_SHOWUIALL,"ISC_SHOWUIALL"},
-			};	
+			};
 			int i;
 
 			printf("WM_IME_SETCONTEXT: active(%s) display flags(", wParam ? "true" : "false");
@@ -1230,10 +1230,10 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 			printf("WM_IME_NOTIFY: ");
 			{
 				struct IMENotify
-				{ 
+				{
 					int id;
 					char *str;
-				} imes[] = 
+				} imes[] =
 				{
 					{IMN_CHANGECANDIDATE,"IMN_CHANGECANDIDATE"},
 					{IMN_CLOSECANDIDATE,"IMN_CLOSECANDIDATE"},
@@ -1251,7 +1251,7 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 					{IMN_PRIVATE,"IMN_PRIVATE"},
 				};
 				int i;
-				for( i = 0; i < ARRAY_SIZE( imes ); ++i ) 
+				for( i = 0; i < ARRAY_SIZE( imes ); ++i )
 				{
 					if( imes[i].id == wParam)
 					{
@@ -1306,10 +1306,10 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 		printf("WM_IME_REQUEST: ");
 		{
 			struct IMERequest
-			{ 
+			{
 				int id;
 				char *str;
-			} imers[] = 
+			} imers[] =
 			{
 				{IMR_CANDIDATEWINDOW,"IMR_CANDIDATEWINDOW"},
 				{IMR_COMPOSITIONFONT,"IMR_COMPOSITIONFONT"},
@@ -1320,7 +1320,7 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 				{IMR_RECONVERTSTRING ,"IMR_RECONVERTSTRING "},
 			};
 			int i;
-			for( i = 0; i < ARRAY_SIZE( imers ); ++i ) 
+			for( i = 0; i < ARRAY_SIZE( imers ); ++i )
 			{
 				if( imers[i].id == wParam )
 				{
@@ -1338,12 +1338,12 @@ static void imeMsgPrint(UINT uMsg, WPARAM wParam, LPARAM lParam )
 	case WM_IME_STARTCOMPOSITION:
 		HDR();
 		printf("WM_IME_STARTCOMPOSITION\n");;
-		
+
 		break;
 	case WM_IME_ENDCOMPOSITION:
 		HDR();
-		printf("WM_IME_ENDCOMPOSITION\n");		
-		break;	
+		printf("WM_IME_ENDCOMPOSITION\n");
+		break;
 	default:
 		cnt--;
 		break;
@@ -1362,7 +1362,7 @@ bool uiIME_MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 	{
 		//ab: this is probably the right way to ignore IME, but in the
 		//'if it aint broke' dept: the ArenaNet guy thought manually
-		//disabling IME was better...  
+		//disabling IME was better...
 		//
 		//if bugs start happening with IME, maybe give this a try.  if
 		//you uncomment this, make sure to comment out the two
@@ -1486,15 +1486,15 @@ bool uiIME_MsgProc( HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam )
 }
 
 // ------------------------------------------------------------
-// rendering 
+// rendering
 
 void uiIMEIndicatorRender(F32 z_ind, F32 sc, int color, int bcolor)
 {
 	uiIMEInput *il = &s_IMEState.input;
-	
+
 	// --------------------
 	// render the indicator
-	
+
 	if( s_IMEState.input.visible && verify( il->indicator && s_IMEState.pUIEdit ))
 	{
 		TTDrawContext *fnt = &game_9;
@@ -1532,7 +1532,7 @@ void uiIMEIndicatorRender(F32 z_ind, F32 sc, int color, int bcolor)
 			char *tmp = WideToUTF8StrTempConvert(il->indicator, NULL ); // could cache this...
 
 			// draw frame
-			drawFlatFrame( PIX3, R10, x_ind, y_ind, z_ind, 
+			drawFlatFrame( PIX3, R10, x_ind, y_ind, z_ind,
 				wd_ind, ht_ind, sc, color, bcolor );
 
 			// draw the text
@@ -1555,7 +1555,7 @@ void uiIMEIndicatorRender(F32 z_ind, F32 sc, int color, int bcolor)
 				prnt( x_ind + PIX3*sc, y_ind + (s_IMEState.input.indicatorDims.usHt - PIX3)*sc, z_ind, sc, sc, tmp);
 			}
 		}
-		
+
 	}
 }
 
@@ -1573,7 +1573,7 @@ static void s_renderComposition( TTDrawContext *fnt, F32 x_comp, F32 y_comp, F32
 //		font(fnt);
 //		font_color(CLR_WHITE, CLR_WHITE);
 //		prnt( x_comp, y_comp + dy_fnt, z_comp, sc, sc, c->buf );
-//	}	
+//	}
 }
 
 
@@ -1603,16 +1603,16 @@ static void s_renderCandidates( TTDrawContext *fnt, UIBox const *dimsParent, F32
 
 		// the text
 		// NOTE: this code depends closely on the rendering code below
-		for( i = 0; i < c->candidatesSize; ++i ) 
+		for( i = 0; i < c->candidatesSize; ++i )
 		{
 			CBox bx = {0};
 			F32 ht;
 			F32 wd;
-			
+
 			str_dims(fnt, sc, sc, false, &bx, c->pszCandidates[i]);
 			ht = bx.bottom - bx.top;
 			wd = bx.right - bx.left;
-			
+
 			relPosTxts[i].width = wd;
 			relPosTxts[i].height = ht;
 
@@ -1644,21 +1644,21 @@ static void s_renderCandidates( TTDrawContext *fnt, UIBox const *dimsParent, F32
 
 		// --------------------
 		// render
-		
+
 		{
 			F32 z_cur = z_candidate + 1;
-			F32 z_txt = z_candidate + 2;			
-			
+			F32 z_txt = z_candidate + 2;
+
 			// draw frame
 			uiDrawBox( &dims, z_candidate, color, bcolor );
-			
+
 			// draw the strings
 			font(fnt);
 			font_color(CLR_WHITE,CLR_WHITE);
-			
+
 			// draw the text
 			// NOTE: depends closely on dims finding code above
-			for( i = 0; i < c->candidatesSize; ++i ) 
+			for( i = 0; i < c->candidatesSize; ++i )
 			{
 				UIBox *dp = &relPosTxts[i];
 				F32 x_txt = dims.x + dp->x;
@@ -1667,11 +1667,11 @@ static void s_renderCandidates( TTDrawContext *fnt, UIBox const *dimsParent, F32
 				// for horizontal, make sure all draw from the buttom of the box
 				F32 dyAdj = verticalLayout ? dp->height : dims.height - PIX3*sc;
 				F32 y_txt = dims.y + dp->y + dyAdj;
-				
+
 				// render text
 				// ab: using %s to prevent translation
 				prnt( x_txt, y_txt, z_txt, sc, sc, "%s", c->pszCandidates[i] );
-				
+
 				// draw the selection
 				if( i == c->selection )
 				{
@@ -1770,7 +1770,7 @@ void uiIME_OnFocus(UIEdit *edit)
 			s_IMEState.composition.lenStr = 0;
 
 			// tell indicator to re-calc its dims
-			s_IMEState.input.indicatorDims.usWd = 0.f; 
+			s_IMEState.input.indicatorDims.usWd = 0.f;
 
 			ImmAssociateContext( hwnd, hImc );
 		}

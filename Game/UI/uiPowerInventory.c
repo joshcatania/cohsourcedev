@@ -5,7 +5,7 @@
  ***************************************************************************/
 // Abandon hope all ye who enter
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "earray.h"         // for StructGetNum
 #include "mathutil.h"
@@ -93,7 +93,7 @@ TrayObj * power_getVisibleTrayObj( TrayObj * obj, int *tray, int *slot )
 		{
 			if( to->type == kTrayItemType_Power && obj->iset == to->iset && obj->ipow == to->ipow )
 			{
-				if( tray )	
+				if( tray )
 					*tray = i;
 				if( slot )
 					*slot = j;
@@ -125,7 +125,7 @@ TrayObj * power_getEmptySlot( int *tray, int *num )
 
     i = get_cur_tray( e );
 	assert(e->pchar);
-    
+
 	for( j = 0; j < TRAY_SLOTS; j++)
 	{
 		int type = typeTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, i, j, e->pchar->iCurBuild);
@@ -155,7 +155,7 @@ void initnewbMasterMindMacros(void)
 	if( newbMastermindMacros[0].pchName )
 		return;
 
-	architectPowerMacro.pchName = strdup("ArchitectAccoladeDisplayName"); 
+	architectPowerMacro.pchName = strdup("ArchitectAccoladeDisplayName");
 	architectPowerMacro.pchDisplayName = strdup("ArchitectAccoladeDisplayName");
 	architectPowerMacro.pchDisplayHelp = strdup("Architect$$em MATablet");
 	architectPowerMacro.pchDisplayShortHelp = strdup("ArchitectAccoladeShortHelp");
@@ -295,7 +295,7 @@ static void power_drawPower( const BasePower *pow, float x, float y, float z, fl
 			else
 				tray_dragPower( ppow->psetParent->idx, ppow->idx, icon );
 		}
-		else 
+		else
 		if( mouseClickHit( &box, MS_LEFT ) && !autoPower )
 		{
 			if(inpLevel(INP_CONTROL)&& !bIsMacro) // if ctrl key is down set as auto-power
@@ -420,7 +420,7 @@ static float power_drawSet( PowerSet *pset, float x, float y, float z, float wd,
 	}
 	else // show all powers in set, even if not owned.
 	{
-	
+
 		for( i = 0; i < eaSize(&pset->psetBase->ppPowers); i++ )
 		{
 			if (basepower_ShowInInventory(pset->pcharParent, pset->psetBase->ppPowers[i]))
@@ -453,7 +453,7 @@ static float power_drawSet( PowerSet *pset, float x, float y, float z, float wd,
 		font( &gamebold_9 );
 		font_color( CLR_WHITE, CLR_BLUE );
 
-		if( pset )	
+		if( pset )
 			cprnt( x + wd/2, y+16*scale, z, scale, scale, pset->psetBase->pchDisplayName );
 		else
 			cprnt( x + wd/2, y+16*scale, z, scale, scale, "BasicPetCom" );

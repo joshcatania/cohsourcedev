@@ -4,7 +4,7 @@
 #include <freetype/ftmodule.h>
 
 #include "file.h"	// for fileOpen()
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "truetype/ttAppleMapping.h"
 #include "truetype/ttFontBitmap.h"
@@ -54,7 +54,7 @@ int ttStartup(){
 	// If the module has already been started, don't do anything.
 	if(ttStarted)
 		return 1;
-		
+
 	ftMemoryFuncs.alloc =	cryptic_ft_alloc;
 	ftMemoryFuncs.free =	cryptic_ft_free;
 	ftMemoryFuncs.realloc = cryptic_ft_realloc;
@@ -64,9 +64,9 @@ int ttStartup(){
 		#if 1
 			// MS: Switched to this so we could track the memory allocations properly.
 			//     http://freetype.sourceforge.net/freetype2/docs/design/design-4.html
-			
+
 			error = FT_New_Library(&ftMemoryFuncs, &library);
-			
+
 			if(!error)
 			{
 				FT_Add_Default_Modules( library );
@@ -163,7 +163,7 @@ void ttFontCacheDump(void)
 	EnterCriticalSection(&CriticalSectionFontCache);
 	num = eaSize(&ttFontCache);
 	for (i=0; i<num; i++) {
-		printf("Font: %20s, refs: %d, loaded: %s\n", 
+		printf("Font: %20s, refs: %d, loaded: %s\n",
 			ttFontCache[i]->name, ttFontCache[i]->referenceCount, ttFontCache[i]->font?"YES":"NO");
 	}
 	LeaveCriticalSection(&CriticalSectionFontCache);
@@ -212,7 +212,7 @@ TTSimpleFont* ttFontLoadCachedFace(const char *filename, int load, const char *f
 	if (load)
 		memlog_printf(0, "%u: ttFontLoadCached %s", game_state.client_frame_timestamp, filename);
 
-	
+
 	num = eaSize(&ttFontCache);
 	for (i=0; i<num; i++) {
 		if (stricmp(filename, ttFontCache[i]->name)==0 || game_state.quickLoadFonts) {
@@ -258,18 +258,18 @@ static void fileWrapperClose(FT_Stream stream)
 	fclose(file);
 }
 
-#undef __FTERRORS_H__                                           
-#define FT_ERRORDEF( e, v, s )  { e, s },                       
-#define FT_ERROR_START_LIST     {                               
-#define FT_ERROR_END_LIST       { 0, 0 } };                     
+#undef __FTERRORS_H__
+#define FT_ERRORDEF( e, v, s )  { e, s },
+#define FT_ERROR_START_LIST     {
+#define FT_ERROR_END_LIST       { 0, 0 } };
 
-const struct                                                    
-{                                                               
+const struct
+{
 	int          err_code;
 	const char*  err_msg;
-} ft_errors[] = 
+} ft_errors[] =
 
-#include FT_ERRORS_H 
+#include FT_ERRORS_H
 
 static int dontConfuseWorkspaceWhiz[] = {1,2}; // this stops the previous 2 lines from confusing WWhiz's parser
 
@@ -354,7 +354,7 @@ int ttFontLoad(TTSimpleFont* font, const char* filename, const char* facename){
 		error = FT_Select_Charmap(face, ft_encoding_apple_roman);
 		if(error){
 			// This point should never be reached.  It means that there isn't a unicode
-			// nor an "Apple Roman" character map in the font.  
+			// nor an "Apple Roman" character map in the font.
 			// The library will need to learn to deal with these types of fonts we encounter them.
 			assert(0);
 		}
@@ -489,7 +489,7 @@ FT_Face ttFontRenderGlyphEx(TTSimpleFont* simpleFont, TTFontRenderParams* params
 			assert(simpleFont->boldItalics.font);
 			face = simpleFont->boldItalics.font->font;
 		}
-	} 
+	}
 	else if(params->bold)
 	{
 		if (simpleFont->bold.state == TTFSS_LOADED) {
@@ -561,17 +561,17 @@ FT_Face ttFontRenderGlyphEx(TTSimpleFont* simpleFont, TTFontRenderParams* params
 		case TTGGM_INTERPRETER:
 			flag = FT_LOAD_DEFAULT;
 			break;
-		
+
 		case TTGGM_NOHINT:
 			flag = FT_LOAD_NO_HINTING;
 			break;
 		default:
 			assert(0 && "invalid glyph generation mode");
 		}
-		error = FT_Load_Glyph( 
+		error = FT_Load_Glyph(
 			face,					/* handle to face object */
 			glyphIndex,				/* glyph index           */
-			flag );					
+			flag );
 	}
 
 	if(error){
@@ -592,7 +592,7 @@ FT_Face ttFontRenderGlyphEx(TTSimpleFont* simpleFont, TTFontRenderParams* params
 	}
 
 	return face;
-	
+
 }
 
 static int ttFontFaceGetPixel(unsigned char* row, int element, FT_Bitmap* ftBitmap)
@@ -660,13 +660,13 @@ TTFontBitmap* ttFontGenerateBitmap(FT_Face face)
 		for(j = 0; j < width; j++)
 		{
 			LumAlphaPixel* dst = (LumAlphaPixel*)&dstRowBuffer[j];
-			
+
 			// This will be a texture with only alpha and luminance value where the entire
 			// texture is white and the alpha channel matches the glyph bitmap.
 			dst->alpha = ttFontFaceGetPixel(srcRowBuffer, j, &face->glyph->bitmap);			// Alpha
 			dst->luminance = 255;		// Luminance
 		}
-																				
+
 		srcRowBuffer += face->glyph->bitmap.pitch;
 		dstRowBuffer += width;
 	}

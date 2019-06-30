@@ -1,4 +1,4 @@
-#include "assert.h"
+#include "SuperAssert.h"
 #include "player.h"
 #include "entity.h"
 #include "cmdgame.h"
@@ -13,13 +13,13 @@
 #include "clientcomm.h"
 #include "uiConsole.h"
 #include "memcheck.h"
-#include "sun.h" 
-#include "file.h" 
+#include "sun.h"
+#include "file.h"
 #include "entVarUpdate.h" // for ClientLink
 #include "entclient.h"
 #include "uiCursor.h"
 #include "uiTray.h"
-#include "Position.h"	
+#include "Position.h"
 #include "utils.h"
 #include "character_base.h"
 #include "playerSticky.h"
@@ -40,7 +40,7 @@
 #include "Quat.h"
 #include "uiOptions.h"
 #if !TEST_CLIENT
-	#include "baseedit.h"	
+	#include "baseedit.h"
 #endif
 
 typedef struct PlayerPrivateData {
@@ -93,16 +93,16 @@ Entity *playerPtrForShell(int alloc)
 		else
 		{
 			ppd.playerForShell->costume = ppd.player->costume;
-		}		
+		}
 	}
 	// Set this so that the shell is on the same team but unganged, and thus does not have perception radius problems
 	if (ppd.pccEditingMode > 0)
 	{
 		if (ppd.PCCCritter
-			&& ppd.PCCCritter->pchar 
-			&& ppd.PCCCritter->pchar->iAllyID 
+			&& ppd.PCCCritter->pchar
+			&& ppd.PCCCritter->pchar->iAllyID
 			&& ppd.playerForShell
-			&& ppd.playerForShell->pchar) 
+			&& ppd.playerForShell->pchar)
 		{
 			ppd.playerForShell->pchar->iAllyID = ppd.PCCCritter->pchar->iAllyID;
 			ppd.playerForShell->pchar->iGangID = 0;
@@ -110,11 +110,11 @@ Entity *playerPtrForShell(int alloc)
 	}
 	else
 	{
-		if (ppd.player 
-			&& ppd.player->pchar 
-			&& ppd.player->pchar->iAllyID 
+		if (ppd.player
+			&& ppd.player->pchar
+			&& ppd.player->pchar->iAllyID
 			&& ppd.playerForShell
-			&& ppd.playerForShell->pchar) 
+			&& ppd.playerForShell->pchar)
 		{
 			ppd.playerForShell->pchar->iAllyID = ppd.player->pchar->iAllyID;
 			ppd.playerForShell->pchar->iGangID = 0;
@@ -131,30 +131,30 @@ void setPlayerPtrForShell(Entity *e)
 void setMySlave(Entity* slave, Packet* pak, int control)
 {
 	Entity* master = ownedPlayerPtr();
-	
+
 	if(!master)
 		return;
-		
+
 	if(slave)
 	{
 		// Check if there is already a slave set.
-		
+
 		if(master != playerPtr())
 		{
 			setMySlave(NULL, NULL, 0);
 		}
 
 		assert(pak);
-		
+
 		receiveCharacterFromServer(pak, slave);
-		
+
 		ppd.mySlave = slave;
 		ppd.slaveControl = control;
 	}
 	else
 	{
 		slave = playerPtr();
-		
+
 		if(master != slave)
 		{
 			ppd.mySlave = NULL;
@@ -181,16 +181,16 @@ int playerIsSlave()
 //
 // MS: Returns the entity that I'm viewing.
 //
-	
+
 Entity *playerPtr()
 {
 	if(ppd.mySlave)
 	{
 		return ppd.mySlave;
 	}
-	
+
 	if (ppd.pccEditingMode > 0)
-	{	
+	{
 		return ppd.PCCCritter;
 	}
 	return ppd.player;
@@ -199,12 +199,12 @@ Entity *playerPtr()
 //
 // MS: Returns entity that I'm in control of.
 //
-	
+
 Entity* controlledPlayerPtr()
 {
 	if(playerIsSlave())
 		return NULL;
-		
+
 	if(ppd.mySlave)
 		return ppd.slaveControl ? ppd.mySlave : NULL;
 
@@ -226,7 +226,7 @@ void playerSetEnt(Entity *e)
 //
 // MS: Returns player entity that I own regardless of whether I'm a slave.
 //
-	
+
 Entity* ownedPlayerPtr()
 {
 	return ppd.player;
@@ -312,7 +312,7 @@ void setPlayerFacingLocation(Vec3 vecTarget, F32 time_to_arrive_at_correct_facin
 	if(!control_state.canlook && !control_state.cam_rotate)
 	{
 		// Turn the camera if no camera-turn buttons are held down.
-		
+
 		control_state.forcedTurn.turnCamera = 1;
 		cam_info.rotate_scale = 0.02;
 	}
@@ -362,9 +362,9 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 		optionSetf(kUO_SpeedTurn,30,0);
 
 	if( optionGetf(kUO_MouseSpeed) < 0 )
-		optionSetf(kUO_MouseSpeed,0,0); 
+		optionSetf(kUO_MouseSpeed,0,0);
 	if( optionGetf(kUO_MouseSpeed) > 6 )
-		optionSetf(kUO_MouseSpeed,6,0); 
+		optionSetf(kUO_MouseSpeed,6,0);
 
 	if (optionGet(kUO_CamFree) && control_state.canlook)
 	{
@@ -375,7 +375,7 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 
 	// Make player model orientation adjustments.
 	if (controls->turnleft)
-	{			
+	{
 		playerPyr[1] = addAngle(playerPyr[1], -RAD(optionGetf(kUO_SpeedTurn)) * TIMESTEP);
 		if (optionGet(kUO_CamFree) && !controls->canlook && !controls->first && !controls->follow)
 			controls->cam_pyr_offset[1] = 0;
@@ -387,16 +387,16 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 			controls->cam_pyr_offset[1] = 0;
 	}
 
- 	if (controls->lookup) 
+ 	if (controls->lookup)
 		cameraPyr[0] = addAngle(cameraPyr[0], RAD(optionGetf(kUO_SpeedTurn)) * TIMESTEP);
 	if (controls->lookdown)
 		cameraPyr[0] = addAngle(cameraPyr[0], -RAD(optionGetf(kUO_SpeedTurn)) * TIMESTEP);
 
 	if( controls->zoomin )
 	{
-		game_state.camdist -= 3.0; 
+		game_state.camdist -= 3.0;
 
-		if(game_state.camdist < 0.0) 
+		if(game_state.camdist < 0.0)
 		{
 			game_state.camdist = 0.0;
 			if( !control_state.follow )
@@ -446,7 +446,7 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 		game_state.farz = 50000.0f;
 	}
 	else if ((controls->canlook || controls->cam_rotate) && inpIsMouseLocked())
-	{	
+	{
 		float *pitch;
 
 		if (control_state.follow)
@@ -456,7 +456,7 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 
 		// Adjust player yaw according to player input.
 		cameraPyr[1] = addAngle(cameraPyr[1], optionGetf(kUO_MouseSpeed) * mouse_dx / 500.0F);
-		
+
 		// If the player is in mouselook mode...
 		if(controls->mlook)
 		{
@@ -483,9 +483,9 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 			cameraPyr[0] = addAngle(d,cameraPyr[0]);
 		}
 		// Make sure the pyr does not go beyond certain pitch limits.
-		if (pitch[0] < -MPITCH_SNAP) 
+		if (pitch[0] < -MPITCH_SNAP)
 			pitch[0] = -MPITCH_SNAP;
-		if (pitch[0] >  maxsnap) 
+		if (pitch[0] >  maxsnap)
 			pitch[0] =  maxsnap;
 
 	}
@@ -537,7 +537,7 @@ static void playerProcessMouseInput(ControlState *controls, Vec3 playerPyr, Vec3
 		{
 			player_move = fabs(optionGetf(kUO_MouseSpeed) * mouse_dy / 500.0F);
 			if (player_move > PITCH_BREAK_THRESHOLD) player_move = PITCH_BREAK_THRESHOLD;
-			break_ratio = player_move / PITCH_BREAK_THRESHOLD; 
+			break_ratio = player_move / PITCH_BREAK_THRESHOLD;
 			pitch_spring *= 1.0 - break_ratio;
 		}
 
@@ -569,7 +569,7 @@ static void playerLook(ControlState *controls)
 		y_sign = -1;
 
 	// Decide which pyr to update.
-	
+
 	if(e)
 	{
 		if((control_state.cam_rotate || control_state.follow || (optionGet(kUO_CamFree) && !control_state.canlook))
@@ -581,7 +581,7 @@ static void playerLook(ControlState *controls)
 				controls->cam_pyr_offset[0] = controls->pyr.cur[0];
 
 			if (optionGet(kUO_CamFree))
-			{			
+			{
 				playerProcessMouseInput(controls, controls->pyr.cur, controls->cam_pyr_offset);
 			}
 			else
@@ -599,14 +599,14 @@ static void playerLook(ControlState *controls)
 			{
 				controls->pyr.cur[0] = controls->cam_pyr_offset[0];
 				controls->cam_pyr_offset[0] = 0;
-			}			
+			}
 		}
 		else
 		{
 			float old_yaw = controls->pyr.cur[1];
-			
+
 			playerProcessMouseInput(controls, controls->pyr.cur, controls->pyr.cur);
-			
+
 			if(controls->forcedTurn.turnCamera && old_yaw != controls->pyr.cur[1])
 			{
 				controls->pyr.cur[1] = subAngle(addAngle(cam_info.pyr[1], RAD(180)), controls->cam_pyr_offset[1]);
@@ -617,7 +617,7 @@ static void playerLook(ControlState *controls)
 	}
 
 	// Update camera orientation.
-	
+
 	copyVec3(controls->pyr.cur, pyr);
 	pyr[1] = addAngle(pyr[1], RAD(180));
 
@@ -630,7 +630,7 @@ static void playerLook(ControlState *controls)
 
 	pyr[1] = addAngle(controls->cam_pyr_offset[1], pyr[1]);
 	pyr[0] = -pyr[0];
-	
+
 	camSetPyr(pyr);
 }
 
@@ -642,13 +642,13 @@ static void playerQueueControlAngleChange(ControlState* controls, int index)
 	if(angleU32 != controls->pyr.prev[index])
 	{
 		ControlStateChange* csc = createControlStateChange();
-		
+
 		csc->control_id = id;
 		csc->time_stamp_ms = controls->time.last_send_ms;
 		csc->angleU32 = angleU32;
 
 		addControlStateChange(&control_state.csc_processed_list, csc, 1);
-		
+
 		controls->pyr.prev[index] = angleU32;
 	}
 }
@@ -660,7 +660,7 @@ static F32 clampF32abs(F32 value, F32 max_abs)
 	else if(value < -max_abs)
 		return -max_abs;
 	else
-		return value;		
+		return value;
 }
 
 static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
@@ -673,16 +673,16 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 	int		use_pitch = 0;
 
 	Mat3	newmat;
-	
+
 	// Don't turn me if in the shell.
-	
+
 	if(shell_menu())
 	{
 		return;
 	}
 
 	// Figure out if I should use my PYR.
-	
+
 	if(	!editMode() &&
 		(	controls->nocoll ||
 			controls->alwaysmobile ||
@@ -696,7 +696,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 	{
 		time_to_realign = 30.0 * 0.5;
 	}
-	
+
 	if (!usePYR || !controls->server_state->fly && !controls->nocoll)
 	{
 		body_pyr[0] = 0;
@@ -719,13 +719,13 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 	if(use_pitch != controls->using_pitch)
 	{
 		controls->using_pitch = use_pitch;
-		
+
 		if(!use_pitch)
 		{
 			Vec3 temp_vec;
 
 			getMat3YPR(ENTMAT(e), temp_vec);
-			
+
 			controls->pitch_offset = temp_vec[0];
 		}
 		else
@@ -739,7 +739,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 	if(controls->pitch_scale < 1)
 	{
 		controls->pitch_scale += (1.0 - controls->pitch_scale) * 0.1 * TIMESTEP;
-	
+
 		if(controls->pitch_scale > 1)
 		{
 			controls->pitch_scale = 1;
@@ -754,20 +754,20 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 	{
 		body_pyr[0] = body_pyr[0] * controls->pitch_scale;
 	}
-		
+
 	getMat3YPR(ENTMAT(e), pyr_start);
-	
+
 	if(controls->server_state->fly)
 	{
 		F32 scale = 0.3;
-		
+
 		//printf("pitch: [%1.3f,%1.3f] (%1.3f - %1.3f) * %1.3f", controls->pitch_offset, controls->pitch_scale, body_pyr[0], pyr_start[0], scale * min(TIMESTEP, 0.6 / scale));
-		
+
 		body_pyr[0] = addAngle(pyr_start[0], scale * min(TIMESTEP, 0.6 / scale) * subAngle(body_pyr[0], pyr_start[0]));
-		
+
 		//printf(" ==> %1.3f\n", body_pyr[0]);
 	}
-	
+
 	if(controls->forcedTurn.timeRemaining > 0 || forcedTurnHoldPYR)
 	{
 		Entity* faceEnt = erGetEnt(controls->forcedTurn.erEntityToFace);
@@ -776,7 +776,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 		float yaw, pitch;
 		float yaw_diff;
 		float ratio;
-		
+
 		getMat3YPR(ENTMAT(e), body_pyr);
 
 		if(faceEnt)
@@ -788,9 +788,9 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 		{
 			copyVec3(controls->forcedTurn.locToFace, pos);
 		}
-			
+
 		subVec3(pos, ENTPOS(e), diff);
-		
+
 		if(lengthVec3SquaredXZ(diff))
 		{
 			getVec3YP(diff, &yaw, &pitch);
@@ -799,16 +799,16 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 		{
 			getVec3YP(ENTMAT(e)[2], &yaw, &pitch);
 		}
-		
+
 		ratio = TIMESTEP / controls->forcedTurn.timeRemaining;
-		
+
 		if(ratio > 1)
 			ratio = 1;
-			
+
 		yaw_diff = subAngle(yaw, body_pyr[1]) * ratio;
-		
+
 		body_pyr[1] = addAngle(body_pyr[1], yaw_diff);
-		
+
 		if(controls->server_state->fly)
 		{
 			if(pitch < -RAD(45))
@@ -817,7 +817,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 				pitch -= RAD(45);
 			else
 				pitch = 0;
-				
+
 			body_pyr[0] = addAngle(body_pyr[0], subAngle(pitch, body_pyr[0]) * ratio);
 		}
 
@@ -827,24 +827,24 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 			if (optionGet(kUO_CamFree))
 				controls->cam_pyr_offset[1] = addAngle(controls->cam_pyr_offset[1], -yaw_diff);
 		}
-		
+
 		controls->forcedTurn.timeRemaining -= TIMESTEP;
-		
+
 		if(controls->forcedTurn.timeRemaining <= 0)
 		{
 			time_to_realign = 30.0 * 0.5;
-			
+
 			controls->last_vel_yaw = 0;
 
 			controls->forcedTurn.timeRemaining = 0;
-			
+
 			forcedTurnHoldPYR = getMoveFlags(e->seq, SEQMOVE_CANTMOVE) ? 1 : 0;
 		}
 	}
 	else if(usePYR)
 	{
 		F32 yaw_diff;
-		
+
 		// Subtract out the current input velocity yaw.
 
 		pyr_start[1] = subAngle(pyr_start[1], controls->last_vel_yaw);
@@ -860,11 +860,11 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 										0.4;
 			F32 swap_threshold;
 			F32 vel_yaw;
-			
+
 			// Calculate the yaw caused by the input velocity.
 
 			vel_yaw = getVec3Yaw(controls->last_inp_vel);
-			
+
 			if(controls->last_inp_vel[2] < 0)
 			{
 				vel_yaw = addAngle(vel_yaw, RAD(180));
@@ -881,7 +881,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 					swap_threshold = RAD(130);
 				}
 			}
-			
+
 			yaw_diff = fabs(subAngle(vel_yaw, controls->last_vel_yaw));
 
 			if(yaw_diff > swap_threshold)
@@ -889,7 +889,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 				if(controls->yaw_swap_timer > 0)
 				{
 					controls->yaw_swap_timer -= TIMESTEP;
-					
+
 					if(controls->yaw_swap_timer < 1)
 						controls->yaw_swap_timer = 1;
 				}
@@ -906,7 +906,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 						controls->yaw_swap_backwards = 0;
 					}
 				}
-				
+
 				if(controls->yaw_swap_timer > 1)
 				{
 					vel_yaw = addAngle(vel_yaw, RAD(180));
@@ -916,26 +916,26 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 			{
 				controls->yaw_swap_timer = 0;
 			}
-			
+
 			yaw_diff = clampF32abs(air_scale * subAngle(vel_yaw, controls->last_vel_yaw), TIMESTEP * RAD(10));
-				
+
 			controls->last_vel_yaw = addAngle(controls->last_vel_yaw, yaw_diff);
 		}
 		else
 		{
 			controls->last_vel_yaw = 0;
 		}
-				
+
 		// Calculate the yaw to the control direction.
-		
+
 		yaw_diff = subAngle(controls->pyr.cur[1], pyr_start[1]);
-		
+
 		if(time_to_realign > 0)
 		{
 			if(yaw_diff)
 			{
 				F32 new_yaw_diff = clampF32abs(yaw_diff, TIMESTEP * RAD(25));
-				
+
 				if(new_yaw_diff == yaw_diff)
 				{
 					time_to_realign = 0;
@@ -943,7 +943,7 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 				else
 				{
 					yaw_diff = new_yaw_diff;
-					
+
 					time_to_realign -= TIMESTEP;
 				}
 			}
@@ -958,20 +958,20 @@ static void playerAdjustBodyPYR(Entity* e, ControlState* controls)
 
 			yaw_diff = yaw_diff * scale * min(TIMESTEP, 0.6 / scale);
 		}
-				
+
 		yaw_diff = addAngle(yaw_diff, controls->last_vel_yaw);
-		
+
 		body_pyr[1] = addAngle(pyr_start[1], yaw_diff);
-		
+
 		//printf("pyr: %1.3f\t%1.3f\t%1.3f (%1.3f + %1.3f + %1.3f)\n", body_pyr[0], body_pyr[1], controls->pyr.cur[2], pyr_start[1], controls->last_vel_yaw, yaw_diff);
 	}
 	else
 	{
 		body_pyr[1] = pyr_start[1];
 	}
-		
+
 	body_pyr[2] = controls->pyr.cur[2];
-	
+
 	createMat3YPR(newmat,body_pyr);
 	entSetMat3(e, newmat);
 }
@@ -987,11 +987,11 @@ void playerResetControlState()
 	old_cs = control_state;
 
 	// Clear and then restore some old values.
-	
+
  	ZeroStruct(&control_state);
  	ZeroStruct(&server_control_state);
 	ZeroStruct(&pushCatchup);
- 	
+
  	control_state.server_state			= &server_control_state;
 	control_state.packet_ids			= old_cs.packet_ids;
 	control_state.notimeout				= old_cs.notimeout;
@@ -1014,12 +1014,12 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 	ControlStateChange* csc = controls->csc_to_process_list.head;
 	int destroy_csc = !control_state.mapserver_responding;
 	int id = csc->control_id;
-	
+
 	// This is a direction key being toggled.
-	
+
 	controls->csc_to_process_list.head = csc->next;
 	controls->csc_to_process_list.count--;
-	
+
 	assert(controls->csc_to_process_list.count || !controls->csc_to_process_list.head);
 
 	if(!destroy_csc)
@@ -1030,17 +1030,17 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 	if(csc->state != ((controls->dir_key.down_now >> id) & 1))
 	{
 		// State changed.
-		
+
 		int bit = 1 << id;
-		
+
 		if(csc->state)
 		{
 			// Key being pressed.
-			
+
 			controls->dir_key.down_now |= bit;
-			
+
 			// If changed from previous step, enable for this step.
-			
+
 			if(!(use_prev & bit))
 			{
 				controls->dir_key.use_now |= bit;
@@ -1048,9 +1048,9 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 			}
 
 			// Store the time that the control changed.
-			
+
 			controls->dir_key.start_ms[id] = csc->time_stamp_ms;
-			
+
 			if(controls->controldebug & 1)
 			{
 				printf("\nKeyDown: %s @ %dms\n", pmotionGetBinaryControlName(id), csc->time_stamp_ms);
@@ -1059,13 +1059,13 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 		else
 		{
 			// Key being released.
-			
+
 			int add_ms;
-			
+
 			controls->dir_key.down_now &= ~bit;
 
 			// If changed from previous step, disable for this step.
-			
+
 			if(use_prev & bit)
 			{
 				controls->dir_key.use_now &= ~bit;
@@ -1080,17 +1080,17 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 			if(controls->dir_key.down_now & (1 << opposite_control_id[id]))
 			{
 				// Add nothing if the opposite key is held down on release.
-				
+
 				add_ms = 0;
 			}
 			else
 			{
 				int add_ms = csc->time_stamp_ms - controls->dir_key.start_ms[id];
-				
+
 				if(add_ms > 0)
 				{
 					controls->dir_key.total_ms[id] += add_ms;
-					
+
 					if(controls->dir_key.total_ms[id] > 1000)
 					{
 						controls->dir_key.total_ms[id] = 1000;
@@ -1103,7 +1103,7 @@ static void handleBinaryStateChange(Entity* e, ControlState* controls, U8 use_pr
 					controls->dir_key.total_ms[id] = 1;
 				}
 			}
-			
+
 			if(controls->controldebug & 1)
 			{
 				printf(	"\nKeyUp: %s @ %dms, %dms added, %dms total\n",
@@ -1125,24 +1125,24 @@ static void handleControlsUntilTime(Entity* e, ControlState* controls, U32 times
 {
 	ControlStateChange* csc;
 	U8 use_prev = controls->dir_key.use_now;
-	
+
 	for(csc = controls->csc_to_process_list.head; csc; csc = controls->csc_to_process_list.head)
 	{
 		S32 time_diff_ms = timestamp - csc->time_stamp_ms;
-		
+
 		// Process all timestamps that are before or equal to this point in time.
-		
+
 		if(time_diff_ms > -3000 && time_diff_ms < 0)
 		{
 			break;
 		}
-		
+
 		// Only direction keys should be in the process list.
-		
+
 		assert(csc->control_id < CONTROLID_BINARY_MAX);
 
 		handleBinaryStateChange(e, controls, use_prev);
-		
+
 		// Update the tail if the end of the list was hit.
 
 		if(!controls->csc_to_process_list.head)
@@ -1192,7 +1192,7 @@ static void printControlDebugText(	Entity* e,
 	if(key_string[0] || !sameVec3(controls->start_pos, controls->end_pos))
 	{
 		count++;
-		
+
 		if(count == 0)
 		{
 			printf(	"\n\n\n\n"
@@ -1204,12 +1204,12 @@ static void printControlDebugText(	Entity* e,
 		else if(count % 10 == 0)
 		{
 			count = count % 1000;
-			
+
 			printf("\n------ %3d -----------------------------------------------------------------\n", count);
 		}
-		
+
 		#define TRIPLET "%1.8f, %1.8f, %1.8f"
-		
+
 		printf(	"\n"
 				"%4d. [%d/%dx]:\tid=%5d, cur_time=%dms, runTime=%dms (%dms)\n"
 				"        keys:      %s\n"
@@ -1269,7 +1269,7 @@ static ControlStateChange* removeFuturePushFromCSC(FuturePush* fp)
 	ControlStateChange* csc = fp->csc;
 	FuturePush* cur;
 	FuturePush* prev = NULL;
-	
+
 	if(csc)
 	{
 		for(cur = csc->future_push_list; cur; prev = cur, cur = cur->csc_next)
@@ -1284,16 +1284,16 @@ static ControlStateChange* removeFuturePushFromCSC(FuturePush* fp)
 				{
 					csc->future_push_list = cur->csc_next;
 				}
-				
+
 				fp->csc = NULL;
-				
+
 				return csc;
 			}
 		}
-		
+
 		assert(0);
 	}
-		
+
 	return NULL;
 }
 
@@ -1307,11 +1307,11 @@ static ControlStateChange* getNextPhysicsCSC(ControlStateChange* csc)
 static void playerForwardFuturePushes(ControlState* controls)
 {
 	FuturePush* fp;
-	
+
 	for(fp = controls->future_push_list; fp; fp = fp->controls_next)
 	{
 		ControlStateChange* csc = removeFuturePushFromCSC(fp);
-		
+
 		if(!csc)
 		{
 			// Packets were probably out of order.
@@ -1320,11 +1320,11 @@ static void playerForwardFuturePushes(ControlState* controls)
 		}
 
 		// Move the FuturePush forward until it's on the CSC that it should apply to.
-		
+
 		while(csc && fp->phys_tick_remaining)
 		{
 			ControlStateChange* next = getNextPhysicsCSC(csc->next);
-			
+
 			if(next)
 			{
 				fp->phys_tick_remaining--;
@@ -1335,9 +1335,9 @@ static void playerForwardFuturePushes(ControlState* controls)
 				break;
 			}
 		}
-		
+
 		assert(csc);
-		
+
 		fp->csc = csc;
 		fp->csc_next = csc->future_push_list;
 		csc->future_push_list = fp;
@@ -1367,38 +1367,38 @@ static void hexDump(void* dataParam, U32 length)
 {
 	U8* data = dataParam;
 	int odd = 1;
-	
+
 	printf("---------------------\n");
 	while(length)
 	{
 		int writeLength = min(length, 16);
 		int sum = 0;
 		int i;
-		
+
 		odd = !odd;
-		
+
 		printf("%8.8x:   ", data - (U8*)dataParam);
-		
+
 		for(i = 0; i < writeLength; i++)
 		{
 			if(i % 4 == 0)
 			{
 				consoleSetColor((odd?COLOR_BRIGHT:0)|(i%8?COLOR_GREEN:0)|COLOR_BLUE, i%8?COLOR_BLUE:0);
 			}
-			
+
 			sum += data[i];
 			printf("%2.2x ", data[i]);
 		}
-		
+
 		for(; i < 16; i++)
 		{
 			printf("   ");
 		}
-		
+
 		consoleSetColor(1 + sum % 15, 0);
 		printf(" = %8.8x\n", sum);
 		consoleSetDefaultColor();
-		
+
 		data += writeLength;
 		length -= writeLength;
 	}
@@ -1408,7 +1408,7 @@ static void hexDump(void* dataParam, U32 length)
 static void setEntityPositions(Entity* entExclude, ControlStateChange* csc)
 {
 	int i;
-	
+
 	for(i = 1; i < entities_max; i++)
 	{
 		Entity* e = validEntFromId(i);
@@ -1432,113 +1432,113 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
 	FuturePush* fp = controls->future_push_list;
 	FuturePush* prev = NULL;
 	FuturePush* next;
-	
+
 	playerForwardFuturePushes(controls);
-	
+
 	for(; fp; fp = next)
 	{
 		S32 client_abs_diff = global_state.client_abs - fp->abs_time;
-		
+
 		next = fp->controls_next;
 
 		if(!fp->abs_time_used && client_abs_diff > 0)
 		{
 			ControlStateChange* csc;
-			
+
 			fp->abs_time_used = 1;
-		
+
 			// Apply the push.
-		
+
 			if(fp->do_knockback_anim)
 			{
 				SETB(e->seq->state, STATE_KNOCKBACK);
 				SETB(e->seq->state, STATE_HIT);
 			}
-			
+
 			pmotionApplyFuturePush(motion, fp);
-				
+
 			// Destroy if the net_id was already used.
-			
+
 			csc = removeFuturePushFromCSC(fp);
-			
+
 			if(csc && !fp->phys_tick_remaining)
 			{
 				int remainingCount = getPhysicsCSCCount(csc);
-				
+
 				if(pushCatchup.csc)
 				{
 					MotionState oldMotion;
-					
+
 					addVec3(controls->start_pos, pushCatchup.last_offset, controls->start_pos);
 					addVec3(controls->end_pos, pushCatchup.last_offset, controls->end_pos);
 					copyVec3(controls->end_pos, motion->last_pos);
-					
+
 					oldMotion = *motion;
-					
+
 					// Run the rest of the physics up to the new starting point.
-					
+
 					global_motion_state.doNotSetAnimBits = 1;
-					
+
 					*motion = pushCatchup.csc->before.motion_state;
 					entUpdatePosInterpolated(e, pushCatchup.csc->before.pos);
 					copyVec3(pushCatchup.csc->before.pos, motion->last_pos);
-					
+
 					for(; pushCatchup.csc; pushCatchup.csc = pushCatchup.csc->next)
 					{
 						motion->input = pushCatchup.csc->before.motion_state.input;
-						
+
 						pushCatchup.csc->before.motion_state = *motion;
 						copyVec3(ENTPOS(e), pushCatchup.csc->before.pos);
-						
+
 						if(pushCatchup.csc->control_id != CONTROLID_RUN_PHYSICS)
 						{
 							continue;
 						}
-						
+
 						if(pushCatchup.csc == csc)
 						{
 							break;
 						}
-						
+
 						// Move all the entities to this point in time.
-						
+
 						setEntityPositions(e, pushCatchup.csc);
 
 						// Record motion BEFORE physics.
-						
+
 						if(controls->record_motion)
 						{
 							pmotionRecordStateBeforePhysics(e, "pushClear", pushCatchup.csc);
 						}
-						
+
 						// Run the physics.
-						
+
 						e->timestep = 1;
 						entMotion(e, unitmat);
-						
+
 						// Record motion AFTER physics.
-						
+
 						if(controls->record_motion)
 						{
 							pmotionRecordStateAfterPhysics(e, "pushClear");
 						}
-						
+
 						copyVec3(ENTPOS(e), pushCatchup.csc->after.pos);
 						copyVec3(motion->vel, pushCatchup.csc->after.vel);
 					}
 
 					global_motion_state.doNotSetAnimBits = 0;
-					
+
 					*motion = oldMotion;
 				}
 
 				pushCatchup.csc = csc;
 				pushCatchup.acc = -1;
 				zeroVec3(pushCatchup.last_offset);
-				
+
 				pushCatchup.total_time = (F32)remainingCount / (F32)(PUSH_CATCHUP_SCALE - 1.0);
 				pushCatchup.used_time = 0;
-				
+
 				//printf("total time: %1.2f\n", pushCatchup.total_time);
 
 				pmotionApplyFuturePush(&csc->before.motion_state, fp);
@@ -1549,9 +1549,9 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
 			{
 				//printf("destroying future push!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n");
 			}
-		
+
 			destroyFuturePush(fp);
-			
+
 			if(prev)
 			{
 				prev->controls_next = next;
@@ -1560,10 +1560,10 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
 			{
 				controls->future_push_list = next;
 			}
-			
+
 			fp = NULL;
 		}
-		
+
 		if(fp)
 		{
 			prev = fp;
@@ -1574,9 +1574,9 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
 static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel, ControlStateChange* csc)
 {
 	static const char* trackName = "client";
-	
+
 	extern int dump_grid_coll_info;
-	
+
 	MotionState* motion = e->motion;
 
 	// Initialize physics variables to what they were last time.
@@ -1590,7 +1590,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
 	{
 		controls->recover_from_landing_timer--;
 	}
-	
+
 	// Set stuff from the controls.
 
 	motion->input.max_speed_scale	= controls->max_speed_scale;
@@ -1604,26 +1604,26 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
 	copyVec3(ENTPOS(e), csc->before.pos);
 
 	// Enable gridcoll info for control debugging.
-	
+
 	dump_grid_coll_info = controls->controldebug;
-	
+
 	// Apply future pushes.
-	
+
 	playerApplyFuturePushes(e, controls);
-	
+
 	// Record motion BEFORE physics.
-	
+
 	if(controls->record_motion)
 	{
 		pmotionRecordStateBeforePhysics(e, trackName, csc);
 	}
-	
+
 	// Run the physics.
 
 	entMotion(e, unitmat);
-	
+
 	// Record motion AFTER physics.
-	
+
 	if(controls->record_motion)
 	{
 		pmotionRecordStateAfterPhysics(e, trackName);
@@ -1638,7 +1638,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
 	copyVec3(ENTPOS(e), controls->end_pos);
 
 	// Add a debug line.
-	
+
 	if(game_state.ent_debug_client & 128)
 	{
 		entDebugAddLine(controls->start_pos, 0xffffffff, controls->end_pos, 0xffffff00);
@@ -1672,16 +1672,16 @@ static int playerIsControlDisabled(Entity* e, ControlState* controls)
 static void playerAdjustMotionPYR(Entity* e, ControlState* controls)
 {
 	int i;
-	
+
 	// Calculate the motion PYR by converting to a CSC angle and back to F32 (since that's what the server will do).
-	
+
 	for(i = 0; i < 2; i++)
 	{
 		U32 angleU32 = CSC_ANGLE_F32_TO_U32(controls->pyr.cur[i]) & ((1 << CSC_ANGLE_BITS) - 1);
-		
+
 		controls->pyr.motion[i] = CSC_ANGLE_U32_TO_F32(angleU32);
 	}
-	
+
 	controls->pyr.motion[2] = 0;
 
 	if (!controls->server_state->fly && !controls->nocoll)
@@ -1699,38 +1699,38 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 	float				start_timestep_acc;
 	U8					inp_vel_scale_U8;
 	float				inp_vel_scale_F32;
-	
+
 	// Run physics once for every 1 timestep.
 
 	controls->timestep_acc += min(TIMESTEP, 15);
-	
+
 	if(controls->timestep_acc < 1.0)
 	{
 		return;
 	}
 
 	controls->controls_input_ignored_this_csc = playerIsControlDisabled(e, controls);
-	
+
 	// Adjust motion PYR.
 
 	controls->pyr.cur[2] = 0;
 
 	// Calculate the input velocity scale.
-	
+
 	if(controls->inp_vel_scale > 1)
 		controls->inp_vel_scale = 1;
 	else if(controls->inp_vel_scale < 0)
 		controls->inp_vel_scale = 0;
-	
+
 	inp_vel_scale_U8 = (U8)(255 * controls->inp_vel_scale);
 	inp_vel_scale_F32 = (F32)inp_vel_scale_U8 / 255.0;
-		
+
 	// Run all the physics steps that have accumulated.
 
 	cur_physics_step = 0;
-	
+
 	start_timestep_acc = controls->timestep_acc;
-	
+
 	for(;controls->timestep_acc >= 1.0; cur_physics_step++)
 	{
 		static S32 old_end_time_init = 0;
@@ -1740,70 +1740,70 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 		S32		time_diff_ms;
 		Vec3	new_vel;
 		F32		diff_ms_scale;
-		
+
 		if(!old_end_time_init)
 		{
 			old_end_time_init = 1;
 			old_end_time_ms = global_state.cur_timeGetTime;
 		}
-		
+
 		// Calculate the ms timestamp that this physics step "happened" at.
 		// Do this by scaling the ms time passed to match the timestep accumulator.
-		
+
 		time_diff_ms = global_state.cur_timeGetTime - old_end_time_ms;
-		
+
 		if(time_diff_ms > 1000)
 			time_diff_ms = 1000;
-			
+
 		diff_ms_scale = (cur_physics_step + 1) / start_timestep_acc;
-			
+
 		current_timestamp_ms =	global_state.cur_timeGetTime - time_diff_ms + (S32)floor(time_diff_ms * diff_ms_scale + 0.5);
-		
+
 		//assert(current_timestamp_ms <= cur_time_ms);
 
 		// Update timestep_acc, and old_end_time_ms if necessary.
 
 		controls->timestep_acc -= 1.0;
-		
+
 		// Process controls that happened up to current_timestamp_ms.
-		
+
 		handleControlsUntilTime(e, controls, current_timestamp_ms);
-		
+
 		// Do stuff for follow-mode.
 
 		playerDoFollowMode();
 
 		// Check for PYR changes.
-		
+
 		playerAdjustMotionPYR(e, controls);
 		playerQueueControlAngleChange(controls, 0);
 		playerQueueControlAngleChange(controls, 1);
-			
+
 		// Update control times.
-		
+
 		pmotionUpdateControlsPrePhysics(e, controls, current_timestamp_ms);
 
 		// Print out key states.
-		
+
 		if(controls->controldebug & 1 && !server_visible_state.pause)
 		{
 			createKeyString(key_string, controls);
 		}
-		
+
 		// Do the physics and junk.
 
 		pmotionSetVel(e, controls, inp_vel_scale_F32);
-		
+
 		// Do stuff that happens on the last physics step.
 
 		if(controls->timestep_acc < 1.0)
 		{
 			// Store the starting point for next time.
-		
+
 			old_end_time_ms = current_timestamp_ms;
-			
+
 			// Output the last input velocity.
-			
+
 			if(!controls->controls_input_ignored_this_csc)
 			{
 				copyVec3(motion->input.vel, controls->last_inp_vel);
@@ -1813,9 +1813,9 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 				zeroVec3(controls->last_inp_vel);
 			}
 		}
-		
+
 		// Calculate the input velocity based on the control direction.
-		
+
 		if(!controls->controls_input_ignored_this_csc)
 		{
 			Mat3 control_mat;
@@ -1826,9 +1826,9 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 		{
 			zeroVec3(new_vel);
 		}
-	
+
 		//printf("pos %5d :\ttimes %8d\t%8d\n", controls->phys_position_cur_id, global_state.client_abs, global_state.client_abs_slow);
-		
+
 		// Store some stuff if in debug mode.
 
 		if(controls->controldebug & 1)
@@ -1837,14 +1837,14 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 			controldebug_data.gravity = motion->input.surf_mods[motion->input.flying].gravity;
 			controldebug_data.jumping = motion->jumping;
 		}
-		
+
 		// Run the physics if prediction is on.
 
 		csc = createControlStateChange();
-		
+
 		if(controls->predict)
 		{
-			if( !controls->server_state->no_physics ) 
+			if( !controls->server_state->no_physics )
 				playerRunPhysicsStep(e, controls, new_vel, csc);
 		}
 		else
@@ -1855,10 +1855,10 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 
 			// Not predicting, so just copy current position to start_pos and end_pos
 			//   so that transition is smoother when re-enabling prediction.
-		
+
 			copyVec3(ENTPOS(e), controls->start_pos);
 			copyVec3(ENTPOS(e), controls->end_pos);
-			
+
 			for(fp = controls->future_push_list; fp; fp = fp->controls_next)
 			{
 				removeFuturePushFromCSC(fp);
@@ -1866,13 +1866,13 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 
 			destroyFuturePushList(controls);
 		}
-	
+
 		//if(0){
 		//	static F32 max_y = -9999999999.0;
 		//	static int printing = 0;
-		//	
+		//
 		//	F32 cur_y = posY(e);
-		//	
+		//
 		//	if(cur_y > max_y){
 		//		printf("max: %f\t%f\t%f\t%d\n", cur_y, new_vel[1], motion->vel[1], motion->jumping);
 		//		printing = 1;
@@ -1884,28 +1884,28 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 
 		//	max_y = posY(e);
 		//}
-			
+
 		// Store the AFTER data.
-		
+
 		copyVec3(ENTPOS(e),				csc->after.pos);
 		copyVec3(motion->vel,			csc->after.vel);
 
 		// Add a physics step.
-		
+
 		csc->control_id	=				CONTROLID_RUN_PHYSICS;
 		csc->time_stamp_ms =			current_timestamp_ms;
 		csc->controls_input_ignored =	controls->controls_input_ignored_this_csc;
 		csc->client_abs =				global_state.client_abs;
 		csc->client_abs_slow =			global_state.client_abs_slow;
 		csc->inp_vel_scale_U8 =			inp_vel_scale_U8;
-		
+
 		if(pushCatchup.csc)
 		{
 			csc->no_ack = 1;
 		}
-		
+
 		assert(abs((int)(current_timestamp_ms - global_state.cur_timeGetTime)) < 2000);
-		
+
 		if(control_state.mapserver_responding)
 		{
 			addControlStateChange(&controls->csc_processed_list, csc, 1);
@@ -1914,11 +1914,11 @@ static void playerRunPhysicsSteps(Entity* e, ControlState* controls)
 		{
 			destroyControlStateChange(csc);
 		}
-		
+
 		//assert(current_timestamp_ms == csc->time_stamp);
 
 		// Reset key states.
-		
+
 		pmotionUpdateControlsPostPhysics(controls, current_timestamp_ms);
 
 		// Print debugging stuff.
@@ -1944,12 +1944,12 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
 	ControlState old_control_state;
 	MotionState old_motion_state;
 	ControlStateChange cscTemp;
-	
+
 	if(!pushCatchup.csc)
 	{
 		return;
 	}
-	
+
 	if(pushCatchup.acc < 0)
 	{
 		cscTemp.next = pushCatchup.csc;
@@ -1958,18 +1958,18 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
 		pushCatchup.next_motion_state = cscTemp.next->before.motion_state;
 		assert(tractionNonZero(&pushCatchup.next_motion_state));
 	}
-	
+
 	pushCatchup.acc += TIMESTEP * PUSH_CATCHUP_SCALE;
-	
+
 	old_control_state = control_state;
 	old_motion_state = *motion;
 	assert(tractionNonZero(motion));
-	
+
 	while(pushCatchup.csc && pushCatchup.acc >= 1.0)
 	{
 		ControlStateChange* next = getNextPhysicsCSC(pushCatchup.csc->next);
 		ControlStateChange* csc;
-		
+
 		if(!next)
 		{
 			pushCatchup.csc->no_ack = 1;
@@ -1986,9 +1986,9 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
 		}
 
 		pushCatchup.acc -= 1.0;
-		
+
 		assert(pushCatchup.acc >= 0);
-	
+
 		if(pushCatchup.csc != &cscTemp)
 		{
 			copyVec3(pushCatchup.csc->after.pos, next->before.pos);
@@ -1996,46 +1996,46 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
 			next->before.motion_state = pushCatchup.next_motion_state;
 			assert(tractionNonZero(&next->before.motion_state));
 		}
-		
+
 		csc = pushCatchup.csc = next;
-		
+
 		csc->no_ack = 1;
 
 		*motion = pushCatchup.next_motion_state;
 		entUpdatePosInterpolated(e, csc->before.pos);
 		copyVec3(csc->before.pos, motion->last_pos);
 		copyVec3(csc->before.pos, control_state.end_pos);
-		
+
 		motion->input = csc->before.motion_state.input;
-		
+
 		// Move all the entities to this point in time.
-		
+
 		setEntityPositions(e, csc);
-		
+
 		// Record motion BEFORE physics.
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateBeforePhysics(e, "pushCatchup", csc);
 		}
-		
+
 		// Run the physics.
-		
+
 		e->timestep = 1;
 		global_motion_state.doNotSetAnimBits = 1;
 		entMotion(e, unitmat);
 		global_motion_state.doNotSetAnimBits = 0;
-		
+
 		// Record motion AFTER physics.
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateAfterPhysics(e, "pushCatchup");
 		}
-		
+
 		copyVec3(ENTPOS(e), csc->after.pos);
 		copyVec3(motion->vel, csc->after.vel);
-		
+
 		pushCatchup.next_motion_state = *motion;
 		assert(tractionNonZero(&pushCatchup.next_motion_state));
 	}
@@ -2049,7 +2049,7 @@ static void playerSetInterpPosition(Entity* e, ControlState* controls)
 	static Vec3 lastFramePos;
 	Vec3 posDiff;
 	Vec3 newPos;
-	
+
 	if(controls->record_motion)
 	{
 		entUpdatePosInterpolated(e, lastFramePos);
@@ -2062,12 +2062,12 @@ static void playerSetInterpPosition(Entity* e, ControlState* controls)
 	scaleVec3(posDiff, controls->timestep_acc, posDiff);
 	addVec3(posDiff, controls->start_pos, newPos);
 	entUpdatePosInterpolated(e, newPos);
-	
+
 	if(pushCatchup.csc && pushCatchup.acc >= 0 && pushCatchup.acc <= 1)
 	{
 		Vec3 pushPos;
 		F32 scale;
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateBeforePhysics(e, "pushInterp", pushCatchup.csc);
@@ -2076,27 +2076,27 @@ static void playerSetInterpPosition(Entity* e, ControlState* controls)
 		subVec3(pushCatchup.csc->after.pos, pushCatchup.csc->before.pos, pushPos);
 		scaleVec3(pushPos, pushCatchup.acc, pushPos);
 		addVec3(pushCatchup.csc->before.pos, pushPos, pushPos);
-		
+
 		pushCatchup.used_time += TIMESTEP;
-		
+
 		if(pushCatchup.used_time > pushCatchup.total_time)
 		{
 			pushCatchup.used_time = pushCatchup.total_time;
 		}
-		
+
 		scale = pushCatchup.used_time / pushCatchup.total_time;
-		
+
 		//printf("scale: %1.2f\t%1.2f\t%1.2f\t%1.2f\n", scale, pushCatchup.acc, pushCatchup.used_time, pushCatchup.total_time);
-		
+
 		subVec3(pushPos, ENTPOS(e), pushCatchup.last_offset);
 		scaleVec3(pushCatchup.last_offset, scale, pushCatchup.last_offset);
 		addVec3(ENTPOS(e), pushCatchup.last_offset, newPos);
 		entUpdatePosInterpolated(e, newPos);
-		
+
 		//entDebugAddLine(e->mat[3], 0xffffffff, pushPos, 0xffff0000);
 		//copyVec3(e->mat[3], controls->start_pos);
 		//copyVec3(e->mat[3], controls->end_pos);
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateAfterPhysics(e, "pushInterp");
@@ -2114,23 +2114,23 @@ static void playerSetInterpPosition(Entity* e, ControlState* controls)
 static void playerPredictMotion(Entity* e, ControlState* controls)
 {
 	// Run all the needed physics steps.
-	
+
 	playerRunPhysicsSteps(e, controls);
 
 	// Run all the needed push catchup physics.
-	
+
 	playerRunPushCatchup(e, controls);
 
 	// Adjust body PYR.
-	
+
 	playerAdjustBodyPYR(e, controls);
-	
+
 	// Move the player model to the appropriate position based on the timestep.
-	
+
 	playerSetInterpPosition(e, controls);
 
 	// Set states that need setting every frame.
-	
+
 	pmotionSetState(e, controls);
 }
 #endif
@@ -2138,26 +2138,26 @@ static void playerPredictMotion(Entity* e, ControlState* controls)
 static void playerCheckForcedMove(Entity *e, ControlState *controls)
 {
 	MotionState* motion = e->motion;
-	
+
 	if (glob_plrstate_valid && !control_state.nosync)
 	{
 		//Vec3 cam_pyr;
 		Vec3 body_pyr;
 		Mat3 newmat;
-		
+
 		// Cancel forced turn if it is toward a position.
-		
+
 		if(!controls->forcedTurn.erEntityToFace)
 		{
 			controls->forcedTurn.timeRemaining = 0;
 			forcedTurnHoldPYR = 0;
 		}
-		
+
 		pushCatchup.csc = NULL;
-		
+
 		if( e->seq )
 			e->seq->moved_instantly = 1;
-		
+
 		entUpdatePosInterpolated(e, glob_pos);
 		copyVec3(glob_pos,motion->last_pos);
 		copyVec3(glob_vel,motion->vel);
@@ -2175,9 +2175,9 @@ static void playerCheckForcedMove(Entity *e, ControlState *controls)
 		// Set the camera position directly to avoid dragging the camera through
 		// geometry when moving from map to map.
 		camSetPos( ENTPOS(e), false );
-		
+
 		DoorAnimCheckForcedMove();
-		
+
 		compass_UpdateWaypoints(1);
 	}
 
@@ -2190,29 +2190,29 @@ static void playerCheckForcedMove(Entity *e, ControlState *controls)
 void playerGetInput()
 {
 	// MS: Add a control-log entry.  This is a debugging feature.
-	
+
 	addControlLogEntry(&control_state);
 
  	if(	(control_state.nocoll || control_state.first_packet_sent) &&
  		!DoorAnimIgnorePositionUpdates())
 	{
 		Entity* e = controlledPlayerPtr();
-	
+
 		if (e && !(game_state.spin360))
 		{
 			// Check if the server has placed me somewhere else.
-			
+
 			playerCheckForcedMove(e, &control_state);
 
 			// Check for FOV changes.
-			
+
 			if(!control_state.detached_camera)
 				playerLook(&control_state);
 
 			if(control_state.mapserver_responding || control_state.nocoll || control_state.alwaysmobile)
 			{
  				// Enable/disable autorun.
- 				
+
  				if(!control_state.follow)
  				{
 					updateControlState(	CONTROLID_FORWARD,
@@ -2220,7 +2220,7 @@ void playerGetInput()
 						control_state.autorun ? 1 : 0,
 						control_state.time.last_send_ms);
  				}
- 				
+
  				// Do motion prediction.
 
 	 			playerPredictMotion(e, &control_state);
@@ -2236,8 +2236,8 @@ void playerGetInput()
 #endif
 
 static Vec3	plr_pyr = {RAD(0),RAD(200),RAD(0)};
-/*turns a player in the shell the given number of degrees and remembers the player's 
-current pyr in the shell for future turns.  If you give it zero degrees, it resets the 
+/*turns a player in the shell the given number of degrees and remembers the player's
+current pyr in the shell for future turns.  If you give it zero degrees, it resets the
 player's position to the default*/
 void playerTurn(F32 ticks)
 {
@@ -2273,11 +2273,11 @@ float playerHeight()
 	Entity* e = playerPtr();
 	float height = SEQ_DEFAULT_CAMERA_HEIGHT;
 	SeqInst* seq = e ? e->seq : NULL;
-	
+
 	if(!seq || !seq->type->name)
 		return height;		// Default player height.
-		
-	if(seq->type->cameraHeight) //Fems are 5'5"  
+
+	if(seq->type->cameraHeight) //Fems are 5'5"
 		height = seq->type->cameraHeight;
 
 	// Take into consideration the scale of this character.
@@ -2397,7 +2397,7 @@ static void playerReceiveServerControlState(Packet *pak)
 				}
 			}
 
-			if( scs->hit_stumble )  
+			if( scs->hit_stumble )
 			{
 				motion->hit_stumble = 1;
 				motion->hitStumbleTractionLoss = 1.0; //TO DO base on strength of hit
@@ -2504,7 +2504,7 @@ static void repredictPhysicsSteps(ControlState* controls, ControlStateChange* cs
 	for(; csc; csc = csc->next)
 	{
 		MotionState cscMotion;
-		
+
 		if(csc->control_id != CONTROLID_RUN_PHYSICS)
 			continue;
 
@@ -2524,40 +2524,40 @@ static void repredictPhysicsSteps(ControlState* controls, ControlStateChange* cs
 		else
 		{
 			// If not the first one, then copy input from the old MotionState.
-			
+
 			motion->input = cscMotion.input;
 
 			// Copy the whole MotionState back to the CSC.
-			
+
 			copyVec3(ENTPOS(e), csc->before.pos);
 			csc->before.motion_state = *motion;
 		}
-				
+
 		// Move all the entities to this point in time.
-		
+
 		setEntityPositions(e, csc);
-		
+
 		copyVec3(control_state.end_pos, control_state.start_pos);
 
 		// Record motion BEFORE physics.
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateBeforePhysics(e, "repredict", csc);
 		}
-		
+
 		e->timestep = 1;
 		global_motion_state.doNotSetAnimBits = 1;
 		entMotion(e, unitmat);
 		global_motion_state.doNotSetAnimBits = 0;
-		
+
 		// Record motion AFTER physics.
-		
+
 		if(controls->record_motion)
 		{
 			pmotionRecordStateAfterPhysics(e, "repredict");
 		}
-		
+
 		copyVec3(ENTPOS(e), control_state.end_pos);
 	}
 }
@@ -2607,15 +2607,15 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 	{
 		return;
 	}
-	
+
 	// Store the new information if it's really new.
-	
+
 	control_state.svr_phys.step[control_state.svr_phys.end].net_id = new_id;
 
 	if(pos_changed)
 	{
 		control_state.server_pos_pkt_id = pak->id;
-		
+
 		copyVec3(new_pos, control_state.svr_phys.step[control_state.svr_phys.end].pos);
 		copyVec3(new_vel, control_state.svr_phys.step[control_state.svr_phys.end].vel);
 	}
@@ -2631,13 +2631,13 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 	}
 
 	// Make a copy of the current state.
-	
+
 	last_server_net_id = control_state.svr_phys.step[control_state.svr_phys.end].net_id;
 	copyVec3(control_state.svr_phys.step[control_state.svr_phys.end].pos, last_server_pos);
 	copyVec3(control_state.svr_phys.step[control_state.svr_phys.end].vel, last_server_vel);
 
-	// Increment to the next 
-	
+	// Increment to the next
+
 	if(!server_visible_state.pause)
 	{
 		control_state.svr_phys.end = (control_state.svr_phys.end + 1) % size;
@@ -2652,27 +2652,27 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 			{
 				found_push_list = 1;
 			}
-			
+
 			// Stop if this CSC is the physics step we're looking for.
-			
+
 			if(csc->control_id == CONTROLID_RUN_PHYSICS && csc->net_id == last_server_net_id)
 			{
 				ControlStateChange* cscNextPhys = getNextPhysicsCSC(csc->next);
-				
+
 				csc->has_ack = 1;
 				copyVec3(last_server_pos, csc->ack_info.pos);
 				copyVec3(last_server_vel, csc->ack_info.vel);
-				
+
 				if(cscNextPhys)
 				{
 					copyVec3(last_server_pos, cscNextPhys->before.pos);
 					copyVec3(last_server_vel, cscNextPhys->before.motion_state.vel);
 				}
-				
+
 				break;
 			}
 		#endif
-		
+
 		// Ignore everything before the matching net_id.
 
 		if(!found_push_list)
@@ -2708,7 +2708,7 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 
 		return;
 	}
-	
+
 	#if !TEST_CLIENT
 		// TEMP!!!
 		if(0)
@@ -2719,18 +2719,18 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 			pos[1] += 10;
 			entDebugAddLine(last_server_pos, 0xffffffff, pos, 0xffff00ff);
 			entDebugAddLine(last_server_pos, 0xffffffff, csc->after.pos, 0xffff0000);
-			
+
 			if(getNextPhysicsCSC(csc->next))
 			{
 				entDebugAddLine(csc->after.pos, 0xffffffff, getNextPhysicsCSC(csc->next)->after.pos, 0xff00ffff);
 			}
-			
+
 			for(; prev; prev = prev->next)
 			{
 				if(prev->control_id == CONTROLID_RUN_PHYSICS)
 				{
 					ControlStateChange* next = getNextPhysicsCSC(prev->next);
-					
+
 					if(next == csc)
 					{
 						entDebugAddLine(prev->after.pos, 0xffffff00, csc->after.pos, 0xff00ffff);
@@ -2740,7 +2740,7 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 			}
 		}
 	#endif
-	
+
 	if(csc)
 	{
 		// Set this for demo recorder.
@@ -2758,7 +2758,7 @@ static void playerReceiveServerPhysicsPositions(Packet* pak)
 		sprintf(buffer, "%d : %1.2f", last_server_net_id, distance3(last_server_pos, csc->after.pos));
 		entDebugAddText(last_server_pos, buffer, 0);
 	}
-	
+
 	//if(lengthVec3(last_server_pos) < 0.1){
 	//	printf("last_server_pos[%d]: %1.1f, %1.1f, %1.1f\n", control_state.svr_phys.end, vecParamsXYZ(last_server_pos));
 	//}
@@ -2867,7 +2867,7 @@ static void playerReceiveFuturePushList(Packet* pak)
 	{
 		ControlStateChange* csc;
 		FuturePush* fp = addFuturePush(&control_state);
-		
+
 		fp->net_id_start		= pktGetBits(pak, 16);
 		fp->phys_tick_remaining = pktGetBitsPack(pak, 5);
 		fp->abs_time			= pktGetBits(pak, 32);
@@ -2877,7 +2877,7 @@ static void playerReceiveFuturePushList(Packet* pak)
 		fp->do_knockback_anim	= pktGetBits(pak, 1);
 
 		// The starting net_id better be in the reprocess list or something is out of sync.
-		
+
 		for(csc = control_state.csc_processed_list.head; csc && csc->sent; csc = csc->next)
 		{
 			if(csc->net_id == fp->net_id_start)
@@ -2888,7 +2888,7 @@ static void playerReceiveFuturePushList(Packet* pak)
 					fp->csc_next = csc->future_push_list;
 					csc->future_push_list = fp;
 				}
-				
+
 				break;
 			}
 		}
@@ -2898,11 +2898,11 @@ static void playerReceiveFuturePushList(Packet* pak)
 void playerReceiveControlState(Packet* pak)
 {
 	// Receive future push list.
-	
+
 	START_BIT_COUNT(pak, "receiveFuturePushList");
 		playerReceiveFuturePushList(pak);
 	STOP_BIT_COUNT(pak);
-	
+
 	#if !TEST_CLIENT
 		// Push FuturePushes forward.
 
@@ -2910,7 +2910,7 @@ void playerReceiveControlState(Packet* pak)
 			playerForwardFuturePushes(&control_state);
 		STOP_BIT_COUNT(pak);
 	#endif
-	
+
 	// Receive physics positions.
 
 	START_BIT_COUNT(pak, "receiveServerPhysicsPositions");

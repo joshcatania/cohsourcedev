@@ -15,7 +15,7 @@
 #include "win_init.h"
 #include "groupfilelib.h"
 #include "utils.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "edit_errcheck.h"
 #include "edit_drawlines.h"
 #include "Menu.h"
@@ -73,7 +73,7 @@ typedef struct
 	int		*val;
 } CmdScrollEnt;
 
-CmdScrollEnt cmd_scroll_ents[] = 
+CmdScrollEnt cmd_scroll_ents[] =
 {
 	{ "file/load" },
 	{ "file/import" },
@@ -212,13 +212,13 @@ int cmdScrollCallback(char *name,int idx)
 
 	if (strstr(name,"knobs/gridsize") || strstr(name,"knobs/gridshrink") || strstr(name,"knobs/misc/editlib") || strstr(name,"editTexWord"))
 		sprintf(cmd,"%s",s);
-	else if (strstr(name,"knobs/") || 
-		strstr(name,"fog/fogsize") || 
-		strstr(name,"light/lightsize") || 
-		strstr(name,"sound/soundsize") || 
-		strstr(name,"beacons/beaconsize") || 
-		strstr(name,"beacons/beaconradii") || 
-		strstr(name,"useoldmenu") || 
+	else if (strstr(name,"knobs/") ||
+		strstr(name,"fog/fogsize") ||
+		strstr(name,"light/lightsize") ||
+		strstr(name,"sound/soundsize") ||
+		strstr(name,"beacons/beaconsize") ||
+		strstr(name,"beacons/beaconradii") ||
+		strstr(name,"useoldmenu") ||
 		strstr(name,"beacons/beaconselect"))
 	{
 		sprintf(cmd,"++%s",s);
@@ -273,7 +273,7 @@ void commandMenuClickFunc(MenuEntry * me,ClickInfo * ci) {
 	else
 	if (value==2)
 		sprintf(command,"++%s",name);
-		
+
 	editCmdParse(command, 0, 0);
 
 	if (value==2)	{
@@ -330,7 +330,7 @@ void soundDebugHelper(DefTracker * tracker,int * line,int tab) {
 	char buf[512];
 	int i;
 	int r,g,b;
-	
+
 	if (!tracker)
 		return;
 	if (!tracker->def)
@@ -477,7 +477,7 @@ void favoritesMenuUpdateRecentItems(char * name_param,MenuEntry * me)
 		color=libraryMenuColorFunc(me,NULL);
 	if (color==0)
 		color=0x00ff00ff;
-	
+
 	if (commandMenu==NULL || recentMaps==NULL)
 		return;
 
@@ -503,7 +503,7 @@ void favoritesMenuUpdateRecentItems(char * name_param,MenuEntry * me)
 
 	if (!me || me->theMenu!=favoritesMenu)
 	{
-		for (i=recentItems->count-1;i>=0;i--) 
+		for (i=recentItems->count-1;i>=0;i--)
 		{
 			snprintf(local_name, TEXT_DIALOG_MAX_STRLEN - 1, "%s", recentItems->values[i]);
 			local_name[TEXT_DIALOG_MAX_STRLEN - 1] = '\0';
@@ -511,7 +511,7 @@ void favoritesMenuUpdateRecentItems(char * name_param,MenuEntry * me)
 			{
 				sscanf(strrchr(local_name,'/')+1,"%x",&color);
 				*strrchr(local_name,'/')=0;
-			} 
+			}
 			else
 			{
 				color=0x00ff00ff;
@@ -785,12 +785,12 @@ void trackerPrint(DefTracker * tracker,int start,int end,int * current,char ** t
 			colors[actual]=0x7F7F7FFF;	//grayish
 		if (tracker->frozen)
 			colors[actual]=0x1F1FF3FF;	//grayish
-		if (tracker->def->has_properties)   
+		if (tracker->def->has_properties)
 		{
-			//If this is a Layer, 
-			PropertyEnt* layerProp; 
+			//If this is a Layer,
+			PropertyEnt* layerProp;
 			stashFindPointer(  tracker->def->properties, "Layer" , &layerProp );
-			
+
 			if( layerProp )
 			{
 				extern EditSelect sel;
@@ -799,7 +799,7 @@ void trackerPrint(DefTracker * tracker,int start,int end,int * current,char ** t
 					estrConcatStaticCharArray(&text[actual], " Active");
 					colors[actual]=0xFF7F00FF;
 				}
-				estrConcatStaticCharArray(&text[actual], " Layer");		
+				estrConcatStaticCharArray(&text[actual], " Layer");
 				if (colors[actual]==-1)
 					colors[actual]=0xAC3FBFFF;	//purlish?
 			}
@@ -965,7 +965,7 @@ int isWhiteSpace(char c) {
 }
 
 
-FileScanAction paletteScanner(char * dir, struct _finddata32_t * dat) {	
+FileScanAction paletteScanner(char * dir, struct _finddata32_t * dat) {
 	char * data;
 	char * cur;
 	char folder[256];
@@ -1276,12 +1276,12 @@ void trackerUpdateList(int ref_id,DefTracker *tracker,int depth)
 		}
 
 		// A hash mark means the group has properties attached.
-		if (tracker->def->has_properties)   
+		if (tracker->def->has_properties)
 		{
-			//If this is a Layer, 
-			PropertyEnt* layerProp; 
+			//If this is a Layer,
+			PropertyEnt* layerProp;
 			stashFindPointer(  tracker->def->properties, "Layer" , &layerProp );
-			
+
 			if( layerProp )
 			{
 				extern EditSelect sel;
@@ -1289,7 +1289,7 @@ void trackerUpdateList(int ref_id,DefTracker *tracker,int depth)
 				{
 					strcat( so, " Active");
 				}
-				strcat( so, " Layer" );		
+				strcat( so, " Layer" );
 			}
 			else
 				strcat(so, "#");
@@ -1351,7 +1351,7 @@ static int ExtractAllProperties(StashElement element){
 
 void propertyUpdateList(){
 	GroupDef* def;
-	
+
 	property_name_scroll.count = 1;
 	property_value_scroll.count = 1;
 
@@ -1394,7 +1394,7 @@ int promptUserForString(const char* oldString, char* newString){
 	// If the user did not change the name, do nothing.
 	if(0 == strcmp(oldString, newString) || (*newString)==0)
 		return 0;
-	else 
+	else
 		return 1;
 }
 
@@ -1412,7 +1412,7 @@ int editRemoveProperty(StashTable properties, char* propName){
 		destroyPropertyEnt(prop);
 		defChanged = 1;
 	}
-	
+
 	edit_state.removeProperty = 0;
 	return defChanged;
 }
@@ -1427,7 +1427,7 @@ int editChangePropertyName(StashTable properties, char* oldPropName, int * delet
 	if(!promptUserForString(oldPropName, newPropName))
 		return defChanged;
 
-	*deleteProperty = 0; 
+	*deleteProperty = 0;
 
 	//If the string is null, it means remove property
 	if( newPropName[0] == 0 )
@@ -1439,7 +1439,7 @@ int editChangePropertyName(StashTable properties, char* oldPropName, int * delet
 	if(strlen(newPropName))
 	{
 		unsigned char* curChar;
-		
+
 		for(curChar = newPropName; *curChar; curChar++)
 		{
 			if(isalnum((unsigned char)*curChar))
@@ -1449,7 +1449,7 @@ int editChangePropertyName(StashTable properties, char* oldPropName, int * delet
 			}
 		}
 	}
-	
+
 	if(!goodName)
 	{
 		winMsgAlert("That name is unnacceptable, try again.  This time, use some letters and numbers.");
@@ -1490,9 +1490,9 @@ int editChangePropertyValueString(StashTable properties, char* propName){
 	// Extract the property entry from the property name
 	stashFindPointer( properties, propName, &prop );
 	assert(prop);
-	
+
 	if(!promptUserForString(prop->value_str, newValue))
-		return defChanged;	
+		return defChanged;
 
 	strcpy(prop->value_str, newValue);
 	defChanged = 1;
@@ -1640,8 +1640,8 @@ int propValueScrollCallback(char* oldValue,int idx){
 		editUpdateTracker(sel_list[0].def_tracker);
 		unSelect(2);
 	}
-		
-	
+
+
 	return 0;
 }
 
@@ -1774,11 +1774,11 @@ int		i,focus;
 	if (edit_state.editorTrashing) {
 		thrashEditor();
 	}
-	if (!init)          
+	if (!init)
 	{
 		init = 1;
 
-		uiScrollInit(&lib_scroll); 
+		uiScrollInit(&lib_scroll);
 		lib_scroll.list_step = sizeof(lib_list[0]);
 		lib_scroll.list_names = lib_list[0].name;
 		lib_scroll.list_count = 0;
@@ -1846,7 +1846,7 @@ int		i,focus;
 		property_value_scroll.linkedScroll = &property_name_scroll;
 		strcpy(property_value_scroll.header,"Value");
 
-		//the new Menus 
+		//the new Menus
 		trackerListViewCreate();
 		commandMenuCreate();
 

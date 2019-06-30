@@ -5,7 +5,7 @@
 #include "file.h"
 #include "gfxSettings.h"
 #include "win_init.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "NvPanelApi.h"
 #include "renderUtil.h"
@@ -60,7 +60,7 @@ static int setupPFD()
 			0,                              // shift bit ignored
 			0,                              // no accumulation buffer
 			0, 0, 0, 0,                     // accum bits ignored
-			24,                             // 24-bit z-buffer      
+			24,                             // 24-bit z-buffer
 			8,                              // with 8-bit stencil buffer
 			0,                              // no auxiliary buffer
 			PFD_MAIN_PLANE,                 // main layer
@@ -129,7 +129,7 @@ static int setupContext()
 	#define FORCE_NOT_DEBUG 0
 #else
 	#define FORCE_DEBUG 0
-	#define FORCE_NOT_DEBUG 0 
+	#define FORCE_NOT_DEBUG 0
 #endif
 
 static int setupGL(int reinit)
@@ -199,7 +199,7 @@ static void windowPostInit(void)
 {
 	const char* s;
 
-	// Log and record some fundamental GL context strings to the console 
+	// Log and record some fundamental GL context strings to the console
 	// and to the caps to aid in resolving configuration problems.
 	// These are also recorded in the database with the users configuration information
 	s = glGetString(GL_VENDOR);
@@ -372,7 +372,7 @@ void	windowUpdateDirect()
 	}
 
 	rdrEndMarker();
-	
+
 	rdrGpuFrameDone();
 
 	rdrDrawFrameHistory();
@@ -433,9 +433,9 @@ void rdrRestoreGammaRampDirect()
 	}
 }
 
-void rdrSetGammaDirect( float Gamma ) 
+void rdrSetGammaDirect( float Gamma )
 {
-	if( Gamma > 0.1 && currentGamma != Gamma )  
+	if( Gamma > 0.1 && currentGamma != Gamma )
 	{
 		WORD ramp[256*3];
 		int i;
@@ -444,22 +444,22 @@ void rdrSetGammaDirect( float Gamma )
 		F32 scaledGamma = 0;
 		static int lastTweak=0;
 
-		adjustedGamma =  MINMAX( ( Gamma ), 0.3, 3.0 ); 
+		adjustedGamma =  MINMAX( ( Gamma ), 0.3, 3.0 );
 
-		for( i = 0 ; i < 256 ; i++ )      
-		{	
-			//Convert ramp idx to 0.0 to 1.0; 
-			rampIdx = (i+1) / 256.0; 
+		for( i = 0 ; i < 256 ; i++ )
+		{
+			//Convert ramp idx to 0.0 to 1.0;
+			rampIdx = (i+1) / 256.0;
 
 			//Do crazy scaling to get something that looks nice
-			//scale = adjustedGamma - 1.0;    
-			//scale = scale * (1.0 - rampIdx*rampIdx); 
-			//scaledGamma = scale + 1.0;     
+			//scale = adjustedGamma - 1.0;
+			//scale = scale * (1.0 - rampIdx*rampIdx);
+			//scaledGamma = scale + 1.0;
 
-			scaledGamma = adjustedGamma;  
+			scaledGamma = adjustedGamma;
 
-			//Apply Gamma Scale   
-			rampVal = pow( rampIdx, scaledGamma ); 
+			//Apply Gamma Scale
+			rampVal = pow( rampIdx, scaledGamma );
 
 			//Scale to fit WORD
 			rampVal = rampVal * 65535 + 0.5;

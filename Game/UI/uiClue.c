@@ -3,7 +3,7 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include "assert.h"
+#include "SuperAssert.h"
 #include "earray.h"
 #include "cmdcommon.h"
 #include "mathutil.h"
@@ -267,7 +267,7 @@ void addPlayerCreatedSouvenir(int uid, char * title, char * description )
 void updateSouvenirClue( int uid, char * description )
 {
 	int i;
-	SouvenirClue* clue;	
+	SouvenirClue* clue;
 	SouvenirData *pData = &souvenirData[0];
 
 	// Find the clue being updated.
@@ -352,9 +352,9 @@ static void displayTabs()
 	CBox box;
 	UIBox uibox;
 
-	static AtlasTex *active_l, *active_m, *active_r, *inactive_l, *inactive_m, *inactive_r; 
+	static AtlasTex *active_l, *active_m, *active_r, *inactive_l, *inactive_m, *inactive_r;
 	static char * tabNames[] = { "ClueTab", "SouvenirTab", "MMSouvenirTab" };
- 
+
  	if( !active_l )
 	{
 		active_l = atlasLoadTexture( "map_tab_active_L.tga" );
@@ -382,7 +382,7 @@ static void displayTabs()
 		AtlasTex *l, *m, *r;
 		F32 text_wd;
 		F32 sc = scale, tz = z, ty = y;
- 
+
 		if( i == contentType )
 		{
 			font_color( CLR_WHITE, CLR_WHITE );
@@ -408,7 +408,7 @@ static void displayTabs()
 		display_sprite( r, x + l->width*scale + text_wd, ty, tz, scale, scale, color);
 
   		cprnt( x + l->width*scale + text_wd/2, ty + 17*scale, tz, sc, sc, tabNames[i] );
-  
+
 		BuildCBox(&box, x, y, text_wd + (l->width + r->width - OVERLAP)*scale, m->height*scale );
 		if(mouseDownHit(&box, MS_LEFT))
 			contentType = i;
@@ -435,7 +435,7 @@ void displayClue( StoryClue* clue, int cacheIndex, int xorig, float * y, int z, 
 	int foreColor = CLR_NORMAL_FOREGROUND;
 	int backColor = CLR_NORMAL_BACKGROUND;
 	UIBox box;
- 
+
 
 
 	*y += PIX3*sc;
@@ -480,10 +480,10 @@ void displayClue( StoryClue* clue, int cacheIndex, int xorig, float * y, int z, 
 			clue->detailtext,
 			x+10*sc, *y+33*sc, z,
 			wd-(10+CLUE_SPACE)*sc, 0,
-			false, false, &s_taDefaults, NULL, 
+			false, false, &s_taDefaults, NULL,
 			0, true);
 	}
-	
+
 	ht = max(ht+(35+CLUE_SPACE)*sc, max((ICON_HEIGHT+PIX3*2+4+4)*sc, (CLUE_HT-5)*sc));
 	clipperPop();
 	drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
@@ -626,7 +626,7 @@ void displaySouvenirClue( SouvenirData *pData, int idx, int xorig, float * y, in
 			else
 				str = "";
 		}
-			
+
 
 		if( window_getMode(WDW_CLUE) == WINDOW_DISPLAYING)
 		{
@@ -650,7 +650,7 @@ void displaySouvenirClue( SouvenirData *pData, int idx, int xorig, float * y, in
 
 	drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
 
-	if( deletable && drawCloseButton( xorig + wdorig - 12*sc,  *y + 10*sc, z, sc, backColor)  )  
+	if( deletable && drawCloseButton( xorig + wdorig - 12*sc,  *y + 10*sc, z, sc, backColor)  )
 		dialogStdCB(DIALOG_ACCEPT_CANCEL, "MMSouvenirReallyDelete", 0, 0, souvenirClueDelete, 0, 0, clue );
 
 	*y += ht;

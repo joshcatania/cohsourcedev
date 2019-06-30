@@ -28,7 +28,7 @@
 #include "player.h"
 #include "timing.h"
 #include "font.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "camera.h"
 #include "gfx.h"
 #include "varutils.h"
@@ -302,7 +302,7 @@ static Entity *checkEntCreate(Packet *pak,int idx,int *ent_create)
 	U32				bDismissablePet = 0;
 	bool		    playerIsBeingCritter = false;
 	int				idDetail = 0;
-	
+
 	if(dummy_ent_costume == NULL)
 	{
 		// JS:	Stupid hack to make sure the entity is initialized correctly.
@@ -961,7 +961,7 @@ static int entGetRagdoll(Packet *pak,Entity *e)
 	bool transitioning_out = false;
 	U8     num_bones;
 	int res = 0;
-	
+
 	START_BIT_COUNT(pak, "ragdoll_num_bones");
 	num_bones = pktGetIfSetBits(pak,5);
 	STOP_BIT_COUNT(pak);
@@ -1026,8 +1026,8 @@ static int entGetRagdoll(Packet *pak,Entity *e)
 			initNonRagdollBoneRecord(&e->nonRagdollBoneRecord, e->seq, e->seq->gfx_root->child);
 			transitioning_out = true;
 		}
-	}	
-	
+	}
+
 	if((res || transitioning_out) && demoIsRecording() && e && pak)
 	{
 		char* pcHexString = num_bones?hexStringFromIntList(e->ragdollCompressed, num_bones*3):NULL;
@@ -1050,14 +1050,14 @@ static int entGetRagdoll(Packet *pak,Entity *e)
 		}
 		*/
 	}
-	
+
 	return res;
 }
 
 int entGetRagdoll_ForDemoPlayback(Entity *e, int num_bones, int *ragdollCompressed, int svr_last_frame_dt, int svr_client_dt, int frame_dt)
 {
 	int res = 0;
-	
+
 	if (num_bones)
 	{
 		bool bCreatedRagdoll = false;
@@ -1127,7 +1127,7 @@ int entGetRagdoll_ForDemoPlayback(Entity *e, int num_bones, int *ragdollCompress
 			initNonRagdollBoneRecord(&e->nonRagdollBoneRecord, e->seq, e->seq->gfx_root->child);
 		}
 	}
-	
+
 	return res;
 }
 #endif
@@ -1912,7 +1912,7 @@ static int entReceivePowerCust(Packet *pak, Entity *e, bool oo_packet)
 			STOP_BIT_COUNT(pak);
 			break;
 		case AT_OWNED_COSTUME:
-			START_BIT_COUNT(pak, "PCCCostume");			
+			START_BIT_COUNT(pak, "PCCCostume");
 			if (!oo_packet)
 			{
 				if (!e->ownedPowerCustomizationList)	e->ownedPowerCustomizationList = StructAllocRaw(sizeof(PowerCustomizationList));
@@ -2036,8 +2036,8 @@ static int entReceiveCostume(Packet *pak, Entity *e, bool oo_packet)
 				{
 					bool b;
 					int iMode, iHideEmblem;
-					
-					if (deferred && !shell_menu() && e->pl->supergroup_mode && 
+
+					if (deferred && !shell_menu() && e->pl->supergroup_mode &&
 									(e != playerPtr() || menuCanSetCostumeAndPowerCust()))
 					{
 						if (e->pl->pendingCostume == NULL || e->pl->pendingCostume == e->pl->costume[current_costume])
@@ -2211,12 +2211,12 @@ static int entReceiveCostume(Packet *pak, Entity *e, bool oo_packet)
 		{
 			//printf("%d: AT_NPC_COSTUME: %s %s\n", pak->id, e->name, oo_packet?"OOP":"");
 
-			START_BIT_COUNT(pak, "PCCCostume");			
+			START_BIT_COUNT(pak, "PCCCostume");
 			if (!oo_packet)
 			{
 				// @todo SHAREDMEM NEEDS_REVIEW we can handle this better
 				e->ownedCostume = costume_create(GetBodyPartCount());
-				costume_receive(pak, e->ownedCostume);	
+				costume_receive(pak, e->ownedCostume);
 				if (e->ownedCostume && (e != playerPtr()))
 				{
 					e->costume = costume_as_const(e->ownedCostume);
@@ -2418,7 +2418,7 @@ static void entRecieveTaskforceArchitectInfo(Packet *pak, Entity *e)
 	}
 
 	e->onArchitect = pktGetBits(pak, 1);
-	if(e->onArchitect) 
+	if(e->onArchitect)
 	{
 		Costume * costume = 0;
 		char *contact_name;
@@ -2459,11 +2459,11 @@ static void entRecieveTaskforceArchitectInfo(Packet *pak, Entity *e)
 			{
 				if (costume)
 				{
-					if ( e->taskforce->architect_contact_costume ) 
+					if ( e->taskforce->architect_contact_costume )
 					{
 						costume_destroy(e->taskforce->architect_contact_costume);
 					}
-					e->taskforce->architect_contact_costume = costume;		
+					e->taskforce->architect_contact_costume = costume;
 					e->taskforce->architect_useCachedCostume = 0;
 				}
 			}
@@ -2519,7 +2519,7 @@ static void entRecieveTaskforceArchitectInfo(Packet *pak, Entity *e)
 
 			if (e->taskforce)
 				missionReview_Set(e->taskforce->architect_id, e->taskforce->architect_flags, pchName, pchAuthor, pchDescription, rating, euro );
-		
+
 			SAFE_FREE(pchName);
 			SAFE_FREE(pchAuthor);
 			SAFE_FREE(pchDescription);
@@ -2635,7 +2635,7 @@ static int entReceiveLevelingpactInfo(Packet *pak, Entity *e, bool oo_packet)
 
 
 		memberCount = pktGetBitsAuto(pak);
-		if (!oo_packet && e && e->pchar) 
+		if (!oo_packet && e && e->pchar)
 		{
 			e->levelingpact->members.count  = memberCount;
 			e->levelingpact->count = e->levelingpact->members.count;
@@ -2681,22 +2681,22 @@ static int entReceivePvP(Packet *pak, Entity *e, bool oo_packet)
 
 	if(!oo_packet && e && e->pl)
 		e->pl->pvpSwitch = bPvPSwitch;
-	
+
 
 	if(!oo_packet && e && e->pchar)
 		e->pchar->bPvPActive = bPvPActive;
-	
+
 
 	if(!oo_packet && e)
 	{
 		e->pvpClientZoneTimer = iPvPTimer;
 		e->pvpUpdateTime = timerCpuTicks();
 	}
-	
+
 
 	if(!oo_packet && e && e->pl)
 		e->pl->bIsGanker = bIsGanker;
-	
+
 	return 1;
 }
 
@@ -3316,7 +3316,7 @@ static int entReceive(Packet *pak,int idx,int odd_send)
 		{
 			bool stream_oo_packet;
 			if (isSelf)
-			{	
+			{
 				START_BIT_COUNT(pak, "entReceiveTaskforceParameters");
 					entRecieveTaskforceArchitectInfo(pak, e);
 					entReceiveTaskforceParameters(pak, e);
@@ -4124,7 +4124,7 @@ int entNetUpdate()
 		e = entities[i];
 		if (e->demo_id)
 			continue;
-		
+
 		if (e->showInMenu)
 			continue;
 
@@ -4278,7 +4278,7 @@ void receiveCharacterFromServer( Packet *pak, Entity *e )
 			// JS:	Why does the server send over uninitialized windows?
 			// BZ:  The server sends over uninitialized windows on new character
 			// CW:  Default windows are initialized.
-			if(wdw.mode == WINDOW_UNINITIALIZED) 
+			if(wdw.mode == WINDOW_UNINITIALIZED)
 			{
 				//newchar = 1;
 				continue;
@@ -4482,7 +4482,7 @@ void receiveCharacterFromServer( Packet *pak, Entity *e )
 	START_BIT_COUNT(pak, "receiveFriendsList");
 		receiveFriendsList( pak, e );
 	STOP_BIT_COUNT(pak);
-	
+
 	START_BIT_COUNT(pak, "receiveCombatMonitorStats");
 		receiveCombatMonitorStats(e, pak);
 	STOP_BIT_COUNT(pak);

@@ -1,5 +1,5 @@
 #include <ctype.h>
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "ttFontUtil.h"
 #include "ttFont.h"
@@ -645,7 +645,7 @@ TTTextLine* ttGetLine(TTTextWrapper* obj, unsigned int curLineWidth, unsigned in
 		characterWidthsParam.lastWidthSum = 0.0;
 		ttTextForEachGlyph(obj->font, (TTTextForEachGlyphParam*)&characterWidthsParam, 0, 0, sc, sc, obj->wideText, characterCount, true);
 	}
-	
+
 	{
 		// Start processing a new line.
 		TTTextLine* line = obj->line;
@@ -662,7 +662,7 @@ TTTextLine* ttGetLine(TTTextWrapper* obj, unsigned int curLineWidth, unsigned in
 		// Sanity check.  Can any characters be fitted at all?
 		if(!obj->characterWidths->storage || (*(float*)&obj->characterWidths->storage[obj->processCursor] > curFitWidth))
 			return NULL;
-		
+
 
 		// Start a new width counter to calculate how to fit the given text into the given width.
 		wcInit(&counter, obj->wideText, characterCount, curFitWidth, obj->characterWidths, obj->processCursor);

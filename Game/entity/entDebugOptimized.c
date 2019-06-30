@@ -25,7 +25,7 @@
 #include "MemoryMonitor.h"
 #include "initclient.h"
 #include "clientcomm.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "entrecv.h"
 #include "edit_cmd.h"
 #include "entclient.h"
@@ -61,24 +61,24 @@ void destroyPerfInfoUserData(PerformanceInfo* info){
 
 PerfInfoUserData* getPerfInfoUserData(PerformanceInfo* info){
 	PerfInfoUserData* userData;
-	
+
 	MP_CREATE(PerfInfoUserData, 100);
-	
+
 	if(!info->userData.data){
 		int i;
-		
+
 		info->userData.data = userData = MP_ALLOC(PerfInfoUserData);
 		info->userData.destructor = destroyPerfInfoUserData;
-		
+
 		for(i = 0; i < ARRAY_SIZE(userData->history); i++){
 			userData->history[i].count = ~0;
 		}
-		
+
 		if(!info->parent && info->locName && !strnicmp(info->locName, "Sleep(", 6)){
 			userData->hidden = 1;
 		}
 	}
-	
+
 	return info->userData.data;
 }
 
@@ -93,7 +93,7 @@ static void entDebugAdvanceTimerHistoryHelper(PerformanceInfo* cur){
 			cur->totalTime += cycles64;
 			cur->opCountInt += count;
 		}
-			
+
 		entDebugAdvanceTimerHistoryHelper(cur->child.head);
 	}
 }
@@ -106,7 +106,7 @@ static void entDebugAdvanceSystemTimer(PerformanceInfo* info){
 
 static void entDebugAdvanceSystemTimerTree(PerformanceInfo* info){
 	entDebugAdvanceSystemTimer(info);
-	
+
 	for(info = info->child.head; info; info = info->nextSibling){
 		entDebugAdvanceSystemTimerTree(info);
 	}
@@ -118,11 +118,11 @@ void entDebugAdvanceTimerHistory(){
 	if(PERFINFO_RUN_CONDITIONS){
 		if(!debug_state.perfInfo.paused){
 			PerfInfoIterator iter = {0};
-		
+
 			PERFINFO_AUTO_START("entDebugAdvanceTimerHistory", 1);
 
 				// Advance the history position.
-				
+
 				debug_state.perfInfo.historyPos = (debug_state.perfInfo.historyPos + 1) % TYPE_ARRAY_SIZE(PerfInfoUserData, history);
 
 				entDebugAdvanceSystemTimer(autoTimerGetPageFaults());
@@ -132,7 +132,7 @@ void entDebugAdvanceTimerHistory(){
 
 				while(autoTimerIterateThreadRoots(&iter)){
 					autoTimerDestroyLockAcquireByThreadID(iter.curThreadID);
-					
+
 					PERFINFO_AUTO_START("advance", 1);
 						entDebugAdvanceSystemTimer(&iter.publicData->systemCounters.userMode);
 						entDebugAdvanceSystemTimer(&iter.publicData->systemCounters.kernelMode);

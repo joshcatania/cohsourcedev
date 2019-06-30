@@ -1,11 +1,10 @@
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "error.h"
 #include "memcheck.h"
-#include "assert.h" 
+#include "SuperAssert.h"
 #include "utils.h"
-#include "assert.h"   
 #include "font.h"
 #include "ReferenceList.h"
 
@@ -14,18 +13,18 @@
 
 /*Basic idea: Use handles instead of pointers for things that could die without you knowing.
 
-1. When you create something, give it's pointer to this module for safe keeping (hdlAssignHandle) 
-and get back a handle you can give to others instead of a pointer. 
+1. When you create something, give it's pointer to this module for safe keeping (hdlAssignHandle)
+and get back a handle you can give to others instead of a pointer.
 2. Retrieve the pointer with (hdlGetPtrFromHandle), returns 0 if the object has been destroyed.
 3. When you destroy the thing, you call (hdlClearHandle).
 
 (In a perfect world, owners use the handle and accessor funtions and
 never get their hands on the pointer at all. Fx are like that, sequencers aren't yet)
 
-These are the four bread and butter functions the others are odd balls 
+These are the four bread and butter functions the others are odd balls
 
 int hdlAssignHandle(void * ptr)
-void * hdlGetPtrFromHandle(int handle)  
+void * hdlGetPtrFromHandle(int handle)
 void hdlClearHandle(int handle)
 
 //TO DO: hdl_id_to_ptrs needs to know how to automatically grow. (hard limit is 64k things with valid handles)
@@ -75,12 +74,12 @@ int hdlAssignHandle(void * ptr)
 		}
 	}
 	assert(curr_hdl_idx >= 0 && curr_hdl_idx < max_handles);
-	//Assign these values 
+	//Assign these values
 	hdl_id_to_ptrs[curr_hdl_idx].ptr = ptr;
 	// Update a new ID
 	assert(hdl_id_to_ptrs[curr_hdl_idx].id < 0 );
 	hdl_id_to_ptrs[curr_hdl_idx].id = -hdl_id_to_ptrs[curr_hdl_idx].id + 1;
-	if (hdl_id_to_ptrs[curr_hdl_idx].id <= 0) // Wrap 
+	if (hdl_id_to_ptrs[curr_hdl_idx].id <= 0) // Wrap
 		hdl_id_to_ptrs[curr_hdl_idx].id = 1;
 	handle.id  = hdl_id_to_ptrs[curr_hdl_idx].id;
 	handle.idx = curr_hdl_idx;
@@ -108,7 +107,7 @@ void * hdlGetPtrFromHandle(int handle)
 #else
 	assert( ((Handle*)&handle)->idx >= 0 && ((Handle*)&handle)->idx < max_handles );
 	if( hdl_id_to_ptrs[((Handle*)&handle)->idx].id == ((Handle*)&handle)->id )
-		return hdl_id_to_ptrs[((Handle*)&handle)->idx].ptr; 
+		return hdl_id_to_ptrs[((Handle*)&handle)->idx].ptr;
 	return 0;
 #endif
 }

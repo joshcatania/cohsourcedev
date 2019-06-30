@@ -18,7 +18,7 @@
 #include "gfxLoadScreens.h"
 #include "render.h"
 #include "bump.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "genericlist.h"
 #include "timing.h"
 #include "sun.h"
@@ -46,7 +46,7 @@ static const char TEXTURE_MEMMONITOR_NAME[] = "OpenGL Textures";
 
 int disable_parallel_tex_thread_loader = 0;
 int delay_texture_loading = 0;  // Adds a delay to simulate slow loading
-TexBind *white_tex_bind, *invisible_tex_bind, *grey_tex_bind, *black_tex_bind; 
+TexBind *white_tex_bind, *invisible_tex_bind, *grey_tex_bind, *black_tex_bind;
 BasicTexture *white_tex, *invisible_tex, *grey_tex, *black_tex, *dummy_bump_tex, *dummy_dynamic_cubemap_tex, *building_lights_tex;
 
 int texLoadCalls, texLoadStdCalls;
@@ -88,11 +88,11 @@ static int reduceAllAmount[MAX_TEXDETAILREDUCE+1] = { 0, 0, 0, 1, 2 };
 
 int texGetNumMipsToSkip(U32 tex_width, U32 tex_height, int is_for_entity)
 {
-	// TODO: Also limit this size by the maximum size supported by the hardware. 
+	// TODO: Also limit this size by the maximum size supported by the hardware.
 	//  rdr_caps.max_texture_size is supposed to capture this, but it's calculated by the unreliable
-	//  glGetIntegerv(GL_MAX_TEXTURE_SIZE... method. This should be switched to 
+	//  glGetIntegerv(GL_MAX_TEXTURE_SIZE... method. This should be switched to
 	//  glTexImage2D(GL_PROXY_TEXTURE_2D... / glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D...
-	
+
 	int num, mipLevel = is_for_entity?game_state.entityMipLevel:game_state.actualMipLevel;
 	MIN1(mipLevel, MAX_TEXDETAILREDUCE);
 	for (num = 0; (num < reduceAllAmount[mipLevel] || tex_width > maxTextureSize[mipLevel] || tex_height > maxTextureSize[mipLevel])
@@ -159,7 +159,7 @@ void texEnableThreadedLoading(void) {
 }
 
 
-/*called only by TexLoad Image*/ 
+/*called only by TexLoad Image*/
 static int ddsLoad(FILE *fp, TexReadInfo *info, int file_bytes, int needRawData, int forEntity)
 {
 	DDSURFACEDESC2	ddsd;
@@ -186,10 +186,10 @@ static int ddsLoad(FILE *fp, TexReadInfo *info, int file_bytes, int needRawData,
 		Errorf("File Format Error: attempting to load dds from .texture without DDS tag");
 		return 0;
 	}
-   
+
 	/* get the surface desc */
 	fread(&ddsd, sizeof(ddsd), 1, fp);
-	
+
 	info->size = file_bytes - (4 + sizeof(ddsd));
 
 	switch(ddsd.ddpfPixelFormat.dwFourCC)
@@ -250,7 +250,7 @@ static int ddsLoad(FILE *fp, TexReadInfo *info, int file_bytes, int needRawData,
 		info->mip_count		= ddsd.dwMipMapCount;
 		info->width			= ddsd.dwWidth;
 		info->height		= ddsd.dwHeight;
-		if (needRawData) 
+		if (needRawData)
 		{
 			int total_bytes = info->size + sizeof(ddsd) + 4;
 			// Need the "whole" .dds file, but with the new parameters
@@ -375,16 +375,16 @@ int  texWriteFile(char * texName, TexReadInfo * info)
 	//SETUP THE .TEXTURE STRUCTURES:
 	//--------------------------------------------------------
 	//Contents:
-	//1) TextureFileHeader (29 bytes) 
-	//2) filename (variable null terminated) 
-	//3) "DDS " (4 bytes) 
-	//4) DDSURFACEDESC2 (?) 
+	//1) TextureFileHeader (29 bytes)
+	//2) filename (variable null terminated)
+	//3) "DDS " (4 bytes)
+	//4) DDSURFACEDESC2 (?)
 	//5) DATA (file_bytes - (4 + sizeof(ddsd)))
-	
+
 	//(1)fill out the tfh
 	tfh.header_size = sizeof(tfh) + strlen(filename) +1; // Number of bytes in header data of file (not sizeof(struct)) +1 because of null at end of filename
 	tfh.file_size = info->size + 4 + sizeof(surface); // Number of bytes in data chunk of file (everything after the header + name + mip = .tga file or .dds file)
-	tfh.width = info->width; 
+	tfh.width = info->width;
 	tfh.height = info->height;
 	tfh.flags;	//STILL NEED
 	tfh.fade[2];
@@ -491,7 +491,7 @@ static void texLoadData(TexThreadPackage *pkg)
 	char filename[MAX_PATH];
 
 	//printf("loading tex: %s\n", pkg->bind->name);
-	
+
 	bind = pkg->bind;
 	info = &pkg->info;
 
@@ -511,14 +511,14 @@ static void texLoadData(TexThreadPackage *pkg)
 	EnterCriticalSection(&CriticalSectionTexLoadData);
 
 	STR_COMBINE_SSSSS(filename, "texture_library/", bind->dirname, "/", bind->name, ".texture");
-	
+
 	tex_file = fileOpen(filename, "rb");
 	if (!tex_file) {
 		printf("Error!  File 'texture_library/%s/%s.texture' not found when loading texture '%s'!\n", bind->dirname, bind->name, bind->name);
 		LeaveCriticalSection(&CriticalSectionTexLoadData);
 		return;
 	}
-	if (quickload) 
+	if (quickload)
 	{
 		// With -quickloadtextures, we can end up having not in sync headers, this will fix it partially
 		bind->file_bytes = fileSize(filename) - bind->file_pos;
@@ -554,7 +554,7 @@ static void texLoadData(TexThreadPackage *pkg)
 	}
 
 	fclose(tex_file);
-	
+
 	LeaveCriticalSection(&CriticalSectionTexLoadData);
 
 	if (pkg->needRawData && info->data) {
@@ -584,7 +584,7 @@ static TexOpt *trickFromTextureDirName(const char *dirname, const char *name, Te
 //END OUT OF THREAD
 
 
-/*Removes tex file suffix, and returns .tga or .dds flag based on that suffix.  
+/*Removes tex file suffix, and returns .tga or .dds flag based on that suffix.
 s = input name, res = chopped name (can be same ptr) */
 static int texFixName(const char *s,char *res, int size)
 {
@@ -688,7 +688,7 @@ static BasicTexture *texFindVerify(const char *name, BasicTexture *fallback, cha
 			ret = fallback;
 		}
 	}
-	return ret;	
+	return ret;
 }
 
 static BasicTexture *texFindVerifyCubemap(const char *name, BasicTexture *fallback, char *fieldName, char *filename, char *trickname)
@@ -727,7 +727,7 @@ static void fixLightingScalesOnFallback(TexBind *bind)
 	}
 	scaleVec3(bind->texopt->scrollsScales.ambientScaleTrick, ambient, bind->scrollsScales->ambientScale);
 	scaleVec3(bind->texopt->scrollsScales.diffuseScaleTrick, diffuse, bind->scrollsScales->diffuseScale);
-	
+
 }
 
 BlendModeType optimizeBlendMode(BlendModeShader shader, TexBind *bind)
@@ -1006,7 +1006,7 @@ static void texResetTrickBasedParametersComposite(TexBind *bind, bool forceFallb
 
 			bind->is_fallback_material = 1;
 
-			for (i=TEXLAYER_BUMPMAP1+1; i<TEXLAYER_MAX_LAYERS; i++) 
+			for (i=TEXLAYER_BUMPMAP1+1; i<TEXLAYER_MAX_LAYERS; i++)
 				bind->tex_layers[i] = NULL;
 		}
 	} else {
@@ -1070,7 +1070,7 @@ static void texResetTrickBasedParametersComposite(TexBind *bind, bool forceFallb
 			if(!stricmp(bind->tex_layers[TEXLAYER_GENERIC]->name, "grey"))
 				bind->tex_layers[TEXLAYER_GENERIC] = texFind("black");
 		}
-		for (i=TEXLAYER_BUMPMAP1+1; i<TEXLAYER_MAX_LAYERS; i++) 
+		for (i=TEXLAYER_BUMPMAP1+1; i<TEXLAYER_MAX_LAYERS; i++)
 			bind->tex_layers[i] = NULL;
 
 		if (bind->bind_blend_mode.shader == BLENDMODE_COLORBLEND_DUAL) // && texopt && texopt->flags & TEXOPT_TREAT_AS_MULTITEX)
@@ -1164,7 +1164,7 @@ void texSetBindsSubComposite(TexBind *bind)
 	texResetTrickBasedParametersComposite(bind, false);
 }
 
-//Set flags and such in the Tex_Binds.  Must be done after all texLoadHeaders because 
+//Set flags and such in the Tex_Binds.  Must be done after all texLoadHeaders because
 //tex_links can refer to binds in any .rom file, so all need to be loaded.
 static void texSetBinds(void)
 {
@@ -1380,8 +1380,8 @@ int texFillInBind(char *filename, BasicTexture *bind) {
 		if (texopt)
 		{
 			bind->texopt_surface = texopt->surface;
-		} 
-		else 
+		}
+		else
 			bind->texopt_surface = 0;
 
 	}
@@ -1455,7 +1455,7 @@ void texScanForTexHeaders(bool bInitialLoad)
 	fileScanAllDataDirs(basefolder, texLoadHeaderProcessor);
 
 	// TBD, clean up the rest of this function to make it work better for initial load vs stages data loads
-	//	Eg should have a list of basictextures that were just loaded in addition to the full gBasicTexture list, 
+	//	Eg should have a list of basictextures that were just loaded in addition to the full gBasicTexture list,
 	//	and the functions below here operate on the newly loaded textures only.  Might work now with all textures, but
 	//	wasting time redoing whats already been set up for the previously loaded textures.
 
@@ -1680,7 +1680,7 @@ int texLoadHeaders(void)
 	FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE_AND_DELETE, "texture_library/*.texture", reloadTextureCallback);
 
 	loadend_printf("");
-	
+
 	return tex_load_header_count;
 }
 
@@ -1698,7 +1698,7 @@ void texFreeAll()
 void texFree( BasicTexture *bind, int freeRawData )
 {
 	bool freed=false;
-	
+
 	if (bind->load_state[freeRawData] == TEX_LOADED) {
 		//printf("freeing tex: %s\n", bind->name);
 
@@ -1770,7 +1770,7 @@ void texRemoveRef( TexBind *bind )
 }
 
 
-// Returns ptr to the Basic TexBind with the given name or zero. 
+// Returns ptr to the Basic TexBind with the given name or zero.
 BasicTexture *texFind(const char *name)
 {
 	char search[128];
@@ -1824,7 +1824,7 @@ char *texCheckForSceneMaterialSwap(char *name)
 	return name;
 }
 
-// Returns ptr to the Composite TexBind with the given name or zero. 
+// Returns ptr to the Composite TexBind with the given name or zero.
 TexBind *texFindComposite(const char *name)
 {
 	char search[128];
@@ -1858,13 +1858,13 @@ static VOID CALLBACK texDoThreadedTextureLoading( ULONG_PTR dwParam)
 	TexThreadPackage * pkg;
 
 	PERFINFO_AUTO_START("texDoThreadedTextureLoading", 1);
-	
+
 	pkg = (TexThreadPackage*)dwParam;
 
 	//debug printf("texDoThreadedTextureLoading(%s)\n", pkg->bind.dirname);
 
 	if (pkg->should_queue==1 || (pkg->should_queue==-1 && queuingTexLoads)) {
-		EnterCriticalSection(&CriticalSectionTexLoadQueues); 
+		EnterCriticalSection(&CriticalSectionTexLoadQueues);
 		//printf("queuing tex: %s\n", pkg->bind->name);
 		listAddForeignMember(&queuedTexLoads, pkg);
 		LeaveCriticalSection(&CriticalSectionTexLoadQueues);
@@ -1900,7 +1900,7 @@ static VOID CALLBACK texDoThreadedTextureLoading( ULONG_PTR dwParam)
 //		// Sort by filename (assume piggs are alphabetical and faster to load that way?)
 //		return stricmp((*elem1)->bind.dirname, (*elem2)->bind.dirname);
 //	} else {
-//		// One of these has a TexWord, it needs to be loaded last because of 
+//		// One of these has a TexWord, it needs to be loaded last because of
 //		//  dependencies
 //		return !(*elem2)->bind.texWord - !(*elem1)->bind.texWord;
 //	}
@@ -1932,9 +1932,9 @@ static void texDoThreadedQueuedTextureLoading( void )
 
 	// find end
 	for (pkg = queuedTexLoads; pkg && ++count && pkg->next; pkg = pkg->next);
-	
+
 	printf("loading %d textures\n", count);
-	
+
 	for( ; pkg ; pkg = prevPkg, count-- )
 	{
 		bool addToFinalList=true;
@@ -1957,13 +1957,13 @@ static void texDoThreadedQueuedTextureLoading( void )
 
 			totaldata+=pkg->info.size;
 
-			EnterCriticalSection(&CriticalSectionTexLoadQueues); 
+			EnterCriticalSection(&CriticalSectionTexLoadQueues);
 			listAddForeignMember(&texBindsReadyForFinalProcessing, pkg);
 			LeaveCriticalSection(&CriticalSectionTexLoadQueues);
 		}
 		texCheckThreadLoader();
 	}
-	
+
 	assert(!queuedTexLoads && !count);
 
 	loadend_printf(" (%.3f Mbytes %.3f TexWord MPixels)", totaldata / 1000000.f, (texWordGetTotalPixels()-pixelsStart)/1000000.f);
@@ -2052,7 +2052,7 @@ static int texConvertToGameFormat(BasicTexture *tex_bind, TexReadInfo * info)
 	return 1;
 }
 
-/*Called every frame to check to see if the background loader has finished it's work (TO DO the linked list 
+/*Called every frame to check to see if the background loader has finished it's work (TO DO the linked list
 won't work in multi thread with out some work)*/
 
 void texCheckThreadLoader()
@@ -2072,8 +2072,8 @@ void texCheckThreadLoader()
 		PERFINFO_AUTO_STOP();
 		return;
 	}
-		
-	EnterCriticalSection(&CriticalSectionTexLoadQueues); 
+
+	EnterCriticalSection(&CriticalSectionTexLoadQueues);
 	orgList = texBindsReadyForFinalProcessing;
 	texBindsReadyForFinalProcessing = NULL;
 	LeaveCriticalSection(&CriticalSectionTexLoadQueues);
@@ -2093,7 +2093,7 @@ void texCheckThreadLoader()
 	for(pkg = tail; pkg ; pkg = tail)
 	{
 		tail = pkg->prev;
-		
+
 		if (pkg->needRawData && pkg->info.data) {
 			if (!pkg->bind->rawInfo) {
 				// Something horrible has gone wrong?  Texture freed while in the queue to get loaded?
@@ -2105,15 +2105,15 @@ void texCheckThreadLoader()
 		else if (pkg->info.data)
 		{
 			eaPush(&eaTexBindsThisTick, pkg->bind);
-		
+
 			PERFINFO_AUTO_START("texConvertToGameFormat", 1);
 				texConvertToGameFormat(pkg->bind, &(pkg->info));
 			PERFINFO_AUTO_STOP();
-			
+
 			num_bytes_loaded += pkg->bind->file_bytes;
 			did_something = 1;
 		}
-		else if (pkg->bind->texWordParams) 
+		else if (pkg->bind->texWordParams)
 		{
 			// TexWord package, no actual data
 			eaPush(&eaTexBindsThisTick, pkg->bind);
@@ -2148,7 +2148,7 @@ void texCheckThreadLoader()
 		{
 			int num = eaSize(&eaTexBindsThisTick);
 			int i;
-			for (i=0; i<num; i++) 
+			for (i=0; i<num; i++)
 			{
 				BasicTexture *bind = eaTexBindsThisTick[i];
 				// texCheckForSwaps( bind ); Don't need this anymore?  We only load actualTextures now?
@@ -2159,7 +2159,7 @@ void texCheckThreadLoader()
 					PERFINFO_AUTO_START("texWordDoFinalComposition", 1);
 						texWordDoFinalComposition(bind->texWord, bind);
 					PERFINFO_AUTO_STOP();
-					
+
 					bind->hasBeenComposited = 1;
 					bind->load_state[0] = TEX_LOADED;
 					bind->memory_use[0] = bind->width * bind->height * 4; // TODO: fix this up to be accurate
@@ -2170,7 +2170,7 @@ void texCheckThreadLoader()
 			eaSetSize(&eaTexBindsThisTick, 0);
 		}
 	PERFINFO_AUTO_STOP();
-	
+
 	PERFINFO_AUTO_START("loadUpdate", 1);
 		loadUpdate("bg_textures",num_bytes_loaded);
 	PERFINFO_AUTO_STOP();
@@ -2280,7 +2280,7 @@ void texSetSearchPath(char *searchPath)
 {
 	// Expects something like "#English", "#French;#Base" or just ""
 	char *walk;
-	while (walk = eaPop(&textureSearchPath)) 
+	while (walk = eaPop(&textureSearchPath))
 		free(walk);
 	walk = strtok(searchPath, ";, \t");
 	while (walk) {
@@ -2365,7 +2365,7 @@ void texLoadQueueFinish(void) // Directs the loader to stop queueing load calls 
 	// Wait until all are loaded
 	if (queuingTexLoadsOutOfThread==0) {
 		// We want to wait until all the textures are loaded
-		
+
 		while (!hasStartedQueuing) Sleep(1); // Wait until we've *started* queueing the textures
 
 		EnterQueueingLoadsCS(); // Wait for loads to finish
@@ -2456,7 +2456,7 @@ void texLoadInternalBasic(BasicTexture *bind, TexLoadHow mode, TexUsage use_cate
 
 	CHECKNOTGLTHREAD;
 
-	// special case for cubemaps, need to load synchronously so subsequent faces 
+	// special case for cubemaps, need to load synchronously so subsequent faces
 	//	can know ID assigned to first face
 	if ( (disable_parallel_tex_thread_loader || bIsCubemapFace0) &&
 		mode == TEX_LOAD_IN_BACKGROUND)
@@ -2475,18 +2475,18 @@ void texLoadInternalBasic(BasicTexture *bind, TexLoadHow mode, TexUsage use_cate
 	}
 
 	if ( match->load_state[rawData] == TEX_NOT_LOADED ) {
-		EnterCriticalSection(&CriticalSectionTexLoadQueues); 
+		EnterCriticalSection(&CriticalSectionTexLoadQueues);
 		if ( match->load_state[rawData] == TEX_NOT_LOADED ) {
 			need_to_load = 1;
 			match->load_state[rawData] = TEX_LOADING;
 		}
-		LeaveCriticalSection(&CriticalSectionTexLoadQueues); 
+		LeaveCriticalSection(&CriticalSectionTexLoadQueues);
 	}
 
 	if ( need_to_load )
 	{
 		// Check to see if we have any dependencies to load, load them first, in the same manner as how
-		//   we're loading this texture (i.e. a LOAD_NOW will have all dependencies loaded first, a 
+		//   we're loading this texture (i.e. a LOAD_NOW will have all dependencies loaded first, a
 		//   LOAD_IN_BACKGROUND will have all dependencies loaded asynchronously, but *before* the actual
 		//   texture, it is assumed that once the actual texture gets loaded all dependencies are loaded
 		if (!rawData && match->texWord) {
@@ -2545,7 +2545,7 @@ void texLoadInternalBasic(BasicTexture *bind, TexLoadHow mode, TexUsage use_cate
 	//	The loader will take care of correctly loading into the proper cubemap face slot.
 	if(bIsCubemapFace0)
 	{
-		// find the other cubemap faces based on naming convention.  We assume that cubemap face 
+		// find the other cubemap faces based on naming convention.  We assume that cubemap face
 		//	names end in '0', '1', '2', etc.  We will muck with the last character here to get
 		//	the names of the other faces, but restore it below.
 		char* tempName = (char*)match->name;
@@ -2584,7 +2584,7 @@ BasicTexture *texLoadBasic(const char *name, TexLoadHow mode, TexUsage use_categ
 
 	//find TexBind from the name
 	match = texFind(name);
-	if(!match) 
+	if(!match)
 		return white_tex; //handle bad texture name
 
 	texLoadInternalBasic(match->actualTexture, mode, use_category, 0);
@@ -2637,7 +2637,7 @@ TexBind *texLoad(const char *name, TexLoadHow mode, TexUsage use_category)
 
 	//find TexBind from the name
 	match = texFindComposite(name);
-	if(!match) 
+	if(!match)
 		return white_tex_bind; //handle bad texture name
 
 	texLoadInternalComposite(match, mode, use_category);
@@ -2972,7 +2972,7 @@ int texDemandLoadActual(BasicTexture *texbind)
 
 	if (!texbind)
 		return 0;
-		
+
 	PERFINFO_AUTO_START("texDemandLoadActual", 1);
 
 	actualTexture = texbind->actualTexture;
@@ -2994,9 +2994,9 @@ int texDemandLoadActual(BasicTexture *texbind)
 		// Bind the low mip levels now!
 		texBindLowMips(actualTexture);
 	}
-	
+
 	PERFINFO_AUTO_STOP();
-	
+
 	return actualTexture->mipid ? actualTexture->mipid : (actualTexture->id?actualTexture->id:white_tex->id);
 }
 

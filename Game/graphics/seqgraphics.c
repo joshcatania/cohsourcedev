@@ -12,7 +12,7 @@
 #include "memcheck.h"
 #include "error.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "anim.h"
 #include "file.h"
 #include "mathutil.h"
@@ -68,7 +68,7 @@
 // Used by takePicture()
 #define NUM_TAKEPICTURE_INFOS 16
 
-typedef struct 
+typedef struct
 {
 	bool inited;
 	bool inUse;
@@ -121,12 +121,12 @@ void animCalculateSortFlags( GfxNode * gfxnode )
 		model = node->model;
 
 		if( model )
-		{	
+		{
 			node->flags &= ~GFXNODE_ALPHASORT;
 			//If you have a customtex, check second texture.
 			if( node->customtex.base )
 			{
-				if( node->customtex.generic && ( node->customtex.generic->flags & TEX_ALPHA ) && 
+				if( node->customtex.generic && ( node->customtex.generic->flags & TEX_ALPHA ) &&
 					!(node->model && (node->model->flags & OBJ_TREEDRAW)) &&
 					!(node->tricks && (node->tricks->flags1 & TRICK_ALPHACUTOUT)))
 				{
@@ -147,7 +147,7 @@ void animCalculateSortFlags( GfxNode * gfxnode )
 
 
 		if( node->child )
-			animCalculateSortFlags( node->child );		
+			animCalculateSortFlags( node->child );
 	}
 }
 
@@ -165,7 +165,7 @@ void minMaxVec3(Vec3 newvec, Vec3 min, Vec3 max)
 	max[2] = MAX(max[2], newvec[2]);
 }
 
-static BoneId extentbones[] = // This list is for bones we check when calculating extents.  Some bones like WepR need to be ignored 
+static BoneId extentbones[] = // This list is for bones we check when calculating extents.  Some bones like WepR need to be ignored
 {
 	BONEID_HIPS,
 	BONEID_WAIST,
@@ -204,7 +204,7 @@ static BoneId extentbones[] = // This list is for bones we check when calculatin
 	BONEID_FORE_LLEGR,
 	BONEID_FORE_FOOTR,
 	BONEID_FORE_TOER,
-}; 
+};
 
 static void s_destroyTempEnt(Entity *e)
 {
@@ -229,16 +229,16 @@ void seqGetExtremes( GfxNode * node, int seqHandle, SeqGfxData * seqGfxData, Vec
 {
 	Vec3 vec;
 	Vec3 vecScreen;
-  
+
 	for(; node ; node = node->next)
 	{
 		if( node->seqHandle == seqHandle && node->anim_id != BONEID_MYSTIC && node->anim_id != BONEID_BENDMYSTIC && node->useFlags ) //mystic bones can be anywhere...
-		{ 
+		{
 			if(bone_IdIsValid(node->anim_id) && isExtentBone(node->anim_id))
 			{
 				mulVecMat4( seqGfxData->btt[node->anim_id], seqGfxData->bpt[node->anim_id], vec );
 				gfxWindowScreenPos( vec, vecScreen );
-				ul[0] = MIN( ul[0], vecScreen[0] ); 
+				ul[0] = MIN( ul[0], vecScreen[0] );
 				ul[1] = MAX( ul[1], vecScreen[1] );
 				lr[0] = MAX( lr[0], vecScreen[0] );
 				lr[1] = MIN( lr[1], vecScreen[1] );
@@ -258,17 +258,17 @@ void findMinMax( Vec2 ul, Vec2 lr, Vec3 corner )
 	Vec3 cornerX;
 
 	//DEBUG
-	if(0){  
+	if(0){
 		Vec3 cornerup;
 		copyVec3( corner, cornerup );
 		cornerup[1] += 1;
 		drawLine3D( cornerup, corner, 0xffffffff);
 	}
 	//END DEBUG
- 
-	mulVecMat4( corner, cam_info.viewmat, cornerX );    
 
-	ul[0] = MIN( ul[0], cornerX[0] );   
+	mulVecMat4( corner, cam_info.viewmat, cornerX );
+
+	ul[0] = MIN( ul[0], cornerX[0] );
 	ul[1] = MAX( ul[1], cornerX[1] );
 	ul[2] = MAX( ul[2], cornerX[2] );
 
@@ -285,8 +285,8 @@ int seqGetWorldGroupDimensions( SeqInst * seq, Vec3 ul, Vec3 lr )
 	copyMat4( seq->gfx_root->mat, mat );
 	zeroVec3( ul );
 	zeroVec3( lr );
- 
-	if( seq->worldGroupPtr )  
+
+	if( seq->worldGroupPtr )
 	{
 		GroupDef * def = seq->worldGroupPtr;
 
@@ -306,27 +306,27 @@ int seqGetWorldGroupDimensions( SeqInst * seq, Vec3 ul, Vec3 lr )
 		}
 		else
 		{
-			groupGetBoundsMinMax( def, mat, min, max );   
+			groupGetBoundsMinMax( def, mat, min, max );
 		}
 
-		ul[0] = +1000000;      
+		ul[0] = +1000000;
 		ul[1] = -1000000;
-		ul[2] = -1000000; 
+		ul[2] = -1000000;
 		lr[0] = -1000000;
 		lr[1] = +1000000;
 		lr[2] = -1000000;
 
-		findMinMax( ul, lr, min );  
+		findMinMax( ul, lr, min );
 		findMinMax( ul, lr, max );
-		corner[0] = min[0]; 
+		corner[0] = min[0];
 		corner[1] = min[1];
 		corner[2] = max[2];
 		findMinMax( ul, lr, corner );
 		corner[0] = min[0];
 		corner[1] = max[1];
 		corner[2] = max[2];
-		findMinMax( ul, lr, corner ); 
-		corner[0] = min[0]; 
+		findMinMax( ul, lr, corner );
+		corner[0] = min[0];
 		corner[1] = max[1];
 		corner[2] = min[2];
 		findMinMax( ul, lr, corner );
@@ -338,17 +338,17 @@ int seqGetWorldGroupDimensions( SeqInst * seq, Vec3 ul, Vec3 lr )
 		corner[1] = min[1];
 		corner[2] = max[2];
 		findMinMax( ul, lr, corner );
-		corner[0] = max[0]; 
+		corner[0] = max[0];
 		corner[1] = min[1];
 		corner[2] = min[2];
-		findMinMax( ul, lr, corner ); 
+		findMinMax( ul, lr, corner );
 
 		//Use ther middle of the box for the z to minimize parallax
 		addVec3( min, max, mid );
 		scaleVec3( mid, 0.5, mid );
 		mulVecMat4( mid, cam_info.viewmat, midx );
 		ul[2] = lr[2] = midx[2];
-		return 1;  
+		return 1;
 	}
 
 	return 0;
@@ -363,8 +363,8 @@ int seqGetSteadyTop( SeqInst * seq, Vec3 steady_top )
 		zeroVec3(steady_top);
 		return FALSE;
 	}
-		
-	if( seq->type->selection == SEQ_SELECTION_LIBRARYPIECE ) 
+
+	if( seq->type->selection == SEQ_SELECTION_LIBRARYPIECE )
 	{
 		Vec3 ul, lr;
 		if( seqGetWorldGroupDimensions( seq, ul, lr ) )
@@ -377,7 +377,7 @@ int seqGetSteadyTop( SeqInst * seq, Vec3 steady_top )
 	}
 
 	//SEQ_SELECTION_CAPSULE uses this by default
-	//SELECTION_LIBRARYPIECE falls through to here, 
+	//SELECTION_LIBRARYPIECE falls through to here,
 	//SELECTION_BONES uses capsule for steady top -- since it's supposed to be steady
 	{
 		Mat4 mat;
@@ -415,11 +415,11 @@ int seqGetCollisionBrackets( SeqInst * seq, const Mat3 entMat, Vec3 ul, Vec3 lr,
 	F32 bias, basebias;
 	EntityCapsule cap;
 
-	bias = seq->type->reticleHeightBias; 
-	basebias = seq->type->reticleBaseBias;  
+	bias = seq->type->reticleHeightBias;
+	basebias = seq->type->reticleBaseBias;
 
-	getCapsule(seq, &cap ); 
-	positionCapsule( entMat, &cap, collMat ); 
+	getCapsule(seq, &cap );
+	positionCapsule( entMat, &cap, collMat );
 
 	/////////////// Now we have right entMat and a capsule, find the screen coordinate extremes
 	{
@@ -447,10 +447,10 @@ int seqGetCollisionBrackets( SeqInst * seq, const Mat3 entMat, Vec3 ul, Vec3 lr,
 
 		// Find point 1 & 2 and put them in camera space
 		point2[1] += cap.length;
-		mulVecMat4( point1, collMat, point1x ); 
-		mulVecMat4( point2, collMat, point2x ); 
+		mulVecMat4( point1, collMat, point1x );
+		mulVecMat4( point2, collMat, point2x );
 
-		//drawLine3DWidth( point1x, point2x, 0xffffffff, 20); 
+		//drawLine3DWidth( point1x, point2x, 0xffffffff, 20);
 
 		mulVecMat4( point1x, cam_info.viewmat, point1 );
 		mulVecMat4( point2x, cam_info.viewmat, point2 );
@@ -462,29 +462,29 @@ int seqGetCollisionBrackets( SeqInst * seq, const Mat3 entMat, Vec3 ul, Vec3 lr,
 		//( Use reticle height bias to lift top of both front facing squares (making rectangles) )
 		copyVec3( point1, point1ul );
 		point1ul[0] -= cap.radius;
-		point1ul[1] += cap.radius + bias; 
+		point1ul[1] += cap.radius + bias;
 		point1ul[2] += cap.radius;
 		copyVec3( point1, point1ur );
 		point1ur[0] += cap.radius;
-		point1ur[1] += cap.radius + bias; 
-		point1ur[2] += cap.radius; 
+		point1ur[1] += cap.radius + bias;
+		point1ur[2] += cap.radius;
 		copyVec3( point1, point1ll );
 		point1ll[0] -= cap.radius;
-		point1ll[1] -= cap.radius + basebias; 
-		point1ll[2] -= cap.radius; 
+		point1ll[1] -= cap.radius + basebias;
+		point1ll[2] -= cap.radius;
 		copyVec3( point1, point1lr );
 		point1lr[0] += cap.radius;
-		point1lr[1] -= cap.radius + basebias; 
-		point1lr[2] -= cap.radius; 
+		point1lr[1] -= cap.radius + basebias;
+		point1lr[2] -= cap.radius;
 
 		copyVec3( point2, point2ul );
 		point2ul[0] -= cap.radius;
-		point2ul[1] += cap.radius + bias; 
-		point2ul[2] += cap.radius; 
+		point2ul[1] += cap.radius + bias;
+		point2ul[2] += cap.radius;
 		copyVec3( point2, point2ur );
 		point2ur[0] += cap.radius;
-		point2ur[1] += cap.radius + bias; 
-		point2ur[2] += cap.radius; 
+		point2ur[1] += cap.radius + bias;
+		point2ur[2] += cap.radius;
 		copyVec3( point2, point2ll );
 		point2ll[0] -= cap.radius;
 		point2ll[1] -= cap.radius + basebias;
@@ -516,13 +516,13 @@ int seqGetCollisionBrackets( SeqInst * seq, const Mat3 entMat, Vec3 ul, Vec3 lr,
 		minMaxVec3(point2ur, worldMin, worldMax);
 		minMaxVec3(point2lr, worldMin, worldMax);
 
-		//Find extremes of the corner points to find the screenUL and screenUL 
-		screenUL[0] = +1000000; 
+		//Find extremes of the corner points to find the screenUL and screenUL
+		screenUL[0] = +1000000;
 		screenUL[1] = -1000000;
 		screenLR[0] = -1000000;
 		screenLR[1] = +1000000;
 
-		for( i = 0 ; i < 8 ; i++ ) 
+		for( i = 0 ; i < 8 ; i++ )
 		{
 			F32 * pnt = pointScreen[i];
 
@@ -534,7 +534,7 @@ int seqGetCollisionBrackets( SeqInst * seq, const Mat3 entMat, Vec3 ul, Vec3 lr,
 			if( pnt[0] > screenLR[0] )
 				screenLR[0] = pnt[0];
 
-			//Is it highest? 
+			//Is it highest?
 			if( pnt[1] > screenUL[1] )
 				screenUL[1] = pnt[1];
 
@@ -594,13 +594,13 @@ bool seqGetScreenAreaOfBones( SeqInst * seq, Vec2 screenUL, Vec2 screenLR, Vec3 
 		worldMax = tempb;
 
 	seqGfxData = &seq->seqGfxData;
-	node = seq->gfx_root->child; 
+	node = seq->gfx_root->child;
 
 	//If this thing is off screen or just messed up, bail
 	if( seq->gfx_root->flags & GFXNODE_HIDE || !seq->gfx_root->child || seq->gfx_root->child->anim_id != 0 )
 		return false;
 
-	//Restore the pretranslated bonepositions back to original spots 
+	//Restore the pretranslated bonepositions back to original spots
 	mulVecMat4( seqGfxData->btt[node->anim_id], seqGfxData->bpt[node->anim_id], t1 );
 
 	if (t1[0] == 0.0f || t1[1] == 0.0f || t1[2] == 0.0f)
@@ -656,7 +656,7 @@ int seqGetSides( SeqInst * seq, const Mat4 entmat, Vec2 screenULVec2, Vec2 scree
 	if (!worldMax)
 		worldMax = tempb;
 
-	if( !seq || !seq->gfx_root ) 
+	if( !seq || !seq->gfx_root )
 	{
 		//Only way we can get here is an unformed entity, just bail
 		screenUL[0] = screenUL[1] = 0;
@@ -700,15 +700,15 @@ int seqGetSides( SeqInst * seq, const Mat4 entmat, Vec2 screenULVec2, Vec2 scree
 
 		//Find root, so cached reticle coords are relative to ent position -- feels a little better, no reticle lag as you turn camera
 		mulMat4( cam_info.viewmat, seq->gfx_root->mat, meInCamSpace );
-		gfxWindowScreenPos( meInCamSpace[3], root );   
+		gfxWindowScreenPos( meInCamSpace[3], root );
 
-		//If it was selected last frame, and selected in a different way now, then start the interpolation 
+		//If it was selected last frame, and selected in a different way now, then start the interpolation
 		if( 0 && seq->selectionUsedLastFrame && actualSelectionUsed != seq->selectionUsedLastFrame
-			&& seq->visStatusLastFrame == ENT_OCCLUDED ) //Dont interoplate if you couldn't see the reticle 
+			&& seq->visStatusLastFrame == ENT_OCCLUDED ) //Dont interoplate if you couldn't see the reticle
 			seq->reticleInterpFrame = FRAMES_TO_INTERP_RETICLE; //Do interpolation between reticles
 
 		//Interpolate to the new reticle if needed
-		if( seq->reticleInterpFrame > 0.0 )  
+		if( seq->reticleInterpFrame > 0.0 )
 		{
 			Vec3 screenULOld = {0};
 			Vec3 screenLROld = {0};
@@ -726,19 +726,19 @@ int seqGetSides( SeqInst * seq, const Mat4 entmat, Vec2 screenULVec2, Vec2 scree
 		}
 		else //No interpolation
 		{
-			copyVec2( screenUL, screenULVec2 ); 
+			copyVec2( screenUL, screenULVec2 );
 			copyVec2( screenLR, screenLRVec2 );
 
 			//Cache current reticle values in case you need them next frame
-			subVec3( screenULVec2, root, seq->ulFromRoot ); 
+			subVec3( screenULVec2, root, seq->ulFromRoot );
 			subVec3( screenLRVec2, root, seq->lrFromRoot );
 		}
 
 		//selectionUsedLastFrame set and reticleInterpFrame incremented in ent ClientUpdate so seqGetSides can be called
 		//several times a frame on the same entity
-		//TO DO since entClientUpdate can also be called multiple times per frame, theoretically, this is probably not 
-		//the best solution.  Maybe switch to absolute timestamps.  
-		seq->selectionUsedThisFrame = actualSelectionUsed; 
+		//TO DO since entClientUpdate can also be called multiple times per frame, theoretically, this is probably not
+		//the best solution.  Maybe switch to absolute timestamps.
+		seq->selectionUsedThisFrame = actualSelectionUsed;
 	}
 
 	return true;
@@ -768,7 +768,7 @@ void seqSetLod(SeqInst * seq, F32 len)
 		d3 += (game_state.camdist - MAX_CAMDIST_BEFORE_UPPING_LODS);
 	}
 
-	lod = seq->lod_level;	
+	lod = seq->lod_level;
 	assert(lod >= 0 && lod < MAX_LODS);
 
 	oldlod = -1;
@@ -800,7 +800,7 @@ void seqSetLod(SeqInst * seq, F32 len)
 				lod--;
 		}
 	}
-	
+
 	//Hack so character looks good in the UI
 	if( game_state.game_mode == SHOW_TEMPLATE )
 		lod = 0;
@@ -894,7 +894,7 @@ void printLod(SeqInst * seq)
 	xyprintf( x, y++,"Distance From Camera: %0.0f       ", ent_dist );
 	xyprintf( x, y++,"Current LOD level:    %d          ", seq->lod_level );
 	xyprintf( x, y++,"Geometry:                         ");
-	
+
 	totalTris = printGeometry( seq->gfx_root->child, seq->handle, &y );
 
 	xyprintfcolor( x, y++,255, 200, 200,"                Total Tris: %d     ", totalTris );
@@ -919,7 +919,7 @@ void printScreenSeq(SeqInst * seq)
 	}
 
 	empty[0] = 0;
-	
+
 	xyprintf( x, y++,"%-100s ", "");
 	xyprintf( x, y++,"Custom Graphics                                                                                      ");
 	xyprintf( x, y++,"%-100s ", "");
@@ -1087,7 +1087,7 @@ static int getBonesThatNeedStaticLight(GfxNode * node, GfxNode * bones[BONEID_CO
 		if( node->seqHandle == seqHandle )
 		{
 			if( bone_IdIsValid(node->anim_id) && node->model && (node->model->flags & OBJ_STATICFX) )
-			{	
+			{
 				bones[node->anim_id] = node;
 				hits++;
 			}
@@ -1278,7 +1278,7 @@ U8 * getThePixelBuffer( SeqInst * seq, Vec3 headshotCameraPos, F32 headShotFovMa
 	if (rdr_caps.use_pbuffers) {
 		initHeadShotPbuffer(sizeOfPictureX, sizeOfPictureY, desired_aa, required_aa);
 		sizeOfPictureX *= pbufHeadShot.software_multisample_level;
-		sizeOfPictureY *= pbufHeadShot.software_multisample_level; 
+		sizeOfPictureY *= pbufHeadShot.software_multisample_level;
 		// Move back camera so that the same scene is rendered twice as big
 		//  we should really do this via fov or something less tweaky... as it changes the aspect of things...
 		headshotCameraPos[2] = headshotCameraPos[2] / (pow(pbufHeadShot.software_multisample_level,0.95));
@@ -1290,16 +1290,16 @@ U8 * getThePixelBuffer( SeqInst * seq, Vec3 headshotCameraPos, F32 headShotFovMa
 	heldBackgroundLoaderState = game_state.disableGeometryBackgroundLoader;
 	game_state.disableGeometryBackgroundLoader = 1;  //tells the background loader to finish
 
-	seq->seqGfxData.alpha = 255; 
-	preservedLegScale = seq->legScale; 
+	seq->seqGfxData.alpha = 255;
+	preservedLegScale = seq->legScale;
 	seq->legScale = 0.0;
 
 	//Make sure we're in the right LOD and that all textures and geometry are loaded
 	seqProcessClientInst( seq, 1.0, 0, 1 ) ; //Ready move
 	seqSetLod( seq, 1.0 );  //?? nEEDED?
 	seq->seqGfxData.alpha = 255;
-	animSetHeader( seq, 0 );  
-	animPlayInst( seq );   
+	animSetHeader( seq, 0 );
+	animPlayInst( seq );
 
 	//Preserve the old params
 	disable2d = game_state.disable2Dgraphics;
@@ -1519,7 +1519,7 @@ U8 * getThePixelBuffer( SeqInst * seq, Vec3 headshotCameraPos, F32 headShotFovMa
 		pixbuf = malloc( sizeOfPictureX * sizeOfPictureY * 4 );
 		rdrGetFrameBuffer(ULx, ULy, sizeOfPictureX, sizeOfPictureY, GETFRAMEBUF_RGBA, pixbuf);
 	}
-	
+
 	//invert picture, I don't know why, am I stupid or is GL?  JE: We're all stupid.
 	if( shouldIFlip )
 	{
@@ -1558,7 +1558,7 @@ U8 * getThePixelBuffer( SeqInst * seq, Vec3 headshotCameraPos, F32 headShotFovMa
 
 	g_doingHeadShot = false;
 	rdrNeedGammaReset(); // Because people were reporting gamma going screwy after headshots taken.
-	
+
 	game_state.disableGeometryBackgroundLoader = old_disableGeometryBackgroundLoader;
 	PERFINFO_AUTO_STOP();
 
@@ -1582,16 +1582,16 @@ static bool takePicture_viewport_precallback1(ViewportInfo *pViewportInfo)
 	takepicture_info->heldBackgroundLoaderState = game_state.disableGeometryBackgroundLoader;
 	game_state.disableGeometryBackgroundLoader = 1;  //tells the background loader to finish
 
-	seq->seqGfxData.alpha = 255; 
-	takepicture_info->preservedLegScale = seq->legScale; 
+	seq->seqGfxData.alpha = 255;
+	takepicture_info->preservedLegScale = seq->legScale;
 	seq->legScale = 0.0;
 
 	//Make sure we're in the right LOD and that all textures and geometry are loaded
 	seqProcessClientInst( seq, 1.0, 0, 1 ) ; //Ready move
 	seqSetLod( seq, 1.0 );  //?? nEEDED?
 	seq->seqGfxData.alpha = 255;
-	animSetHeader( seq, 0 );  
-	animPlayInst( seq );   
+	animSetHeader( seq, 0 );
+	animPlayInst( seq );
 
 	//Preserve the old params
 	takepicture_info->saveClipper = do_scissor;
@@ -1665,7 +1665,7 @@ static bool takePicture_viewport_precallback2(ViewportInfo *pViewportInfo)
 
 	forceGeoLoaderToComplete();
 	texForceTexLoaderToComplete(0);
-	
+
 	// Jump ahead a bunch in case the FX has a longer startup time
 	TIMESTEP_NOSCALE = TIMESTEP = FRAME_TIMESTEP_INIT;
 	fxRunEngine();
@@ -1725,7 +1725,7 @@ static bool takePicture_viewport_postcallback2(ViewportInfo *pViewportInfo)
 
 	g_doingHeadShot = false;
 	rdrNeedGammaReset(); // Because people were reporting gamma going screwy after headshots taken.
-	
+
 	viewport_Remove(&takepicture_info->viewport_2);
 	viewport_Remove(&takepicture_info->viewport_1);
 
@@ -1748,7 +1748,7 @@ TakePictureInfo * takePicture(SeqInst *seq, Mat4 cameraMatrix, F32 FovMagic,
 							  F32 entity_y_offset, bool newImage)
 {
 	TakePictureInfo	*takepicture_info;
-   
+
 	// Find a free takepicture_info
 	{
 		if (s_takepicture_info[s_next_takepicture_index].inUse)
@@ -1855,7 +1855,7 @@ AtlasTex * takePicturHeadBodyShot(Entity *entity, int bodyshot, int villain, int
 	SeqInst * seq;
 
 	TakePictureInfo	*takepicture_info;
-   
+
 	if(!entity || !entity->seq)	//if we don't have a sequence, we can't do anything.
 		return NULL;
 
@@ -1949,8 +1949,8 @@ AtlasTex * takePicturHeadBodyShot(Entity *entity, int bodyshot, int villain, int
 
 #define BODYSHOT_TEX_STARTING_RESOLUTION_X 128
 #define BODYSHOT_TEX_STARTING_RESOLUTION_Y 256
-AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2, 
-						 int * y1, int * y2, Vec3 headshotCameraPos, Vec3 lookatPos, 
+AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
+						 int * y1, int * y2, Vec3 headshotCameraPos, Vec3 lookatPos,
 						 int newImage, BoneId centerBone, int autoResize)
 {
 	U8 * pixbuf = 0;
@@ -1969,7 +1969,7 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 
 
 	//setup lookat position
-	if(newImage) 
+	if(newImage)
 	{
 		int headNum;
 		F32 distance;
@@ -1993,7 +1993,7 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 		if( seq->type->selection == SEQ_SELECTION_LIBRARYPIECE )
 		{
 			autoResize = 1;		//always resize on library piece
-			getCapsule(seq, &cap ); 
+			getCapsule(seq, &cap );
 			positionCapsule( seq->gfx_root->mat, &cap, collMat );
 
 			if(cap.dir == 0)
@@ -2003,7 +2003,7 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 			else if(cap.dir == 2)
 			{
 				lookatPos[1] =seq->curranimscale*((cap.radius*2+ seq->type->reticleBaseBias)/2.0 + cap.offset[2]);
-				
+
 			}
 			else
 				lookatPos[1] =seq->curranimscale*((cap.radius*2+ seq->type->reticleBaseBias)/2.0 + cap.offset[2]);
@@ -2026,13 +2026,13 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 		else if( seq->type->selection == SEQ_SELECTION_BONES )
 		{
 			//HIPS
-			/*headNum = centerBone;  
+			/*headNum = centerBone;
 			headNode = gfxTreeFindBoneInAnimation( headNum, seq->gfx_root->child, seq->handle, 1 );
 			gfxTreeFindWorldSpaceMat(lookAtMatrix, headNode);
 			copyVec3(lookAtMatrix[3], lookatPos);*/
 
 			//HEAD
-			headNum = BONEID_HEAD;  
+			headNum = BONEID_HEAD;
 			headNode = gfxTreeFindBoneInAnimation( headNum, seq->gfx_root->child, seq->handle, 1 );
 			if(!headNode)
 				autoResize = 1;		//always resize if there's no head
@@ -2048,7 +2048,7 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 		else
 		{
 			autoResize = 1;		//always resize if this is a capsule only entity
-			getCapsule(seq, &cap ); 
+			getCapsule(seq, &cap );
 			positionCapsule( seq->gfx_root->mat, &cap, collMat );
 
 			if(cap.dir == 1)
@@ -2100,7 +2100,7 @@ AtlasTex * takeMMPicture( AtlasTex **tex, SeqInst * seq, int * x1, int * x2,
 	if(newImage && autoResize)
 	{
 
-		if(sizeOfPictureX > BODYSHOT_TEX_STARTING_RESOLUTION_Y || 
+		if(sizeOfPictureX > BODYSHOT_TEX_STARTING_RESOLUTION_Y ||
 			sizeOfPictureY > BODYSHOT_TEX_STARTING_RESOLUTION_Y)
 		{
 			//if this is ridiculously large, it's because the model information is unhelpful.
@@ -2168,7 +2168,7 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 	if(!MMShotCount || !MMShotHT)
 		return NULL;
 
-	
+
 	if(pictureType == PICTURETYPE_BODYSHOT)
 	{
 		centerbone = BONEID_HIPS;
@@ -2180,7 +2180,7 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 		autoResize = 0;
 	}
 
-	
+
 
 	PERFINFO_AUTO_START("seqGetMMShot", 1);
 
@@ -2232,7 +2232,7 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 
 			//data->e->costume = costume;
 			e->costume = costume;
-			
+
 
 			costume_Apply( e );
 			entUpdateMat4Interpolated(e, unitmat);
@@ -2250,7 +2250,7 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 		}
 	}
 
-	if(	pictureType == PICTURETYPE_HEADSHOT && 
+	if(	pictureType == PICTURETYPE_HEADSHOT &&
 		e->seq->type->selection == SEQ_SELECTION_BONES &&
 		gfxTreeFindBoneInAnimation(BONEID_HEAD, e->seq->gfx_root->child, e->seq->handle, 1) )
 	{
@@ -2273,8 +2273,8 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 
 	//Add to hash table
 
-	
-	
+
+
 
 	if(bind)
 	{
@@ -2297,7 +2297,7 @@ AtlasTex * seqGetMMShotStore( const cCostume * costume, int stillImage, Seqgraph
 
 	return white_tex_atlas;
 
-	
+
 }
 
 AtlasTex * seqGetMMShot( const cCostume * costume, int stillImage, Seqgraphics_PictureType type)
@@ -2322,7 +2322,7 @@ AtlasTex * seqGetBodyshot( const cCostume * costume, int uniqueId )
 	AtlasTex * bind;
 
 	PERFINFO_AUTO_START("seqGetBodyshot", 1);
-	
+
 	bind = 0;
 	if( !costume )
 		bind =  white_tex_atlas;
@@ -2342,7 +2342,7 @@ AtlasTex * seqGetBodyshot( const cCostume * costume, int uniqueId )
 
 		if (!bFoundElem)
 			bind = NULL;
-			
+
 		if( !bind )
 		{
 			//The thing chokes at les than 128 x 128, so wait till the screen is a decent size
@@ -2357,7 +2357,7 @@ AtlasTex * seqGetBodyshot( const cCostume * costume, int uniqueId )
 
 			//if( game_state.game_mode != SHOW_GAME )
 			//	bind = white_tex_atlas;
-			
+
 			//if( glob_have_camera_pos != PLAYING_GAME )
 			//	bind = white_tex_atlas;
 
@@ -2383,9 +2383,9 @@ AtlasTex * seqGetBodyshot( const cCostume * costume, int uniqueId )
 			}
 		}
 	}
-	
+
 	PERFINFO_AUTO_STOP();
-	
+
 	return bind;
 }
 

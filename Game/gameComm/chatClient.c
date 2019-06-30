@@ -7,7 +7,7 @@
 #include "uiFriend.h"
 #include "uiChatUtil.h"
 #include "uiChat.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "EArray.h"
 #include "uiConsole.h"
@@ -58,7 +58,7 @@ bool canInviteToChannel(char * channelName)
 	if(UsingChatServer())
 	{
 		ChatChannel * channel = GetChannel(channelName);
-		
+
 		if(channel)
 		{
 			if(channelInviteAllowed(channel))
@@ -89,7 +89,7 @@ void changeHandleDlgHandler()
 
 void chatClientRename()
 {
-	gCanChangeChatHandle = 1;	
+	gCanChangeChatHandle = 1;
 }
 
 
@@ -110,8 +110,8 @@ void chatClientName(char * oldHandle, char * newHandle)
 	{
 		GlobalFriend * gf;
 		// someone elses name changed
-		addSystemChatMsg( textStd("UserHandleHasBeenChangeTo", oldHandle, newHandle), INFO_SVR_COM, 0 );	
-	
+		addSystemChatMsg( textStd("UserHandleHasBeenChangeTo", oldHandle, newHandle), INFO_SVR_COM, 0 );
+
 		// update friend list
 		gf = GetGlobalFriend(oldHandle);
 		if(gf)
@@ -146,7 +146,7 @@ void chatClientSysMsg(char * args[], int count)
  	if(count >= 2)
 	{
 		char * type = args[1];
-		
+
 		if(count >= 4)
 		{
 			if( ! stricmp(type, "UserMsgSent"))
@@ -160,7 +160,7 @@ void chatClientSysMsg(char * args[], int count)
 			{
 				addSystemChatMsg(textStd("CannotInviteAlreadyMember", args[2], args[3]), INFO_USER_ERROR, 0 );
 				return;
-			}		
+			}
 			else if( !stricmp(type, "FriendsListFull"))
 			{
 				if( ! stricmp(args[2], game_state.chatHandle))
@@ -188,7 +188,7 @@ void chatClientSysMsg(char * args[], int count)
 					addSystemChatMsg(textStd("InvalidChannelMultipleSymbols"), INFO_USER_ERROR, 0 );
 				else
 					addSystemChatMsg(textStd("ChannelNameNotAllowed", args[2]), INFO_USER_ERROR, 0 );
-					
+
 				ChatFilterAssignPendingChannel(0, args[2]);
 				return;
 			}
@@ -237,27 +237,27 @@ void chatClientSysMsg(char * args[], int count)
 		{
 			if( ! stricmp(type, "FriendReq"))
 			{
-				addSystemChatMsg( textStd("SentGlobalFriendReqest", args[2]), INFO_SVR_COM, 0 );	
+				addSystemChatMsg( textStd("SentGlobalFriendReqest", args[2]), INFO_SVR_COM, 0 );
 				return;
 			}
 			else if( ! stricmp(type, "Unfriend"))
 			{
-				addSystemChatMsg( textStd( "NotifyGlobalFriendDecline", args[2] ), INFO_SVR_COM, 0 );	
+				addSystemChatMsg( textStd( "NotifyGlobalFriendDecline", args[2] ), INFO_SVR_COM, 0 );
 				return;
 			}
 			else if( ! stricmp(type, "AlreadyFriendsWith"))
 			{
-				addSystemChatMsg( textStd("YouAreAlreadyFriendsWith", args[2]), INFO_USER_ERROR, 0 );	
+				addSystemChatMsg( textStd("YouAreAlreadyFriendsWith", args[2]), INFO_USER_ERROR, 0 );
 				return;
 			}
 			else if( ! stricmp(type, "NotFriendsWith"))
 			{
-				addSystemChatMsg( textStd("YouAreNotFriendsWith", args[2]), INFO_USER_ERROR, 0 );	
+				addSystemChatMsg( textStd("YouAreNotFriendsWith", args[2]), INFO_USER_ERROR, 0 );
 				return;
 			}
 			else if( ! stricmp(type, "ChannelDoesNotExist"))
 			{
-				addSystemChatMsg( textStd("ChannelDoesNotExist", args[2]), INFO_USER_ERROR, 0 );	
+				addSystemChatMsg( textStd("ChannelDoesNotExist", args[2]), INFO_USER_ERROR, 0 );
 				return;
 			}
 			else if( ! stricmp(type, "JoinChannelDoesNotExist"))
@@ -277,12 +277,12 @@ void chatClientSysMsg(char * args[], int count)
 			else if( !stricmp(type, "NotJoinableChannel"))
 			{
 				addSystemChatMsg( textStd("UnableToJoinPrivateChannel", args[2]), INFO_USER_ERROR, 0 );
-				ChatFilterAssignPendingChannel(0, args[2]);	
+				ChatFilterAssignPendingChannel(0, args[2]);
 				return;
 			}
 			else if( !stricmp(type, "ChannelFull"))
 			{
-				addSystemChatMsg( textStd("UnableToJoinChannelFull", args[2]), INFO_USER_ERROR, 0 );	
+				addSystemChatMsg( textStd("UnableToJoinChannelFull", args[2]), INFO_USER_ERROR, 0 );
 				ChatFilterAssignPendingChannel(0, args[2]);
 				return;
 			}
@@ -452,7 +452,7 @@ void chatClientSysMsg(char * args[], int count)
 			{
 				addSystemChatMsg(textStd(type), INFO_ADMIN_COM, 0 );
 				return;
-			} 
+			}
 			else if( !stricmp(type, "YouMayRenameYourChatHandle"))
 			{
 				addSystemChatMsg(textStd(type), INFO_ADMIN_COM, 0);
@@ -460,7 +460,7 @@ void chatClientSysMsg(char * args[], int count)
 			}
 			else if ( !stricmp(type, "SpamThresholdSet") )
 			{
-				addSystemChatMsg("Spam Threshold Set", INFO_DEBUG_INFO, 0); 
+				addSystemChatMsg("Spam Threshold Set", INFO_DEBUG_INFO, 0);
 				return;
 			}
 			else if ( !stricmp(type, "SpamMultiplierSet") )
@@ -483,7 +483,7 @@ void chatClientSysMsg(char * args[], int count)
 				addSystemChatMsg(textStd(type), INFO_USER_ERROR, 0);
 				return;
 			}
-		} 
+		}
 
 		if(gPrintShardCommCmds)
 			conPrintf("DID NOT HANDLE: SysMsg %s (%d total params)", type, count);
@@ -498,7 +498,7 @@ void chatClientInvalidUser(char * handle)
 	if( ! stricmp(handle, game_state.chatHandle))
 		addSystemChatMsg( textStd("InvalidUserSelf"), INFO_USER_ERROR, 0);
 	else
-		addSystemChatMsg( textStd("InvalidUser", handle), INFO_USER_ERROR, 0 );	
+		addSystemChatMsg( textStd("InvalidUser", handle), INFO_USER_ERROR, 0 );
 }
 
 void chatClientUserMsg(char * handle, char * msg)
@@ -524,7 +524,7 @@ void chatClientStoredMsg(char * secStr, char * handle, char * msg)
 	char buf[100 + MAX_MESSAGE + MAX_PLAYERNAME];
 	char dateStr[200];
 	int time = atoi(secStr);
-	
+
 	timerMakeDateStringFromSecondsSince2000(dateStr, time);
 
 	sprintf(buf, "%s Message From @%s : %s", dateStr, handle, unescapeString(msg));
@@ -575,7 +575,7 @@ void chatClientChanSysMsg(char *args[], int count)
 					addGlobalChatMsg(channel, 0, textStd("UserBecameChannelOperator", target, channel, admin), -1);
 			}
 		}
-	} 
+	}
  	else if(count >= 3)
 	{
    		if( ! stricmp(type, "NoPermissionToSendInChannel"))
@@ -676,12 +676,12 @@ void chatClientJoin(char * channelName, char * handle, char * db_id, char * flag
 		cc->me = user;
 		ChatFilterAssignPendingChannel(cc, 0);
 		if(!atoi(refresh))
-			chatChannelSet(cc->name); 
+			chatChannelSet(cc->name);
 	}
 }
 
 void chatClientReserve(char * channelName)
-{	
+{
 	// if we get a reserved message for a channel that already exists on the client, we have a problem, so ignore
 	ChatChannel * cc = GetChannel(channelName);
 	if(!cc)
@@ -701,7 +701,7 @@ void chatClientLeave(char * channelName, char * handle, char *isKicking)
 	if(cc)
 	{
 		if( ! stricmp(game_state.chatHandle, handle))
-		{			
+		{
 			if(!gDisableFeedback && ! cc->isReserved)
 			{
 				if (atoi(isKicking))
@@ -797,7 +797,7 @@ void chatClientLogin(char * refresh, char * handle, char * shard)
 
 	// print chat handle
 	if( ! gDisableFeedback)
-		addSystemChatMsg( textStd("UsingChatHandleMessage", game_state.chatHandle), INFO_SVR_COM, 0 );	
+		addSystemChatMsg( textStd("UsingChatHandleMessage", game_state.chatHandle), INFO_SVR_COM, 0 );
 
 	gChatServerRunning = true;
 
@@ -879,7 +879,7 @@ void chatClientCsrSendAll(char * handle, char * msg)
 	addSystemChatMsg(msg, INFO_ADMIN_COM, 0 );
 }
 
-void chatClientInvisible() 
+void chatClientInvisible()
 {
 	// not sending chat message anymore
 }
@@ -918,20 +918,20 @@ void chatClientTellUnHide()
 
 typedef struct StatusParams
 {
-	int size;	
+	int size;
 	int offset;
 	int type;
 
 }StatusParams;
 
 
-#define GFITEM(x)	SIZEOF2(GlobalFriend, x), OFFSETOF(GlobalFriend, x) 
+#define GFITEM(x)	SIZEOF2(GlobalFriend, x), OFFSETOF(GlobalFriend, x)
 
 
 StatusParams gStatusParams[] =
 {
 	{GFITEM(name),		PARSETYPE_STR},
-	{GFITEM(dbid),		PARSETYPE_S32},		
+	{GFITEM(dbid),		PARSETYPE_S32},
 	{GFITEM(map),		PARSETYPE_STR},
 	{GFITEM(archetype),	PARSETYPE_STR},
 	{GFITEM(origin),	PARSETYPE_STR},
@@ -941,7 +941,7 @@ StatusParams gStatusParams[] =
 };
 
 
-	
+
 
 //SYNTAX: friend <STATUS> <SHARD>
 void chatClientFriend(char * handle, char * db_id, char * status, char * shard)
@@ -1102,7 +1102,7 @@ void sendGlobalFriendAccept(void *data)
 	sprintf(buf, "gfriend @%s", gHandle);
 	cmdParse(buf);
 }
- 
+
 void chatClientFriendReq(char * handle)
 {
 	strncpyt(gHandle, handle, sizeof(gHandle));
@@ -1187,16 +1187,16 @@ typedef struct{
 
 static ClientShardCmd cmds[] =
 {
-		{	"Name",				chatClientName,			{MAX_PLAYERNAME, MAX_PLAYERNAME}},	
-		{	"Login",			chatClientLogin,		{32, MAX_PLAYERNAME, MAX_PLAYERNAME}},	
-		{	"LoginEnd",			chatClientLoginEnd,		},	
-		{	"Renameable",		chatClientRename		},	
+		{	"Name",				chatClientName,			{MAX_PLAYERNAME, MAX_PLAYERNAME}},
+		{	"Login",			chatClientLogin,		{32, MAX_PLAYERNAME, MAX_PLAYERNAME}},
+		{	"LoginEnd",			chatClientLoginEnd,		},
+		{	"Renameable",		chatClientRename		},
 		{	"ChatServerStatus",	chatClientServerStatus,	100},
 
 		{	"UserMsg",			chatClientUserMsg,		{MAX_PLAYERNAME, MAX_MESSAGE}},
 		{	"StoredMsg",		chatClientStoredMsg,	{64, MAX_PLAYERNAME, MAX_MESSAGE}},
 
-				
+
 		{	"Channel",			chatClientChannel,		{MAX_CHANNELNAME, 64}},
 		{	"ChanInfo",			chatClientChannelInfo,	{MAX_CHANNELNAME, 64, 64, MAX_CHANNELDESC}},
 		{	"Join",				chatClientJoin,			{MAX_CHANNELNAME, MAX_PLAYERNAME, 64, 64, 1}},
@@ -1224,17 +1224,17 @@ static ClientShardCmd cmds[] =
 		{	"FriendReq",		chatClientFriendReq,	{MAX_PLAYERNAME}},
 		{	"Friend",			chatClientFriend,		{MAX_PLAYERNAME, 64, MAX_FRIENDSTATUS, MAX_FRIENDSTATUS}},
 		{	"UnFriend",			chatClientUnfriend,		{MAX_PLAYERNAME}},
-		
+
 		{	"InvalidUser",		chatClientInvalidUser,	{MAX_PLAYERNAME}},
 
 		{	"AccessLevel",		chatClientAccessLevel,	{64}},
-		{	"CsrStatus",		chatClientCsrStatus,	{MAX_PLAYERNAME,64,MAX_FRIENDSTATUS,64,64,64}},		
+		{	"CsrStatus",		chatClientCsrStatus,	{MAX_PLAYERNAME,64,MAX_FRIENDSTATUS,64,64,64}},
 		{	"WhoGlobal",		chatClientWhoGlobal,		{MAX_PLAYERNAME, MAX_FRIENDSTATUS}},
 		{	"WhoGlobalHidden",	chatClientWhoGlobalHidden,	{MAX_PLAYERNAME, MAX_FRIENDSTATUS}},
 		{	"WhoLocal",			chatClientWhoLocal,			{MAX_PLAYERNAME, MAX_FRIENDSTATUS}},
 		{	"WhoLocalInvite",	chatClientWhoLocalInvite,	{MAX_PLAYERNAME, MAX_FRIENDSTATUS}},
 		{	"WhoLocalLeagueInvite",	chatClientWhoLocalLeagueInvite,	{MAX_PLAYERNAME, MAX_FRIENDSTATUS}},
-		
+
 		{	"Gmail",			chatClientGmail, {MAX_PLAYERNAME, 64,  MAX_SUBJECT, MAX_MESSAGE, MAX_PATH, 64, 12 }},
 		{	"GmailClaim",		chatClientGmailClaim, { 12, MAX_PATH }},
 

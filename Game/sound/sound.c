@@ -8,7 +8,7 @@
 #include "cmdgame.h"
 #include "utils.h"
 #include "memcheck.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "sound_ambient.h"
 #include "fileUtil.h"
 #include "StashTable.h"
@@ -29,7 +29,7 @@
 #include "gfxLoadScreens.h"
 #include "LWC.h"
 
-enum 
+enum
 {
 	eSoundFlags_Loop		= 1 << 0,
 	eSoundFlags_Music		= 1 << 1,
@@ -39,7 +39,7 @@ enum
 typedef struct
 {
 	char* name;
-	int max_instances;	// max instances that can play at once.  Default = 1 
+	int max_instances;	// max instances that can play at once.  Default = 1
 	int cur_instances;	// set/maintained at runtime
 	char** sounds;			// list of sounds in this group
 } SndInstanceGroup;
@@ -147,7 +147,7 @@ static struct {
 		Vec3	vel;
 		F32		decrementTimeout;
 	} main, thread;
-	
+
 	S32		hasMat;
 
 	struct {
@@ -164,7 +164,7 @@ static int				sound_name_count,sound_name_max;
 
 static SphereGroup		sphereGroups[MAX_EVER_SOUND_CHANNELS];
 static Mat4				head_mat;
-static F32				volume_control[SOUND_VOLUME_COUNT] = {DEFAULT_VOLUME_FX, DEFAULT_VOLUME_MUSIC, DEFAULT_VOLUME_VO}; 
+static F32				volume_control[SOUND_VOLUME_COUNT] = {DEFAULT_VOLUME_FX, DEFAULT_VOLUME_MUSIC, DEFAULT_VOLUME_VO};
 
 typedef struct VolumeDucking {
 	F32 current;
@@ -233,8 +233,8 @@ F32 sndSphereVolume(F32 inner,F32 outer,const Vec3 pos)
 	// fpe 1/9/10 -- this code used to behave such that it ignored inner and just used outer. We
 	//	now have the option to behave the old way or the new way.  The new way is the "correct" way, but
 	//	requires updating alot of sound nodes to set inner radius to 0 in order to get the same behavior as
-	//	the old code produced.  
-	if( game_state.ignoreSoundRamp ) 
+	//	the old code produced.
+	if( game_state.ignoreSoundRamp )
 		inner = 0.0f;
 
 	subVec3(pos,head_mat[3],dv);
@@ -254,7 +254,7 @@ static int gets3D(SoundSphere* sphere)
 	return sphere->forceDimension == 3 ||
 				!( sphere->onplayer ||
 				sphere->forceDimension == 2 ||
-				sphere->owner==SOUND_PLAYER || 
+				sphere->owner==SOUND_PLAYER ||
 				sphere->owner==SOUND_MUSIC ||
 				sphere->owner==SOUND_GAME ||
 				(sphere->owner>=SOUND_AMBIENT && (sphere->inner_radius>=150 ||
@@ -278,13 +278,13 @@ static F32 sphereGroupGetVolume(SoundSphere *spheres,int count,F32 *mixOut)
 		F32 length;
 		F32 fadingRatio = 1.0f;
 		F32 dMix;
-		
+
 		if(sphere->secTimeoutTotal > 0.f)
 		{
 			// allow secTimeoutBuffer to pass before we begin fading
 			if(sphere->secTimeoutCurrent < sphere->secTimeoutTotal)
 				fadingRatio = sphere->secTimeoutCurrent / sphere->secTimeoutTotal; // linear fade over total fadeout time
-		}			
+		}
 
 		// MS: Forcing inner radius to full radius.
 		//scale = sndSphereVolume(sphere->outer_radius,sphere->outer_radius,sphere->pos);
@@ -379,7 +379,7 @@ static int sndFindBestSphereGroup(SoundSphere *sphere,int index,F32 volume, bool
 		for(i=0;i<g_audio_state.maxSoundChannels;i++)
 		{
 			sphereGroup = sphereGroups + i;
-			
+
 			if (sphereGroup->index == index && (sphereGroup->name_info->flags & eSoundFlags_Loop) )
 			{
 				dynArrayFit(&sphereGroup->spheres,sizeof(sphereGroup->spheres[0]),&sphereGroup->sphere_max,sphereGroup->count);
@@ -528,7 +528,7 @@ static void sndSpatialize(int sphereGroupIdx,SphereGroup *sphereGroup,int dopple
 	sphere = &sphereGroup->spheres[0];
 
 	// fpe changed BASE_AMBIENT_TO_PAN from (SOUND_AMBIENT+8) to SOUND_AMBIENT so that would
-	//	include non-scripted soundspheres.  Not sure why they didn't have these panning, but 
+	//	include non-scripted soundspheres.  Not sure why they didn't have these panning, but
 	//	Adam has requested that these pan as well.  They already do if 3d sound is enabled (in
 	//	which case the pan value calculated here (as mix) doesn't even get used.
 	#define BASE_AMBIENT_TO_PAN	SOUND_AMBIENT
@@ -649,7 +649,7 @@ static void UpdateInstanceCount(SoundNameInfo* sni, int deltaCount, const char* 
 		assert(!game_state.sound_info || deltaCount > 0 || sni->instGroup->cur_instances || soundUpdateInfo.flagsThread.freeSoundCache);
 		if(deltaCount > 0 || sni->instGroup->cur_instances)
 			sni->instGroup->cur_instances += deltaCount;
-			
+
 #if AUDIO_DEBUG
 		if(game_state.sound_info) {
 			// In full debug build, go thru all sounds in instGroup and verify that total count adds up
@@ -692,13 +692,13 @@ static void sndMakeRoom(U32 max_bytes, SoundNameInfo *ignored_info)
 				oldest_time = sound_name_infos[i].last_active;
 				oldest = i;
 			}
-			
+
 			sound_state.file_cache_bytes += sndSysBytes(sound_name_infos[i].sound_data);
 		}
 		if (sound_state.file_cache_bytes < max_bytes || oldest < 0)
 			break;
 
-		// deal with instance count. 
+		// deal with instance count.
 		// dont need this, plus screws up count.  Revisit if necessary, but will need to call sndSysPlaying with appropriate channel.
 		//UpdateInstanceCount(&sound_name_infos[oldest], -1, "sndMakeRoom", 0);
 
@@ -721,12 +721,12 @@ static void sndMakeRoom(U32 max_bytes, SoundNameInfo *ignored_info)
 SoundPlaySpatialInfo* createSoundPlaySpatialInfo()
 {
 	SoundPlaySpatialInfo* info;
-	
+
 	EnterCriticalSection(&csCreateSoundPlaySpatialInfo);
 		MP_CREATE(SoundPlaySpatialInfo, 100);
 		info = MP_ALLOC(SoundPlaySpatialInfo);
 	LeaveCriticalSection(&csCreateSoundPlaySpatialInfo);
-	
+
 	return info;
 }
 
@@ -753,9 +753,9 @@ static void sndAddToQueue(SoundPlaySpatialInfo* info)
 		{
 			queueMain.head = info;
 		}
-		
+
 		queueMain.tail = info;
-		
+
 		queueMain.count++;
 	LeaveCriticalSection(&csSoundQueue);
 }
@@ -833,7 +833,7 @@ static void sndPlaySpatialThreaded(SoundPlaySpatialInfo* info)
 	sphereGroupIdx = sndFindBestSphereGroup(&sphere,info->desc_idx,volRatio,(info->flags&SOUND_PLAY_FLAGS_INTERRUPT)!= 0);
 	if (sphereGroupIdx < 0)
 		return;
-	
+
 	sphereGroup = sphereGroups + sphereGroupIdx;
 	bSameSound = (sphereGroup->index == info->desc_idx);
 
@@ -862,7 +862,7 @@ static void sndPlaySpatialThreaded(SoundPlaySpatialInfo* info)
 			UpdateInstanceCount(name_info, 1, "played", sphereGroupIdx, info->owner);
 		}
 	}
-	
+
 	//printf("%d: setting to: %d\n", sphereGroupIdx, info->desc_idx);
 	sphereGroup->name_info	= name_info;
 	sphereGroup->volRatio	= volRatio;
@@ -899,7 +899,7 @@ static bool applyFadeOut(SphereGroup* sphereGroup)
 			removeSphereFromSphereGroup(sphereGroup, i--);
 	}
 
-	// return true if fadeout results in 
+	// return true if fadeout results in
 	return (sphereGroup->count == 0);
 }
 
@@ -918,7 +918,7 @@ static void sndPlayingThreadExit()
 		sndFreeAll();
 
 		soundPlayingThreadState = SOUNDPLAY_TOLDTODIE;
-		
+
 		while(soundPlayingThreadState != SOUNDPLAY_DIED)
 		{
 			Sleep(1);
@@ -931,19 +931,19 @@ static void sndPlayingThreadExit()
 static void sndUpdateGetInputInfo()
 {
 	EnterCriticalSection(&csSoundUpdateInfo);
-	
+
 	if(soundUpdateInfo.hasMat)
 	{
 		soundUpdateInfo.hasMat = 0;
 		soundUpdateInfo.thread = soundUpdateInfo.main;
-		
+
 		soundUpdateInfo.main.decrementTimeout = 0;
 	}
-	
+
 	soundUpdateInfo.flagsThread = soundUpdateInfo.flagsMain;
-	
+
 	ZeroStruct(&soundUpdateInfo.flagsMain);
-	
+
 	LeaveCriticalSection(&csSoundUpdateInfo);
 }
 
@@ -1073,7 +1073,7 @@ static SoundPlaySpatialInfo *soundPlayingThreadFetchCommands()
 		queueMain.count = 0; // atomic zeroing of count since we access from main thread without CS
 		ZeroStruct(&queueMain);
 	LeaveCriticalSection(&csSoundQueue);
-	
+
 	return result;
 }
 
@@ -1087,14 +1087,14 @@ static void soundPlayingThreadDispatchCommands(SoundPlaySpatialInfo *head)
 		{
 			sndPlaySpatialThreaded(head);
 		}
-		
+
 		destroySoundPlaySpatialInfo(head);
 
 		head = next;
 	}
-}			
+}
 
-void soundTick(F32 deltaTime) 
+void soundTick(F32 deltaTime)
 {
 	SoundPlaySpatialInfo *commands;
 	PERFINFO_AUTO_START("soundPlayingThread", 1);
@@ -1113,7 +1113,7 @@ void soundTick(F32 deltaTime)
 static DWORD WINAPI soundPlayingThread( LPVOID lpParam )
 {
 	EXCEPTION_HANDLER_BEGIN
-	
+
 	int i;
 	int sndSysTickCount = 0;
 	F32 curTime, lastTime;
@@ -1151,14 +1151,14 @@ static DWORD WINAPI soundPlayingThread( LPVOID lpParam )
 
 		Sleep(5);
 	}
-	
+
 	// Stop everything.
-	
+
 	soundUpdateInfo.flagsThread.stopAllSounds = 1;
 	soundUpdateInfo.flagsThread.freeSoundCache = 1;
-	
+
 	sndUpdateThreaded(0.f);
-	
+
 	// Shut down the sound system.
 
 	sndSysExit();
@@ -1176,11 +1176,11 @@ static void sndPlayingThreadStart()
 
 	if(g_audio_state.noaudio || soundPlayingThreadState != SOUNDPLAY_NOTSTARTED)
 		return;
-	
+
 	resetDucking(); // ducking is controlled only on sound thread
 
 	_beginthreadex(NULL, 0, soundPlayingThread, &dwThrdParam, 0, &dwThreadId);
-	
+
 	soundPlayingThreadState = SOUNDPLAY_STARTED;
 }
 
@@ -1210,12 +1210,12 @@ bool sndPlaySpatial(const char *name,int owner,U8 forceDimension,const Vec3 pos,
 
 	if (distance3Squared(pos,head_mat[3]) > SQR(outer))
 		return false;
-		
+
 	if (!(flags&SOUND_PLAY_FLAGS_ONPLAYER) && !vistrayIsSoundReachable(pos, head_mat[3]))
 		return false;
 
 	info = createSoundPlaySpatialInfo();
-	
+
 	info->desc_idx			= desc_idx;
 	info->inner				= inner;
 	info->max_volume		= max_volume;
@@ -1237,7 +1237,7 @@ bool sndPlaySpatial(const char *name,int owner,U8 forceDimension,const Vec3 pos,
 #endif
 
 	sndAddToQueue(info);
-		
+
 	return true;
 }
 
@@ -1247,7 +1247,7 @@ int sndIsLoopingSample(const char *name)
 
 	if( idx >= 0)
 		return (sound_name_infos[idx].flags & eSoundFlags_Loop) ? 1:0;
-	else 
+	else
 		return 0;
 }
 
@@ -1299,7 +1299,7 @@ void sndUpdate(const Mat4 cam_mat)
 	{
 		g_audio_state.uisurround=game_state.surround_sound;
 	}
-	
+
 #if AUDIO_DEBUG
 	bChangedNumChannels = (g_audio_state.maxSoundChannels != game_state.maxSoundChannels ||
 		g_audio_state.maxSoundSpheres != game_state.maxSoundSpheres);
@@ -1326,7 +1326,7 @@ void sndStop(int owner, F32 fadeOutSecs)
 
 	if(g_audio_state.noaudio)
 		return;
-		
+
 	info = createSoundPlaySpatialInfo();
 	memset(info, 0, sizeof(SoundPlaySpatialInfo));
 	info->owner				= owner;
@@ -1382,7 +1382,7 @@ static FileScanAction soundLoadCallback(char* dir, struct _finddata32_t* data)
 			return FSA_EXPLORE_DIRECTORY;
 		dir = strstri(dir, "sound/ogg");
 		assert(dir); // sanity check that all sounds are where we expect them to be
-		
+
 		name_info = dynArrayAdd(&sound_name_infos,sizeof(sound_name_infos[0]),&sound_name_count,&sound_name_max,1); // already zeroed
 		name_info->volRatio = 1.0f; // not used currently
 		name_info->flags = strstri(dir, "music") ? eSoundFlags_Music: 0;
@@ -1500,7 +1500,7 @@ static bool LoadSoundDefs()
 	return true;
 }
 
-// tbd, callback 
+// tbd, callback
 void sndOnLWCAdvanceStage(LWC_STAGE stage)
 {
 	// LWC loaded a new stage, so we need to load new sounds that might be in the  newly loaded pigg files.
@@ -1513,7 +1513,7 @@ void sndInit()
 {
 	static int init = 0;
 	Entity * e=playerPtr();
-	
+
 	if(!init){
 		int i;
 		init = 1;
@@ -1534,7 +1534,7 @@ void sndInit()
 	g_audio_state.maxSoundChannels = game_state.maxSoundChannels;
 	g_audio_state.maxSoundSpheres = game_state.maxSoundSpheres;
 	sound_name_hashes = stashTableCreateWithStringKeys(1000,StashDeepCopyKeys);
-	
+
 	fileScanAllDataDirs("sound", soundLoadCallback);
 	FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE_AND_DELETE, "sound/*", noteChangedSounds);
 	LoadSoundDefs();
@@ -1607,7 +1607,7 @@ static void sndUpdateDebug()
 		// see if time to trigger next repeat sound (for testing max instance functionality)
 		if(curTime >= sRepeatSound.nextTriggerTime)
 		{
-			sndPlay(sRepeatSound.name, sRepeatSound.nextOwner++);  
+			sndPlay(sRepeatSound.name, sRepeatSound.nextOwner++);
 			if(sRepeatSound.nextOwner >= SOUND_FX_LAST)
 				sRepeatSound.nextOwner = SOUND_FX_BASE;
 			sRepeatSound.nextTriggerTime = curTime + sRepeatSound.interval;

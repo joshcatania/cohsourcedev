@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "error.h"
-#include "assert.h" 
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "render.h"
 #include "cmdgame.h"
@@ -89,13 +89,13 @@ static PerfTestResult2 *createPerfTestResult2(PerfTestResults2 *results)
 	return test;
 }
 
-typedef struct 
+typedef struct
 {
 	char *modelName;
 	Model *model;
 } PerfModelStruct;
 
-static char *PerfModelPrefixes[] = 
+static char *PerfModelPrefixes[] =
 {
 	"PerfModel_rock_gray_",
 	"PerfModel2_rock_gray_",
@@ -105,7 +105,7 @@ static struct
 {
 	int extNum;
 	Model *models[5];
-} PerfModels[] = 
+} PerfModels[] =
 {
 	{18, {0}},
 	{32, {0}},
@@ -154,7 +154,7 @@ static void printStates()
 #define printBlendState(mode) if (setBlendStateCalls[mode]) conPrintf(" %s: %d/%d", blend_mode_names[mode], setBlendStateChanges[mode],setBlendStateCalls[mode]);
 #define printDrawState(mode) if (setDrawStateCalls[mode]) conPrintf(" " #mode ": %d/%d", setDrawStateChanges[mode],setDrawStateCalls[mode]);
 
-	for (i=0; i<BLENDMODE_NUMENTRIES; i++) 
+	for (i=0; i<BLENDMODE_NUMENTRIES; i++)
 		printBlendState(i);
 
 	printDrawState(DRAWMODE_SPRITE);
@@ -362,7 +362,7 @@ void renderPerfTestSuite(int num_runs)
 
 	sprintf(path, "C:\\PerfTest\\");
 	makeDirectories(path);
-	
+
 	strcpy(filename, path);
 	strcat(filename, "Throughput.csv");
 
@@ -413,7 +413,7 @@ void renderPerfTestSuite(int num_runs)
 			strcat(filename, ".csv");
 		else
 			strcat(filename, ".txt");
-		
+
 		if (f = fopen(filename, "wt"))
 		{
 			if (k == 0 || k == 1)

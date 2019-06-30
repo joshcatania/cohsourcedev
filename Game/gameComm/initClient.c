@@ -25,7 +25,7 @@
 #include "uiTarget.h"
 #include "cmdgame.h"
 #include "costume_client.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "uiRegister.h"
 #include "entrecv.h"
 #include "uiCursor.h"
@@ -92,7 +92,7 @@ int okayToChangeGameMode(void)
 }
 
 
-// This is called when we've received the world geometry, and are ready to 
+// This is called when we've received the world geometry, and are ready to
 //   begin receiving entities
 // Only called in commReqScene
 void setWaitingForFullUpdate(void)
@@ -109,7 +109,7 @@ void setWaitingForFullUpdate(void)
 void notifyReceivedCharacter()
 {
 	if (!waiting_for_full_update) return;
-	
+
 	//printf("sending CLIENTINP_RECEIVED_CHARACTER\n");
 	EMPTY_INPUT_PACKET( CLIENTINP_RECEIVED_CHARACTER );
 
@@ -437,7 +437,7 @@ int checkForCharacterCreate()
 
 		gfxReload(1);						//Blows away local player entity as part of reinitting gfx tree & loading a map.
 		gfxPrepareforLoadingScreen();
-		
+
 		if(commReqScene(0))					//Get the scene
 		{
 			player_being_created = FALSE;

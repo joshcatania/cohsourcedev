@@ -3,7 +3,7 @@
 #include "uiConsole.h"
 #include "win_init.h"
 #include "error.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "timing.h"
 #include "AppRegCache.h"
 #include "RegistryReader.h"

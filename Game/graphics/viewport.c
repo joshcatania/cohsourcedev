@@ -1,5 +1,5 @@
 
-#include <assert.h>
+#include "SuperAssert.h"
 #include "viewport.h"
 
 #include "gfx.h"
@@ -92,7 +92,7 @@ void viewport_InitStructToDefaults(ViewportInfo *viewport_info)
 	viewport_info->pPreCallback = NULL;
 	viewport_info->pCustomRenderCallback = NULL;
 	viewport_info->pPostCallback = NULL;
-	
+
 	viewport_info->pSharedPBufferTexture = NULL;
 }
 
@@ -144,7 +144,7 @@ bool viewport_Remove(ViewportInfo *viewport_info)
 {
 	int i;
 	bool found = false;
-	
+
 	for (i = s_numViewports - 1; i >= 0; i--)
 	{
 		if (s_viewports[i] == viewport_info)
@@ -179,7 +179,7 @@ bool viewport_InitRenderToTexture(ViewportInfo *viewport_info)
 	if(viewport_info->pSharedPBufferTexture)
 		return true; // using a shared pbuffer (e.g., cubemap faces 1-5, shadowmap atlas)
 
-	bIsCubemap = (viewport_info->target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB && 
+	bIsCubemap = (viewport_info->target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB &&
 					viewport_info->target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB);
 
 	// If needDepthTexture is specified, then depth_bits should not be 0
@@ -258,7 +258,7 @@ void viewport_RenderAll()
 	// Save the main camera matrix before rendering the other viewports
 	// for a 'just in case' restoration when we are done
 	copyMat4(cam_info.cammat, savedCamMat);
-	
+
 	// iterate over the array of viewports in reverse order
 	// in case one removes itself
 	for (i = s_numViewports - 1; i >= 0; i--)
@@ -285,7 +285,7 @@ void viewport_RenderAll()
 					continue; // skip rendering this viewport
 				}
 			}
-			
+
 			if( viewport->renderCharacters && player)
 			{
 				SET_ENTHIDE(player) = viewport->renderPlayer ? 0 : 1;

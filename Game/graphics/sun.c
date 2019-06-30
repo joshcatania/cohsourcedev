@@ -15,14 +15,13 @@
 #include "gfxwindow.h"
 #include "error.h"
 #include "render.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "anim.h"
 #include "tricks.h"
 #include "win_init.h"
 #include "groupfilelib.h"
 #include "textparser.h"
 #include "earray.h"
-#include "assert.h"
 #include "cmdgame.h"
 #include "FolderCache.h"
 #include "utils.h"
@@ -180,8 +179,8 @@ typedef struct UberSky
 	int		moon_count;		//Sun and moon(s), (number of moonNames) in the sky. sky[0]->moon_names. Kinda weird that it's not in the sky struct, but since there can be only one sky struct, we're fine
 
 	Cloud	**clouds;		//sky geometry, including the skybowl
-	int		cloud_count;	
-	
+	int		cloud_count;
+
 	SunTime **times;		//time of day
 	int		sun_time_count; //Number of times of day described in the <sun>.txt file
 
@@ -237,7 +236,7 @@ static void hackmoon(const UberSky IN *sky, SunLight OUT *sun, int idx, F32 dist
 	{
 		F32		speed;
 		F32		pyr[3];
-	} moon_types[MAXMOONS] = 
+	} moon_types[MAXMOONS] =
 	{
 		{ 1, { 0, RAD(112.5), RAD(180)} },
 		{ 1, { -RAD(35), 0, 0} },
@@ -279,8 +278,8 @@ static void hackmoon(const UberSky IN *sky, SunLight OUT *sun, int idx, F32 dist
 	if (!moon)
 		return;
 
-	mtype = &moon_types[idx]; 
-	
+	mtype = &moon_types[idx];
+
 	num_params = eaSize((&(*moon_params)->params));
 
 	if( idx != 0 || num_params > 1 ) //The sun gets broken by this
@@ -303,7 +302,7 @@ static void hackmoon(const UberSky IN *sky, SunLight OUT *sun, int idx, F32 dist
 	copyMat4(unitmat,mmat);
 	pitchMat3(RAD(-90),mmat);
 	mmat[3][1] = 7500 + distadd;
-	mmat[3][0] = 3000; 
+	mmat[3][0] = 3000;
 
 	mulMat4(mat,mmat,moon->mat);
 	scaleMat3(moon->mat,moon->mat,scale);
@@ -347,7 +346,7 @@ static GfxNode *sunAddNode(char *name, int treeToInsertInto )
 		gfxTreeInitGfxNodeWithObjectsTricks(node, node->model->trick);
 		node->trick_from_where = TRICKFROM_MODEL;
 	}
-	
+
 	copyMat4(unitmat,node->mat);
 
 	node->flags |= GFXNODE_SKY;
@@ -363,7 +362,7 @@ void sunGlareDisableInternal(UberSky *sky)
 void sunGlareDisable(void)
 {
 	int i;
-	for (i=0; i<eaSize(&g_skies); i++) 
+	for (i=0; i<eaSize(&g_skies); i++)
 		sunGlareDisableInternal(g_skies[i]);
 }
 
@@ -377,7 +376,7 @@ void sunGlareEnable(void)
 		{
 			gfxNodeSetAlpha(sky->sunflare_node_ptr,sky->sunflare_alpha*255,1);
 		}
-		
+
 	}
 }
 
@@ -410,14 +409,14 @@ void sunVisible(void)
 		copyVec3(g_skies[0]->sunflare_node_ptr->mat[3],pos);
 
 		//if below the horizon, dont bother
-		if( pos[1] < cam_info.cammat[3][1] ) 
+		if( pos[1] < cam_info.cammat[3][1] )
 		{
 			can_see = 0.0f;
 		}
 		else
 		{
 			if (rdr_caps.supports_occlusion_query) {
-				static float visibility = 0.0f;			   
+				static float visibility = 0.0f;
 				rdrSunFlareUpdate(g_skies[0]->moonNodes[0][0], &visibility);
 				can_see = visibility;
 				//xyprintf( 50, 50, "%f", visibility );
@@ -426,13 +425,13 @@ void sunVisible(void)
 				Vec2 pixel_pos;
 				Vec3 xpos;
 				mulVecMat4(pos,cam_info.viewmat,xpos);
-				gfxWindowScreenPos(xpos,pixel_pos); 
+				gfxWindowScreenPos(xpos,pixel_pos);
 				windowSize(&width,&height);
 				if (pixel_pos[0] >= 0 && pixel_pos[0] < width && pixel_pos[1] >= 0 && pixel_pos[1] < height)
 				{
 					static F32 depthbuf[16] = {1};
 					rdrGetPixelDepth(pixel_pos[0],pixel_pos[1], depthbuf);
-					if (depthbuf[0] > 0.999f) //1.0 doesn't seem to work. The sky gets in the way... 
+					if (depthbuf[0] > 0.999f) //1.0 doesn't seem to work. The sky gets in the way...
 						can_see = 1.0f;
 					//xyprintf( 50, 50, "%f", depthbuf[0] );
 				}
@@ -516,8 +515,8 @@ static void skySetRenderValues(const Vec2 IN dist, const Vec3 IN fog_color, SunL
 
 	if( game_state.draw_scale < 1.0 ) // || game_state.allow_vis_scale_to_scale_up_fog )
 	{
-		//A total hack to make sure foggy world doesn't get foggier for low vis_scale settings 
-		if( dist[1] > 400 ) //Less that this and you are in an especially foggy world : don't pull that in.  
+		//A total hack to make sure foggy world doesn't get foggier for low vis_scale settings
+		if( dist[1] > 400 ) //Less that this and you are in an especially foggy world : don't pull that in.
 			scale = game_state.draw_scale;
 	} //End hack
 	scaleVec2(dist, scale, sun->fogdist);
@@ -566,10 +565,10 @@ static void setSkyFog(const UberSky *sky, const SunTime *early, const SunTime *l
 			fogdist[0] = 10.f;
 			fogdist[1] = server_visible_state.fog_dist;
 		}
-		
+
 		if (game_state.fogdist[1])
 			copyVec2(game_state.fogdist,fogdist);
-		
+
 
 		// LRP between this and a fog dist for high heights, but only let it get foggier?
 		for(i=0;i<2;i++)
@@ -703,11 +702,11 @@ void dofBlendWithLast(DOFValues *new_values, DOFValues *old_values, DOFValues *f
 
 	if (custom_dof_state == DOF_FADING_TO_CUSTOM) {
 		dofBlend(&custom_dof, old_values, percent, old_values);
-		if (nearSameF32(custom_dof.focusDistance, old_values->focusDistance) && 
-			nearSameF32(custom_dof.focusValue, old_values->focusValue) && 
-			nearSameF32(custom_dof.nearDist, old_values->nearDist) && 
-			nearSameF32(custom_dof.nearValue, old_values->nearValue) && 
-			nearSameF32(custom_dof.farDist, old_values->farDist) && 
+		if (nearSameF32(custom_dof.focusDistance, old_values->focusDistance) &&
+			nearSameF32(custom_dof.focusValue, old_values->focusValue) &&
+			nearSameF32(custom_dof.nearDist, old_values->nearDist) &&
+			nearSameF32(custom_dof.nearValue, old_values->nearValue) &&
+			nearSameF32(custom_dof.farDist, old_values->farDist) &&
 			nearSameF32(custom_dof.farValue, old_values->farValue))
 		{
 			custom_dof_state = DOF_CUSTOM;
@@ -843,12 +842,12 @@ static void initializeSkyInternal(UberSky *sky, int init)
 			if ( sunTime->sky_node )
 				copyVec3( sunTime->sky_node->mat[3], sunTime->skypos );
 			else
-				conPrintfVerbose( "Cant find sky: %s", sunTime->skyname );		
+				conPrintfVerbose( "Cant find sky: %s", sunTime->skyname );
 		}
 		else
 			sunTime->sky_node = 0;
 	}
-	
+
 
 	//Add moon[0] : the sun's and the sun's glow
 	sky->fixed_sun_pos = false;
@@ -860,7 +859,7 @@ static void initializeSkyInternal(UberSky *sky, int init)
 		sky->moonNodes[0][0] = sunAddNode( sunName, SKY_TREE );
 		if (!sky->moonNodes[0])
 			conPrintfVerbose( "cant find sun: %s", sunName );
-			
+
 		sky->fixed_sun_pos = (( eaSize( &sky->sky_struct.moon_names[0]->params ) >= 2 ) &&
 							  ( atof(sky->sky_struct.moon_names[0]->params[1])==0.0f));
 
@@ -889,15 +888,15 @@ static void initializeSkyInternal(UberSky *sky, int init)
 		//Add this Moon's glow, if there is one
 		sky->moonNodes[i][1] = 0;// moonglow is a thing of the past sunAddNode(buf, SKY_TREE);
 	}
-	
 
-	//clouds (dumb name) are geometry always there.  SkyBowl and the clouds are examples 
+
+	//clouds (dumb name) are geometry always there.  SkyBowl and the clouds are examples
 	for(i=0;i<sky->cloud_count;i++)
 	{
 		char * cloudName = sky->clouds[i]->name;
 
 		sky->cloudNodes[i] = sunAddNode( cloudName, SKY_TREE );
-		if ( !sky->cloudNodes[i] ) 
+		if ( !sky->cloudNodes[i] )
 			conPrintfVerbose( "cant find cloud: %s", cloudName );
 	}
 
@@ -944,7 +943,7 @@ static F32 indoorLuminance()
 static void setSunMoonRot(const UberSky IN *sky, float IN time, const SunTime IN *early, const SunTime IN *late, float IN ratio, const Vec3 IN plr_offset, SunLight OUT *sun)
 {
 	int i;
-	F32 rot; 
+	F32 rot;
 	rot = 2.f * PI * (time - 12.f) / 24.f;
 	rot = fixAngle(rot);
 	rot = rot * sqrt(fabs(rot)) / sqrt(PI);
@@ -985,9 +984,9 @@ static void setSunMoonRot(const UberSky IN *sky, float IN time, const SunTime IN
 	}
 }
 
-static F32 playerAmbientAdjuster;    
-static F32 playerDiffuseAdjuster;   
-static F32 MINIMUM_AMBIENT; 
+static F32 playerAmbientAdjuster;
+static F32 playerDiffuseAdjuster;
+static F32 MINIMUM_AMBIENT;
 static F32 MINIMUM_PLAYER_AMBIENT;
 static F32 MINIMUM_DIFFUSE;
 static F32 MINIMUM_PLAYER_DIFFUSE;
@@ -1016,7 +1015,7 @@ static void initLightingMinMaxes(void)
 
 	//TO DO : use this for inside player light, too.
 	// Set player lighting based on whether or not we're doing bumpmapping
-	if( (rdr_caps.features & GFXF_BUMPMAPS) )    
+	if( (rdr_caps.features & GFXF_BUMPMAPS) )
 	{
 		playerAmbientAdjuster	= 2.75;	//sun ambient x this = ambient for players
 		playerDiffuseAdjuster	= 0.52;	//sun diffuse x this = duffuse for players
@@ -1031,7 +1030,7 @@ static void initLightingMinMaxes(void)
 		MINIMUM_PLAYER_DIFFUSE	= 0.10;	//player diffuse R,G,or B cna never be less than this
 	}
 	// World geometry is lit the same with/without bumpmaps
-	MINIMUM_AMBIENT			= 0.08; //sun ambient R,G,or B can never be less than this 
+	MINIMUM_AMBIENT			= 0.08; //sun ambient R,G,or B can never be less than this
 	MINIMUM_DIFFUSE			= 0.05;	//sun diffuse R,G,or B cna never be less than this
 }
 
@@ -1059,7 +1058,7 @@ static void sunUpdateInternal(UberSky IN OUT *sky, SunLight OUT *sun, int IN ini
 	time = server_visible_state.time;
 
 	//Debug// If sky.sun_time_count == 0 gfxReload() has been called, but sceneLoad has
-	//never been called, so don't do anything.  If !sky.sky_struct, then no sky has ever been 
+	//never been called, so don't do anything.  If !sky.sky_struct, then no sky has ever been
 	//loaded
 	if ( sky->sun_time_count == 0)
 		return;
@@ -1181,7 +1180,7 @@ static void sunUpdateInternal(UberSky IN OUT *sky, SunLight OUT *sun, int IN ini
 		{
 			F32 t_dist, t_len;
 
-			t_dist = fixTime(time - early->time); 
+			t_dist = fixTime(time - early->time);
 			t_len = fixTime(late->time - early->time);
 			if (!t_len)
 				ratio = 0;
@@ -1279,11 +1278,11 @@ static void sunUpdateInternal(UberSky IN OUT *sky, SunLight OUT *sun, int IN ini
 			newluminance = blendF32( early->luminance, late->luminance, ratio );
 		}
 		sun->luminance = luminanceBlendWithLast(newluminance, sun->luminance);
-		
+
 		dofBlend(&early->dof_values, &late->dof_values, ratio, &new_dof_values);
 		dofBlendWithLast(&new_dof_values, &sun->dof_values, &sun->dof_values);
-			
-		//Kinda crazy scaling, because I don't want change how it used to be done and break it. 
+
+		//Kinda crazy scaling, because I don't want change how it used to be done and break it.
 		//Someday just remove this
 		scaleVec3(ambient,COLOR_SCALEUB(255),sun->ambient);
 		scaleVec3(diffuse,COLOR_SCALEUB(255),sun->diffuse);
@@ -1298,26 +1297,26 @@ static void sunUpdateInternal(UberSky IN OUT *sky, SunLight OUT *sun, int IN ini
 
 	// Do mins/maxes
 
-	sun->ambient[3] = 1;   
-	sun->diffuse[3] = 1;    
-	copyVec4( sun->ambient, sun->ambient_for_players );         
-	copyVec4( sun->diffuse, sun->diffuse_for_players ); 
-	scaleVec3( sun->ambient_for_players, playerAmbientAdjuster, sun->ambient_for_players );     
-	scaleVec3( sun->diffuse_for_players, playerDiffuseAdjuster, sun->diffuse_for_players );  
+	sun->ambient[3] = 1;
+	sun->diffuse[3] = 1;
+	copyVec4( sun->ambient, sun->ambient_for_players );
+	copyVec4( sun->diffuse, sun->diffuse_for_players );
+	scaleVec3( sun->ambient_for_players, playerAmbientAdjuster, sun->ambient_for_players );
+	scaleVec3( sun->diffuse_for_players, playerDiffuseAdjuster, sun->diffuse_for_players );
 
 	if (!sky->ignoreLightClamping)
 	{
-		for(i=0;i<3;i++)  
+		for(i=0;i<3;i++)
 		{
-			sun->ambient[i]						= MAX( sun->ambient[i],						MINIMUM_AMBIENT			); 
+			sun->ambient[i]						= MAX( sun->ambient[i],						MINIMUM_AMBIENT			);
 			sun->ambient_for_players[i]			= MAX( sun->ambient_for_players[i],			MINIMUM_PLAYER_AMBIENT	);
-			sun->diffuse[i]						= MAX( sun->diffuse[i],						MINIMUM_DIFFUSE			); 
+			sun->diffuse[i]						= MAX( sun->diffuse[i],						MINIMUM_DIFFUSE			);
 			sun->diffuse_for_players[i]			= MAX( sun->diffuse_for_players[i],			MINIMUM_PLAYER_DIFFUSE	);
 			// it's okay for the reverse light to be black
 
-			sun->ambient[i]						= MIN( sun->ambient[i],						MAXIMUM_AMBIENT			); 
+			sun->ambient[i]						= MIN( sun->ambient[i],						MAXIMUM_AMBIENT			);
 			sun->ambient_for_players[i]			= MIN( sun->ambient_for_players[i],			MAXIMUM_PLAYER_AMBIENT	);
-			sun->diffuse[i]						= MIN( sun->diffuse[i],						MAXIMUM_DIFFUSE			); 
+			sun->diffuse[i]						= MIN( sun->diffuse[i],						MAXIMUM_DIFFUSE			);
 			sun->diffuse_for_players[i]			= MIN( sun->diffuse_for_players[i],			MAXIMUM_PLAYER_DIFFUSE	);
 		}
 	}
@@ -1343,13 +1342,13 @@ static const char* s_color(const Vec3 color, F32 scale_inv)
 
 static void showLightDebug(const SunLight IN *sun, const FogVals IN *fog_final, const FogVals IN *fog_curr)
 {
-	//Debug 
-	if(game_state.lightdebug){ 
+	//Debug
+	if(game_state.lightdebug){
 		int y = 1;
 		int x = 2;
 		const char *caveat = game_state.lightdebug == 1 ? "" : "(skyfile colors, could be wrong -GG)";
 		const F32 screwed_scaling_inv = 256.f*255.f/63.f;
-		xyprintf( x, y++, "Time %f", server_visible_state.time );  
+		xyprintf( x, y++, "Time %f", server_visible_state.time );
 		y++;
 		xyprintf( x, y++, "Adjusters" );
 		xyprintfcolor( x, y++, 255, 255, 100, "    playerAmbientAdjuster  %f", playerAmbientAdjuster );
@@ -1427,7 +1426,7 @@ static int skyNodeCmp(const SkyNode *sky_node1, const SkyNode *sky_node2)
 	if (node1->model != node2->model) {
 		return node1->model - node2->model;
 	}
-	for (i=0; i<3; i++) 
+	for (i=0; i<3; i++)
 		if (!nearSameDoubleTol(node1->mat[3][i],node2->mat[3][i], 0.01))
 			return ((node1->mat[3][i] - node2->mat[3][i])>0)?1:-1;
 	return 0;
@@ -1557,7 +1556,7 @@ static void sunApplyValues(const SkyWorkingValues IN *sky_work, SunLight IN OUT 
 
 		fogBlendWithLast(fog_final, &fog_out, speed); // Sets fog_final from fog_curr
 
-		skySetRenderValues( fog_final->dist, fog_final->color, sun );  
+		skySetRenderValues( fog_final->dist, fog_final->color, sun );
 	}
 	// End Apply Fog
 
@@ -1567,7 +1566,7 @@ static void sunApplyValues(const SkyWorkingValues IN *sky_work, SunLight IN OUT 
 		blendSkyNodes(&sky_work->sun_work.sky_node_list, &sun->sky_node_list, ratio);
 
 		// Set alpha
-		for (i=0; i<sun->sky_node_list.count; i++) 
+		for (i=0; i<sun->sky_node_list.count; i++)
 			gfxNodeSetAlpha(sun->sky_node_list.nodes[i].node,(U8)((sun->sky_node_list.nodes[i].alpha) * 255),1);
 	}
 	// End alpha on gfxnodes
@@ -1589,7 +1588,7 @@ static void sunUpdateGlobals(void)
 static void sunInitNodes(SkyNodeList *dest, const SkyNodeList *src)
 {
 	int i;
-	
+
 	for (i=0; i<src->count; i++) {
 		SkyNode *node = dynArrayAddStruct(&dest->nodes, &dest->count, &dest->max);
 		*node = src->nodes[i];
@@ -1618,7 +1617,7 @@ void sunUpdate(SunLight OUT *sun, int IN init)
 
 	// Update global sun information
 	sunUpdateGlobals();
-	
+
 	if(init)
 		sun->sky_node_list.count = 0;
 
@@ -1936,7 +1935,7 @@ static void skyLoadInternal( const char *skyFileName, const char *sceneFileName,
 {
 	TokenizerHandle tok;
 
-	ParserDestroyStruct(all_parse, sky);	
+	ParserDestroyStruct(all_parse, sky);
 	tok = TokenizerCreate(skyFileName);
 	if( !tok )
 		FatalErrorf( "This is not a valid sky file %s ", skyFileName );
@@ -1944,7 +1943,7 @@ static void skyLoadInternal( const char *skyFileName, const char *sceneFileName,
 	TokenizerParseList( tok, all_parse, sky, TokenizerErrorCallback );
 	TokenizerDestroy(tok);
 
-	//Initialize Parsed Files, set 
+	//Initialize Parsed Files, set
 	sky->sun_time_count		= eaSize( &sky->times );
 	sky->moon_count			= eaSize( &sky->sky_struct.moon_names );
 	sky->cloud_count		= eaSize( &sky->clouds );
@@ -1967,7 +1966,7 @@ void skyLoad( char ** skyFileNames, char *sceneFileName )
 
 	initializeSky();
 
-	for (i=0; i<eaSize(&skyFileNames); i++) 
+	for (i=0; i<eaSize(&skyFileNames); i++)
 	{
 		eaPush(&g_skies, ParserAllocStruct(sizeof(*g_skies[i])));
 		sprintf(buf,"scenes/skies/%s",skyFileNames[i]);

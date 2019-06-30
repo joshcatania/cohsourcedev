@@ -10,7 +10,7 @@
 #include "rt_stats.h"
 #include "rt_model.h"
 #include "rt_pbuffer.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "timing.h"
 #include "renderWater.h"
@@ -39,7 +39,7 @@ void rdrFrameGrabDirect(RdrFrameGrabParams *params)
 
 	PERFINFO_AUTO_START("rdrFrameGrabDirect", 1);
 	rdrBeginMarker(__FUNCTION__);
-	
+
 	w = params->screen_width;
 	h = params->screen_height;
 
@@ -187,12 +187,12 @@ static __inline void drawLoopWater(VBO *vbo, RdrModel *draw, Vec4 lightdir, RdrT
 
 	tex_count = vbo->tex_count;
 
-	for(i = 0; i < tex_count; i++) 
+	for(i = 0; i < tex_count; i++)
 	{
 		F32 waterFresnelBias = rdr_view_state.waterFresnelBias;
 		F32 waterFresnelScale = rdr_view_state.waterFresnelScale;
 		F32 waterFresnelPower = rdr_view_state.waterFresnelPower;
-		
+
 		ele_count = vbo->tex_ids[i].count*3;
 
 		if (tex_index==-1 || tex_index==i)
@@ -205,7 +205,7 @@ static __inline void drawLoopWater(VBO *vbo, RdrModel *draw, Vec4 lightdir, RdrT
 			{
 				cgGLSetManageTextureParameters(rt_cgfxGetGlobalContext(), CG_TRUE);
 			}
-					
+
 			for (j=0; j<rdr_caps.max_layer_texunits; j++) {
 				if (j == TEXLAYER_REFRACTION) {
 					texBind(j, water_params.allocated_handles ? water_params.handle[rdr_frame_state.curFrame % water_params.allocated_handles] : 0);

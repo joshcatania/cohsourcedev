@@ -15,7 +15,7 @@
 #include "uiClipper.h"
 #include "ttFont.h"
 #include "ttFontUtil.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "cmdcommon.h"
 #include "uiInput.h"
@@ -1483,7 +1483,7 @@ void uiEditCommaNumericUpdate(UIEdit *edit)
 	char *estr;
 	if(!edit)
 		return;
-	
+
 	estr=uiEditGetUTF8Text(edit);
 	if(estr)
 	{
@@ -1492,10 +1492,10 @@ void uiEditCommaNumericUpdate(UIEdit *edit)
 		int iLen;
 		int iDest = 0;
 		int i=0;
-		
+
 		UIEditLine* line = uiEditGetCursorLine(edit);
 		int idx = edit->cursor.characterIndex;
-		
+
 		// Get all the digits from the string, get rid of
 		//   everything else.
 		// Try to keep the cursor stable.
@@ -1509,25 +1509,25 @@ void uiEditCommaNumericUpdate(UIEdit *edit)
 			{
 				idx--;
 			}
-			
+
 			pch++;
 		}
 		ach[i] = '\0';
-		
+
 		// Normalize the value
 		i = atoi(ach);
-		
+
 		// This will leave zeroes when they are editing.
 		if(i!=0)
 		{
 			itoa(i, ach, 10);
 		}
-		
+
 		// Now reprint it with commas
 		iLen = strlen(ach);
 		estrReserveCapacity(&estr, iLen+1);
 		*estr = '\0';
-		
+
 		estr[iDest++] = ach[0];
 		for(i=iLen-1; i>0; i--)
 		{
@@ -1785,7 +1785,7 @@ void uiEditCommaNumericInputHandler(UIEdit* edit)
 	}
 
 	uiEditDefaultMouseHandler(edit);
-	
+
 	// If the cursor is to the right of a comma, move it to the left
 	if(edit->cursor.characterIndex > 0)
 	{
@@ -1795,7 +1795,7 @@ void uiEditCommaNumericInputHandler(UIEdit* edit)
 			uiEditMoveCursor(edit, UIECM_LEFT);
 		}
 	}
-	
+
 }
 
 void uiEditHandleInput(UIEdit* edit)
@@ -2201,7 +2201,7 @@ void uiEditEditSimple(UIEdit *edit, float x, float y, float z, float w, float h,
                 uiEditTakeFocus(edit);
         }
         drawMenuFrame( R12,edit->boundsText.x-10,edit->boundsText.y-6,z,edit->boundsText.width,edit->boundsText.height, CLR_WHITE, color, 0 );
-    }   
+    }
 
 	GetTextColorForType(type, rgba);
 	edit->textColor = rgba[0];

@@ -7,7 +7,7 @@
 #include "bump.h"
 #include "tex.h"
 #include "camera.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "rendermodel.h"
 #include "renderbonedmodel.h"
 #include "rendermodel.h"
@@ -33,12 +33,12 @@ static void tangentBasisOrig(Mat3 basis,Vec3 pv0,Vec3 pv1,Vec3 pv2,Vec2 t0,Vec2 
 		subVec3(pv2,pv0,dv);
 		crossVec3(dv,n,cp);
 		addVec3(cp,pv0,v1);
-	 
+
 		subVec3(pv1,pv0,dv);
 		crossVec3(n,dv,cp);
 		addVec3(cp,pv0,v2);
 	}
- 
+
 	copyVec3(pv0,v0);
 
 	if (0) {
@@ -54,7 +54,7 @@ static void tangentBasisOrig(Mat3 basis,Vec3 pv0,Vec3 pv1,Vec3 pv2,Vec2 t0,Vec2 
 
     if ( fabs(cp[0]) > EPSILON)
     {
-        basis[0][0] = -cp[1] / cp[0];        
+        basis[0][0] = -cp[1] / cp[0];
         basis[1][0] = -cp[2] / cp[0];
     }
 
@@ -64,7 +64,7 @@ static void tangentBasisOrig(Mat3 basis,Vec3 pv0,Vec3 pv1,Vec3 pv2,Vec2 t0,Vec2 
     crossVec3(e0,e1,cp);
     if ( fabs(cp[0]) > EPSILON)
     {
-        basis[0][1] = -cp[1] / cp[0];        
+        basis[0][1] = -cp[1] / cp[0];
         basis[1][1] = -cp[2] / cp[0];
     }
 
@@ -74,7 +74,7 @@ static void tangentBasisOrig(Mat3 basis,Vec3 pv0,Vec3 pv1,Vec3 pv2,Vec2 t0,Vec2 
     crossVec3(e0,e1,cp);
     if ( fabs(cp[0]) > EPSILON)
     {
-        basis[0][2] = -cp[1] / cp[0];        
+        basis[0][2] = -cp[1] / cp[0];
         basis[1][2] = -cp[2] / cp[0];
     }
 
@@ -90,7 +90,7 @@ static void tangentBasisOrig(Mat3 basis,Vec3 pv0,Vec3 pv1,Vec3 pv2,Vec2 t0,Vec2 
     normalVec3(basis[2]);
 
     // Gram-Schmidt orthogonalization process for B
-    // compute the cross product B=NxT to obtain 
+    // compute the cross product B=NxT to obtain
     // an orthogonal basis
 	crossVec3(basis[2],basis[0],basis[1]);
 
@@ -125,7 +125,7 @@ static void orthogonalizeNv(Vec3 tangent, Vec3 binormal, Vec3 normal)
 	subVec3(newB, tv, newB);
 
 	//D3DXVec3Normalize(&(theVerts[i].tangent), &newT);
-	//D3DXVec3Normalize(&(theVerts[i].binormal), &newB);		
+	//D3DXVec3Normalize(&(theVerts[i].binormal), &newB);
 	normalVec3(newT);copyVec3(newT, tangent);
 	normalVec3(newB);copyVec3(newB, binormal);
 
@@ -135,7 +135,7 @@ static void orthogonalizeNv(Vec3 tangent, Vec3 binormal, Vec3 normal)
 	lenBin = lengthVec3(binormal);
 
 	if( (lenTan <= 0.001f) || (lenBin <= 0.001f)  ) //should be approx 1.0f
-	{	
+	{
 		//the tangent space is ill defined at this vertex
 		//so we can generate a valid one based on the normal vector,
 		//which I'm assuming is valid!
@@ -347,7 +347,7 @@ void bumpInitObj(Model *model)
 				//	don't author with them in the first place.
 				if()
 				{
-					
+
 				}
 #endif
 			}

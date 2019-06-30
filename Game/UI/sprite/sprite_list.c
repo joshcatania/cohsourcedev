@@ -1,6 +1,6 @@
 #include "sprite.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 
 typedef struct SpriteIndexElement {
 	int next; // index into dynarray

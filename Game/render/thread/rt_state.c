@@ -4,7 +4,7 @@
 #include "wcw_statemgmt.h"
 #include "error.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "bump.h"
 #include "shadersATI.h"
 #include "rt_shaderMgr.h"
@@ -24,7 +24,7 @@ DrawModeType curr_draw_state;
 ModelStateSetFlags curr_draw_state_flags;
 BlendModeType curr_blend_state;
 
-//Debug 
+//Debug
 int setBlendStateCalls[BLENDMODE_NUMENTRIES];
 int setBlendStateChanges[BLENDMODE_NUMENTRIES];
 int setDrawStateCalls[DRAWMODE_NUMENTRIES];
@@ -136,17 +136,17 @@ void modelBlendStateInit()
 		blender_dlists_special[0] = 0;
 	}
 
-	//assert( heapValidateAll() ); 
+	//assert( heapValidateAll() );
 	for(i=0;i<BLENDMODE_NUMENTRIES;i++)
 	{
-		//assert( heapValidateAll() ); 
+		//assert( heapValidateAll() );
 		blender_dlists[i] = glGenLists(1); CHECKGL;
 		glNewList(blender_dlists[i],GL_COMPILE); CHECKGL;
 		for(j=0;j<ARRAY_SIZE(combiner_infos);j++)
 		{
 			if (!rdr_caps.chip) // Unknown graphics chip
 				continue;
-			if (((rdr_caps.chip&(NV1X|NV2X)) == NV1X && combiner_infos[j].id2 == i) || 
+			if (((rdr_caps.chip&(NV1X|NV2X)) == NV1X && combiner_infos[j].id2 == i) ||
 				((rdr_caps.chip & (NV1X)) && combiner_infos[j].id == i))
 			{
 				glEnable(GL_REGISTER_COMBINERS_NV); CHECKGL;
@@ -173,7 +173,7 @@ void modelBlendStateInit()
 				if (combiner_infos[j].id == BLENDMODE_BUMPMAP_COLORBLEND_DUAL) {
 					glEnable(GL_PER_STAGE_CONSTANTS_NV); CHECKGL;
 				}
-				//assert( heapValidateAll() ); 
+				//assert( heapValidateAll() );
 				break;
 			} else if (rdr_caps.chip == TEX_ENV_COMBINE && (combiner_infos[j].id2 == i || combiner_infos[j].id == i) && combiner_infos[j].fileNameTexEnv) {
 				ret = renderTexEnvparse(combiner_infos[j].fileNameTexEnv, i);
@@ -189,11 +189,11 @@ void modelBlendStateInit()
 
 		if (j >= ARRAY_SIZE(combiner_infos))
 		{
-			//assert( heapValidateAll() ); 
+			//assert( heapValidateAll() );
 			if (rdr_caps.chip & NV1X) { // Need to do this on ATI too?
 				glDisable(GL_REGISTER_COMBINERS_NV); CHECKGL;
 			}
-			
+
 			if(glActiveTextureARB) {
 				glActiveTextureARB(GL_TEXTURE1); CHECKGL;
 				glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE); CHECKGL;
@@ -215,7 +215,7 @@ void modelBlendStateInit()
 		// Return to tex 0 at the end
 		if(glActiveTextureARB) glActiveTextureARB(GL_TEXTURE0); CHECKGL;
 		glEndList(); CHECKGL;
-		//assert( heapValidateAll() ); 
+		//assert( heapValidateAll() );
 	}
 
 	if ((rdr_caps.chip&(NV1X|NV2X)) == NV1X) {
@@ -239,7 +239,7 @@ void modelBlendStateInit()
 		glActiveTextureARB(GL_TEXTURE0); CHECKGL;
 		glEndList(); CHECKGL;
 	}
-	//assert( heapValidateAll() ); 
+	//assert( heapValidateAll() );
 }
 
 static struct {
@@ -312,12 +312,12 @@ void modelBlendState(BlendModeType type, int force_set)
 {
 	BlendModeShader num = type.shader;
 	setBlendStateCalls[num]++;  //Debug global
-	
+
 	RT_STAT_INC(blendstate_calls);
 
 	if (!force_set && curr_blend_state.intval == type.intval)
 		return;
-	
+
 	RT_STAT_BLEND_CHANGE;
 
 #ifndef FINAL //Debug
@@ -335,7 +335,7 @@ void modelBlendState(BlendModeType type, int force_set)
 			//     Does not do the multiply by constant color or the scale by 8 that BLENDMODE_MULTIPLY does.
 			WCW_DisableFragmentProgram();
 			//glCallList(blender_dlists[num]); CHECKGL;
-		} 
+		}
 		else
 		{
 			int pgmID;
@@ -357,7 +357,7 @@ void modelBlendState(BlendModeType type, int force_set)
 			{
 				texBind(14,g_mt_shader_debug_state.visualize_tex_id);	// yes, bind it to unused global sampler
 			}
-#endif	
+#endif
 		}
     }
 	else if (rdr_caps.chip & R200)		// USE ATI 'register combiner' programs on Radeon 8500
@@ -443,7 +443,7 @@ void modelDrawState(DrawModeType num, ModelStateSetFlags flags)
 		setDrawStateChanges[num]++; //Debug global
 		if( drawCall < ARRAY_SIZE(drawModeSwitchOrder) )
 			drawModeSwitchOrder[drawCall++] = num;
-		
+
 		RT_STAT_DRAW_CHANGE;
 	}
 
@@ -458,7 +458,7 @@ void modelDrawState(DrawModeType num, ModelStateSetFlags flags)
 
 	RT_STAT_DRAW_CHANGE;
 
-#endif	
+#endif
 
 	#define BINDVP WCW_BindVertexProgram((flags&BIT_HIGH_QUALITY_VERTEX_PROGRAM)?shaderMgrVertexProgramsHQ[num]:shaderMgrVertexPrograms[num])
 
@@ -562,7 +562,7 @@ void modelDrawState(DrawModeType num, ModelStateSetFlags flags)
 
 		xcase DRAWMODE_BUMPMAP_NORMALS:		// outside, vertex lit with specular bump per pixel
 		case DRAWMODE_BUMPMAP_RGBS:			// indoor (ambient group), baked lighting and specular bump per pixel
-		case DRAWMODE_BUMPMAP_NORMALS_PP:	// full per pixel lighting in view space	
+		case DRAWMODE_BUMPMAP_NORMALS_PP:	// full per pixel lighting in view space
 			WCW_EnableTexture( GL_TEXTURE_2D, TEXLAYER_BASE );
 			texEnableTexCoordPointer(TEXLAYER_BASE, true);
 
@@ -622,7 +622,7 @@ void modelDrawState(DrawModeType num, ModelStateSetFlags flags)
 		xcase DRAWMODE_SPRITE:
 			WCW_EnableTexture( GL_TEXTURE_2D, TEXLAYER_BASE );
 			texEnableTexCoordPointer(TEXLAYER_BASE, true);
-			
+
 			WCW_EnableTexture( GL_TEXTURE_2D, TEXLAYER_GENERIC );
 			texSetWhite(TEXLAYER_GENERIC);
 			texEnableTexCoordPointer(TEXLAYER_GENERIC, false);
@@ -855,7 +855,7 @@ static void setupDebugParams(void)
 	{
 		// These should match the "Debug Flag Macros" in debug_fp.cgh
 		// Note that g_DebugEnableFlagSetsFP is a float4 so only about 24 bits
-		// are usable in each component. 
+		// are usable in each component.
 		Vec4 debug_flags;
 		unsigned int flags[4] = {0,0,0,0};
 
@@ -932,7 +932,7 @@ static void setupDebugParams(void)
 	};
 	static int gShaderDbgLoggingState = kShaderDbgState_OFF;
 	static int gShaderDbgLoggingFrames = 0;
-	
+
 	// normally, called at the top of the frame
 	static void MANAGE_SHADER_DEBUG_LOGING()
 	{
@@ -950,7 +950,7 @@ static void setupDebugParams(void)
 				gShaderDbgLoggingFrames = 1;
 			}
 		}
-		
+
 		if ( gShaderDbgLoggingState == kShaderDbgState_REQUESTED )
 		{
 			char fpath[256];
@@ -1063,7 +1063,7 @@ void rdrInitTopOfViewDirect(RdrViewState *rvs)
 	glEnable(GL_LIGHT0); CHECKGL;
 	WCW_Color4(255,255,255,255);
 
-	//These two should not be needed since every model handles it's own lighting, and 
+	//These two should not be needed since every model handles it's own lighting, and
 	//(I think everything should set their own; it's currently a bit over complicated)
 	{ //Set light
 		WCW_Light(GL_LIGHT0, GL_AMBIENT, rvs->sun_ambient);
@@ -1081,17 +1081,17 @@ void rdrInitTopOfViewDirect(RdrViewState *rvs)
 	{ //Set specref
 		F32 specref[4];
 		F32 shininess[1];
-		
+
 		setVec4(specref,0,0,0,1);
 		shininess[0] = 128;
 
-		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, specref); CHECKGL;	
+		glLightModelfv(GL_LIGHT_MODEL_AMBIENT, specref); CHECKGL;
 
 		WCW_Material(GL_FRONT, GL_SPECULAR, specref);
 		WCW_Material(GL_FRONT, GL_SHININESS, shininess);
 	}
 
-	WCW_Fog(1); 
+	WCW_Fog(1);
 	WCW_ClearTextureStateToWhite();
 	modelBindDefaultBuffer(); //need to reset this state every frame, or headshot can mess up if sky isn't drawn. I'm not entirely sure why.
 
@@ -1118,7 +1118,7 @@ void rdrInitTopOfViewDirect(RdrViewState *rvs)
 		WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_NewFeatureFP, newFeature );
 	}
 #endif
-	
+
 	// setup some global reflection shader params once
 	if( (rdr_caps.chip & ARBFP) && rvs->renderPass == RENDERPASS_COLOR )
 	{

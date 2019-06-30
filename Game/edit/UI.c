@@ -4,7 +4,7 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <assert.h>
+#include "SuperAssert.h"
 
 
 
@@ -26,14 +26,14 @@
 ///**************************************************************************
 // * Generic User Interface Element
 // */
-// 
+//
 //struct UIElementImp{
 //	HashTableStack classVFtable;
 //	StashTable instaceVFTable;
 //
 //	// Element location
 //	UIRect rect;
-//	
+//
 //	// Composite info
 //	// Contains a list of child UIElementImp*
 //	Array* children;
@@ -83,7 +83,7 @@
 //
 ///* UIESetRect()
 // *	This function dispatches the a SetRect call to either the element's custom
-// *	handler, or the default handler, 
+// *	handler, or the default handler,
 // *
 // */
 //void UIESetRect(UIElementImp* element, UIRect rect){
@@ -119,7 +119,7 @@
 //		if(-1 == arrayFindElement(parent->children, (void*)child))
 //			return 0;
 //	}
-//	
+//
 //	// Otherwise, add the child to the parent's list of children.
 //	pushBack(parent->children, (void*)child);
 //	return 1;
@@ -157,7 +157,7 @@
 //}
 //
 ///* Function UIESetInstanceHandler()
-// *	
+// *
 // *
 // *
 // *
@@ -188,7 +188,7 @@
 //			return stashAddPointer(element->instaceVFTable, descriptor->handlerName, func, false);
 //		}
 //	}
-//	
+//
 //}
 //
 //void* UIEGetInstanceHandler(UIElementImp* element, HandlerDescriptor* descriptor){
@@ -230,7 +230,7 @@
 //	if(UIEVTable)
 //		return UIEVTable;
 //
-//	
+//
 //	fTable = createHashTable();
 //	initHashTable(fTable, 8);
 //	fTable = stashTableCreateWithStringKeys(STASHSIZEPLEASE,  StashDeepCopyKeys | StashCaseSensitive );
@@ -277,7 +277,7 @@
 //
 //// Scrolling
 //int UISBScroll(int scrollDistance){
-//	
+//
 //}
 ///*
 // * ScrollBox
@@ -338,13 +338,13 @@
 //	if(UIEVTable)
 //		return UIEVTable;
 //
-//	
+//
 //	fTable = createHashTable();
 //	initHashTable(fTable, 8);
 //	fTable = stashTableCreateWithStringKeys(STASHSIZEPLEASE,  StashDeepCopyKeys | StashCaseSensitive );
 //
 //	stashAddPointer(fTable, OnSetRect.handlerName, UITBSetRect, false);
-//	
+//
 //
 //	hashStackPushTable(UIEVTable, fTable);
 //	return UIEVTable;
@@ -369,7 +369,7 @@ static char* uiScroll2SimpleName(char* name)
 {
 	/*
 	char	*s;
-	
+
 	s = strrchr(name,'/');
 	if (!s)
 		s = name;
@@ -395,7 +395,7 @@ void uiScroll2AddName(ScrollInfo2* scroll, char* name, int depth, int cangroup)
 	char base[128],*s;
 	NameInfo2* ni;
 	int	add_base = 1,i;
-	
+
 	strcpy(base,name);
 	s = base;
 	for(i=0;i<depth;i++)
@@ -445,7 +445,7 @@ void uiScroll2AddName(ScrollInfo2* scroll, char* name, int depth, int cangroup)
 static void uiScroll2Expand(ScrollInfo2* scroll, int idx)
 {
 	int		i,orig_count,count;
-	
+
 	if (!scroll->names[idx].group || scroll->names[idx].expanded)
 		return;
 	scroll->names[idx].expanded = 1;
@@ -463,7 +463,7 @@ static void uiScroll2Compact(ScrollInfo2* scroll, int idx)
 {
 	int		i,count,len;
 	char	*base;
-	
+
 	if (!scroll->names[idx].group || !scroll->names[idx].expanded)
 		return;
 	scroll->names[idx].expanded = 0;
@@ -489,8 +489,8 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 	U32		nameCount;
 #define PTSZX 8
 #define PTSZY 9
-	
-	maxlines = windowScaleY(scroll->maxlines); 
+
+	maxlines = windowScaleY(scroll->maxlines);
 	if (scroll->maxlines < 20)
 		maxlines += (maxlines - scroll->maxlines) * 1.15;
 	if (cant_focus || !scroll->got_focus && inpLevel(INP_RBUTTON) && !inpEdge(INP_RBUTTON) )
@@ -512,11 +512,11 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 		scroll->offset = (scroll->count - maxlines) * PTSZY;
 	if (scroll->offset < 0)
 		scroll->offset = 0;
-	
+
 	//Resize the text box to fix the longest string in it
 	widthOfDarkenedBox = scroll->maxcols;
 	nameCount = 0;							//raises the box so no properties fall off the bottom
-	for(i=0;i<maxlines;i++)     
+	for(i=0;i<maxlines;i++)
 	{
 		idx = scroll->offset/PTSZY + i;
 		if (idx >= scroll->count)
@@ -530,16 +530,16 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 	//End resize
 
 
-	fontDefaults(); 
+	fontDefaults();
 	fontSet(0);
 	fontScale(PTSZX + widthOfDarkenedBox * PTSZX,PTSZY/2 + PTSZY + MIN(scroll->count,maxlines) * PTSZY);
 	fontColor(0x000000);
 	fontAlpha(0x80);
 	fontText(scroll->xpos-PTSZX,ypos-PTSZY,"\001");
-	fontDefaults(); 
-	 
-	xp = (x - fontLocX(scroll->xpos)/PTSZX) + 1; //+1 makes better selection 
-	for(i=0;i<maxlines;i++)     
+	fontDefaults();
+
+	xp = (x - fontLocX(scroll->xpos)/PTSZX) + 1; //+1 makes better selection
+	for(i=0;i<maxlines;i++)
 	{
 		idx = scroll->offset/PTSZY + i;
 		if (idx >= scroll->count)
@@ -561,7 +561,7 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 				{
 					// Don't expand or compat if only callbacks are supposed to be working.
 					// This effectively turns the scroll box into a flat list.
-					if(!scroll->callbackOnly){						
+					if(!scroll->callbackOnly){
 						if(!scroll->names[idx].expanded){
 							uiScroll2Expand(scroll,idx);
 							if(scroll->linkedScroll)
@@ -578,7 +578,7 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 		else
 		{
 			int		len;
-			
+
 			len = strlen(scroll->names[idx].name)-1;
 			if (scroll->names[idx].name[len] == '~')
 				fontColor(0x7f7f7f);
@@ -589,7 +589,7 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 			else
 				fontColor(0x00ff00);
 		}
-		buf[0] = 0; 
+		buf[0] = 0;
 		for(j=0;j<scroll->names[idx].depth;j++)
 			strcat(buf," ");
 
@@ -611,9 +611,9 @@ int uiScroll2Update(ScrollInfo2* scroll, int cant_focus)
 		strcat(buf,uiScroll2SimpleName(scroll->names[idx].name));
 
 		// Index 0 gets the header string.
-		if (!idx) 
+		if (!idx)
 			strcat(buf,scroll->header);
-		
+
 		buf[widthOfDarkenedBox] = 0;
 		fontTextf(scroll->xpos,ypos + i * PTSZY,buf);
 	}
@@ -625,7 +625,7 @@ void uiScroll2Init(ScrollInfo2* scroll)
 {
 	scroll->names = calloc(sizeof(ScrollInfo),1000);
 	scroll->count = 0;
-	
+
 	memset(&scroll->names[0],0,sizeof(scroll->names[0]));
 	scroll->names[0].group = 1;
 	scroll->count = 1;

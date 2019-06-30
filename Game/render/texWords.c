@@ -7,7 +7,7 @@
 #include "tex.h"
 #include "rt_tex.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "StashTable.h"
 #include "renderUtil.h"
 #include "pbuffer.h"
@@ -326,7 +326,7 @@ static DWORD WINAPI texWordsThread( LPVOID lpParam )
 		//}
 		for(;;)
 			SleepEx(INFINITE, TRUE);
-		return 0; 
+		return 0;
 	EXCEPTION_HANDLER_END
 }
 
@@ -337,15 +337,15 @@ void initBackgroundTexWordRenderer(void)
 
 	if(background_renderer_handle == NULL )
 	{
-		DWORD dwThrdParam = 1; 
+		DWORD dwThrdParam = 1;
 
-		background_renderer_handle = (HANDLE)_beginthreadex( 
-			NULL,                        // no security attributes 
-			0,                           // use default stack size  
-			texWordsThread,				 // thread function 
-			&dwThrdParam,                // argument to thread function 
-			0,                           // use default creation flags 
-			&background_renderer_threadID);                // returns the thread identifier 
+		background_renderer_handle = (HANDLE)_beginthreadex(
+			NULL,                        // no security attributes
+			0,                           // use default stack size
+			texWordsThread,				 // thread function
+			&dwThrdParam,                // argument to thread function
+			0,                           // use default creation flags
+			&background_renderer_threadID);                // returns the thread identifier
 
 		//_ASSERTE(heapValidateAll());
 		assert(background_renderer_handle != NULL);
@@ -845,7 +845,7 @@ static void unloadDataAfterCompositionLayer(TexWordLayer *layer)
 	switch(layer->type) {
 		case TWLT_BASEIMAGE:
 			if (texWords_useGl) {
-			} else {			
+			} else {
 				texUnloadRawData(layer->image);
 			}
 			break;
@@ -877,12 +877,12 @@ static Color makeColor(eaiHandle colors)
 	if (eaiSize(&colors)==3) {
 		ret.integer = 0xff << 24 |
 			colors[2] << 16 |
-			colors[1] << 8 | 
+			colors[1] << 8 |
 			colors[0];
 	} else if (eaiSize(&colors)==4) {
 		ret.integer = colors[3] << 24 |
 			colors[2] << 16 |
-			colors[1] << 8 | 
+			colors[1] << 8 |
 			colors[0];
 	} else {
 		ret.integer = 0xffff00ff;
@@ -1004,7 +1004,7 @@ U8* uncompressRawTexInfo(TexReadInfo *rawInfo) // Uncompresses to GL_RGBA8
 		}
 		leprintf("done.");
 	}
-	
+
 	if (rawInfo->format == GL_RGBA8) {
 		buffer = rawInfo->data;
 	} else {
@@ -1483,7 +1483,7 @@ void renderTexWordLayerText(PBName target, TexWordLayer *layer, int x, int y, in
 		if (index >=0 && index < eaSize(&texBindParent->texWordParams->parameters)) {
 			effText = texBindParent->texWordParams->parameters[index];
 		}
-	} 
+	}
 	if (!effText) {
 		effText = layer->text;
 	}
@@ -2059,7 +2059,7 @@ static void filterKernelColorizeNoSpreadNoAlphaGL(U8* dest, U8* src, S32 *intKer
 			}
 		}
 	}
-	
+
 	glDeleteTextures(1, &tempid); CHECKGL;
 	texSetWhite(TEXLAYER_BASE);
 	glReadPixels(0, 0, bufferSizeX, bufferSizeY, GL_ALPHA, GL_UNSIGNED_BYTE, dest); CHECKGL;
@@ -2090,7 +2090,7 @@ static void filterDropShadow(U8* dest, U8* src, TexWordLayerFilter *filter, bool
 		// This version will be perfectly accurate, but much, much slower
 		filterKernelColorize(dest, src, kernel, kernel_width, kernel_width, filter->offset[0], -filter->offset[1], makeColor(filter->rgba), filter->spread*255, yield);
 	}
-	else 
+	else
 	{
 		filterKernelColorizeFast(dest, src, kernel, kernel_width, kernel_width, filter->offset[0], -filter->offset[1], makeColor(filter->rgba), filter->spread*255, yield);
 	}
@@ -2462,7 +2462,7 @@ static void texWordDoComposition(TexWord *texWord, BasicTexture *texBindParent, 
 		glEnable(GL_ALPHA_TEST); CHECKGL;
 		rdrFinish2DRendering();
 	}
-	
+
 	//windowUpdate();
 
 	// 3. Extract image to memory
@@ -2587,7 +2587,7 @@ static VOID CALLBACK texWordDoThreadedWorkSub( TexWordThreadPackage *twPkg)
 		PERFINFO_AUTO_STOP();
 
 		PERFINFO_AUTO_START("other", 1);
-			EnterCriticalSection(&CriticalSectionTexLoadQueues); 
+			EnterCriticalSection(&CriticalSectionTexLoadQueues);
 			listAddForeignMember(&texBindsReadyForFinalProcessing, twPkg->texPkg);
 			LeaveCriticalSection(&CriticalSectionTexLoadQueues);
 			InterlockedDecrement(&numTexWordsInThread);

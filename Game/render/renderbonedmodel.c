@@ -7,7 +7,7 @@
 #include "error.h"
 #include "model.h"
 #include "memcheck.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "gfxtree.h"
 #include "render.h"
@@ -75,13 +75,13 @@ void fixUpFakeBoneInfo(Model *model)
 }
 
 //TO DO, this is a bit sloppy
-//Any model that 
+//Any model that
 BoneInfo * assignDummyBoneInfo(char * model_name)
 {
 	BoneInfo * boneinfo;
 	BoneId idx;
 
-	if(!mfbinit)		
+	if(!mfbinit)
 		initMyFakeBoneInfo();
 
 	//Extract the core bone name from the geometry name
@@ -98,14 +98,14 @@ BoneInfo * assignDummyBoneInfo(char * model_name)
 	return boneinfo;
 }
 
-//A SeqGfxData holds info a gfxNode needs to know about it's sequencer, like positions of 
+//A SeqGfxData holds info a gfxNode needs to know about it's sequencer, like positions of
 //other bones, and lighting.  If you want to draw an object using modelDrawBonedNode that doesn't
 //have a sequencer, we fake it with this function.
 SeqGfxData * assignDummySeqGfxData( Mat4 mymat )
 {
 	static SeqGfxData myFakeSeqGfxData;
 	static int mfbinit = 0;
-	if(!mfbinit)		
+	if(!mfbinit)
 	{
 		memset( &myFakeSeqGfxData, 0, sizeof(SeqGfxData) );
 		mfbinit = 0;
@@ -149,10 +149,10 @@ static void copyBonesForSock(GfxNode *node,SkinModel *skin)
 	idx_table			= boneinfo->bone_ID;
 	bone_table			= seqGfxData->bpt;
 
-	for(j = 0 ; j < boneinfo->numbones ; j++)     
+	for(j = 0 ; j < boneinfo->numbones ; j++)
 	{
-		bonemat = bone_table[idx_table[j]]; 
-		mulVecMat4(offset,bonemat,skin->bone_mats[j][3]);  
+		bonemat = bone_table[idx_table[j]];
+		mulVecMat4(offset,bonemat,skin->bone_mats[j][3]);
 		copyMat3(bonemat,skin->bone_mats[j]);
 	}
 }
@@ -180,7 +180,7 @@ void modelDrawBonedNode(GfxNode *node, BlendModeType blend_mode, int tex_index, 
 	assert(blend_mode.shader);
 	assert( (model->flags & OBJ_DRAWBONED) && (node->flags & GFXNODE_SEQUENCER));
 	assert(model->boneinfo);
-	
+
 	drawOrder = node->unique_id * next++; //debug
 	boned++; //debug
 
@@ -222,12 +222,12 @@ void modelDrawBonedNode(GfxNode *node, BlendModeType blend_mode, int tex_index, 
 			else
 			{
 				// The artist has specified an explicit static cubemap for this skinned piece in the material, e.g.:
-				//       CubeMap generic_cubemap_face0.tga 
+				//       CubeMap generic_cubemap_face0.tga
 				// It should have been demand loaded above and we can just pass along the texture ID from that step.
 				// @todo should attenuation still be calculated in this case? Probably not.
 				cubemap_UseStaticCubemap();
 			}
-		}			
+		}
 	}
 
 	size = sizeof(SkinModel) + sizeof(Mat4) * (bonecount-1) + sizeof(RdrTexList) * tex_count;
@@ -292,18 +292,18 @@ void modelDrawBonedNode(GfxNode *node, BlendModeType blend_mode, int tex_index, 
  				Entity *playerPtr();
  				Entity * e = playerPtr();
 
-				glLoadIdentity(); CHECKGL; 
+				glLoadIdentity(); CHECKGL;
 
 				// draw all bones (not very efficient right now, as it will draw all bones for each node drawn, redundantly...)
 				if(e)
-				{ 
+				{
 					Mat4		temp;
 					Mat4		mat;
 					F32 * v;
 
 				 	glLineWidth(5); CHECKGL;
    					glPointSize(6); CHECKGL;
-					
+
  					for(i = 0 ; i <= 30 ; i++)
 					{
  						if(i>=13 && i<=22)
@@ -313,7 +313,7 @@ void modelDrawBonedNode(GfxNode *node, BlendModeType blend_mode, int tex_index, 
 						gfxTreeFindWorldSpaceMat(mat, node);
     					mulMat4(  cam_info.viewmat, mat, temp);
 						copyMat4(temp, mat);
-						
+
  						WCW_Color4(255, 0, 0, 255);
 						glBegin(GL_POINTS);
 							v = mat[3];

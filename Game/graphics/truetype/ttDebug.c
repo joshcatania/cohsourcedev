@@ -2,7 +2,7 @@
 #include "cmdgame.h"
 #include "renderprim.h"
 #include "color.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "StringUtil.h"
 #include "truetype/ttFontDraw.h"
 #include "truetype/ttFontBitmap.h"

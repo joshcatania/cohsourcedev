@@ -7,11 +7,11 @@
 #include "tricks.h"
 #include "error.h"
 #include "memcheck.h"
-#include "assert.h" 
+#include "SuperAssert.h"
 #include "render.h"
 #include "mathutil.h"
 #include "cmdgame.h"
-#include "bump.h" 
+#include "bump.h"
 #include "light.h"
 #include "camera.h"
 #include "utils.h"
@@ -86,7 +86,7 @@ void modelDrawGetCharacterLighting(GfxNode *node, Vec3 ambient, Vec3 diffuse, Ve
 	}
 
 	//Used by pulsing only right now
-	if( seqGfxData && seqGfxData->light.use & ( ENTLIGHT_CUSTOM_AMBIENT | ENTLIGHT_CUSTOM_DIFFUSE ) )  
+	if( seqGfxData && seqGfxData->light.use & ( ENTLIGHT_CUSTOM_AMBIENT | ENTLIGHT_CUSTOM_DIFFUSE ) )
 	{
 		scaleVec3( ambient, seqGfxData->light.ambientScale, ambient );
 		scaleVec3( diffuse, seqGfxData->light.diffuseScale, diffuse );
@@ -130,7 +130,7 @@ static INLINEDBG void modelSetupLighting(EntLight *light,RdrModel *draw)
 		//copyVec4(g_sun.direction_in_viewspace, lightdir);
 	}
 
-	if( light->use & ( ENTLIGHT_CUSTOM_AMBIENT | ENTLIGHT_CUSTOM_DIFFUSE ) )  
+	if( light->use & ( ENTLIGHT_CUSTOM_AMBIENT | ENTLIGHT_CUSTOM_DIFFUSE ) )
 	{
 		scaleVec3( draw->ambient, light->ambientScale, draw->ambient );
 		scaleVec3( draw->diffuse, light->diffuseScale, draw->diffuse );
@@ -174,7 +174,7 @@ ScrollsScales *getFallbackScrollsScales(void)
 
 static INLINEDBG BlendModeType swappedBlendModeInline(BlendModeType model_blend_mode, BlendModeType tex_blend_mode, bool is_world_model)
 {
-	if ((rdr_caps.features & GFXF_BUMPMAPS_WORLD) && 
+	if ((rdr_caps.features & GFXF_BUMPMAPS_WORLD) &&
 		((model_blend_mode.shader == BLENDMODE_ADDGLOW && tex_blend_mode.shader <= BLENDMODE_MULTIPLY) ||
 		  model_blend_mode.shader == BLENDMODE_WATER ||
 		  model_blend_mode.shader == BLENDMODE_SUNFLARE))
@@ -222,7 +222,7 @@ TexBind *modelSubGetBaseTexture(Model *model, TextureOverride *swaps,int require
 
 static TexBind *modelGetFinalTexturesInline(BasicTexture **actual_textures,
 	Model *model,TextureOverride *swaps,int require_replaceable,int swapIndex,
-	int texidx,RdrTexList *rtexlist, BlendModeType *first_blend_mode, 
+	int texidx,RdrTexList *rtexlist, BlendModeType *first_blend_mode,
 	bool is_world_model, DefTracker *pParent)
 {
 	int j, k;
@@ -274,7 +274,7 @@ static TexBind *modelGetFinalTexturesInline(BasicTexture **actual_textures,
 		dtswaps=texSwaps[tempSwapIndex-1].swaps;
 		for (j=0;j<eaSize(&dtswaps);j++) {
 			if (!dtswaps[j]->composite && dtswaps[j]->tex_bind && dtswaps[j]->replace_bind) {
-				for (k=0; k<TEXLAYER_MAX_LAYERS; k++) 
+				for (k=0; k<TEXLAYER_MAX_LAYERS; k++)
 				{
 					BasicTexture *swappedTex = dtswaps[j]->tex_bind->actualTexture;
 					if (actual_textures[k] && actual_textures[k]==swappedTex)
@@ -334,7 +334,7 @@ static TexBind *modelGetFinalTexturesInline(BasicTexture **actual_textures,
 	}
 
 	if ((rtexlist->blend_mode.shader == BLENDMODE_ADDGLOW)
-		&& 
+		&&
 		(actual_textures[TEXLAYER_GENERIC] == grey_tex ||
 		basebind->bind_blend_mode.shader != BLENDMODE_ADDGLOW))
 	{
@@ -371,7 +371,7 @@ RdrTexList *modelDemandLoadTextures(Model *model,TextureOverride *swaps,int requ
 
 		ZeroArray(actual_textures);
 		basebind = modelGetFinalTexturesInline(actual_textures, model, swaps,
-			require_replaceable, 0, tex_index==-1?i:tex_index, &texlist[i], 
+			require_replaceable, 0, tex_index==-1?i:tex_index, &texlist[i],
 			&first_blend_mode, is_world_model,0);
 		if (use_fallback_material)
 			basebind = texFindLOD(basebind);
@@ -379,7 +379,7 @@ RdrTexList *modelDemandLoadTextures(Model *model,TextureOverride *swaps,int requ
 		// White texture override
 		if (game_state.texoff)
 		{
-			for (k=0; k<TEXLAYER_MAX_LAYERS; k++) 
+			for (k=0; k<TEXLAYER_MAX_LAYERS; k++)
 				if (actual_textures[k])
 					actual_textures[k] = (k == TEXLAYER_BUMPMAP1 || k == TEXLAYER_BUMPMAP2)?dummy_bump_tex:white_tex;
 		}
@@ -404,7 +404,7 @@ RdrTexList *modelDemandLoadTextures(Model *model,TextureOverride *swaps,int requ
 		if (((model->trick && (model->trick->flags2 & TRICK2_HASADDGLOW)
 			&& texlist[0].blend_mode.shader == BLENDMODE_ADDGLOW) ||
 			(texlist[i].blend_mode.shader == BLENDMODE_ADDGLOW))
-			&& 
+			&&
 			(actual_textures[TEXLAYER_GENERIC] == grey_tex ||
 			basebind->bind_blend_mode.shader != BLENDMODE_ADDGLOW))
 		{
@@ -433,11 +433,11 @@ static INLINEDBG RdrTexList *demandLoadTexturesInline2(TexBind *bind, int is_sha
 
 	if (use_fallback_material)
 		bind = texFindLOD(bind);
-		
+
 	// Make duplicate since they may get overridden
 	memcpy(actual_textures, bind->tex_layers, sizeof(actual_textures));
 	texlist.blend_mode = bind->bind_blend_mode;
-	
+
 	texlist.scrollsScales = bind->scrollsScales;
 	if (bind->tex_layers[TEXLAYER_BUMPMAP1])
 		texlist.gloss1 = bind->tex_layers[TEXLAYER_BUMPMAP1]->gloss;
@@ -451,7 +451,7 @@ static INLINEDBG RdrTexList *demandLoadTexturesInline2(TexBind *bind, int is_sha
 	if (game_state.texture_special_flags) {
 		// White texture override
 		if (game_state.texoff)
-			for (k=0; k<TEXLAYER_MAX_LAYERS; k++) 
+			for (k=0; k<TEXLAYER_MAX_LAYERS; k++)
 				if (actual_textures[k])
 					actual_textures[k] = (k == TEXLAYER_BUMPMAP1 || k == TEXLAYER_BUMPMAP2)?dummy_bump_tex:white_tex;
 	}
@@ -496,7 +496,7 @@ TexBind *modelGetFinalTextures(BasicTexture **actual_textures,Model *model,
 	RdrTexList *rtexlist, BlendModeType *first_blend_mode, bool is_world_model,
 	DefTracker *pParent)
 {
- 	return modelGetFinalTexturesInline(actual_textures, model, swaps, 
+ 	return modelGetFinalTexturesInline(actual_textures, model, swaps,
 		require_replaceable, swapIndex, texidx, rtexlist, first_blend_mode,
 		is_world_model, pParent);
 }
@@ -691,7 +691,7 @@ static TrickNode *mergeTricks(TrickNode *vs_trick, TrickNode *model_trick)
 	node.flags2 |= vs_trick->flags2;
 
 	// prevent downstream crash -- remove stanimate flag if combined node doesnt have the stAnim data
-	if(node.flags2 & TRICK2_STANIMATE && !(node.info && node.info->stAnim)) {	
+	if(node.flags2 & TRICK2_STANIMATE && !(node.info && node.info->stAnim)) {
 		node.flags2 &= ~TRICK2_STANIMATE;
 	}
 #else
@@ -711,7 +711,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
 {
 	Model		*model = vs->model;
 
-	if (!model 
+	if (!model
 #ifndef FINAL
 		|| !strstri(model->name, g_client_debug_state.modelFilter) || (g_client_debug_state.submeshIndex >= 0 && tex_index != g_client_debug_state.submeshIndex)
 #endif
@@ -767,7 +767,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
 			{
 				if (findReflectors(model, vs->num_reflection_planes, vs->reflection_planes))
 					blend_mode.blend_bits |= BMB_PLANAR_REFLECTION;
-			}	
+			}
 
 			if ((blend_mode.shader == BLENDMODE_WATER) && (game_state.waterMode >= WATER_HIGH))
 			{
@@ -790,7 +790,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
 				}
 				texlist->texid[TEXLAYER_CUBEMAP] = cubemapTexID;
 				cubemap_attenuation = cubemap_CalculateAttenuation(bIsTerrain, vs->mid, model->radius, forceDynamicCubemap);
-			}			
+			}
 		}
 
 		draw = initRdrModel(drawcmd, model, vs, trick, texlist, blend_mode, tex_index);

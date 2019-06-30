@@ -6,7 +6,7 @@
 #include "gfxwindow.h"
 #include "cmdgame.h"
 #include "timing.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "utils.h"
 #include "font.h"
 #include "model_cache.h"
@@ -72,7 +72,7 @@ int modelDrawParticleSys(ParticleSystem * system, F32 alpha, int VBOBuffer, Mat4
 		pkg->tex[i].texid = tex_ids[i];
 		copyVec2(system->textranslate[i],pkg->tex[i].textranslate);
 		copyVec2(info->parttex[i].texscale,pkg->tex[i].texscale);
-		
+
 	}
 	memcpy(pkg + 1,system->verts,vert_size);
 	memcpy(((U8*)(pkg + 1))+vert_size,system->rgbas,rgba_size);
@@ -122,13 +122,13 @@ void drawFluid(FxFluidEmitter* emitter)
 		Vec3 part_pos_view;
 		//copyVec3(emitter->particlePositions[uiParticle], part_pos_view);
 		mulVecMat4(emitter->particlePositions[uiParticle], cam_info.viewmat, part_pos_view);
-		
+
 		*vertarray++ = part_pos_view[0] - fHalfScale;
-		*vertarray++ = part_pos_view[1] + fHalfScale + fHalfScale; 
+		*vertarray++ = part_pos_view[1] + fHalfScale + fHalfScale;
 		*vertarray++ = part_pos_view[2];
 
 		//upper right
-		*vertarray++ = part_pos_view[0] + fHalfScale ; 
+		*vertarray++ = part_pos_view[0] + fHalfScale ;
 		*vertarray++ = part_pos_view[1] + fHalfScale + fHalfScale ;
 		*vertarray++ = part_pos_view[2];
 
@@ -141,7 +141,7 @@ void drawFluid(FxFluidEmitter* emitter)
 		*vertarray++ = part_pos_view[0] + fHalfScale;
 		*vertarray++ = part_pos_view[1];
 		*vertarray++ = part_pos_view[2];
-		
+
 		if( fluid->colorPathDefault.length > 1)
 		{
 			int idx;
@@ -155,7 +155,7 @@ void drawFluid(FxFluidEmitter* emitter)
 		*rgbaarray++ = rgb[0];
 		*rgbaarray++ = rgb[1];
 		*rgbaarray++ = rgb[2];
-		*rgbaarray++ = fluid->alpha; 
+		*rgbaarray++ = fluid->alpha;
 
 		*rgbaarray++ = rgb[0];
 		*rgbaarray++ = rgb[1];

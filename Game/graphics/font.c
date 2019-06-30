@@ -12,7 +12,7 @@
 #include "sprite.h"
 #include "renderfont.h"
 #include "edit_cmd.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "file.h"
 #include "timing.h"
 
@@ -34,7 +34,7 @@ static CRITICAL_SECTION state_stack_critical_section;
 static int			stack_depth;
 static FontState	state_stack[16];
 static FontState	curr_state = { {255,255,255,255} };
-static FontState	default_state = 
+static FontState	default_state =
 {
 	{ 255,255,255,255},
 	1,1,
@@ -378,7 +378,7 @@ void fontRender()
 		PERFINFO_AUTO_START("fontRenderGame", 1);
 			fontRenderGame();
 		PERFINFO_AUTO_STOP();
-			
+
 		init_display_list();	//ensure that all frames reinit my display list to fix overflow bug.
 									//lf, 03/26/01
 	}
@@ -433,7 +433,7 @@ void displayLog()
 	if( game_state.fxdebug & ( FX_DEBUG_BASIC | FX_PRINT_VERBOSE ) )
 	{
 		char * t;
-	
+
 		if(numlogentries)
 		{
 			s = mylog;
@@ -449,7 +449,7 @@ void displayLog()
 				}
 				s = (t + 1);
 				i++;
-			} 
+			}
 			while ( t );
 		}
 
@@ -477,7 +477,7 @@ void printToScreenLog(int message_priority, char const *fmt, ...)
 		return ;
 
 	if(!loginit)
-	{ 
+	{
 		clearLog();
 		loginit = 1;
 	}
@@ -500,7 +500,7 @@ void printToScreenLog(int message_priority, char const *fmt, ...)
 		clearLog();
 		printToScreenLog(0, "Log Overflow, Cleared Log");
 	}
-	
+
 	myloglength += strlen(str);
 
 	strcat( mylog, str );

@@ -9,7 +9,7 @@
 #include "rt_tex.h"
 #include "rt_pbuffer.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "genericlist.h"
 //#include "win_init.h"
@@ -747,14 +747,14 @@ static bool pbufInitInternal(RdrPbufParams *params)
 					int maxMipLevel = 0;
 					bool bIsCubemap = (pbuf->flags & PB_CUBEMAP) != 0;
 					int textureTarget = bIsCubemap ? GL_TEXTURE_CUBE_MAP : GL_TEXTURE_2D;
-	
+
 					// 8-bit RGB
 					GLint internalFormat = GL_RGB8;
 					GLenum format = GL_RGB;
 					GLenum type = GL_UNSIGNED_BYTE;
-	
+
 					// We only handle 8-bit components non-float, and 16-bit float components right now
-	
+
 					if (params->flags & PB_FLOAT)
 					{
 						pbuf->isFloat = 1;
@@ -781,11 +781,11 @@ static bool pbufInitInternal(RdrPbufParams *params)
 							format = GL_RGBA;
 						}
 					}
-	
+
 					pbuf->color_internal_format = internalFormat;
 					pbuf->color_format = format;
 					pbuf->color_type = type;
-	
+
 					// setup mipmap flag
 					if (params->flags & PB_MIPMAPPED)
 					{
@@ -796,7 +796,7 @@ static bool pbufInitInternal(RdrPbufParams *params)
 							maxMipLevel = params->max_mip_level;
 						}
 					}
-	
+
 					if (bUseColorRenderBuffer)
 					{
 						// Initialize color render buffer
@@ -820,30 +820,30 @@ static bool pbufInitInternal(RdrPbufParams *params)
 								return false;
 							}
 						}
-	
+
 	#if 1
 						glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, pbuf->color_rbhandle[i]); CHECKGL;
 	#else
 						glFramebufferRenderbufferEXT(GL_DRAW_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, pbuf->color_rbhandle[i]); CHECKGL;
 						glFramebufferRenderbufferEXT(GL_READ_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_RENDERBUFFER_EXT, pbuf->color_rbhandle[i]); CHECKGL;
 	#endif
-	
+
 						if (params->flags & PB_COLOR_TEXTURE)
 						{
 							// Initialize color texture
 							glGenTextures(1, &pbuf->color_handle[i]); CHECKGL;
 							WCW_BindTexture(textureTarget, TEXLAYER_BASE, pbuf->color_handle[i]);
 							setTextureParameters(textureTarget, !pbuf->isFloat || bIsMipmapped, maxMipLevel);
-	
+
 							if(bIsCubemap) {
 								int face;
 								glTexParameterf(textureTarget, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); CHECKGL;
 								glTexParameterf(textureTarget, GL_TEXTURE_MIN_LOD, 0.5f); CHECKGL;
-	
+
 								// generate texture memory for each face
 								for(face=0; face<6; face++) {
 									glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+face, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;
-									
+
 									if (bIsMipmapped) {
 										glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP); CHECKGL;
 									}
@@ -854,14 +854,14 @@ static bool pbufInitInternal(RdrPbufParams *params)
 									glGenerateMipmapEXT(GL_TEXTURE_2D); CHECKGL;
 								}
 							}
-	
+
 							// This FBO is used to blit from the color renderbuffer to the color texture
 							if (pbuf->blit_fbo[i] == 0) {
 								glGenFramebuffersEXT(1, &pbuf->blit_fbo[i]); CHECKGL;
 							}
-	
-							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, pbuf->blit_fbo[i]); CHECKGL;						
-							pbuf->blit_flags |= GL_COLOR_BUFFER_BIT;						
+
+							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, pbuf->blit_fbo[i]); CHECKGL;
+							pbuf->blit_flags |= GL_COLOR_BUFFER_BIT;
 							glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, bIsCubemap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D, pbuf->color_handle[i], 0); CHECKGL;
 							CHECKFBO("color blit");
 
@@ -874,12 +874,12 @@ static bool pbufInitInternal(RdrPbufParams *params)
 						glGenTextures(1, &pbuf->color_handle[i]); CHECKGL;
 						WCW_BindTexture(textureTarget, TEXLAYER_BASE, pbuf->color_handle[i]); CHECKGL;
 						setTextureParameters(textureTarget, !pbuf->isFloat || bIsMipmapped, maxMipLevel);
-	
+
 						if(bIsCubemap) {
 							int face;
 							glTexParameterf(textureTarget, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); CHECKGL;
 							glTexParameterf(textureTarget, GL_TEXTURE_MIN_LOD, 0.5f); CHECKGL;
-	
+
 							// generate texture memory for each face
 							for(face=0; face<6; face++)  {
 								glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+face, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;
@@ -888,14 +888,14 @@ static bool pbufInitInternal(RdrPbufParams *params)
 								}
 							}
 						} else {
-							glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;						  
+							glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;
 							if (bIsMipmapped) {
 								glGenerateMipmapEXT(GL_TEXTURE_2D); CHECKGL;
 							}
 						}
-						
+
 						glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, bIsCubemap ? GL_TEXTURE_CUBE_MAP_POSITIVE_X : GL_TEXTURE_2D, pbuf->color_handle[i], 0); CHECKGL;
-	
+
 						// multisample not available with FBO + texture
 						pbuf->color_rbhandle[i] = 0;
 
@@ -907,7 +907,7 @@ static bool pbufInitInternal(RdrPbufParams *params)
 							glGenTextures(1, &pbuf->color_handle_aux[i]); CHECKGL;
 							WCW_BindTexture(textureTarget, TEXLAYER_BASE, pbuf->color_handle_aux[i]); CHECKGL;
 							setTextureParameters(textureTarget, !pbuf->isFloat || bIsMipmapped, maxMipLevel);
-							glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;						  
+							glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, pbuf->virtual_width, pbuf->virtual_height, 0, format, type, NULL); CHECKGL;
 							glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT, GL_TEXTURE_2D, pbuf->color_handle_aux[i], 0); CHECKGL;
 						}
 
@@ -919,15 +919,15 @@ static bool pbufInitInternal(RdrPbufParams *params)
 					glDrawBuffer(GL_NONE); CHECKGL;
 					glReadBuffer(GL_NONE); CHECKGL;
 				} // end initialize color
-	
-	
+
+
 				// Initialize Depth
 				if (params->depth_bits)
 				{
 					GLint depth_internal_format;
 					GLenum depth_format;
 					GLenum depth_type;
-	
+
 					if (params->stencil_bits && rdr_caps.supports_packed_stencil)
 					{
 						depth_internal_format = GL_DEPTH24_STENCIL8;
@@ -953,13 +953,13 @@ static bool pbufInitInternal(RdrPbufParams *params)
 					pbuf->depth_internal_format = depth_internal_format;
 					pbuf->depth_format = depth_format;
 					pbuf->depth_type = depth_type;
-	
+
 					if (bUseDepthRenderBuffer)
 					{
 						// Initialize depth render buffer
 						glGenRenderbuffersEXT(1, &pbuf->depth_rbhandle[i]); CHECKGL;
 						glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, pbuf->depth_rbhandle[i]); CHECKGL;
-	
+
 						if (multisample_level == 1)
 						{
 							glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, depth_internal_format, pbuf->virtual_width, pbuf->virtual_height);
@@ -978,47 +978,47 @@ static bool pbufInitInternal(RdrPbufParams *params)
 								return false;
 							}
 						}
-	
-						glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, pbuf->depth_rbhandle[i]); CHECKGL; 
+
+						glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, pbuf->depth_rbhandle[i]); CHECKGL;
 						if (pbuf->hasStencil) {
 							glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, pbuf->depth_rbhandle[i]); CHECKGL;
 						} else {
 							glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, 0); CHECKGL;
 						}
-	
+
 						if (params->flags & PB_DEPTH_TEXTURE)
 						{
 							// Initialize depth texture
 							glGenTextures(1, &pbuf->depth_handle[i]); CHECKGL;
-	
+
 							WCW_BindTexture(GL_TEXTURE_2D, TEXLAYER_BASE, pbuf->depth_handle[i]);
 							setTextureParameters(GL_TEXTURE_2D, false, 0);
-	
+
 							glTexImage2D(GL_TEXTURE_2D, 0, depth_internal_format, pbuf->virtual_width, pbuf->virtual_height, 0, depth_format, depth_type, NULL); CHECKGL;
-	
+
 							// This FBO is used to blit from the depth renderbuffer to the depth texture
 							if (pbuf->blit_fbo[i] == 0) {
 								glGenFramebuffersEXT(1, &pbuf->blit_fbo[i]); CHECKGL;
 							}
-	
-							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, pbuf->blit_fbo[i]); CHECKGL;    
-							pbuf->blit_flags |= GL_DEPTH_BUFFER_BIT | (pbuf->hasStencil ? GL_STENCIL_BUFFER_BIT : 0); 
+
+							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, pbuf->blit_fbo[i]); CHECKGL;
+							pbuf->blit_flags |= GL_DEPTH_BUFFER_BIT | (pbuf->hasStencil ? GL_STENCIL_BUFFER_BIT : 0);
 							glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_TEXTURE_2D, pbuf->depth_handle[i], 0); CHECKGL;
 							if (pbuf->hasStencil) {
 								glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_TEXTURE_2D, pbuf->depth_handle[i], 0); CHECKGL;
 							} else {
 								glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_TEXTURE_2D, 0, 0); CHECKGL;
 							}
-	
+
 							// disable drawing/reading from the color buffers
 							if (!(params->flags & PB_COLOR_TEXTURE))
 							{
 								glDrawBuffer(GL_NONE); CHECKGL;
 								glReadBuffer(GL_NONE); CHECKGL;
 							}
-	
+
 							CHECKFBO("depth blit");
-	
+
 							glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, pbuf->fbo[i]); CHECKGL;
 						}
 					}
@@ -1035,7 +1035,7 @@ static bool pbufInitInternal(RdrPbufParams *params)
 						}
 					}
 				} // End initialize depth
-	
+
 				// Only packed stencil buffers (packed into the depth buffer) appear to be
 				// supported right now.  04/03/09
 				/*
@@ -1064,11 +1064,11 @@ static bool pbufInitInternal(RdrPbufParams *params)
 					glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_STENCIL_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, pbuf->stencil_rbhandle); CHECKGL;
 				}
 				*/
-	
+
 				if (params->num_aux_buffers) {
 					int i;
 					assert(params->num_aux_buffers <= ARRAY_SIZE(pbuf->aux_handles));
-					for (i=0; i<params->num_aux_buffers; i++) 
+					for (i=0; i<params->num_aux_buffers; i++)
 					{
 						// initialize aux renderbuffer
 						glGenTextures(1, &pbuf->aux_handles[i]); CHECKGL;
@@ -1077,10 +1077,10 @@ static bool pbufInitInternal(RdrPbufParams *params)
 						setTextureParameters(GL_TEXTURE_2D, !(params->flags & PB_FLOAT), 0);
 						// TOOD: handle all these parameters?
 						glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, pbuf->virtual_width, pbuf->virtual_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL); CHECKGL;
-						glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT+i, GL_TEXTURE_2D, pbuf->aux_handles[i], 0); CHECKGL;	
+						glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT1_EXT+i, GL_TEXTURE_2D, pbuf->aux_handles[i], 0); CHECKGL;
 					}
 				}
-	
+
 				CHECKFBO("main FBO");
 			}
 
@@ -1446,10 +1446,10 @@ void pbufBindAuxDirect(PBuffer *pbuf, int tex_unit, int buffer)
 		{
 			DWORD error = GetLastError();
 
-			 // pbuff->buffer is not a valid handle. 
+			 // pbuff->buffer is not a valid handle.
 			assert(error != ERROR_INVALID_HANDLE);
 
-			// buffer is not a valid value. 
+			// buffer is not a valid value.
 			assert(error != ERROR_INVALID_DATA);
 
 			// The pbuffer attribute WGL_TEXTURE_FORMAT_ARB is set to

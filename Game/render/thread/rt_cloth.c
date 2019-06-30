@@ -9,7 +9,7 @@
 #include "rt_model.h"
 #include "rt_stats.h"
 #include "mathutil.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "rt_shadow.h"
 
 #include "clothnode.h"
@@ -57,17 +57,17 @@ void modelDrawClothObjectDirect( RdrCloth *rc )
 	diffuse[3]		= 1.0;
    	constColor0[3]	= rc->alpha;
 
-	WCW_TexLODBias(0, -1.0); 
+	WCW_TexLODBias(0, -1.0);
 	WCW_TexLODBias(1, -1.0);
 
-	//Set Tricks ( could change constColors ) 
+	//Set Tricks ( could change constColors )
 	//This is over CUSTOM COLORS because custom colors should take precedence
 	if (rc->has_trick)
 		trick = &rc->trick;
 	else
 		trick = 0;
 
-	gfxNodeTricks( trick, NULL, NULL, rc->blend_mode, false ); 
+	gfxNodeTricks( trick, NULL, NULL, rc->blend_mode, false );
 
 	if (rdr_view_state.wireframe)
 	{
@@ -76,7 +76,7 @@ void modelDrawClothObjectDirect( RdrCloth *rc )
 
 	modelBindDefaultBuffer(); // NO VBOs in this function
 
-	if ( !rdr_caps.use_vertshaders ) 
+	if ( !rdr_caps.use_vertshaders )
 	{
 		assert( rc->blend_mode.shader == BLENDMODE_COLORBLEND_DUAL);
 	}
@@ -90,9 +90,9 @@ void modelDrawClothObjectDirect( RdrCloth *rc )
 		setupFixedFunctionVertShader(trick);
 
 		// Set world light (only for no vert shaders or no bumpmaps)
-		ambient[3] = 1.0;  
-		WCW_Light(GL_LIGHT0, GL_AMBIENT, ambient);  
-		WCW_Light(GL_LIGHT0, GL_DIFFUSE, diffuse);  
+		ambient[3] = 1.0;
+		WCW_Light(GL_LIGHT0, GL_AMBIENT, ambient);
+		WCW_Light(GL_LIGHT0, GL_DIFFUSE, diffuse);
 	}
 	else if (rc->blend_mode.shader == BLENDMODE_BUMPMAP_COLORBLEND_DUAL)
 	{
@@ -204,10 +204,10 @@ void modelDrawClothObjectDirect( RdrCloth *rc )
 	}
 
 	WCW_Color4(255,255,255,255);
-	
-//	glActiveTextureARB(GL_TEXTURE0_ARB); CHECKGL; // makes things work... 
+
+//	glActiveTextureARB(GL_TEXTURE0_ARB); CHECKGL; // makes things work...
 //	texSetWhite(TEXLAYER_BUMPMAP1); //Super slow, makes ATI work State Manage
-	gfxNodeTricksUndo(trick, NULL, false ); 
+	gfxNodeTricksUndo(trick, NULL, false );
 
 	WCW_LoadModelViewMatrixIdentity();
 

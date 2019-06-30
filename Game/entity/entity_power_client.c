@@ -3,7 +3,7 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "netio.h"
 #include "netcomp.h"

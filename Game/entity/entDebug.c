@@ -24,7 +24,7 @@
 #include "memorypool.h"
 #include "initclient.h"
 #include "clientcomm.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "entrecv.h"
 #include "edit_cmd.h"
 #include "entclient.h"
@@ -92,18 +92,18 @@ typedef struct ClientEntityDebugPathPoint
 	U32		isFlying : 1;
 } ClientEntityDebugPathPoint;
 
-typedef struct ClientEntityDebugInfo 
+typedef struct ClientEntityDebugInfo
 {
 	char*						text;
 
-	struct 
+	struct
 	{
 		int						count;
 		ClientEntityDebugPathPoint* points;
 	} path;
 
-	struct 
-	{	
+	struct
+	{
 		int						count;
 		int						maxCount;
 		ClientEntityDebugPoint*	pos;
@@ -205,7 +205,7 @@ MP_DEFINE(AStarBeaconBlock);
 
 AStarBeaconBlock* createAStarBeaconBlock(){
 	MP_CREATE(AStarBeaconBlock, 100);
-	
+
 	return MP_ALLOC(AStarBeaconBlock);
 }
 
@@ -279,11 +279,11 @@ void entDebugClearLines(){
 void entDebugAddLine(const Vec3 p1, int argb1, const Vec3 p2, int argb2)
 {
 	#define MAX_DEBUG_LINES (10000)
-	
+
 	EntDebugLine* line;
 
 	initEntDebug();
-	
+
 	if(!debug_state.lines){
 		debug_state.lines = calloc(sizeof(*debug_state.lines), MAX_DEBUG_LINES);
 	}
@@ -417,7 +417,7 @@ static StashElement menuItemGetElement(DebugMenuItem* item, int create){
 		if(item != curItem){
 			STR_COMBINE_CAT("::");
 		}
-		
+
 		STR_COMBINE_CAT(curItem->displayText);
 
 		curItem = curItem->parent;
@@ -425,7 +425,7 @@ static StashElement menuItemGetElement(DebugMenuItem* item, int create){
 		if(displayText)
 			*displayText = '$';
 	}
-	
+
 	STR_COMBINE_END();
 
 	stashFindElement(debug_state.menuItemNameTable, buffer, &element);
@@ -619,13 +619,13 @@ DebugMenuItem* addDebugMenuItem(DebugMenuItem* parent, const char* displayText, 
 	}else{
 		newItem->open = open;
 	}
-	
+
 	addDebugMenuItemTail(parent, newItem);
 
 	menuItemInitOpenState(newItem);
-	
+
 	return newItem;
-} 
+}
 
 static void addDebugMenu(DebugMenuItem* parent, FileDebugMenu* menu){
 	if(menu->name){
@@ -701,7 +701,7 @@ void entDebugReceiveCommands(Packet* pak)
 	if(debug_state.menuItem && !debug_state.closingTime){
 		return;
 	}
-	
+
 	freeDebugMenuItem(debug_state.menuItem);
 
 	startSize = pak->stream.cursor.byte * 8 + pak->stream.cursor.bit;
@@ -715,7 +715,7 @@ void entDebugReceiveCommands(Packet* pak)
 	if(debug_state.menuItem)
 	{
 		DebugMenuItem* localMenu;
-		
+
 		entDebugLoadFileMenus(0);
 		localMenu = addDebugMenuItem(debug_state.menuItem, "Local", NULL, 0);
 		addDebugMenuItem(localMenu, "Reload ^2c:\\entdebugmenu.txt", "reloadentdebugfilemenus", 0);
@@ -733,7 +733,7 @@ int entDebugCmdParse(char *str, int x, int y)
 
 	if(debug_state.closingTime || debug_state.openingTime)
 		return 1;
-	
+
 	output.found_cmd = false;
 	output.access_level = cmdAccessLevel();
 	cmd = cmdOldRead(&ent_debug_cmdlist,str,&output);
@@ -766,7 +766,7 @@ int entDebugCmdParse(char *str, int x, int y)
 
 				if(debug_state.cursel < 0)
 					debug_state.cursel = 0;
-				
+
 				sel = debug_state.cursel;
 
 				while(debug_state.cursel > 0 && !getCurMenuItem(debug_state.menuItem, &sel))
@@ -839,7 +839,7 @@ int entDebugCmdParse(char *str, int x, int y)
 
 					if(mouse_y < 0 || mouse_y >= h)
 						break;
-										
+
 					if (mouse_x < 0)
 						break; // Don't detect clicks on the other monitor to a different app!
 
@@ -1019,7 +1019,7 @@ int entDebugCmdParse(char *str, int x, int y)
 			int sel = debug_state.cursel;
 			DebugMenuItem* item = getCurMenuItem(debug_state.menuItem, &sel);
 
-			if( item && item->commandString && *item->commandString ) 
+			if( item && item->commandString && *item->commandString )
 			{
 				unbindKeyProfile(&ent_debug_binds_profile);
 				cmdParsef( "macro \"%s\" \"%s\"", item->displayText, item->commandString );
@@ -1032,7 +1032,7 @@ int entDebugCmdParse(char *str, int x, int y)
 				int sel = debug_state.cursel;
 				DebugMenuItem* item = getCurMenuItem(debug_state.menuItem, &sel);
 
-				if( item && item->commandString && *item->commandString && isDevelopmentMode() ) 
+				if( item && item->commandString && *item->commandString && isDevelopmentMode() )
 					addCustomWindowButtonToAll(item->displayText, item->commandString);
 				break;
 			}
@@ -1092,17 +1092,17 @@ void printDebugString( char* outputString, int x, int y, float scale, int lineHe
 	unsigned int colors[] = {
 		0xeef8ff00,		// ^0 WHITE
 		0xff99aa00,		// ^1 PINK
-		0x88ff9900,		// ^2 GREEN	 
-		0xeebbbb00,		// ^3 LIGHT PINK	  
-		0xf9ab7700,		// ^4 ORANGE	
-		0x43b6fa00, 	// ^5 BLUE	
-		0xff945200,		// ^6 DARK ORANGE	 
-		0xffff3200,		// ^7 YELLOW	 
-		0x68ffff00,		// ^8 LIGHT BLUE	 
-		0xaa99ff00,		// ^9 PURPLE	
-		0xffde8c00,		
+		0x88ff9900,		// ^2 GREEN
+		0xeebbbb00,		// ^3 LIGHT PINK
+		0xf9ab7700,		// ^4 ORANGE
+		0x43b6fa00, 	// ^5 BLUE
+		0xff945200,		// ^6 DARK ORANGE
+		0xffff3200,		// ^7 YELLOW
+		0x68ffff00,		// ^8 LIGHT BLUE
+		0xaa99ff00,		// ^9 PURPLE
+		0xffde8c00,
 	};
-	
+
 	if(!outputString)
 		return;
 
@@ -1402,7 +1402,7 @@ int drawButton2D(int x1, int y1, int dx, int dy, int centered, char* text, float
 	int x2 = x1 + dx;
 	int y2 = y1 + dy;
 	int widthHeight[2];
-	
+
 	mouseOverLastButtonState = 0;
 
 	windowSize(&w,&h);
@@ -1435,7 +1435,7 @@ int drawButton2D(int x1, int y1, int dx, int dy, int centered, char* text, float
 
 	if(centered){
 		printDebugString(text, 0, 0, scale, 11, -1, -1, 255, widthHeight);
-		
+
 		printDebugString(	text,
 							x1 + (x2 - x1 - widthHeight[0]) / 2,
 							y1 + (y2 - y1 - widthHeight[1]) / 2 + widthHeight[1] - scale * 9,
@@ -1483,7 +1483,7 @@ static int drawDefaultButton2D(int x1, int y1, int dx, int dy, char* text){
 static void displayEntDebugInfoText()
 {
 	static int hideText;
-	
+
 	int w, h, i, j;
 	int mouse_x, mouse_y;
 	Entity* player = playerPtr();
@@ -1504,7 +1504,7 @@ static void displayEntDebugInfoText()
 
 	{
 		int y = 100;
-		
+
 		windowSize(&w, &h);
 
 		if(control_state.server_state->controls_input_ignored){
@@ -1519,7 +1519,7 @@ static void displayEntDebugInfoText()
 			printDebugString( "^1client says controls are ignored", w / 2, h - (y += 15), 1, 0, -1, -1, 255, NULL);
 		}
 	}
-	
+
 	inpMousePos(&mouse_x, &mouse_y);
 
 	for(j = 0, i = (debug_state.curText + j) % ARRAY_SIZE(debug_state.text);
@@ -1698,7 +1698,7 @@ static void displayEntDebugInfoText()
 					}
 
 					showButton = 1;
-					
+
 					if(!hideText){
 						printDebugString(outputString, 0, 0, scale, lineHeight, -1, 0, 255, widthHeight);
 
@@ -1764,7 +1764,7 @@ static void displayEntDebugInfoText()
 			}
 		}
 	}
-	
+
 	if(showButton){
 		if(drawButton2D(5, h - 30 + max(0, sqrt(SQR(mouse_x - 50) + SQR(mouse_y - 30)) - 100), 100, 25, 1, hideText ? "^2Show Text" : "^1Hide Text", 1, NULL, NULL)){
 			hideText ^= 1;
@@ -1777,9 +1777,9 @@ static char* getCommaSeparatedInt(__int64 x){
 	static char bufferArray[10][50];
 	char* buffer = bufferArray[curBuffer = (curBuffer + 1) % 10];
 	int j = 0;
-	
+
 	buffer += ARRAY_SIZE(bufferArray[0]) - 1;
-	
+
 	*buffer-- = 0;
 
 	do{
@@ -1820,7 +1820,7 @@ static char* getCommaSeparatedFloat(float x, int decimalPlaces)
 			j = 0;
 			*bufferPtr-- = ',';
 		}
-	} 
+	}
 	while (temp);
 
 	// now building the decimal part, reusing above variables
@@ -1856,16 +1856,16 @@ static StashElement perfInfoGetElement(const char* source, PerformanceInfo* info
 		if(info != curInfo){
 			STR_COMBINE_CAT(":");
 		}
-		
+
 		if((U32)curInfo->rootStatic){
 			STR_COMBINE_CAT_D((U32)curInfo->rootStatic);
 		}else{
 			STR_COMBINE_CAT(curInfo->locName);
 		}
-		
-		curInfo = curInfo->parent;		 
+
+		curInfo = curInfo->parent;
 	}
-	
+
 	STR_COMBINE_END();
 
 	stashFindElement(debug_state.perfInfoStateTable, buffer, &element);
@@ -1931,7 +1931,7 @@ static const char* getPercentColor(float percent){
 
 static const char* getPercentString(float percent){
 	static char buffer[15];
-	
+
 	STR_COMBINE_BEGIN(buffer);
 	if(percent < 1){
 		STR_COMBINE_CAT("^s");
@@ -1986,7 +1986,7 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 	int recentRuns = 0;
 	__int64 recentCycles = 0;
 	int recentCount = 0;
-	
+
 	if(cpuSpeed <= 0){
 		cpuSpeed = 2000000000;
 	}
@@ -1996,7 +1996,7 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 
 	if(!info->inited)
 		perfInfoInitState(prefix, info);
-	
+
 	if(info->hidden)
 	{
 		*y -= 15;
@@ -2017,18 +2017,18 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 				hiddenChild = 1;
 		}
 	}
-	
+
 	if(draw_y > maxPerfDrawY)
 		maxPerfDrawY = draw_y;
-	
-	
+
+
 	if(draw_y < minPerfDrawY)
 		minPerfDrawY = draw_y;
-	
+
 
 	if(draw_y < 15 || draw_y > h)
 		return;
-	
+
 
 	// Draw self after children.
 	if(!inpIsMouseLocked())
@@ -2090,11 +2090,11 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 			debug_state.perfInfoZoomedAlpha = max(0, min(255, 255 - mouse_x));
 		}
 	}
- 	
+
  	if(mouse_x >= 252 && mouse_x < 252 + ARRAY_SIZE(info->history))
 	{
  		alpha = 100;
- 		
+
  		if(selected)
 		{
 			debug_state.perfInfoZoomed = info;
@@ -2111,22 +2111,22 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 
 		if(mouse_over)
 			debug_state.mouseOverUI = 1;
-		
+
 		drawFilledBox4(	0, h - 15 - draw_y, PERF_INFO_WIDTH, h - draw_y, 0x111111 | alpha, 0x111111 | alpha, boxColor | alpha, boxColor | alpha);
 		drawFilledBox4(	1, h - 14 - draw_y, 12, h - draw_y - 1, alpha | 0xcccccc, alpha | 0xdddddd, alpha | 0xaaaaaa, alpha | 0xbbbbbb);
-		drawFilledBox4(	2, h - 13 - draw_y, 11, h - draw_y - 2, 
+		drawFilledBox4(	2, h - 13 - draw_y, 11, h - draw_y - 2,
 			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x880000 : 0x009900),
-			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x770000 : 0x00aa00), 
-			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x440000 : 0x007700), 
+			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x770000 : 0x00aa00),
+			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x440000 : 0x007700),
 			alpha | (mouse_over == 1 ? rand() : hiddenChild ? 0x990000 : 0x008800));
 
 		if(selected && hiddenChild)
 		{
 			drawFilledBox4(	14, h - 14 - draw_y, 25, h - draw_y - 1, alpha | 0xcccccc, alpha | 0xdddddd, alpha | 0xaaaaaa, alpha | 0xbbbbbb);
-			drawFilledBox4(	15, h - 13 - draw_y, 24, h - draw_y - 2, 
-				alpha | (mouse_over == 2 ? rand() : 0x009900), 
-				alpha | (mouse_over == 2 ? rand() : 0x00aa00), 
-				alpha | (mouse_over == 2 ? rand() : 0x007700), 
+			drawFilledBox4(	15, h - 13 - draw_y, 24, h - draw_y - 2,
+				alpha | (mouse_over == 2 ? rand() : 0x009900),
+				alpha | (mouse_over == 2 ? rand() : 0x00aa00),
+				alpha | (mouse_over == 2 ? rand() : 0x007700),
 				alpha | (mouse_over == 2 ? rand() : 0x008800));
 		}
 	}
@@ -2194,18 +2194,18 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 				STR_COMBINE_CAT("^0^n)");
 			}
 			STR_COMBINE_END();
-			
+
 			printDebugString( buffer, 460, h - 15 - draw_y + 3, 1, 15, -1, 0, 255, NULL);
 		}
 	}
 
 	if(info->historyPos < 0 || info->historyPos >= size)
 		info->historyPos = 0;
-	
+
 
 	if(alpha)
 		drawFilledBox(251, h - draw_y - 15, 450, h - draw_y, alpha);
-	
+
 
 	for(j = (info->historyPos + 1) % size, k = 0; k < size - 1;	j = (j + 1) % size, k++)
 	{
@@ -2220,7 +2220,7 @@ static void displayPerformanceInfoHelper( PerformanceInfo* info, int* y, int lev
 		color = 255 * percent / 10;
 		color = max(0, min(255, color));
 		true_color = color << 16 | (max(min(64 + 255 - color, 255), 64) << 8) | (255 - color);
-		
+
 		if(selected && debug_state.perfInfoZoomed && debug_state.perfInfoZoomedHilight - 1 == k)
 		{
 			base_color = 0xffff00;
@@ -2257,7 +2257,7 @@ static void displayPerformanceInfoZoomed(__int64 cpuSpeed)
 
 	if(!info || debug_state.perfInfoZoomedAlpha <= 0)
 		return;
-		
+
 	if(cpuSpeed <= 0){
 		cpuSpeed = 2000000000;
 	}
@@ -2321,12 +2321,12 @@ static void displayPerformanceInfoZoomed(__int64 cpuSpeed)
 
 		color = 255 * percent / 100;
 		color = max(0, min(255, color));
-		
+
 		if(height > 0 || hilight){
 			int alpha = ((master_alpha * (height % 100)) / 99) << 24;
 			int top_color = color << 16 | (max(min(64 + 255 - color, 255), 64) << 8) | (255 - color);
 			int bottom_color = 0x00ffff;
-			
+
 			if(hilight){
 				top_color = bottom_color = 0xffff00;
 				master_alpha = 0xff;
@@ -2402,7 +2402,7 @@ static void displayPerformanceInfoZoomed(__int64 cpuSpeed)
 			strcpy(buffer, getCommaSeparatedInt(cur_order));
 
 			printDebugString(buffer, 0, 0, 1, 0, -1, -1, 0, wh);
-			
+
 			printDebugString(buffer, w - wh[0] - 5, y + 5, 1, 10, -1, -1, alpha, NULL);
 		}
 	}
@@ -2413,13 +2413,13 @@ static void drawPerformanceButtons(int isServer, int showUnhide){
 	int w, h;
 	int mouse_x, mouse_y;
 	float draw_y;
-	
+
 	if(inpIsMouseLocked())
 		return;
 
 	windowSize(&w, &h);
 	inpMousePos(&mouse_x, &mouse_y);
-	
+
 	draw_y = h + max(0, sqrt(SQR(mouse_y) + SQR(mouse_x - PERF_INFO_WIDTH - 100)) - 200);
 	drawFilledBox(PERF_INFO_WIDTH + 5, draw_y - 155, PERF_INFO_WIDTH + 165, draw_y, 0x80000080);
 	// First row.
@@ -2443,7 +2443,7 @@ static void drawPerformanceButtons(int isServer, int showUnhide){
 	STR_COMBINE_BEGIN(buffer);
 	STR_COMBINE_CAT("Scale: ^4");
 	STR_COMBINE_CAT_D(debug_state.perfInfoScale);
-	STR_COMBINE_END();			
+	STR_COMBINE_END();
 	// Fifth row.
 	if(drawButton2D(PERF_INFO_WIDTH + 70, draw_y - 120, 90, 25, 1, buffer, 1, NULL, NULL))
 		debug_state.perfInfoScale = 0;
@@ -2457,16 +2457,16 @@ static void drawPerformanceButtons(int isServer, int showUnhide){
 static void updatePerfDrawY(){
 	int w, h;
 	int bottom_y;
-	
+
 	windowSize(&w, &h);
-	
+
 	h = (h / 15) * 15;
-	
+
 	bottom_y = h - 15;
-	
+
 	if(selectedPerfDrawY > 0 && selectedPerfDrawY < 115){
 		int add = selectedPerfDrawY - 115;
-		
+
 		perfDrawY += add;
 	}
 
@@ -2477,16 +2477,16 @@ static void updatePerfDrawY(){
 	}
 	else if(selectedPerfDrawY > 0 && selectedPerfDrawY > h - 105){
 		int add = selectedPerfDrawY - (h - 105);
-		
+
 		if(add > maxPerfDrawY - bottom_y){
 			add = maxPerfDrawY - bottom_y;
 		}
-		
+
 		perfDrawY += add;
 	}
-	
+
 	perfDrawY = (perfDrawY / 15) * 15;
-	
+
 	if(perfDrawY < 15)
 		perfDrawY = 15;
 }
@@ -2524,18 +2524,18 @@ static void displayPerformanceInfo()
 
 	debug_state.perfInfoZoomed = NULL;
 	debug_state.perfInfoZoomedHilight = 0;
-	
+
 	debug_state.perfInfoScaleF32 = pow(2, debug_state.perfInfoScale - 2);
 
 	selectedPerfDrawY = -1;
 	maxPerfDrawY = INT_MIN;
 	minPerfDrawY = INT_MAX;
-	
+
 	if(!timing_state.autoTimerRootList)
     {
 		if(!debug_state.serverTimersCount)
             return;
-        
+
         if(!debug_state.hidePerfInfo)
         {
             for(i = 0; i < debug_state.serverTimersCount; i++)
@@ -2555,18 +2555,18 @@ static void displayPerformanceInfo()
                                                         debug_state.serverTimersTotal,
                                                         debug_state.serverCPUSpeed,
                                                         "s");
-                        
+
                         y += 15;
                     }
                 }
             }
 #define FILLEDBOX_COLORS 0xff008000, 0x80008000, 0xff008000, 0x80008000
             drawFilledBox4(	0, h - 30, PERF_INFO_WIDTH, h, FILLEDBOX_COLORS);
-            
+
             if(!debug_state.hidePerfInfoText)
             {
                 int percent = 100.0 * (float)debug_state.serverTimeUsed / (float)debug_state.serverTimePassed + 0.5;
-                
+
                 sprintf(buffer,
                         titleFormat,
                         debug_state.serverTimersCount,
@@ -2575,13 +2575,13 @@ static void displayPerformanceInfo()
                         percent / 4,
                         0.001 * (debug_state.serverCPUSpeed / 1000000),
                         debug_state.perfInfoPaused ? " ^rPAUSED!^d" : "");
-                
+
                 printDebugString(buffer, 15, h - 12, 1, 11, -1, 0, 255, NULL);
 
 				printDebugString(subtitleFormat, 15, h - 27, 1, 11, -1, 0, 255, NULL);
             }
         }
-        
+
         if(resetTops){
             for(i = 0; i < debug_state.serverTimersCount; i++){
                 if(debug_state.serverTimers[i].hidden && !debug_state.serverTimers[i].parent){
@@ -2589,9 +2589,9 @@ static void displayPerformanceInfo()
                 }
             }
         }
-        
+
         updatePerfDrawY();
-        
+
         if(debug_state.serverCPUSpeed)
             displayPerformanceInfoZoomed(debug_state.serverCPUSpeed);
         drawPerformanceButtons(1, showUnhide);
@@ -2648,11 +2648,11 @@ static void displayPerformanceInfo()
 	}
 
 	updatePerfDrawY();
-	
+
 	displayPerformanceInfoZoomed(clientCPUSpeed);
 
 	drawPerformanceButtons(0, showUnhide);
-	
+
 	if(!timing_state.runperfinfo)
 	{
 		sprintf(buffer, "Steps: ^4%d", timing_state.autoTimerPlaybackStepSize);
@@ -2667,10 +2667,10 @@ static void displayPerformanceInfo()
 			timing_state.autoTimerPlaybackStepSize = max(timing_state.autoTimerPlaybackStepSize - 1, 1);
 		if(drawButton2D(795, h - 230, 35, 25, 1, "- 10", 1, NULL, NULL))
 			timing_state.autoTimerPlaybackStepSize = max(timing_state.autoTimerPlaybackStepSize - 10, 1);
-			
+
 		if(drawButton2D(660, h - 230, 100, 25, 1, timing_state.autoTimerPlaybackState == 0 ? "^2play" : "^7PAUSE", 1, NULL, NULL))
 			timing_state.autoTimerPlaybackState = timing_state.autoTimerPlaybackState ? 0 : -1;
-			
+
 		if(drawButton2D(660, h - 260, 100, 25, 1, "^7Single Step", 1, NULL, NULL))
 			timing_state.autoTimerPlaybackState = 1;
 
@@ -2803,11 +2803,11 @@ static int displayMenuItem(DebugMenuItem* item, int* line, int left, int x, int 
 		if(selected){
 			int w, h;
 			int widthHeight[2];
-			
+
 			windowSize(&w, &h);
-			
+
 			sprintf(buffer, item->bitsUsed % 8 ? "^4%d ^0bytes, ^4%d ^0bits" : "^4%d ^0bytes", item->bitsUsed / 8, item->bitsUsed % 8);
-			
+
 			printDebugString(buffer, 0, 0, 1, 1, -1, -1, 0, widthHeight);
 
 			printDebugString(buffer, w - widthHeight[0] - 4, h - 13, 1, 1, -1, -1, 192, NULL);
@@ -2834,7 +2834,7 @@ static int displayMenuItem(DebugMenuItem* item, int* line, int left, int x, int 
 									"^nKeyboard^s\n"
 									"  Arrows:\t^8^sNavigate\t ^0Ctrl+C: ^8^sCopy Current Command\t ^0Ctrl+B: ^8^sBind Current Command\t ^0Ctrl+M: ^8^sMacro Current Command\t ^0Ctrl+W: ^8^Add to Custom Window\n"
 									"  Enter:\t^8^sOpen/Close Group ^0OR ^8Execute Command\n"
-									"  Space:\t^8^sOpen/Close Group ^0OR ^8Execute Command, Don't Close Menu\n";  
+									"  Space:\t^8^sOpen/Close Group ^0OR ^8Execute Command, Don't Close Menu\n";
 
 				printDebugString( "Menu Help", left+ 485, h - 28, 2.5, 11, -1, 0, alpha, NULL);
 				printDebugString( commands, left + 485, h - 60, 1.5, 11, -1, 0, alpha, NULL);
@@ -2864,7 +2864,7 @@ void debugMenuKeyboardNavigation(int curTime)
 {
 	static int last_input;
 	static char matchString[22];
-	char * matchPtr = matchString + strlen(matchString); 
+	char * matchPtr = matchString + strlen(matchString);
 	KeyInput *input;
 	DebugMenuItem *item;
 
@@ -2884,7 +2884,7 @@ void debugMenuKeyboardNavigation(int curTime)
 			{
 				int sel = debug_state.cursel;
 				DebugMenuItem* item = getCurMenuItem(debug_state.menuItem, &sel);
-				
+
 				if( item && item->commandString && *item->commandString )
 				{
 					char * bindkey;
@@ -2897,7 +2897,7 @@ void debugMenuKeyboardNavigation(int curTime)
 					if( input->attrib&KIA_SHIFT )
 						estrConcatStaticCharArray(&bindkey, "shift+");
 
-					estrConcatChar( &bindkey, input->asciiCharacter); 
+					estrConcatChar( &bindkey, input->asciiCharacter);
 					unbindKeyProfile(&ent_debug_binds_profile);
 					bindKey( bindkey, item->commandString, 1 );
 					bindKeyProfile(&ent_debug_binds_profile);
@@ -2929,13 +2929,13 @@ void displayDebugMenu()
 
 	if(!debug_state.menuItem)
 		return;
-		
+
 	setCursor(NULL, NULL, FALSE, 2, 2);
 	curTime = (int)timeGetTime();
 	windowSize(&w,&h);
 	debug_state.windowHeight = h;
 
-	if(	( debug_state.downHeld || debug_state.upHeld ||	debug_state.pagedownHeld || debug_state.pageupHeld) 
+	if(	( debug_state.downHeld || debug_state.upHeld ||	debug_state.pagedownHeld || debug_state.pageupHeld)
 		&& curTime - debug_state.keyDelayMsecStart > debug_state.keyDelayMsecWait )
 	{
 		int sel;
@@ -2954,7 +2954,7 @@ void displayDebugMenu()
 
 		if(debug_state.cursel < 0)
 			debug_state.cursel = 0;
-		
+
 
 		sel = debug_state.cursel;
 
@@ -2991,24 +2991,24 @@ void displayDebugMenu()
 
 			if(mouse_x < width && mouse_x > 0 && mouseLine >= 0 && mouseLine < totalLines)
 				debug_state.cursel = mouseLine;
-			
+
 		}
 
 		if((debug_state.cursel - debug_state.firstLine) > maxLines - 5)
 			debug_state.firstLine += (debug_state.cursel - debug_state.firstLine) - (maxLines - 5);
-		
+
 
 		if(debug_state.cursel < debug_state.firstLine + 4)
 			debug_state.firstLine -= 4 - (debug_state.cursel - debug_state.firstLine);
-		
+
 
 		if(debug_state.firstLine + maxLines > totalLines)
 			debug_state.firstLine = totalLines - maxLines;
-		
+
 
 		if(debug_state.firstLine < 0)
 			debug_state.firstLine = 0;
-		
+
 
 		lines_from_bottom = max(0, totalLines - (debug_state.firstLine + maxLines));
 
@@ -3040,7 +3040,7 @@ void displayDebugMenu()
 			}
 			else
 				debug_state.openingTime = 0;
-		
+
 		}
 
 		// Save positions into debug_state
@@ -3059,7 +3059,7 @@ void displayDebugMenu()
 		drawFilledBox(x_off + width + 1, h - 35, w, h - 34, (alpha << 24) | 0xff8000);
 		drawFilledBox(x_off + width + 1, h - 200, w, h - 35, ((alpha / 2) << 24) | 0xffff00);
 		drawFilledBox(x_off + width + 1, h - 201, w, h - 200, (alpha << 24) | 0xff8000);
-		if (!game_state.texWordEdit) 
+		if (!game_state.texWordEdit)
 		{
 			// Green box in lower right
 			drawFilledBox(x_off + width + 1, 0, w, h - 201, ((alpha/4) << 24) | 0x00ff00 );
@@ -3270,7 +3270,7 @@ static void displayEntDebugLines(){
 								int iDrawMat3;
 								int cur = (e->motion_hist_latest + j) % ARRAY_SIZE(e->motion_hist);
 								int next = (cur + 1) % ARRAY_SIZE(e->motion_hist);
-								
+
 								copyVec3(e->motion_hist[cur].pos, p1);
 								p1[1] += j ? 1.0 : 5.0;
 								copyVec3(e->motion_hist[cur].pos, p2);
@@ -3517,7 +3517,7 @@ static void displayEntDebugLines(){
 						copyVec3(point->pos, p2);
 						vecY(p2) += 2;
 						drawLine3D(p1, p2, point->argb);
-						
+
 						if(point->lineToEnt){
 							drawLine3D(ENTPOS(e), p1, point->argb);
 						}
@@ -3561,7 +3561,7 @@ static void displayEntDebugLines(){
 				Mat4 mScaledMat;
 				scaleMat3(ENTMAT(e), mScaledMat, e->seq->currgeomscale[0]);
 				copyVec3(ENTPOS(e), mScaledMat[3]);
-				
+
 				#if NOVODEX
 					drawRagdollSkeleton( e->seq->gfx_root->child, mScaledMat, e->seq );
 				#endif
@@ -3813,7 +3813,7 @@ static void displayCrazyLoadCovering(){
 static int __cdecl compareConnTotal(const AStarConnectionInfo** i1p, const AStarConnectionInfo** i2p){
 	const AStarConnectionInfo* i1 = *i1p;
 	const AStarConnectionInfo* i2 = *i2p;
-	
+
 	if(i1->totalCost < i2->totalCost){
 		return -1;
 	}
@@ -3828,7 +3828,7 @@ static int __cdecl compareConnTotal(const AStarConnectionInfo** i1p, const AStar
 void displayAStarRecording(){
 	static int showNextPoints;
 	static int showBlockPath;
-	
+
 	int size = eaSize(&debug_state.aStarRecording.sets);
 	int curFrame = debug_state.aStarRecording.frame;
 	int w, h;
@@ -3853,46 +3853,46 @@ void displayAStarRecording(){
 
 	if(showBlockPath){
 		// Draw the block path.
-		
+
 		count = eaSize(&debug_state.aStarRecording.blocks);
-		
+
 		for(i = 0; i < count; i++){
 			AStarBeaconBlock* block = debug_state.aStarRecording.blocks[i];
 			int j;
-			
+
 			copyVec3(block->pos, pos2);
 
 			if(i){
 				AStarBeaconBlock* prevBlock = debug_state.aStarRecording.blocks[i - 1];
-				
+
 				copyVec3(prevBlock->pos, pos);
-				
+
 				drawLine3D_2(pos, 0xffffffff, pos2, 0xffff0000);
-				
+
 				pos[1] = prevBlock->searchY;
 				pos2[1] = block->searchY;
 
 				drawLine3D_2(pos, 0xffffffff, pos2, 0xff00ff66);
 			}
-			
+
 			pos2[1] = block->searchY;
 			drawLine3D_2(block->pos, 0x80ffff00, pos2, 0x80ffff00);
 
 			for(j = 0; j < eaSize(&block->beacons); j++){
 				AStarPoint* point = block->beacons[j];
-				
+
 				drawLine3D_2(block->pos, 0xc0ffffffff, block->beacons[j]->pos, 0xc000ff00);
 			}
 		}
 	}
-	
+
 	if(curFrame < 0)
 		curFrame = 0;
 	if(curFrame >= size)
 		curFrame = size - 1;
 
 	set = debug_state.aStarRecording.sets[curFrame];
-	
+
 	count = eaSize(&set->points);
 
 	for(i = 0; i < count; i++){
@@ -3990,13 +3990,13 @@ void displayAStarRecording(){
 
 		if(!set->foundNextPoints){
 			set->foundNextPoints = 1;
-			
+
 			if(count > 1){
 				for(i = curFrame - 1; i >= 0; i--){
 					AStarRecordingSet* otherSet = debug_state.aStarRecording.sets[i];
-					
+
 					otherCount = eaSize(&otherSet->points);
-					
+
 					if(otherCount == count - 1){
 						if(distance3Squared(otherSet->points[0]->pos, set->points[1]->pos) < 0.1){
 							set->parent = otherSet->points[0];
@@ -4005,12 +4005,12 @@ void displayAStarRecording(){
 					}
 				}
 			}
-						
+
 			for(i = curFrame + 1; i < size; i++){
 				AStarRecordingSet* otherSet = debug_state.aStarRecording.sets[i];
-				
+
 				otherCount = eaSize(&otherSet->points);
-				
+
 				if(otherCount == count + 1){
 					if(distance3Squared(otherSet->points[1]->pos, set->points[0]->pos) < 0.1){
 						eaPush(&set->nextPoints, otherSet->points[0]);
@@ -4019,14 +4019,14 @@ void displayAStarRecording(){
 			}
 
 			otherCount = eaSize(&set->nextConns);
-			
+
 			for(i = 0; i < otherCount; i++){
 				AStarConnectionInfo* info = set->nextConns[i];
 				int j;
-				
+
 				for(j = size - 1; j >= 0; j--){
 					AStarRecordingSet* otherSet = debug_state.aStarRecording.sets[j];
-				
+
 					if(distance3Squared(otherSet->points[0]->pos, info->beaconPos) < 0.1){
 						info->point = otherSet->points[0];
 						break;
@@ -4034,22 +4034,22 @@ void displayAStarRecording(){
 				}
 			}
 		}
-		
+
 		otherCount = eaSize(&set->nextPoints);
-		
+
 		for(i = 0; i < otherCount; i++){
 			AStarPoint* point = set->nextPoints[i];
-			
+
 			copyVec3(set->points[0]->pos, pos);
 			pos[1] = set->points[0]->flyHeight + 0.1;
 			copyVec3(point->pos, pos2);
 			pos2[1] = point->flyHeight + 0.1;
-			
+
 			drawLine3D_2(pos, 0x80ffffff, pos2, 0x80ff8000);
 		}
 
 		otherCount = eaSize(&set->nextConns);
-		
+
 		for(i = 0; i < otherCount; i++){
 			AStarConnectionInfo* info = set->nextConns[i];
 
@@ -4060,7 +4060,7 @@ void displayAStarRecording(){
 				pos[1] = set->points[0]->flyHeight + 0.1;
 				copyVec3(info->point->pos, pos2);
 				pos2[1] = info->point->flyHeight + 0.1;
-				
+
 				if(flashColor){
 					int j;
 					for(j = 0; j < 3; j++){
@@ -4068,7 +4068,7 @@ void displayAStarRecording(){
 						pos2[j] += ((rand() % 101) - 50) * 0.001;
 					}
 				}
-				
+
 				drawLine3D_2(pos, flashColor ? flashColor : 0x80ffffff, pos2, flashColor ? flashColor : 0x8000ff00);
 			}else{
 				U32 flashColor = info->flash ? (0xff000000 | (rand() & 255) << 16 | (rand() & 255) << 8) : 0;
@@ -4076,7 +4076,7 @@ void displayAStarRecording(){
 				copyVec3(set->points[0]->pos, pos);
 				pos[1] = set->points[0]->flyHeight + 0.1;
 				copyVec3(info->beaconPos, pos2);
-				
+
 				if(flashColor){
 					int j;
 					for(j = 0; j < 3; j++){
@@ -4155,7 +4155,7 @@ void displayAStarRecording(){
 				debug_state.aStarRecording.frame = size - 1;
 			}
 		}
-		
+
 		printDebugString(	buffer,
 							w / 2 - widthHeight[0] / 2,
 							draw_y + 60,
@@ -4172,26 +4172,26 @@ void displayAStarRecording(){
 					debug_state.aStarRecording.frame = set->parent->set->index;
 				}
 			}
-			
+
 			otherCount = eaSize(&set->nextPoints);
-			
+
 			for(i = 0; i < otherCount; i++){
 				AStarPoint* point = set->nextPoints[i];
-				
+
 				sprintf(buffer, "%d", point->set->index + 1);
-				
+
 				if(drawButton2D(w / 2 - 300 + (i % 5) * 110, 130 + (i / 5) * 30, 100, 25, 1, buffer, 1, NULL, NULL)){
 					debug_state.aStarRecording.frame = point->set->index;
 				}
 			}
-			
+
 			otherCount = eaSize(&set->nextConns);
-			
+
 			qsort(set->nextConns, otherCount, sizeof(set->nextConns[0]), compareConnTotal);
 
 			for(i = 0; i < otherCount; i++){
 				AStarConnectionInfo* info = set->nextConns[i];
-				
+
 				sprintf(buffer,
 						"^%d%d/%d: %d, %d",
 						info->point ? 2 : 1,
@@ -4199,23 +4199,23 @@ void displayAStarRecording(){
 						info->queueIndex,
 						info->costSoFar,
 						info->totalCost);
-				
+
 				if(drawButton2D(150, 5 + i * 25, 165, 25, 1, buffer, 1, NULL, NULL)){
 					if(info->point){
 						debug_state.aStarRecording.frame = info->point->set->index;
 					}
 				}
-				
+
 				info->flash = mouseOverLastButton();
 			}
 
 			sprintf(buffer, "^1Hide ^d(^4%d^d)", eaSize(&set->nextPoints));
 		}
-		
+
 		if(drawButton2D(w / 2 - 320, draw_y, 70, 30, 1, showNextPoints ? buffer : "^2Show", 1, NULL, NULL)){
 			showNextPoints ^= 1;
 		}
-		
+
 		displayEntDebugInfoTextEnd();
 
 		if(clear){
@@ -4267,13 +4267,13 @@ static void displayBeaconDebugButtons(){
 		if(drawButton2D(w / 2 - 50, 5, 100, 25, 1, "Clear Lines", 1, NULL, NULL)){
 			eaDestroyEx(&beaconConnection, destroyBeaconDebugLine);
 		}
-		if(drawButton2D(w / 2 - 75, 35, 150, 25, 1, beacConn_showWhenMouseDown ? "^1Hide ^dOn Mouse" : "^2Show ^dOn Mouse", 1, NULL, NULL)){			
+		if(drawButton2D(w / 2 - 75, 35, 150, 25, 1, beacConn_showWhenMouseDown ? "^1Hide ^dOn Mouse" : "^2Show ^dOn Mouse", 1, NULL, NULL)){
 			beacConn_showWhenMouseDown = !beacConn_showWhenMouseDown;
 		}
-		if(drawButton2D(w / 2 - 75, 65, 150, 25, 1, beacConn_cullLines ? "^1Disable ^dCulling" : "^2Enable ^dCulling", 1, NULL, NULL)){			
+		if(drawButton2D(w / 2 - 75, 65, 150, 25, 1, beacConn_cullLines ? "^1Disable ^dCulling" : "^2Enable ^dCulling", 1, NULL, NULL)){
 			beacConn_cullLines = !beacConn_cullLines;
 		}
-		if(drawButton2D(w / 2 - 75, 95, 150, 25, 1, (game_state.see_everything & 2) ? "^1Hide ^dLines" : "^2Show ^dLines", 1, NULL, NULL)){			
+		if(drawButton2D(w / 2 - 75, 95, 150, 25, 1, (game_state.see_everything & 2) ? "^1Hide ^dLines" : "^2Show ^dLines", 1, NULL, NULL)){
 			if(game_state.see_everything & 2){
 				game_state.see_everything &= ~2;
 			}else{
@@ -4289,11 +4289,11 @@ static void displayClientStuff(){
 
 	if(game_state.ent_debug_client & (1 | 2 | 8)){
 		int y = 7 - 15;
-		
+
 		if(showthis){
 			Entity* player = playerPtr();
 			MotionState* motion = player->motion;
-			
+
 			drawFilledBox(2, 2, 301, 151, 0xd0ffffff);
 			drawFilledBox(3, 3, 300, 150, 0xd0442233);
 
@@ -4462,7 +4462,7 @@ static void displayClientStuff(){
 									NULL);
 			}
 		}
-		
+
 		{
 			int mouse_x, mouse_y;
 			int w, h;
@@ -4490,7 +4490,7 @@ static int debugCameraAdd(GroupDef *def, DefTracker *tracker, Mat4 world_mat, vo
 		{
 			DebugCameraInfo* info = &debug_state.debugCamera;
 			DebugCamera* cam;
-			
+
 			// After the Camera has been placed, give it a unique camera value
 			// We pick up the new index when the mapserver processes the update
 			if(stricmp(prop->value_str, "-1")==0)
@@ -4501,7 +4501,7 @@ static int debugCameraAdd(GroupDef *def, DefTracker *tracker, Mat4 world_mat, vo
 				selAdd(tracker,trackerRootID(tracker),0,0);
 				addPropertiesToSelectedTrackers( "CutSceneCamera", camNum, NULL );
 
-				
+
 				if(!tracker->def->properties){
 					tracker->def->properties = stashTableCreateWithStringKeys(16,  StashDeepCopyKeys);
 					tracker->def->has_properties = 1;
@@ -4516,7 +4516,7 @@ static int debugCameraAdd(GroupDef *def, DefTracker *tracker, Mat4 world_mat, vo
 			dynArrayAdd(&info->cameras.camera, sizeof(info->cameras.camera[0]),	&info->cameras.size, &info->cameras.maxSize, 1);
 			cam = info->cameras.camera + info->cameras.size - 1;
 			cam->tracker = tracker;
-			copyMat4( world_mat, cam->mat ); 
+			copyMat4( world_mat, cam->mat );
 		}
 	}
 
@@ -4539,7 +4539,7 @@ void updateCutSceneCameras()
 static void displayDebugCameraEditor()
 {
 	static int hideTitle;
-	DebugCameraInfo* info = &debug_state.debugCamera; 
+	DebugCameraInfo* info = &debug_state.debugCamera;
 	DebugCamera* cam;
 	char buffer[1000];
 	int i;
@@ -4576,7 +4576,7 @@ static void displayDebugCameraEditor()
 			printDebugString("^2Debug Camera Edit Mode", w/2 - widthHeight[0]/2, h*0.75 - widthHeight[1]/2, 5, 1, -1, -1, 192, NULL);
 		}
 	}
-	
+
 	if(drawButton2D(5, 5, 85, 25, 1, "^2New Camera", 1, NULL, NULL))
 	{
 		dynArrayAdd(&info->cameras.camera, sizeof(info->cameras.camera[0]),&info->cameras.size, &info->cameras.maxSize, 1 );
@@ -4593,13 +4593,13 @@ static void displayDebugCameraEditor()
 			editPaste();
 		}
 	}
-	
+
 	if(drawButton2D(95, 5, 85, 25, 1, "^1Exit Editor", 1, NULL, NULL))
 	{
 		info->editMode = 0;
 		return;
 	}
-	
+
 	if(drawButton2D(185, 5, 85, 25, 1, hideTitle ? "^1Show Title" : "^2Hide Title", 1, NULL, NULL))
 		hideTitle = !hideTitle;
 
@@ -4624,9 +4624,9 @@ static void displayDebugCameraEditor()
 		PropertyEnt* prop=0;
 
 		cam = info->cameras.camera + i;
-		
+
 		if( cam->tracker && cam->tracker->def && cam->tracker->def->properties )
-			stashFindPointer( cam->tracker->def->properties, "CutSceneCamera", &prop );	
+			stashFindPointer( cam->tracker->def->properties, "CutSceneCamera", &prop );
 
 		if( design_placement_mode )
 		{
@@ -4640,9 +4640,9 @@ static void displayDebugCameraEditor()
 
 		if(drawButton2D(5, y, 100, 25, 1, buffer, 1, NULL, NULL))
 			info->curCamera = i;
-		
-		
-		if(drawButton2D(110, y, 25, 25, 1, "^1X", 1.5, NULL, NULL)) 
+
+
+		if(drawButton2D(110, y, 25, 25, 1, "^1X", 1.5, NULL, NULL))
 		{
 			if( design_placement_mode && cam->tracker )
 			{
@@ -4659,7 +4659,7 @@ static void displayDebugCameraEditor()
 			i--;
 			continue;
 		}
-		
+
 		if(i == info->curCamera)
 		{
 			if(drawButton2D(140, y, 50, 25, 1, info->hideInEditor ? "^2Show" : "^1Hide", 1, NULL, NULL))
@@ -4678,27 +4678,27 @@ static void displayDebugCameraEditor()
 					cam_pos[1] -= camGetPlayerHeight();
 
 					cmdParsef( "setpospyr %f %f %f %f %f %f", vecParamsXYZ(cam_pos), vecParamsXYZ(cam_pyr) );
-					
+
 					copyVec3( cam_pyr, control_state.pyr.cur );
-					camSetPyr( cam_pyr ); 
+					camSetPyr( cam_pyr );
 
 					//entUpdatePosInstantaneous(player,cam->mat[3]);
 					//camSetPos( cam->mat[3], 0 );
 					game_state.camdist = 0;
 				}
 			}
-		
+
 			if( design_placement_mode )
 			{
-				if(drawButton2D(195, y, 110, 25, 1, prop?"Move":"Place", 1, NULL, NULL)) 
+				if(drawButton2D(195, y, 110, 25, 1, prop?"Move":"Place", 1, NULL, NULL))
 				{
-					if( prop ) 
+					if( prop )
 					{
 						unSelect(1);
 						selAdd(cam->tracker,trackerRootID(cam->tracker),0,0);
 
 						copyMat4(cam_info.cammat, cam->mat);
-						
+
 						edit_state.cut = 1;
 						editCmdCutCopy();
 						copyMat4(unitmat,sel.offsetnode->mat);
@@ -4716,37 +4716,37 @@ static void displayDebugCameraEditor()
 			}
 		}
 	}
-	
+
 	if(!info->cameras.size)
 		return;
-	
+
 	info->curCamera = MINMAX(info->curCamera, 0, info->cameras.size - 1);
 	cam = info->cameras.camera + info->curCamera;
-	
+
 	x = 400;
 	y = 5;
-	
+
 	// Select myself.
  	if( !design_placement_mode )
 	{
 		if(drawButton2D(x, y, 85, 25, 1, "Select Self", 1, NULL, NULL))
 			current_target = playerPtr();
-	
+
 		// Selected entity name.
 		sprintf(buffer, "Current Target: ");
-		
+
 		if(current_target)
 			sprintf(buffer + strlen(buffer), "^7%s ^0(^4%d^0)", current_target->name, current_target->svr_idx);
 		else
 			sprintf(buffer + strlen(buffer), "^1NONE");
-		
-		
+
+
 		printDebugString(buffer, x + 90, y + 8, 1, 1, -1, -1, 255, NULL);
-		
+
 		y += 30;
-		
+
 		// Relative entity.
-		
+
 		if(cam->relativeToThisEntity || current_target)
 		{
 			if(!cam->relativeToThisEntity)
@@ -4756,14 +4756,14 @@ static void displayDebugCameraEditor()
 			else
 			{
 				Entity* e = validEntFromId(cam->relativeToThisEntity);
-				
+
 				sprintf(buffer, "^2Relative: ^4%d", cam->relativeToThisEntity);
-				
+
 				if(e)
 					sprintf(buffer + strlen(buffer), " ^0(^7%s^0)", e->name);
 				else
 					sprintf(buffer + strlen(buffer), " ^0(^1NOT VISIBLE^0)");
-				
+
 			}
 
 			if(drawButton2D(x, y, 300, 25, 1, buffer, 1, NULL, NULL))
@@ -4782,22 +4782,22 @@ static void displayDebugCameraEditor()
 					scaleVec3(cam->mat[2], -1, cam->mat[2]);
 				}
 			}
-			
+
 			if(cam->relativeToThisEntity)
 			{
 				if(drawButton2D(x + 305, y, 25, 25, 1, "^1X", 1.5, NULL, NULL))
 					cam->relativeToThisEntity = 0;
-				
-				
+
+
 				if(drawButton2D(x + 335, y, 50, 25, 1, "Center", 1, NULL, NULL))
 					zeroVec3(posPoint(cam));
 			}
 		}
-			
+
 		y += 30;
-		
+
 		// Tracked entity.
-		
+
 		if(cam->trackThisEntity || current_target)
 		{
 			if(!cam->trackThisEntity)
@@ -4807,23 +4807,23 @@ static void displayDebugCameraEditor()
 			else
 			{
 				Entity* e = validEntFromId(cam->trackThisEntity);
-				
+
 				sprintf(buffer, "^2Tracked: ^4%d", cam->trackThisEntity);
-				
+
 				if(e)
 					sprintf(buffer + strlen(buffer), " ^0(^7%s^0)", e->name);
 				else
 					sprintf(buffer + strlen(buffer), " ^0(^1NOT VISIBLE^0)");
-				
+
 			}
 
 			if(drawButton2D(x, y, 300, 25, 1, buffer, 1, NULL, NULL))
 			{
 				if(!cam->trackThisEntity && current_target)
 					cam->trackThisEntity = current_target->svr_idx;
-				
+
 			}
-			
+
 			if(cam->trackThisEntity && drawButton2D(x + 305, y, 25, 25, 1, "^1X", 1.5, NULL, NULL))
 			{
 				cam->trackThisEntity = 0;
@@ -4846,20 +4846,20 @@ int getDebugCameraPosition(CameraInfo* caminfo)
 		if(!info->cameras.size){
 			info->on = 0;
 		}
-		
+
 		return 0;
 	}
-	
+
 	info->curCamera = MINMAX(info->curCamera, 0, info->cameras.size - 1);
-	
+
 	cam = info->cameras.camera + info->curCamera;
-	
+
 	copyMat4(cam->mat, caminfo->cammat);
-	
+
 	// Relative entity.
-	
+
 	e = validEntFromId(cam->relativeToThisEntity);
-	
+
 	if(e){
 		//Vec3 temp;
 		mulMat4(ENTMAT(e), cam->mat, caminfo->cammat);
@@ -4868,9 +4868,9 @@ int getDebugCameraPosition(CameraInfo* caminfo)
 	else if(cam->relativeToThisEntity){
 		return 0;
 	}
-	
+
 	// Tracked entity.
-	
+
 	e = validEntFromId(cam->trackThisEntity);
 
 	if(e){
@@ -4889,7 +4889,7 @@ int getDebugCameraPosition(CameraInfo* caminfo)
 		scaleVec3(caminfo->cammat[0], -1, caminfo->cammat[0]);
 		scaleVec3(caminfo->cammat[2], -1, caminfo->cammat[2]);
 	}
-	
+
 	return 1;
 }
 
@@ -4909,7 +4909,7 @@ static void displayDebugPowerInfo(void)
 	int i;
 
 	if(!debug_state.debugPower)
-		return; 
+		return;
 
  	ppow = debug_state.debugPower;
 	copyMat4( unitmat, loc_mat );
@@ -4933,7 +4933,7 @@ static void displayDebugPowerInfo(void)
 		}
 	}
 	// Targeted AoE
-	else if( current_target && ppow->eTargetType != kTargetType_Caster && ppow->eTargetType != kTargetType_MyOwner 
+	else if( current_target && ppow->eTargetType != kTargetType_Caster && ppow->eTargetType != kTargetType_MyOwner
 		&& ppow->eTargetType != kTargetType_MyCreator && ppow->eEffectArea == kEffectArea_Sphere)
 	{
 		copyMat4( ENTMAT(current_target), loc_mat );
@@ -4955,7 +4955,7 @@ static void displayDebugPowerInfo(void)
 		xcase kEffectArea_Cone:
 			loc_mat[3][1] += 2;
 			drawSpinningCircle( ppow->fRadius, loc_mat, CLR_GREEN );
- 
+
 			if( current_target )// A cone centered around the ray connecting the source to the target.
 			{
 				Mat3 dirmat;
@@ -4973,11 +4973,11 @@ static void displayDebugPowerInfo(void)
 				copyMat3( unitmat, dirmat );
 				orientMat3( dirmat, vecDir );
 				yawMat3( ppow->fArc/2, dirmat );
-				 
+
 				copyVec3( loc_pos, vecPos );
 				moveVinZ( vecPos, dirmat, ppow->fRadius );
 				drawLine3D( loc_pos, vecPos, 0xffffff00);
-				
+
 				orientMat3( dirmat, vecDir );
 				yawMat3( -ppow->fArc/2, dirmat );
 				copyVec3( loc_pos, vecPos );
@@ -5035,7 +5035,7 @@ static void showPackedArray(unsigned int array[33], int off, char* name)
 		height2 = height * i;
 		if (height2 > 100.0)
 			height2 = 100.0;
-		
+
 		drawFilledBox(i*10, off+10, i*10+3, height+off+10, 0xff00ff00);
 		if (height2 > height)
 			drawFilledBox(i*10, height+off+10, i*10+3, height2+off+10, 0xffffff00);
@@ -5109,11 +5109,11 @@ static void displayNetGraph()
 
 typedef struct PhysicsRecordingUIInfo {
 	S32		curPos;
-	
+
 	S32		fadeOutLo;
 	S32		fadeOutHi;
 	S32		fadeOutAlpha;
-	
+
 	U32		visible			: 1;
 	U32		visible3D		: 1;
 	U32		doNotStayAtEnd	: 1;
@@ -5124,22 +5124,22 @@ typedef struct PhysicsRecordingUIInfo {
 static PhysicsRecordingUIInfo* getPhysicsRecordingUIInfo(const char* hashName)
 {
 	static StashTable ht;
-	
+
 	StashElement element;
-	
+
 	if(!ht)
 	{
 		ht = stashTableCreateWithStringKeys(10, StashDeepCopyKeys);
 		element = NULL;
 	}
-	
+
 	stashFindElement(ht, hashName, &element);
-	
+
 	if(!element)
 	{
 		stashAddPointerAndGetElement(ht, hashName, calloc(sizeof(PhysicsRecordingUIInfo), 1), false, &element);
 	}
-	
+
 	return stashElementGetPointer(element);
 }
 
@@ -5153,7 +5153,7 @@ static int gatherPhysicsRecordings(StashElement element){
 	if(stashElementGetPointer(element)){
 		dynArrayAddp(&phys_recs.rec, &phys_recs.count, &phys_recs.maxCount, stashElementGetPointer(element));
 	}
-	
+
 	return 1;
 }
 
@@ -5168,7 +5168,7 @@ static void displayPhysicsRecording(int show3D){
 	static S32 hideVel;
 	static S32 hideInputVel;
 	static S32 showUI = 1;
-	
+
 	char buffer[1000];
 
 	int goPrev1 = 0;
@@ -5177,7 +5177,7 @@ static void displayPhysicsRecording(int show3D){
 	int goNext1 = 0;
 	int goNext2 = 0;
 	int goNext3 = 0;
-	
+
 	int clearAll = 0;
 	int visibleY = 0;
 
@@ -5186,32 +5186,32 @@ static void displayPhysicsRecording(int show3D){
 	int w, h;
 	int mouse_x, mouse_y;
 	int i;
-	
+
 	if(debug_state.menuItem){
 		return;
 	}
-	
+
 	curTime = timeGetTime();
 
 	if(!lastTime){
 		lastTime = curTime;
 	}
-	
+
 	windowSize(&w, &h);
 	inpLastMousePos(&mouse_x, &mouse_y);
-	
+
 	phys_recs.count = 0;
-	
+
 	if ( global_pmotion_state.htPhysicsRecording ) stashForEachElement(global_pmotion_state.htPhysicsRecording, gatherPhysicsRecordings);
-	
+
 	qsort(phys_recs.rec, phys_recs.count, sizeof(phys_recs.rec[0]), compareRecordingName);
-	
+
 	for(i = 0; i < phys_recs.count; i++){
 		PhysicsRecording* rec = phys_recs.rec[i];
 		PhysicsRecordingUIInfo* ui = getPhysicsRecordingUIInfo(rec->name);
 		PhysicsRecordingStep* step;
 		int j;
-		
+
 		if(!ui->doNotStayAtEnd){
 			ui->curPos = rec->steps.count - 1;
 		}
@@ -5223,7 +5223,7 @@ static void displayPhysicsRecording(int show3D){
 				}
 			}
 		}
-		
+
 		ui->curPos = MINMAX(ui->curPos, 0, max(0, rec->steps.count - 1));
 
 		step = rec->steps.count ? rec->steps.step + ui->curPos : NULL;
@@ -5233,9 +5233,9 @@ static void displayPhysicsRecording(int show3D){
 				Vec3 temp;
 				Vec3 temp2;
 				U32 overrideColor = (ui->hilight && !(global_state.global_frame_count & 4)) ? 0xffffff00 : 0;
-				
+
 				#define COLOR(x) (overrideColor ? overrideColor : x)
-				
+
 				if(ui->fadeOutAlpha > 0){
 					for(j = ui->fadeOutLo; j <= ui->fadeOutHi; j++){
 						if(j >= 0 && j < rec->steps.count){
@@ -5244,16 +5244,16 @@ static void displayPhysicsRecording(int show3D){
 							drawLine3D_2(fadeStep->before.pos, alpha | 0xffffff, fadeStep->after.pos, alpha | 0xff0000);
 						}
 					}
-					
+
 					ui->fadeOutAlpha -= (curTime - lastTime);
 				}
-				
+
 				drawLine3D_2(step->before.pos, COLOR(0xffffffff), step->after.pos, COLOR(0xffff0000));
-				
+
 				copyVec3(step->before.pos, temp);
 				vecY(temp) -= 20;
 				drawLine3D_2(step->before.pos, COLOR(0x40ffffff), temp, COLOR(0x40ffffff));
-				
+
 				copyVec3(step->after.pos, temp);
 				vecY(temp) -= 20;
 				drawLine3D_2(step->after.pos, COLOR(0x40ff0000), temp, COLOR(0x40ff0000));
@@ -5263,7 +5263,7 @@ static void displayPhysicsRecording(int show3D){
 					addVec3(temp, step->before.motion.vel, temp);
 					drawLine3D_2(step->before.pos, COLOR(0xffffffff), temp, COLOR(0xff00ffff));
 				}
-				
+
 				if(!hideInputVel && lengthVec3Squared(step->before.motion.input.vel)){
 					addVec3(step->before.pos, step->before.motion.input.vel, temp);
 					drawLine3D_2(step->before.pos, COLOR(0xffffffff), temp, COLOR(0xff00ff00));
@@ -5274,7 +5274,7 @@ static void displayPhysicsRecording(int show3D){
 						drawLine3D_2(temp, COLOR(0x4000ff00), temp2, COLOR(0x4000ff00));
 					}
 				}
-				
+
 				#undef COLOR
 			}else{
 				ui->fadeOutAlpha = 0;
@@ -5287,34 +5287,34 @@ static void displayPhysicsRecording(int show3D){
 				ui->syncToMe = 0;
 				syncToCSC = -1;
 			}
-			
+
 			if(!visibleY && (showUI || rec->steps.count)){
 				drawFilledBox(w / 2 - 405, visibleY ? y : visibleY,  w / 2 + 400, visibleY + 35, 0xc0000000);
-				
+
 				goPrev1 = drawDefaultButton2D(w / 2 - 130, y, 25, 25, "^2<");
 				goPrev2 = drawDefaultButton2D(w / 2 - 160, y, 25, 25, "^1<<\n10");
 				goPrev3 = drawDefaultButton2D(w / 2 - 190, y, 25, 25, "^7<<\n100");
 				goNext1 = drawDefaultButton2D(w / 2 + 105, y, 25, 25, "^2>");
 				goNext2 = drawDefaultButton2D(w / 2 + 135, y, 25, 25, "^1>>\n10");
 				goNext3 = drawDefaultButton2D(w / 2 + 165, y, 25, 25, "^7>>\n100");
-				
+
 				if(drawDefaultButton2D(w / 2 - 400, y, 55, 25, "^1clear all")){
 					pmotionUpdateNetID(NULL);
 					clearAll = 1;
 				}
-				
+
 				if(drawDefaultButton2D(w / 2 - 340, y, 25, 25, hideVel ? "^1^svel" : "^2vel")){
 					hideVel ^= 1;
 				}
-				
+
 				if(drawDefaultButton2D(w / 2 - 310, y, 45, 25, hideInputVel ? "^1^sinpVel" : "^2inpVel")){
 					hideInputVel ^= 1;
 				}
-				
+
 				if(drawDefaultButton2D(w / 2 + 300, y, 75, 25, control_state.record_motion ? "^1pause" : "^2record")){
 					cmdParse(control_state.record_motion ? "recordmotion 0" : "recordmotion 1");
 				}
-				
+
 				if(!control_state.record_motion){
 					if(drawDefaultButton2D(w / 2 + 220, y, 75, 25, showUI ? "^1hide empty" : "^2show empty")){
 						showUI = !showUI;
@@ -5322,19 +5322,19 @@ static void displayPhysicsRecording(int show3D){
 				}else{
 					showUI = 1;
 				}
-				
+
 				visibleY += 30;
 			}
-			
+
 			if(clearAll){
 				SAFE_FREE(rec->steps.step);
 				ZeroStruct(&rec->steps);
 			}
-			
+
 			if(!rec->steps.count){
 				continue;
 			}
-			
+
 			y = visibleY + 5;
 
 			if(	!inpIsMouseLocked() &&
@@ -5351,24 +5351,24 @@ static void displayPhysicsRecording(int show3D){
 			{
 				ui->hilight = 0;
 			}
-			
+
 			drawFilledBox(w / 2 - 405, visibleY ? y : visibleY, w / 2 + 400, visibleY + 35, ui->hilight ? 0xc0008888 : 0xc0000000);
-			
+
 			if(drawDefaultButton2D(w / 2 - 400, y, 25, 25, ui->visible ? "^2ON" : "^1off")){
 				ui->visible ^= 1;
 			}
-			
+
 			if(!ui->visible){
 				sprintf(buffer, "^%d%s ^d(^4%d^d)", ui->curPos == rec->steps.count - 1 ? 1 : 7, rec->name, rec->steps.count);
 				printDebugString(buffer, w / 2 - 370, y + 6, 1, 11, -1, -1, 255, NULL);
 				visibleY += 30;
 				continue;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 - 370, y, 45, 25, ui->visible3D ? "^23D ON" : "^13D off")){
 				ui->visible3D ^= 1;
 			}
-			
+
 			if(step && drawDefaultButton2D(w / 2 - 320, y, 25, 25, "^5go")){
 				sprintf(buffer, "setpos %1.3f %1.3f %1.3f", vecParamsXYZ(step->before.pos));
 				cmdParse(buffer);
@@ -5381,31 +5381,31 @@ static void displayPhysicsRecording(int show3D){
 					rec->name,
 					ui->curPos,
 					max(0, rec->steps.count - 1));
-					
+
 			if(step){
 				sprintf(buffer + strlen(buffer), " ^d(^4%d^d)", step->csc_net_id);
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 - 100, y, 200, 25, buffer)){
 				if(step){
 					ui->syncToMe = 1;
 					syncToCSC = step->csc_net_id;
 				}
 			}
-			
+
 			oldCurPos = ui->curPos;
-			
+
 			if(rec->steps.count){
 				int count;
 				int gotoMe;
-				
+
 				for(j = 0, count = 0; j < ui->curPos; j++){
 					if(rec->steps.step[j].csc_net_id == rec->steps.step[ui->curPos].csc_net_id){
 						count++;
 						gotoMe = j;
 					}
 				}
-				
+
 				if(count){
 					sprintf(buffer, "^4%d^d<", count);
 					if(drawDefaultButton2D(w / 2 - 220, y, 25, 25, buffer)){
@@ -5421,34 +5421,34 @@ static void displayPhysicsRecording(int show3D){
 						}
 					}
 				}
-				
+
 				if(count){
 					sprintf(buffer, ">^4%d", count);
 					if(drawDefaultButton2D(w / 2 + 225, y, 25, 25, buffer)){
 						ui->curPos = gotoMe;
 					}
 				}
-				
+
 				if(drawDefaultButton2D(w / 2 + 300, y, 45, 25, "^1break")){
 					assert(0);
 				}
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 - 130, y, 25, 25, "^2<") || goPrev1){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos--;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 - 160, y, 25, 25, "^1<<\n10") || goPrev2){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos -= 10;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 - 190, y, 25, 25, "^7<<\n100") || goPrev3){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos -= 100;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 + 105, y, 25, 25, "^2>") || goNext1){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos++;
@@ -5458,66 +5458,66 @@ static void displayPhysicsRecording(int show3D){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos += 10;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 + 165, y, 25, 25, "^7>>\n100") || goNext3){
 				ui->doNotStayAtEnd = 1;
 				ui->curPos += 100;
 			}
-			
+
 			if(drawDefaultButton2D(w / 2 + 195, y, 25, 25, ui->doNotStayAtEnd ? "^1>|" : "^2>|")){
 				ui->doNotStayAtEnd ^= 1;
 			}
-			
+
 			ui->curPos = MINMAX(ui->curPos, 0, max(0, rec->steps.count - 1));
-			
+
 			if(oldCurPos != ui->curPos){
 				ui->fadeOutLo = min(oldCurPos, ui->curPos);
 				ui->fadeOutHi = max(oldCurPos, ui->curPos);
 				ui->fadeOutAlpha = 1023;
 			}
-			
+
 			if(ui->hilight && step){
 				char* pos = buffer;
-				
+
 				pos += sprintf(pos, "^1Before:\n");
 
 				#define PRINT(cond, params) {if(cond)pos += sprintf params;pos += sprintf(pos, "\n");}
 				PRINT(step->before.motion.jumping, (pos, "jumping"));
 				#undef PRINT
-				
+
 				printDebugString(buffer, 5, h - 25, 2, 20, -1, -1, 255, NULL);
 
 				pos = buffer;
-				
+
 				pos += sprintf(pos, "^2After:\n");
-				
+
 				#define PRINT(cond, params) {if(cond)pos += sprintf params;pos += sprintf(pos, "\n");}
 				PRINT(step->after.motion.jumping, (pos, "jumping"));
 				#undef PRINT
-				
+
 				printDebugString(buffer, 205, h - 25, 2, 20, -1, -1, 255, NULL);
 			}
 
 			visibleY += 30;
 		}
 	}
-	
+
 	if(!show3D){
 		if(printName){
 			int wh[2];
-			
+
 			printDebugString(printName, 0, 0, 3, 1, -1, -1, 0, wh);
-			
+
 			printDebugString(printName, (w - wh[0]) / 2, visibleY + 10, 3, 11, 7, -1, 128, NULL);
 		}
 	}
-	
+
 	lastTime = curTime;
 }
 
 static void displayBeaconLines(){
 	// Draw beacon debug lines.
-	
+
 	if(	eaSize(&beaconConnection) &&
 		game_state.see_everything & 3 &&
 		isMenu(MENU_GAME) &&
@@ -5532,7 +5532,7 @@ static void displayBeaconLines(){
 			!control_state.canlook))
 	{
 		int i;
-		
+
 		for(i = 0; i < eaSize(&beaconConnection); i++){
 			if((!beacConn_cullLines || gfxIsPointVisible(beaconConnection[i]->a)) && distance3Squared(beaconConnection[i]->a, playerPtr()->fork[3]) < g_BeaconDebugRadius * g_BeaconDebugRadius)
 			{
@@ -5547,7 +5547,7 @@ static void displayBeaconLines(){
 
 void displayDebugInterface3D()
 {
-	
+
 	debug_state.mouseOverUI = 0;
 
 	ent_debug_binds_profile.trickleKeys = conVisible();
@@ -5560,7 +5560,7 @@ void displayDebugInterface3D()
 	displayDebugPowerInfo();
 
 	// Draw various other lines.
-	
+
 	if(game_state.hasEntDebugInfo || game_state.ent_debug_client){
 		//Vec3 pos;
 
@@ -5661,15 +5661,15 @@ void displayDebugInterface2D()
 	if (game_state.disable2Dgraphics || demoIsPlaying() || conVisible() || !e || !isMenu(MENU_GAME))
 		return;
 
-		
+
 	PERFINFO_AUTO_START("displayEntDebugInfoTextBegin",1);
-	
+
 		displayEntDebugInfoTextBegin();
 		{
 			int w, h;
 			windowSize(&w,&h);
 			if (!gfx_state.screenshot && !game_state.beacons_loaded && !isProductionMode())
-				printDebugStringAlign( "^1THIS MAP HAS NOT BEEN BEACONIZED", 
+				printDebugStringAlign( "^1THIS MAP HAS NOT BEEN BEACONIZED",
 					(w / 2)-40, h - 20, 80, 20, ALIGN_HCENTER, 1, 0, -1, -1, 255);
 			// TODO: how do I beaconize?
 		}
@@ -5688,7 +5688,7 @@ void displayDebugInterface2D()
 	{
 		drawAccessLevelDebugInterfaces();
 	}
-		
+
 	PERFINFO_AUTO_START("displayEntDebugInfoTextEnd",1);
 
 		displayEntDebugInfoTextEnd();
@@ -5720,10 +5720,10 @@ static int receiveServerPerformanceUpdateLayout(Packet* pak, int* totalCount, Pe
 	info->rootStatic = (PerformanceInfo**)pktGetBits(pak, 32);
 
 	info->infoType = pktGetBits(pak, 1);
-	
+
 	if(info->infoType){
 		// First bit == 1 means that it's either 1 or 2.
-		
+
 		info->infoType = 1 + pktGetBits(pak, 1);
 	}
 
@@ -5789,7 +5789,7 @@ void entDebugReceiveServerPerformanceUpdate(Packet* pak){
 		entDebugClearServerPerformanceInfo();
 		return;
 	}
-	
+
 	if(layoutID < debug_state.serverTimersLayoutID){
 		return;
 	}
@@ -5815,7 +5815,7 @@ void entDebugReceiveServerPerformanceUpdate(Packet* pak){
 
 			SAFE_FREE(debug_state.serverTimerName);
 			SAFE_FREE(debug_state.serverTimers);
-			
+
 			debug_state.serverTimerName = newNames;
 			debug_state.serverTimers = newInfo;
 
@@ -5895,25 +5895,25 @@ void entDebugReceiveAStarRecording(Packet* pak){
 	while(pktGetBits(pak, 1)){
 		AStarBeaconBlock* block = createAStarBeaconBlock();
 		int count;
-		
+
 		block->pos[0] = pktGetF32(pak);
 		block->pos[1] = pktGetF32(pak);
 		block->pos[2] = pktGetF32(pak);
-		
+
 		block->searchY = pktGetF32(pak);
-		
+
 		count = pktGetBitsPack(pak, 8);
-		
+
 		while(count--){
 			AStarPoint* point = createAStarPoint();
-			
+
 			point->pos[0] = pktGetF32(pak);
 			point->pos[1] = pktGetF32(pak);
 			point->pos[2] = pktGetF32(pak);
-			
+
 			eaPush(&block->beacons, point);
 		}
-		
+
 		eaPush(&debug_state.aStarRecording.blocks, block);
 	}
 
@@ -5925,29 +5925,29 @@ void entDebugReceiveAStarRecording(Packet* pak){
 		AStarRecordingSet* set = MP_ALLOC(AStarRecordingSet);
 
 		set->checkedConnectionCount = pktGetBitsPack(pak, 10);
-		
+
 		set->costSoFar = pktGetBitsPack(pak, 10);
 		set->totalCost = pktGetBitsPack(pak, 10);
-		
+
 		while(pktGetBits(pak, 1)){
 			AStarConnectionInfo* info = createAStarConnectionInfo();
-			
+
 			if(pktGetBits(pak, 1)){
 				info->queueIndex = pktGetBitsPack(pak, 8);
 				info->totalCost = pktGetBitsPack(pak, 24);
 				info->costSoFar = pktGetBitsPack(pak, 24);
 			}
-			
+
 			info->beaconPos[0] = pktGetF32(pak);
 			info->beaconPos[1] = pktGetF32(pak);
 			info->beaconPos[2] = pktGetF32(pak);
-			
+
 			eaPush(&set->nextConns, info);
 		}
-		
+
 		while(pktGetBits(pak, 1)){
 			AStarPoint* point = MP_ALLOC(AStarPoint);
-			
+
 			point->set = set;
 			point->pos[0] = pktGetF32(pak);
 			point->pos[1] = pktGetF32(pak);
@@ -5964,7 +5964,7 @@ void entDebugReceiveAStarRecording(Packet* pak){
 
 			eaPush(&set->points, point);
 		}
-		
+
 		set->index = eaSize(&debug_state.aStarRecording.sets);
 
 		eaPush(&debug_state.aStarRecording.sets, set);
@@ -5975,16 +5975,16 @@ void entDebugReceiveAStarRecording(Packet* pak){
 
 static ClientEntityDebugPoint* addClientDebugPoint(ClientEntityDebugInfo* info){
 	ClientEntityDebugPoint* point;
-	
+
 	if(!info)
 		return NULL;
-		
+
 	point = dynArrayAdd(&info->points.pos, sizeof(*info->points.pos), &info->points.count, &info->points.maxCount, 1);
-	
+
 	SAFE_FREE(point->tag);
-	
+
 	memset(point, 0, sizeof(*point));
-		
+
 	return point;
 }
 
@@ -6072,12 +6072,12 @@ void receiveEntDebugInfo(Entity* e, Packet* pak){
 		// Read the point log.
 
 		pointCount = pktGetBitsPack(pak, 1);
-		
+
 		GET_INFO(info->points.count, 0);
 
 		for(i = 0; i < pointCount; i++){
 			ClientEntityDebugPoint* point = addClientDebugPoint(info);
-			
+
 			GET_INFO(point->argb, pktGetBits(pak, 32));
 			GET_INFO(point->lineToPrevious, i ? 1 : 0);
 			GET_INFO(point->pos[0], pktGetF32(pak));

@@ -14,7 +14,7 @@
 #include "model.h"
 #include "group.h"
 #include "edit.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "gfx.h"
 #include "entDebug.h"
 #include "uiNet.h"
@@ -34,7 +34,7 @@ CameraInfo	cam_info;
 
 void camSetPyr(Vec3 pyr)
 {
-	if(cam_info.camIsLocked == true) 
+	if(cam_info.camIsLocked == true)
 		return;
 
 	copyVec3(pyr,cam_info.targetPYR);
@@ -45,7 +45,7 @@ void camSetPyr(Vec3 pyr)
 		F32 factor = game_state.camera_shake;
 		cam_info.targetPYR[0] = fixAngle(cam_info.targetPYR[0] + factor * RAD((rand() % 31 - 15) / 10.f));
 		cam_info.targetPYR[1] = fixAngle(cam_info.targetPYR[1] + factor * RAD((rand() % 31 - 15) / 10.f));
-		cam_info.targetPYR[2] = fixAngle(cam_info.targetPYR[2] + factor * RAD((rand() % 91 - 45) / 10.f));	
+		cam_info.targetPYR[2] = fixAngle(cam_info.targetPYR[2] + factor * RAD((rand() % 91 - 45) / 10.f));
 	}
 }
 
@@ -53,7 +53,7 @@ void camSetPyr(Vec3 pyr)
 /* interpolate sets a position that where the camera should eventually move to.  The camera code may decide how fast to move to the given position.*/
 void camSetPos(const Vec3 pos, bool interpolate )
 {
-	if(cam_info.camIsLocked == true)  
+	if(cam_info.camIsLocked == true)
 		return;
 
 	copyVec3(pos,cam_info.mat[3]);
@@ -114,7 +114,7 @@ static void camPushPull(CameraInfo* ci, float newZDist, int snap)
 	float idealDelta;
 	float lastDist = ci->lastZDist;
 
-	if(snap)       
+	if(snap)
 	{
 		lastDist = newZDist;
 	}
@@ -128,7 +128,7 @@ static void camPushPull(CameraInfo* ci, float newZDist, int snap)
 		// Clamp real delta to ideal delta in case timestep is large.
 		if(fabs(realDelta) > fabs(idealDelta))
 			realDelta = idealDelta;
-		
+
 		lastDist = lastDist + realDelta;
 	}
 
@@ -141,15 +141,15 @@ static void camSetAlpha(CameraInfo* ci)
 	Vec3 translucencyInterpPoints[] = { {1000, 255, 0},{10, 255, 0},{3, 255, 0}, {0.0, 16, 0}, {-1000, 0, 0} };
 	int interpResult;
 
-	interpResult = graphInterp(ci->lastZDist, translucencyInterpPoints); 
-	//xyprintf( 20, 20, "cam SetAlpha %d", interpResult ); 
-	entSetAlpha( playerPtr(), interpResult, SET_BY_CAMERA );	
+	interpResult = graphInterp(ci->lastZDist, translucencyInterpPoints);
+	//xyprintf( 20, 20, "cam SetAlpha %d", interpResult );
+	entSetAlpha( playerPtr(), interpResult, SET_BY_CAMERA );
 }
 
 float camGetPlayerHeight()
 {
 	Entity* player = playerPtr();
-		
+
 	float camRaiseHeight = 0.0;
 	// Figure out new camera height based on player height.
 	// Account for any geometry that may have cut through the player model.
@@ -172,14 +172,14 @@ float camGetPlayerHeight()
 		{
 			curHeight = camRaiseHeight;
 		}
-		
+
 		if(player && player->pchar && player->pchar->attrCur.fHitPoints <= 0)
 		{
 			camRaiseHeight = 2.0;
 		}
-		
+
 		curHeight += (camRaiseHeight - curHeight) * TIMESTEP / 30;
-		
+
 		camRaiseHeight = curHeight;
 
 		if(!control_state.nocoll && player->pl && !baseedit_Mode()){
@@ -219,7 +219,7 @@ float findProperZDistanceOld( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 *
 */
 {
-	// Tweakable variables	
+	// Tweakable variables
 	F32 cameraRadius = 0.6;  // cushion radius around camera
 	F32 dist;
 	F32 reverseFOV;
@@ -351,12 +351,12 @@ float findProperZDistanceOld( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 			// move cursor to the next bit...
 			radCursor = radCursor << 1;
 		}
-	}	
+	}
 
 	return dist;
 }
 
-typedef struct CamRay 
+typedef struct CamRay
 {
 	Vec3 headPos;
 	Vec3 camPos;
@@ -374,8 +374,8 @@ int camRaySort( const CamRay * f1, const CamRay * f2 )
 	return 1;
 }
 
-// Tweakable Camera collision variables	
-#define LENGTH_EXCLUSION_CYLINDER 5.0	//If, by freak geometry, something still manages to slip inside this cylinder in front 
+// Tweakable Camera collision variables
+#define LENGTH_EXCLUSION_CYLINDER 5.0	//If, by freak geometry, something still manages to slip inside this cylinder in front
 #define RADIUS_EXCLUSION_CYLINDER 0.5	//of the camera, reject this camera dist
 #define TOTAL_CAM_RAYS 30				//Cast this many rays
 #define MAX_BLOCKERS 23
@@ -386,33 +386,33 @@ int camRaySort( const CamRay * f1, const CamRay * f2 )
 #define AMOUNT_TO_SHORTEN_RAYS 4.0  //since we're using a cylinder now, the rays are around the camera instead of converging on them, soth
 
 float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDist, int * instantPullPush, F32 goodSpots[], int goodSpotCount )
-{  
+{
 	int i;
 	F32 dist = -1000; //return value (-1000=debug val)
-	CamRay camRays[TOTAL_CAM_RAYS] = {0};    
+	CamRay camRays[TOTAL_CAM_RAYS] = {0};
 	Entity *player = playerPtr();
 
-	PERFINFO_AUTO_START("CalcRays",1);  
+	PERFINFO_AUTO_START("CalcRays",1);
 	// Calculate the rays around the camera
 	{
 		int i, s;
-		F32 m, rad, rdm, xmove, ymove; 
+		F32 m, rad, rdm, xmove, ymove;
 		Vec3 newCameraPos;
- 
+
 		// Find newCameraPos (the camera pulled to the first candidate spot
-		copyVec3(newCameraTarget, newCameraPos);       
+		copyVec3(newCameraTarget, newCameraPos);
 		moveVinZ(newCameraPos, ci->cammat, goodSpots[ 0 ]);
 
 		//Cone of collision
-		for( i = 0 ; i < TOTAL_CAM_RAYS - 1 ; i++ )       
+		for( i = 0 ; i < TOTAL_CAM_RAYS - 1 ; i++ )
 		{
 			CamRay * camRay = &camRays[i];
 
 			//This makes the rays spread inside the area of the camera circle
-			s = i+37;   
-			rdm = ABS( qfrandFromSeed( &s ) );  
-			rdm = 1.0 - rdm * rdm * rdm ; 
- 
+			s = i+37;
+			rdm = ABS( qfrandFromSeed( &s ) );
+			rdm = 1.0 - rdm * rdm * rdm ;
+
 			//Find rays
 			m = (F32)(i*360) / (F32)(TOTAL_CAM_RAYS-1);
 
@@ -431,30 +431,30 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 		}
 
 		//Cast last one down the middle
-		copyVec3(newCameraPos, camRays[TOTAL_CAM_RAYS-1].camPos );  
+		copyVec3(newCameraPos, camRays[TOTAL_CAM_RAYS-1].camPos );
 		copyVec3(newCameraTarget, camRays[TOTAL_CAM_RAYS-1].headPos );
 	}
 
 	PERFINFO_AUTO_STOP_START("CollGrids",1);
-	// Find collision distances of each ray, and sort rays by distance of collision from head 
+	// Find collision distances of each ray, and sort rays by distance of collision from head
 	{
 		Mat4 camInv;
 		Mat4 cammat;
-		int needsBackFaceCheck; 
+		int needsBackFaceCheck;
 
 		//Find camInv -- inverted cammat at head
-		copyMat4( ci->cammat, cammat );  
+		copyMat4( ci->cammat, cammat );
 		copyVec3( newCameraTarget, cammat[3] );
-		invertMat4Copy( cammat, camInv ); 
+		invertMat4Copy( cammat, camInv );
 
-		//Get the disc around the head the rays emanate from.  Check that for obstruction. 
+		//Get the disc around the head the rays emanate from.  Check that for obstruction.
 		//If any,
 		needsBackFaceCheck = 1;
-		
-		for( i = 0 ; i < TOTAL_CAM_RAYS ; i++ )        
+
+		for( i = 0 ; i < TOTAL_CAM_RAYS ; i++ )
 		{
 			CamRay * camRay = &camRays[i];
-			Vec3 dv; 
+			Vec3 dv;
 			bool insideAnObject = false;
 
 			//If this line begins inside an object, it is automatically considered blocked at the source.
@@ -490,7 +490,7 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 						drawLine3DWidth( camRay->headPos, camRay->camPos, 0xf0000000, 2);
 				}
 				else
-				{	
+				{
 					camRay->camZNeededToAvoidThis = goodSpots[0];
 
 					if( game_state.cameraDebug & 2 )
@@ -498,25 +498,25 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 				}
 			}
 		}
-		
 
-		qsort( camRays, TOTAL_CAM_RAYS, sizeof( CamRay ), camRaySort );  
+
+		qsort( camRays, TOTAL_CAM_RAYS, sizeof( CamRay ), camRaySort );
 	}
 
 	PERFINFO_AUTO_STOP_START("FindBest",1);
 
 	//Check Rays against good spots
-	for( i = 0 ; i < goodSpotCount ; i++ )    
+	for( i = 0 ; i < goodSpotCount ; i++ )
 	{
 		dist = goodSpots[i] - JUMP_FORWARD_TO_STAY_OUT_OF_TROUBLE;
-		if( dist - AMOUNT_TO_SHORTEN_RAYS < camRays[ MAX_BLOCKERS ].camZNeededToAvoidThis )	
+		if( dist - AMOUNT_TO_SHORTEN_RAYS < camRays[ MAX_BLOCKERS ].camZNeededToAvoidThis )
 			break;
 	}
-	
+
 	//A little play in the system: If there's a spot close by that's good, and there are still some blocked rays, choose the close spot
 	if( !ci->triedToScrollBackThisFrame ) //don't do this if the mouse wheel just ticked back, so you don't get stuck
-	{ 
-		for( i = 0 ; i < goodSpotCount ; i++ )    
+	{
+		for( i = 0 ; i < goodSpotCount ; i++ )
 		{
 			F32 closeGoodSpot = goodSpots[i] - JUMP_FORWARD_TO_STAY_OUT_OF_TROUBLE;
 
@@ -526,7 +526,7 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 				if( ABS( ci->zDistImMovingToward - closeGoodSpot ) < 2.0 ) //And it's close to where you wanted to be last frame
 				{
 					//and the spot you found still has a fair number of blockers
-					if( dist - AMOUNT_TO_SHORTEN_RAYS > camRays[ MAX_BLOCKERS_TO_MOVE_BACK ].camZNeededToAvoidThis ) 
+					if( dist - AMOUNT_TO_SHORTEN_RAYS > camRays[ MAX_BLOCKERS_TO_MOVE_BACK ].camZNeededToAvoidThis )
 					{
 						dist = closeGoodSpot;
 						break;
@@ -538,18 +538,18 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 
 	//If the camera got moved forward by a collision, turn off smoothing, and jump forward
 	if( dist < ci->zDistImMovingToward && dist < maxZDist - JUMP_FORWARD_TO_STAY_OUT_OF_TROUBLE - 0.001 ) //cuz floating point is a cruel mistress
-		*instantPullPush = 1; 
+		*instantPullPush = 1;
 
 	//finally if the camera tells you to move back between 1 and 4 feet because the good spot has changed, don't bother
-	//TO DO 
- 
+	//TO DO
+
 	assert( dist > -1.1 );
-	dist = MAX( 0, dist ); 
+	dist = MAX( 0, dist );
 
 	//Debug
-	if( game_state.cameraDebug & 4 )    
+	if( game_state.cameraDebug & 4 )
 	{
-		for( i = 0 ; i < TOTAL_CAM_RAYS ; i++ )     
+		for( i = 0 ; i < TOTAL_CAM_RAYS ; i++ )
 		{
 			CamRay * camRay = &camRays[i];
 			if( i == MAX_BLOCKERS )
@@ -560,15 +560,15 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 				xyprintf( 20, 30+i, "%d %f %d", i, camRays[ i ].camZNeededToAvoidThis, camRay->hit );
 		}
 
-		for( i = 0 ; i < goodSpotCount ; i++ )     
+		for( i = 0 ; i < goodSpotCount ; i++ )
 		{
 			Vec3 x, y;
 			F32 goodSpot = goodSpots[i];
 			F32 goodSpotUsed = goodSpots[i] - JUMP_FORWARD_TO_STAY_OUT_OF_TROUBLE;
 			copyVec3( newCameraTarget, x );
 			copyVec3( newCameraTarget, y );
-			moveVinZ(x, ci->cammat, goodSpot ); 
-			moveVinZ(y, ci->cammat, goodSpotUsed ); 
+			moveVinZ(x, ci->cammat, goodSpot );
+			moveVinZ(y, ci->cammat, goodSpotUsed );
 
 			drawLine3DWidth( x, y, 0xf000ff00, 10);
 
@@ -585,7 +585,7 @@ float findProperZDistanceNew( CameraInfo * ci, Vec3 newCameraTarget, F32 maxZDis
 }
 
 static void swapInt (int * a, int * b )
-{	
+{
 	int t;
 	t=*a;
 	*a=*b;
@@ -596,7 +596,7 @@ static Vec3 splatVertsX[MAX_SHADOW_TRIS*3];
 
 int sortTrisByNearestZ( const Triangle * t1, const Triangle * t2 )
 {
-	if( (splatVertsX[ t1->index[0] ])[2] < (splatVertsX[ t2->index[0] ])[2] ) 
+	if( (splatVertsX[ t1->index[0] ])[2] < (splatVertsX[ t2->index[0] ])[2] )
 		return -1;
 
 	if( (splatVertsX[ t1->index[0] ])[2] == (splatVertsX[ t2->index[0] ])[2] )
@@ -617,7 +617,7 @@ int findGoodSpots( CameraInfo * ci, F32 maxZDist, Vec3 newCameraTarget, F32 good
 
 	//Xform all verts into camera space
 	copyMat4( ci->cammat, cammat );
-	copyVec3(newCameraTarget, cammat[3]);    
+	copyVec3(newCameraTarget, cammat[3]);
 	moveVinZ(cammat[3], cammat, maxZDist);
 
 	invertMat4Copy( cammat, camInv );
@@ -677,49 +677,49 @@ void updateCameraSplat( CameraInfo * ci, F32 maxZDist, Vec3 newCameraTarget )
 	Vec3 dir;
 	Mat3 mat;
 
-	splatParams = &sp;  
+	splatParams = &sp;
 
-	//Make sure you have a good node   
+	//Make sure you have a good node
 	if( !gfxTreeNodeIsValid( ci->simpleShadow, ci->simpleShadowUniqueId ) )
 		ci->simpleShadow = initSplatNode( &ci->simpleShadowUniqueId, "white", "white", 0 );
 
-	splatParams->node = ci->simpleShadow;   
- 
-	copyMat3( ci->cammat, mat );   
- 
-	splatParams->shadowSize[0] = RADIUS_EXCLUSION_CYLINDER;  //looks wrong, but is right, because shadowSize is actually 2x in X and Z, for obscure reasons    
+	splatParams->node = ci->simpleShadow;
+
+	copyMat3( ci->cammat, mat );
+
+	splatParams->shadowSize[0] = RADIUS_EXCLUSION_CYLINDER;  //looks wrong, but is right, because shadowSize is actually 2x in X and Z, for obscure reasons
 	splatParams->shadowSize[1] = maxZDist;
 	splatParams->shadowSize[2] = RADIUS_EXCLUSION_CYLINDER; //looks wrong, see above
 	splatParams->maxAlpha = 100;
-	 
-	copyVec3(newCameraTarget, newCameraPos);    
+
+	copyVec3(newCameraTarget, newCameraPos);
 	moveVinZ(newCameraPos, mat, maxZDist);
-	copyVec3( newCameraPos, splatParams->projectionStart );   //Get Projection Start   
-	copyMat3( mat, splatParams->mat ); 
-	pitchMat3( RAD(-90), splatParams->mat ); 
+	copyVec3( newCameraPos, splatParams->projectionStart );   //Get Projection Start
+	copyMat3( mat, splatParams->mat );
+	pitchMat3( RAD(-90), splatParams->mat );
 	copyVec3( newCameraPos, splatParams->mat[3] );
 
-	subVec3( newCameraPos, newCameraTarget, dir ); 
+	subVec3( newCameraPos, newCameraTarget, dir );
 	normalVec3( dir );
 	copyVec3( dir, splatParams->projectionDirection );
 
 	//Debug
 	splatParams->projectionDirection[0] = 0;
-	splatParams->projectionDirection[1] = -1; 
+	splatParams->projectionDirection[1] = -1;
 	splatParams->projectionDirection[2] = 0;
 	//End Debug
 
-	splatParams->max_density = 1000.0; //TO DO make none 
+	splatParams->max_density = 1000.0; //TO DO make none
 
-	splatParams->rgb[0] = 0;  
+	splatParams->rgb[0] = 0;
 	splatParams->rgb[1] = 0;
 	splatParams->rgb[2] = 0;
 
 	splatParams->falloffType = SPLAT_FALLOFF_NONE;
 	splatParams->flags |= SPLAT_CAMERA;
 
-	updateASplat( splatParams ); 
- 	 
+	updateASplat( splatParams );
+
 	if( game_state.cameraDebug & 1 )
 	{
 		updateSplatTextureAndColors(splatParams, 2.0f * splatParams->shadowSize[0], 2.0f * splatParams->shadowSize[2]);
@@ -727,7 +727,7 @@ void updateCameraSplat( CameraInfo * ci, F32 maxZDist, Vec3 newCameraTarget )
 	else
 	{
 		splatParams->node->alpha = 0;
-		((Splat*)splatParams->node->splat)->drawMe = 0; //If the splat wasn't updated, don't draw it. 
+		((Splat*)splatParams->node->splat)->drawMe = 0; //If the splat wasn't updated, don't draw it.
 		return;
 	}
 }
@@ -746,16 +746,16 @@ static void camThirdPerson(	CameraInfo *ci )
 PERFINFO_AUTO_START("Top",1);
 
 	// Player model should be visible in 3rd person mode.  Do not hide it.
-	playerHide(0); 
+	playerHide(0);
 
 	// Extract player position and camera orientation + position from ci
 	copyVec3(ci->mat[3], plr);
 
-	
+
 	/*********************************
 	 * Rotate camera
 	 */
-	
+
 	{
 		int i;
 		Vec3 camPYRScale;
@@ -765,12 +765,12 @@ PERFINFO_AUTO_START("Top",1);
 		if(ci->rotate_scale < 1){
 			ci->rotate_scale *= 1 + 0.08 * camTimeStep();
 		}
-		
+
 		if(ci->rotate_scale < 0.0001)
 			ci->rotate_scale = 0.001;
 		else if(ci->rotate_scale > 1)
 			ci->rotate_scale = 1;
-			
+
 		if(control_state.server_state->fly){
 			copyVec3(camAirPYRScale, camPYRScale);
 			camPYRScale[1] = camAirPYRScale[1] * ci->rotate_scale;
@@ -805,17 +805,17 @@ PERFINFO_AUTO_START("Top",1);
 		// Produce the new, rotated camera matrix
 		createMat3YPR(ci->cammat, ci->pyr);
 	}
-  
-	game_state.fov = game_state.fov_3rd;  
-	copyVec3(plr, newCameraTarget);  
-	newCameraTarget[1] += camGetPlayerHeight(); 
-  
-	copyVec3( newCameraTarget, debugTemp );       
+
+	game_state.fov = game_state.fov_3rd;
+	copyVec3(plr, newCameraTarget);
+	newCameraTarget[1] += camGetPlayerHeight();
+
+	copyVec3( newCameraTarget, debugTemp );
 
 PERFINFO_AUTO_STOP_START("YSpring",1);
 
-	//Cushion Y changes  
-	if( 0 && !(game_state.cameraDebug & 8) )        
+	//Cushion Y changes
+	if( 0 && !(game_state.cameraDebug & 8) )
 	{
 #define MAX_SPRING_LENGTH 1.0
 #define SPRING_STRENGTH 0.03
@@ -823,22 +823,22 @@ PERFINFO_AUTO_STOP_START("YSpring",1);
 		F32 tgt, curr, realDelta, idealDelta, numStepsF32;
 		F32 fullGap, stepGap, newCurr, stepTgt;
 		int i, numSteps;
-         
+
 		tgt		= newCameraTarget[1];
 		curr	= ci->CameraYLastFrame;
-		fullGap = tgt - curr;  
-		numStepsF32 = 50.0 * TIMESTEP; //One step every 1/300th of a second 
+		fullGap = tgt - curr;
+		numStepsF32 = 50.0 * TIMESTEP; //One step every 1/300th of a second
 
 		numSteps = (int)numStepsF32;
 		stepGap = fullGap/numStepsF32;
-		newCurr = 0;     
-        
-		for( i = 0 ; i <= numSteps; i++ )     
+		newCurr = 0;
+
+		for( i = 0 ; i <= numSteps; i++ )
 		{
 			stepTgt = stepGap*(i+1);
 
-			idealDelta = stepTgt - newCurr; 
-			realDelta = idealDelta * SPRING_STRENGTH; 
+			idealDelta = stepTgt - newCurr;
+			realDelta = idealDelta * SPRING_STRENGTH;
 
 			//MAX_SPRING_LENGTH
 			if( ABS( (idealDelta-realDelta) ) > MAX_SPRING_LENGTH )
@@ -849,53 +849,53 @@ PERFINFO_AUTO_STOP_START("YSpring",1);
 					realDelta = idealDelta+MAX_SPRING_LENGTH;
 			}
 
-			//for the last one, 
+			//for the last one,
 			if( i == numSteps )
 			{
-				F32 pct = ( numStepsF32 - (F32)numSteps ); 
+				F32 pct = ( numStepsF32 - (F32)numSteps );
 				realDelta *= pct;
 			}
 			newCurr += realDelta;
 		}
-		
-		newCameraTarget[1] = curr + newCurr;    
-  
+
+		newCameraTarget[1] = curr + newCurr;
+
 		ci->CameraYLastFrame = newCameraTarget[1];
 
-		if( game_state.cameraDebug & 1 ) 
+		if( game_state.cameraDebug & 1 )
 		{
-			xyprintf( 30, 28, "   TIMESTEP %f", TIMESTEP ); 
-			xyprintf( 30, 29, "   numSteps %d", numSteps ); 
-			xyprintf( 30, 30, "    fullGap %f", fullGap );  
+			xyprintf( 30, 28, "   TIMESTEP %f", TIMESTEP );
+			xyprintf( 30, 29, "   numSteps %d", numSteps );
+			xyprintf( 30, 30, "    fullGap %f", fullGap );
 			xyprintf( 30, 31, " bridgedGap %f", tgt - newCameraTarget[1] );
 		}
 	}
 
-	if( game_state.cameraDebug & 1 ) 
+	if( game_state.cameraDebug & 1 )
 	{
 		Vec3 t1,t2;
 
 		//Top of Head Bar
-		copyVec3( debugTemp, t1 ); 
-		copyVec3( debugTemp, t2 );  
+		copyVec3( debugTemp, t1 );
+		copyVec3( debugTemp, t2 );
 		moveVinX( t1, ci->cammat, 0.25 );
 		moveVinX( t2, ci->cammat, -0.25 );
 		drawLine3DWidth( t1, t2, 0xff7070ff, 3 );
 
 		//Actual Cam Pos Bar
-		copyVec3( newCameraTarget, t1 ); 
-		copyVec3( newCameraTarget, t2 );  
+		copyVec3( newCameraTarget, t1 );
+		copyVec3( newCameraTarget, t2 );
 		moveVinX( t1, ci->cammat, 0.15 );
 		moveVinX( t2, ci->cammat, -0.15 );
 		drawLine3DWidth( t1, t2, 0xf77000f7, 3 );
 
-		//Connect   
+		//Connect
 		drawLine3DWidth( debugTemp, newCameraTarget, 0xffffffff, 3 );
 	}
 
 PERFINFO_AUTO_STOP_START("DistFind",1);
 
-	// Move camera  
+	// Move camera
 	if( game_state.cameraDebug & 32 )
 	{
 		ci->zDistImMovingToward = findProperZDistanceOld( ci, newCameraTarget, game_state.camdist, &instantPullPush );
@@ -917,16 +917,16 @@ PERFINFO_AUTO_STOP_START("DistFind",1);
 PERFINFO_AUTO_STOP_START("Bottom",1);
 
 	//Ignore all the stuff you did above if you are editing a base
-	if( baseedit_Mode() )   
-		ci->zDistImMovingToward = game_state.camdist; 
+	if( baseedit_Mode() )
+		ci->zDistImMovingToward = game_state.camdist;
 
 	{
 		Vec3 newCameraPos;
-		instantPullPush = instantPullPush && ci->zDistImMovingToward < ci->lastZDist; 
+		instantPullPush = instantPullPush && ci->zDistImMovingToward < ci->lastZDist;
 		ci->camDistLastFrame = game_state.camdist;
 		ci->triedToScrollBackThisFrame = 0;
 		camPushPull(ci, ci->zDistImMovingToward, instantPullPush); //sets ci->lastZDist from dist with lag (unless instant)
-		copyVec3(newCameraTarget, newCameraPos); 
+		copyVec3(newCameraTarget, newCameraPos);
 		moveVinZ(newCameraPos, ci->cammat, ci->lastZDist);
 		camSetAlpha(ci);
 
@@ -940,12 +940,12 @@ PERFINFO_AUTO_STOP_START("Bottom",1);
 				if (newCameraPos[i]<-1000000 || newCameraPos[i]>1000000)
 					newCameraTarget[i] = newCameraPos[i] = ci->cammat[3][i];
 			}
-		}     
-		copyVec3(newCameraPos,ci->cammat[3]);    
+		}
+		copyVec3(newCameraPos,ci->cammat[3]);
 	}
-   
-	if( game_state.cameraDebug & 16 )  
-	{       
+
+	if( game_state.cameraDebug & 16 )
+	{
 		Mat4 mat;
 		Vec3 pos = { -20, 20, -30 };
 		Vec3 dir;
@@ -955,7 +955,7 @@ PERFINFO_AUTO_STOP_START("Bottom",1);
 		if( !vec3IsZero( game_state.cameraDebugPos ) )
 			copyVec3( game_state.cameraDebugPos, pos );
 
-		copyMat4( mat, ci->cammat); 
+		copyMat4( mat, ci->cammat);
 
 		addVec3( ci->cammat[3], pos, ci->cammat[3] );
 
@@ -965,9 +965,9 @@ PERFINFO_AUTO_STOP_START("Bottom",1);
 	}
 
 	if(0)
-	{ 
+	{
 		Vec3 c,x,y,z;
-  
+
 		//Player
 		copyVec3( ENTPOS(playerPtr()), c );
 		copyVec3( ENTPOS(playerPtr()), x );
@@ -976,12 +976,12 @@ PERFINFO_AUTO_STOP_START("Bottom",1);
 		moveVinX( x, ENTMAT(playerPtr()), 0.8);
 		moveVinY( y, ENTMAT(playerPtr()), 0.8);
 		moveVinZ( z, ENTMAT(playerPtr()), 0.8);
- 
+
 		drawLine3DWidth( c, x, 0xffffffff, 5 ); //X White
 		drawLine3DWidth( c, y, 0xff777777, 5 ); //Y Light Gray
 		drawLine3DWidth( c, z, 0xff333333, 5 ); //Z Dark Gray
- 
-		// World Coordinates 
+
+		// World Coordinates
 		copyVec3( ENTPOS(playerPtr()), c );
 		copyVec3( ENTPOS(playerPtr()), x );
 		copyVec3( ENTPOS(playerPtr()), y );
@@ -989,7 +989,7 @@ PERFINFO_AUTO_STOP_START("Bottom",1);
 		moveVinX( x, unitmat, 1.3);
 		moveVinY( y, unitmat, 1.3);
 		moveVinZ( z, unitmat, 1.3);
-  
+
 		drawLine3DWidth( c, x, 0xffffffff, 2 ); //X White
 		drawLine3DWidth( c, y, 0xff777777, 2 ); //Y Light Gray
 		drawLine3DWidth( c, z, 0xff333333, 2 ); //Z Dark Gray
@@ -1092,7 +1092,7 @@ extern int mouse_dx,mouse_dy;
 	entSetAlpha( playerPtr(), 255, SET_BY_CAMERA );
 	copyVec3(view_pos,ci->mat[3]);
 	copyMat3(ci->mat,cam_info.cammat);
-	copyVec3(ci->mat[3],pos); 
+	copyVec3(ci->mat[3],pos);
 	game_state.fov = game_state.fov_1st;
 	copyVec3(pos,plr);
 	copyVec3(pos,eye);
@@ -1189,14 +1189,14 @@ void camUpdate()
 {
 	int		i;
 
-	if(game_state.camera_shake) 
+	if(game_state.camera_shake)
 	{
 		game_state.camera_shake -= game_state.camera_shake_falloff * camTimeStep();
 
 		if(game_state.camera_shake < 0.01)
 			game_state.camera_shake = 0;
 	}
-	if(game_state.camera_blur) 
+	if(game_state.camera_blur)
 	{
 		game_state.camera_blur -= game_state.camera_blur_falloff * camTimeStep();
 
@@ -1291,7 +1291,7 @@ void camUpdate()
 	{
 		game_state.fov = game_state.fov_custom;
 	}
-	
+
 	if (game_state.camera_shared_master)
 		memcpy(sharedMemoryGetScratch(sizeof(cam_info)), &cam_info, sizeof(cam_info));
 	else if (game_state.camera_shared_slave)

@@ -1,7 +1,7 @@
 #define RT_ALLOW_BINDTEXTURE
 #define WCW_STATEMANAGER
 #include "ogl.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "render.h"
 #include "wcw_statemgmt.h"
 #include "rt_cgfx.h"
@@ -37,8 +37,8 @@
 #define SSE_PREFETCH_L1(ptr) _mm_prefetch(ptr, 1)
 #define SSE_PREFETCH_L2(ptr) _mm_prefetch(ptr, 2)
 #else
-#define SSE_PREFETCH_L1(ptr) 
-#define SSE_PREFETCH_L2(ptr) 
+#define SSE_PREFETCH_L1(ptr)
+#define SSE_PREFETCH_L2(ptr)
 #endif
 
 #ifndef FINAL
@@ -57,7 +57,7 @@
 	#define ASSERT_GLON(_pname, _value) do {} while(0)
 #endif
 
-typedef enum { 
+typedef enum {
 	kDataSrc_PgmLocalVariable = 0,	// param binding is via a naming convention.
 	kDataSrc_EnvVariable,			// not cleared when a new shader program is bound
 	kDataSrc_OpenGLMatrix,			// dataKey1 of the param spec = tMatrixType
@@ -84,14 +84,14 @@ typedef enum {
 } tFogStateType;
 
 typedef enum {
-	kLightVal_Position = 600,		
-	kLightVal_Half,			
-	kLightVal_Diffuse,		
-	kLightVal_Ambient,		
+	kLightVal_Position = 600,
+	kLightVal_Half,
+	kLightVal_Diffuse,
+	kLightVal_Ambient,
 	kLightVal_Specular,
 	kLightVal_MatShininess,
 	kLightVal_ProdDiffuse,
-	kLightVal_ProdAmbient,	
+	kLightVal_ProdAmbient,
 	kLightVal_ProdSpecular
 } tLightValueType;
 
@@ -176,7 +176,7 @@ static U64 sCurrentShaderOpenGLFlags = 0;
 // Will fail an assert() at runtime otherwise.
 //--------------------------------------------------------------------------
 static tShaderParamSpec sShaderParamSpecTbl[] = {
-//																									
+//
 //																															dataCacheVec4Ofs
 //																														numElements  														openGlDirtyBit
 //																													elementFloatCols													paramNmCacheKey
@@ -186,7 +186,7 @@ static tShaderParamSpec sShaderParamSpecTbl[] = {
 	//-----------------------------------------
 	//	Matrix params
 	//-----------------------------------------
-	
+
 	{ kMatrixParam_ModelView,						kShaderPgmType_VERTEX,		"g_ModelViewMatrix",			4,	4,	1,	-1,	kDataSrc_OpenGLMatrix,		kMatrix_ModelView,		-1,	-1,	kOpenGLDirtyBit_Matrix_ModelView },
 	{ kMatrixParam_ModelViewIT,						kShaderPgmType_VERTEX,		"g_ModelViewMatrixInvTrans",	4,	4,	1,	-1,	kDataSrc_OpenGLMatrix,		kMatrix_ModelViewIT,	-1,	-1,	kOpenGLDirtyBit_Matrix_ModelViewIT },
 	{ kMatrixParam_Projection,						kShaderPgmType_VERTEX,		"g_ProjectionMatrix",			4,	4,	1,	-1,	kDataSrc_OpenGLMatrix,		kMatrix_Projection,		-1,	-1,	kOpenGLDirtyBit_Matrix_Projection },
@@ -261,8 +261,8 @@ static tShaderParamSpec sShaderParamSpecTbl[] = {
 	{ kShaderParam_BoneMatrixArrVP,					kShaderPgmType_VERTEX,		"g_BoneMatrixArrVP",			1,	4,	48,	-1,	kDataSrc_PgmLocalVariable,	16,	-1,	-1,	0 },
 
 	{ kShaderParam_PlanarReflectionPlaneVP,			kShaderPgmType_VERTEX,		"g_PlanarReflectionPlaneVP",	1,	4,	1,	-1,	kDataSrc_PgmLocalVariable,	9,	-1,	-1,	0 },
-	
-	// .... End of vertex shader params. New entries can be added anywhere; just make sure 
+
+	// .... End of vertex shader params. New entries can be added anywhere; just make sure
 	//		the table order matches the enum order.
 
 	//-----------------------------------------
@@ -374,11 +374,11 @@ static tShaderParamSpec sShaderParamSpecTbl[] = {
 
 	{ kShaderParam_NewFeatureFP,					kShaderPgmType_FRAGMENT,	"g_NewFeatureFP",				1,	4,	1,	-1,	kDataSrc_EnvVariable,		60,	-1,	-1,	0 },
 	{ kShaderParam_TestFlagsFP,						kShaderPgmType_FRAGMENT,	"g_TestFlagsFP",				1,	4,	1,	-1,	kDataSrc_EnvVariable,		61,	-1,	-1,	0 },
-	
+
 	{ kShaderParam_DebugEnableFlagSetsFP,			kShaderPgmType_FRAGMENT,	"g_DebugEnableFlagSetsFP",		1,	4,	1,	-1,	kDataSrc_EnvVariable,		65,	-1,	-1,	0 },
 	{ kShaderParam_DebugDisabledColorFP,			kShaderPgmType_FRAGMENT,	"g_DebugDisabledColorFP",		1,	4,	1,	-1,	kDataSrc_EnvVariable,		66,	-1,	-1,	0 },
 
-	// .... End of fragment shader params. New entries can be added anywhere; just make sure 
+	// .... End of fragment shader params. New entries can be added anywhere; just make sure
 	//		the table order matches the enum order.
 
 };
@@ -412,7 +412,7 @@ static void setFragmentProgramConstColor( GLuint index, const GLfloat* vec4 );
 //		Distinctions:
 //			-	Once a value has been sent to the shader, it's no longer "dirty", but it is
 //				still "set". If we do more drawing with the same shader we don't need to
-//				send a parameter update. 
+//				send a parameter update.
 //			-	If another shader is bound and it uses the same value ("g_AmbientColor", lets' say)
 //				we can send that "set" value to the new shader even though it isn't "dirty".
 //
@@ -443,25 +443,25 @@ tParamDataCache sLocalDataCache[kDataSrc_COUNT][kShaderPgmType_COUNT] = {
 
 
 //state vars (put this in an structure?)
-static GLenum sfunc  = GL_ALWAYS; 
+static GLenum sfunc  = GL_ALWAYS;
 static GLint  sref   = 0;
 static GLuint smask  = 0xffffffff;
 static GLenum sfail  = GL_KEEP;
 static GLenum szfail = GL_KEEP;
 static GLenum szpass = GL_KEEP;
-static int    senabled = 0; 
-static int    numclipplanesenabled = 0; 
+static int    senabled = 0;
+static int    numclipplanesenabled = 0;
 static GLdouble clipplanes[6][4];
 
-static float slight[2][4][4] =	
+static float slight[2][4][4] =
 						{
-							{   
+							{
 								{0.0, 0.0, 0.0, 1.0},       //GL_AMBIENT
                                 {1.0, 1.0, 1.0, 1.0},		//GL_DIFFUSE
                                 {1.0, 1.0, 1.0, 1.0},		//GL_SPECULAR
                                 {0.0, 0.0, 1.0, 0.0}		//GL_POSITION
-							},	
-							{   
+							},
+							{
 								{0.0, 0.0, 0.0, 1.0},       //GL_AMBIENT
                                 {1.0, 1.0, 1.0, 1.0},		//GL_DIFFUSE
                                 {1.0, 1.0, 1.0, 1.0},		//GL_SPECULAR
@@ -471,13 +471,13 @@ static float slight[2][4][4] =
 
 static float slight_ogl[2][4][4] =
 						{
-							{   
+							{
 								{0.0, 0.0, 0.0, 1.0},       //GL_AMBIENT
                                 {1.0, 1.0, 1.0, 1.0},		//GL_DIFFUSE
                                 {1.0, 1.0, 1.0, 1.0},		//GL_SPECULAR
                                 {0.0, 0.0, 1.0, 0.0}		//GL_POSITION
-							},	
-							{   
+							},
+							{
 								{0.0, 0.0, 0.0, 1.0},       //GL_AMBIENT
                                 {1.0, 1.0, 1.0, 1.0},		//GL_DIFFUSE
                                 {1.0, 1.0, 1.0, 1.0},		//GL_SPECULAR
@@ -490,12 +490,12 @@ static U8 scolor_green = 0;
 static U8 scolor_blue = 0;
 static U8 scolor_alpha = 0;
 
-static float smaterial[4][4] = {   
+static float smaterial[4][4] = {
 								{0.2, 0.2, 0.2, 1.0},       //GL_AMBIENT
                                 {0.8, 0.8, 0.8, 1.0},		//GL_DIFFUSE
                                 {0.0, 0.0, 0.0, 1.0},		//GL_SPECULAR
                                 {0.0, 0.0, 0.0, 0.0}		//GL_SHININESS
-							};	
+							};
 
 static GLfloat* s_modelview_matrix		= NULL;
 static GLfloat* s_projection_matrix		= NULL;
@@ -537,7 +537,7 @@ typedef struct ClientState
 } ClientState;
 
 static ClientState clientstate[] =
-{			
+{
 	{ GL_VERTEX_ATTRIB_ARRAY1_NV,	0 }, //0
 	{ GL_VERTEX_ATTRIB_ARRAY5_NV,	0 }, //1
 	{ GL_VERTEX_ATTRIB_ARRAY6_NV,	0 }, //2
@@ -603,11 +603,11 @@ void WCW_ResetState( void )
 	sfail  = -1;
 	szfail = -1;
 	szpass = -1;
-	senabled = -1;  
+	senabled = -1;
 
-	for (i=0; i<4; i++) 
+	for (i=0; i<4; i++)
 	{
-		for (j=0; j<4; j++) 
+		for (j=0; j<4; j++)
 		{
 			slight[0][i][j] = 4;
 			slight[1][i][j] = 4;
@@ -620,7 +620,7 @@ void WCW_ResetState( void )
 	scolor_alpha = 0;
 
 	sdepthmask = -1;
-	for (i=0; i<MAX_TEXTURE_UNITS_TOTAL; i++) 
+	for (i=0; i<MAX_TEXTURE_UNITS_TOTAL; i++)
 	{
 		texLODbias[i] = -9999;
 	}
@@ -631,14 +631,14 @@ void WCW_ResetState( void )
 	fragmentProgramEnabled = -1;
 	boundFragmentProgram = 0xFFFFFFFF;
 	glNormalizeEnabled = -1;
-	
+
 	// Make sure vertex and fragment programs are disabled
 	// instead of leaving them in an unknown state.
 	// This can cause blit to fail.
 	WCW_DisableVertexProgram();
 	WCW_DisableFragmentProgram();
 
-	if (fog_context) 
+	if (fog_context)
 	{
 		fog_context->on = -1;
 		fog_context->fog_doneonce = 0;
@@ -649,7 +649,7 @@ void WCW_ResetState( void )
 	glLightingEnabled = -1;
 
 	for (i=0; i<ARRAY_SIZE(clientstate); i++)
-	{	
+	{
 		if(clientstate[i].arrayid >= GL_VERTEX_ATTRIB_ARRAY0_NV && clientstate[i].arrayid <= GL_VERTEX_ATTRIB_ARRAY15_NV) {
 			if(!(rdr_caps.chip & NV1X)) {
 				continue;
@@ -675,8 +675,8 @@ void WCW_ResetState( void )
 	norm_pointer = (void *)0xffffffff;
 	memset((void *)tex_pointer, 0xff, sizeof(tex_pointer));
 
-	for (i=0; i<2; i++) 
-		for (j=0; j<4; j++) 
+	for (i=0; i<2; i++)
+		for (j=0; j<4; j++)
             combiconst[i][j] = -2;
 	curr_blend_state.intval = -1;
 	curr_draw_state = -1;
@@ -784,7 +784,7 @@ void WCW_FetchGLState(void)
 		glClientActiveTextureARB(state.clienttexunit_bound); CHECKGL;
 	}
 
-	state.valid = 1;	
+	state.valid = 1;
 	rdrEndMarker();
 }
 
@@ -838,7 +838,7 @@ static void buildLocalDataCache()
 		//
 		int dataSrcTypeI;
 		for ( dataSrcTypeI=0; dataSrcTypeI < kDataSrc_COUNT; dataSrcTypeI++ )
-		{	
+		{
 			size_t pgmTypeI;
 			for ( pgmTypeI=0; pgmTypeI < ARRAY_SIZE(sLocalDataCache[dataSrcTypeI]); pgmTypeI++ )
 			{
@@ -850,11 +850,11 @@ static void buildLocalDataCache()
 			}
 		}
 	}
-	
+
 	{
 		//
 		//	Compute the arraySz value for each cache type.
-		//		
+		//
 		size_t tableI;
 		for ( tableI=0; tableI < ARRAY_SIZE(sShaderParamSpecTbl); tableI++ )
 		{
@@ -866,19 +866,19 @@ static void buildLocalDataCache()
 			pgmType		= sShaderParamSpecTbl[tableI].nProgramType;
 			pCache		= &sLocalDataCache[dataSrcType][pgmType];
 			sShaderParamSpecTbl[tableI].dataCacheFloatOfs = pCache->arraySz;
-			pCache->arraySz += 
+			pCache->arraySz +=
 					( ShaderParamSpec_FloatsPerElement( &sShaderParamSpecTbl[tableI] ) *
 						sShaderParamSpecTbl[tableI].numElements );
 		}
 	}
-		
+
 	{
 		//
 		// Now build the arrays to match the computed array sizes.
 		//
 		int dataSrcTypeI;
 		for ( dataSrcTypeI=0; dataSrcTypeI < kDataSrc_COUNT; dataSrcTypeI++ )
-		{	
+		{
 			//
 			// Clear out old arrays (probably won't every be needed, since
 			// this is only called at program initialization time.
@@ -890,12 +890,12 @@ static void buildLocalDataCache()
 				if ( pCache->arraySz > 0 )
 				{
 					size_t nBytesNeeded;
-					
+
 					// the data array
 					nBytesNeeded = ( kBytesInFloat * pCache->arraySz );
 					pCache->data = (GLfloat*)malloc( nBytesNeeded );
 					memset( pCache->data, 0, nBytesNeeded );
-					
+
 					// the "isSet" array
 					nBytesNeeded = ( sizeof(bool) * pCache->arraySz );
 					pCache->isSet = (bool*)malloc( nBytesNeeded );
@@ -909,7 +909,7 @@ static void buildLocalDataCache()
 			}
 		}
 	}
-	
+
 	//
 	//	Store some of these locations for use in grabbing OpenGL values.
 	//
@@ -922,13 +922,13 @@ static void buildLocalDataCache()
 void WCW_InitOnce(void)
 {
 	int tableI;
-	
+
 	rdrBeginMarker(__FUNCTION__);
 	WCW_FetchGLState();
 	WCW_CheckGLState();
 
 	buildLocalDataCache();
-	
+
 	//
 	// Validate the param table.
 	//
@@ -944,19 +944,19 @@ void WCW_InitOnce(void)
 		//
 		// All entries in the sShaderParamSpecTbl[] have a paramNmCacheKey equal to their array offset.
 		// IOW, given a "paramNmCacheKey" you can not only locate the param handle cache element but also the
-		// param spec (descriptive) element. 
+		// param spec (descriptive) element.
 		//
 		// For paramNmCacheKey values >= ARRAY_SIZE(sShaderParamSpecTbl) this handy double linking does not
 		// apply. The paramNmCacheKey value is the offset in the param handle cache, but (of course) not the
-		// offset in a param spec item. That would happen if other modules chose not to register their param 
+		// offset in a param spec item. That would happen if other modules chose not to register their param
 		// specs in the master table, but did use the param handle cache.
 		//
 		sShaderParamSpecTbl[tableI].paramNmCacheKey = AddParamHandleCacheKey( sShaderParamSpecTbl[tableI].szStdParamName, pgmType );
 		assert( sShaderParamSpecTbl[tableI].paramNmCacheKey == tableI );
-		
+
 		nDataSrcType = sShaderParamSpecTbl[tableI].dataSrcType;
 		sShaderParamSpecTbl[tableI].dataCacheFloatOfs = sLocalDataCache[nDataSrcType][pgmType].numItems;
-		sLocalDataCache[nDataSrcType][pgmType].numItems += 
+		sLocalDataCache[nDataSrcType][pgmType].numItems +=
 			( ShaderParamSpec_FloatsPerElement(&sShaderParamSpecTbl[tableI]) *
 				sShaderParamSpecTbl[tableI].numElements );
 	}
@@ -1193,7 +1193,7 @@ void WCW_Fog(int on)
 				glEnable(GL_FOG); CHECKGL;
 			} else {
 				glDisable(GL_FOG); CHECKGL;
-			}			
+			}
 		}
 		fog_context->on = on;
 	}
@@ -1417,8 +1417,8 @@ void WCW_Light( GLenum l, GLenum pname, const float light[] )
 	assert(pname != GL_POSITION);
 	assert(idx >= 0 && idx < 4);
 	assert(light_index >= 0 && light_index < 2);
-	
-    if (NO_STATEMANAGEMENT || (0 != memcmp( slight[light_index][idx], light, 16 )) ) 
+
+    if (NO_STATEMANAGEMENT || (0 != memcmp( slight[light_index][idx], light, 16 )) )
 	{
 		memcpy( slight[light_index][idx], light, 16 );
 		if ( !rdr_caps.chip )
@@ -1472,9 +1472,9 @@ void WCW_LightPosition( const float light[], const Mat4 lightMtx )
 	scaleVec3(light,-1,mlight);
 	mlight[3] = light[3];
 	glLightfv( GL_LIGHT1, pname, mlight ); CHECKGL;
-	
+
 	glPopMatrix(); CHECKGL;
-		
+
 	if (lightMtx)
 	{
 		mulVecMat4(light, lightMtx, slight_ogl[0][idx]);
@@ -1549,7 +1549,7 @@ void WCW_LoadModelViewMatrix(const Mat4 m)
 
 	glMatrixMode(GL_MODELVIEW); CHECKGL;
 	glLoadMatrixf(s_modelview_matrix); CHECKGL;
-	
+
 	sOpenGLShaderParamDirtyFlags |= kOpenGLDirtyBit_Matrix_ModelView | kOpenGLDirtyBit_Matrix_ModelViewIT | kOpenGLDirtyBit_Matrix_ModelViewProjection;
 }
 
@@ -1754,7 +1754,7 @@ void WCW_ConstantCombinerParamerterfv( int idx, float constColor[] )
 
 void WCW_DepthMask( GLboolean mask )
 {
-    if (NO_STATEMANAGEMENT || sdepthmask != mask ) 
+    if (NO_STATEMANAGEMENT || sdepthmask != mask )
 	{
 		sdepthmask = mask;
 		glDepthMask( mask ); CHECKGL;
@@ -1893,8 +1893,8 @@ GLuint WCW_BindBuffer(GLsizei target, GLuint buffer)
 }
 
 void WCW_VertexPointer( GLint size, GLenum type,  GLsizei stride, const GLvoid *pointer )
-{   
-    if (NO_STATEMANAGEMENT || vert_pointer != pointer || !last_vertex_array_id) 
+{
+    if (NO_STATEMANAGEMENT || vert_pointer != pointer || !last_vertex_array_id)
 	{
 		glVertexPointer( size, type, stride, pointer ); CHECKGL;
 		vert_pointer = pointer;
@@ -1911,7 +1911,7 @@ void WCW_DisableColorMaterial(void)
 }
 
 void WCW_TexLODBias(int texindex, F32 newbias)
-{	
+{
 	if (GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_GROUPDEF_TRAVERSAL))
 		return;
 
@@ -2135,7 +2135,7 @@ void WCW_BufferData(GLenum target, GLsizeiptrARB size, const GLvoid *data, GLenu
 	memMonitorTrackUserMemory(memname, 1, MOT_ALLOC, size);
 }
 
-void WCW_DeleteBuffers(GLenum target,GLsizei n, const GLuint *buffers,const char *memname) 
+void WCW_DeleteBuffers(GLenum target,GLsizei n, const GLuint *buffers,const char *memname)
 {
 	int		id,size;
 
@@ -2161,7 +2161,7 @@ void WCW_EnableVertexProgram(void)
 	rdrBeginMarker(__FUNCTION__);
 	if (NO_STATEMANAGEMENT || vertexProgramEnabled!=1)
 	{
-		// NOTE GL_VERTEX_PROGRAM_ARB == GL_VERTEX_PROGRAM_NV; so it isn't 
+		// NOTE GL_VERTEX_PROGRAM_ARB == GL_VERTEX_PROGRAM_NV; so it isn't
 		// necessary to check this conditional
 		if(rdr_caps.chip & (ARBVP|GLSL))
 		{
@@ -2173,7 +2173,7 @@ void WCW_EnableVertexProgram(void)
 			else
 			{
 				glEnable(GL_VERTEX_PROGRAM_ARB); CHECKGL;
-			}			
+			}
 		}
 
 		vertexProgramEnabled = 1;
@@ -2196,12 +2196,12 @@ void WCW_BindVertexProgram(GLuint id)
 			else
 			{
 				glBindProgramARB(GL_VERTEX_PROGRAM_ARB, id); CHECKGL;
-				// JE: It appears we're not actually state managing this here, but we are in modelDrawState, 
+				// JE: It appears we're not actually state managing this here, but we are in modelDrawState,
 				//   and we enable and disable vertex programs without clearing boundVertexProgram, so I'm
 				//   just going to leave this as it is for now.
 			}
 		}
-		boundVertexProgram = id;		
+		boundVertexProgram = id;
 		// Don't do "sOpenGLShaderParamDirtyFlags = kOpenGLDirtyBit_ALL" here; wait until the
 		// shader has been set up and the values fed to it.
 	}
@@ -2324,7 +2324,7 @@ void WCW_DisableFragmentProgram(void)
 				rt_cgDisableProgram(kShaderPgmType_FRAGMENT);
 			}
 			else
-			{	
+			{
 				glDisable(GL_FRAGMENT_PROGRAM_ARB); CHECKGL;
 			}
 		}
@@ -2435,10 +2435,10 @@ void WCW_EnableGL_LIGHTING( int on )
 static void resetLocalParameters(tShaderProgramType target)
 {
 	SHADER_DBG_PRINTF( "resetLocalParameters( %s )\n", SHADER_DBG_PGM_TYPE_STR(target) );
-	memset( 
-			sLocalDataCache[kDataSrc_PgmLocalVariable][target].isSet, 
-			0, 
-			( sizeof(sLocalDataCache[kDataSrc_PgmLocalVariable][target].isSet[0]) * 
+	memset(
+			sLocalDataCache[kDataSrc_PgmLocalVariable][target].isSet,
+			0,
+			( sizeof(sLocalDataCache[kDataSrc_PgmLocalVariable][target].isSet[0]) *
 				sLocalDataCache[kDataSrc_PgmLocalVariable][target].numItems )
 		);
 }
@@ -2447,7 +2447,7 @@ void WCW_SetParamDirtyFlags( bool bVertexPgm, bool bFragmentPgm )
 {
 	int nDatsSrcI;
 	SHADER_DBG_PRINTF( "WCW_SetParamDirtyFlags( bVertex=%d, bFragment=%d )\n", bVertexPgm, bFragmentPgm );
-	
+
 	for ( nDatsSrcI = 0; nDatsSrcI < kDataSrc_COUNT; nDatsSrcI++ )
 	{
 		int nPgmTypeI;
@@ -2455,10 +2455,10 @@ void WCW_SetParamDirtyFlags( bool bVertexPgm, bool bFragmentPgm )
 		{
 			if (( nPgmTypeI == kShaderPgmType_VERTEX )   && ( ! bVertexPgm ))   continue;
 			if (( nPgmTypeI == kShaderPgmType_FRAGMENT ) && ( ! bFragmentPgm )) continue;
-			memset( 
-					sLocalDataCache[nDatsSrcI][nPgmTypeI].dirty, 
-					1, 
-					( sizeof(sLocalDataCache[nDatsSrcI][nPgmTypeI].dirty[0]) * 
+			memset(
+					sLocalDataCache[nDatsSrcI][nPgmTypeI].dirty,
+					1,
+					( sizeof(sLocalDataCache[nDatsSrcI][nPgmTypeI].dirty[0]) *
 						sLocalDataCache[nDatsSrcI][nPgmTypeI].numItems )
 				);
 		}
@@ -2511,7 +2511,7 @@ void setFragmentProgramConstColor( GLuint index, const GLfloat* vec4 )
 {
 	#define kNumEnvParamsDefined 2
 	assert( index < kNumEnvParamsDefined );
-	
+
 	#if RT_SUPPORT_ARB_SHADER_PATH
 		if ( ! rt_cgGetCgShaderMode() )
 		{
@@ -2586,13 +2586,13 @@ int	WCW_GetCacheIdForShaderParamName( const char* szParamName, tShaderProgramTyp
 			return i;
 		}
 	}
-	
+
 	// Not found. Add it?
 	if ( bAdd )
 	{
 		return AddParamHandleCacheKey( szParamName, pgmType );
 	}
-	
+
 	return -1;
 }
 
@@ -2607,9 +2607,9 @@ static INLINEDBG bool RefreshCachedMatrixValueFromOpenGL( tShaderParamSpec* pSpe
 {
 	SHADER_DBG_ASSERT( pSpec->dataSrcType == kDataSrc_OpenGLMatrix );
 	SHADER_DBG_ASSERT( ShaderParamSpec_FloatsPerElement( pSpec ) == 16 );
-	
+
 	SHADER_DBG_PRINTF( "  RefreshCachedMatrixValueFromOpenGL( %s )\n", pSpec->szStdParamName );
-	
+
 	// The dataKey1 is the matrix type.
 	switch ( pSpec->dataKey1 )
 	{
@@ -2654,7 +2654,7 @@ static INLINEDBG bool RefreshCachedFogStateValueFromOpenGL( tShaderParamSpec* pS
 	GLfloat previousVal[kFloatsInVec4];
 	SHADER_DBG_ASSERT( pSpec->dataSrcType == kDataSrc_FogState );
 	SHADER_DBG_ASSERT( ShaderParamSpec_FloatsPerElement( pSpec ) == 4 );
-	
+
 	switch ( pSpec->dataKey1 )
 	{
 		case kFogState_Params :
@@ -2676,7 +2676,7 @@ static INLINEDBG bool RefreshCachedFogStateValueFromOpenGL( tShaderParamSpec* pS
 			assert(0);
 			break;
 	}
-	
+
 	return bNewData;
 }
 
@@ -2685,7 +2685,7 @@ static INLINEDBG bool RefreshCachedLightingValueFromOpenGL( tShaderParamSpec* pS
 	bool bNewData = false;
 	SHADER_DBG_ASSERT( pSpec->dataSrcType == kDataSrc_LightingModel );
 	SHADER_DBG_ASSERT( ShaderParamSpec_FloatsPerElement( pSpec ) == 4 );
-	
+
 	switch ( pSpec->dataKey1 )
 	{
 		case kLightVal_Position :
@@ -2697,7 +2697,7 @@ static INLINEDBG bool RefreshCachedLightingValueFromOpenGL( tShaderParamSpec* pS
 			break;
 		case kLightVal_Half :
 			assert(0); // unimplemented
-			break;			
+			break;
 		case kLightVal_Diffuse :
 			bNewData = ( memcmp(pTargetData, slight_ogl[pSpec->dataKey2][GL_DIFFUSE - GL_AMBIENT], 16) != 0 );
 			if ( bNewData )
@@ -2744,10 +2744,10 @@ static INLINEDBG bool RefreshCachedLightingValueFromOpenGL( tShaderParamSpec* pS
 				case kLightVal_ProdDiffuse :	propEnum = GL_DIFFUSE;	break;
 				case kLightVal_ProdAmbient :	propEnum = GL_AMBIENT;	break;
 				case kLightVal_ProdSpecular :	propEnum = GL_SPECULAR;	break;
-			}		
+			}
 			memcpy(materialColor, smaterial[propEnum - GL_AMBIENT], 16);
 			memcpy(lightColor, slight_ogl[pSpec->dataKey2][propEnum - GL_AMBIENT], 16);
-			for ( i=0; i < 3; i++ ) 
+			for ( i=0; i < 3; i++ )
 			{
 				pTargetData[i] = ( materialColor[i] * lightColor[i] );
 			}
@@ -2768,7 +2768,7 @@ static INLINEDBG bool RefreshCachedClipValueFromOpenGL( tShaderParamSpec* pSpec,
 	bool bNewData = false;
 	SHADER_DBG_ASSERT( pSpec->dataSrcType == kDataSrc_Clipping );
 	SHADER_DBG_ASSERT( ShaderParamSpec_FloatsPerElement( pSpec ) == 4 );
-	
+
 	switch ( pSpec->dataKey1 )
 	{
 		case kClipInfo_Plane :
@@ -2837,7 +2837,7 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 #endif
 
 			WCW_ASSERT( nParamNmCacheId < ARRAY_SIZE(sShaderParamSpecTbl) );
-			
+
 			pSpec		= &sShaderParamSpecTbl[nParamNmCacheId];
 
 			// Update cached shader value from OpenGL
@@ -2895,7 +2895,7 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 				}
 
 				SHADER_DBG_PRINTF( "    Data %s.\n", ( bNewData ? "changed" : "did not change" ));
-				
+
 				sOpenGLShaderParamDirtyBitsApplied |= pSpec->openGlDirtyBit;
 
 				for ( itemsSetI=0; itemsSetI < nItemsSet; itemsSetI++ )
@@ -2905,15 +2905,15 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 			}
 
 			SHADER_DBG_PRINTF( "  PushShaderParamValuesToTheShader( %s )\n", pSpec->szStdParamName );
-			
+
 			WCW_ASSERT( pSpec->paramNmCacheKey == nParamNmCacheId );
-			
+
 			// bUpdateShaderNow will be set if we have a shader set up and ready
 			// to be updated. In other words: we have some param handles to use.
 			// That should always be true.
-			bUpdateShaderNow = WCW_GetCachedParamHandleList( 
-												nParamNmCacheId, 
-												&paramHdlList, 
+			bUpdateShaderNow = WCW_GetCachedParamHandleList(
+												nParamNmCacheId,
+												&paramHdlList,
 												&nParamHdlListSz );
 
 			assert( bUpdateShaderNow );
@@ -2935,14 +2935,14 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 				GLuint nNumRowsPerParam		= ( nFloatsPerParam / pSpec->elementFloatCols );
 				GLuint nNumParamsToSet		= pSpec->numElements;
 				GLuint nFlags				= 0;
-				
+
 				if ( pSpec->dataSrcType == kDataSrc_OpenGLMatrix )
 				{
 					nFlags |= kCgFX_SetFloat_AsMatrix;
 				}
-			
+
 				nNumParamsToSet = min( nNumParamsToSet, nParamHdlListSz );
-				
+
 				assert( nNumParamsToSet <= (GLuint)pSpec->numElements );
 
 				for ( i=0; i < nNumParamsToSet; i++ )
@@ -2979,7 +2979,7 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 					} // set and dirty
 					else
 					{
-						SHADER_DBG_PRINTF( "    Not updating %s[%d]. IsSet=%d, Dirty=%d.\n", pSpec->szStdParamName, i, *isSetLoc, *isDirtyLoc );			
+						SHADER_DBG_PRINTF( "    Not updating %s[%d]. IsSet=%d, Dirty=%d.\n", pSpec->szStdParamName, i, *isSetLoc, *isDirtyLoc );
 						//SHADER_DBG_ASSERT( *isSetLoc );	// Somebody forgot to update this value?
 					}
 					paramData	+= nFloatsPerParam;
@@ -2990,7 +2990,7 @@ void WCW_UpdateShaderParamsFromLocalCache( const tCgParamCacheSpec* paramSpecs, 
 		}	// one tCgParamCacheSpec
 	}
 
-	//	
+	//
 	// NOTE: One might be tempted to do this here:
 	//		sOpenGLShaderParamDirtyFlags = 0;
 	// But don't. First, the handlers called from WCW_UpdateShaderParamsFromLocalCache()
@@ -3168,10 +3168,10 @@ void setNamedParamValue( tShaderParamSpec* pSpec, const GLfloat *floatArr, GLuin
 {
 	CGparameter* paramHdlList = NULL;
 	GLuint nParamHdlListSz = 0;
-	
+
 	SHADER_DBG_PRINTF( "setNamedParamValue( %s ). Values: ", pSpec->szStdParamName );
 	SHADER_DBG_DUMPFLOATS( floatArr, (int)(nRows*nCols) );
-	
+
 	//
 	//	The engine code wants to set a Cg param value for a shader. The goal here
 	//	is to get the current param handle as efficiently as possible.
@@ -3202,7 +3202,7 @@ void setNamedParamValue( tShaderParamSpec* pSpec, const GLfloat *floatArr, GLuin
 		bool* isSetLoc			= ( pDataCache->isSet + pSpec->dataCacheFloatOfs );
 		bool* isDirtyLoc		= ( pDataCache->dirty + pSpec->dataCacheFloatOfs );
 		int cacheOfs			= 0;
-				
+
 		for ( itemI=0; itemI < (GLuint)pSpec->numElements; itemI++ )
 		{
 			if ( itemI < nRows )
@@ -3243,7 +3243,7 @@ void setNamedParamValue( tShaderParamSpec* pSpec, const GLfloat *floatArr, GLuin
 				*isSetLoc	= false;
 				*isDirtyLoc = false;
 			}
-			
+
 			itemData	+= nCols;
 			cacheLoc	+= nCols;
 			isSetLoc	+= nCols;

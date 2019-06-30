@@ -1,6 +1,6 @@
 #include "cubemap.h"
 
-#include <assert.h>
+#include "SuperAssert.h"
 #include "viewport.h"
 #include "gfx.h"
 #include "cmdgame.h"
@@ -125,7 +125,7 @@ static bool cubemapFacePreRenderCB(ViewportInfo *pViewportInfo)
 		pyr[2] = 0.0f;
 
 		createMat3PYR(temp1, pyr);
-		
+
 		mulMat3(temp1, temp3, temp2);
 
 		zeroVec3(pyr);
@@ -184,16 +184,16 @@ static bool cubemapFacePostRenderCB(ViewportInfo *pViewportInfo)
 static void initTuningMenu()
 {
 	rdrQueue( DRAWCMD_INITCUBEMAPMENU,NULL,0);
-}	
+}
 
 static bool cubemapInitEx( int size, float lod_scale, bool bUpdateAllPerFrame, bool bRenderChars, bool bRenderAlphaPass, bool bRenderParticles )
 {
 	int i;
 	bool bSuccess = true;
-	
+
 	assert(!s_bInitedCubemap);
 
-	// init each face of the cubemap.  The first face serves as the master cubemap texture and other 
+	// init each face of the cubemap.  The first face serves as the master cubemap texture and other
 	//	faces share its pbuffer for rendering.
 	for(i=0; i<NUM_CUBEMAP_FACES && bSuccess; i++)
 	{
@@ -285,7 +285,7 @@ static bool cubemapInitEx( int size, float lod_scale, bool bUpdateAllPerFrame, b
 static bool cubemapInit()
 {
 	return cubemapInitEx( game_state.cubemap_size, game_state.cubemapLodScale, false,
-		!game_state.gen_static_cubemaps && 
+		!game_state.gen_static_cubemaps &&
 			(game_state.cubemapMode >= CUBEMAP_HIGHQUALITY || game_state.charsInCubemap != 0),
 		true, false );
 }
@@ -296,7 +296,7 @@ static void cubemapRelease()
 
 	if ( !s_bInitedCubemap )
 		return;
-	
+
 	// release in reverse order since first entry contains the shared pbuffer
 	for(i=NUM_CUBEMAP_FACES-1; i>=0; i--)
 	{
@@ -491,7 +491,7 @@ static float sLodScaleMapping[] =
 	1.0			// CUBEMAP_DEBUG_SUPERHQ
 };
 
-static void saveCubemap(const char* dirName, const char *name, void *filteredFaces[], int size) 
+static void saveCubemap(const char* dirName, const char *name, void *filteredFaces[], int size)
 {
 	int i;
 	char the_date[32] = "";
@@ -560,8 +560,8 @@ static void cubemap_GenerateStatic(int genSize, int captureSize, float radius, f
 	// We render particles/alpha pass into static gen cubemaps to capture effects like the
 	// War Walls. Best to capture using just the geometry layer to avoid any entity FX
 
-	if ( cubemapInitEx(captureSize, lod_scale, true, false, 
-		game_state.cubemap_flags&kCubemapStaticGen_RenderAlpha, 
+	if ( cubemapInitEx(captureSize, lod_scale, true, false,
+		game_state.cubemap_flags&kCubemapStaticGen_RenderAlpha,
 		game_state.cubemap_flags&kCubemapStaticGen_RenderParticles) )
 	{
 		int i;
@@ -596,7 +596,7 @@ static void cubemap_GenerateStatic(int genSize, int captureSize, float radius, f
 	if (game_state.cubemap_flags&kReloadStaticOnGen)
 	{
 		BasicTexture *pTestCubemap = texFind( GetDefaultStaticCubemapName() );
-		
+
 		if(game_state.debugCubemapTexture)
 			assert(pTestCubemap);
 
@@ -645,7 +645,7 @@ static void findCaptureNodes(DefTracker ***foundNodes, DefTracker *root)
 		eaPush(foundNodes, root);
 }
 
-typedef struct  
+typedef struct
 {
 	DefTracker **nodes;
 	int index;
@@ -699,7 +699,7 @@ const char *findAnyDuplicateCubemapName(DefTracker ***nodes)
 	return NULL;
 }
 
-static void endStaticCubemapGeneration(CubemapGenerationContext *context) 
+static void endStaticCubemapGeneration(CubemapGenerationContext *context)
 {
 	char commandBuffer[64];
 	game_state.gen_static_cubemaps = 0;
@@ -717,7 +717,7 @@ static void endStaticCubemapGeneration(CubemapGenerationContext *context)
 	cmdParse(commandBuffer);
 }
 
-void initializeStaticCubemapGeneration(CubemapGenerationContext *context) 
+void initializeStaticCubemapGeneration(CubemapGenerationContext *context)
 {
 	int i;
 	const char* duplicateName;
@@ -772,14 +772,14 @@ static void getMapName(char * mapName)
 		mapName[len - 4] = '\0';
 }
 
-static void handleStaticCubemapGeneration() 
+static void handleStaticCubemapGeneration()
 {
 	static CubemapGenerationContext sContext = { NULL, -1, 0, CUBEMAP_OFF };
 
 	if (!game_state.gen_static_cubemaps)
 		return;
 
-	xyprintf(30, 20, "Generating static cubemap: %s", 
+	xyprintf(30, 20, "Generating static cubemap: %s",
 		(sContext.index >= 0 && sContext.index < eaSize(&sContext.nodes))
 			? sContext.nodes[sContext.index]->def->name
 			: "");
@@ -792,7 +792,7 @@ static void handleStaticCubemapGeneration()
 		char mapName[MAX_PATH];
 		DefTracker *cubemapNode = sContext.nodes[sContext.index];
 		getMapName(mapName);
-		cubemap_GenerateStatic(cubemapNode->def->cubemapGenSize, 
+		cubemap_GenerateStatic(cubemapNode->def->cubemapGenSize,
 			cubemapNode->def->cubemapCaptureSize, cubemapNode->def->cubemapBlurAngle,
 			game_state.cubemapLodScale_gen,  mapName, cubemapNode->def->name, cubemapNode);
 		setUpNextStaticCubemapCapture(&sContext);
@@ -827,7 +827,7 @@ void cubemap_Update()
 		return;
 	}
 
-	if(s_bInitedCubemap && !(game_state.static_cubemap_terrain && game_state.static_cubemap_chars) && game_state.cubemap_size != lastCubemapSize ) 
+	if(s_bInitedCubemap && !(game_state.static_cubemap_terrain && game_state.static_cubemap_chars) && game_state.cubemap_size != lastCubemapSize )
 	{
 		// changed cubemap size, so re-initialize cubemaps now
 		cubemapRelease();
@@ -869,7 +869,7 @@ void cubemap_Update()
 #endif
 
 	// viewport module takes care of rendering each face when its turn comes up, so no
-	//	non-debug rendering to do here	
+	//	non-debug rendering to do here
 
 #ifndef FINAL
 	// debug rendering:
@@ -950,11 +950,11 @@ int cubemap_GetTextureID(bool bForTerrain, Vec3 modelLoc, bool bForceDynamic)
 {
 	int texID = 0;
 
-	// force static cubemap in front end, otherwise use terrain/char preference 
-	bool bUseStatic = ( game_state.game_mode != SHOW_GAME || 
-			( (bForTerrain && game_state.static_cubemap_terrain) || 
+	// force static cubemap in front end, otherwise use terrain/char preference
+	bool bUseStatic = ( game_state.game_mode != SHOW_GAME ||
+			( (bForTerrain && game_state.static_cubemap_terrain) ||
 			  (!bForTerrain && game_state.static_cubemap_chars) )   );
-	
+
 	if (bUseStatic && bForceDynamic && game_state.game_mode == SHOW_GAME)
 	{
 		bUseStatic = false;
@@ -990,7 +990,7 @@ int cubemap_GetTextureID(bool bForTerrain, Vec3 modelLoc, bool bForceDynamic)
 				{
 					nearestDistSq = distSq;
 					nearestIndex = i;
-					//printf("index %d distance = %.2f  (cameraPos {%.1f,%.1f,%.1f},  beaconLoc {%.1f,%.1f,%.1f})\n", 
+					//printf("index %d distance = %.2f  (cameraPos {%.1f,%.1f,%.1f},  beaconLoc {%.1f,%.1f,%.1f})\n",
 					//	nearestIndex, sqrt(distSq), cameraPos[0], cameraPos[1], cameraPos[2], beaconLoc[0], beaconLoc[1], beaconLoc[2] );
 				}
 			}
@@ -1042,7 +1042,7 @@ F32 cubemap_CalculateAttenuation(bool bForTerrain, const Vec3 modelLoc, F32 mode
 	F32 cubemap_attenuation = 0.0f;
 
 	bool bUseStatic = game_state.game_mode != SHOW_GAME ||
-		( ( (game_state.static_cubemap_chars && !bForTerrain) || 
+		( ( (game_state.static_cubemap_chars && !bForTerrain) ||
 		    (game_state.static_cubemap_terrain && bForTerrain) ) && !bForceDynamic);
 
 	if (!bUseStatic)

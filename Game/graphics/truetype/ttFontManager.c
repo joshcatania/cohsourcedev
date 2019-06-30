@@ -1,7 +1,7 @@
 #include "truetype/ttFontManager.h"
 #include "wininclude.h"
 #include "StashTable.h"	// for hashCalc()
-#include <assert.h>
+#include "SuperAssert.h"
 #include "mathutil.h"
 #include "Color.h"
 #include "utils.h"
@@ -17,8 +17,8 @@ static int ttCacheElementHash(const TTFMCacheElement* element, int hashSeed){
 }
 
 static int ttCacheElementCompare(const TTFMCacheElement* refKey, const TTFMCacheElement* key){
-	if(memcmp(	((unsigned char*)&refKey->renderParams), 
-		((unsigned char*)&key->renderParams), 
+	if(memcmp(	((unsigned char*)&refKey->renderParams),
+		((unsigned char*)&key->renderParams),
 		sizeof(TTFontRenderParams)) == 0)
 		return 0;
 	else
@@ -70,7 +70,7 @@ void ttFMFreeFont(TTFontManager* manager, TTCompositeFont* font)
 	// Remove all elements from the hashtable that include this font
 
 
-	
+
 	stashGetIterator(manager->glyphCache, &iter);
 
 	while (stashGetNextElement(&iter, &elem))
@@ -104,7 +104,7 @@ void ttFMAddFont(TTFontManager* manager, TTCompositeFont* font){
 
 /* Function ttFMSetMemoryLimit()
 *	This function tells the manager how much memory it should use total for all fonts that it controls.
-*	
+*
 */
 void ttFMSetMemoryLimit(TTFontManager* manager, unsigned int memoryLimit){
 
@@ -183,7 +183,7 @@ void ttFontLoadSubstitute(TTSimpleFont* primaryFont, TTFontSubstitue* substitute
 	substitute->font = ttFontLoadCached(fontFilename, 1);
 	if(substitute->font)
 	{
-		substitute->state = TTFSS_LOADED;	
+		substitute->state = TTFSS_LOADED;
 	}
 	else
 	{
@@ -208,7 +208,7 @@ TTFMCacheElement* ttFMGetCachedTexture(TTCompositeFont* compositeFont, TTFontRen
 		TTFontBitmap* bitmap;
 		FT_Face face;
 		TTSimpleFont* simpleFont;
-	
+
 		simpleFont = ttFontGetFontForCharacter(compositeFont, renderParams->unicodeCharacter);
 		if(!simpleFont) {
 			LeaveCriticalSection(&CriticalSectionFontManager);
@@ -231,7 +231,7 @@ TTFMCacheElement* ttFMGetCachedTexture(TTCompositeFont* compositeFont, TTFontRen
 				// Try to load an italics version of the font
 				ttFontLoadSubstitute(simpleFont, &simpleFont->italics, "i");
 		}
-		
+
 
 		face = ttFontRenderGlyphEx(simpleFont, renderParams);				// Ask the freetype library to render a glyph
 		if(!face) {

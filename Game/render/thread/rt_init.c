@@ -7,7 +7,7 @@
 #include "utils.h"
 #include "fileutil.h"
 #include "rt_state.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "texEnums.h"
 #include "mathutil.h"
 #include "win_init.h" // For winMsgAlert
@@ -46,7 +46,7 @@ void rdrInitDirect(void)
 
 	glDepthFunc(GL_LEQUAL); CHECKGL;
 	glEnable(GL_DEPTH_TEST); CHECKGL;
-// wcw	glEnable(GL_VERTEX_WEIGHTING_EXT); CHECKGL; //mm 
+// wcw	glEnable(GL_VERTEX_WEIGHTING_EXT); CHECKGL; //mm
 
 	glShadeModel(GL_SMOOTH); CHECKGL;
 
@@ -144,7 +144,7 @@ void reloadShaderCallbackDirect(const char *relpath)
 	{
 		// make sure this is a file we care about
 		if( strEndsWith(relpath, ".bak") ||
-			(rt_cgGetCgShaderMode() && !(strEndsWith(relpath, ".cg") || strEndsWith(relpath, ".cgh") || strEndsWith(relpath, ".cgfx")))  || 
+			(rt_cgGetCgShaderMode() && !(strEndsWith(relpath, ".cg") || strEndsWith(relpath, ".cgh") || strEndsWith(relpath, ".cgfx")))  ||
 			(!rt_cgGetCgShaderMode() && !(strEndsWith(relpath, ".fp") || strEndsWith(relpath, ".fph") || strEndsWith(relpath, ".vp")))
 		)
 		{
@@ -173,7 +173,7 @@ void reloadShaderCallbackDirect(const char *relpath)
 	} else {
 		reloading_shader[0]=0;
 	}
-	
+
 	shaderMgr_ReleaseShaderIds();
 
 	modelBlendStateInit();
@@ -247,7 +247,7 @@ char *rdrFeatureToString(int featurebit) {
 
 //Here go render stuff that don't need to be recalled when gfx reload is called
 void rdrInitExtensionsDirect()
-{	
+{
 	int failure = 0;
 	int required = 1;
 	bool isNvidia = false;
@@ -303,7 +303,7 @@ void rdrInitExtensionsDirect()
 			// also flagging nVidia specific behavior in other paths.  Treat nVidia
 			// cards under MacOS as generic graphics cards until and unless nVidia
 			// needs special attention under MacOS.
-			if (extInit(NV_register_combiners,0) && 
+			if (extInit(NV_register_combiners,0) &&
 				extInit(NV_vertex_program,0))
 			{
 				rdr_caps.chip |= NV1X;
@@ -336,7 +336,7 @@ void rdrInitExtensionsDirect()
 		if (extInit(ARB_fragment_program, 0))
 		{
 			rdr_caps.chip |= ARBFP;
-			
+
 			// No ARBFP with GeForce FX (5XXX) cards.  Possibly because of poor performance.  Fall back to NV2X instead.
 			// fpe 12/6/09 -- verified that framerate sucks if we let FX5000 series card run with ARBFP.
 			// fpe 3/7/2011 -- disable this check for mac now that simplified graphics logic is in place
@@ -347,7 +347,7 @@ void rdrInitExtensionsDirect()
 			}
 		}
 	}
-	
+
 	if (!(rdr_caps.chip & (ARBFP|NV1X|NV2X|R200)) &&
 		extInit(ARB_texture_env_combine, 0))
 	{
@@ -433,10 +433,10 @@ void rdrInitExtensionsDirect()
 	{
 		glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_LOCAL_PARAMETERS_ARB, &rdr_caps.max_program_local_parameters); CHECKGL;
 		glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_ENV_PARAMETERS_ARB, &rdr_caps.max_program_env_parameters); CHECKGL;
-        glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB, &rdr_caps.max_program_native_attribs); CHECKGL;  
+        glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_NATIVE_ATTRIBS_ARB, &rdr_caps.max_program_native_attribs); CHECKGL;
         glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_NATIVE_INSTRUCTIONS_ARB, &rdr_caps.max_program_native_instructions); CHECKGL;
 		glGetProgramivARB (GL_FRAGMENT_PROGRAM_ARB, GL_MAX_PROGRAM_NATIVE_TEMPORARIES_ARB, &rdr_caps.max_program_native_temporaries); CHECKGL;
-		
+
 	}
 	else
 	{

@@ -4,9 +4,8 @@
 #include "mathutil.h"
 #include "error.h"
 #include "memcheck.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "utils.h"
-#include "assert.h"
 #include "font.h"
 #include "cmdcommon.h"	//TIMESTEP
 #include "cmdgame.h"
@@ -270,7 +269,7 @@ static int fxCheckThatSequencersAreStillGood( FxParams * fxp )
 		}
 		if (fxp->keys[i].gfxnode)
 		{
-			// Hacky, and won't always work, but should stop it from crashing... 
+			// Hacky, and won't always work, but should stop it from crashing...
 			if (fxp->keys[i].gfxnode->model == (Model*)0xfafafafa)
 				return 0;
 		}
@@ -384,7 +383,7 @@ static void fxPrintDebugInfo()
 
 		fxcount = 1;
 		psystotal = 0;
-		ptotal = 0; 
+		ptotal = 0;
 
 		{
 			FxObject * fx = 0;
@@ -530,7 +529,7 @@ static void fxPrintDebugInfo()
 					windowSize(&w,&h);
 
 					y = h - y;
-					if (!inpIsMouseLocked() && x >= 72*fontWidth && (x <= (int)(72+100)*fontWidth) && 
+					if (!inpIsMouseLocked() && x >= 72*fontWidth && (x <= (int)(72+100)*fontWidth) &&
 						y >= (fxcount-1)*fontHeight && y < (fxcount-1+1)*fontHeight)
 					{
 						if(inpEdge(INP_LBUTTON))
@@ -549,7 +548,7 @@ static void fxPrintDebugInfo()
 		if( detail_fx )
 		{
 			fx = detail_fx;
-			xyprintfcolor(2,480/8-70+TEXT_JUSTIFY,100,255,255, "%s", fx->fxinfo->name ); 
+			xyprintfcolor(2,480/8-70+TEXT_JUSTIFY,100,255,255, "%s", fx->fxinfo->name );
 			xyprintfcolor(2,480/8-69+TEXT_JUSTIFY,100,255,255, "Net_Id:    %d", fx->net_id );
 			xyprintfcolor(2,480/8-68+TEXT_JUSTIFY,100,255,255, "Age:       %0.0f", fx->age );
 			xyprintfcolor(2,480/8-67+TEXT_JUSTIFY,100,255,255, "lifeStage: %d", fx->lifeStage );
@@ -1008,7 +1007,7 @@ int fxCreate( const char * fxname, FxParams * originalfxp )
 
 
 	PERFINFO_AUTO_START("fxCreate", 1);
-	
+
 	if (game_state.tintFxByType && !originalfxp->numColors)
 	{
 		originalfxp->numColors = 1;
@@ -1116,7 +1115,7 @@ int fxCreate( const char * fxname, FxParams * originalfxp )
 	for(i = 0, fxi = 0; fxi < iSizeInputs && i < fxp->keycount; i++, fxi++)
 	{
 		okToCreate = 1;
-		
+
 		inputName = fx->fxinfo->inputsReal[ fxi ]; //fx->fxinfo->inputs[fxi];
 
 		//Find the KeyGfxNode, if any, that will be this fxgeo's gfxnode's parent
@@ -1126,7 +1125,7 @@ int fxCreate( const char * fxname, FxParams * originalfxp )
 			parentofkeygfxnode = seqFindGfxNodeGivenBoneNumOfChild(fxp->keys[i].seq, fxp->keys[i].bone, fxp->keys[i].childBone);
 
 			if( 0 && !parentofkeygfxnode )	//should never happen anymore, but Steve doesn't want an error msg
-											// DG - this can happen with the advent of Kheldians, if we try to 
+											// DG - this can happen with the advent of Kheldians, if we try to
 											// attach an FX to their non-existant hands
 			{
 				Errorf("FX %s:%s doesn't have %s bone for ", fxname, "Hmm",
@@ -1359,7 +1358,7 @@ static void fxEventSetBits(FxObject * fx, FxEvent * fxevent )
 		{
 			SeqInst * seq;
 			seq = hdlGetPtrFromHandle( fxgeo->seq_handle );
-			
+
 			if(seq)
 				seqSetStateFromString( seq->state, stateNames );
 			else
@@ -1545,7 +1544,7 @@ static int fxEventCreateFxGeo(FxObject * fx, FxEvent * fxevent, int isDeathEvent
 	}
 
 	fxGeoAnimationChangeParams(fxgeo, &fx->fxp);
-	
+
 	if (( fxgeo->gfx_node->model ) &&
 		( fxgeo->gfx_node->model->trick ) &&
 		( fxgeo->gfx_node->model->trick->info ) &&
@@ -1554,7 +1553,7 @@ static int fxEventCreateFxGeo(FxObject * fx, FxEvent * fxevent, int isDeathEvent
 		// This effect geo needs to maintain some animation state in
 		// its trick node for the use of the render thread (animateSts()).
 		//
-		// An animation age of < 0.0f means "initialize me on the next 
+		// An animation age of < 0.0f means "initialize me on the next
 		// animation update".
 		fxgeo->gfx_node->model->trick->st_anim_age = -1.0f;
 	}
@@ -1562,7 +1561,7 @@ static int fxEventCreateFxGeo(FxObject * fx, FxEvent * fxevent, int isDeathEvent
 	if ( fxevent->parentVelFraction > 0.0f && fx )
 	{
 		Vec3 vInheritedVel;
-		
+
 		scaleVec3(fx->parentLinVel, fxgeo->event->parentVelFraction, vInheritedVel);
 		addVec3(fxgeo->velocity, vInheritedVel, fxgeo->velocity );
 
@@ -1639,13 +1638,13 @@ void fxEventSetLight( FxObject * fx,  FxEvent * event )
 			if( event->bhvr )
 				bhvr = fxGetFxBhvr( event->bhvr ) ;
 
-			if( bhvr )   
+			if( bhvr )
 			{
 				light->pulsePeakTime	= bhvr->pulsePeakTime;
 				light->pulseBrightness	= bhvr->pulseBrightness;
 				light->pulseClamp		= bhvr->pulseClamp;
 			}
-			else 
+			else
 			{
 				light->pulsePeakTime	= light->pulseEndTime / 2;
 				light->pulseBrightness	= 1.8;
@@ -1746,7 +1745,7 @@ static int fxDoThisEvent(FxObject * fx, FxEvent * fxevent, int isDeathEvent )
 
 	PERFINFO_AUTO_STOP(); // Matches all the above starts.
 	PERFINFO_AUTO_STOP_CHECKED("fxDoThisEvent");
-	
+
 	return success;
 }
 
@@ -1944,7 +1943,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 									pEmissary->vPhysicsHitNorm[1] = 1.0f;
 									pEmissary->vPhysicsHitNorm[2] = 0.0f;
 								}
-								copyVec3(pEmissary->vPhysicsHitPos, fxp.keys[0].offset[3] );		
+								copyVec3(pEmissary->vPhysicsHitPos, fxp.keys[0].offset[3] );
 								mat3FromUpVector( pEmissary->vPhysicsHitNorm, fxp.keys[0].offset );
 							}
 							else
@@ -1955,7 +1954,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 							fxp.fxtype = FX_POWERFX;
 							fxp.numColors = fx->fxp.numColors;
 							fxp.isUserColored = fx->fxp.isUserColored;
-							memcpy(fxp.colors, fx->fxp.colors, 
+							memcpy(fxp.colors, fx->fxp.colors,
 								fxp.numColors * sizeof(fxp.colors[0]));
 							iChildEventGeoHandle = fxCreate( fxgeo->event->cevent, &fxp );
 							pEmissary->uPhysicsHitObject = 0;
@@ -2006,9 +2005,9 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 		SeqInst * seq = fx->handle_of_parent_seq ? hdlGetPtrFromHandle(fx->handle_of_parent_seq) : NULL;
 		bool bHideGeo = false;
 
-		//DYnamic Lighting really means static lighting, that is, it means, you need to figure out your 
-		//own lighting and not inherit it from your parent seq.  But it's only done once now, since there's 
-		//not really a way to 
+		//DYnamic Lighting really means static lighting, that is, it means, you need to figure out your
+		//own lighting and not inherit it from your parent seq.  But it's only done once now, since there's
+		//not really a way to
 		if( fx->fxinfo->lighting == FX_DYNAMIC_LIGHTING  ) //use your own lighting
 		{
 
@@ -2049,7 +2048,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 
 		//### Update all the living fxgeo's particles, animations and sounds
 		//(after all fxgeos have been processed so magnets etc are right)
-		for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next) 
+		for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next)
 		{
 			U8 actualAlpha;
 			bool bHideParticles;
@@ -2075,7 +2074,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 
 			fxGeoUpdateWorldGroup( fxgeo, fx->currupdatestate, entLight, inheritedAlpha, fx->useStaticLighting );
 
-			// Hide or unhide the geo.  Assumes no other code is hiding this node for any reason, or in the case  
+			// Hide or unhide the geo.  Assumes no other code is hiding this node for any reason, or in the case
 			//	where geo is hidden elsewhere it gets hidden after this call and before rendering takes place (this
 			//	is the case for animation triggered fx, see fxGeoUpdateAnimation).
 			if(bHideGeo)
@@ -2102,7 +2101,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 					{
 						seqSetStateFromString( childfx->state, fxgeo->event->newstate );
 					}
-					seqSetOutputs( childfx->state, fx->state ); 
+					seqSetOutputs( childfx->state, fx->state );
 				}
 			}
 			else
@@ -2135,7 +2134,7 @@ static int fxUpdateFxStateFromParentSeq( FxObject * fx )
 	const SeqMove * parent_move;
 	int parent_move_num;
 	int i;
- 
+
 	if( fx->fxinfo->fxinfo_flags & FX_USE_TARGET_SEQ )
 		seq = hdlGetPtrFromHandle( fx->handle_of_target_seq );
 	else
@@ -2146,7 +2145,7 @@ static int fxUpdateFxStateFromParentSeq( FxObject * fx )
 
 	state = fx->state;
 
-	if( seq ) 
+	if( seq )
 	{
 		//#### First just copy off the bits from the sequencer
 		seqSetOutputs(state, seq->state);
@@ -2158,7 +2157,7 @@ static int fxUpdateFxStateFromParentSeq( FxObject * fx )
 		assert(parent_move);
 
 		parent_move_num = parent_move->raw.idx;
- 
+
 		//is this move new, or are we in a cycle move?
 		if( 1 ) //parent_move_num != fx->last_move_of_parent
 			//|| ( parent_move->flags & ( SEQMOVE_CYCLE | SEQMOVE_REQINPUTS ) ) )
@@ -2179,7 +2178,7 @@ static int fxUpdateFxStateFromParentSeq( FxObject * fx )
 			}
 		}
 
-		//Hackery. Combat 
+		//Hackery. Combat
 
 		if( eaSize( &parent_move->sticksOnChildStr ) ) //99.9% none
 		{
@@ -2305,7 +2304,7 @@ static void fxDoEvent(FxObject* fx, FxCondition* fxcon, int iFxIndex)
 	#endif
 
 	//If this event is only allowed to have one with this name at a time
-	if( fxevent->fxevent_flags & FXGEO_ONE_AT_A_TIME )  
+	if( fxevent->fxevent_flags & FXGEO_ONE_AT_A_TIME )
 	{
 		if ( !fxevent->name )
 		{
@@ -2493,7 +2492,7 @@ PERFINFO_AUTO_START("start",1);
 	if(!fx->primeHasHit && fx->net_id && (fx->fxobject_flags & FX_STATE_PRIMEHIT))//only networked fx will need to report their doings
 	{
 		putMsgInMailbox(&globalEntityFxMailbox, fx->net_id, FX_STATE_PRIMEHIT );
-		
+
 		fx->primeHasHit = 1;
 	}
 
@@ -2501,7 +2500,7 @@ PERFINFO_AUTO_START("start",1);
 	PERFINFO_AUTO_START("fxCheckConditions", 1);
 		fxCheckConditions( fx );
 	PERFINFO_AUTO_STOP_CHECKED("fxCheckConditions");
-	
+
 	fx->fxobject_flags = 0; //They've all had their chance to be handled.
 	fx->lastForcePower = 0; //Same with force triggers
 
@@ -2525,7 +2524,7 @@ PERFINFO_AUTO_START("start",1);
 		}
 	}
 
-	if (inheritedAlpha && seq && seq->forceInheritAlpha) 
+	if (inheritedAlpha && seq && seq->forceInheritAlpha)
 	{
 		// well, in case we still have a visible effect, we need to check if the seq wants it to be faded;
 		// wish there was a better way to do this, as this might cause cache misses
@@ -2581,7 +2580,7 @@ PERFINFO_AUTO_START("end",1);
 	{
 		PERFINFO_AUTO_STOP();
 	}
-	
+
 	return still_alive;
 }
 
@@ -2592,7 +2591,7 @@ void fxRunParticleSystems(FxObject* fx, void* notUsed)
 	if(!fx)
 		return;
 
-	for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next) 
+	for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next)
 	{
 		for(j = 0; j < fxgeo->psys_count; j++)
 		{
@@ -2865,7 +2864,7 @@ void fxRunEngine()
 		PERFINFO_AUTO_STOP_CHECKED("end stuff");
 
 	}
-	
+
 	if (compact_counter++ > 15)
 	{
 		void vhCompact(void);

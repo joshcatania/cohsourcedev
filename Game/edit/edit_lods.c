@@ -1,5 +1,5 @@
 #include "stdtypes.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "error.h"
 #include "mathutil.h"
 #include "textparser.h"
@@ -61,7 +61,7 @@ typedef struct EditLODs
 
 static EditLODs edit_lods = {0};
 
-enum 
+enum
 {
 	APPLY_STATE_NONE=0,
 	APPLY_STATE_START,
@@ -357,7 +357,7 @@ static int findPath(const char *path, TreeElementAddress *elem)
 			str = 0;
 		}
 	}
-	
+
 	return 1;
 }
 
@@ -365,7 +365,7 @@ static int findObject(char *namebuf, char *path, const TreeElementAddress *elem)
 {
 	int i, j, child_count=0;
 	FolderNode *node = FolderNodeFind(folder_cache->root, "object_library");
-	
+
 	path[0]=0;
 
 	if (!node || !isOkNode(node))
@@ -605,7 +605,7 @@ static void editLODsGetDistStatusText(char *text)
 {
 	float near_dist = 0, far_dist = 0;
 	int i;
-	
+
 	if (!edit_lods.tracker)
 		return;
 

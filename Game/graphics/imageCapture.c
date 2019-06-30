@@ -12,7 +12,7 @@
 #include "memcheck.h"
 #include "error.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "anim.h"
 #include "file.h"
 #include "mathutil.h"
@@ -122,8 +122,8 @@ void ImageCapture_WriteMapImages(char *filename, char *directory, int checkin)
 //	char		fname[1000];
 	char *s;
 	char mapName[1000];
-	
-	
+
+
 	//example: char mapname[] = "C:\\game\\data\\maps\\Missions\\Outdoor_Missions\\V_Outdoor_LongBow_CargoBase\\V_Outdoor_LongBow_CargoBase.txt";
 
 	//FIRST COUNT THE NUMBER OF '.'s IN THE FILENAME!  More than one period will result in everyone's client crashing.  Not good.
@@ -144,7 +144,7 @@ void ImageCapture_WriteMapImages(char *filename, char *directory, int checkin)
 
 		loadMapForImages(mapName);
 	}
-	else 
+	else
 	{
 		//if the filename has directory information attached, remove it.
 		s = strrchr(filename, '/');
@@ -155,7 +155,7 @@ void ImageCapture_WriteMapImages(char *filename, char *directory, int checkin)
 
 		sprintf(mapName,"%s",filename);
 	}
-	
+
 	minimap_saveHeader(mapName);
 #endif
 }
@@ -164,8 +164,8 @@ void ImageCapture_WriteMapImages(char *filename, char *directory, int checkin)
 
 
 //TODO: don't do this on every pixel.
-void clearImageBorder(U8 * origBuffer, unsigned int width, unsigned int height, 
-					  unsigned int left, unsigned int right, 
+void clearImageBorder(U8 * origBuffer, unsigned int width, unsigned int height,
+					  unsigned int left, unsigned int right,
 					  unsigned int top, unsigned int bottom)
 {
 	unsigned int i, j;
@@ -243,7 +243,7 @@ void hasAdditiveParticles(FxObject* fx, int* additive)
 	if(!fx || !additive)
 		return;
 
-	for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next) 
+	for( fxgeo = fx->fxgeos; fxgeo ; fxgeo = fxgeo->next)
 	{
 		for(j = 0; j < fxgeo->psys_count; j++)
 		{
@@ -332,7 +332,7 @@ void clearImageByBlueness(U8 * origBuffer, unsigned int width, unsigned int heig
 	unsigned int i, j;
 	U8 * buffer = origBuffer;
 
-	for (i = 0; i < height; i++) 
+	for (i = 0; i < height; i++)
 	{
 		for(j = 0; j < width; j++)
 		{
@@ -355,7 +355,7 @@ void flipImageVertically(U8 * buffer, unsigned int width, unsigned int height )
 	if(width > 256)
 		return;
 
-	for (i = 0; i < height/2; i++) 
+	for (i = 0; i < height/2; i++)
 	{
 		memcpy( temp, buffer + i*(width*4), (width)*4 );
 		memcpy( buffer + i*width*4, buffer + (height-i-1)*width*4, width*4 );
@@ -405,7 +405,7 @@ int checkImageRowForContent(U8 * img, unsigned int width, unsigned int height, u
 	{
 		if(img[3] > MM_MIN_ALPHA_THRESHOLD)
 			return 1;
-		img += sizeof(U8)*4; 
+		img += sizeof(U8)*4;
 	}
 	return 0;
 }
@@ -431,7 +431,7 @@ int checkImageColumnForContent(U8 * img, unsigned int width, unsigned int height
 	return 0;
 }
 
-//returns a number between 0 and height-1 indicating the highest position with content.  
+//returns a number between 0 and height-1 indicating the highest position with content.
 int getTopY(U8 * img, unsigned int width, unsigned int height)
 {
 	unsigned int i;
@@ -500,20 +500,20 @@ int hasContent(U8 * img, unsigned int width, unsigned int height)
 	return 0;
 }
 
-void copyMMImage(U8 * src, unsigned int srcWidth, unsigned int srcHeight, U8 *dst, unsigned int dstWidth, 
+void copyMMImage(U8 * src, unsigned int srcWidth, unsigned int srcHeight, U8 *dst, unsigned int dstWidth,
 				 unsigned int dstHeight, unsigned int leftX, unsigned int topY, int srcToDst)
 {
 	U8 * currentIn, *currentOut;
 	int rowsWritten = 0;
 	int smallerToLargerW = srcWidth<=dstWidth;
 	int smallerToLargerH = srcHeight<=dstHeight;
-	int rowsToWrite = (smallerToLargerH)?(MIN(srcHeight, dstHeight-topY)): 
+	int rowsToWrite = (smallerToLargerH)?(MIN(srcHeight, dstHeight-topY)):
 		(MIN(dstHeight, srcHeight-topY));
-	int colsToWrite = (smallerToLargerW)?(MIN(srcWidth, dstWidth-leftX)): 
+	int colsToWrite = (smallerToLargerW)?(MIN(srcWidth, dstWidth-leftX)):
 		(MIN(dstWidth, srcWidth-leftX));
 
 	while(rowsWritten<rowsToWrite)
-	{ 
+	{
 		int position = 4*srcWidth*(rowsWritten + ((smallerToLargerH)?0:topY))+ ((smallerToLargerW)?0:leftX*4);
 		currentIn = (src + position);
 		position = 4*dstWidth*(rowsWritten + ((smallerToLargerH)?topY:0)) + ((smallerToLargerW)?leftX*4:0);
@@ -583,7 +583,7 @@ static void imageCaptureUpdateImage(SeqInst *seq)
 
 	rdrClearScreenEx(CLEAR_DEPTH|CLEAR_STENCIL|CLEAR_COLOR|CLEAR_ALPHA);
 	rdrSetAdditiveAlphaWriteMask(1);
-	
+
 	gfxWindowReshapeForHeadShot(game_state.fov_custom);
 
 	drawSortedModels_headshot(DSM_OPAQUE);
@@ -594,7 +594,7 @@ static void imageCaptureUpdateImage(SeqInst *seq)
 	{
 		partRunStartup();
 		TIMESTEP_NOSCALE = TIMESTEP = FRAME_TIMESTEP;
-		fxDoForEachFx(seq, fxRunParticleSystems, NULL); 
+		fxDoForEachFx(seq, fxRunParticleSystems, NULL);
 		partRunShutdown();
 	}
 }
@@ -656,7 +656,7 @@ void centerMapImage(unsigned int width, unsigned int height, U8 * imageIn, U8 * 
 	estrCreate(&tempMap3);
 	estrConcatFixedWidth(&tempMap3, imageIn3, (width)*(height)*4);
 
-	clearImageByLuminance(tempMap, width, height, 255, 255, 10); 
+	clearImageByLuminance(tempMap, width, height, 255, 255, 10);
 	getMMBounds(tempMap, width, height, &x1, &x2, &y1, &y2);
 	newWidth = x2-x1+1;
 	newHeight = y2-y1+1;
@@ -688,7 +688,7 @@ U8 * getMapImage(unsigned int bufferWidth, unsigned int bufferHeight, unsigned i
 	Vec3 clear = {0.0,1.0,0.0};
 	Vec3 bg_color = {1.0, 1.0, 1.0};
 	U8 * pixbuf = 0;	//hold the pixel buffer that will be returned
-	
+
 	int screenWidth, screenHeight;
 	Vec2 captureBottomLeft;	//the position of the bottom left corner of the capture window in screen coordinates.
 
@@ -704,13 +704,13 @@ U8 * getMapImage(unsigned int bufferWidth, unsigned int bufferHeight, unsigned i
 	totalSize = bufferWidth*bufferHeight*4;
 	rdrSetBgColor(clear);
 	rdrClearScreenEx(CLEAR_DEPTH|CLEAR_STENCIL|CLEAR_COLOR|CLEAR_ALPHA);
-	
+
 	//Screen Size
 	if (rdr_caps.use_pbuffers)
 	{	//taken directly from getThePixelBuffer
 		initHeadShotPbuffer(bufferWidth, bufferHeight, FULL_BODY_SHOT_DESIRED_MULTI, FULL_BODY_SHOT_REQUIRED_MULTI);
 		bufferWidth *= pbufHeadShot.software_multisample_level;
-		bufferHeight *= pbufHeadShot.software_multisample_level; 
+		bufferHeight *= pbufHeadShot.software_multisample_level;
 	}
 	captureBottomLeft[0] = 0;//((F32)screenWidth)/2.0 - ((F32)bufferWidth)/2.0;
 	captureBottomLeft[1] = 0;//((F32)screenHeight)/2.0 - ((F32)bufferHeight)/2.0;
@@ -738,7 +738,7 @@ U8 * getMapImage(unsigned int bufferWidth, unsigned int bufferHeight, unsigned i
 	}
 
 	//directly from getThePixelBuffer
-	if (game_state.imageServerDebug) 
+	if (game_state.imageServerDebug)
 	{
 		extern int glob_force_buffer_flip;
 		if (rdr_caps.use_pbuffers)
@@ -762,19 +762,19 @@ U8 * getMapImage(unsigned int bufferWidth, unsigned int bufferHeight, unsigned i
 		Vec3 clear = {0.0,0.0,0.0};
 		unsigned int total_size = bufferWidth* bufferHeight * 4;
 
-		rdrSetBgColor(clear); 
+		rdrSetBgColor(clear);
 		rdrClearScreenEx(CLEAR_DEPTH|CLEAR_STENCIL|CLEAR_COLOR|CLEAR_ALPHA);
 		gfxUpdateFrame( 0, 3, 0); //3 -->avoid the FX and related world geometry loading problems
 		pixbuf = malloc(total_size);
-		
+
 		automap_drawMap(bufferWidth, bufferHeight, floorNumber, flags);
 		gfxUpdateFrame( 0, 3, 0); //3 -->avoid the FX and related world geometry loading problems
 
 		if (rdr_caps.use_pbuffers)
 		{
 			pbufFrameGrab( &pbufHeadShot, pixbuf, total_size );
-		} 
-		else 
+		}
+		else
 		{
 			rdrGetFrameBuffer(captureBottomLeft[0], captureBottomLeft[1], bufferWidth, bufferHeight, GETFRAMEBUF_RGBA, pixbuf);
 		}
@@ -783,7 +783,7 @@ U8 * getMapImage(unsigned int bufferWidth, unsigned int bufferHeight, unsigned i
 	gfxWindowReshape(); //Restore
 	toggle_3d_game_modes(oldGameMode);
 
-	if (rdr_caps.use_pbuffers) 
+	if (rdr_caps.use_pbuffers)
 	{
 		winMakeCurrent();
 	}
@@ -808,7 +808,7 @@ int getCurrentMapImages(unsigned int imageWidth, unsigned int imageHeight, U8 **
 	else
 		floorImages = 0;
 
-   	for(i = 0; i < num_images; i+=3)     
+   	for(i = 0; i < num_images; i+=3)
 	{
 		int floor = i/3;
 		floorImages[i] = getMapImage(imageWidth, imageHeight, floor, 0);
@@ -819,7 +819,7 @@ int getCurrentMapImages(unsigned int imageWidth, unsigned int imageHeight, U8 **
 
 		floorImages[i+1] = getMapImage(imageWidth, imageHeight, floor, 1);
 		flipImageVertically( floorImages[i+1], imageWidth, imageHeight );
-		clearImageByBlueness(floorImages[i+1], imageWidth, imageHeight ); 
+		clearImageByBlueness(floorImages[i+1], imageWidth, imageHeight );
 
 		floorImages[i+2] = getMapImage(imageWidth, imageHeight, floor, 2);
 		flipImageVertically( floorImages[i+2], imageWidth, imageHeight );
@@ -851,7 +851,7 @@ int getCurrentMapImages(unsigned int imageWidth, unsigned int imageHeight, U8 **
 
 void loadMapForImages(char * filename)
 {
-	
+
 	//groupReset();
 	//groupLoadTo(filename,NULL);
 	char	*fname = filename;
@@ -907,7 +907,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 	Vec2 captureBottomLeft;	//the position of the bottom left corner of the capture window in screen coordinates.
 	int hasFx = 0;
 	//first make the image at twice the size
-	unsigned int doubleWidth = bufferWidth*2; 
+	unsigned int doubleWidth = bufferWidth*2;
 	unsigned int doubleHeight = bufferHeight*2;
 	unsigned int totalSize;
 	Vec3 bgColor = {0};
@@ -931,13 +931,13 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 		doubleHeight = (unsigned int)bufferHeight;
 		doubleWidth = (unsigned int)bufferWidth;
 	}
-	
+
 
 	//Screen Size
 	if (rdr_caps.use_pbuffers) {	//taken directly from getThePixelBuffer
 		initHeadShotPbuffer(doubleWidth, doubleHeight, FULL_BODY_SHOT_DESIRED_MULTI, FULL_BODY_SHOT_REQUIRED_MULTI);
 		bufferWidth *= pbufHeadShot.software_multisample_level;
-		bufferHeight *= pbufHeadShot.software_multisample_level; 
+		bufferHeight *= pbufHeadShot.software_multisample_level;
 		// Move back camera so that the same scene is rendered twice as big
 		//  we should really do this via fov or something less tweaky... as it changes the aspect of things...
 		cameraPos[2] = cameraPos[2] / (pow(pbufHeadShot.software_multisample_level,0.95));
@@ -947,7 +947,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 		}*/
 //		bgimage->data->basic_texture->id = pbufHeadShot.handle;
 		doubleHeight = pbufHeadShot.height;
-		doubleWidth = pbufHeadShot.width; 
+		doubleWidth = pbufHeadShot.width;
 	}
 	totalSize = doubleHeight*doubleWidth*4;
 	additiveAlphaBuf = opaqueBuf = NULL;
@@ -986,7 +986,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 	game_state.disableGeometryBackgroundLoader = 1;
 	seq->legScale = 0.0;
 	game_state.disable2Dgraphics = 1;
-	if(oldScissor) 
+	if(oldScissor)
 		set_scissor(0);
 	toggle_3d_game_modes(SHOW_GAME);	//do not draw world or baddies
 	seq->gfx_root->flags &= ~GFXNODE_HIDE;
@@ -1030,13 +1030,13 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 	animPlayInst( seq );
 	//finally, move the particles forward about 30 seconds.
 
-	
+
 	//imagecapture_passSeqIntro(seq);
 
 
 
-	
-	copyMat3( unitmat, cam_info.mat ); 
+
+	copyMat3( unitmat, cam_info.mat );
 	copyVec3( lookat,cam_info.mat[3] );
 
 	copyMat3( unitmat, cam_info.cammat );
@@ -1105,7 +1105,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 
 	scaleVec3(g_sun.ambient, 0.5, g_sun.ambient);
 	scaleVec3(g_sun.diffuse, 1.0, g_sun.diffuse);
-	mulVecMat3(g_sun.direction, unitmat, g_sun.direction_in_viewspace); 
+	mulVecMat3(g_sun.direction, unitmat, g_sun.direction_in_viewspace);
 
 	// Run the particle systems for a bit
 	TIMESTEP_NOSCALE = TIMESTEP = FRAME_TIMESTEP;
@@ -1181,9 +1181,9 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 			width = x2-x1;
 			height = y2-y1;
 		}
-		
-		
-		
+
+
+
 		if(newImage && width * height < 30)
 		{
 				/*getMMBounds(opaqueBuf, doubleWidth, doubleHeight, &x1, &x2, &y1, &y2);*/
@@ -1194,7 +1194,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 				x2 = doubleWidth - x1;
 				y1 = (doubleHeight-height)/2;
 				y2 = doubleHeight - y1;
-			
+
 		}
 
 		*px1 = x1 = MAX((int)(x1-MM_IMAGE_BUFFER_SIZE),0);
@@ -1210,8 +1210,8 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 			x2-=moveIn;
 			width -= moveIn*2;
 		}
-		
-		
+
+
 		//width = min(width,doubleWidth);
 		//height = min(height, doubleHeight);
 
@@ -1231,8 +1231,8 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 
 		if(newImage)
 		{
-			clearImageBorder(opaqueBuf, doubleWidth, doubleHeight, 
-			x1, x2, 
+			clearImageBorder(opaqueBuf, doubleWidth, doubleHeight,
+			x1, x2,
 			y1, y2);
 		}
 		copyMMImage(opaqueBuf, doubleWidth, doubleHeight, *pixbuf, width, height, captureBottomLeft[0], captureBottomLeft[1], 1);
@@ -1265,7 +1265,7 @@ U8 * getMMSeqImage(U8** pixbuf, SeqInst * seq, Vec3 cameraPos, Vec3 lookat, floa
 	TIMESTEP_NOSCALE = oldTimeStepNoScale;
 	game_state.disable2Dgraphics = oldDisable2D;
 	seq->gfx_root->flags &= GFXNODE_HIDE;
-	if (oldScissor) 
+	if (oldScissor)
 		set_scissor(1);
 	game_state.game_mode = oldGameMode;
 	toggle_3d_game_modes(oldGameMode);
@@ -1375,7 +1375,7 @@ void updateMMSeqImage(MMPinPData * data, Vec2 screenPosition)
 	totalSize = data->wdPow*data->htPow*4;
 
 	//Screen Size
-	
+
 	if (rdr_caps.use_pbuffers) {	//taken directly from getThePixelBuffer
 		initMMPbuffer(&data->pbuffer, data->wdPow, data->htPow, FULL_BODY_SHOT_DESIRED_MULTI, FULL_BODY_SHOT_REQUIRED_MULTI);
 		pbufMakeCurrent(&data->pbuffer);
@@ -1458,7 +1458,7 @@ void updateMMSeqImage(MMPinPData * data, Vec2 screenPosition)
 
 
 
-	copyMat3( unitmat, cam_info.mat ); 
+	copyMat3( unitmat, cam_info.mat );
 	copyVec3( data->lookatPos,cam_info.mat[3] );
 
 	copyMat3( unitmat, cam_info.cammat );
@@ -1532,7 +1532,7 @@ void updateMMSeqImage(MMPinPData * data, Vec2 screenPosition)
 	setLightForCharacterEditor();
 	scaleVec3(g_sun.ambient, 0.5, g_sun.ambient);
 	scaleVec3(g_sun.diffuse, 1.0, g_sun.diffuse);
-	mulVecMat3(g_sun.direction, unitmat, g_sun.direction_in_viewspace); 
+	mulVecMat3(g_sun.direction, unitmat, g_sun.direction_in_viewspace);
 
 
 	gfxUpdateFrame( 0, 2, 0);
@@ -1564,7 +1564,7 @@ void updateMMSeqImage(MMPinPData * data, Vec2 screenPosition)
 	TIMESTEP_NOSCALE = oldTimeStepNoScale;
 	game_state.disable2Dgraphics = oldDisable2D;
 	data->e->seq->gfx_root->flags &= GFXNODE_HIDE;
-	if (oldScissor) 
+	if (oldScissor)
 		set_scissor(1);
 	game_state.game_mode = oldGameMode;
 	toggle_3d_game_modes(oldGameMode);

@@ -5,7 +5,7 @@
 #include "Position.h"
 #include "StashTable.h"
 #include <limits.h>
-#include <assert.h>
+#include "SuperAssert.h"
 #include "grouptrack.h"
 #include "gridcoll.h"
 #include "edit_select.h"
@@ -22,12 +22,12 @@ MP_DEFINE(BeaconDebugLine);
 
 static BeaconDebugLine* getNewLine(){
 	BeaconDebugLine* newLine;
-	
+
 	MP_CREATE(BeaconDebugLine,1000);
 	newLine = MP_ALLOC(BeaconDebugLine);
 
 	eaPush(&beaconConnection, newLine);
-	
+
 	return newLine;
 }
 
@@ -45,33 +45,33 @@ void ShowBeaconDebugInfo(Packet* pak){
 	U32 color;
 	U32 color2;
 	BeaconDebugLine* newLine;
-	
+
 	while(!pktEnd(pak)){
 		// Get the operation type.
-		
+
 		infoType = pktGetBitsPack(pak, 2);
 
 		switch(infoType){
 			case 0:{
 				Vec3 tempLocation;
-				
+
 				// Highlight a beacon.
-				
+
 				sourcePos[0] = pktGetF32(pak);
 				sourcePos[1] = pktGetF32(pak);
 				sourcePos[2] = pktGetF32(pak);
 				color = pktGetBits(pak, 32);
-				
+
 				copyVec3(sourcePos, tempLocation);
 
 				tempLocation[1] += 5;
-				
+
 				if(collGrid(NULL, sourcePos, tempLocation, &info, 0, COLL_EDITONLY | COLL_BOTHSIDES)){
 					tracker = info.node;
-					
+
 					if(tracker->parent){
 						tracker = tracker->parent;
-						
+
 						if(tracker->def->has_beacon){
 							selAdd(tracker,trackerRootID(tracker),0,0);
 							editRefSelect(sel_list[getSelIndex(tracker)].def_tracker, color & 0xffffff);
@@ -80,22 +80,22 @@ void ShowBeaconDebugInfo(Packet* pak){
 				}
 				else if(0){
 					int i;
-					
+
 					newLine = getNewLine();
-					
+
 					copyVec3(sourcePos, newLine->a);
 					copyVec3(sourcePos, newLine->b);
-					
+
 					newLine->b[1] += 5;
 
 					newLine->colorARGB1 = newLine->colorARGB2 = 0xff0000ff;
 
 					for(i = 0; i < 100; i++){
 						newLine = getNewLine();
-						
+
 						copyVec3(beaconConnection[eaSize(&beaconConnection)-2]->b, newLine->a);
 						copyVec3(sourcePos, newLine->b);
-						
+
 						newLine->b[0] += i * sin(i/5.f) * cos(i) / 10.f;
 						newLine->b[1] += i + 6;
 						newLine->b[2] += i * sin(i/5.f) * sin(i) / 10.f;
@@ -108,7 +108,7 @@ void ShowBeaconDebugInfo(Packet* pak){
 
 			case 1:{
 				// Draw a line.
-				
+
 				sourcePos[0] = pktGetF32(pak);
 				sourcePos[1] = pktGetF32(pak);
 				sourcePos[2] = pktGetF32(pak);
@@ -119,9 +119,9 @@ void ShowBeaconDebugInfo(Packet* pak){
 				color2 = pktGetBits(pak, 1) ? pktGetBits(pak, 32) : color;
 
 				// Add the line to the list.
-				
+
 				newLine = getNewLine();
-				
+
 				copyVec3(sourcePos, newLine->a);
 				copyVec3(targetPos, newLine->b);
 
@@ -130,13 +130,13 @@ void ShowBeaconDebugInfo(Packet* pak){
 
 				break;
 			}
-			
+
 			case 2:{
 				sourcePos[0] = pktGetF32(pak);
 				sourcePos[1] = pktGetF32(pak);
 				sourcePos[2] = pktGetF32(pak);
 				color = pktGetIfSetBits(pak, 32);
-				
+
 				{
 					#define ADDLINE(pt1, pt2, clr){							\
 						newLine = getNewLine();								\
@@ -150,7 +150,7 @@ void ShowBeaconDebugInfo(Packet* pak){
 					F32 size = 0.2;
 					Vec3 o;
 					Vec3 a, b, c;
-					
+
 					//sourcePos[1] += height;
 
 					copyVec3(sourcePos, o);
@@ -175,7 +175,7 @@ void ShowBeaconDebugInfo(Packet* pak){
 
 					if(0){
 						// Draw the little knob on top.
-						
+
 						copyVec3(o, a);
 						copyVec3(o, b);
 						a[0] += size;
@@ -217,10 +217,10 @@ void ShowBeaconDebugInfo(Packet* pak){
 						ADDLINE(b, c, 0xffaaaaff);
 					}
 				}
-				
+
 				break;
 			}
-			
+
 			default:{
 				assert(0 && "Bad operation code in ShowBeaconDebugInfo.");
 				break;
@@ -231,7 +231,7 @@ void ShowBeaconDebugInfo(Packet* pak){
 
 void cmdOldDebugHandle(Packet* pak){
 	char* command = pktGetString(pak);
-	
+
 	if(!stricmp(command, "ShowBeaconDebugInfo")){
 		ShowBeaconDebugInfo(pak);
 	}

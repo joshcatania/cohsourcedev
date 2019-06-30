@@ -29,7 +29,7 @@
 #include "entVarUpdate.h"
 #include "entDebug.h"
 #include "position.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "dbclient.h"
 #include "sound.h"
 #include "storyarc/contactClient.h"
@@ -161,8 +161,8 @@ void commResetControlState()
 	setMySlave(NULL, NULL, 0);
 	setPlayerIsSlave(0);
 
-	playerResetControlState();	
-	
+	playerResetControlState();
+
 	cmdOldSetSends(control_cmds,1);
 }
 
@@ -260,7 +260,7 @@ static void sendControlStateChangeData(Packet* pak, ControlStateChange* csc)
 	else if(csc->control_id < CONTROLID_ANGLE_MAX)
 	{
 		pktSendBits(pak, CSC_ANGLE_BITS, csc->angleU32);
-		
+
 		control_state.pyr.send[csc->control_id - CONTROLID_PITCH] = csc->angleU32;
 	}
 	else if(csc->control_id == CONTROLID_RUN_PHYSICS)
@@ -315,9 +315,9 @@ static void sendControlStateChangeData(Packet* pak, ControlStateChange* csc)
 void sendControlStateChangeList(Packet* pak, ControlStateChange* csc)
 {
 	// If this was previously sent, use the previous last_send_ms time, otherwise use the current last_send_ms.
-	
+
 	U32 last_send_ms = csc->sent ? csc->last_send_ms : control_state.time.last_send_ms;
-	
+
 	while(csc)
 	{
 		S32 diff_ms;
@@ -367,7 +367,7 @@ void sendControlStateChangeList(Packet* pak, ControlStateChange* csc)
 		}
 
 		// Send the CSC data.
-		
+
 		sendControlStateChangeData(pak, csc);
 
 		csc_send.last_time_stamp_ms = csc->time_stamp_ms;
@@ -387,7 +387,7 @@ void sendControlStateChangeList(Packet* pak, ControlStateChange* csc)
 
 		csc = csc->next;
 	}
-	
+
 	#if !TEST_CLIENT
 		pmotionUpdateNetID(NULL);
 	#endif
@@ -421,13 +421,13 @@ static void commSendControlUpdate(Packet* pak, int sendUpdate)
 	pktSendBits(pak, 1, 1);
 
 	// Increment the net packet order.
-	
+
 	csc_send.net_packet_order++;
-	
+
 	// Find the starting CSC from x packets ago.
-	
+
 	control_state.net_error_correction = MINMAX(control_state.net_error_correction, 0, 2);
-	
+
 	for(csc = control_state.csc_processed_list.head; csc && csc->sent; csc = csc->next)
 	{
 		U32 diff = csc_send.net_packet_order - csc->net_packet_order;
@@ -437,9 +437,9 @@ static void commSendControlUpdate(Packet* pak, int sendUpdate)
 			break;
 		}
 	}
-	
+
 	csc_send_head = csc;
-	
+
 	// Send the control state change list.
 
 	if(csc_send_head)
@@ -450,19 +450,19 @@ static void commSendControlUpdate(Packet* pak, int sendUpdate)
 		// Send the first "1" bit to indicate that some control stuff is coming up.
 
 		pktSendBits(pak, 1, 1);
-		
+
 		// Calculate the maximum time delta.
-		
+
 		for(csc = csc_send_head, last = NULL; csc; last = csc, csc = csc->next)
 		{
 			S32 diff_ms = csc->time_stamp_ms - (last ? last->time_stamp_ms : csc->sent ? csc->last_send_ms : control_state.time.last_send_ms);
-			
+
 			//assert(diff >= 0 && diff <= 1000);
 
 			if(diff_ms < 32 || diff_ms > 32 + 3)
 			{
 				diff_ms = MINMAX(diff_ms, 0, 1000);
-				
+
 				if(diff_ms > max_time_diff_ms)
 				{
 					max_time_diff_ms = diff_ms;
@@ -506,7 +506,7 @@ static void commSendControlUpdate(Packet* pak, int sendUpdate)
 			}
 		#endif
 	}
-	
+
 	// End of control-list bit.
 
 	pktSendBits(pak, 1, 0);
@@ -620,7 +620,7 @@ void commSendInput()
 
 	pak = pktCreate();
 	pktSendBitsPack(pak,1,CLIENT_INPUT);
-	
+
 	START_BIT_COUNT(pak, "CLIENT_INPUT");
 
 	// Send control update.
@@ -696,9 +696,9 @@ void commSendInput()
 
 	START_BIT_COUNT(pak, "cmdSend");
 		reliable = cmdOldSend(pak,control_cmds,0,0);
-	STOP_BIT_COUNT(pak);	
+	STOP_BIT_COUNT(pak);
 	cmdOldSetSends(control_cmds,0);
-	
+
 	// Send hacker detection *DO NOT USE START_INPUT_PACKET*
 	if (comm_link.nextID+1 == 37) {
 		pktSendBitsPack(client_input_pak, 1, CLIENTINP_NOTAHACKER);
@@ -721,9 +721,9 @@ void commSendInput()
 	//printf("sent:\t%d, %d\n", pak->stream.cursor.byte, pak->stream.cursor.bit);
 
 	//printf("end:    %d, %d\n\n", pak->stream.cursor.byte, pak->stream.cursor.bit);
-	
+
 	STOP_BIT_COUNT(pak); // Matches START_BIT_COUNT right after sending CLIENT_INPUT.
-	
+
 	PERFINFO_AUTO_START("pktSend", 1);
 		pktSend(&pak,&comm_link);
 	PERFINFO_AUTO_STOP();
@@ -770,7 +770,7 @@ void commGetStats(NetLink *link, Packet* pak)
 				// lost multiple packets this frame, go into troubled mode
 				commSetTroubledMode(TroubledComm_DroppedPackets);
 			}
-			else 
+			else
 			{
 				// Check recent received packet history to see if we are over threshold we consider for TroubledMode.
 				//	For our purposes, we look to see if there is a second lost packet within a fixed packet count.
@@ -783,7 +783,7 @@ void commGetStats(NetLink *link, Packet* pak)
 						commSetTroubledMode(TroubledComm_DroppedPackets);
 						break;
 					}
-				}		
+				}
 			}
 		}
 
@@ -960,7 +960,7 @@ void sendShardCmd(char * cmd, char *fmt,...)
 			char * s = va_arg(ap,char *);
 			if (!s)
 				break;
-		
+
 			strcatf(str," \"%s\"",escapeString(s));
 			++p;
 		}
@@ -971,7 +971,7 @@ void sendShardCmd(char * cmd, char *fmt,...)
 			strcatf(str," \"%d\"",i);
 			++p;
 		}
-		else 
+		else
 		{
 			strcatf(str, "%c", *p);
 		}
@@ -979,7 +979,7 @@ void sendShardCmd(char * cmd, char *fmt,...)
 	va_end(ap);
 
 	if(gPrintShardCommCmds)
-	{	
+	{
 		conPrintf("SEND--> %s", str);
 	}
 
@@ -1002,16 +1002,16 @@ void receiveShardComm(Packet *pak)
 		return;
 
 	if(gPrintShardCommCmds)
-	{	
+	{
 		char buf[10000] = "";
-		
+
 		for(i=0;i<count;i++)
 			strcatf(buf,"%s ",args[i]);
 
  		conPrintf("RECV--> %s\n",buf);
 		printf("shardcomm: %s\n", buf);
 	}
-	
+
 	if (!processShardCmd(args, count))
 	{
 		// if it didn't process correctly, send a message back to the logserver.
@@ -1115,9 +1115,9 @@ static int handleGameCmd(Packet *pak, int cmd)
 			if(cmd >= 0 && cmd < ARRAY_SIZE(cmdBitCounts))
 			{
 				const char* name = getServerCmdName(cmd);
-				
+
 				timer_started = 1;
-				
+
 				START_BIT_COUNT_STATIC(pak, &cmdBitCounts[cmd], name);
 				PERFINFO_AUTO_START_STATIC(name, &cmdTimers[cmd], 1);
 			}
@@ -1132,7 +1132,7 @@ static int handleGameCmd(Packet *pak, int cmd)
 		logPacketInfo("SGC: %d, %s", cmd, getServerCmdName(cmd));
 		switch(cmd)
 		{
-			xcase SERVER_GAME_CMDS:break;										
+			xcase SERVER_GAME_CMDS:break;
 			_Ch(SERVER_RECEIVE_DIALOG,					receiveDialog)
 			_Ch(SERVER_RECEIVE_DIALOG_POWREQ,			receiveDialogPowerRequest)
 			_Ch(SERVER_RECEIVE_DIALOG_TEAMLEVEL,		receiveTeamChangeDialog)
@@ -1279,7 +1279,7 @@ static int handleGameCmd(Packet *pak, int cmd)
 			_Ch(SERVER_ARENA_UPDATE_PLAYER,				handleClientArenaPlayerUpdate);
 			_Ch(SERVER_ARENA_REQRESULTS,				receiveArenaResults );
 			_Ch(SERVER_ARENA_OFFER,						receiveArenaInvite );
-			
+
 			_Ch(SERVER_SALVAGE_IMMEDIATE_USE_STATUS,	receiveSalvageImmediateUseStatus );
 
 			_Ch(SERVER_SEND_PACKAGEDENT,				receivePackagedEnt );
@@ -1334,13 +1334,13 @@ static int handleGameCmd(Packet *pak, int cmd)
 			_Ch(SERVER_MISSIONSERVER_ARCDATA,			missionserver_game_receiveArcData);
 			_Ch(SERVER_MISSIONSERVER_ARCDATA_OTHERUSER,	missionserver_game_receiveArcData_otherUser);
 			_Ch(SERVER_ARCHITECTKIOSK_SETOPEN,			receiveArchitectKioskSetOpen);
-			
+
 			_Ch(SERVER_SG_COLOR_DATA,					receiveSGColorData);
 			_Ch(SERVER_RENAME_BUILD,					receiveRenameBuild);
 			_Ch(SERVER_COSTUME_CHANGE_EMOTE_LIST,		receiveCostumeChangeEmoteList);
 
 			_Ch(SERVER_CONFIRM_SG_PROMOTE,				receiveConfirmSGPromote);
-			
+
 			_Ch(SERVER_LEVELINGPACT_INVITE,				receiveLevelingPactInvite);
 			_Ch(SERVER_ARCHITECT_COMPLETE,				receiveArchitectComplete);
 			_Ch(SERVER_ARCHITECT_SOUVENIR,				receiveArchitectSouvenir);
@@ -1373,7 +1373,7 @@ static int handleGameCmd(Packet *pak, int cmd)
 			_Ch(SERVER_EVENT_START_STATUS,				turnstileGame_HandleEventStartStatus);
 			_Ch(SERVER_EVENT_STATUS,					turnstileGame_handleEventStatus);
 			_Ch(SERVER_EVENT_JOIN_LEADER,				turnstileGame_handleJoinLeader);
-		
+
 			_Ch(SERVER_GOINGROGUE_NAG,					receiveGoingRogueNag);
 			_Ch(SERVER_INCARNATE_TRIAL_STATUS,			receiveIncarnateTrialStatus);
 			_Ch(SERVER_POPHELP_EVENT_HAPPENED_BY_TAG,	receivePopHelpEventHappenedByTag);
@@ -1438,7 +1438,7 @@ static int commHandleMessage(Packet *pak,int cmd,NetLink *link)
 {
 	unsigned int cursorStart = pak->stream.cursor.byte * 8 + pak->stream.cursor.bit;
 	int ret = 1;
-	
+
 	logPacketInfo(
 		//"Cmd, Id, Compress, Creation, Debug, RetransmitQueue, SendQueue, Ordered, OrderedId, Reliable, RetransCount, SibCount, SibId, SibPart, TruncId, Uid, XferTime"
 		"%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d",
@@ -1486,16 +1486,16 @@ static int commHandleMessage(Packet *pak,int cmd,NetLink *link)
 			STOP_BIT_COUNT(pak);
 		xcase SERVER_ALLENTS:{
 			// See comment for SERVER_GROUPS
-			
+
 			U32 ackFullUpdateID = pktGetBitsPack(pak, 1);
-			
+
 			START_INPUT_PACKET(pak, CLIENTINP_ACK_FULL_UPDATE);
 			pktSendBitsPack(pak, 1, ackFullUpdateID);
 			END_INPUT_PACKET
-			
+
 			netSendIdle(link);
 			lnkBatchSend(link);
-			
+
 			// Intentional fall-through
 		}
 		case SERVER_UPDATE:
@@ -1564,10 +1564,10 @@ static int commHandleMessage(Packet *pak,int cmd,NetLink *link)
 
 				if ( msgType == EDITOR_MESSAGE_ERROR ) //Error from the editor
 					winErrorDialog(msg, "Program Error", 0, 0);
-				else if( msgType == EDITOR_MESSAGE_HIGH_PRIORITY )  
+				else if( msgType == EDITOR_MESSAGE_HIGH_PRIORITY )
 					winErrorDialog(msg, "The Editor Says", 0, 0); //Editor has a an important message like checkout
-				
-				if( msgType == EDITOR_MESSAGE_LOW_PRIORITY || msgType == EDITOR_MESSAGE_HIGH_PRIORITY )  
+
+				if( msgType == EDITOR_MESSAGE_LOW_PRIORITY || msgType == EDITOR_MESSAGE_HIGH_PRIORITY )
 					status_printf("%s",msg); //run of the mill message
 
 				editNetUpdate();
@@ -1596,7 +1596,7 @@ static int commHandleMessage(Packet *pak,int cmd,NetLink *link)
 			START_BIT_COUNT(pak, "connectMsg");
 			if (pktGetBitsPack(pak,1))
 			{
-				game_state.dbTimeZoneDelta = pktGetF32(pak); 
+				game_state.dbTimeZoneDelta = pktGetF32(pak);
 				STOP_BIT_COUNT(pak);
 			}
 			else
@@ -1650,7 +1650,7 @@ int commStart(char *ip_str,int port,int connect_cookie)
 	pak = pktCreate();
 	pktSendBitsPack(pak,1,CLIENT_CONNECT);
 	pktSendBitsPack(pak,1,connect_cookie);
-	pktSendBits(pak, 1, game_state.cod);	
+	pktSendBits(pak, 1, game_state.cod);
 
 	sendCharacterCreate(pak);
 
@@ -1754,7 +1754,7 @@ int commCheck(int lookfor)
 			return 0;
 		}
 	PERFINFO_AUTO_STOP();
-	
+
 	// If we're in the middle of a map transfer, the net link to the map server
 	// will have been destroyed.  Do not try to use it.
 	if(do_map_xfer)
@@ -1767,7 +1767,7 @@ int commCheck(int lookfor)
 	PERFINFO_AUTO_START("commLinkLooksDead", 1);
 		dead_link = commLinkLooksDead(&comm_link);
 	PERFINFO_AUTO_STOP();
-	
+
 	if (dead_link)
 	{
 		if (glob_have_camera_pos != PLAYING_GAME && game_state.game_mode != SHOW_LOAD_SCREEN)
@@ -1791,7 +1791,7 @@ int commCheck(int lookfor)
 					// Disconnect from the server.
 					//		At this point, it is fairly certain that the mapserver is dead.
 					//		This is just marking the link as disconnected in a nice way.
-					
+
 					PERFINFO_AUTO_START("commDisconnect()", 1);
 						commDisconnect();
 					PERFINFO_AUTO_STOP();
@@ -1813,7 +1813,7 @@ int commCheck(int lookfor)
 						dialogStd(DIALOG_OK, textStd("LostConn"), NULL, NULL, NULL, NULL, 0);
 					PERFINFO_AUTO_STOP();
 				PERFINFO_AUTO_STOP();
-				
+
 				return 0;
 			}
 		}
@@ -1828,7 +1828,7 @@ int commCheck(int lookfor)
 		PERFINFO_AUTO_START("netLinkMonitor", 1);
 			got_it = netLinkMonitor(&comm_link, lookfor, commHandleMessage);
 		PERFINFO_AUTO_STOP_CHECKED("netLinkMonitor");
-		
+
 		PERFINFO_AUTO_START("lnkBatchSend", 1);
 			lnkBatchSend(&comm_link);
 		PERFINFO_AUTO_STOP();
@@ -1857,7 +1857,7 @@ int commReqScene(int isInitialLogin)
 #endif
 
 	PERFINFO_AUTO_START("commReqScene", 1);
-	
+
 		clearWaitingForFullUpdate();
 
 		//sndVolumeControl( SOUND_VOLUME_FX, 0.0 );
@@ -1994,20 +1994,20 @@ void clearCutScene( void )
 int commConnect(char *addr,int port,int cookie)
 {
 	int result;
-	
+
 	loadstart_printf("Connecting to mapserver %s:%d (UDP) cookie: %x..",addr,port,cookie);
 
 	PERFINFO_AUTO_START("commStart", 1);
 		result = commStart(addr,port,cookie);
 	PERFINFO_AUTO_STOP();
-	
+
 	if (!result)
 	{
 		return 0;
 	}
 
 	clearCutScene();
-	
+
 	entDebugClearServerPerformanceInfo();
 	resetArenaVars();
 	commResetControlState();
@@ -2017,7 +2017,7 @@ int commConnect(char *addr,int port,int cookie)
 	PERFINFO_AUTO_START("commReqShortcuts", 1);
 		result = commReqShortcuts();
 	PERFINFO_AUTO_STOP();
-	
+
 	if(!result)
 	{
 		return 0;
@@ -2148,7 +2148,7 @@ void commLogPackets(int value)
 
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
-// TroubledMode gets set when we notice a slow tick to mapserver/dbserver, or when excess 
+// TroubledMode gets set when we notice a slow tick to mapserver/dbserver, or when excess
 //	packet loss is detected.
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

@@ -11,7 +11,7 @@
 #include "memcheck.h"
 #include "mathutil.h"
 #include "winuser.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "uiInput.h"
 #include "uiChat.h"
 #include "uiCursor.h"
@@ -45,7 +45,7 @@ int altKeyState = 0;
 int ctrlKeyState = 0;
 int shiftKeyState = 0;
 
-LPDIRECTINPUT8			DirectInput8; 
+LPDIRECTINPUT8			DirectInput8;
 LPDIRECTINPUTDEVICE8	Keyboard;
 LPDIRECTINPUTDEVICE8	gMouse;
 LPDIRECTINPUTDEVICE8	gJoystick;
@@ -59,18 +59,18 @@ int GetScancodeFromVirtualKey(WPARAM wParam, LPARAM lParam);
 
 
 void KeyboardShutdown(){
-	if(Keyboard){ 
-		Keyboard->lpVtbl->Unacquire(Keyboard); 
+	if(Keyboard){
+		Keyboard->lpVtbl->Unacquire(Keyboard);
 		Keyboard->lpVtbl->Release(Keyboard);
-		Keyboard = NULL; 
-	} 
+		Keyboard = NULL;
+	}
 }
 
 int inpKeyboardAcquire(){
 	HRESULT hr;
 
 	if(Keyboard){
-		hr = Keyboard->lpVtbl->Acquire(Keyboard); 
+		hr = Keyboard->lpVtbl->Acquire(Keyboard);
 		if(FAILED(hr)){
 			return 0;
 		}
@@ -82,14 +82,14 @@ int inpKeyboardAcquire(){
 }
 
 int KeyboardStartup(){
-	HRESULT               hr; 
-	
-	hr = DirectInput8->lpVtbl->CreateDevice(DirectInput8, &GUID_SysKeyboard, &Keyboard, NULL); 
+	HRESULT               hr;
+
+	hr = DirectInput8->lpVtbl->CreateDevice(DirectInput8, &GUID_SysKeyboard, &Keyboard, NULL);
 	if(FAILED(hr))
 		goto KeyboardStartupError;
 
 
-	hr = Keyboard->lpVtbl->SetDataFormat(Keyboard, &c_dfDIKeyboard);  
+	hr = Keyboard->lpVtbl->SetDataFormat(Keyboard, &c_dfDIKeyboard);
 	if(FAILED(hr))
 		goto KeyboardStartupError;
 
@@ -98,7 +98,7 @@ int KeyboardStartup(){
 	//		1.  The input system stops receiving keyboard input when the game window lose focus.
 	//		2.  The input system allows windows messages for the keyboard to be generated.
 	//		3.  The input system disables the windows key. (Cannot escape app using the windows key)
-	hr = Keyboard->lpVtbl->SetCooperativeLevel(Keyboard, hwnd, 
+	hr = Keyboard->lpVtbl->SetCooperativeLevel(Keyboard, hwnd,
 		DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);// | DISCL_NOWINKEY);
 	if(FAILED(hr))
 		goto KeyboardStartupError;
@@ -129,7 +129,7 @@ static int inpMouseAcquire( void )
 {
 	if(gMouse)
 	{
-		HRESULT hr = Keyboard->lpVtbl->Acquire(gMouse); 
+		HRESULT hr = Keyboard->lpVtbl->Acquire(gMouse);
 		if( SUCCEEDED(hr))
 			return 1;
 	}
@@ -139,13 +139,13 @@ static int inpMouseAcquire( void )
 
 int MouseStartup( void )
 {
-	HRESULT               hr; 
-	
-	hr = DirectInput8->lpVtbl->CreateDevice(DirectInput8, &GUID_SysMouse, &gMouse, NULL); 
+	HRESULT               hr;
+
+	hr = DirectInput8->lpVtbl->CreateDevice(DirectInput8, &GUID_SysMouse, &gMouse, NULL);
 	if( FAILED( hr ) )
 		return 1;
 
-	hr = gMouse->lpVtbl->SetDataFormat( gMouse, &c_dfDIMouse2 );  
+	hr = gMouse->lpVtbl->SetDataFormat( gMouse, &c_dfDIMouse2 );
 	if( FAILED( hr ) )
 		return 1;
 
@@ -162,8 +162,8 @@ int MouseStartup( void )
     dpd.dwData            = MOUSE_BUFFER_SIZE;
 
 	hr = gMouse->lpVtbl->SetProperty( gMouse, DIPROP_BUFFERSIZE, &dpd.diph);
- 
-	if ( FAILED(hr) ) 
+
+	if ( FAILED(hr) )
 		 return 1;
 
 	inpMouseAcquire();
@@ -187,11 +187,11 @@ void MouseClearButtonState(void)
 void MouseShutdown( void )
 {
 	if(gMouse)
-	{ 
-		gMouse->lpVtbl->Unacquire( gMouse ); 
+	{
+		gMouse->lpVtbl->Unacquire( gMouse );
 		gMouse->lpVtbl->Release( gMouse );
-		gMouse = NULL; 
-    } 
+		gMouse = NULL;
+    }
 }
 
 BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,	VOID* pContext )
@@ -203,7 +203,7 @@ BOOL CALLBACK EnumJoysticksCallback( const DIDEVICEINSTANCE* pdidInstance,	VOID*
 
 	// If it failed, then we can't use this joystick. (Maybe the user unplugged
 	// it while we were in the middle of enumerating it.)
-	if( FAILED(hr) ) 
+	if( FAILED(hr) )
 		return DIENUM_CONTINUE;
 
 	// Stop enumeration. Note: we're just taking the first joystick we get. You
@@ -222,16 +222,16 @@ BOOL CALLBACK EnumObjectsCallback( const DIDEVICEOBJECTINSTANCE* pdidoi,  VOID* 
 	// enumerated axis in order to scale min/max values.
 	if( pdidoi->dwType & DIDFT_AXIS )
 	{
-		DIPROPRANGE diprg; 
-		diprg.diph.dwSize       = sizeof(DIPROPRANGE); 
-		diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
-		diprg.diph.dwHow        = DIPH_BYID; 
+		DIPROPRANGE diprg;
+		diprg.diph.dwSize       = sizeof(DIPROPRANGE);
+		diprg.diph.dwHeaderSize = sizeof(DIPROPHEADER);
+		diprg.diph.dwHow        = DIPH_BYID;
 		diprg.diph.dwObj        = pdidoi->dwType; // Specify the enumerated axis
-		diprg.lMin              = -1000; 
-		diprg.lMax              = +1000; 
+		diprg.lMin              = -1000;
+		diprg.lMax              = +1000;
 
 		// Set the range for the axis
-		if( FAILED( gJoystick->lpVtbl->SetProperty( gJoystick, DIPROP_RANGE, &diprg.diph ) ) ) 
+		if( FAILED( gJoystick->lpVtbl->SetProperty( gJoystick, DIPROP_RANGE, &diprg.diph ) ) )
 			return DIENUM_STOP;
 
 	}
@@ -250,7 +250,7 @@ int JoystickStartup()
 	if( !gJoystick )
 		return 1;
 
-	// Set the data format to "simple joystick" - a predefined data format 
+	// Set the data format to "simple joystick" - a predefined data format
 	//
 	// A data format specifies which controls on a device we are interested in,
 	// and how they should be reported. This tells DInput that we will be
@@ -274,9 +274,9 @@ int JoystickStartup()
 
 void JoystickShutdown()
 {
-	// Unacquire the device one last time just in case 
+	// Unacquire the device one last time just in case
 	// the app tried to exit while the device is still acquired.
-	if( gJoystick ) 
+	if( gJoystick )
 		gJoystick->lpVtbl->Unacquire( gJoystick );
 
 	// Release any DirectInput objects.
@@ -308,7 +308,7 @@ int InputStartup()
 	// Initialize DirectInput8.
 	hr = DirectInput8Create(glob_hinstance, DIRECTINPUT_VERSION, &IID_IDirectInput8, (void**)&DirectInput8, NULL);
 
-	if(FAILED(hr)) 
+	if(FAILED(hr))
 		goto fail;
 
 	// If both the keyboard and the mouse starts up successfully,
@@ -321,7 +321,7 @@ int InputStartup()
 
 		return 0;
 	}
-	
+
 	// Otherwise, the input system was not started up correctly.
 	// Shutdown to release all acquired resources.
 	printf("Input system failed to initialize\n");
@@ -330,17 +330,17 @@ fail:
 	winMsgAlert(textStd("GetDirectX"));
 	return 1;
 }
- 
- 
+
+
 void InputShutdown()
 {
 	KeyboardShutdown();
 	MouseShutdown();
 	JoystickShutdown();
 
-	if (DirectInput8){ 
+	if (DirectInput8){
 		DirectInput8->lpVtbl->Release(DirectInput8);
-        DirectInput8 = NULL; 
+        DirectInput8 = NULL;
 	}
 }
 
@@ -375,7 +375,7 @@ int inpEdge(int idx)
 bool inpEdgeNoTextEntry(int idx)
 {
 	return (uiNoOneHasFocus() && inpEdge(idx));
-} 
+}
 
 bool inpEdgeThisFrame(void)
 {
@@ -431,20 +431,20 @@ KeyInput* inpGetKeyBuf(){
 }
 
 void inpGetNextKey(KeyInput** input){
-	
+
 	// Invalid parameters.
 	if(!input || !*input)
 		return;
 
 	// Range check.  Is the caller trying to read a random piece of memory as a KeyInput?
 	assert(*input >= textKeyboardBuffer && *input <= (textKeyboardBuffer + ARRAY_SIZE(textKeyboardBuffer)));
-	
+
 	// If the caller is already pointing to the last element (very unlikely), reply that there are no more inputs.
 	if(*input >= textKeyboardBuffer + ARRAY_SIZE(textKeyboardBuffer) - 1){
 		*input = NULL;
 		return;
 	}
-	
+
 	// If there are no more valid inputs, say so.
 	if(KIT_None == ((*input)+1)->type){
 		*input = NULL;
@@ -515,7 +515,7 @@ int inpMousePos(int *xp,int *yp)
 		GetCursorPos(&pCursor);
 
 		size = ClientToScreen( hwnd, &pClient );
- 
+
 		x = pCursor.x - pClient.x;
 		y = pCursor.y - pClient.y;
 	}
@@ -576,7 +576,7 @@ static char scan2ascii(DWORD scancode)
 // 	static char buffer[1024];
 // 	char* cursor = buffer;
 // 	int i;
-// 
+//
 // 	*cursor = '\0';
 // 	for(i = 0; i < INP_VIRTUALKEY_LAST; i++){
 // 		if(keyState[i]){
@@ -599,7 +599,7 @@ void inpKeyboardUpdate()
 
 	// If the attempt was unsuccessful, the most likely reason is because
 	// the keyboard has become unacquired.
-	// 
+	//
 	// Acquire the keyboard and try to get the keyboard state again.
 	if(FAILED(hr)){
 		inpKeyboardAcquire();
@@ -620,7 +620,7 @@ void inpKeyboardUpdate()
 	{
 		memset(inp_edges,0,INP_MOUSE_BUTTONS);
 	}
- 
+
   	for(i = 0; i < keyDataSize; i++)
  	{
 		inpUpdateKey(keyboardData[i].dwOfs, keyboardData[i].dwData, keyboardData[i].dwTimeStamp);
@@ -674,31 +674,31 @@ int dxPovDefines[][4] = {
 void inpJoystickState()
 {
 	HRESULT     hr;
-	DIJOYSTATE2 js;           // DInput joystick state 
+	DIJOYSTATE2 js;           // DInput joystick state
 	int i;
 	const S32 curTime = timeGetTime();
 
 	static int joystick_sensitivity = 500;
 
-	if( NULL == gJoystick ) 
+	if( NULL == gJoystick )
 		return;
 
 	// Poll the device to read the current state
-	hr = gJoystick->lpVtbl->Poll( gJoystick ); 
-	if( FAILED(hr) )  
+	hr = gJoystick->lpVtbl->Poll( gJoystick );
+	if( FAILED(hr) )
 	{
 		// DInput is telling us that the input stream has been
 		// interrupted. We aren't tracking any state between polls, so
 		// we don't have any special reset that needs to be done. We
 		// just re-acquire and try again.
 		hr = gJoystick->lpVtbl->Acquire( gJoystick );
-		while( hr == DIERR_INPUTLOST ) 
+		while( hr == DIERR_INPUTLOST )
 			hr = gJoystick->lpVtbl->Acquire( gJoystick );
 
 		// hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
-		// may occur when the app is minimized or in the process of 
-		// switching, so just try again later 
-		return; 
+		// may occur when the app is minimized or in the process of
+		// switching, so just try again later
+		return;
 	}
 
 	// Get the input's device state
@@ -710,12 +710,12 @@ void inpJoystickState()
 	// XY axis (Joystick 1)
 	if( js.lX < -joystick_sensitivity )
 		inpUpdateKey(INP_JOYSTICK1_LEFT, 1, curTime);
-	else 
+	else
 		inpUpdateKeyClearIfActive(INP_JOYSTICK1_LEFT, curTime);
 
 	if( js.lX > joystick_sensitivity )
 		inpUpdateKey(INP_JOYSTICK1_RIGHT, 1, curTime);
-	else 
+	else
 		inpUpdateKeyClearIfActive(INP_JOYSTICK1_RIGHT, curTime);
 
 	if( js.lY < -joystick_sensitivity )
@@ -770,24 +770,24 @@ void inpJoystickState()
 	else
 		inpUpdateKeyClearIfActive(INP_JOYSTICK3_DOWN, curTime);
 
-	
+
 	// Pov[0] corresponds to the numpad: 0 = up, 9000 = right, 18000 = down, 27000 = left
 	// I don't know where these insane numbers come from, this was by trial and error
 	for( i = 0; i < DXDIR_NUM; i++ )
 	{
  		if( ((int)js.rgdwPOV[i] >= 0 && (int)js.rgdwPOV[i] <= 4500) || ((int)js.rgdwPOV[i] >= 31500) )
 			inpUpdateKey(dxPovDefines[i][DXDIR_UP], 1, curTime);
-		else 
+		else
 			inpUpdateKeyClearIfActive(dxPovDefines[i][DXDIR_UP], curTime);
 
 		if( (int)js.rgdwPOV[i] >= 4500 && (int)js.rgdwPOV[i] <= 13500 )
 			inpUpdateKey(dxPovDefines[i][DXDIR_RIGHT], 1, curTime);
-		else 
+		else
 			inpUpdateKeyClearIfActive(dxPovDefines[i][DXDIR_RIGHT], curTime);
 
 		if( (int)js.rgdwPOV[i] >= 13500 && (int)js.rgdwPOV[i] <= 22500 )
 			inpUpdateKey(dxPovDefines[i][DXDIR_DOWN], 1, curTime);
-		else 
+		else
 			inpUpdateKeyClearIfActive(dxPovDefines[i][DXDIR_DOWN], curTime);
 
 		if( (int)js.rgdwPOV[i] >= 22500 )
@@ -842,7 +842,7 @@ int inpKeyFromDxMouseKey(int dxMouseKey)
 mouseState rmbstate = MS_NONE;
 int rmbdownx = 0;
 int rmbdowny = 0;
-int rmbcurx = 0;	
+int rmbcurx = 0;
 int rmbcury = 0;
 int rmbclickx = 0;
 int rmbclicky = 0;
@@ -853,7 +853,7 @@ int lmbdrag = 0;
 mouseState lmbstate = MS_NONE;
 int lmbdownx = 0;
 int lmbdowny = 0;
-int lmbcurx = 0;	
+int lmbcurx = 0;
 int lmbcury = 0;
 int lmbclickx = 0;
 int lmbclicky = 0;
@@ -864,7 +864,7 @@ int rmbdrag = 0;
 mouseState mmbstate = MS_NONE;
 int mmbdownx = 0;
 int mmbdowny = 0;
-int mmbcurx = 0;	
+int mmbcurx = 0;
 int mmbcury = 0;
 int mmbclickx = 0;
 int mmbclicky = 0;
@@ -897,7 +897,7 @@ void inpMouseLeftClick(DIDEVICEOBJECTDATA *didod )
 
 			// doing these double-click messages as additive on down/up
 			if (lmbtime != ldctime && // last click wasn't a double-click event
-				didod->dwTimeStamp - lmbtime < gDoubleClickTime && 
+				didod->dwTimeStamp - lmbtime < gDoubleClickTime &&
 				(ABS(lmbclickx-gMouseInpCur.x) <= CLICK_SIZE) &&
 				(ABS(lmbclicky-gMouseInpCur.y) <= CLICK_SIZE) )
 			{
@@ -914,7 +914,7 @@ void inpMouseLeftClick(DIDEVICEOBJECTDATA *didod )
 			lmbstate = MS_DOWN;
 			lmbcurx = lmbdownx = gMouseInpCur.x;
 			lmbcury = lmbdowny = gMouseInpCur.y;
-			lmbtime = didod->dwTimeStamp; 
+			lmbtime = didod->dwTimeStamp;
 		}
 	}
 	else if ( gMouseInpCur.left == MS_DOWN && !(didod->dwData & 0x80) )
@@ -959,7 +959,7 @@ void inpMouseRightClick(DIDEVICEOBJECTDATA *didod)
 {
 	int click = false, double_click = false;
 
-	// register mouse downs or mouse ups 
+	// register mouse downs or mouse ups
 	if ( (didod->dwData & 0x80 ) && gMouseInpCur.right == MS_NONE )
 	{
 		if (inpMousePosOnScreen(gMouseInpCur.x, gMouseInpCur.y)) {
@@ -981,7 +981,7 @@ void inpMouseRightClick(DIDEVICEOBJECTDATA *didod)
 				gMouseInpBuf[gInpBufferSize].x = gMouseInpCur.x;
 				gMouseInpBuf[gInpBufferSize].y = gMouseInpCur.y;
 				gInpBufferSize++;
-				rdctime = didod->dwTimeStamp; 
+				rdctime = didod->dwTimeStamp;
 				inpUpdateKeyEx(INP_RDBLCLICK, true, didod->dwTimeStamp, rmbdownx, rmbdowny);
 				double_click = true;
 			}
@@ -990,7 +990,7 @@ void inpMouseRightClick(DIDEVICEOBJECTDATA *didod)
 			rmbstate = MS_DOWN;
 			rmbcurx = rmbdownx = gMouseInpCur.x;
 			rmbcury = rmbdowny = gMouseInpCur.y;
-			rmbtime = didod->dwTimeStamp; 
+			rmbtime = didod->dwTimeStamp;
 		}
 	}
 	else if ( gMouseInpCur.right == MS_DOWN && !(didod->dwData & 0x80) )
@@ -1035,7 +1035,7 @@ void inpMouseMiddleClick(DIDEVICEOBJECTDATA *didod)
 {
 	int click = false, double_click = false;
 
-	// register mouse downs or mouse ups 
+	// register mouse downs or mouse ups
 	if ( (didod->dwData & 0x80 ) && gMouseInpCur.mid == MS_NONE )
 	{
 		if (inpMousePosOnScreen(gMouseInpCur.x, gMouseInpCur.y)) {
@@ -1057,7 +1057,7 @@ void inpMouseMiddleClick(DIDEVICEOBJECTDATA *didod)
 			 gMouseInpBuf[gInpBufferSize].x = gMouseInpCur.x;
 			 gMouseInpBuf[gInpBufferSize].y = gMouseInpCur.y;
 			 gInpBufferSize++;
-			 mdctime = didod->dwTimeStamp; 
+			 mdctime = didod->dwTimeStamp;
 			 inpUpdateKeyEx(INP_MDBLCLICK, true, didod->dwTimeStamp, mmbdownx, mmbdowny);
 			 double_click = true;
 		 }
@@ -1066,7 +1066,7 @@ void inpMouseMiddleClick(DIDEVICEOBJECTDATA *didod)
 		 mmbstate = MS_DOWN;
 		 mmbcurx = mmbdownx = gMouseInpCur.x;
 		 mmbcury = mmbdowny = gMouseInpCur.y;
-		 mmbtime = didod->dwTimeStamp; 
+		 mmbtime = didod->dwTimeStamp;
 		}
 	}
 	else if ( gMouseInpCur.mid == MS_DOWN && !(didod->dwData & 0x80) )
@@ -1111,7 +1111,7 @@ void inpMouseMiddleClick(DIDEVICEOBJECTDATA *didod)
 void inpReadMouse( void )
 {
 
-    DIDEVICEOBJECTDATA didod[ MOUSE_BUFFER_SIZE ];  // Receives buffered data 
+    DIDEVICEOBJECTDATA didod[ MOUSE_BUFFER_SIZE ];  // Receives buffered data
     DWORD dwElements = MOUSE_BUFFER_SIZE;
     DWORD i;
     HRESULT hr;
@@ -1125,14 +1125,14 @@ void inpReadMouse( void )
 	{
 		dxMouseToInpKeyMapping[0][0] = DIMOFS_BUTTON1;
 		dxMouseToInpKeyMapping[2][0] = DIMOFS_BUTTON0;
-	} 
+	}
 	else
 	{
 		dxMouseToInpKeyMapping[0][0] = DIMOFS_BUTTON0;
 		dxMouseToInpKeyMapping[2][0] = DIMOFS_BUTTON1;
 	}
 
-    if( NULL == gMouse ) 
+    if( NULL == gMouse )
         return;
 
 	if(!inpMouseAcquire())
@@ -1145,7 +1145,7 @@ void inpReadMouse( void )
     hr = gMouse->lpVtbl->GetDeviceData( gMouse, sizeof(DIDEVICEOBJECTDATA), didod, &dwElements, 0 );
 
     // Study each of the buffer elements and process them.
-    for( i = 0; i < dwElements && i < MOUSE_INPUT_SIZE; i++ ) 
+    for( i = 0; i < dwElements && i < MOUSE_INPUT_SIZE; i++ )
     {
         switch( didod[ i ].dwOfs )
         {
@@ -1153,27 +1153,27 @@ void inpReadMouse( void )
             case DIMOFS_BUTTON0: // left mouse button pressed or released
 				if (!optionGet(kUO_ReverseMouseButtons))
 					inpMouseLeftClick(&(didod[i]));
-				else 
+				else
 					inpMouseRightClick(&(didod[i]));
 				break;
             case DIMOFS_BUTTON1: // right mouse button
-				if (optionGet(kUO_ReverseMouseButtons)) 
+				if (optionGet(kUO_ReverseMouseButtons))
 					inpMouseLeftClick(&(didod[i]));
-				else 
+				else
 					inpMouseRightClick(&(didod[i]));
 				break;
 			case DIMOFS_BUTTON2: // middle button
 				{
 					inpMouseMiddleClick(&(didod[i]));
 				}break;
-				
+
             case DIMOFS_X:
 				{
 					gMouseInpCur.x += didod[ i ].dwData;
 					rmbcurx += didod[i].dwData;
 					lmbcurx += didod[i].dwData;
 					mouse_dx += didod[ i ].dwData;
-					
+
 					if (lmbstate == MS_DOWN)
 					{
 						if(	(ABS(lmbdownx - lmbcurx) >= CLICK_SIZE) ||
@@ -1288,7 +1288,7 @@ void inpReadMouse( void )
 		{
 			// "Game key": the enumeration used by the game to specify a key.
 			// See input.h
-			int keyIndex = inpKeyFromDxMouseKey(didod[ i ].dwOfs); 
+			int keyIndex = inpKeyFromDxMouseKey(didod[ i ].dwOfs);
 			int keyState;
 
 			// If we don't know how to process this key, do nothing.
@@ -1316,7 +1316,7 @@ void inpReadMouse( void )
 		}
 
 		// whenever we get edges on these, update the chord state
- 		if (didod[i].dwOfs == DIMOFS_BUTTON0 || didod[i].dwOfs == DIMOFS_BUTTON1) 
+ 		if (didod[i].dwOfs == DIMOFS_BUTTON0 || didod[i].dwOfs == DIMOFS_BUTTON1)
 		{
  			updatedMouseChord = 1;
 			if (gMouseInpCur.left == MS_DOWN && gMouseInpCur.right == MS_DOWN && !mouseDragging() )
@@ -1329,7 +1329,7 @@ void inpReadMouse( void )
 	// check for chord buttons being down - have to keep faking key signals if held
 	if (!updatedMouseChord)
 	{
-		if (gMouseInpCur.left == MS_DOWN && gMouseInpCur.right == MS_DOWN && !mouseDragging()) 
+		if (gMouseInpCur.left == MS_DOWN && gMouseInpCur.right == MS_DOWN && !mouseDragging())
 			inpUpdateKey(INP_MOUSE_CHORD, 1, curTime);
 		else
 			inpUpdateKeyClearIfActive(INP_MOUSE_CHORD, curTime);
@@ -1377,7 +1377,7 @@ void inpReadMouse( void )
 	}
 
 	if( lmbdrag )
-		inpUpdateKeyEx( INP_LDRAG, 1, curTime, lmbdownx, lmbdowny );	
+		inpUpdateKeyEx( INP_LDRAG, 1, curTime, lmbdownx, lmbdowny );
 	else
 		inpUpdateKeyClearIfActive(INP_LDRAG, curTime );
 
@@ -1470,7 +1470,7 @@ void inpUpdateKeyEx(int keyIndex, int keyState, int timeStamp, int x, int y )
  		if(okToInput(keyIndex))
 			bindKeyExecEx(keyIndex, 0, timeStamp, x, y );
 
-		// Do not zero out the input edge for the key because it is 
+		// Do not zero out the input edge for the key because it is
 		// possible that the key was pressed and released since the
 		// keyboard was checked last.
 		//
@@ -1625,7 +1625,7 @@ static LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM l
         {
             // Check to see if the CTRL key is pressed
             bControlKeyDown = GetAsyncKeyState (VK_CONTROL) >> ((sizeof(SHORT) * 8) - 1);
-            
+
             // Disable CTRL+ESC
             if (pkbhs->vkCode == VK_ESCAPE && bControlKeyDown)
                 return 1;
@@ -1638,9 +1638,9 @@ static LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM l
             if (pkbhs->vkCode == VK_ESCAPE && pkbhs->flags & LLKHF_ALTDOWN)
                 return 1;
 
-			 // Disable the WINDOWS key 
-			if (pkbhs->vkCode == VK_LWIN || pkbhs->vkCode == VK_RWIN) 
-				return 1; 
+			 // Disable the WINDOWS key
+			if (pkbhs->vkCode == VK_LWIN || pkbhs->vkCode == VK_RWIN)
+				return 1;
            break;
         }
 
@@ -1648,7 +1648,7 @@ static LRESULT CALLBACK LowLevelKeyboardProc (INT nCode, WPARAM wParam, LPARAM l
             break;
     }
     return CallNextHookEx (hHook, nCode, wParam, lParam);
-} 
+}
 
 void setNT4KeyHooks(int set)
 {
@@ -1696,7 +1696,7 @@ int inpVKIsTextEditKey(int vk, int control){
 				return 1;
 			else
 				return 0;
-		case VK_INSERT:		
+		case VK_INSERT:
 		case VK_DELETE:
 		case VK_HOME:
 		case VK_END:
@@ -1706,7 +1706,7 @@ int inpVKIsTextEditKey(int vk, int control){
 		case VK_DOWN:
 		case VK_RIGHT:
 		case VK_LEFT:
-		case VK_BACK:		// Backspace		
+		case VK_BACK:		// Backspace
 			return 1;
 		default:
 			return 0;
@@ -1738,7 +1738,7 @@ int GetScancodeFromVirtualKey(WPARAM wParam, LPARAM lParam)
 	int scancode = MapVirtualKeyEx(wParam, 0, GetKeyboardLayout(0));
 	if(lParam & 1 << 24)
 		scancode |= 1 << 7;
-	
+
 	// ab: special case for korean windows. if the
 	// scancode is zero try a custom mapping. the reason for this is that VK_BACK doesn't map to anything on korean win98
 	//if( !scancode )
@@ -1750,13 +1750,13 @@ int GetScancodeFromVirtualKey(WPARAM wParam, LPARAM lParam)
 			int scanCode;
 			bool override;
 		} ScancodeVkPair;
- 
+
 		static StashTable scancodeFromVk = NULL;
 		ScancodeVkPair *scancodeTmp = 0;
-		
+
 		if( !scancodeFromVk )
 		{
-			 static struct ScancodeVkPair codes[] = 
+			 static struct ScancodeVkPair codes[] =
 				{
 					{VK_BACK, INP_BACK},
 					{VK_RETURN, INP_RETURN},
@@ -1775,20 +1775,20 @@ int GetScancodeFromVirtualKey(WPARAM wParam, LPARAM lParam)
 			GetVersionEx(&vi);
 
 			scancodeFromVk = stashTableCreateInt( (3*ARRAY_SIZE(codes))/2 ); //arbitrary pad. pack it pretty tight, and don't waste too much space
-		
+
 			// only init the values if this is before win 2k. this
 			// function is targeted at win98 korean
 			if( vi.dwMajorVersion < 5 )
 			{
-				for( i = 0; i < ARRAY_SIZE( codes ); ++i ) 
+				for( i = 0; i < ARRAY_SIZE( codes ); ++i )
 				{
 					verify(stashIntAddPointer( scancodeFromVk, codes[i].vkey, &codes[i], false ));
 				}
 			}
 		}
-		
-		
-		if( stashIntFindPointer( scancodeFromVk, wParam, &scancodeTmp ) 
+
+
+		if( stashIntFindPointer( scancodeFromVk, wParam, &scancodeTmp )
 			&& (!scancode || scancodeTmp->override ))
 		{
 			scancode = scancodeTmp->scanCode;

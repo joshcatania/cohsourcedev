@@ -9,7 +9,7 @@
 #include "gridcoll.h"
 #include "grouputil.h"
 #include "gridfind.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "utils.h"
 #include "anim.h"
 

@@ -21,7 +21,7 @@
 #include "sprite_base.h"
 #include "sprite_font.h"
 #include "sprite_text.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "AppLocale.h"
 #include "MessageStoreUtil.h"
 #include "playerCreatedStoryarcValidate.h"
@@ -220,7 +220,7 @@ int commandParameterStrcmp( char * command_key, char * string )
 
 int commandParameterStrstr( char * command_key, char * string )
 {
-	char base_name[1024]; 
+	char base_name[1024];
 	char *postfix;
 
 	if( !command_key || !string )
@@ -412,7 +412,7 @@ float str_sc( TTDrawContext * font, float avail_wd, const char * str, ...)
 		return sc;
 	}
 
-	return 1.0; 
+	return 1.0;
 }
 
 /***************************************************************************
@@ -439,7 +439,7 @@ void str_dims_notranslate(TTDrawContext * font, float xscale, float yscale, int 
 void str_dims(TTDrawContext * font, float xscale, float yscale, int center_text, CBox * box, const char * str, ...)
 {
 	va_list va;
-	
+
 	va_start(va, str);
 	vstr_dims(font,xscale,yscale,center_text,box,str, 0, va);
 	va_end(va);
@@ -499,7 +499,7 @@ float str_height(TTDrawContext * font, float xscale, float yscale, int center_te
 	{
 		CBox box = {0};
 		va_list va;
-		
+
 		va_start(va, str);
 		vstr_dims(font,xscale,yscale,center_text,&box,str,0,va);
 		va_end(va);
@@ -528,7 +528,7 @@ char* timerFriendlyDateFromSS2(char *datestr, int datestrLength, U32 seconds)
 	x *= 10000000;
 	x += y2kOffset();
 
-	//MW this is accounted for with localTimeFromServer that takes into account system clock 
+	//MW this is accounted for with localTimeFromServer that takes into account system clock
 	//and time zone settings. (Maybe we only want to use timezone settings?  If so, change timing_s2000_delta
 	//FileTimeToLocalFileTime((FILETIME*)&x,&local);
 	FileTimeToSystemTime((FILETIME*)&x, &t);
@@ -551,7 +551,7 @@ char* timerFriendlyDateFromSS2(char *datestr, int datestrLength, U32 seconds)
 		STR_COMBINE_CAT_C('/');
 		STR_COMBINE_CAT_D(t.wDay);
 	STR_COMBINE_END();
-	
+
 	strcpy_s(datestr + strlen(datestr), datestrLength - strlen(datestr), buffer);
 
 	return datestr;
@@ -570,7 +570,7 @@ char* timerFriendlyHour(char* datestr, int datestrLength, int hour, int min, int
 	{
 		sprintf_s(datestr, datestrLength, "%02d:%02d",hour,showMin?min:0);
 	}
-	else 
+	else
 	{
 		pm = hour >= 12;
 
@@ -609,7 +609,7 @@ static SYSTEMTIME systemTimeFromSS2(U32 seconds, int rounded)
 	x *= 10000000;
 	x += y2kOffset();
 
-	//MW this is accounted for with localTimeFromServer that takes into account system clock 
+	//MW this is accounted for with localTimeFromServer that takes into account system clock
 	//and time zone settings. (Maybe we only want to use timezone settings?  If so, change timing_s2000_delta
 	//FileTimeToLocalFileTime((FILETIME*)&x,&local);
 	//FileTimeToLocalFileTime((FILETIME*)&x,&local);

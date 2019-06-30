@@ -1,7 +1,7 @@
 #include "uiChatUtil.h"
 #include "StashTable.h"
 #include "EArray.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "wdwbase.h"
 #include "clientcomm.h"
 #include "uiConsole.h"
@@ -150,9 +150,9 @@ void ChatChannelDestroy(ChatChannel * channel)
 	eaFindAndRemove(&gReservedChatChannels, channel);
 
 	eaDestroy(&channel->filters);	// should I also clean from windows here?
-	
+
 	eaDestroyEx(&channel->users, ChatUserDestroy);
-	
+
 	free(channel->name);
 	free(channel);
 }
@@ -261,7 +261,7 @@ void ChatChannelRemoveUser(ChatChannel * channel, char * handle)
 {
 	ChatUser * user = GetChannelUser(channel, handle);
 	if(user)
-	{		
+	{
 		notifyRebuildChannelUserList(channel);
 
 		eaRemove(&channel->users, eaFind(&channel->users, user));
@@ -276,17 +276,17 @@ void ChatChannelRemoveUser(ChatChannel * channel, char * handle)
 */
 
 ChatFilter** gChatFilters;	// global list of all current filters
-ChatFilter* gActiveChatFilter;	// the active filter gets most system messages & also text input from user 
+ChatFilter* gActiveChatFilter;	// the active filter gets most system messages & also text input from user
 ChatFilter* gPrevActiveChatFilter;	// the LAST active chat filter, prior to the current one. Used only to toggle between two active tabs
 ChatFilter* gWaitingForChannelFilter; // stores the active channel at the time the join command was sent. (allows some delay to occur between join & confirmation)
 
 // USE THIS TO SET ACTIVE CHAT FILTER!!!!
 void SelectActiveChatFilter(ChatFilter * filter)
-{	
+{
  	if(filter)
 	{
  		if(filter != gActiveChatFilter)
-		{	
+		{
 			int i;
 			gPrevActiveChatFilter = gActiveChatFilter;
 			gActiveChatFilter = filter;
@@ -354,7 +354,7 @@ void ChatFilterDestroy(ChatFilter * filter)
 
 	if(gWaitingForChannelFilter == filter)
 		gWaitingForChannelFilter = 0;
-	
+
 	if(gActiveChatFilter == filter)
 		ChooseDefaultActiveFilter(0);
 	if(gPrevActiveChatFilter == filter)
@@ -379,17 +379,17 @@ void ChatFilterAddChannel(ChatFilter * filter, ChatChannel * channel)
 }
 
 void ChatFilterRemoveAllChannels(ChatFilter * filter, bool leaveUnassigned)
-{	
+{
 	assert(filter);
 
 	filter->defaultChannel.system	= 0;
 	filter->defaultChannel.user		= 0;
-	filter->defaultChannel.type		= ChannelType_None;	
+	filter->defaultChannel.type		= ChannelType_None;
 	memset(filter->systemChannels, 0, SYSTEM_CHANNEL_BITFIELD_SIZE*sizeof(int));
 
 	if(leaveUnassigned)
 	{
-		// leave any chat channels in this filter, unless they are shared with another chat filter				
+		// leave any chat channels in this filter, unless they are shared with another chat filter
 		int i, size=eaSize(&filter->channels);
 		for(i=0;i<size;i++)
 		{
@@ -419,7 +419,7 @@ void ChatFilterRemoveChannel(ChatFilter * filter, ChatChannel * channel)
 		filter->defaultChannel.type = ChannelType_None;
 		filter->defaultChannel.user = 0;
 	}
-	
+
 	// now, remove channel
 	eaRemove(&channel->filters, eaFind(&channel->filters, filter));
 	eaRemove(&filter->channels, eaFind(&filter->channels, channel));
@@ -442,7 +442,7 @@ bool ChatFilterHasChannel(ChatFilter * filter, ChatChannel * channel)
 	if(res)
 	{
 		assert(0 <= eaFind(&filter->channels, channel));
-		assert(0 <= eaFind(&channel->filters, filter));	
+		assert(0 <= eaFind(&channel->filters, filter));
 
 	}
 	else
@@ -531,7 +531,7 @@ void ChatFilterPrepareAllForUpdate(int full_update)
 	for(k=0;k<eaSize(&gChatFilters);k++)
 	{
 		ChatFilter * filter = gChatFilters[k];
-		
+
 		// save channel names
 		size = eaSize(&filter->channels);
 		for(i=0;i<size;i++)
@@ -546,7 +546,7 @@ void ChatFilterPrepareAllForUpdate(int full_update)
 			ChatFilterAddPendingChannel(filter, filter->channels[i]->name, isDefault);
 		}
 
-		// empty out all current channels 
+		// empty out all current channels
 		while(eaSize(&filter->channels))
 		{
 			ChatFilterRemoveChannel(filter, filter->channels[0]);
@@ -585,7 +585,7 @@ void ChatFilterAddPendingChannel(ChatFilter * filter, char * channelName, bool i
 			}
 		}
 
-		// add it... 
+		// add it...
 		p = strdup(channelName);
 
 		eaPush(&filter->pendingChannels, p);
@@ -616,7 +616,7 @@ void ChatFilterAssignPendingChannel(ChatChannel * addChannel, char * removeName)
 					ChatFilterAddChannel(filter, addChannel);
 
 					if(   (   filter->pendingDefaultChannel && ! stricmp(filter->pendingDefaultChannel, filter->pendingChannels[k]))
-					   || ( ! filter->pendingDefaultChannel && filter->defaultChannel.type == ChannelType_None)) 
+					   || ( ! filter->pendingDefaultChannel && filter->defaultChannel.type == ChannelType_None))
 					{
 						filter->pendingDefaultChannel = 0;
 						filter->defaultChannel.type = ChannelType_User;
@@ -656,7 +656,7 @@ ChatWindow * GetChatWindow(int idx)
 {
 	if(idx >= 0 && idx < MAX_CHAT_WINDOWS)
 		return &gChatWindows[idx];
-	else 
+	else
 		return NULL;
 }
 
@@ -712,7 +712,7 @@ void ChatWindowRemoveFilter(ChatWindow * cw, ChatFilter * filter)
 
 	// now, remove filter
 	if( pane == 1)
-		uiTabControlRemove(cw->topTabControl, filter);	
+		uiTabControlRemove(cw->topTabControl, filter);
 	else if( pane == 2 )
 		uiTabControlRemove(cw->botTabControl, filter);
 }
@@ -730,7 +730,7 @@ void ChatWindowRemoveAllFilters(ChatWindow * cw)
 ChatWindow * GetFilterParentWindow(ChatFilter * filter)
 {
 	int i;
-	
+
 	assert(filter);
 
 	for(i=0;i<MAX_CHAT_WINDOWS;i++)
@@ -750,7 +750,7 @@ void ChatWindowUpdateFilter(ChatFilter * filter)
 {
 	// currently, we just need to update the tab text
 	ChatWindow * window = GetFilterParentWindow(filter);
-	
+
 	if(window)
 	{
 		if(ChatWindowHasFilter(window,filter)==1)
@@ -771,7 +771,7 @@ int ChatWindowHasFilter(ChatWindow * cw, ChatFilter * filter)
 
 		return 0;
 	}
-	else 
+	else
 		return 0;
 }
 
@@ -854,7 +854,7 @@ void addChannelSlashCmd(char * cmd, char * channelName, char * option, ChatFilte
 
 	if(!filter)
 		filter = gActiveChatFilter;
-	
+
 	if(cc && !cc->isReserved)
 	{
 		addSystemChatMsg( textStd("AlreadyBelongToChatChannel", channelName), INFO_USER_ERROR, 0 );
@@ -882,13 +882,13 @@ void chatFilterOpen(const char * filterName, int windowIdx, int pane)
 
 	if(GetChatFilter(filterName))
 	{
-		addSystemChatMsg( textStd("ChatTabAlreadyExistsError", filterName), INFO_USER_ERROR, 0 );	
+		addSystemChatMsg( textStd("ChatTabAlreadyExistsError", filterName), INFO_USER_ERROR, 0 );
 		return;
 	}
 
 	if(!chatOptionsAvailable())
 	{
-		addSystemChatMsg( textStd("OpenTabOptionsBusyError"), INFO_USER_ERROR, 0 );	
+		addSystemChatMsg( textStd("OpenTabOptionsBusyError"), INFO_USER_ERROR, 0 );
 		return;
 	}
 
@@ -934,7 +934,7 @@ void chatFilterToggle()
 	}
 }
 
-// open a chat window (if it's closed). 
+// open a chat window (if it's closed).
 void OpenChatWindow(ChatWindow * window)
 {
 	if( ! windowUp(window->windefIdx))
@@ -998,7 +998,7 @@ void chatFilterGlobalCycle(bool backward)
 		addSystemChatMsg( textStd("NoChatFilters"), INFO_USER_ERROR, 0 );
 		return;
 	}
-	
+
 	if(gActiveChatFilter)
 	{
 		ChatFilter *	filter;
@@ -1029,7 +1029,7 @@ void chatFilterGlobalCycle(bool backward)
 
 				} while( ! uiTabControlGetFirst(tc));	// must eventually stop since we have at least one tab (somewhere)
 
-				uiTabControlSelect(tc, uiTabControlGetLast(tc));	
+				uiTabControlSelect(tc, uiTabControlGetLast(tc));
 			}
 			else
 				uiTabControlSelectPrev(tc);
@@ -1045,10 +1045,10 @@ void chatFilterGlobalCycle(bool backward)
 					if(idx >= MAX_CHAT_WINDOWS)
 						idx = 0;
 					window = GetChatWindow(idx);
-	
+
 				} while( ! uiTabControlGetFirst(tc));	// must eventually stop since we have at least one tab (somewhere)
-				
-				uiTabControlSelect(tc, uiTabControlGetFirst(tc));	
+
+				uiTabControlSelect(tc, uiTabControlGetFirst(tc));
 			}
 			else
 				uiTabControlSelectNext(tc);
@@ -1109,7 +1109,7 @@ int canMoveBottomCM( ChatFilter * filter)
 		return CM_HIDE; // the tab is already on the bottom, can't go there
 
 	if(uiTabControlNumTabs(cw->topTabControl) == 1)
-		return CM_VISIBLE;	// tab is on the top, but there is only one, 
+		return CM_VISIBLE;	// tab is on the top, but there is only one,
 							//so moving to bottom would collapse everything to top tab resulting in no net change
 	return CM_AVAILABLE;
 }
@@ -1154,7 +1154,7 @@ void ChatWindowInit(int windowIdx)
 
 	window->idx = windowIdx;
 
-	window->windefIdx = ChatWindowIdxToWindefIdx(windowIdx); 
+	window->windefIdx = ChatWindowIdxToWindefIdx(windowIdx);
 
 	window->topsb.wdw = window->windefIdx;
 	window->botsb.wdw = window->windefIdx;

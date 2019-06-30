@@ -3,7 +3,7 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "error.h"
 #include "earray.h"
@@ -86,7 +86,7 @@ void character_SetAnimClientStanceBits(Character *p, int *piList)
 * with no way to specify which of the FX you really want.
 */
 unsigned int entity_PlayClientsideMaintainedFX(Entity *pSrc, Entity *pTarget,
-									 char *pchName, ColorPair uiTint, 
+									 char *pchName, ColorPair uiTint,
 									 float fDelay, unsigned int iAttached, float fTimeOut, int iFlags)
 {
 	static int netfx_client_id_counter = 0; // should never be zero, positive numbers are for server-side FX
@@ -103,12 +103,12 @@ unsigned int entity_PlayClientsideMaintainedFX(Entity *pSrc, Entity *pTarget,
 		{
 			NetFx *netfx           = entrecvAllocNetFx(pSrc);
  			netfx->command         = CREATE_MAINTAINED_FX;
-			
+
 			netfx_client_id_counter--;
 			if (netfx_client_id_counter >= 0)
 				netfx_client_id_counter = -1;
 			netfx->net_id          = netfx_client_id_counter;
-			
+
 			netfx->pitchToTarget   = PLAYFX_PITCH_TO_TARGET(iFlags);
 			netfx->powerTypeflags  = (PLAYFX_POWER_TYPE(iFlags)&PLAYFX_FROM_AOE?NETFX_POWER_FROM_AOE:0)
 				| (PLAYFX_POWER_TYPE(iFlags)&PLAYFX_CONTINUING?NETFX_POWER_CONTINUING:0)
@@ -123,7 +123,7 @@ unsigned int entity_PlayClientsideMaintainedFX(Entity *pSrc, Entity *pTarget,
 			netfx->radius          = 10;
 			netfx->power           = 10;
 			netfx->debris          = 0;
-			
+
  			netfx->originType      = NETFX_ENTITY;
  			netfx->originEnt       = 0;
  			netfx->originPos[0]    = 0.0;
@@ -192,7 +192,7 @@ void entity_KillClientsideMaintainedFX(Entity *pSrc, Entity *pTarget, char *pchN
 			{
 				fxtracker = &(pSrc->fxtrackers[j]);
 
-				//TO DO : what if the tracker is 
+				//TO DO : what if the tracker is
 				if( fxtracker->netfx.handle == iNameRef )
 				{
 					//(not guaranteed there even is an fx yet, it could have come this frame,

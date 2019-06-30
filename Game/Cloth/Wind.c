@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "SuperAssert.h"
 #include <stdlib.h>
 #include <math.h>
 #include "stdtypes.h"
@@ -61,7 +61,7 @@ F32 ClothWindGetRandom(Vec3 wind, F32 *windScale, F32 *windDirScale)
 	frand = -1.0f + (frand*2.0f); // [-1, 1]
 	*windDirScale += WindDirDeltaScale * frand;
 	*windDirScale = MINMAX(*windDirScale, -WindDirDeltaMax, WindDirDeltaMax);
-	
+
 	scale = MINMAX(*windScale, 0.f, 1.f);
 	mag = WindMagnitude * scale;
 
@@ -70,7 +70,7 @@ F32 ClothWindGetRandom(Vec3 wind, F32 *windScale, F32 *windDirScale)
 	setVec3(adddir, -WindDir[2]* *windDirScale, 0.f, WindDir[0]* *windDirScale);
 	scaleAddVec3(adddir, *windDirScale, WindDir, dir);
 	normalVec3(dir);
-	
+
 	scaleVec3(dir, mag, wind);
 	return mag;
 }

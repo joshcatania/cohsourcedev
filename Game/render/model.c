@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include "utils.h"
 #include "memcheck.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "error.h"
 #include "earray.h"
 
@@ -21,11 +21,11 @@
 #include "renderbonedmodel.h"
 
 /* MW thoughts on model.c: One slightly awkward aspect is that the trick setting done here doesn't know anything about
-custom textures (either from the grouping or from the character customization).  Custom stuff has 
-to be handled closer to draw time, but it's a bit haphazard, with each customizer handling its own special cases, often 
-making assumptions about the state coming in.  For example if you put a trick an modelects default texture, then in the world 
+custom textures (either from the grouping or from the character customization).  Custom stuff has
+to be handled closer to draw time, but it's a bit haphazard, with each customizer handling its own special cases, often
+making assumptions about the state coming in.  For example if you put a trick an modelects default texture, then in the world
 editor change its texture, the trick may still affect the new texture, causing craziness.  */
-//1/18/03 MW 
+//1/18/03 MW
 
 
 //2.  ##################### Do this in the thread ##########################
@@ -94,10 +94,10 @@ U32 modelNeedsAlphaSort(Model *model)
 	if (model->flags & OBJ_TREEDRAW || model->trick && (model->trick->flags1&TRICK_ALPHACUTOUT))
 		return ((model->flags&(OBJ_FORCEOPAQUE|OBJ_ALLOW_MULTISPLIT))==OBJ_FORCEOPAQUE)?0:(OBJ_FORCEOPAQUE|OBJ_ALLOW_MULTISPLIT);
 	for(j=0;j<model->tex_count;j++)
-	{	
+	{
 		TexBind *bind = model->tex_binds[j];
 
-		ret |= texNeedsAlphaSort(bind, model->blend_modes[j]); //if any texture needs alpha sort, sort this modelect 
+		ret |= texNeedsAlphaSort(bind, model->blend_modes[j]); //if any texture needs alpha sort, sort this modelect
 	}
 	return ret;
 }
@@ -170,35 +170,35 @@ void modelResetFlags(Model *model)
 			model->flags |= OBJ_BUMPMAP;
 		}
 		if (blendModeHasDualColor(bind->bind_blend_mode))
-			allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR; 
+			allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR;
 		if (bind->bind_blend_mode.shader == BLENDMODE_ADDGLOW)
 		{
 			allocModelTrick(model)->flags2 |= TRICK2_HASADDGLOW;
 			allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR;
 		}
 		if (bind->bind_blend_mode.shader == BLENDMODE_WATER)
-			allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR; 
+			allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR;
 
 #if 0 // old cubemap code
 		if ((bind->flags & TEX_CUBEMAPFACE) || (bind_bump && bind_bump->flags & TEX_CUBEMAPFACE))
 			model->flags |= OBJ_CUBEMAP;
 #endif
 
-		//Dumb trick to not draw things that are frikin' invisible anyway. 
+		//Dumb trick to not draw things that are frikin' invisible anyway.
 		if( 0 != strnicmp( "clearalpha", bind->name, 10 ) && 0 != stricmp( "invisible", bind->name ) && 0 != stricmp( "churn_col_alpha_01", bind->name ) ) //Josh's idea of an invisible texture
 			visibleTextures++;
 
 		// Texture trick trickle down here!
 		if (bind->texopt) {
 			if (bind->texopt->flags & TEXOPT_NORANDOMADDGLOW)
-				allocModelTrick(model)->flags2 |= TRICK2_NORANDOMADDGLOW; 
+				allocModelTrick(model)->flags2 |= TRICK2_NORANDOMADDGLOW;
 			if (bind->texopt->flags & TEXOPT_ALWAYSADDGLOW)
-				allocModelTrick(model)->flags2 |= TRICK2_ALWAYSADDGLOW; 
+				allocModelTrick(model)->flags2 |= TRICK2_ALWAYSADDGLOW;
 			model->flags |= bind->texopt->model_flags;
 			if (bind->texopt->scrollsScales.multiply1Reflect && (bind->bind_blend_mode.shader==BLENDMODE_MULTIPLY || bind->bind_blend_mode.shader==BLENDMODE_MODULATE))
 				allocModelTrick(model)->flags1 |= TRICK_REFLECT_TEX1;
 			if (bind->texopt->flags & TEXOPT_FALLBACKFORCEOPAQUE)
-				allocModelTrick(model)->flags2 |= TRICK2_FALLBACKFORCEOPAQUE; 
+				allocModelTrick(model)->flags2 |= TRICK2_FALLBACKFORCEOPAQUE;
 		}
 		merged_blend_mode = promoteBlendMode(merged_blend_mode, bind->bind_blend_mode);
 	}
@@ -214,7 +214,7 @@ void modelResetFlags(Model *model)
 	}
 
 	if (blendModeHasDualColor(min_blend_mode))
-		allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR; 
+		allocModelTrick(model)->flags2 |= TRICK2_SETCOLOR;
 
 	// Set individual blend modes on model
 	model->common_blend_mode = BlendMode(-1, 0);
@@ -233,7 +233,7 @@ void modelResetFlags(Model *model)
 			// Only ups those who are MULTIPLY
 			if (bind->bind_blend_mode.shader <= BLENDMODE_MULTIPLY)
 				model->blend_modes[j] = min_blend_mode;
-			else 
+			else
 				model->blend_modes[j] = bind->bind_blend_mode;
 		} else {
 			// Others override everything (WATER, SUNFLARE, etc)
@@ -296,7 +296,7 @@ void modelResetVBOs(bool freeModels)
 }
 
 
-//IN THREAD 
+//IN THREAD
 static void modelCreateObjectFromModel(Model *model, TexBind * binds[], int numbinds)
 {
 	int		j;
@@ -360,7 +360,7 @@ void validateAllTextures( GeoLoadData * gld, TexBind **binds, PackNames * texnam
 		if( strstriConst( binds[i]->name, "white") && !strstriConst( texnames->strings[i], "white" ) )
 		{
 			Errorf( "Data Problem: %s wants the texture %s, which doesn't exist.",
-				gld->name, texnames->strings[i]); 
+				gld->name, texnames->strings[i]);
 		}
 	}
 }
@@ -386,9 +386,9 @@ void addModelData(GeoLoadData * gld)
 			modelCreateObjectFromModel(model->lod_models[j]->model, binds, gld->texnames.count);
 		}
 	}
-	
+
 	free(binds);
-} 
+}
 
 void addModelDataSingle(Model *model)
 {

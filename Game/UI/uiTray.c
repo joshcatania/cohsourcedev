@@ -22,7 +22,7 @@
 #include "uiUtilMenu.h"
 #include "uiDialog.h"
 #include "entclient.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "uiInput.h"
 #include "cmdgame.h"
 #include "language/langClientUtil.h"
@@ -123,25 +123,25 @@ void tray_momentary_alt_toggle( CurTrayMask mask, int toggle )
 // -AB: created :2005 Feb 08 05:20 PM
 //----------------------------------------------------------
 static int s_next_tray_mode( int tray_mask )
-{    
+{
     // --------------------
     // find the first un-set bit
-    
+
     int i;
     for( i = 0; i <= kCurTrayType_Alt2; ++i )
     {
         int mask = 1<<i;
-        
+
         if( !(mask & tray_mask) )
         {
             tray_mask |= mask;
             break;
         }
     }
-    
+
     // --------------------
     // if not found, reset sticky to just show primary
-    
+
     if( i > kCurTrayType_Alt2 )
     {
         tray_mask = kCurTrayMask_Primary;
@@ -372,7 +372,7 @@ static const char *trayobj_Name( TrayObj *obj )
 	Entity  *e;
 
 	e = playerPtr();
-	
+
 	if( obj && !shell_menu() && obj->type == kTrayItemType_Power)
 	{
 		const Power *power = character_GetPowerFromArrayIndices(e->pchar, obj->iset, obj->ipow);
@@ -391,7 +391,7 @@ void trayobj_copy( TrayObj *dest, TrayObj *src, int update_server )
 	if (!verify(dest && src))
 		return;
 
-	bUpdate = update_server && 
+	bUpdate = update_server &&
 		(src->type == kTrayItemType_Power || src->type == kTrayItemType_Inspiration || src->type == kTrayItemType_MacroHideName || src->type == kTrayItemType_Macro ||
 		dest->type == kTrayItemType_Power || dest->type == kTrayItemType_Inspiration || dest->type == kTrayItemType_MacroHideName || dest->type == kTrayItemType_Macro);
 
@@ -426,7 +426,7 @@ void trayobj_copy( TrayObj *dest, TrayObj *src, int update_server )
 	}
 
 	// make sure to add assigns here as you add members
-	//STATIC_ASSERT(sizeof(*src) == 636); 
+	//STATIC_ASSERT(sizeof(*src) == 636);
 }
 
 //
@@ -532,7 +532,7 @@ TrayObj *trayslot_Get( Entity *e, TrayCategory tray_cat, int tray_num, int slot_
 			{
 				// This power has been removed.
 				clearTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, tray_num, slot_num, e->pchar->iCurBuild);
-				return NULL;				
+				return NULL;
 			}
 		}
 		return pto;
@@ -592,7 +592,7 @@ TrayObj *trayslot_find( Entity *e, const char *pch )
 	while (getNextTrayObjFromIterator(&pto))
 	{
 		if (pto && pto->type == kTrayItemType_Power)
-		{			
+		{
 			Power *power = e->pchar->ppPowerSets[pto->iset]->ppPowers[pto->ipow];
 
 			if(stricmp(textStd(power->ppowBase->pchDisplayName), pch)==0)
@@ -608,7 +608,7 @@ TrayObj *trayslot_find( Entity *e, const char *pch )
 	while (getNextTrayObjFromIterator(&pto))
 	{
 		if (pto && pto->type == kTrayItemType_Power)
-		{		
+		{
 			Power *power = e->pchar->ppPowerSets[pto->iset]->ppPowers[pto->ipow];
 
 			if( stricmp(power->ppowBase->pchName, pch)==0)
@@ -744,13 +744,13 @@ static void trayobj_select(Entity *e, TrayObj *ts)
 			// If I'm confused
 			//  and I have someone targeted
 			//  and this power targets
-			//   a friendly player or 
+			//   a friendly player or
 			//   a foe and I'm not taunted,
 			// THEN see if we want to randomize my target
 			if ( character_IsConfused(e->pchar)
 				&& current_target
 				&& (power->ppowBase->eTargetType == kTargetType_Player
-					|| (power->ppowBase->eTargetType == kTargetType_Foe 
+					|| (power->ppowBase->eTargetType == kTargetType_Foe
 						&& !g_erTaunter)))
 			{
 				F32 frand = (F32)rand()/(F32)(RAND_MAX+1);
@@ -765,11 +765,11 @@ static void trayobj_select(Entity *e, TrayObj *ts)
 					}
 				}
 			}
-			
+
 			// If this is a foe-targeted power and I'm taunted and I'm not targeting
 			//  my taunter, cancel my current target (which will get set appropriately
 			//  later in the function)
-			if ( power->ppowBase->eTargetType == kTargetType_Foe 
+			if ( power->ppowBase->eTargetType == kTargetType_Foe
 				&& g_erTaunter
 				&& current_target != erGetEnt(g_erTaunter))
 			{
@@ -777,7 +777,7 @@ static void trayobj_select(Entity *e, TrayObj *ts)
 				handleFloatingInfo(e->svr_idx, "FloatTaunted", kFloaterStyle_Info, 0.0, 0);
 				addSystemChatMsg(textStd("YouAreTaunted"), INFO_COMBAT_ERROR, 0);
 			}
-            
+
 			if ( power->ppowBase->eType == kPowerType_Click)
 			{
 				if( power->ppowBase->eTargetType == kTargetType_Caster )
@@ -1012,7 +1012,7 @@ bool trayslot_istype( Entity *e, int slot_num, int tray_num, TrayItemType type)
 //
 //
 int trayslot_IsActive(Entity *e, TrayObj * to)
-{	
+{
 	if( to && to->type == kTrayItemType_Power )
 	{
 		PowerRef ppowRef;
@@ -1267,7 +1267,7 @@ int traycm_showExtra(void *data)
 
 	if ( !pow || !pow->ppowBase->bHasUseLimit)
 		return false;
-	
+
 	return true;
 }
 
@@ -1275,7 +1275,7 @@ const char *traycm_PowerExtra(void *data)
 {
 	TrayObj *ts = (TrayObj*)data;
 	Entity *e = playerPtr();
-	Power *pow;	
+	Power *pow;
 	static char info[128];
 	static char time[128];
 
@@ -1289,14 +1289,14 @@ const char *traycm_PowerExtra(void *data)
 
 	if ( !pow || !pow->ppowBase->bHasUseLimit)
 		return "UNKNOWN";
-	
+
 	if (pow->ppowBase->iNumCharges)
-	{		
+	{
 		sprintf(info,"%s",textStd("PowerUsesLeft",pow->iNumCharges));
 	}
 	else if (pow->ppowBase->fUsageTime)
 	{
-		timerMakeOffsetStringFromSeconds(time,pow->fUsageTime);		
+		timerMakeOffsetStringFromSeconds(time,pow->fUsageTime);
 		sprintf(info,"%s",textStd("PowerTimeLeft",time));
 	}
 	return info;
@@ -1305,7 +1305,7 @@ const char *traycm_PowerExtra(void *data)
 
 
 //------------------------------------------------------------
-// 
+//
 // -AB: refactored for new cur tray functionality :2005 Jan 26 03:41 PM
 //----------------------------------------------------------
 void traycm_Remove( void * data )
@@ -1346,7 +1346,7 @@ static void tray_AddCurrentTrayObj( TrayObj *to );
 void traycm_Add( void *data )
 {
 	TrayObj * ts = (TrayObj*)data;
-		
+
 	if(!power_getVisibleTrayObj( ts, NULL, NULL))
 		tray_AddCurrentTrayObj( ts );
 }
@@ -1442,7 +1442,7 @@ void traycm_DeletePower( void * data )
 
 	if( traycm_DeletableTempPower(data) != CM_AVAILABLE )
 		return;
-	
+
 	iDeletePow = ts->ipow;
 	dialogStd( DIALOG_YES_NO, textStd("ReallyDeletePower", ppow->ppowBase->pchDisplayName), 0, 0, deleteTempPower, 0, 0 );
 }
@@ -1489,7 +1489,7 @@ void traycm_EditMacro( void * data )
 	j = ts->islot;
 
 	to = getTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, i, j, e->pchar->iCurBuild, false);
-	
+
 	if (to && IS_TRAY_MACRO(ts->type) && IS_TRAY_MACRO(to->type) && stricmp(ts->command, to->command)==0 && stricmp(ts->shortName, to->shortName)==0 )
 		update = to;
 
@@ -1532,7 +1532,7 @@ void tray_dragPower( int i, int j, AtlasTex * icon )
 //
 //
 //------------------------------------------------------------
-// 
+//
 // -AB: refactored for new cur tray functionality :2005 Jan 26 03:41 PM
 //----------------------------------------------------------
 static void tray_AddCurrentTrayObj( TrayObj *to )
@@ -1573,7 +1573,7 @@ void tray_AddObj( TrayObj *to )
 	{
 		// try current tray first
 		for( i = 0; i < TRAY_SLOTS; i++ )
-		{			
+		{
 			if( trayslot_istype( e, i, e->pl->tray->current_trays[cur_tray_i], kTrayItemType_None ) )
 			{
 				trayobj_copy(getTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, e->pl->tray->current_trays[cur_tray_i], i, e->pchar->iCurBuild, true), to, TRUE);
@@ -1601,7 +1601,7 @@ void tray_AddObjTryAt(TrayObj *to, int trayIndex)
 		}
 
 		for( i = 0; i < TRAY_SLOTS; i++ )
-		{			
+		{
 			if( trayslot_istype( e, i, e->pl->tray->current_trays[cur_tray_i], kTrayItemType_None ) )
 			{
 				trayobj_copy(getTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, e->pl->tray->current_trays[cur_tray_i], i, e->pchar->iCurBuild, true), to, TRUE );
@@ -1754,7 +1754,7 @@ static float activePowerTimer_getAngle( const BasePower * pow )
 				float fAngleDelta;
 
 				activePowerTimers[i]->rotatedThisTick = TRUE;
-				
+
 				//@todo SHAREDMEM shouldn't have to init this here and violate const
 				if( !pow->fActivatePeriod )
 					(cpp_const_cast(BasePower*)(pow))->fActivatePeriod = 1.f/30;
@@ -1854,7 +1854,7 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
 			(!e->access_level && pPower->ppowBase->ppchActivateRequires && !chareval_Eval(e->pchar, pPower->ppowBase->ppchActivateRequires, pPower->ppowBase->pchSourceFile)) )
 			usable = 0;
 
-		if( !character_AtLevelCanUsePower( e->pchar, pPower ) ) 
+		if( !character_AtLevelCanUsePower( e->pchar, pPower ) )
 			usable = 0;
 
 		disabled = !pPower->bEnabled;
@@ -2067,8 +2067,8 @@ void trayslot_Display( Entity *e, int slotNumber, int raw_tray_value, int curTra
 					{
 						ts = getTrayObj(e->pl->tray, currentCategory, currentTray, slotNumber, build, true);
  						if( cursor.drag_obj.type == kTrayItemType_Power || IS_TRAY_MACRO(cursor.drag_obj.type) )
-						{						
-							trayobj_copy( ts, &cursor.drag_obj, TRUE );	 
+						{
+							trayobj_copy( ts, &cursor.drag_obj, TRUE );
 						}
 						trayobj_stopDragging();
 					}
@@ -2124,7 +2124,7 @@ void trayslot_Display( Entity *e, int slotNumber, int raw_tray_value, int curTra
 							TrayObj *last = getTrayObj(e->pl->tray, cursor.drag_obj.icat, cursor.drag_obj.itray, cursor.drag_obj.islot, build, true);
 							trayobj_copy( last, ts, TRUE );
 						}
-						
+
 						trayobj_copy( ts, &cursor.drag_obj, TRUE );
 					}
 
@@ -2146,11 +2146,11 @@ void trayslot_Display( Entity *e, int slotNumber, int raw_tray_value, int curTra
 			if ( mouseClickHit( &box, MS_LEFT) ) // is there was a mouse press
 			{
 				// @hack -AB: crazy hack for control clicking a sticky tray :2005 Mar 21 11:33 AM
-				// if this is an alt tray that is showing temporarily do not process this as a 
+				// if this is an alt tray that is showing temporarily do not process this as a
 				// control click, instead process as a regular click.
 				U32 alttray_mask = curtraytype_to_altmask( curTrayType );
 				bool isMomentaryTray = alttray_mask & s_TrayMomentaryMask && !(s_TrayStickyMask & alttray_mask);
-				
+
 				if( !isMomentaryTray && inpLevel(INP_CONTROL))
 				{
  					TrayObj *ts = trayslot_Get(e, currentCategory, currentTray, slotNumber);
@@ -2292,7 +2292,7 @@ void tray_goto_tray( int curtray, int traynum )
     {
 		Entity *e = playerPtr();
         assert(e);
-        
+
         e->pl->tray->current_trays[ curtray ] = traynum;
         START_INPUT_PACKET(pak, CLIENTINP_RECEIVE_TRAYS);
         sendTray( pak, e );
@@ -2315,7 +2315,7 @@ void tray_drawArrows( Entity *e, int cur_tray, float x, float y, float z, float 
 	static AtlasTex * left_arrow;
 	static AtlasTex * right_arrow;
 	static int texBindInit=0;
-	if (!texBindInit) 
+	if (!texBindInit)
 	{
 		texBindInit = 1;
 		power_ring            = atlasLoadTexture( "tray_ring_power.tga" );
@@ -2389,7 +2389,7 @@ void tray_HandleWorldCursor(Entity *e, Mat4 matCursor, Vec3 probe)
 					&& power && (power->ppowBase->eTargetType==kTargetType_Teleport
 						|| power->ppowBase->eTargetTypeSecondary == kTargetType_Teleport))
 				{
-					// Determine if we should hand the probe vector to CalcTeleportTarget, this is used inside that routine 
+					// Determine if we should hand the probe vector to CalcTeleportTarget, this is used inside that routine
 					// to determine if it should do the stepback checks to avoid "red reticle of death" syndrome.
 					// We get a valid probe vector for any teleport power (teleport self, recall friend and teleport foe),
 					// because it's needed for the ExtraTeleportChecks.
@@ -2518,10 +2518,10 @@ static CurTrayType type_from_mask( int mask )
     int i;
     CurTrayType res = kCurTrayType_Primary;
     assert(POW_OF_2(mask));
-    
+
     // go until a bit is set
     for( i = 0; i < kCurTrayType_Count; ++i )
-    { 
+    {
         if( !((1<<i) & mask) )
         {
             res = (CurTrayType)i;
@@ -2531,7 +2531,7 @@ static CurTrayType type_from_mask( int mask )
 
     // --------------------
     // return the result
-    
+
     return res;
 }
 
@@ -2576,7 +2576,7 @@ static int get_num_trays_showing()
     // count it as showing. Note that we only deal with the three normal
 	// trays here - the Razer tray is not part of the tray stack.
     for( i = 0; i <= kCurTrayType_Alt2; ++i )
-    { 
+    {
         if( tray_is_showing( i ) )
         {
             res++;
@@ -2595,7 +2595,7 @@ void tray_Clear(void)
 	while (getNextTrayObjFromIterator(&obj))
 	{
 		if (obj && !IS_TRAY_MACRO(obj->type))
-		{		
+		{
 			destroyCurrentTrayObjViaIterator();
 		}
 	}
@@ -2704,9 +2704,9 @@ void serverTray_checkActivationRequirements(Entity *e)
 							&& (!ppow->ppowBase->ppchActivateRequires || chareval_Eval(e->pchar, ppow->ppowBase->ppchActivateRequires, ppow->ppowBase->pchSourceFile));
 		TrayObj *curTray = getTrayObj(e->pl->tray, kTrayCategory_ServerControlled, 0, trayIndex, 0, false);
 		bool wasDisplayed;
-		
+
 		wasDisplayed = (curTray && curTray->iset == s_serverTrayPriorities[priorityIndex]->iset && curTray->ipow == s_serverTrayPriorities[priorityIndex]->ipow);
-		
+
 		if (shouldDisplay && !wasDisplayed)
 		{
 			serverTray_InsertServerTrayItem(e, ppow, trayIndex);
@@ -2849,7 +2849,7 @@ int trayWindow()
 	int i, color, bcolor;
     int tray_lvl = 0;
 	bool serverTrayOverride = character_IsInPowerMode(e->pchar, kPowerMode_ServerTrayOverride);
-    
+
 	AtlasTex *arrow;
 	Wdw * wdw;
 
@@ -2859,7 +2859,7 @@ int trayWindow()
 	static AtlasTex * arrow_up;
 	static AtlasTex * arrow_down;
 	static int texBindInit=0;
-	if (!texBindInit) 
+	if (!texBindInit)
 	{
 		texBindInit = 1;
 		left  = atlasLoadTexture( "Jelly_tray_edge_L.tga" );
@@ -2877,7 +2877,7 @@ int trayWindow()
 		serverTray_checkActivationRequirements(e);
 	PERFINFO_AUTO_STOP();
 
-	tray_timer += TIMESTEP; 
+	tray_timer += TIMESTEP;
 
 	if ( !init )
 	{
@@ -2905,7 +2905,7 @@ int trayWindow()
 	if( !window_getDims( WDW_TRAY, NULL, NULL, &z, &wd, &ht, &scale, &color, &bcolor ) )
 		return 0;
 
-    wdw = wdwGetWindow( WDW_TRAY ); 
+    wdw = wdwGetWindow( WDW_TRAY );
 
 	// animate the tray opening or closing
 	{
@@ -2929,7 +2929,7 @@ int trayWindow()
         // and if the ht is zero, slam the height, but leave y
         // untouched.
 		//
-		// ARM NOTE:  Now that the y value stored in the database 
+		// ARM NOTE:  Now that the y value stored in the database
 		//   is the bottom of this window, we could eliminate this hack
 		//   by storing the tray height in the database and altering
 		//   the code that minmax's the height of the window.
@@ -2946,7 +2946,7 @@ int trayWindow()
             {
                 // window is growing
  				ht += delta;
-				
+
                 if( ht > goal_height )
                 {
 					// goal reached
@@ -2979,7 +2979,7 @@ int trayWindow()
 // 			window_UpdateServer( WDW_TRAY );
 // 		}
 	}
-	
+
 	window_getDims( WDW_TRAY, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor );
 
     // show the down arrow if all trays or showing, otherwise the up arrow
@@ -2992,11 +2992,11 @@ int trayWindow()
             arrow = arrow_down;
         else
             arrow = arrow_up;
-        
+
     }
-    
-	// draw the up/down arrow, handle clicks    
-	if(window_getMode(WDW_TRAY) == WINDOW_DISPLAYING ) 
+
+	// draw the up/down arrow, handle clicks
+	if(window_getMode(WDW_TRAY) == WINDOW_DISPLAYING )
 	{
 		if( (!wdw->below && !wdw->flip) || (wdw->below && wdw->flip) )
 		{
@@ -3032,7 +3032,7 @@ int trayWindow()
             tray_y = y + (goal_ht <= ht ? ht - goal_ht : 0);
 
             drawFrame( PIX3, R22, x, tray_y, z, wd, DEFAULT_TRAY_HT*scale, scale, color, bcolor );
-            
+
         	if (trays_drawn == 1 && !tray_is_showing(trays_drawn) && tray_is_showing(trays_drawn + 1))
 			{
 				// This if check is a super ugly hack to get this done quickly for I22 launch.
@@ -3041,7 +3041,7 @@ int trayWindow()
 				//   the four trays (main, alt, alt2, server) as a WindowDisplayMode...
 				tray_to_use = trays_drawn + 1;
 			}
-        	else if (((serverTrayOverride || s_displayServerTray || !tray_is_showing(trays_drawn)) && ht <= goal_ht) 
+        	else if (((serverTrayOverride || s_displayServerTray || !tray_is_showing(trays_drawn)) && ht <= goal_ht)
 				|| trays_drawn > kCurTrayType_Alt2)
 			{
 				tray_to_use = -1;
@@ -3050,7 +3050,7 @@ int trayWindow()
 			{
 				tray_to_use = trays_drawn;
 			}
-            
+
             // draw the tray slots
             for( i = 0; i < TRAY_SLOTS; i++ )
             {
@@ -3063,25 +3063,25 @@ int trayWindow()
 			// do the tray switching arrows
 			if (tray_to_use != -1)
 				tray_drawArrows( e, tray_to_use, x, tray_y, z, wd, ht, scale, color );
-            
+
             if (goal_ht <= ht - DEFAULT_TRAY_HT*scale)
             {
                 Wdw * wdw = wdwGetWindow( WDW_TRAY );
                 float left_y = tray_y - left->height/2;
                 float right_y = tray_y - right->height/2;
                 float meat_y = tray_y - meat->height/2;
-                
+
                 display_sprite( left, x + 5, left_y, z-5, 1.f, 1.f, (color & 0xffffff00) | (int)(255*wdw->opacity) );
                 display_sprite( right, x + wd - right->width - 5, right_y, z-5, 1.f, 1.f, (color & 0xffffff00) | (int)(255*wdw->opacity) );
                 display_sprite( meat, x + left->width + 5, meat_y, z-5, (wd - left->width - right->width - 10)/meat->width, 1.f, (color & 0xffffff00) | (int)(255*wdw->opacity) );
-            }                
+            }
 
 			// increment the drawn trays count
 			trays_drawn++;
         }
 		while (ht > goal_ht);
     }
-    
+
 	// Let the player cancel a queued power.
 	if(inpEdge(INP_ESCAPE))
 	{
@@ -3135,11 +3135,11 @@ CurTrayType get_cur_tray( Entity *e )
 
 void tray_setSticky( CurTrayType tray, int toggle )
 {
-	int mask = curtraytype_to_altmask( tray ); 
+	int mask = curtraytype_to_altmask( tray );
     if (toggle)
         s_TrayStickyMask |= mask;
     else
-        s_TrayStickyMask &= ~mask;    
+        s_TrayStickyMask &= ~mask;
 }
 
 

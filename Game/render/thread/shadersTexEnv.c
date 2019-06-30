@@ -9,7 +9,7 @@
 #include "textparser.h"
 #include "earray.h"
 #include "error.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "wcw_statemgmt.h"
 #include "rt_tex.h"
 
@@ -159,7 +159,7 @@ static int processTextureOp(TextureOp *texop, GLenum defaultSourceOp)
 		Errorf("Incorrect number of operands : %d, expected %d", operandnum+1, texop->numOperands);
 		return 0;
 	}
-	
+
 	return 1;
 }
 
@@ -281,7 +281,7 @@ void renderTexEnvSetupBlendmode(BlendModeShader type)
 	TexEnvProg *texEnvProg= eaTexEnvProgs[type];
 	int i;
 	int numstages;
-	
+
 	if (texEnvProg) {
 		numstages = texEnvProg->numstages;
 	} else {

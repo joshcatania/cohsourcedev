@@ -1,5 +1,5 @@
 #include "ogl.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -315,7 +315,7 @@ default:
 		for (i=0;i<heightout;i++) {
 			i0 = i * sy;
 			i1 = i0 + 1;
-			if (i1 >= heightin) i1 = heightin-1; 
+			if (i1 >= heightin) i1 = heightin-1;
 			/*	 i1 = (i+1) * sy - EPSILON; */
 			for (j=0;j<widthout;j++) {
 				j0 = j * sx;

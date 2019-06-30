@@ -15,7 +15,7 @@
 #include "rendermodel.h"
 #include "cmdgame.h"
 #include "entclient.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "model_cache.h"
 #include "renderutil.h"
 #include "rgb_hsv.h"
@@ -155,7 +155,7 @@ void lightModel(Model *model,Mat4 mat,U8 *rgb,DefTracker *light_trkr, F32 bright
 	scene_amb = sceneGetAmbient();
 	if (scene_amb)
 		scaleVec3(scene_amb,.25,ambient);
-		
+
 	copyVec3(light_trkr->def->color[1],maxbright);
 	if ((maxbright[0]|maxbright[1]|maxbright[2]) == 0)
 		maxbright[0] = maxbright[1] = maxbright[2] = 255;
@@ -318,15 +318,15 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 //	Line * line;
 #define LIGHTINFO 0
 	//extern int camera_is_inside;
-    
+
 	PERFINFO_AUTO_START("lightEnt", 1);
 
 	if(	light->hasBeenLitAtLeastOnce )
 		no_light_interp = 0; //debug
 	else
 		no_light_interp = 1;
-		
-	light->hasBeenLitAtLeastOnce = 1;	
+
+	light->hasBeenLitAtLeastOnce = 1;
 
 	//IF anyone wnats to custom set the ambinet or diffuse sclae, they have to do it every frame
 	/*
@@ -339,8 +339,8 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 	light->ambientScaleUp;
 	light->ambientScale
 	*/
-	light->ambientScale = 1.0; 	  
-	light->diffuseScale = 1.0; 
+	light->ambientScale = 1.0;
+	light->diffuseScale = 1.0;
 	if( light->use & ( ENTLIGHT_CUSTOM_AMBIENT | ENTLIGHT_CUSTOM_DIFFUSE ) )
 	{
 		F32 scale;
@@ -350,54 +350,54 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 
 		light->pulseTime += TIMESTEP;
 
-		if( light->pulseTime > pulseEndTime )     
+		if( light->pulseTime > pulseEndTime )
 		{
 			light->use &= ~ENTLIGHT_CUSTOM_AMBIENT;
-			light->use &= ~ENTLIGHT_CUSTOM_DIFFUSE; 
-			light->ambientScale = 1.0; 
+			light->use &= ~ENTLIGHT_CUSTOM_DIFFUSE;
+			light->ambientScale = 1.0;
 			light->diffuseScale = 1.0;
 			light->pulseTime = 0;
 			light->pulseClamp = 0;
 			scale = 0.0;
 		}
-		else if( light->pulseTime > pulsePeakTime )  
+		else if( light->pulseTime > pulsePeakTime )
 		{
 			scale = ( 1.0 - ( (light->pulseTime - pulsePeakTime) / (pulseEndTime - pulsePeakTime ) ) );
 		}
-		else 
+		else
 		{
 			scale = ( light->pulseTime / pulsePeakTime );
 		}
 
 		//Override : if you are told to clamp to a certain brightness, just be that
 		//AS long as you are repeatedly told by the fx to hold your pulse value, hold it.
-		if( light->pulseClamp )  
+		if( light->pulseClamp )
 		{
 			pulseBrightness = light->pulseBrightness;
 			scale = 1.0;
 		}
 
 		scale = 1 + (scale * (pulseBrightness - 1.0) );
- 
+
 		//xyprintf( 20, 20, "Light %f at age %f ", scale, light->pulseTime);
 
 		//if( light->pulseTime > pulsePeakTime && scale2 > light->pulseClamp )
 		//	light->pulseTime = pulsePeakTime * scale;
 
 		light->ambientScale = scale;
-		light->diffuseScale = scale; 
+		light->diffuseScale = scale;
 
 		//light->ambientScale = 1.0;
 		//light->diffuseScale = 1.0;
 	}
-	
-	//xyprintf( 22, 21, "ambientScale %f", light->ambientScale); 
-	//xyprintf( 22, 22, "diffuseScale %f", light->diffuseScale); 
- 
-	//Only update special lighting when you've moved more than 2 feet from the last pos at which you updated light
-	subVec3(pos,light->calc_pos,dv);   
 
-	if ( lengthVec3Squared(dv) > DISTANCE_TO_MOVE_BEFORE_RECALCULATING_LIGHT*DISTANCE_TO_MOVE_BEFORE_RECALCULATING_LIGHT ) //4.0    
+	//xyprintf( 22, 21, "ambientScale %f", light->ambientScale);
+	//xyprintf( 22, 22, "diffuseScale %f", light->diffuseScale);
+
+	//Only update special lighting when you've moved more than 2 feet from the last pos at which you updated light
+	subVec3(pos,light->calc_pos,dv);
+
+	if ( lengthVec3Squared(dv) > DISTANCE_TO_MOVE_BEFORE_RECALCULATING_LIGHT*DISTANCE_TO_MOVE_BEFORE_RECALCULATING_LIGHT ) //4.0
 	{
 		copyVec3(pos,light->calc_pos);
 
@@ -408,14 +408,14 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 			//this tracker hasn't been processed yet, so dont give up on it for lighting
 			//slightly hacky way to say this light still needs to be processed even though it hasn't moved lately
 			if( tracker && tracker->def && tracker->def->has_ambient )
-				light->calc_pos[1] = -1000;  
+				light->calc_pos[1] = -1000;
 
 			light->use &= ~ENTLIGHT_INDOOR_LIGHT;
 
 			PERFINFO_AUTO_STOP();
 			return;
 		}
-		light->use |= ENTLIGHT_INDOOR_LIGHT; 
+		light->use |= ENTLIGHT_INDOOR_LIGHT;
 
 		//Get Base Ambient Light (from the group tracker) (can be augmented by dispersed diffuse lights)
 		getDefColorVec3(tracker->def,0,light->tgt_ambient);
@@ -426,8 +426,8 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 		if (scene_amb)
 			scaleVec3(scene_amb,.25,light->tgt_ambient);
 
-		//scaleVec3(tracker->def->color[0],(1.f/155.f),light->tgt_ambient); 
-		for(j=0;j<3;j++) //mm 
+		//scaleVec3(tracker->def->color[0],(1.f/155.f),light->tgt_ambient);
+		for(j=0;j<3;j++) //mm
 			light->tgt_ambient[j] = MAX( light->tgt_ambient[j], min_base_ambient );
 		//Get Diffuse Light(get all the lights around you and add their influences based on distance to a single color)
 		//(Where is the direction of the diffuse light figured out?)
@@ -439,7 +439,7 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 		zeroVec3(color);
 		zeroVec3(diffuse_dir);
 		diffuse_dir[1] = 0.001; //so if there are no ligths, the direction will be up and left
-		diffuse_dir[0] = 0.001; // 
+		diffuse_dir[0] = 0.001; //
 
 		total_intensity = 0;
 
@@ -459,7 +459,7 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 			{
 				intensity = 1;
 			}
-			else 
+			else
 			{
 				intensity = (def->light_radius - dist) / (def->light_radius - falloff);
 				intensity = intensity * intensity;
@@ -481,15 +481,15 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 					subVec3(color,dv,color);
 				else
 					addVec3(color,dv,color);
-				total_intensity += intensity; 
+				total_intensity += intensity;
 			}
 		}
 
 		////////////////////////////////////////////////////////
 		copyVec3(diffuse_dir, gross_diffuse_dir); //rem gross diffuse dir for debug
-		len_diffuse_dir = normalVec3(diffuse_dir); 
+		len_diffuse_dir = normalVec3(diffuse_dir);
 
-		part_diffuse = MIN( 1.0, (len_diffuse_dir / (total_intensity * 0.5)) ); 
+		part_diffuse = MIN( 1.0, (len_diffuse_dir / (total_intensity * 0.5)) );
 
 		if (color[0] < 0)
 			color[0] = 0;
@@ -498,12 +498,12 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 		if (color[2] < 0)
 			color[2] = 0;
 
-		scaleVec3(color, part_diffuse,     diffuse_added );    
-		scaleVec3(color, ((1.0 - part_diffuse)/2.0), ambient_added ); 
+		scaleVec3(color, part_diffuse,     diffuse_added );
+		scaleVec3(color, ((1.0 - part_diffuse)/2.0), ambient_added );
 
 		copyVec3(diffuse_added,light->tgt_diffuse);
 
-		addVec3(light->tgt_ambient, ambient_added, light->tgt_ambient );  
+		addVec3(light->tgt_ambient, ambient_added, light->tgt_ambient );
 
 		if (game_state.scaleEntityAmbient)
 		{
@@ -522,10 +522,10 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 				light->tgt_ambient[j] = MIN(max_ambient, light->tgt_ambient[j]);
 		}
 
-		copyVec3( diffuse_dir, light->tgt_direction ); 
+		copyVec3( diffuse_dir, light->tgt_direction );
 		////////////////////////////////////////////////////////
 
-		light->diffuse[3] = 1.0; 
+		light->diffuse[3] = 1.0;
 		light->ambient[3] = 1.0;
 		light->direction[3] = 0.0;
 
@@ -534,7 +534,7 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 
 	if( light->interp_rate || no_light_interp)
 	{
-		F32 percent_new; 
+		F32 percent_new;
 
 		light->interp_rate -= TIMESTEP;
 
@@ -561,16 +561,16 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 
 	if( game_state.fxdebug & FX_CHECK_LIGHTS)
 	{
-		Vec3 dbig; 
+		Vec3 dbig;
 		F32 len;
 		Vec3	p1,p2;
 
 		total_intensity = 1.0;
-	
+
 		//Draw line in direction of diffuse light, it's length is the intensity of the diffuse light
-		len = normalVec3(light->direction); 
-		scaleVec3( light->direction, -5 * total_intensity, dbig);  
-		subVec3(pos, dbig, p1); 
+		len = normalVec3(light->direction);
+		scaleVec3( light->direction, -5 * total_intensity, dbig);
+		subVec3(pos, dbig, p1);
 		copyVec3(pos, p2);
 
 		drawLine3D(p1,p2, 0xff70ff70);
@@ -578,8 +578,8 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 		//Draw line of all lights added up
 		//line = &(lightlines[lightline_count++]);
 
-		//scaleVec3( gross_diffuse_dir, -5 , dbig);  
-		//subVec3(pos, dbig, line->a); 
+		//scaleVec3( gross_diffuse_dir, -5 , dbig);
+		//subVec3(pos, dbig, line->a);
 		//copyVec3(pos, line->b);
 		//line->color[0] = line->color[1] = 255;
 		//line->color[2] = line->color[3] = 100;
@@ -590,7 +590,7 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 			extern Entity * current_target;
 			if( (!current_target && light == &playerPtr()->seq->seqGfxData.light)  || (current_target && &(current_target->seq->seqGfxData.light) == light) )
 			{
-				xyprintf(5,16,"blue: total diffuse intensity");  
+				xyprintf(5,16,"blue: total diffuse intensity");
 				xyprintf(5,15,"red: combined lights.%%<.5 blue=ambient");
 
 				xyprintf(5,19,"light->tgt_ambient  : %d %d %d",(int)(light->tgt_ambient[0] * 255),(int)(light->tgt_ambient[1] * 255),(int)(light->tgt_ambient[2] * 255));
@@ -599,8 +599,8 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 				xyprintf(5,22,"light->diffuse      : %d %d %d",(int)(light->diffuse[0] * 255),(int)(light->diffuse[1] * 255),(int)(light->diffuse[2] * 255));
 				xyprintf(5,23,"light->tgt_direction: %d %d %d",(int)(light->tgt_direction[0] * 255),(int)(light->tgt_direction[1] * 255),(int)(light->tgt_direction[2] * 255));
 				xyprintf(5,24,"light->direction    : %d %d %d",(int)(light->direction[0] * 255),(int)(light->direction[1] * 255),(int)(light->direction[2] * 255));
-				xyprintf(5,25,"light->interp_rate  : %2.2f", light->interp_rate); 
-				//xyprintf(5,26,"part_diffuse        : %2.2f", part_diffuse); 
+				xyprintf(5,25,"light->interp_rate  : %2.2f", light->interp_rate);
+				//xyprintf(5,26,"part_diffuse        : %2.2f", part_diffuse);
 				xyprintf(5,18,"%f %f %f",pos[0],pos[1],pos[2]);
 			}
 		}
@@ -612,7 +612,7 @@ void lightEnt(EntLight *light,Vec3 pos, F32 min_base_ambient, F32 max_ambient )
 void lightGiveLightTrackerToMyDoor(DefTracker * tracker, DefTracker * lighttracker)
 {
 	Entity * e;
-	
+
 	assert(tracker && lighttracker);
 	e = entFindEntAtThisPosition(tracker->mat[3], 0.1);
 

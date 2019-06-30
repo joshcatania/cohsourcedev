@@ -1,5 +1,5 @@
 #include "uiListView.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include <stddef.h>
 #include <string.h>
 #include "strings_opt.h"
@@ -50,7 +50,7 @@ typedef struct SavedColumn
 	UIColumnHeader	*column;
 }SavedColumn;
 
-SavedColumn savedColumns[] = 
+SavedColumn savedColumns[] =
 {
 	{ &gDivSuperName,		SG_MEMBER_NAME_COLUMN,	},
 	{ &gDivSuperMap,		SG_MEMBER_ZONE,			},
@@ -90,7 +90,7 @@ void Widget3PartDraw(Widget3Part* widget, float x, float y, float z, float scale
  	part2 = atlasLoadTexture(widget->part2);
 	part3 = atlasLoadTexture(widget->part3);
 
-	// Decide which direction will be used for 
+	// Decide which direction will be used for
 	if(widget->mode == WPM_HORIZONTAL)
 	{
 		cursor = &penX;
@@ -195,7 +195,7 @@ Widget3Part ColumnSelectedHeaderParts =
 };
 
 //--------------------------------------------------------------------------------------------------------------------
-// UIColumnHeader 
+// UIColumnHeader
 //--------------------------------------------------------------------------------------------------------------------
 #include "earray.h"
 
@@ -321,7 +321,7 @@ void uiLVHSetColumnCaption(UIListViewHeader* header, char* name, char * caption)
 }
 
 /* Function uiLVHFindColumnIndex()
- *	Returns the index of the named column into UIListViewHeader::columns 
+ *	Returns the index of the named column into UIListViewHeader::columns
  *	or -1 if the column is not found.
  */
 int uiLVHFindColumnIndex(UIListViewHeader* header, char* name)
@@ -494,7 +494,7 @@ int uiCHIGetNextColumn(UIColumnHeaderIterator* iterator, float scale)
 	// For any column other than the first and last column, add in the separator widths to derive the
 	// next column offset.
 	if(iterator->columnIndex != -1 && iterator->columnIndex-1 != eaSize(&iterator->header->columns))
-		iterator->columnStartOffset += iterator->separatorWidth + (2 * HEADER_SEPARATOR_MARGINS);	
+		iterator->columnStartOffset += iterator->separatorWidth + (2 * HEADER_SEPARATOR_MARGINS);
 
 	// Try to get the next column.
 	iterator->columnIndex++;
@@ -571,7 +571,7 @@ void uiLVHDisplay(UIListViewHeader* header, float x, float y, float z, float sca
 			str_dims(font_grp, scale, scale, CENTER_X | CENTER_Y, &box, column->caption);
 
 			// Draw the selected header sprites.
-			Widget3PartDraw(&ColumnSelectedHeaderParts, box.upperLeft.x-selectedHeaderPart1Width*scale, y, z+1, scale, 
+			Widget3PartDraw(&ColumnSelectedHeaderParts, box.upperLeft.x-selectedHeaderPart1Width*scale, y, z+1, scale,
  				box.hx-box.lx+(selectedHeaderPart1Width+selectedHeaderPart3Width)*scale, header->drawColor);
 		}
 
@@ -686,7 +686,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 {
 	if(!list)
 		return;
-	
+
 	// Handle list view header clicks.
 	// Can the list be sorted at all?
   	if(list->compareItem)
@@ -695,7 +695,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 		UIColumnHeaderIterator iterator;
 		AtlasTex* arrows[2];
 		uiCHIGetIterator(list->header, &iterator);
-	
+
 		box.lx = origin.x;
  		box.ly = origin.y;
  		box.hy = box.ly + uiLVHGetHeight(list->header)*list->scale;
@@ -710,7 +710,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 			int arrowClick = 0;
 
 			box.lx = origin.x + iterator.columnStartOffset*list->scale;
-			
+
 			// Did the user click on the sort arrow?
 			if(list->header->selectedColumn == iterator.columnIndex)
 			{
@@ -736,7 +736,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 				box.lx -= HEADER_SEPARATOR_MARGINS*list->scale;
 				box.hx = box.lx + iterator.currentWidth*list->scale + HEADER_SEPARATOR_MARGINS*list->scale;
 			}
-			else 
+			else
 			{
 				// Middle columns.
 				box.lx -= HEADER_SEPARATOR_MARGINS*list->scale;
@@ -752,7 +752,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 				itemCompare = eaGet(&(void**)list->compareItem, iterator.columnIndex);
 				if(!itemCompare)
 					break;
-				
+
 				// Reversing sort direction?
 				if(list->header->selectedColumn == iterator.columnIndex)
 				{
@@ -781,7 +781,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 		listViewItemDrawArea.height = list->height;
 		listViewItemDrawArea.width = list->header->width;
 		uiBoxAlter(&listViewItemDrawArea, UIBAT_SHRINK, UIBAD_TOP, uiLVGetMinDrawHeight(list));
- 
+
 		list->mouseOverItem = NULL;
 		if(uiMouseCollision(&listViewItemDrawArea))
 		{
@@ -807,7 +807,7 @@ void uiLVHandleInput(UIListView* list, PointFloatXYZ origin)
 
 /* Function uiLVDisplayColumnSeparators()
  *	Displays the line in the list view to indicate column boundries.
- *	
+ *
  */
 static void uiLVDisplayColumnSeparators(UIListView* list, PointFloatXYZ origin)
 {
@@ -846,7 +846,7 @@ static void uiLVDisplayColumnSeparators(UIListView* list, PointFloatXYZ origin)
 		clipBox.origin.y = pen.y-4*list->scale;
 		clipBox.height = list->height;
  		clipBox.width = separatorEnd->width;
-		
+
 		//clipperPushRestrict(&clipBox);
 		{
  			int color = list->drawColor;
@@ -902,7 +902,7 @@ int uiLVDisplaySortArrow(UIListView* list, PointFloatXYZ origin)
  			display_sprite(arrow, pen.x + iterator.currentWidth*list->scale/2 - arrow->width*list->scale/2, pen.y -2*list->scale, pen.z, list->scale, list->scale, list->drawColor);
 		}
 	}
-	
+
 	return max(arrows[0]->height, arrows[1]->height);
 }
 
@@ -934,10 +934,10 @@ void uiLVDisplay(UIListView* list, PointFloatXYZ origin)
 
 	if(!list || !list->displayItem)
 		return;
-	
+
 	// Draw the list view header.
  	uiLVHDisplay(list->header, pen.x, pen.y, pen.z+1, list->scale);
-	uiLVDisplayColumnSeparators(list, pen);	
+	uiLVDisplayColumnSeparators(list, pen);
 	uiLVDisplaySortArrow(list, pen);
 	minDrawHeight = uiLVGetMinDrawHeight(list);
 
@@ -951,13 +951,13 @@ void uiLVDisplay(UIListView* list, PointFloatXYZ origin)
  	clipBox.width = list->header->width;
  	clipBox.height = list->height - minDrawHeight;
 	clipperPushRestrict(&clipBox);
-	
+
 
 	// Adjust the pen so that items are scrolled appropriately.
  	pen.y -= list->scrollOffset;
 
 	for(i = 0; i < eaSizeUnsafe(&list->items); i++)
-	{ 
+	{
 		void* item = list->items[i];
 		UIBox* box = eaGet(&list->itemWindows, i);
 
@@ -968,7 +968,7 @@ void uiLVDisplay(UIListView* list, PointFloatXYZ origin)
 		// Draw selection background first if the item is selected.
 		// FIXME!!!  Get rid of these +PIX3 things by first figuring out the area in which the control should be allowed to be drawn.
 		if(item == list->selectedItem)
-		{			
+		{
  			int foregrounColor = CLR_SELECTION_FOREGROUND;
  			int backgrounColor = CLR_SELECTION_BACKGROUND;
  			drawFlatFrame(PIX2, R10, pen.x+PIX3*list->scale, pen.y, origin.z, list->header->width-2*PIX3*list->scale, (R10+PIX2)*2*list->scale, list->scale, foregrounColor, backgrounColor);
@@ -1005,7 +1005,7 @@ int uiLVSetHeight(UIListView* list, unsigned int height)
 {
 	if(!list || height < list->minHeight)
 		return 0;
-	
+
 	list->height = height;
 	return 1;
 }
@@ -1070,7 +1070,7 @@ unsigned int uiLVSetRowHeight(UIListView* list, unsigned int height)
 {
 	if(!list)
 		return 0;
-	
+
 	if(LIST_SELECTION_MIN_HEIGHT > height)
 		height = LIST_SELECTION_MIN_HEIGHT;
 
@@ -1187,7 +1187,7 @@ int uiLVClearEx(UIListView* list, void (*destructor)(void*) )
 	return 1;
 }
 
-typedef struct 
+typedef struct
 {
 	UIListViewItemCompare itemCompare;
 	UIListViewSortDirection sortDirection;
@@ -1213,7 +1213,7 @@ int uiLVSortList(UIListView* list, UIListViewSortDirection sortDirection, UIList
 
 	context.sortDirection = sortDirection;
 	context.itemCompare = itemCompare;
-	
+
 	contextQsort(list->items, eaSizeUnsafe(&list->items), sizeof(void*), &context, uiListViewSortCompare);
 	return 1;
 }

@@ -15,7 +15,7 @@
 #include "player.h"
 #include "gfxwindow.h"
 #include "gfxwindow.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "groupdynrecv.h"
 #include "font.h"
 #include "float.h"
@@ -55,11 +55,11 @@ static int entCursorFind(Vec3 startWorld, Vec3 endWorld, Vec2 mousePos, DefTrack
 	float z, endLen;
 	Vec3 vec;
 	GroupDef *blocker = tracker?tracker->def:NULL;
-	
-	subVec3(endWorld, cam_info.cammat[3], vec);
-	endLen = lengthVec3(vec); 
 
-	if( game_state.selectionDebug )  
+	subVec3(endWorld, cam_info.cammat[3], vec);
+	endLen = lengthVec3(vec);
+
+	if( game_state.selectionDebug )
 		xyprintf(25, 18, "EndLen %f!", endLen );
 
 	idx = 0;
@@ -79,50 +79,50 @@ static int entCursorFind(Vec3 startWorld, Vec3 endWorld, Vec2 mousePos, DefTrack
 
 		if(player == e && (control_state.first || !canSelectAnyEntity()))
 			continue;
-	
+
 		if( !isEntitySelectable( e ) )
 			continue;
 
-		if( e->svr_idx <= 0 ) //I thought redundant, but maybe not 
+		if( e->svr_idx <= 0 ) //I thought redundant, but maybe not
 			continue;
 
 		//UGLY
 		//An associated world geometry piece (the black poly with "door door" property) is selectable
 		//Doors (entities spawned by door generators) that don't have collisionType Door(GEO_COLLISION) are bugged because
-		//many have capsule collisions in the enttype file.  If they do, ignore them.  In the future fix this by adding 
-		//the right kind of collision to all doors.   
+		//many have capsule collisions in the enttype file.  If they do, ignore them.  In the future fix this by adding
+		//the right kind of collision to all doors.
 		//Also Collision Type door is made to imply selection type door, which is a little strange
-		//TO DO Get rid of this and put selection thing in the enttype 
+		//TO DO Get rid of this and put selection thing in the enttype
 		//mw 3.806 removed this.  The above comment was wrong, I think.  If a door is put down, it should be given the right
 		//collision capsule, or set to collision type none.  I don't actually think there is anywhere that screws up like this
 		//except the cathedral pf oina door entity that just needed to be set to noColl
-		//if ( ENTTYPE(e) == ENTTYPE_DOOR && e->seq->type->collisionType != SEQ_ENTCOLL_DOOR ) 
-		//	continue;  
- 
-		cap = e->motion->capsule; 
+		//if ( ENTTYPE(e) == ENTTYPE_DOOR && e->seq->type->collisionType != SEQ_ENTCOLL_DOOR )
+		//	continue;
+
+		cap = e->motion->capsule;
 		positionCapsule( ENTMAT(e), &cap, capMat );
 		//capMat is oriented with the collision capsule, and capmat[3] is the near end of the collision capsule line)
 
 		//if( e != playerPtr() && e->seq->gfx_root->flags & 2 )
 		//{
-		//	xyprintf( 20, 30, "Hid!" ); 
+		//	xyprintf( 20, 30, "Hid!" );
 		//}
 
-		mulVecMat4(capMat[3], cam_info.viewmat, ent_pos_cam);  
+		mulVecMat4(capMat[3], cam_info.viewmat, ent_pos_cam);
 		z = -ent_pos_cam[2]; //distance from camera to ent
 
 		if (z < 0) //Ent is behind near clip plane
 			continue;
 
 		//minus cap.radius to be more forgiving of big guys. allowing ease of selection, but it's theoretically possible to select through a thin wall.
-		//(- cap.radius isn't precise, since the capsule could be tilted, or you above it but this was always a rough estimate) 
-		if (z > endLen + cap.radius )  
+		//(- cap.radius isn't precise, since the capsule could be tilted, or you above it but this was always a rough estimate)
+		if (z > endLen + cap.radius )
 		{
 			//Ent is beyond clickable distance or World geometry that is not part of the ent is blocking selection of the ent
-			if( !tracker || tracker->ent_id != e->svr_idx ) 
+			if( !tracker || tracker->ent_id != e->svr_idx )
 				continue;
 		}
- 
+
 		if( e->seq->type->selection == SEQ_SELECTION_LIBRARYPIECE || e->seq->type->collisionType == SEQ_ENTCOLL_DOOR )
 		{
 			//Selection Library Piece only works if your collisionType is also Library Piece.
@@ -130,12 +130,12 @@ static int entCursorFind(Vec3 startWorld, Vec3 endWorld, Vec2 mousePos, DefTrack
 			//Selection Door only works if your collisionType is also Door
 			//  (Door's Animation's GEO_COLLISION becomes e->coll_tracker)
 
-			//Both LibraryPiece's HealthFx/Geometry and Door's Animation's GEO_COLLISION become 
+			//Both LibraryPiece's HealthFx/Geometry and Door's Animation's GEO_COLLISION become
 			if( !tracker || tracker->ent_id == -1 || tracker->ent_id != e->svr_idx ) //-1 since tracker *could* have a bad ent
 				continue;
-			
+
 			//TO DO maybe : if you have a library piece object that is not collidable, selection library piece won't work
-			//either flag this as an error to the artist making the piece, or else do a line/object collision just for this 
+			//either flag this as an error to the artist making the piece, or else do a line/object collision just for this
 			//thing right here.
 		}
 		else if ( e->seq->type->selection == SEQ_SELECTION_CAPSULE || !mousePos ) //!mousepos == don't use bone selection on minimap calculator
@@ -165,7 +165,7 @@ static int entCursorFind(Vec3 startWorld, Vec3 endWorld, Vec2 mousePos, DefTrack
 				continue;
 		}
 
-		if (z < closest)   
+		if (z < closest)
 		{
 			if( game_state.selectionDebug )
 				xyprintf(25, 27+e->owner, "%s %f!", e->name, z );
@@ -220,7 +220,7 @@ int cursorFind(int x,int y,F32 dist,ItemSelect *item_sel,Vec3 end,Mat4 matWorld,
 	//Notice that end gets truncated to collision location
 	gfxCursor3d(x,y,dist,start,end);
 	tracker = groupFindOnLine(start,end,matWorld,hitWorld,0);
-	
+
 	// Save the probe vector - we actually save it's reverse (from end to start)
 	if (probe)
 		subVec3(start, end, probe);
@@ -272,12 +272,12 @@ bool isEntityPerceptible(Entity *e)
 	float fEffPercept, fDistSQR;
 	Vec3 perceptionPos;
 	assert(e);
-	
+
 	if(!playerPtr())
 	{
 		return false;
 	}
-	
+
 	pcharTarget = e->pchar;
 	pcharPlayer = playerPtr()->pchar;
 
@@ -285,7 +285,7 @@ bool isEntityPerceptible(Entity *e)
 		!entity_TargetIsInVisionPhase(playerPtr(), e))
 	{
 		return false;
-	}	
+	}
 
 	if ( game_state.viewCutScene )
 		copyVec3( game_state.cutSceneCameraMat[3], perceptionPos );
@@ -306,8 +306,8 @@ bool isEntityPerceptible(Entity *e)
 	{
 		// Assume the player's percept radius.. however if the monster wants to be seen
 		//  from farther away and we haven't been debuffed, go with that instead
-		if (e->seq && 
-			e->seq->type->fade[1] > fEffPercept && 
+		if (e->seq &&
+			e->seq->type->fade[1] > fEffPercept &&
 			(pcharPlayer->pclass && pcharPlayer->pclass->ppattrBase[0]->fPerceptionRadius <= fEffPercept))
 		{
 			fEffPercept = e->seq->type->fade[1];
@@ -335,19 +335,19 @@ bool isEntityPlacatingMe(Entity *e)
 
 int isEntitySelectable(Entity *e)
 {
-	if(canSelectAnyEntity()) 
+	if(canSelectAnyEntity())
 	{
 		// Every entity is selectable.
 		return 1;
 	}
-		
+
 	if (e->seq)
 	{
 		// If we're doing some sort of fading in or out, trigger alpha inheritance on effects
 		e->seq->forceInheritAlpha = (e->fadedirection != ENT_NOT_FADING);
 	}
 
-	// Don't allow this to be selected (or its fading mucked with) if it is flagged as 
+	// Don't allow this to be selected (or its fading mucked with) if it is flagged as
 	//  undergoing permanent fade out (and has thus been deleted from this client)
 	if (!e || e->waitingForFadeOut)
 		return 0;
@@ -355,16 +355,16 @@ int isEntitySelectable(Entity *e)
 	// We check perception to fiddle with fading, even if you're not selectable (trip mines, etc)
 	if (isEntityPerceptible(e))
 	{
-		if (e->seq) 
+		if (e->seq)
 			e->seq->notPerceptible = false;
-		if (e->fadedirection == ENT_FADING_OUT) 
+		if (e->fadedirection == ENT_FADING_OUT)
 			e->fadedirection = ENT_FADING_IN;
 	}
-	else 
+	else
 	{
-		if (e->seq) 
+		if (e->seq)
 			e->seq->notPerceptible = true;
-		if (e->fadedirection != ENT_FADING_OUT) 
+		if (e->fadedirection != ENT_FADING_OUT)
 			e->fadedirection = ENT_FADING_OUT;
 	}
 
@@ -452,7 +452,7 @@ static int selectEntityVisible(Entity *e)
 	return 0;
 }
 
-int selectNextEntity(int last_svr_idx, bool bBackwards, int FriendOrFoe, 
+int selectNextEntity(int last_svr_idx, bool bBackwards, int FriendOrFoe,
 					 int DeadOrAlive, int BasePassiveOrNot, int MyPetOrNot, int TeammateOrNot, char * name )
 { // for the 'Or' variables, -1 is first only, 0 is both, 1 is second only
 	int			idx, best_idx = -1, fallbackIdx = -1;
@@ -512,7 +512,7 @@ int selectNextEntity(int last_svr_idx, bool bBackwards, int FriendOrFoe,
 						continue;
 				}
 				else
-				{	
+				{
 					if( DeadOrAlive > 0)
 						target_type = kTargetType_Foe;
 					else if( DeadOrAlive < 0 )

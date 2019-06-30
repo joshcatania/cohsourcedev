@@ -3,13 +3,13 @@
 #include "ogl.h"
 #include <stdio.h>
 #include "gfxwindow.h"
-#include "memcheck.h" 
+#include "memcheck.h"
 #include "render.h"
 #include "camera.h"
 #include "rendershadow.h"
 #include "rendershadowmap.h"
 #include "wcw_statemgmt.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "model.h"
 #include "tex.h"
@@ -46,9 +46,9 @@ static void render_mesh(ClothMesh *mesh)
 	texSetWhite(TEXLAYER_BASE);
 	texSetWhite(TEXLAYER_GENERIC);
 
-	//glColorPointer(4,GL_UNSIGNED_BYTE,0,mesh->colors); 
-	texBindTexCoordPointer( TEXLAYER_BASE, mesh->TexCoords ); 
-	texBindTexCoordPointer( TEXLAYER_GENERIC, mesh->TexCoords ); 
+	//glColorPointer(4,GL_UNSIGNED_BYTE,0,mesh->colors);
+	texBindTexCoordPointer( TEXLAYER_BASE, mesh->TexCoords );
+	texBindTexCoordPointer( TEXLAYER_GENERIC, mesh->TexCoords );
 	WCW_VertexPointer(3,GL_FLOAT,0, mesh->Points );
 	WCW_NormalPointer(GL_FLOAT,0, mesh->Normals );
 
@@ -75,7 +75,7 @@ static void render_points(Mat4 viewspace, ClothMesh *mesh, RdrCloth *rc, int fla
 	ClothMesh *pointmesh = ClothMeshCreate();
 
 	modelDrawState(DRAWMODE_COLORONLY, ONLY_IF_NOT_ALREADY);
-	
+
 	ClothMeshPrimitiveCreateSphere(pointmesh, .05f, 0);
 
 	for (i=0; i<mesh->NumPoints; i++)
@@ -99,15 +99,15 @@ static void render_points(Mat4 viewspace, ClothMesh *mesh, RdrCloth *rc, int fla
 		}
 		copyMat4(unitmat, pmat);
 		copyVec3(mesh->Points[i], pmat[3]);
-		mulMat4( viewspace, pmat, tmat ); 
+		mulMat4( viewspace, pmat, tmat );
 
-		mat43to44( tmat, m4 );   
+		mat43to44( tmat, m4 );
 		addVec3(m4[3], rc->PositionOffset, m4[3]);
-		WCW_LoadModelViewMatrixM44( m4 );  
+		WCW_LoadModelViewMatrixM44( m4 );
 
 		render_mesh(pointmesh);
 	}
-	
+
 	ClothMeshDelete(pointmesh);
 }
 
@@ -118,7 +118,7 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 	int			size_positions;
 	ClothMesh	*mesh = rc->renderData.currentMesh;
 	ClothRenderData	*renderData = &rc->renderData;
-	
+
 	// Copy dynamic data into correct buffers
 	size_positions = sizeof(Vec3)*renderData->commonData.NumParticles;
 	memcpy(renderData->RenderPos, ((char*)rc) + sizeof(RdrCloth), size_positions);
@@ -131,13 +131,13 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 	ClothMeshSetPoints(renderData->currentMesh, nump, renderData->RenderPos, renderData->Normals, renderData->TexCoords, renderData->BiNormals, renderData->Tangents);
 
 
-	clothObjectsDrawn++;   
+	clothObjectsDrawn++;
 	modelBlendState(BlendMode(BLENDMODE_MODULATE,0), ONLY_IF_NOT_ALREADY);
 	modelBindDefaultBuffer();
 	modelSetAlpha(255);
 	WCW_SunLightDir();
-	WCW_Light(GL_LIGHT0, GL_AMBIENT, rc->ambient);  
-	WCW_Light(GL_LIGHT0, GL_DIFFUSE, rc->diffuse); 
+	WCW_Light(GL_LIGHT0, GL_AMBIENT, rc->ambient);
+	WCW_Light(GL_LIGHT0, GL_DIFFUSE, rc->diffuse);
 	// Render Cloth
 
 	if (!(rc->Flags & CLOTH_FLAG_DEBUG_POINTS))
@@ -145,9 +145,9 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 		Mat44 m4;
 		modelDrawState(DRAWMODE_DUALTEX_NORMALS, ONLY_IF_NOT_ALREADY);
 
-		mat43to44( rc->viewspace, m4 );   
+		mat43to44( rc->viewspace, m4 );
 		addVec3(m4[3], rc->PositionOffset, m4[3]);
-		WCW_LoadModelViewMatrixM44( m4 );  
+		WCW_LoadModelViewMatrixM44( m4 );
 
 		WCW_Color4(255,255,255,255);
 		glCullFace( GL_FRONT ); CHECKGL;
@@ -182,11 +182,11 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 			}
 			copyMat4(unitmat, pmat);
 			copyVec3(mesh->Points[i], pmat[3]);
-			mulMat4( rc->viewspace, pmat, tmat ); 
+			mulMat4( rc->viewspace, pmat, tmat );
 
-			mat43to44( tmat, m4 );   
+			mat43to44( tmat, m4 );
 			addVec3(m4[3], rc->PositionOffset, m4[3]);
-			WCW_LoadModelViewMatrixM44( m4 );  
+			WCW_LoadModelViewMatrixM44( m4 );
 
 #define SCALE 1.0
 			WCW_Color4(127,127,255,255);
@@ -218,9 +218,9 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 					break;
 			}
 
-			mat43to44( rc->viewspace, m4); //tmat, m4 );   
+			mat43to44( rc->viewspace, m4); //tmat, m4 );
 			addVec3(m4[3], rc->PositionOffset, m4[3]);
-			WCW_LoadModelViewMatrixM44( m4 );  
+			WCW_LoadModelViewMatrixM44( m4 );
 
 			WCW_Color4(200,100,200,255);
 			glBegin(GL_LINES);
@@ -236,7 +236,7 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 	}
 
 
-	
+
 	if (rc->Flags & CLOTH_FLAG_DEBUG_COLLISION)
 	{
 		modelDrawState(DRAWMODE_DUALTEX_NORMALS, ONLY_IF_NOT_ALREADY);
@@ -249,7 +249,7 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 		for (i=0; i<rc->cloth_debug->NumCollidables; i++)
 		{
 			ClothCol *clothcol;
-		
+
 			clothcol = ClothGetCollidable(rc->cloth_debug, i);
 			mesh = clothcol->Mesh;
 
@@ -259,12 +259,12 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 				Mat44 m4;
 
 				ClothColGetMatrix(clothcol, colmat);
-				mulMat4( rc->viewspace, colmat, tmat ); 
+				mulMat4( rc->viewspace, colmat, tmat );
 
-				mat43to44( tmat, m4 );   
+				mat43to44( tmat, m4 );
 				addVec3(m4[3], rc->PositionOffset, m4[3]);
-				WCW_LoadModelViewMatrixM44( m4 );  
-		
+				WCW_LoadModelViewMatrixM44( m4 );
+
 				render_mesh(mesh);
 			}
 		}
@@ -281,11 +281,11 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 
 			copyMat4(unitmat, pmat);
 			copyVec3(rc->clothobj_debug->debugHookPos[i], pmat[3]);
-			mulMat4( rc->viewspace, pmat, tmat ); 
+			mulMat4( rc->viewspace, pmat, tmat );
 
-			mat43to44( tmat, m4 );   
+			mat43to44( tmat, m4 );
 			addVec3(m4[3], rc->PositionOffset, m4[3]);
-			WCW_LoadModelViewMatrixM44( m4 );  
+			WCW_LoadModelViewMatrixM44( m4 );
 
 #undef SCALE
 #define SCALE 0.7
@@ -304,7 +304,7 @@ void modelDrawClothObjectDebug( RdrCloth *rc)
 	//WCW_EnableGL_LIGHTING(1);
 
 	WCW_Color4(255,255,255,255);
-	
+
 	WCW_LoadModelViewMatrixIdentity();
 }
 
@@ -393,7 +393,7 @@ void modelDrawClothObject(GfxNode * node, BlendModeType blend_mode)
 	// Copy copies of dynamic data (hookNormals, positions)
 	memcpy(((char*)rc) + sizeof(RdrCloth), cloth->CurPos, size_positions);
 	if (size_hooks) {
-		memcpy(((char*)rc) + sizeof(RdrCloth) + size_positions, 
+		memcpy(((char*)rc) + sizeof(RdrCloth) + size_positions,
 			cloth->renderData.hookNormals, sizeof(Vec3)*cloth->commonData.MaxAttachments);
 	}
 	rc->renderData.currentMesh = mesh;
@@ -421,7 +421,7 @@ void modelDrawClothObject(GfxNode * node, BlendModeType blend_mode)
 		if (rc->blend_mode.shader == BLENDMODE_MULTI) {
 			// TEXTODO: Allow overriding
 			if (bIsMultiTex) {
-				for (j=0; j<TEXLAYER_MAX_LAYERS; j++) 
+				for (j=0; j<TEXLAYER_MAX_LAYERS; j++)
 					texlist[i].texid[j] = texDemandLoad(binds->base->tex_layers[j]);
 			} else {
 				// Colorblenddual/bumpmap_colorblenddual rendered as Multi9
@@ -429,7 +429,7 @@ void modelDrawClothObject(GfxNode * node, BlendModeType blend_mode)
 				texlist[i].texid[TEXLAYER_MULTIPLY1] = white_tex->id;
 				texlist[i].texid[TEXLAYER_BUMPMAP1] = texDemandLoad(binds->base->tex_layers[TEXLAYER_BUMPMAP1]);
 				texlist[i].texid[TEXLAYER_DUALCOLOR1] = texDemandLoad(binds->generic);
-				for (j=TEXLAYER_MASK; j<TEXLAYER_MAX_LAYERS; j++) 
+				for (j=TEXLAYER_MASK; j<TEXLAYER_MAX_LAYERS; j++)
 					texlist[i].texid[j] = white_tex->id;
 				texlist[i].texid[TEXLAYER_ADDGLOW1] = black_tex->id;
 			}
@@ -460,7 +460,7 @@ void modelDrawClothObject(GfxNode * node, BlendModeType blend_mode)
 		}
 
 		if (game_state.texoff)
-			for (j=0; j<TEXLAYER_MAX_LAYERS; j++) 
+			for (j=0; j<TEXLAYER_MAX_LAYERS; j++)
 				if (texlist[i].texid[j])
 					texlist[i].texid[j] = (j == TEXLAYER_BUMPMAP1 || j == TEXLAYER_BUMPMAP2)?dummy_bump_tex->id:white_tex->id;
 

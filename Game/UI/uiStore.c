@@ -31,7 +31,7 @@
 #include "character_base.h"
 #include "powers.h"
 #include "gameData/store.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "MessageStoreUtil.h"
 #include "timing.h"
 #include "character_inventory.h"
@@ -250,7 +250,7 @@ static bool next_enhancement( int *res_i, int *res_j, Entity *e, int i, int j )
             // set both to the same
             if( res_i ) *res_i = i;
             if( res_j ) *res_j = i;
-            return true;            
+            return true;
         }
     }
     return false;
@@ -272,7 +272,7 @@ static bool prev_enhancement( int *res_i, int *res_j, Entity *e, int i, int j )
             // set both to the same
             if( res_i ) *res_i = i;
             if( res_j ) *res_j = i;
-            return true;            
+            return true;
         }
     }
     return false;
@@ -296,10 +296,10 @@ static void salvage_sell(void * data)
 	if( s_DeleteMe )
 	{
 		int stack = data?1:0;
-		
+
 		if (stack)
 			store_SendBuySalvage(&s_MultiStore, s_DeleteMe->salId, character_SalvageCount(playerPtr()->pchar, s_DeleteMe));
-		else 
+		else
 			store_SendBuySalvage(&s_MultiStore, s_DeleteMe->salId, 1);
 
 		if (stack || character_SalvageCount(playerPtr()->pchar, gSelectedItem.pSal) < 2 )
@@ -318,15 +318,15 @@ static void salvage_sell(void * data)
 				pSal = salvage_GetItemById(id);
 				if (pSal)
 				{
-					// select this recipe	
+					// select this recipe
 					gSelectedItem.i = idx;
 					gSelectedItem.pSal = pSal;
-				} 
+				}
 				else if (idx > gSelectedItem.i)
 				{
 					idx++;
 				}
-				else 
+				else
 				{
 					idx--;
 				}
@@ -349,7 +349,7 @@ void menu_BuyOrSell(void *data)
 		{
 			store_SendBuyItem(&s_MultiStore, gSelectedItem.type, gSelectedItem.j, gSelectedItem.i);
 		}
-		else if (gSelectedItem.pSal) 
+		else if (gSelectedItem.pSal)
 		{
 			Entity * e = playerPtr();
 			DetailRecipe **ppRecipes=0;
@@ -372,15 +372,15 @@ void menu_BuyOrSell(void *data)
 			{
 				if (stack)
 					store_SendBuySalvage(&s_MultiStore, gSelectedItem.pSal->salId, character_SalvageCount(playerPtr()->pchar, gSelectedItem.pSal));
-				else 
+				else
 					store_SendBuySalvage(&s_MultiStore, gSelectedItem.pSal->salId, 1);
 			}
-		} 
-		else if (gSelectedItem.pRec) 
+		}
+		else if (gSelectedItem.pRec)
 		{
 			if (stack)
 				store_SendBuyRecipe(&s_MultiStore, gSelectedItem.pRec->id, character_RecipeCount(playerPtr()->pchar, gSelectedItem.pRec));
-			else 
+			else
 				store_SendBuyRecipe(&s_MultiStore, gSelectedItem.pRec->id, 1);
 		}
         if( gSelectedItem.selected )
@@ -396,7 +396,7 @@ void menu_BuyOrSell(void *data)
 				case kPowerType_Count:
 					// could be salvage or recipes
 					if (gSelectedItem.pSal )
-					{			
+					{
 						Entity * e = playerPtr();
 						DetailRecipe **ppRecipes=0;
 
@@ -416,28 +416,28 @@ void menu_BuyOrSell(void *data)
 								pSal = salvage_GetItemById(id);
 								if (pSal)
 								{
-									// select this recipe	
+									// select this recipe
 									gSelectedItem.i = idx;
 									gSelectedItem.pSal = pSal;
-								} 
+								}
 								else if (idx > gSelectedItem.i)
 								{
 									idx++;
 								}
-								else 
+								else
 								{
 									idx--;
 								}
 							}
 						}
-					} 	
+					}
 					else if (gSelectedItem.pRec)
 					{
 						const DetailRecipe	*pRec = NULL;
 						int				id = 0;
 						int				count = character_GetInvSize(playerPtr()->pchar, kInventoryType_Recipe);
 						int				idx = gSelectedItem.i + 1;
-					
+
 						if (stack || character_RecipeCount(playerPtr()->pchar,gSelectedItem.pRec) < 2)
 						{
 							while (pRec == NULL && idx >= 0)
@@ -449,15 +449,15 @@ void menu_BuyOrSell(void *data)
 								pRec = recipe_GetItemById(id);
 								if (pRec)
 								{
-									// select this recipe	
+									// select this recipe
 									gSelectedItem.i = idx;
 									gSelectedItem.pRec = pRec;
-								} 
+								}
 								else if (idx > gSelectedItem.i)
 								{
 									idx++;
 								}
-								else 
+								else
 								{
 									idx--;
 								}
@@ -467,7 +467,7 @@ void menu_BuyOrSell(void *data)
 					break;
 			}
         }
-        
+
 	}
 	else
 	{
@@ -483,7 +483,7 @@ void menu_BuyOrSell(void *data)
 //
 //
 static void store_drawPower( const BasePower * ppow, float x, float y, float z, float sc, float wd, float ht, int i, int j, int price, int inventory, const StoreItem *psi, bool bAvailable, int type )
-{ 
+{
 	AtlasTex     *icon;
 	CBox        box;
 	bool		bSelect = false;
@@ -504,7 +504,7 @@ static void store_drawPower( const BasePower * ppow, float x, float y, float z, 
 		display_sprite( icon, x + (ht - icon->width*.75f*sc)/2 + PIX3*2*sc, y + (ht - icon->height*.75f*sc)/2, z,.75f*sc,.75f*sc, color );
 
 		font_color( color, color );
-		uiStore_DrawName(&game_9, x + ITEM_HT*sc, y + ht/2, z, wd - 125*sc, ppow->pchDisplayName, sc); 
+		uiStore_DrawName(&game_9, x + ITEM_HT*sc, y + ht/2, z, wd - 125*sc, ppow->pchDisplayName, sc);
 
 		if(price>=0)
 		{
@@ -582,10 +582,10 @@ static void store_drawEnhancement( const BasePower * ppow, float x, float y, flo
 
  		icon = uiEnhancementDraw( pEnh, x + ht/2 + PIX3*2*sc, y + ht/2, z, .5*sc, sc, MENU_GAME, WDW_STORE, true);
 		// 		icon = drawEnhancementOriginLevel( ppow, iLevel+1, 0, true, x + ht/2 + PIX3*2, y + ht/2, z, .5*sc, sc, color, false );
- 
-		font( &game_9 ); 
+
+		font( &game_9 );
 		font_color( color, color );
-		uiStore_DrawName(&game_9, x + ITEM_HT*sc + PIX3*1*sc, y + ht/2, z, wd - 125*sc, ppow->pchDisplayName, sc); 
+		uiStore_DrawName(&game_9, x + ITEM_HT*sc + PIX3*1*sc, y + ht/2, z, wd - 125*sc, ppow->pchDisplayName, sc);
 
 		uiEnhancementFree(&pEnh);
 
@@ -671,11 +671,11 @@ static void store_drawRecipe( const DetailRecipe *pRec, float x, float y, float 
 		font_color(0x00deffff, 0x00deffff);
 		prnt( x + -4*sc, y + 6*sc, z+1.0, sc, sc, "%d", count );
 
-		icon = uiRecipeDrawIcon(pRec, pRec->level, x - ht/2 + PIX3*2*sc, y - ht/2 + PIX3*1*sc, z, sc*0.6f, WDW_STORE, true, CLR_WHITE); 
+		icon = uiRecipeDrawIcon(pRec, pRec->level, x - ht/2 + PIX3*2*sc, y - ht/2 + PIX3*1*sc, z, sc*0.6f, WDW_STORE, true, CLR_WHITE);
 
 		font_color( color, color );
 //		cprntEx( x + ITEM_HT*sc, y + ht/2, z, sc, sc, CENTER_Y, pRec->ui.pchDisplayName );
-		uiStore_DrawName(&game_9, x + (ITEM_HT*1.5f)*sc, y + ht/2, z, wd - 175*sc, pRec->ui.pchDisplayName, sc);  
+		uiStore_DrawName(&game_9, x + (ITEM_HT*1.5f)*sc, y + ht/2, z, wd - 175*sc, pRec->ui.pchDisplayName, sc);
 
 
 		if (price > 0)
@@ -704,7 +704,7 @@ static void store_drawRecipe( const DetailRecipe *pRec, float x, float y, float 
 	{
 		if (price > 0)
 			gSelectedItem.available = 1;
-		else 
+		else
 			gSelectedItem.available = 0;
 		gSelectedItem.selected = 1;
 		gSelectedItem.i = idx;
@@ -768,7 +768,7 @@ void store_drawSalvage( const SalvageItem *pSal, float x, float y, float z, floa
 		}
 
 		font_color( color, color );
-		uiStore_DrawName(&game_9, x + ITEM_HT*sc, y + ht/2, z, wd - 125*sc, pSal->ui.pchDisplayName, sc); 
+		uiStore_DrawName(&game_9, x + ITEM_HT*sc, y + ht/2, z, wd - 125*sc, pSal->ui.pchDisplayName, sc);
 
 
 		if(price > 0)
@@ -795,10 +795,10 @@ void store_drawSalvage( const SalvageItem *pSal, float x, float y, float z, floa
 
 	if( bSelect || mouseClickHit( &box, MS_LEFT ))
 	{
-		
+
 		if (price > 0)
 			gSelectedItem.available = 1;
-		else 
+		else
 			gSelectedItem.available = 0;
 		gSelectedItem.selected = 1;
 		gSelectedItem.i = idx;
@@ -856,7 +856,7 @@ void store_SellEnhancement( int idx )
 
 	if( si )
 		cost = MAX(ceil(si->iBuy*f),0);
-	
+
 	if( !si || cost < 0 )
 		return;
 
@@ -869,7 +869,7 @@ void store_SellEnhancement( int idx )
 	gSelectedItem.psi = si;
 	gSelectedItem.pSal = NULL;
 	gSelectedItem.pRec = NULL;
-	menu_BuyOrSell(NULL);	
+	menu_BuyOrSell(NULL);
 }
 
 int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, float ht, int numInsp, int numSpec, bool bInspFull, bool bSpecFull,float realy )
@@ -932,12 +932,12 @@ int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, fl
         {
             float f, cost;
 			const StoreItem * si = multistoreiter_GetBuyItem(piter, e->pchar->aInspirations[i][j], 0, &f);
-            
+
             if( si )
                 cost = ceil(si->iBuy*f);
             else
                 cost = -1;
-            
+
             y += ITEM_HT*sc;
 			if (y < realy + ht && y + (ITEM_HT*sc) > realy)
 			{
@@ -945,10 +945,10 @@ int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, fl
 			}
         }
     }
- 
+
    	y += (ITEM_HT+10)*sc;
 
-	// Recipes 
+	// Recipes
 	{
 		const DetailRecipe	*pRec = NULL;
 		int				cost = 0;
@@ -956,7 +956,7 @@ int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, fl
 		int				realCount = e->pchar->recipeInvCurrentCount;
 		int				maxCount = character_GetInvTotalSize(e->pchar, kInventoryType_Recipe);
 
-		// checking for outdated recipe 
+		// checking for outdated recipe
 		if (gSelectedItem.pRec)
 		{
 			if (character_RecipeCount(e->pchar, gSelectedItem.pRec) <= 0)
@@ -998,12 +998,12 @@ int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, fl
 	// Salvage
 	{
 		int					invCount = e->pchar->salvageInvCurrentCount;
-		int					count = character_GetInvSize(e->pchar, kInventoryType_Salvage); 
+		int					count = character_GetInvSize(e->pchar, kInventoryType_Salvage);
 		int					maxCount = character_GetInvTotalSize(e->pchar, kInventoryType_Salvage);
 		int					cost = 0;
 		const SalvageItem	*pSal = NULL;
 
-		// checking for outdated recipe 
+		// checking for outdated recipe
 		if (gSelectedItem.pSal)
 		{
 			if (character_SalvageCount(e->pchar, gSelectedItem.pSal) <= 0)
@@ -1029,10 +1029,10 @@ int store_drawPlayerInventory( float x, float y, float z, float sc, float wd, fl
 			{
 
 				cost = pSal->sellAmount * multistoreiter_GetBuySalvageMult(piter);
-				if (cost > 0) 
+				if (cost > 0)
 				{
 					y += ITEM_HT*sc;
-					
+
 					store_drawSalvage(  pSal, x + ITEM_INSET*sc, y, z+3, sc, wd - (ITEM_INSET+TITLE_INSET)*sc, (ITEM_HT-10)*sc, cost,
 									character_SalvageCount(e->pchar, pSal), i);
 				} else {

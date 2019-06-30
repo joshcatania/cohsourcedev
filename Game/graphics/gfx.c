@@ -26,7 +26,7 @@
 #include "entDebug.h"
 #include "edit_cmd.h"
 #include "uiReticle.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "initClient.h"
 #include "dooranimclient.h"
 #include "seqgraphics.h"
@@ -169,7 +169,7 @@ void gfxLoadRelevantTextures()
 		game_state.game_mode = SHOW_GAME;
 		windowUpdate();
 	}
-	
+
 	zeroVec3(pyr);
 	createMat3RYP(cam_info.cammat,pyr);
 	if(sleeptime)
@@ -336,9 +336,9 @@ void showFrameRate()
 
 	TIMESTEP_NOSCALE = 30.f * time;
 	TIMESTEP = TIMESTEP_NOSCALE;
-	
+
 	global_state.cur_timeGetTime = timeGetTime();
-	
+
 	//Check for large and small timesteps.
 	if(largest_time_step < TIMESTEP)
 		largest_time_step = TIMESTEP;
@@ -387,7 +387,7 @@ void showFrameRate()
 		smallest_time_step = 100;
 	}
 
- 
+
 #if defined(_DEBUG) || defined(_OPTDEBUG)
 	// TODO: Add override check for character select.
 	if (!game_state.e3screenshot && !isDevelopmentMode() && (current_menu() == MENU_LOGIN || game_state.showfps) && !doingHeadShot())
@@ -427,7 +427,7 @@ void showFrameRate()
 		line += 2;
 		if( longtime > 6 )
 			xyprintf(45 + TEXT_JUSTIFY,line,"## < 5 ##");
-		xyprintf(55 + TEXT_JUSTIFY,line++,"Slow: % 2.2f", 30 / longtime);	
+		xyprintf(55 + TEXT_JUSTIFY,line++,"Slow: % 2.2f", 30 / longtime);
 		xyprintf(55 + TEXT_JUSTIFY,line++,"Avg:  % 2.2f", 30 / avgtime);
 		xyprintf(55 + TEXT_JUSTIFY,line++,"Fast: % 2.2f", 30 / shorttime);
 	}
@@ -441,12 +441,12 @@ void gfxReload(int unloadAllModels)
 	PERFINFO_AUTO_START("gfxReload", 1);
 		ErrorfResetCounts();
 		fxReInit();
-		
+
 		#if NOVODEX
 			fxDeinitDebrisManager();
 			fxInitDebrisManager();
 		#endif
-		
+
 		entReset();
 		playerSetEnt(0);
 		gfxTreeInit();
@@ -489,17 +489,17 @@ void gfxResetTextures()
 
 
 static displayLetterBox( void )
-{  
+{
 	static F32 time = 0;
 	int w, h;
-	int x1, y1, x2, y2, argb = 0;  
+	int x1, y1, x2, y2, argb = 0;
 	F32 timeToClose = 15;
 	F32 percent_covered = 0.15;
 	F32 percent_complete;
 
 	if( !game_state.viewCutScene && !game_state.forceCutSceneLetterbox )
 		time -= TIMESTEP;
-	else 
+	else
 		time += TIMESTEP;
 	time = CLAMP( time, 0.0, timeToClose );
 
@@ -507,19 +507,19 @@ static displayLetterBox( void )
 	{
 		percent_complete = CLAMP( time/timeToClose, 0.0, 1.0 );
 
-		x1 = 0;        
+		x1 = 0;
 		x2 = 3000;
 		windowSize(&w,&h);
 
 		rdrSetup2DRendering();
 
-		//TOP BOX  
+		//TOP BOX
 		y1 = h - (h*percent_covered) * percent_complete;
 		y2 = h;
-		drawFilledBox(x1, y1, x2, y2, 0xff000000); 
+		drawFilledBox(x1, y1, x2, y2, 0xff000000);
 
 		//BOTTOM BOX
-		y1 = 0; 
+		y1 = 0;
 		y2 = (h*percent_covered) * percent_complete;
 		drawFilledBox(x1, y1, x2, y2, 0xff000000);
 
@@ -587,7 +587,7 @@ static bool callback_ViewCacheVisibility(ViewCacheEntry *entry)
 
 	if (!clip)
 		return false;
-	
+
 	if (!def->shadow_dist)
 	{
 		if (group_draw.zocclusion && (def->model || def->count>1 || def->welded_models))
@@ -623,7 +623,7 @@ static bool callback_ViewCacheVisibility(ViewCacheEntry *entry)
 static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world, int headShot, int no_drawing)
 {
 	// Init stuff
-	extern int splatShadowsDrawn; 
+	extern int splatShadowsDrawn;
 	static bool last_render_to_pbuffers=false;
 
 	gfxTreeFrameInit();
@@ -670,7 +670,7 @@ static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world,
 		{
 			// Traverse the map scene graph, etc
 			PERFINFO_AUTO_START("Traverse World",1);
-			if( viewport->renderEnvironment && !viewport->doHeadshot && !GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_GROUPDEF_TRAVERSAL)) 
+			if( viewport->renderEnvironment && !viewport->doHeadshot && !GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_GROUPDEF_TRAVERSAL))
 				groupDrawRefs(cam_info.viewmat, cam_info.inv_viewmat);
 			PERFINFO_AUTO_STOP();
 		}
@@ -683,7 +683,7 @@ static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world,
 		if (!viewport->doHeadshot && viewport->renderCharacters)
 			entClientProcessVisibility();
 		PERFINFO_AUTO_STOP_CHECKED("entClientProcessVisibility");
-	} 
+	}
 	else if(playerPtr() && playerPtr()->powerInfo && !viewport->doHeadshot)
 	{ //make sure we update the power timers from game menus
 		powerInfo_UpdateTimers(playerPtr()->powerInfo, TIMESTEP / 30);
@@ -736,11 +736,11 @@ static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world,
 		extern Line	lightlines[1000];
 		extern int	lightline_count;
 		int i;
-		
+
 		for(i = 0; i < lightline_count; i++){
 			drawLine3DWidth(lightlines[i].a, lightlines[i].b, *(int*)lightlines[i].color, lightlines[i].width);
 		}
-		
+
 		lightline_count = 0;
 	}
 #endif
@@ -825,17 +825,17 @@ void gfxDrawSetupDrawing(ViewportInfo *viewport)
 	}
 
 	// Must setup sun before rdrInitTopOfFrame()
-	// Set Light	
+	// Set Light
 	if( game_state.game_mode == SHOW_TEMPLATE ) //Override parts of sunUpdate
-		setLightForCharacterEditor();	
-	mulVecMat3(g_sun.direction, cam_info.viewmat, g_sun.direction_in_viewspace); 
+		setLightForCharacterEditor();
+	mulVecMat3(g_sun.direction, cam_info.viewmat, g_sun.direction_in_viewspace);
 
 	// Must be before gfxTreeDrawNode
 	if(!viewport || !viewport->renderSky)
 		sunGlareDisable();
 	else
 		sunGlareEnable();
-	
+
 	// Calculate view-space position of cubemap origin
 	mulVecMat4(gfx_state.cubemap_origin, cam_info.viewmat, gfx_state.cubemap_origin_vs);
 
@@ -856,7 +856,7 @@ void gfxDraw2DStuffPre3D()
 			spriteZClip(ZCLIP_NONE, 0);
 		}
 
-		fontRender(); //render UI and all other sprites  
+		fontRender(); //render UI and all other sprites
 	}
 	rdrEndMarker();
 }
@@ -866,9 +866,9 @@ void gfxDraw2DStuffPost3D(int show2D, int headShot)
 	rdrBeginMarker(__FUNCTION__);
 	if (!headShot && show2D)
 	{
-		PERFINFO_AUTO_START("displayLetterBox",1);  
+		PERFINFO_AUTO_START("displayLetterBox",1);
 		displayLetterBox();
-		PERFINFO_AUTO_STOP_START("drawStuffOnEntities",1);  
+		PERFINFO_AUTO_STOP_START("drawStuffOnEntities",1);
 		drawStuffOnEntities(); // Needs to be after setting matrices, traversing entities, but before fontRender()
 		PERFINFO_AUTO_STOP();
 	}
@@ -882,14 +882,14 @@ void gfxDraw2DStuffPost3D(int show2D, int headShot)
 			gfxSetupLetterBoxViewport();
 		}
 
-		PERFINFO_AUTO_START("fontRender",1);  
+		PERFINFO_AUTO_START("fontRender",1);
 		if (sprite_secondpass && !GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_2D)) {
 			if (sprite_secondpass_clip) {
 				spriteZClip(ZCLIP_BEHIND, game_state.nearz);
 			} else {
 				spriteZClip(ZCLIP_NONE, 0);
 			}
-			fontRender(); //render UI and all other sprites  
+			fontRender(); //render UI and all other sprites
 		}
 		PERFINFO_AUTO_STOP();
 	}
@@ -913,7 +913,7 @@ void gfxDraw2DStuffPost3D(int show2D, int headShot)
 		fontRenderEditor();
 
 		PERFINFO_AUTO_STOP_START("DoorAnimCheckFade",1);
-		DoorAnimCheckFade(); 
+		DoorAnimCheckFade();
 		PERFINFO_AUTO_STOP_START("rdrStatsDisplay",1);
 		displayEntDebugInfoTextBegin();
 		rdrStatsDisplay(); // Needs to be after DoorAnimCheckFade()
@@ -969,7 +969,7 @@ void gfxDrawFinishFrame(int doFlip, int headShot, int renderPass)
 				gfxSetupLetterBoxViewport();
 				showBG();
 				showBgAdd(-2);
-			PERFINFO_AUTO_STOP();				
+			PERFINFO_AUTO_STOP();
 		}
 		else
 		{
@@ -981,13 +981,13 @@ void gfxDrawFinishFrame(int doFlip, int headShot, int renderPass)
 			}
 			PERFINFO_AUTO_START("windowUpdate",1);
 				windowUpdate();
-			PERFINFO_AUTO_STOP();				
+			PERFINFO_AUTO_STOP();
 		}
 	} else if (glob_force_buffer_flip) {
 		// Debug
 		PERFINFO_AUTO_START("windowUpdate",1);
 			windowUpdate();
-		PERFINFO_AUTO_STOP();				
+		PERFINFO_AUTO_STOP();
 	}
 	//else glob_have_camera_pos == LOADING_MAP which means let loadUpdate take care of showing the load screen
 
@@ -1080,7 +1080,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 			gfx_state.stencilAvailable = pbufStencilSupported(viewport_GetPBuffer(viewport)->flags);
 
 		// Enable simple shadows (aka splats) for stencil shadows and shadowmap + interior
-		if ((game_state.shadowMode == SHADOW_STENCIL) || 
+		if ((game_state.shadowMode == SHADOW_STENCIL) ||
 			(game_state.shadowMode >= SHADOW_SHADOWMAP_LOW && isIndoors()))
 			game_state.disableSimpleShadows = false;
 	}
@@ -1097,7 +1097,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 
 	copyMat4(viewport->cameraMatrix, cam_info.cammat);
 	gfxSetViewMat(cam_info.cammat, cam_info.viewmat, cam_info.inv_viewmat);
-	
+
 	PERFINFO_AUTO_STOP_START("gfxDrawSetupDrawing", 1);
 
 	gfxDrawSetupDrawing(viewport);
@@ -1150,14 +1150,14 @@ void gfxRenderViewport(ViewportInfo *viewport)
 	{
 		gfxTreeDrawNodeSky(sky_gfx_tree_root,cam_info.viewmat); // Does GL drawing, must be first actual drawing
 	}
-	
+
 	PERFINFO_AUTO_STOP_START("renderOpaquePass",1);
 	if (viewport->renderOpaquePass && !GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_OPAQUE_PASS))
 	{
 		drawSortedModels_ex(DSM_OPAQUE, viewport->doHeadshot, viewport, false);
 	}
 
-	PERFINFO_AUTO_STOP_START("draw lines",1);  
+	PERFINFO_AUTO_STOP_START("draw lines",1);
 
 	if (gfx_state.mainViewport)
 		drawReflector();
@@ -1167,7 +1167,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 		rdrBeginMarker(__FUNCTION__":draw lines");
 		if (editMode())
 			showGridExternal();
-		
+
 		queuedLinesDraw();
 		rdrEndMarker();
 	}
@@ -1176,14 +1176,14 @@ void gfxRenderViewport(ViewportInfo *viewport)
 		gfxRenderDump("%s_opaque", viewport->name);
 	}
 
-	PERFINFO_AUTO_STOP_START("rdrAmbientOcclusion",1);  
+	PERFINFO_AUTO_STOP_START("rdrAmbientOcclusion",1);
 
 	// SSAO is probably too slow to use for other viewports
 	if (!viewport->isRenderToTexture && viewport->renderPass == RENDERPASS_COLOR) {
 		rdrAmbientOcclusion();
 	}
 
-	PERFINFO_AUTO_STOP_START("renderUnderwaterAlphaObjectsPass",1); 
+	PERFINFO_AUTO_STOP_START("renderUnderwaterAlphaObjectsPass",1);
 	if (viewport->renderUnderwaterAlphaObjectsPass && !GFX_DEBUG_TEST(game_state.perf, GFXDEBUG_PERF_SKIP_UNDERWATER_ALPHA_PASS))
 	{
 		// Render alpha objects which may be below the water line so they show up in the
@@ -1241,7 +1241,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 		rdrEndMarker();
 	}
 
-	PERFINFO_AUTO_STOP_START("renderStencilShadows",1); 
+	PERFINFO_AUTO_STOP_START("renderStencilShadows",1);
 	if (gfx_state.doStencilShadows)
 	{
 		// 05-08-09: FIXME: stencil is getting corrupted in SSAO on ATI cards
@@ -1252,7 +1252,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 		drawSortedModels_ex(DSM_SHADOWS, viewport->doHeadshot, viewport, viewport->renderWater);
 	}
 
-	PERFINFO_AUTO_STOP_START("stencilShadowFinishScene",1); 
+	PERFINFO_AUTO_STOP_START("stencilShadowFinishScene",1);
 	if (gfx_state.doStencilShadows)
 	{
 		rdrBeginMarker(__FUNCTION__":stencilShadowFinishScene");
@@ -1264,7 +1264,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 
 #if RDRMAYBEFIX
 	//debug //use this to wrap anything you are fill interested in.  It might be buggy
-	if( game_state.showDepthComplexity == 1 && !no_drawing)         
+	if( game_state.showDepthComplexity == 1 && !no_drawing)
 		rdrInitDepthComplexity();
 #endif
 
@@ -1273,7 +1273,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 	{
 		if (!game_state.waterDebug || (game_state.waterDebug & 8))
 		{
-			partRunEngine(); 
+			partRunEngine();
 		}
 	}
 
@@ -1281,7 +1281,7 @@ void gfxRenderViewport(ViewportInfo *viewport)
 
 #if RDRMAYBEFIX
 	//debug
-	if( game_state.showDepthComplexity == 1 && !no_drawing)          
+	if( game_state.showDepthComplexity == 1 && !no_drawing)
 		rdrDoDepthComplexity(game_state.fps);
 #endif
 
@@ -1458,17 +1458,17 @@ static void gfxUpdateDebug()
 			int thisRand = rand() % 3;
 			switch(thisRand)
 			{
-				case 0: gfxResetTextures();			
+				case 0: gfxResetTextures();
 				xcase 1: modelFreeAllCache(0);
 				xdefault: break;
-			}	
+			}
 			sTargetDuration = randomFloat(0.5f, 3.f);
 			break;
 		}
 
 		case eDebugRenderTestType_FireFX:
 		{
-			cmdParse("fire1");	
+			cmdParse("fire1");
 			sTargetDuration = randomFloat(2.f, 4.f);
 			break;
 		}
@@ -1483,12 +1483,12 @@ static void gfxUpdateDebug()
 					cmdParse("invincible 1");
 					cmdParse("nocoll 1");
 					cmdParse("timeset 12");
-					sDebugCounter1++;				
+					sDebugCounter1++;
 					nextState = eDebugRenderState_MoveToPos;
 					sTargetDuration = 1.f;
 					break;
 				case eDebugRenderState_MoveToPos:
-				{					
+				{
 					F32 xpos, ypos, zpos;
 					MapLayout* ml = &sMaps[sCurMapIndex];
 					xpos = randomFloat(ml->minx, ml->maxx);
@@ -1585,7 +1585,7 @@ void gfxUpdateFrame(int force_render_world, int headShot, int no_drawing)
 		{
 			cubemap_Update();
 		}
-		
+
 		if (rdr_caps.allowed_features & (GFXF_CUBEMAP|GFXF_WATER_REFLECTIONS))
 		{
 			requestReflection();
@@ -1682,7 +1682,7 @@ void gfxUpdateFrame(int force_render_world, int headShot, int no_drawing)
 
 	PERFINFO_AUTO_START("gfxDraw2DStuffPost3D", 1);
 
-	if (!game_state.disable2Dgraphics) 
+	if (!game_state.disable2Dgraphics)
 	{
 		gfxDraw2DStuffPost3D(!no_drawing, headShot);
 
@@ -1757,7 +1757,7 @@ void gfxAutoSetPerformanceSettings(void)
 	{
 		float target_visscale = cur_visscale;
 		float fps = (global_state.global_frame_count - frame_count) / time;
-		
+
 		if (fps > AUTOPERF_UPPER_FPS)
 			target_visscale += AUTOPERF_STEP;
 		else if (fps < AUTOPERF_LOWER_FPS)
@@ -1773,7 +1773,7 @@ void gfxAutoSetPerformanceSettings(void)
 			cur_visscale = target_visscale;
 			setVisScale(cur_visscale, 0);
 		}
-		
+
 		timerStart(timer);
 		frame_count = global_state.global_frame_count;
 	}

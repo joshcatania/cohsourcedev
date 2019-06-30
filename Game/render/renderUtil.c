@@ -12,7 +12,7 @@
 #include "cmdgame.h"
 #include "cmdcommon.h"
 #include "render.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "sysutil.h" //For specs
 #include "timing.h" //for specs
 #include "font.h" //dumb to be here
@@ -86,7 +86,7 @@ static int GetVideoCardIdentification( char * deviceString, int * vendorID, int 
 
 	id = dd->DeviceID;
 
-    if (0 == id || '\0' == id[0]) 
+    if (0 == id || '\0' == id[0])
 	{
 		*vendorID = 0;
 		*deviceID = 0;
@@ -95,13 +95,13 @@ static int GetVideoCardIdentification( char * deviceString, int * vendorID, int 
 	}
 
     // get vendor ID
-	strcpy( deviceString, dd->DeviceString ); 
+	strcpy( deviceString, dd->DeviceString );
 	{
 		char vendorIDStr[5];
 		char deviceIDStr[5];
 		char end[1];
 		char * endptr;
-		
+
 		end[0] = 0;
 		endptr = end;
 
@@ -157,7 +157,7 @@ void getNVidiaSystemSpecs(SystemSpecs * systemSpecs)
 
 OSVERSIONINFOEX osinfo;
 
-static time_t getVideoDriverDate(int vendorID) 
+static time_t getVideoDriverDate(int vendorID)
 {
 	DISPLAY_DEVICE dd;
 	char driverDateString[128];
@@ -165,7 +165,7 @@ static time_t getVideoDriverDate(int vendorID)
 
 	if (FindPrimaryDisplayDevice(&dd)) {
 		static const char stripPrefix[] = "\\Registry\\Machine\\";
-		
+
 		if (strnicmp(dd.DeviceKey, stripPrefix, sizeof(stripPrefix) - 1) == 0) {
 			RegReader deviceReader = createRegReader();
 			char deviceKey[128];
@@ -177,7 +177,7 @@ static time_t getVideoDriverDate(int vendorID)
 				struct tm driverDate = {0};
 
 				// Don't know if other locales use a different date format.
-				if (3 == sscanf(driverDateString, "%d-%d-%d", &driverDate.tm_mon, 
+				if (3 == sscanf(driverDateString, "%d-%d-%d", &driverDate.tm_mon,
 					&driverDate.tm_mday, &driverDate.tm_year))
 				{
 					driverDate.tm_mon -= 1;
@@ -269,7 +269,7 @@ static time_t getVideoDriverDate(int vendorID)
 			names = SIS_DLLs;
 			array_size = ARRAY_SIZE(SIS_DLLs);
 		}
-		
+
 		GetSystemDirectory(winDirName, 1024);
 
 		for (i=0; i<array_size; i++)
@@ -407,7 +407,7 @@ void rdrExamineDriversEarly(SystemSpecs * systemSpecs)
 	{
 		int v1, v2, v3, v4;
 
-		// Get the atiogl.dll version 
+		// Get the atiogl.dll version
 		// NOTE: we could get the "DriverVersion" from the registry, using code similar
 		// to the getVideoDriverDate() function.  But, that registry entry may only be
 		// valid for AMD/ATI drivers.
@@ -502,9 +502,9 @@ void rdrGetSystemSpecs( SystemSpecs * systemSpecs )
 	// so take this information with a grain of salt.
 	FindPrimaryDisplayDevice(&dd);
 	GetVideoCardIdentification( systemSpecs->videoCardName, &systemSpecs->videoCardVendorID, &systemSpecs->videoCardDeviceID, &dd );
-	
+
 	getPhysicalMemory( &systemSpecs->maxPhysicalMemory , &systemSpecs->availablePhysicalMemory );
-	
+
 	systemSpecs->CPUSpeed = (F32)getRegistryMhz();
 	systemSpecs->numVirtualCPUs = getNumVirtualCpus();
 	systemSpecs->numRealCPUs = getNumRealCpus();
@@ -614,7 +614,7 @@ void rdrGetSystemSpecString( SystemSpecs * systemSpecs, char * buf )
 
 			i++;
 		}
-		
+
 	}
 	strcatf(buf, "Driver Date: %s / ", dateToString(systemSpecs->videoDriverDate));
 	if( systemSpecs->videoMemory)
@@ -629,7 +629,7 @@ void rdrGetSystemSpecString( SystemSpecs * systemSpecs, char * buf )
 	// Information obtained from the GL context
 	if (!rdr_caps.filled)
 	{
-		// Put the "OUTDATED VIDEO CARD DRIVER" text in the string so the crash report system will advice the 
+		// Put the "OUTDATED VIDEO CARD DRIVER" text in the string so the crash report system will advice the
 		// player to update their video card driver if the game crashes during OpenGL initialization.
 		strcatf( buf, "OpenGL has not been initialized yet  OUTDATED VIDEO CARD DRIVER");
 	}
@@ -752,7 +752,7 @@ int getShaderDebugSpecialDefines(const char** defineArray /*OUT*/, int defineArr
 	// set of mutually exclusive defines, only one can be used at a time
 	{
 		char *specials[] = {
-			NULL, 
+			NULL,
 			"NO_SPECULAR",			// shadertest 1
 			"SPECULAR_ONLY",		// shadertest 2
 			"SPECULAR_GLOSS",
@@ -763,7 +763,7 @@ int getShaderDebugSpecialDefines(const char** defineArray /*OUT*/, int defineArr
 			"SHOWLIGHTING",
 			"SHOW_DOF",
 			"TEXCOORD_TEST",
-			"SHOW_LIGHTMAP",		
+			"SHOW_LIGHTMAP",
 			"DIFFUSE_ONLY",			// shadertest 12
 			"BASE_TEXTURE_ONLY",
 			"BLEND_TEXTURE_ONLY",
@@ -829,15 +829,15 @@ void rdrSetupPerspectiveProjection(F32 fovy, F32 aspect, F32 znear, F32 zfar, bo
 	b = -t;
 	l = b * aspect;
 	r = t * aspect;
-	
+
 	// caller can request that rendering is inverted along y axis (dynamic cubemaps need this)
-	if(bFlipY) 
+	if(bFlipY)
 	{
 		t = -t;
 		b = -b;
 	}
 
-	if(bFlipX) 
+	if(bFlipX)
 	{
 		l = -l;
 		r = -r;
@@ -894,7 +894,7 @@ void rdrPerspective(F32 fovy, F32 aspect, F32 znear, F32 zfar, bool bFlipX, bool
 
 void rdrFixMat(Mat4 mat)
 {
-Mat4	matx,unitfix = 
+Mat4	matx,unitfix =
 	{
 		-1, +0, +0,
 		+0, +1, +0,
@@ -1098,7 +1098,7 @@ void setUseDXT5nmNormals( unsigned int useDXT5nmNormals )
 	{
 		game_state.use_dxt5nm_normal_maps = useDXT5nmNormals;
 		rdrQueue(DRAWCMD_SETDXT5NMNORMALS, &useDXT5nmNormals, sizeof(useDXT5nmNormals));
-	}	
+	}
 }
 
 void reloadShaderCallback(const char *relpath, int when)
@@ -1155,7 +1155,7 @@ static void setupOldDriverWarning()
 
 	strcpy( game_state.oldDriverMessage[0], textStd("OldDriver1", systemSpecs.videoCardName, dateStr));
 	strcpy( game_state.oldDriverMessage[1], textStd("OldDriver2", getVideoCardManufacturerWebsite(&systemSpecs)));
-	strcpy( game_state.oldDriverMessage[2], textStd("OldDriver3"));	
+	strcpy( game_state.oldDriverMessage[2], textStd("OldDriver3"));
 
 	// Always show the dialog in development mode
 	if (isDevelopmentMode() && game_state.quick_login)
@@ -1308,7 +1308,7 @@ void rdrSetChipOptions()
 	if ( 0 == rdr_caps.chip || failure )
 	{
 		printf( "Bad driver or video card detected\n");
-		
+
 		// Make sure this pop-up is not ignored
 		if (!isGuiDisabled())
 			g_win_ignore_popups = 0;
@@ -1329,7 +1329,7 @@ void rdrSetChipOptions()
 	rdr_caps.use_vbos		 = 1;
 
 	/////////////////////////////////////////////////////////////////////////////////////
-	//If you don't know, dont use anything (you probably 
+	//If you don't know, dont use anything (you probably
 	if( !rdr_caps.chip )
 	{
 		rdr_caps.use_vbos			= 0;
@@ -1361,7 +1361,7 @@ void rdrSetChipOptions()
 		rdr_caps.use_vertshaders = 0; //We are choosing to do our own skinning on these cards
 	}
 
-	// set rdr_caps.num_texunits here only if we didn't get a value when it was originally 
+	// set rdr_caps.num_texunits here only if we didn't get a value when it was originally
 	//	read in rdrInitExtensionsDirect
 	if( !rdr_caps.num_texunits )
 	{
@@ -1463,14 +1463,14 @@ void rdrSetChipOptions()
 		#define NUM_ENV_PARAMS_FOR_ULTRA		64	// ULTRA features need more than the 32 minimum fragment program ENV constants specified by ARBFP1
 		bMinUltraRequirements = (rdr_caps.supports_fbos &&
 								 rdr_caps.max_program_native_instructions >= NUM_REQUIRED_INSTRUCTIONS &&
-								 rdr_caps.max_program_env_parameters >= NUM_ENV_PARAMS_FOR_ULTRA 
+								 rdr_caps.max_program_env_parameters >= NUM_ENV_PARAMS_FOR_ULTRA
 								 );
 		if(bMinUltraRequirements)
 		{
 			rdr_caps.allowed_features |= GFXF_CUBEMAP;
-			
+
 			if ( rdr_caps.supports_arb_shadow )
-				rdr_caps.allowed_features |= GFXF_SHADOWMAP;	
+				rdr_caps.allowed_features |= GFXF_SHADOWMAP;
 
 			rdr_caps.allowed_features |= GFXF_WATER_REFLECTIONS;
 		}
@@ -1500,7 +1500,7 @@ void rdrSetChipOptions()
 			printf( " Ultra mode Ambient Occlusion is disabled.\n" );
 			rdr_caps.allowed_features &= ~(GFXF_AMBIENT);
 
-			
+
 			printf( " MULTI material degraded.\n" );
 			rdr_caps.limited_fragment_instructions = 1; // flag used to get multi9 shader to compile with reduced capabilities.
 			rdr_caps.allowed_features &= ~GFXF_MULTITEX_HQBUMP;
@@ -1715,7 +1715,7 @@ void rdrInitTopOfView(const Mat4 viewmat, const Mat4 inv_viewmat)
 		rvs.waterTODscale = 1.0f;
 	else
 		rvs.waterTODscale = 1.0f - (rdr_view_state.lamp_alpha * game_state.waterReflectionNightReduction / 255.0f);
-	
+
 	rdrQueue(DRAWCMD_INITTOPOFVIEW,&rvs,sizeof(rvs));
 	//rdrSetFog(g_sun.fogdist[0], g_sun.fogdist[1], g_sun.fogcolor1); // TODO: moves these into inittopofframe and fix pbuffer?
 	rdrSetBgColor(g_sun.bg_color);

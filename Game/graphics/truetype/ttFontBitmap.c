@@ -1,6 +1,6 @@
 #include "truetype/ttFontBitmap.h"
 #include "ttFont.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "mathutil.h"	// for MAX() + MIN()
 
 #include "ft2build.h"
@@ -18,7 +18,7 @@ TTFontBitmap* createTTFontBitmap(){
 void destroyTTFontBitmap(TTFontBitmap* bitmap){
 	if(!bitmap)
 		return;
-	
+
 	SAFE_FREE(bitmap->bitmap);
 	SAFE_FREE(bitmap->bitmapRGBA);
 
@@ -107,7 +107,7 @@ void ttFontBitmapBlit(TTFontBitmap* src, TTFontRectangle* srcRegion, TTFontBitma
 				return;
 			else if(TTF_IN_BITMAP != pointInDstBitmap)
 				// If the point is not in the bitmap, then the point is is outside of the
-				// bitmap in only one dimension.  It is still possible to eventually get 
+				// bitmap in only one dimension.  It is still possible to eventually get
 				// to a point where some data can be written to the dst image.
 				// Move on to the next pixel.
 				continue;
@@ -194,7 +194,7 @@ void TTBBlitGrow(TTFontBBlitContext* context){
 	// Try to grow into the neighboring pixels.
 	for(i = 0; i < sizeof(growDirections) / sizeof(growDirections[0]); i++){
 		LumAlphaPixel* dstPixel;
-		int targetX = context->dstX + growDirections[i][0];		
+		int targetX = context->dstX + growDirections[i][0];
 		int targetY = context->dstY + growDirections[i][1];
 
 		dstPixel = ttFontGetPixelInBitmap(context->dst, targetX, targetY);
@@ -310,7 +310,7 @@ void TTBBlitShadowSpread(TTFontBBlitContext* context){
 
 	for(i = 0; i < sizeof(shadowDirections) / sizeof(shadowDirections[0]); i++){
 		LumAlphaPixel* dstPixel;
-		int targetX = context->dstX + shadowDirections[i].xDirection;		
+		int targetX = context->dstX + shadowDirections[i].xDirection;
 		int targetY = context->dstY + shadowDirections[i].yDirection;
 
 		dstPixel = ttFontGetPixelInBitmap(context->dst, targetX, targetY);
@@ -421,7 +421,7 @@ void ttFontBitmapAddDropShadow(TTFontBitmap** origBitmap, TTFontRenderParams* re
 	dstRegion.width = cloneShadow->bitmapInfo.width;
 	dstRegion.height = cloneShadow->bitmapInfo.height;
 
-	ttBitmapTurnBlack(cloneShadow);			// turn this bitmap into a shadow.			
+	ttBitmapTurnBlack(cloneShadow);			// turn this bitmap into a shadow.
 	ttFontBitmapClear(bitmap);
 	ttFontBitmapBlit(cloneShadow, &srcRegion, finalBitmap, &dstRegion, TTBBlitCopy);
 
@@ -574,7 +574,7 @@ void ttFontBitmapMakeBold2(TTFontBitmap** origBitmap, TTFontRenderParams* render
 
 	// Try to grow into the neighboring pixels.
 	for(i = 0; i < sizeof(growDirections) / sizeof(growDirections[0]); i++){
-		int targetX = growDirections[i][0];		
+		int targetX = growDirections[i][0];
 		int targetY = growDirections[i][1];
 
 		srcRegion.x = 0;
@@ -676,7 +676,7 @@ void ttFontBitmapDumpToFile(TTFontBitmap** origBitmap, TTFontRenderParams* rende
 				goto exit;
 			else if(TTF_IN_BITMAP != pointInDstBitmap)
 				// If the point is not in the bitmap, then the point is is outside of the
-				// bitmap in only one dimension.  It is still possible to eventually get 
+				// bitmap in only one dimension.  It is still possible to eventually get
 				// to a point where some data can be written to the dst image.
 				// Move on to the next pixel.
 				continue;

@@ -8,7 +8,7 @@
 #include "utils.h"
 #include "mmreg.h"
 #include "memcheck.h"
-#include <assert.h>
+#include "SuperAssert.h"
 
 
 #pragma pack(1)
@@ -85,7 +85,7 @@ static IDirectSoundBuffer *CreateSoundBuffer(int dwBufSize, int dwFreq, int dwBi
     memset(&dsbdesc, 0, sizeof(DSBUFFERDESC));  /* Zero it out.  */
     dsbdesc.dwSize              = sizeof(DSBUFFERDESC);
     dsbdesc.dwFlags             = DSBCAPS_CTRLPAN | DSBCAPS_CTRLVOLUME | DSBCAPS_STICKYFOCUS;
- 	dsbdesc.dwBufferBytes       = dwBufSize; 
+ 	dsbdesc.dwBufferBytes       = dwBufSize;
     dsbdesc.lpwfxFormat         = (LPWAVEFORMATEX)&pcmwf;
 
 	if ((hr = gpds->lpVtbl->CreateSoundBuffer(gpds,
@@ -107,7 +107,7 @@ static IDirectSoundBuffer *CreateSoundBuffer(int dwBufSize, int dwFreq, int dwBi
 	return dwBuf;
 }
 
-static int ReadData(IDirectSoundBuffer *dwBuf, FILE* pFile, int dwSize) 
+static int ReadData(IDirectSoundBuffer *dwBuf, FILE* pFile, int dwSize)
 {
     LPVOID pData1;
     DWORD  dwData1Size;
@@ -125,20 +125,20 @@ static int ReadData(IDirectSoundBuffer *dwBuf, FILE* pFile, int dwSize)
     }
 
     /* Read in first chunk of data */
-    if (dwData1Size > 0) 
+    if (dwData1Size > 0)
     {
         rval=fread(pData1,  dwData1Size,  1,pFile);
 		if (rval != 1)
-        {          
+        {
 			printf("%d  %d  Data1 : %d, dwdata: %d, pFile: %d\n",rval,ftell(pFile),pData1,dwData1Size,pFile);
             return FALSE;
         }
     }
 
     /* read in second chunk if necessary */
-    if (dwData2Size > 0) 
+    if (dwData2Size > 0)
     {
-        if (fread(pData2, dwData2Size, 1, pFile) != 1) 
+        if (fread(pData2, dwData2Size, 1, pFile) != 1)
         {
             return FALSE;
         }
@@ -154,7 +154,7 @@ static int ReadData(IDirectSoundBuffer *dwBuf, FILE* pFile, int dwSize)
 
     dwBuf->lpVtbl->SetVolume(dwBuf,0);
     dwBuf->lpVtbl->SetPan(dwBuf,0);
- 
+
     return TRUE;
 }
 
@@ -165,7 +165,7 @@ static IDirectSoundBuffer *LoadWaveFile(FILE *pFile,int *size)
 	IDirectSoundBuffer	*dwBuf;
 
     /* Read in the wave header           */
-    if (fread(&wavHdr, sizeof(wavHdr), 1, pFile) != 1) 
+    if (fread(&wavHdr, sizeof(wavHdr), 1, pFile) != 1)
     {
         return 0;
     }
@@ -186,7 +186,7 @@ static IDirectSoundBuffer *LoadWaveFile(FILE *pFile,int *size)
     }
 
     /* Read the data for the wave file into the sound buffer */
-    if (!ReadData(dwBuf, pFile, dwSize)) 
+    if (!ReadData(dwBuf, pFile, dwSize))
     {
         return 0;
     }
@@ -346,7 +346,7 @@ void X_PlaySound(int channel,void *sound_data,int volume,int pan,int loop,char *
 
 	if(no_audio)
 		return;
-	
+
 	chan_parms[channel].win_sound = sound_data;
 	chan_parms[channel].vol = 99999;
 	chan_parms[channel].pan = 99999;

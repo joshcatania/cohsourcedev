@@ -1,4 +1,4 @@
-#include <assert.h>
+#include "SuperAssert.h"
 #include "frustum_c.h"
 
 #include "mathutil.h"
@@ -11,7 +11,7 @@
 //  * plane normals are normalized
 //  * horizontal field of view is supplied
 //  * aspect ratio is height/width
-//	* OpenGL camera convention, right handed view looking down the -Z axis 
+//	* OpenGL camera convention, right handed view looking down the -Z axis
 //  * z_near_abs, z_far_abs are distance quantities from frustum origin
 //	  to which we apply the view convention (e.g., -z view direction)
 void frustum_build( GfxFrustum* frustum, float fov_x, float aspect, float z_near_abs, float z_far_abs )
@@ -126,12 +126,12 @@ bool frustum_is_capsule_culled_sse2( GfxFrustum* frustum, Vec3 origin, Vec3 dire
 	register __m128 dir = _mm_set_ps(0.0f, direction[2], direction[1], direction[0]);
 
 	for (i=0; i < 6; ++i)
-	{		
+	{
 		register __m128 d1;
 		register __m128 d2;
 
 		register __m128 plane = _mm_load_ps(frustum->planes[i].m128_f32);
- 
+
 		d1 = sse2_dot4(plane, pos); // plane . pos
 		if(_mm_comige_ss(d1, zero)) { // d1 >= zero
 			__nop();
@@ -168,7 +168,7 @@ bool frustum_is_capsule_culled_sse2( GfxFrustum* frustum, Vec3 origin, Vec3 dire
 
 // the general version checks each plane in turn
 // @todo use SSE
-bool frustum_is_sphere_culled_general( GfxFrustum* frustum, Vec3 origin, float radius ) 
+bool frustum_is_sphere_culled_general( GfxFrustum* frustum, Vec3 origin, float radius )
 {
 	int i;
 
@@ -185,4 +185,4 @@ bool frustum_is_sphere_culled_general( GfxFrustum* frustum, Vec3 origin, float r
 
 // when clipping against view space frustum we can leverage sparse coefficients
 // @todo use SSE?
-//bool frustum_is_sphere_culled_vieww( GfxFrustum* frustum, Vec3 origin, float radius ) 
+//bool frustum_is_sphere_culled_vieww( GfxFrustum* frustum, Vec3 origin, float radius )

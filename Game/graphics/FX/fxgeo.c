@@ -2,21 +2,20 @@
 #include "fxgeo.h"
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "stdtypes.h"
 #include "mathutil.h"
 #include "error.h"
 #include "model.h"
 #include "model_cache.h"
 #include "memcheck.h"
-#include "assert.h" 
+#include "SuperAssert.h"
 #include "utils.h"
 #include "gfxtree.h"
-#include "particle.h" 
+#include "particle.h"
 #include "cmdcommon.h" //TIMESTEP
-#include "camera.h" 
-#include "assert.h"   
-#include "player.h" 
+#include "camera.h"
+#include "player.h"
 #include "file.h"
 #include "font.h"
 #include "fxutil.h"
@@ -86,7 +85,7 @@ static void applyTransformFlags( const Mat4 mIn, Mat4 mOut, Vec3 scaleMin, Vec3 
 			// don't do nothing
 		}
 		break;
-	case FX_SCALE: // 0 0 1 
+	case FX_SCALE: // 0 0 1
 		{
 			// scale only
 			Vec3 vScale;
@@ -98,7 +97,7 @@ static void applyTransformFlags( const Mat4 mIn, Mat4 mOut, Vec3 scaleMin, Vec3 
 			scaleMat3Vec3(mOut, vScale);
 		}
 		break;
-	case FX_ROTATION: // 0 1 0 
+	case FX_ROTATION: // 0 1 0
 		{
 			// rot only
 			copyMat3(mIn, mOut);
@@ -119,7 +118,7 @@ static void applyTransformFlags( const Mat4 mIn, Mat4 mOut, Vec3 scaleMin, Vec3 
 			scaleMat3Vec3(mOut, vScale);
 		}
 		break;
-	case FX_POSITION: // 1 0 0 
+	case FX_POSITION: // 1 0 0
 		{
 			// pos only
 			copyVec3(mIn[3], mOut[3]);
@@ -177,7 +176,7 @@ Mat4Ptr fxGeoGetWorldSpot(int fxid)
 
 	fxgeo = hdlGetPtrFromHandle(fxid);
 	if(fxgeo)
-	{	
+	{
 		if( (fxgeo->age != fxgeo->world_spot_age && gfxTreeNodeIsValid(fxgeo->gfx_node, fxgeo->gfx_node_id)) )
 		{
 			gfxTreeFindWorldSpaceMat( fxgeo->world_spot, fxgeo->gfx_node );
@@ -223,11 +222,11 @@ int fxGeoAttachSeq(FxGeo * fxgeo, char * anim)
 	if( anim && anim[0]  )
 	{
 		seq = seqLoadInst( anim, fxgeo->gfx_node, SEQ_LOAD_FULL, 0, NULL ); //The seed was going to be 0 75% of the time before
-	
+
 		if(seq)
 		{
 			fxgeo->seq_handle = seq->handle;
-			seq->curranimscale = fxgeo->bhvr->animscale; 
+			seq->curranimscale = fxgeo->bhvr->animscale;
 			seq->move_predict_seed = qrand();
 		}
 		else
@@ -287,7 +286,7 @@ int fxGeoAttachParticles(FxGeo * fxgeo, TokenizerParams ** part, int kickstart, 
 		part_count = MAX_PSYSPERFXGEO;
 	}
 
-	for( i = 0 ; i < part_count; i++ ) 
+	for( i = 0 ; i < part_count; i++ )
 	{
 		//Check to see if the power level is right
 		num_toks = eaSize( &part[i]->params );
@@ -300,7 +299,7 @@ int fxGeoAttachParticles(FxGeo * fxgeo, TokenizerParams ** part, int kickstart, 
 			else
 				high_power = FX_POWER_RANGE; //max power
 			assert( low_power >= 0 && low_power <= FX_POWER_RANGE && high_power >= 0 && high_power <= FX_POWER_RANGE );
-		
+
 			if( power >= low_power && power <= high_power )
 				power_level_ok = 1;
 			else
@@ -320,7 +319,7 @@ int fxGeoAttachParticles(FxGeo * fxgeo, TokenizerParams ** part, int kickstart, 
 
 			fxgeo->psys[cnt] = partCreateSystem(part_name, &fxgeo->psys_id[cnt], kickstart, power, fxp->fxtype, animScale);
 
-			if( fxgeo->psys[cnt] ) 
+			if( fxgeo->psys[cnt] )
 			{
 				fxgeo->psys[cnt]->geo_handle = fxgeo->handle;
 				fxgeo->psys_count++;
@@ -381,7 +380,7 @@ static void hueShiftParticleSystems(FxGeo * fxgeo, FxParams * fxp, FxInfo *fxInf
 
 	for (i=0; i<fxgeo->psys_count; i++)
 	{
-		if (fxgeo->psys[i] && fxgeo->psys[i]->sysInfo && 
+		if (fxgeo->psys[i] && fxgeo->psys[i]->sysInfo &&
 			!(fxgeo->psys[i]->sysInfo->flags & PART_IGNORE_FX_TINT))
 		{
 			ParticleSystem* system = fxgeo->psys[i];
@@ -401,12 +400,12 @@ void fxGeoParticlesChangeParams(FxGeo * fxgeo, FxParams * fxp, FxInfo *fxInfo)
 
 
 int fxGeoAttachChildFx(FxGeo * fxgeo, char * childfxname, FxParams *parentFxp, int seq_handle, int target_seq_handle)
-{	
+{
 	FxParams	fxp;
 //	FxGeo * fxgeo2;
 
 	if( childfxname && childfxname[0] && childfxname[0] != '0' )
-	{		
+	{
 		fxInitFxParams(&fxp);
 		fxp.keys[fxp.keycount].gfxnode	= fxgeo->gfx_node;
 		fxp.keys[fxp.keycount].seq = hdlGetPtrFromHandle( seq_handle );
@@ -429,7 +428,7 @@ int fxGeoAttachChildFx(FxGeo * fxgeo, char * childfxname, FxParams *parentFxp, i
 //			fxp.keys[fxp.keycount].gfxnode = fxgeo2->gfx_node;
 //			fxp.keycount++;
 //		}
-//		
+//
 //		fxgeo2 = hdlGetPtrFromHandle(fxgeo->lookatid);
 //		if(fxgeo2)
 //		{
@@ -485,7 +484,7 @@ static Model * fxGeoGetModelToUse( GfxNode * key,  TokenizerParams ** geomList )
 	{
 		return NULL;
 	}
-	
+
 	model = NULL;
 
 	//Choose geometry randomly if several are given
@@ -495,7 +494,7 @@ static Model * fxGeoGetModelToUse( GfxNode * key,  TokenizerParams ** geomList )
 		TokenizerParams * geom;
 		char *path;
 		char * geometryName;
-		
+
 		geom = geomList[ rand() % geomCount ];
 		assert( geom && eaSize( &geom->params ) );
 		geometryName = geom->params[0];
@@ -503,7 +502,7 @@ static Model * fxGeoGetModelToUse( GfxNode * key,  TokenizerParams ** geomList )
 
 
 		//Special case "Parent" use the geometry from this guys At Node (needed because geometry can be random)
-		//Used, for example, by random thrown items.  
+		//Used, for example, by random thrown items.
 		if( 0 == stricmp( geometryName, "Parent" ) )
 		{
 			if( key )
@@ -512,7 +511,7 @@ static Model * fxGeoGetModelToUse( GfxNode * key,  TokenizerParams ** geomList )
 		else //Otherwise just dig up the name
 		{
 			if( (path = objectLibraryPathFromObj( geometryName ) ) )
-			{		
+			{
 				model = modelFind( geometryName, path, LOAD_NOW, GEO_INIT_FOR_DRAWING | GEO_USED_BY_GFXTREE);
 				if(!model)
 					printToScreenLog( 1, "FX: Failed to get %s in %s", geometryName, path );
@@ -530,10 +529,10 @@ static Model * fxGeoGetModelToUse( GfxNode * key,  TokenizerParams ** geomList )
 static GfxNode * fxGeoAddGfxNode(GfxNode * parent, Mat4 offset, Model * newmodel)
 {
 	GfxNode    * gfxnode;
-	
-	gfxnode      = gfxTreeInsert(parent); //rem 0 = root 
+
+	gfxnode      = gfxTreeInsert(parent); //rem 0 = root
 	gfxnode->model = newmodel;
-	
+
 	if(newmodel)
 	{
 		*(gfxTreeAssignTrick( gfxnode )) = *(allocModelTrick( newmodel )); //causes the facing to screw up
@@ -550,7 +549,7 @@ static GfxNode * fxGeoAddGfxNode(GfxNode * parent, Mat4 offset, Model * newmodel
 		copyMat4( unitmat, gfxnode->mat );
 
 	gfxNodeBuildMiniTracker(gfxnode);
-	
+
 	return gfxnode;
 }
 
@@ -577,7 +576,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	{
 		printToScreenLog( 1, "FXGEO: !!Cant alloc fxgeo " );
 		PERFINFO_AUTO_STOP();
-		return 0; 
+		return 0;
 	}
 	debug_fxgeo_count++;
 
@@ -593,9 +592,9 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	if(fxgeo_id_pool >= SOUND_FX_LAST )
 		fxgeo_id_pool = SOUND_FX_BASE; // rollover, don't go into off limits id range
 
-	if (fxevent->name) 
+	if (fxevent->name)
 		Strcpy( fxgeo->name, fxevent->name ); //Redundant, but useful
-	else 
+	else
 		fxgeo->name[0] = 0;
 
 	fxgeo->isRoot = !stricmp(&(fxgeo->name[strlen(fxgeo->name)-4]), "ROOT");
@@ -615,7 +614,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	copyVec3(fxinfo->clampMaxScale, maxScale);
 
 	//###2. Set Gfx_node
-	if ( 
+	if (
 		( fxevent->type == FxTypeLocal )
 		|| ( fxevent->type == FxTypeStart )
 		|| ( fxevent->type == FxTypeStartPositOnly )
@@ -628,7 +627,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	if ( fxevent->type == FxTypeCreate )
 	{
 		Mat4 mKey;
-		gfxTreeFindWorldSpaceMat( mKey, key ); 
+		gfxTreeFindWorldSpaceMat( mKey, key );
 		copyMat4(unitmat, result);
 
 		// Check to see if it needs anything in the first frame
@@ -656,7 +655,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	}
 
 	if( offset )
-		mulMat4( result, offset, realoffset ); 
+		mulMat4( result, offset, realoffset );
 	else
 		copyMat4( result, realoffset );
 
@@ -666,7 +665,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 		model = fxGeoGetModelToUse( key, fxevent->geom );
 		//if(model) printf("fxgeocreate: adding model %s\n", model->name);
 		fxgeo->gfx_node		= fxGeoAddGfxNode( parent, realoffset, model);
-		fxgeo->gfx_node_id	= fxgeo->gfx_node->unique_id; 
+		fxgeo->gfx_node_id	= fxgeo->gfx_node->unique_id;
 		if(fxinfo->fxinfo_flags & FX_INHERIT_GEO_SCALE && model && parent && parent->parent) { // tbd, revisit use of parent->parent here, does this work for all cases?
 			fxgeo->gfx_node->flags |= GFXNODE_APPLYBONESCALE;
 		}
@@ -683,7 +682,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	//###3. Get bhvr file and init it
 	fxgeo->bhvr = 0;
 	if( fxevent->bhvr && fxevent->bhvr[0] )
-		fxgeo->bhvr = fxGetFxBhvr( fxevent->bhvr ) ; 
+		fxgeo->bhvr = fxGetFxBhvr( fxevent->bhvr ) ;
 	if(!fxgeo->bhvr)
 		fxgeo->bhvr = fxGetFxBhvr( "behaviors/null.bhvr" ) ;
 	assert(fxgeo->bhvr);
@@ -714,8 +713,8 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 
 
 	//Add in the position changes from the behavior file
-	//This is redundant and cumulative with the offset value, but added to make life easier for artists so 
-	//they can specify this stuff in a behavior file instead of doing simple offsets in altpivs 
+	//This is redundant and cumulative with the offset value, but added to make life easier for artists so
+	//they can specify this stuff in a behavior file instead of doing simple offsets in altpivs
 	if(!vec3IsZero(bhvr->pyrRotate) || !vec3IsZero(bhvr->pyrRotateJitter))
 	{
 		Vec3 vPyrRotate;
@@ -747,7 +746,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 		{
 			Vec3 vTemp;
 			Mat4 mKey;
-			gfxTreeFindWorldSpaceMat( mKey, key ); 
+			gfxTreeFindWorldSpaceMat( mKey, key );
 			normalMat3(mKey);
 			mulVecMat3(vStartingOffset, mKey, vTemp);
 			copyVec3(vTemp, vStartingOffset);
@@ -760,7 +759,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 
 	}
 
-	//###4. Initialize fxgeo params from it's bhvr file	
+	//###4. Initialize fxgeo params from it's bhvr file
 	//## Initialize scaling
 	copyVec3( minScale, fxgeo->clampMinScale);
 	copyVec3( maxScale, fxgeo->clampMaxScale);
@@ -772,13 +771,13 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 			MAXVEC3(fxgeo->clampMinScale, scaleVec, scaleVec);
 		if( fxgeo->clampMaxScale[0] )
 			MINVEC3(fxgeo->clampMaxScale, scaleVec, scaleVec);
-	
+
 		scaleMat3Vec3( fxgeo->gfx_node->mat, scaleVec );
-		copyVec3( scaleVec, fxgeo->cumulativescale ); 
+		copyVec3( scaleVec, fxgeo->cumulativescale );
 	}
 	fxgeo->is_scaling = ( bhvr->scaleTime[0] || bhvr->scaleTime[1] || bhvr->scaleTime[2] );
 
-	
+
 	//### 5. Light fxgeo (is the mat fully correct at this point?)
 	model = fxgeo->gfx_node->model;
 	if(model && (model->flags & OBJ_STATICFX) && lighttracker)
@@ -789,7 +788,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 		fxgeo->gfx_node->rgbs = malloc(model->vert_count * 4);
 		mat = fxGeoGetWorldSpot(fxgeo->handle);
 		lightModel(model, mat, fxgeo->gfx_node->rgbs, lighttracker, 1.f);
-		fxgeo->gfx_node->rgbs = fxgeo->rgbs; 
+		fxgeo->gfx_node->rgbs = fxgeo->rgbs;
 	}
 
 #ifdef NOVODEX
@@ -840,7 +839,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 				Vec3 vScale;
 				fxGeoGetWorldSpot(fxgeo->handle);
 				getScale(fxgeo->world_spot, vScale);
-				
+
 				// Also increase physics scale
 				if ( !vec3IsZero(bhvr->physScale) )
 					mulVecVec3(vScale, bhvr->physScale, vScale);
@@ -919,8 +918,8 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 	}
 
 	assert(fxgeo->handle);
-	(*fxgeo_count)++; 
-	
+	(*fxgeo_count)++;
+
 	PERFINFO_AUTO_STOP();
 
 	return fxgeo->handle;
@@ -930,7 +929,7 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 FxGeo * findFxGeo( FxGeo * firstfxgeo, char * name )
 {
 	FxGeo * fxgeo;
-	
+
 	fxgeo = firstfxgeo;
 	while(fxgeo && fxgeo->next) //screwy //why do I care what order I'm evaluating it in??
 		fxgeo = fxgeo->next;
@@ -942,7 +941,7 @@ FxGeo * findFxGeo( FxGeo * firstfxgeo, char * name )
 			return fxgeo;
 		}
 	}
-	printToScreenLog(0, "GEO: Failed to find geo %s for attaching", name); 
+	printToScreenLog(0, "GEO: Failed to find geo %s for attaching", name);
 	return 0;
 }
 
@@ -950,17 +949,17 @@ void fxGeoInitialize(FxGeo * fxgeo, FxGeo * fxgeolist)
 {
 	FxEvent * fxevent;
 	FxGeo * fxgeo2;
-	
+
 	fxevent = fxgeo->event;
 	if(fxevent)
-	{		
+	{
 		if( fxevent->magnet && fxevent->magnet[0] && fxevent->magnet[0] != '0')
 		{
 			fxgeo2 = findFxGeo( fxgeolist, fxevent->magnet );
 			if(fxgeo2)
 				fxgeo->magnetid	= hdlGetHandleFromPtr( fxgeo2, fxgeo2->handle);
 		}
-		
+
 		if( fxevent->lookat && fxevent->lookat[0] && fxevent->lookat[0] != '0')
 		{
 			if( !_stricmp( "Camera", fxevent->lookat) ) //TO DO: does this work?
@@ -989,26 +988,26 @@ void fxGeoInitialize(FxGeo * fxgeo, FxGeo * fxgeolist)
 			if(fxgeo2)
 				fxgeo->potherid = hdlGetHandleFromPtr( fxgeo2, fxgeo2->handle);
 		}
-	}		
+	}
 }
 
 void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, int * state, EntLight * light, U8 alpha, F32 animScale, char * additionalStates )
-{	
+{
 	SeqInst * seq, *parent_seq;
 
 	seq = hdlGetPtrFromHandle(seq_handle);
 	parent_seq = hdlGetPtrFromHandle(parent_seq_handle);
 
-	if( seq ) 
+	if( seq )
 	{
 		F32 timestep;
 		PERFINFO_AUTO_START("animation",1);
 
-		
+
 		//seqSynchCycles(seq, e->owner); maybe add this later
 
 		//make the fx's state the sequencer's (is this tha right place for this?
-		seqSetOutputs(seq->state, state); 
+		seqSetOutputs(seq->state, state);
 
 		if( additionalStates )
 			seqSetStateFromString( seq->state, additionalStates );
@@ -1021,10 +1020,10 @@ void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, 
 		}
 		else
 			timestep = TIMESTEP * animScale;
-		if(	seqProcessInst( seq, timestep ) ) {//TO DO fix this  
+		if(	seqProcessInst( seq, timestep ) ) {//TO DO fix this
 			seq->updated_appearance = 1;
 		}
- 
+
 //xyprintf(10, 10, "%s", seq->animation.move->name);
 
 		//Manage Fx that are played as a result of the sequencer move
@@ -1045,7 +1044,7 @@ void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, 
 					if(childfx && childfx->fxinfo->fxinfo_flags & FX_IS_WEAPON)
 					{
 						FxGeo *fxgeo;
-						for( fxgeo = childfx->fxgeos; fxgeo ; fxgeo = fxgeo->next) 
+						for( fxgeo = childfx->fxgeos; fxgeo ; fxgeo = fxgeo->next)
 							fxgeo->gfx_node->flags |= GFXNODE_HIDE;
 					}
 				}
@@ -1070,7 +1069,7 @@ void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, 
 		}
 		assert( gfxTreeNodeIsValid(seq->gfx_root, seq->gfx_root_unique_id ) );
 		copyVec3( seq->gfx_root->mat[3], seq->posLastFrame );
-	
+
 		seqClearState( seq->state );
 		gfxNodeSetAlpha(seq->gfx_root, alpha, 1); //FXFADE check if this works
 		animPlayInst( seq );
@@ -1085,7 +1084,7 @@ void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, 
 		if( light )
 			seq->seqGfxData.light = *light;//copy the struct
 		else
-			seq->seqGfxData.light.use = ENTLIGHT_DONT_USE; 
+			seq->seqGfxData.light.use = ENTLIGHT_DONT_USE;
 
 		PERFINFO_AUTO_STOP();
 	}
@@ -1210,19 +1209,19 @@ void fxGeoUpdateParticleSystems( FxGeo * fxgeo, int drawstatus, int teleported, 
 
 	if( fxgeo->event )
 		part_count = eaSize( &fxgeo->event->part );
-	else 
+	else
 		part_count = 0;
-		
+
 	if(!part_count)
 		return;
-		
+
 	PERFINFO_AUTO_START("particles",1);
 
 	for( i = 0 ; i < part_count ; i++ )
 	{
 		fxgeo->psys[i] = psys = partConfirmValid( fxgeo->psys[i], fxgeo->psys_id[i] );
-		if( psys ) 
-		{	
+		if( psys )
+		{
 			psys->animScale = animScale;
 
 			mat = fxGeoGetWorldSpot(fxgeo->handle);
@@ -1232,7 +1231,7 @@ void fxGeoUpdateParticleSystems( FxGeo * fxgeo, int drawstatus, int teleported, 
 				mat = fxGeoGetWorldSpot(fxgeo->pmagnetid);
 			else
 				mat = fxGeoGetWorldSpot(fxgeo->handle);
-	
+
 			partSetMagnetPoint( psys, fxgeo->psys_id[i], mat[3] );
 
 			if( hdlGetPtrFromHandle(fxgeo->potherid) )
@@ -1242,12 +1241,12 @@ void fxGeoUpdateParticleSystems( FxGeo * fxgeo, int drawstatus, int teleported, 
 
 			partSetOtherPoint( psys, fxgeo->psys_id[i], mat[3] );
 
-			partToggleDrawing( psys, fxgeo->psys_id[i], drawstatus ); 
+			partToggleDrawing( psys, fxgeo->psys_id[i], drawstatus );
 
-			if( teleported )  
+			if( teleported )
 				partSetTeleported( psys, fxgeo->psys_id[i], teleported );
 
-			//if( inheritedAlpha != 255 ) 
+			//if( inheritedAlpha != 255 )
 				partSetInheritedAlpha( psys, fxgeo->psys_id[i], inheritedAlpha );
 		}
 	}
@@ -1309,7 +1308,7 @@ static SoundEvent* pickNewSound(FxEvent* fxevent)
 void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
 {
 	Mat4Ptr mat;
-	int soundCount;   
+	int soundCount;
 	SoundEvent * sound;
 	F32 volume;
 	SeqInst * seq=0;
@@ -1342,10 +1341,10 @@ void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
 			sound = pickNewSound(fxgeo->event);
 
 		assert( sound );
-	
+
 		volume = sound->volume;
 
-		mat = fxGeoGetWorldSpot(fxgeo->handle);   
+		mat = fxGeoGetWorldSpot(fxgeo->handle);
 
 		//Little hack to make looping sounds fade as the entity fades away
 		if( seqHandle )
@@ -1362,9 +1361,9 @@ void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
 			if(	sound->isLoopingSample )
 				volume *= (F32)fxgeo->alpha / 255.0;
 		}
-	
+
 	PERFINFO_AUTO_STOP_START("sndPlaySpatial",1);
-	
+
 	{
 		int flags = SOUND_PLAY_FLAGS_INTERRUPT;
 		if (seq && playerPtr() && seq==playerPtr()->seq)
@@ -1382,9 +1381,9 @@ void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
 						0,
 						0.0f);
 	}
-	
-	PERFINFO_AUTO_STOP(); 
-	
+
+	PERFINFO_AUTO_STOP();
+
 	fxgeo->sound_triggered = sound;
 }
 
@@ -1421,7 +1420,7 @@ int gfxTreeDrawNodeJustToFillSeqGfxDataDecide( GfxNode *node, int root, BoneInfo
 		ret |= goodnode;
 		//printf("Node %d: %d\n", node->anim_id, goodnode);
 
-		if ( !node->child ) { 
+		if ( !node->child ) {
 			if ( goodnode ) {
 				//printf(" no child, but good node\n");
 				SETB(decisionBits, *decisionIndex);
@@ -1510,18 +1509,18 @@ int gfxTreeDrawNodeJustToFillSeqGfxDataExecute( GfxNode *node, const Mat4 parent
 			continue;
 
 		//gfxGetAnimMatrices
-		if( bone_IdIsValid(node->anim_id) && node->seqHandle == seqHandle ) 
-		{	
-			Mat4Ptr viewspace_scaled; 
+		if( bone_IdIsValid(node->anim_id) && node->seqHandle == seqHandle )
+		{
+			Mat4Ptr viewspace_scaled;
 			Vec3 xlate_to_hips;
 			Mat4 scaled_xform;
 			Mat4 scale_mat;
 
 			viewspace_scaled = seqGfxDataDst->bpt[node->anim_id];
 
-			copyMat4(unitmat, scale_mat); 
+			copyMat4(unitmat, scale_mat);
 			scaleMat3Vec3(scale_mat,node->bonescale); //I think just Mat4 transfer will fix??
-			mulMat4(node->mat, scale_mat, scaled_xform);	
+			mulMat4(node->mat, scale_mat, scaled_xform);
 
 			mulMat4(parent_mat, scaled_xform, viewspace_scaled );
 			scaleVec3(seqGfxDataSrc->btt[node->anim_id], -1, xlate_to_hips);   //Prexlate this back to home
@@ -1638,7 +1637,7 @@ void fxGeoUpdateCape( FxGeo* fxgeo, FxObject *fx )
 		Model * model;
 		GfxNode * node;
 		Vec3 positionOffset;
-		
+
 		copyVec3(seq->gfx_root->mat[3], positionOffset);
 
 		model = capeInst->capeHarness;
@@ -1663,19 +1662,19 @@ void fxGeoUpdateCape( FxGeo* fxgeo, FxObject *fx )
 			}
 			gfxTreeDrawNodeJustToFillSeqGfxDataExecute( seq->gfx_root, unitmat, seq->handle, &globSeqGfxData, &seq->seqGfxData, 1, 0, capeInst->pathToSkin);
 		}
-		copyVec3(positionOffset, seq->gfx_root->mat[3]); 
- 
-		// Get one used btt value  
+		copyVec3(positionOffset, seq->gfx_root->mat[3]);
+
+		// Get one used btt value
 		copyVec3(seq->seqGfxData.btt[node->anim_id], globSeqGfxData.btt[node->anim_id]);
-		//Function to transform the harness.  
+		//Function to transform the harness.
 		{
 			Mat4 bones[ARRAY_SIZE(globSeqGfxData.bpt)];
-			int i;  
- 
-			for(i = 0 ; i < model->boneinfo->numbones ; i++)      
+			int i;
+
+			for(i = 0 ; i < model->boneinfo->numbones ; i++)
 			{
-				Vec3 * bonemat = globSeqGfxData.bpt[model->boneinfo->bone_ID[i]]; 
-				mulVecMat4( globSeqGfxData.btt[node->anim_id], bonemat, bones[i][3] );  
+				Vec3 * bonemat = globSeqGfxData.bpt[model->boneinfo->bone_ID[i]];
+				mulVecMat4( globSeqGfxData.btt[node->anim_id], bonemat, bones[i][3] );
 				copyMat3(bonemat,bones[i]);
 			}
 			DeformObject(bones, model->vbo, model->vert_count, weightedverts, weightednorms, 0);
@@ -1684,13 +1683,13 @@ void fxGeoUpdateCape( FxGeo* fxgeo, FxObject *fx )
 		//DeformObject2(node, model->vbo, model->vert_count, model->vbo->verts, model->vbo->norms, weightedverts, weightednorms, model->boneinfo, &globSeqGfxData);
 		if (0)
 		{
-			printf( "My pos:  %f %f %f \n", seq->gfx_root->mat[3][0], seq->gfx_root->mat[3][1], seq->gfx_root->mat[3][2] ); 
-			printf("Verts\n"); 
+			printf( "My pos:  %f %f %f \n", seq->gfx_root->mat[3][0], seq->gfx_root->mat[3][1], seq->gfx_root->mat[3][2] );
+			printf("Verts\n");
 			{
-				int x; 
+				int x;
 				for ( x = 0 ; x < model->vert_count ; x++ )
 				{
-					printf( "%d:  %f %f %f \n", x, weightedverts[x][0], weightedverts[x][1], weightedverts[x][2] ); 
+					printf( "%d:  %f %f %f \n", x, weightedverts[x][0], weightedverts[x][1], weightedverts[x][2] );
 				}
 				for(x = 0 ; x < model->boneinfo->numbones ; x++)
 				{
@@ -1800,7 +1799,7 @@ static void fxGeoUpdateAnimationColoring(FxGeo *fxgeo, F32 age)
 	U8			rgb2[3] = {255, 255, 255};
 
 	// Simultaneous time- and texture-based tinting is not supported.
-	if (!fxgeo->bhvr->bTintGeom) 
+	if (!fxgeo->bhvr->bTintGeom)
 		getColorByAge( fxgeo->bhvr, &fxgeo->customTint, age, rgb);
 	else
 	{
@@ -1833,7 +1832,7 @@ static void fxGeoUpdateAnimationColoring(FxGeo *fxgeo, F32 age)
 
 	seq = hdlGetPtrFromHandle(fxgeo->seq_handle);
 
-	if( seq ) 
+	if( seq )
 	{
 		if (gfxTreeNodeIsValid(seq->gfx_root, seq->gfx_root_unique_id)) {
 			gfxTreeSetCustomColorsRecur( seq->gfx_root, rgb, rgb2, GFXNODE_CUSTOMCOLOR );
@@ -1852,7 +1851,7 @@ static void fxGeoUpdateObject(FxGeo * fxgeo, F32 age )
 	U8			rgb2[3] = {255, 255, 255};
 
 	// Simultaneous time- and texture-based tinting is not supported.
-	if (!fxgeo->bhvr->bTintGeom) 
+	if (!fxgeo->bhvr->bTintGeom)
 		getColorByAge( fxgeo->bhvr, &fxgeo->customTint, age, rgb);
 	else
 	{
@@ -1864,7 +1863,7 @@ static void fxGeoUpdateObject(FxGeo * fxgeo, F32 age )
 		rgb2[2] = fxgeo->customTint.secondary.rgb[2];
 
 		// fpe 2/22/11 -- HACK to fix case where white palette entry cause some fx to not get tinted:
-		//	Don't allow pure white for either tint color, because this is 
+		//	Don't allow pure white for either tint color, because this is
 		//	interpreted as a flag of sorts to distinguish between old style fx tinting and
 		//	new style dual color tinting.  This check for white exists in 2 places in
 		//	rendertree.c (where avsn_params.has_fx_tint is set/checked:
@@ -1888,7 +1887,7 @@ static void fxGeoUpdateObject(FxGeo * fxgeo, F32 age )
 }
 
 
-//Tells Fxgeo to begin fading out its geometry and when it's invisible, to destroy itself.  
+//Tells Fxgeo to begin fading out its geometry and when it's invisible, to destroy itself.
 int fxGeoFadeOut( FxGeo * fxgeo )
 {
 	int i;
@@ -1904,14 +1903,14 @@ int fxGeoFadeOut( FxGeo * fxgeo )
 	if( fxgeo->childfxid )
 		fxgeo->childfxid = fxDelete( fxgeo->childfxid, SOFT_KILL );
 
-	//Note anims automatically get the alpha of the fxgeo 
+	//Note anims automatically get the alpha of the fxgeo
 
 	//Kill all particle systems
 	{
 		int part_count;
 		if( fxgeo->event )
 			part_count = eaSize( &fxgeo->event->part );
-		else 
+		else
 			part_count = 0;
 		for( i = 0 ; i < part_count ; i++ )
 		{
@@ -1981,7 +1980,7 @@ int fxGeoCameraShakeAndBlur( FxGeo * fxgeo )
 }
 
 
-//Quick cut and paste from my player turn stuff.  
+//Quick cut and paste from my player turn stuff.
 void fxGeoLayFlat( FxGeo * fxgeo )
 {
 	Vec3 destpyr;
@@ -2002,7 +2001,7 @@ void fxGeoLayFlat( FxGeo * fxgeo )
 	//		percent_new = TIMESTEP / player->time_to_arrive_at_correct_facing;//true linear
 	//	else
 	//		percent_new = 1.0;
-	percent_new = 0.05; 
+	percent_new = 0.05;
 
 	//#### if you don't go a certain minimum turn speed, boost the percent new to get the minimum turn speed
 	//I don't know if this is worth having...
@@ -2010,14 +2009,14 @@ void fxGeoLayFlat( FxGeo * fxgeo )
 	progress = subAngle(precalcnewpyr, oldpyr[1]);
 	if(progress < 0)
 		progress *= -1;
-	if(progress < 0.02 * TIMESTEP) 
+	if(progress < 0.02 * TIMESTEP)
 		percent_new = MIN( 1.0, percent_new * (0.02 * TIMESTEP)/progress);
 
 	//#### Interpolate between the two pyrs
 	//if flying include yaw, add to rotate vec
 	newpyr[0] = interpAngle( percent_new, oldpyr[0], destpyr[0] );
 	newpyr[1] = oldpyr[1];  //newpyr[1] = oldpyr[1] * (1-percent_new) + destpyr[1] * percent_new;
-	newpyr[2] = interpAngle( percent_new, oldpyr[2], destpyr[2]  ); 
+	newpyr[2] = interpAngle( percent_new, oldpyr[2], destpyr[2]  );
 
 	createMat3YPR(fxgeo->gfx_node->mat, newpyr);
 }
@@ -2040,7 +2039,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 	PERFINFO_AUTO_START("initial", 1);
 
 	//########### Check GfxNode for Validity and set up basic variables
-	if( !gfxTreeNodeIsValid(fxgeo->gfx_node, fxgeo->gfx_node_id) ) 
+	if( !gfxTreeNodeIsValid(fxgeo->gfx_node, fxgeo->gfx_node_id) )
 	{
 		printToScreenLog( 0, "GEO: Bad node for %s", fxgeo->name );
 		PERFINFO_AUTO_STOP_CHECKED("initial");
@@ -2078,7 +2077,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 		fxgeo->fadingInTime += ( bhvr->fadeinrate * timestep );
 		alpha = (int) ( 255 * ( fxgeo->fadingInTime / bhvr->fadeinlength ) );
 		alpha = MIN(alpha, bhvr->alpha );
-		fxgeo->alpha = MAX(1, alpha );	
+		fxgeo->alpha = MAX(1, alpha );
 	}
 	else
 	{
@@ -2090,7 +2089,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 
 	gfxNodeSetAlpha(fxgeo->gfx_node,usedAlpha, 1);//(TO DO: is that really what I want??, or just for this one?)
 
-	//### Update Object 
+	//### Update Object
 	if(fxgeo->gfx_node->model)
 		fxGeoUpdateObject( fxgeo,  ( fxgeo->age - timestep ) ); //use the age last frame
 	if (fxgeo->seq_handle)
@@ -2128,7 +2127,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 			#if NOVODEX
 				fxgeo->nxEmissary = 0; // if we can't find it from the guid, it must be gone
 			#endif
-			
+
 			PERFINFO_AUTO_START("OldPhys", 1);
 			fxgeo->velocity[1] -= bhvr->gravity * timestep;
 
@@ -2138,7 +2137,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 				scaleVec3(fxgeo->velocity, (bhvr->drag * timestep), vDragDV);
 				subVec3(fxgeo->velocity, vDragDV, fxgeo->velocity);
 			}
-	
+
 
 			//## Position ####
 			scaleVec3(fxgeo->velocity, timestep, temp);
@@ -2241,7 +2240,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 
 		addVec3(newFluidEmitterMat[3], vOffset, newFluidEmitterMat[3]);
 		nwUpdateFluidEmitterTransform( fxgeo->fluidEmitter.nxFluid, newFluidEmitterMat );
-		
+
 		// Render for now, lines
 		{
 			if ( fxgeo->fluidEmitter.currentNumParticles && fxgeo->fluidEmitter.particlePositions )
@@ -2257,7 +2256,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 				*/
 			}
 		}
-		
+
 	}
 #endif
 	PERFINFO_AUTO_START("Scaling", 1);
@@ -2282,11 +2281,11 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 			}
 			newScale[i] = bhvr->scale[i] + (percentDone * (bhvr->endscale[i] - bhvr->scale[i]));
 		}
-		
+
 		oldScaleRemover[0] = 1.0/fxgeo->cumulativescale[0];
 		oldScaleRemover[1] = 1.0/fxgeo->cumulativescale[1];
 		oldScaleRemover[2] = 1.0/fxgeo->cumulativescale[2];
-	
+
 		if( fxgeo->clampMinScale[0] )
 			vec3RunningMin(newScale,fxgeo->clampMinScale);
 		if( fxgeo->clampMaxScale[0] )
@@ -2328,10 +2327,10 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 		}
 		else
 		{
-			fxLookAt( fxgeo->gfx_node->mat[3], targetMat[3], newMat );		
+			fxLookAt( fxgeo->gfx_node->mat[3], targetMat[3], newMat );
 			copyMat3( newMat, fxgeo->gfx_node->mat );
 
-			scale = timestep * bhvr->trackrate; 
+			scale = timestep * bhvr->trackrate;
 			scaleVec3( fxgeo->gfx_node->mat[2], scale, moveto );
 			addVec3( fxgeo->gfx_node->mat[3], moveto, fxgeo->gfx_node->mat[3] );
 
@@ -2364,7 +2363,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 					collision = 1;
 			}
 
-			if( collision )	 
+			if( collision )
 			{
 				fxgeo->hasCollided = 1;
 				copyVec3( targetMat[3], fxgeo->gfx_node->mat[3] );
@@ -2374,7 +2373,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 			{
 				int flag = 0;
 				if( !_stricmp( fxgeo->name, "Prime" ) )
-					flag |= FX_STATE_PRIMEHIT;  
+					flag |= FX_STATE_PRIMEHIT;
 				else if( !_stricmp( fxgeo->name, "Prime1" ) )
 					flag |= FX_STATE_PRIME1HIT; //this is a bit clunky, but I'm in a hurry
 				else if( !_stricmp( fxgeo->name, "Prime2" ) )
@@ -2397,14 +2396,14 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 					flag |= FX_STATE_PRIME10HIT;
 
 				if(flag)
-					*fxobject_flags |= flag; 
+					*fxobject_flags |= flag;
 			}
 		}
 	}
 
 	PERFINFO_AUTO_STOP_START("Lookat", 1);
 	if( !fxgeo->hasCollided && ((hdlGetPtrFromHandle(fxgeo->lookatid) || fxgeo->fxgeo_flags & FXGEO_LOOKAT_CAMERA)) && fxgeo->fxgeo_flags != 16)
-	{	
+	{
 		Mat4Ptr		mat;
 
 		//Maybe change to FxGeos so I can use world spot?
@@ -2413,7 +2412,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 		else if( fxgeo->fxgeo_flags & FXGEO_LOOKAT_CAMERA )
 			mat = cam_info.cammat;
 
-		//TO DO : I think this local xform is totally crazy, why did I do it? 
+		//TO DO : I think this local xform is totally crazy, why did I do it?
 		if( fxgeo->gfx_node->parent ) // is local to something
 		{
 			Mat4Ptr mat2;
@@ -2425,7 +2424,7 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 			mat = (Mat4Ptr)mat1;
 		}
 
-		len = fxLookAt( fxgeo->gfx_node->mat[3], mat[3],  newMat ); 
+		len = fxLookAt( fxgeo->gfx_node->mat[3], mat[3],  newMat );
 		copyMat3( newMat, fxgeo->gfx_node->mat);
 
 		//reintroduce scale...
@@ -2436,14 +2435,14 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 			Vec3 dv;
 			subVec3( fxgeo->gfx_node->mat[3], mat[3], dv );
 			len = lengthVec3( dv );
-			scalevec[2] *= len;	
+			scalevec[2] *= len;
 		}
-		
+
 		copyMat4( unitmat, tempmat);
 		scaleMat3Vec3( tempmat, scalevec );
 		mulMat4( fxgeo->gfx_node->mat, tempmat,  tempmat2 );
-		copyMat4( tempmat2, fxgeo->gfx_node->mat );		
-		
+		copyMat4( tempmat2, fxgeo->gfx_node->mat );
+
 		//reintroduce spin
 		rotateMat3( fxgeo->cumulativespin, fxgeo->gfx_node->mat );
 
@@ -2465,14 +2464,14 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 	{
 		// Update or initialize the texture animation state info.
 		// < 0.0 means "initialize me"
-		fxgeo->gfx_node->model->trick->st_anim_age = 
+		fxgeo->gfx_node->model->trick->st_anim_age =
 			( fxgeo->gfx_node->model->trick->st_anim_age < 0.0f ) ?
 				0.0f : ( fxgeo->gfx_node->model->trick->st_anim_age + TIMESTEP );
 	}
-	
+
 	PERFINFO_AUTO_STOP_START("AtCamera", 1);
 	if(fxgeo->fxgeo_flags & FXGEO_AT_CAMERA && fxgeo->fxgeo_flags != 16)
-	{	
+	{
 		Vec3 offset;
 		// DGNOTE 4/27/2009 - This vec3 has the near clip distance plus small offset as its 3rd
 		// element.  This is set to match the zNear parameter handed to glFrustum over in rt_init.c
@@ -2494,13 +2493,13 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 	}
 
 	//Something of a HACK to handle things that are supposed to shoot toward a target while facing the target
-	//if( fxgeo->hasCollided && !thisIsMyFirstUpdate && fxgeo->lookatid && fxgeo->magnetid  ) //don't go wheeling all over the place, just hit and stop 
+	//if( fxgeo->hasCollided && !thisIsMyFirstUpdate && fxgeo->lookatid && fxgeo->magnetid  ) //don't go wheeling all over the place, just hit and stop
 	//	copyMat3(orientation_last_frame, fxgeo->gfx_node->mat );
 
 	PERFINFO_AUTO_STOP_START("collides hack", 1);
 	if( bhvr->collides && !fxgeo->fxgeo_flags != 16 )
 	{
-		CollInfo coll; 
+		CollInfo coll;
 		Entity *player = playerPtr();
 		if( collGrid(0, fxgeo->position_last_frame, fxgeo->gfx_node->mat[3], &coll, 0, COLL_DISTFROMSTART) )
 		{
@@ -2520,8 +2519,8 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
 	}
 
 	//Check for scaling state change.
-	if( fxgeo->cumulativescale[2] >= bhvr->endscale[2] && !_stricmp( fxgeo->name, "Prime" ) ) 
-			*fxobject_flags |= FX_STATE_PRIMEBEAMHIT; 
+	if( fxgeo->cumulativescale[2] >= bhvr->endscale[2] && !_stricmp( fxgeo->name, "Prime" ) )
+			*fxobject_flags |= FX_STATE_PRIMEBEAMHIT;
 
 	fxgeo->gfx_node->flags |= GFXNODE_NEEDSVISCHECK;
 
@@ -2595,7 +2594,7 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 	fxgeo->fluidEmitter.particleDensities = NULL;
 	fxgeo->fluidEmitter.currentNumParticles = 0;
 #endif
-	
+
 	//1. Set flags, I donno if this is the best way
 	if( !_stricmp( fxgeo->name, "Prime") )
 		*fxobject_flags |= FX_STATE_PRIMEDIED;
@@ -2636,11 +2635,11 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 	if( fxgeo->seq_handle)
 	{
 		SeqInst * seq;
-		
+
 		//if the seq is dead for some reason (should never happen)
 		seq = hdlGetPtrFromHandle(fxgeo->seq_handle);
 
-		if(seq) 
+		if(seq)
 		{
 			//if the seq has had it's gfxnodes blown out from under it, don't be deleting gfxnodes that are unknown...
 			if( gfxTreeNodeIsValid( seq->gfx_root, seq->gfx_root_unique_id ) )
@@ -2648,7 +2647,7 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 				seq->gfx_root = 0;
 			}
 			seqFreeInst( seq );
-			
+
 		}
 		fxgeo->seq_handle = 0;
 	}
@@ -2669,7 +2668,7 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 		int part_count;
 		if( fxgeo->event )
 			part_count = eaSize( &fxgeo->event->part );
-		else 
+		else
 			part_count = 0;
 		for( i = 0 ; i < part_count ; i++ )
 		{
@@ -2679,7 +2678,7 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 				partKillSystem(fxgeo->psys[i], fxgeo->psys_id[i]);
 		}
 	}
-	
+
 	if(fxgeo->rgbs)
 		free(fxgeo->rgbs);
 
@@ -2693,7 +2692,7 @@ void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * 
 	listRemoveMember(fxgeo, fxgeolist);
 	hdlClearHandle(fxid);
 	mpFree( fx_engine.fxgeo_mp, fxgeo );
-	
+
 
 	(*fxgeo_count)--;
 }
@@ -2706,7 +2705,7 @@ static void getCenter( Vec3 start, Vec3 end, Vec3 center )
 {
 	subVec3( end, start, center );
 	scaleVec3( center, 0.5, center );
-	addVec3( start, center, center ); 
+	addVec3( start, center, center );
 }
 
 
@@ -2726,16 +2725,16 @@ void fxGeoUpdateSplat( FxGeo * fxgeo, U8 actualAlpha )
 
 	splatEvent = fxgeo->event->splat[0];
 
-	splatParams = &sp; 
+	splatParams = &sp;
 	{
-		//Make sure you have a good node   
+		//Make sure you have a good node
 		if( !gfxTreeNodeIsValid(fxgeo->splatNode, fxgeo->splatNodeUniqueId) )
-		{ 
+		{
 			int doInvertedSplat = (bhvr->splatFalloffType == SPLAT_FALLOFF_BOTH) ? 1 : 0;
 			fxgeo->splatNode = initSplatNode( &fxgeo->splatNodeUniqueId, splatEvent->texture1, splatEvent->texture2, doInvertedSplat );
-		}  
+		}
 		assert( gfxTreeNodeIsValid(fxgeo->splatNode, fxgeo->splatNodeUniqueId) );
-		splatParams->node = fxgeo->splatNode;  
+		splatParams->node = fxgeo->splatNode;
 	}
 
 	//node+uniqueID + shadowParams
@@ -2750,35 +2749,35 @@ void fxGeoUpdateSplat( FxGeo * fxgeo, U8 actualAlpha )
 		F32 distAlpha;
 		F32 drawDist;
 		U8 maxAlpha; //maxAlpha possible under the circumstances
-		
+
 		drawDist = SHADOW_BASE_DRAW_DIST * ( splatParams->shadowSize[0] / SEQ_DEFAULT_SHADOW_SIZE );
- 
+
 		//If you are outside of your comfort zome, fade out over 30 feet
-		distAlpha = 255;//(1.0 - (( distFromCamera - drawDist ) / SHADOW_FADE_OUT_DIST )) ; 
+		distAlpha = 255;//(1.0 - (( distFromCamera - drawDist ) / SHADOW_FADE_OUT_DIST )) ;
 		distAlpha = MINMAX( distAlpha, 0, 1.0 );
 
 		//Find MaxAlpha
 		maxAlpha = actualAlpha;								//Node's alpha
-		maxAlpha = MIN( maxAlpha, (U8)(distAlpha * 255) ); 	 	//Distance from camera 
-		
+		maxAlpha = MIN( maxAlpha, (U8)(distAlpha * 255) ); 	 	//Distance from camera
+
 		splatParams->maxAlpha = maxAlpha;
 	}
-	
 
 
-	mat = fxGeoGetWorldSpot( fxgeo->handle ); 
+
+	mat = fxGeoGetWorldSpot( fxgeo->handle );
 
 
-		
+
 	//TO DO this won't work with arbitrary projections
-	copyVec3( mat[3], splatParams->projectionStart );   //Get Projection Start  
+	copyVec3( mat[3], splatParams->projectionStart );   //Get Projection Start
 
 	//TO DO won't work for arbitraries
 	//splatSetBack = what percent of the splat should be behind the node, and what in front
 	splatParams->projectionStart[1] += ( splatParams->shadowSize[1] * bhvr->splatSetBack );
 
 	splatParams->projectionDirection[0] = 0;
-	splatParams->projectionDirection[1] = -1; 
+	splatParams->projectionDirection[1] = -1;
 	splatParams->projectionDirection[2] = 0;
 
 
@@ -2787,12 +2786,12 @@ void fxGeoUpdateSplat( FxGeo * fxgeo, U8 actualAlpha )
 	copyMat4( mat, splatParams->mat );
 
 	//Set the Collision Density Rejection Coefficient
-	splatParams->max_density = 12.0;//  SPLAT_HIGH_DENSITY_REJECTION;    
+	splatParams->max_density = 12.0;//  SPLAT_HIGH_DENSITY_REJECTION;
 
-	splatParams->flags			= bhvr->splatFlags; 
-	splatParams->falloffType	= bhvr->splatFalloffType; 
-	splatParams->normalFade		= bhvr->splatNormalFade; 
-	splatParams->fadeCenter		= bhvr->splatFadeCenter; 
+	splatParams->flags			= bhvr->splatFlags;
+	splatParams->falloffType	= bhvr->splatFalloffType;
+	splatParams->normalFade		= bhvr->splatNormalFade;
+	splatParams->fadeCenter		= bhvr->splatFadeCenter;
 
 
 	if( bhvr->stAnim )
@@ -2815,7 +2814,7 @@ void fxGeoUpdateSplat( FxGeo * fxgeo, U8 actualAlpha )
 			|| fabsf(splat->height - splatParams->shadowSize[2]) > 0.001f
 			|| fabsf(splat->depth - splatParams->shadowSize[1]) > 0.001f
 			)
-			updateASplat( splatParams ); 
+			updateASplat( splatParams );
 	}
 
 	updateSplatTextureAndColors(splatParams, fxgeo->cumulativescale[0], fxgeo->cumulativescale[2]);

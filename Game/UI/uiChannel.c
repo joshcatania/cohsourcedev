@@ -14,7 +14,7 @@
 #include "uiScrollBar.h"
 #include "uiComboBox.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "ttFontUtil.h"
 #include "uiInput.h"
 #include "sprite_base.h"
@@ -52,7 +52,7 @@ static char oldUserHandleSelection[128];
 
 
 // --------------------------------------------------------------------------------
-// Rebuild/Reset 
+// Rebuild/Reset
 // --------------------------------------------------------------------------------
 
 void notifyChannelDestroy(ChatChannel *channel)
@@ -155,7 +155,7 @@ int canInviteSupergroup_CM(void * foo)
 	{
 		return CM_HIDE;
 	}
-	
+
 	if ((e = playerPtr()) == NULL || (sg = e->supergroup) == NULL)
 	{
 		return CM_HIDE;
@@ -165,7 +165,7 @@ int canInviteSupergroup_CM(void * foo)
 	for (i = eaSize(&sg->memberranks) - 1; i >= 0; i--)
 	{
 		if (sg->memberranks[i] && sg->memberranks[i]->dbid == e->db_id)
-		{ 
+		{
 			myRank = sg->memberranks[i]->rank;
 			break;
 		}
@@ -240,11 +240,11 @@ ContextMenu * getChanInviteSupergroupMenu()
 	if(!s_menu)
 	{
 		s_menu = contextMenu_Create( NULL );
-		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 4, "ChanInviteSGLeader",		0); 
-		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 3, "ChanInviteSGCommander",	0); 
-		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 2, "ChanInviteSGCaptain",		0); 
-		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 1, "ChanInviteSGLieutenant",	0); 
-		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 0, "ChanInviteSGAllMembers",	0); 
+		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 4, "ChanInviteSGLeader",		0);
+		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 3, "ChanInviteSGCommander",	0);
+		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 2, "ChanInviteSGCaptain",		0);
+		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 1, "ChanInviteSGLieutenant",	0);
+		contextMenu_addCode(s_menu, alwaysAvailable, 0, chanInviteSupergroup_CM, (void*) 0, "ChanInviteSGAllMembers",	0);
 	}
 
 	return s_menu;
@@ -339,7 +339,7 @@ int canMakeOperator_CM(void * foo)
 int canModify_CM(void * foo)
 {
  	ChatUser * user = GetChannelUser(gCurrentChannel, targetGetHandle());
- 		
+
 	if(!UsingChatServer())
 		return CM_HIDE;
 
@@ -403,8 +403,8 @@ int canSilence(ChatUser * user)
 
 int canSilence_CM(void * foo)
 
-{	
-	ChatUser * user = GetChannelUser(gCurrentChannel, targetGetHandle());	
+{
+	ChatUser * user = GetChannelUser(gCurrentChannel, targetGetHandle());
 
 	if(!UsingChatServer())
 		return CM_HIDE;
@@ -426,7 +426,7 @@ int canUnsilence(ChatUser * user)
 
 
 int canUnsilence_CM(void * foo)
-{		
+{
 	ChatUser * user = GetChannelUser(gCurrentChannel, targetGetHandle());
 
 	if(!UsingChatServer())
@@ -538,14 +538,14 @@ ContextMenu * getChannelInviteMenu()
 	int i;
 
 	static ContextMenu * s_menu = 0;
-	
+
 	if(!s_menu)
 	{
 		s_menu = contextMenu_Create( NULL );
 
 		for(i=1;i<=MAX_WATCHING;i++)
 		{
-			contextMenu_addVariableTextCode(s_menu, canInviteTargetToChannel, (void*) i, inviteTargetToChannel, (void*) i, chatcm_userChannelText, (void*) i, 0); 
+			contextMenu_addVariableTextCode(s_menu, canInviteTargetToChannel, (void*) i, inviteTargetToChannel, (void*) i, chatcm_userChannelText, (void*) i, 0);
 		}
 	}
 
@@ -612,14 +612,14 @@ void initChannelUserContextMenu()
 }
 
 //------------------------------------------------------------------------------------
-// User ListView 
+// User ListView
 //------------------------------------------------------------------------------------
 
 #define USER_HANDLE_COLUMN	"UserHandleColumn"
 
 int compareUserHandle(const ChatUser** f1, const ChatUser** f2)
 {
-	return stricmp((*f1)->handle, (*f2)->handle); 
+	return stricmp((*f1)->handle, (*f2)->handle);
 }
 
 
@@ -628,7 +628,7 @@ UIBox userLVDisplayItem(UIListView* list, PointFloatXYZ rowOrigin, void* userSet
 {
 	UIBox box;
 	PointFloatXYZ pen = rowOrigin;
-	UIColumnHeaderIterator columnIterator; 
+	UIColumnHeaderIterator columnIterator;
 	int color;
 
 	box.origin.x = rowOrigin.x;
@@ -673,7 +673,7 @@ UIBox userLVDisplayItem(UIListView* list, PointFloatXYZ rowOrigin, void* userSet
 				clipBox.width = columnIterator.currentWidth;
 
 			clipperPushRestrict(&clipBox);
-			
+
 			if(flag)
 			{
 				float sc = (20.f*list->scale)/flag->width;
@@ -741,9 +741,9 @@ static TextAttribs s_taText =
 #define B_FOOTER	(B_HT/2 + PIX3 + 5)
 #define USER_BUTTON_AREA (80 + PIX3)
 
-#define BUTTON_HT	(21) 
-#define BUTTON_WD	(70) 
-#define BUTTON_GAP	(3) 
+#define BUTTON_HT	(21)
+#define BUTTON_WD	(70)
+#define BUTTON_GAP	(3)
 
 static int __cdecl compareChannelNames(const ChatChannel** c1, const ChatChannel** c2)
 {
@@ -766,7 +766,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
 	int op, size;
 	float buttonWD, buttonHT, buttonX, buttonXOffset, buttonY, buttonYOffset;
 	char * handle;
-	
+
 	static ChatChannel * last_chatChannel = 0;
 	static bool init = false;
 	static int lastWidth = 0;
@@ -799,7 +799,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
 		resetChannelWindow();
 		return 0;
 	}
-	
+
 	font(&game_12);
 	font_color(CLR_WHITE, CLR_WHITE);
 
@@ -820,12 +820,12 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
  	pen.x = lvDrawArea.x;
  	pen.y = lvDrawArea.y;
 	pen.z = z+1;					// Draw on top of the frame
- 
+
 	// Do nothing if no filter is selected
  	if( !gCurrentChannel || 0 == eaSize(&gChatChannels))
 	{
  		s_taText.piScale = (int *)((int)(sc*SMF_FONT_SCALE));
-		smf_ParseAndDisplay(NULL, textStd("DoNotBelongToAnyChannels"), windowDrawArea.x + R10*sc, windowDrawArea.y + ht/8, z+1, 
+		smf_ParseAndDisplay(NULL, textStd("DoNotBelongToAnyChannels"), windowDrawArea.x + R10*sc, windowDrawArea.y + ht/8, z+1,
 			windowDrawArea.width - 2*R10*sc, 120*sc, 1, 0, &s_taText, NULL, 0, true);
 		return 0;
 	}
@@ -874,7 +874,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
 	// Rebuild the entire friends list if required.
  	if(userLV && userListRebuildRequired)
 	{
-		int i; 
+		int i;
 
 		uiLVClear(userLV);
 		for(i = 0; i < size; i++)
@@ -946,7 +946,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
  			contextMenu_set( interactChannelUser, x, y, NULL );
 		}
 	}
-	
+
 	if(!gCurrentChannel->me)
 	{
 		// i never got a "join" message...
@@ -1032,7 +1032,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
 	{
 		dialogStd(DIALOG_YES_NO, textStd("ConfirmLeaveChannelDialog"), NULL, NULL, confirmLeaveChannelDialog, NULL, DLGFLAG_GAME_ONLY);
 	}
-		
+
 
 	return 0;
 }

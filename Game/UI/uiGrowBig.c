@@ -5,7 +5,7 @@
  ***************************************************************************/
 #include "uiGrowBig.h"
 #include "utils.h"
-#include "assert.h"
+#include "SuperAssert.h"
 
 void uigrowbig_Init(uiGrowBig *growbig, F32 max, U32 numSteps)
 {
@@ -25,7 +25,7 @@ void uigrowbig_Update(uiGrowBig *growbig, void *over)
 	if( verify( growbig ))
 	{
 		int i;
-		
+
 		if( growbig->items[0].over != over )
 		{
 			// move everything down
@@ -35,7 +35,7 @@ void uigrowbig_Update(uiGrowBig *growbig, void *over)
 		}
 
 		// update
-		for( i = 0; i < ARRAY_SIZE( growbig->items ); ++i ) 
+		for( i = 0; i < ARRAY_SIZE( growbig->items ); ++i )
 		{
 			growbig->items[i].scale = CLAMPF32(growbig->items[i].scale + (i == 0 ? growbig->stepsize : -growbig->stepsize), 1.f, growbig->max);
 		}
@@ -49,7 +49,7 @@ F32 uigrowbig_GetScale(uiGrowBig *growbig, void *over, int *elem)
 	if( verify( growbig ))
 	{
 		int i;
-		for( i = 0; i < ARRAY_SIZE( growbig->items ); ++i ) 
+		for( i = 0; i < ARRAY_SIZE( growbig->items ); ++i )
 		{
 			if( growbig->items[i].over == over )
 			{

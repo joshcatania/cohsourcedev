@@ -4,7 +4,7 @@
 #include "uiListView.h"		// For UIBox stuff.  Move it out of that file.
 #include "win_init.h"
 #include "sprite_base.h"
-#include <assert.h>
+#include "SuperAssert.h"
 #include "sprite.h"
 #include "mathutil.h"
 #include "uiGame.h"
@@ -106,11 +106,11 @@ void clipperPushRestrict(UIBox* box)
 }
 
 void clipperPush(UIBox* box)
-{	
+{
 	Clipper2D* clipper;
 	int clipperIndex;
 
-	if(!ClipperMemPool) 
+	if(!ClipperMemPool)
 	{
 		ClipperMemPool = createMemoryPool();
 		initMemoryPool(ClipperMemPool, sizeof(Clipper2D), 16);
@@ -119,7 +119,7 @@ void clipperPush(UIBox* box)
 	clipper = mpAlloc(ClipperMemPool);
 	clipperIndex = eaPush(&ClipperStack, clipper);
 
-	if(!box) // no box, clip to fullscreen 
+	if(!box) // no box, clip to fullscreen
 			// Pushing null onto stack leaves us in wierd state where we are trying to scissor (there is a stack)
 			// but there is no box.
 	{

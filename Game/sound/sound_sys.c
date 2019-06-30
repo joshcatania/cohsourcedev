@@ -7,7 +7,7 @@
 #include "file.h"
 #include "ogg_decode.h"
 #include "sound_sys.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "error.h"
 #include "utils.h"
 #include "MemoryMonitor.h"
@@ -67,7 +67,7 @@ static struct {
 	S32							count;
 	S32							maxCount;
 } sound_files;
-	
+
 static IDirectSound3DListener*	theListener;	//the 3d listener that corresponds to the player's position and speed
 static S32						timer;
 static F32						volumeScale;
@@ -116,7 +116,7 @@ static int matchBufferType(int play_idx)
 	DSoundState	*dsound,dsound_temp;
 	DecodeState	*decode = &curr->decode;
 
-	for(i=0;i<g_audio_state.maxSoundChannels;i++) // 
+	for(i=0;i<g_audio_state.maxSoundChannels;i++) //
 	{
 		idx = (i + play_idx) % g_audio_state.maxSoundChannels;
 		play = &channels[idx];
@@ -152,7 +152,7 @@ static IDirectSoundBuffer *sndSysCreateSoundBuffer(int dwBufSize, int dwFreq, in
 	IDirectSoundBuffer	*dwBuf=0;
 
 	// Set up wave format structure.
-	
+
 	ZeroStruct(&pcmwf);
 	pcmwf.wf.wFormatTag         = WAVE_FORMAT_PCM;
 	pcmwf.wf.nChannels          = num_channels;
@@ -162,7 +162,7 @@ static IDirectSoundBuffer *sndSysCreateSoundBuffer(int dwBufSize, int dwFreq, in
 	pcmwf.wBitsPerSample        = (WORD)16;
 
 	// Set up DSBUFFERDESC structure.
-	
+
 	ZeroStruct(&dsbdesc);
 	dsbdesc.dwSize              = sizeof(dsbdesc);
 	dsbdesc.dwFlags             = DSBCAPS_GLOBALFOCUS | DSBCAPS_CTRLVOLUME | DSBCAPS_GETCURRENTPOSITION2;
@@ -175,13 +175,13 @@ static IDirectSoundBuffer *sndSysCreateSoundBuffer(int dwBufSize, int dwFreq, in
 	{
 		dsbdesc.dwFlags			|= DSBCAPS_CTRLPAN;
 	}
-	
+
 	if (g_audio_state.software)
 	{
 		dsbdesc.dwFlags |= DSBCAPS_LOCDEFER;
 	}
-	
-	dsbdesc.dwBufferBytes       = dwBufSize; 
+
+	dsbdesc.dwBufferBytes       = dwBufSize;
 	dsbdesc.lpwfxFormat         = (LPWAVEFORMATEX)&pcmwf;
 
 	PERFINFO_AUTO_START("IDS_CreateSoundBuffer", 1);
@@ -302,7 +302,7 @@ static void playStart(PlayStream *play)
 			ret = IDirectSoundBuffer_GetVolume(play->dsound.buffer, &volume);
 			DS_ASSERT(ret == DS_OK);
 		PERFINFO_AUTO_STOP();
-		
+
 		i = getVolumeTimer(volume);
 
 		PERFINFO_AUTO_START_STATIC(volumeTimers[i].name, &volumeTimers[i].piStatic, 1);
@@ -339,7 +339,7 @@ static void clearBuffer(PlayStream *play)
 										&dwData2Size,
 										0);//DSBLOCK_FROMWRITECURSOR
 	PERFINFO_AUTO_STOP();
-	
+
 	if (rval != DS_OK)
 	{
 		PERFINFO_AUTO_START("IDSB_Stop", 1);
@@ -347,16 +347,16 @@ static void clearBuffer(PlayStream *play)
 		PERFINFO_AUTO_STOP();
 		return;
 	}
-	
+
 	if (dwData1Size > 0)
 		memset(pData1,0,dwData1Size);
 	if (dwData2Size > 0)
 		memset(pData2,0,dwData2Size);
-		
+
 	PERFINFO_AUTO_START("IDSB_Unlock", 1);
 		rval = IDirectSoundBuffer_Unlock(dsound->buffer,pData1,dwData1Size,pData2,dwData2Size);
 	PERFINFO_AUTO_STOP();
-	
+
 	DS_ASSERT(rval == DS_OK);
 }
 
@@ -389,7 +389,7 @@ void sndSysCleanChannel(int channel)
 	DecodeState	*decode = &play->decode;
 	DSoundState	*dsound = &play->dsound;
 	int ret;
-	
+
 	if (dsound->buffer)
 	{
 		PERFINFO_AUTO_START("IDSB_Release", 1);
@@ -426,7 +426,7 @@ int sndSysChannelGets3D(int channel)
 static F32 volumeDbToRatio(F32 db)
 {
 	db = MINMAX(db, MIN_VOLUME_DB, MAX_VOLUME_DB);
-	
+
 	return powf(10, db / 2000.0);
 }
 
@@ -440,7 +440,7 @@ static int volumeRatioToDb(F32 volRatio)
 	{
 		minVolRatio = volumeDbToRatio(MIN_VOLUME_DB);
 	}
-	
+
 	if(volRatio <= minVolRatio)
 	{
 		db = MIN_VOLUME_DB;
@@ -454,7 +454,7 @@ static int volumeRatioToDb(F32 volRatio)
 		db = MINMAX(db, MIN_VOLUME_DB, MAX_VOLUME_DB);
 	}
 
-	return db;	
+	return db;
 }
 
 static void sndSysSetVolume(DSoundState* dsound, int db)
@@ -463,9 +463,9 @@ static void sndSysSetVolume(DSoundState* dsound, int db)
 	{
 		return;
 	}
-	
+
 	db = MINMAX(db, MIN_VOLUME_DB, MAX_VOLUME_DB);
-	
+
 	PERFINFO_AUTO_START("IDSB_SetVolume", 1);
 	{
 		int i = getVolumeTimer(db);
@@ -487,9 +487,9 @@ static int sndSetupDirectSound(int channel, DSParams* params)
 	DecodeState	*decode = &play->decode;
 	DSoundState	*dsound = &play->dsound;
 	int ret;
-	
+
 	// Setup DSound.
-	
+
 	sndSysCleanChannel(channel);
 	dsound->buffer = sndSysCreateSoundBuffer(decode->decode_len * 4,decode->frequency,decode->num_channels);
 	if (!dsound->buffer)
@@ -497,13 +497,13 @@ static int sndSetupDirectSound(int channel, DSParams* params)
 		dsound->in_use = 0;
 		return 0;
 	}
-	
+
 	memMonitorTrackUserMemory(DSOUND_MEMMONITOR_NAME, 1, MOT_ALLOC, decode->decode_len * 4);
-	
+
 	if (g_audio_state.surround)
 	{
 		assert(!dsound->buffer3d);
-		
+
 		PERFINFO_AUTO_START("IDS_QueryInterface", 1);
 			IDirectSound_QueryInterface(dsound->buffer,
 										(const IID * const)&IID_IDirectSound3DBuffer8,
@@ -527,9 +527,9 @@ static int sndSetupDirectSound(int channel, DSParams* params)
 	dsound->last_write_pos		= 0;
 	dsound->bytes_left			= 0;
 	dsound->saved_play_cursor	= 0;
-	
+
 	sndSysSetVolume(dsound, dsound->volDb);
-	
+
 	PERFINFO_AUTO_START("IDSB_SetCurrentPosition", 1);
 		ret = IDirectSoundBuffer_SetCurrentPosition(dsound->buffer, 0);
 		DS_ASSERT(ret == DS_OK);
@@ -538,7 +538,7 @@ static int sndSetupDirectSound(int channel, DSParams* params)
 	if (g_audio_state.surround)
 	{
 		dsound->params = *params;
-		
+
 		PERFINFO_AUTO_START("IDS3DB_SetMinDistance", 1);
 			IDirectSound3DBuffer_SetMinDistance(dsound->buffer3d, params->innerRadius, DS3D_IMMEDIATE);
 		PERFINFO_AUTO_STOP();
@@ -559,7 +559,7 @@ static int sndSetupDirectSound(int channel, DSParams* params)
 	}
 
 	dsound->last_write_pos = 0;
-	
+
 	return 1;
 }
 
@@ -575,13 +575,13 @@ static struct {
 static void initChannelTimers()
 {
 	int i;
-	
+
 	if(channelTimers){
 		return;
 	}
-	
+
 	channelTimers = calloc(1, sizeof(*channelTimers));
-	
+
 	for(i = 0; i < ARRAY_SIZE(channelTimers->names); i++){
 		char buffer[100];
 		STR_COMBINE_BEGIN(buffer);
@@ -598,23 +598,23 @@ static PlayStream *playStreamCreate(SoundFileInfo *info,int channel,DSParams * p
 	DecodeState*	decode = &play->decode;
 	DSoundState*	dsound = &play->dsound;
 	CodecFuncs*		codec;
-	
+
 	play->infoCopy = *info;
-	
+
 	PERFINFO_AUTO_START("playStreamCreate", 1);
-	
+
 	PERFINFO_RUN(
 		initChannelTimers();
-		
+
 		PERFINFO_AUTO_START_STATIC(channelTimers->names[channel], &channelTimers->timers[channel], 1);
 	)
 
 	EnterDecodingCS();
-	
+
 	PERFINFO_AUTO_START("checkPcmCache", 1);
 		checkPcmCache(info);
 	PERFINFO_AUTO_STOP();
-	
+
 	if (info->pcm_len)
 	{
 		codec = &pcm_funcs;
@@ -629,7 +629,7 @@ static PlayStream *playStreamCreate(SoundFileInfo *info,int channel,DSParams * p
 	PERFINFO_AUTO_STOP();
 
 	// Setup decoder.
-	
+
 	if (!decode->decode_buffer)
 	{
 		decode->decode_len = BUFFER_FILL_SIZE;
@@ -638,9 +638,9 @@ static PlayStream *playStreamCreate(SoundFileInfo *info,int channel,DSParams * p
 	if (dsound->in_use && decode->codec)
 	{
 		// Use old codec to free old data.
-		
+
 		PERFINFO_AUTO_START("reset", 1);
-			decode->codec->reset(decode); 
+			decode->codec->reset(decode);
 		PERFINFO_AUTO_STOP();
 	}
 	decode->info = info;
@@ -650,11 +650,11 @@ static PlayStream *playStreamCreate(SoundFileInfo *info,int channel,DSParams * p
 	PERFINFO_AUTO_STOP();
 
 	decode->codec = codec;
-	
+
 	if(!sndSetupDirectSound(channel, params))
 	{
 		assert(!dsound->in_use);
-		
+
 		PERFINFO_AUTO_START("reset", 1);
 			codec->reset(decode);
 		PERFINFO_AUTO_STOP();
@@ -665,7 +665,7 @@ static PlayStream *playStreamCreate(SoundFileInfo *info,int channel,DSParams * p
 	LeaveDecodingCS();
 	PERFINFO_AUTO_STOP(); // Matches "Channel #".
 	PERFINFO_AUTO_STOP(); // Matches "playStreamCreate".
-	
+
 	return play;
 }
 
@@ -679,25 +679,25 @@ static void copyDataToDSound(PlayStream *play)
 
 	if (decode->decode_count <= 0)
 		return;
-	
+
 	PERFINFO_AUTO_START("IDSB_Lock", 1);
 		rval = IDirectSoundBuffer_Lock(dsound->buffer,dsound->last_write_pos,decode->decode_count,&pData1,&dwData1Size,&pData2,&dwData2Size,0);//DSBLOCK_FROMWRITECURSOR
 	PERFINFO_AUTO_STOP();
 
 	if(rval == DS_OK)
 	{
-		if (dwData1Size > 0) 
+		if (dwData1Size > 0)
 			memcpy(pData1,decode->decode_buffer,dwData1Size);
-		if (dwData2Size > 0) 
+		if (dwData2Size > 0)
 			memcpy(pData2,decode->decode_buffer+dwData1Size,dwData2Size);
-		
+
 		PERFINFO_AUTO_START("IDSB_Unlock", 1);
 			rval = IDirectSoundBuffer_Unlock(dsound->buffer,pData1,dwData1Size,pData2,dwData2Size);
 		PERFINFO_AUTO_STOP();
 
 		DS_ASSERT(rval == DS_OK);
 	}
-	
+
 	dsound->last_write_pos = (dsound->last_write_pos + decode->decode_count) % dsound->length;
 }
 
@@ -732,17 +732,17 @@ static void fillBuffer(PlayStream *play)
 	S32				decodeLen;
 
 	PERFINFO_AUTO_START("fillBuffer", 1);
-	
+
 		PERFINFO_AUTO_START("Decode Sound", 1);
 			decodeLen = codec->decode(decode);
 		PERFINFO_AUTO_STOP();
-		
+
 		if (decodeLen >= 0 && decodeLen < decode->decode_len)
 		{
 			PERFINFO_AUTO_START("copyDataToDSound1", 1);
 				copyDataToDSound(play);
 			PERFINFO_AUTO_STOP();
-			
+
 			if (play->loop)
 			{
 				PERFINFO_AUTO_START("rewind", 1);
@@ -788,7 +788,7 @@ static void fillBuffer(PlayStream *play)
 	if(decodeLen < 0)
 	{
 		// The decoder crashed, so kill the sound.
-		
+
 		playStop(play, 0);
 	}
 }
@@ -796,7 +796,7 @@ static void fillBuffer(PlayStream *play)
 static void sndSysUpdateChannelVolume(DSoundState* dsound)
 {
 	S32 db = volumeRatioToDb(volumeScale * volumeDbToRatio(dsound->volDb));
-	
+
 	sndSysSetVolume(dsound, db);
 }
 
@@ -806,19 +806,19 @@ static void sndSysUpdateVolumeScale()
 	U32 curTime = timeGetTime();
 	U32 timeDelta = curTime - lastTime;
 	int curActive = GetForegroundWindow() == hwnd;
-	
+
 	lastTime = curTime;
 
 	if(curActive)
 	{
 		// Cap the maximum increase in volume.
-		
+
 		F32 delta;
-		
+
 		timeDelta = min(timeDelta, 100);
-		
+
 		delta = (F32)timeDelta / 1000.0f;
-		
+
 		if(volumeScale < 0.1f)
 		{
 			if(0.1f - volumeScale > delta * 0.1f)
@@ -841,7 +841,7 @@ static void sndSysUpdateVolumeScale()
 	else
 	{
 		F32 delta = (F32)timeDelta / 1000.0f;
-		
+
 		if(volumeScale > 0.1f)
 		{
 			if(delta >= volumeScale - 0.1f)
@@ -889,30 +889,30 @@ void sndSysTick(void)
 {
 	PlayStream* play;
 	int			i;
-	
+
 	if (g_audio_state.noaudio)
 		return;
 
 	PERFINFO_AUTO_START("soundSystemTick", 1);
 
 	EnterDecodingCS();
-	
+
 	sndSysUpdateVolumeScale();
 
 	for(i=0;i<g_audio_state.maxSoundChannels;i++)
 	{
 		play = &channels[i];
-		
+
 		if (!play->streaming)
 		{
 			if(play->dsound.buffer && play->dsound.in_use)
 			{
 				sndSysUpdateChannelVolume(&play->dsound);
 			}
-							
+
 			continue;
 		}
-		
+
 		if (getFreeBytes(play) > play->decode.decode_len * 2)
 		{
 			fillBuffer(play);
@@ -920,13 +920,13 @@ void sndSysTick(void)
 
 		sndSysUpdateChannelVolume(&play->dsound);
 	}
-	
+
 	sndSysResetRecentPlayCount();
-	
+
 	LeaveDecodingCS();
-	
+
 	PERFINFO_AUTO_STOP();
-} 
+}
 
 static void soundSystemStop()
 {
@@ -943,7 +943,7 @@ static void soundSystemStart()
 
 void sndSysUpdateChannel(int channel,F32 volRatio,Vec3 pos,F32 pan,int doppler)
 {
-	PlayStream* play = &channels[channel];	
+	PlayStream* play = &channels[channel];
 	DSoundState	*dsound = &play->dsound;
 	static int time,lastTime;
 	F64 timeLapse;
@@ -953,9 +953,9 @@ void sndSysUpdateChannel(int channel,F32 volRatio,Vec3 pos,F32 pan,int doppler)
 	timeLapse=(F64)(time-lastTime)/CLK_TCK;
 	if (timeLapse<=0)
 		timeLapse=1;
-		
+
 	if(	!dsound->in_use ||
-		(	dsound->volRatio == volRatio && 
+		(	dsound->volRatio == volRatio &&
 			(	g_audio_state.surround &&
 				sameVec3(dsound->pos,pos) &&
 				sameVec3(dsound->pos,dsound->lastPos)
@@ -995,14 +995,14 @@ void sndSysUpdateChannel(int channel,F32 volRatio,Vec3 pos,F32 pan,int doppler)
 					ret = IDirectSound3DBuffer_SetPosition(dsound->buffer3d, pos[0], pos[1], pos[2], DS3D_IMMEDIATE);
 					DS_ASSERT(ret == DS_OK);
 				PERFINFO_AUTO_STOP();
-						
+
 				if (doppler)
 				{
 					Vec3 diff;
-					
+
 					subVec3(dsound->pos, dsound->lastPos, diff);
 					scaleVec3(diff, 1.0 / timeLapse, diff);
-					
+
 					PERFINFO_AUTO_START("IDSB_SetVelocity", 1);
 						ret = IDirectSound3DBuffer_SetVelocity(dsound->buffer3d, diff[0], diff[1], diff[2], DS3D_IMMEDIATE);
 						DS_ASSERT(ret == DS_OK);
@@ -1015,13 +1015,13 @@ void sndSysUpdateChannel(int channel,F32 volRatio,Vec3 pos,F32 pan,int doppler)
 			int ret;
 			PERFINFO_AUTO_START("IDSB_SetPan", 1);
 				// pan input value is [-1,1].
-				// DirectSound range is [-10k,10k], but [-2k,2k] sounds more realistic. 
+				// DirectSound range is [-10k,10k], but [-2k,2k] sounds more realistic.
 				// Nothing is ever really ONLY in one ear or the other.
-				
+
 				pan = pan * 2000;
 
 				pan = MINMAX(pan, -10000, 10000);
-				
+
 				ret = IDirectSoundBuffer_SetPan(dsound->buffer, pan);
 				DS_ASSERT(ret == DS_OK);
 			PERFINFO_AUTO_STOP();
@@ -1039,7 +1039,7 @@ void sndSysPlay(int channel,void *sound_data,F32 volRatio,Vec3 pos,F32 pan,int l
 	{
 		return;
 	}
-		
+
 	if(loop)
 	{
 		PERFINFO_AUTO_START("sndSysPlay - loop", 1);
@@ -1050,7 +1050,7 @@ void sndSysPlay(int channel,void *sound_data,F32 volRatio,Vec3 pos,F32 pan,int l
 	}
 
 		info->recent_play_count++;
-		
+
 		play = playStreamCreate(sound_data,channel,params);
 
 		if (play)
@@ -1063,7 +1063,7 @@ void sndSysPlay(int channel,void *sound_data,F32 volRatio,Vec3 pos,F32 pan,int l
 			sndSysUpdateChannel(channel,volRatio,pos,pan,0);
 			LeaveDecodingCS();
 		}
-		
+
 	PERFINFO_AUTO_STOP();
 }
 
@@ -1093,7 +1093,7 @@ int sndSysPlaying(int channel)
 
 	if (!dsound->in_use || !channels[channel].streaming)
 		return 0;
-	
+
 	PERFINFO_AUTO_START("IDSB_GetStatus", 1);
 		ret = IDirectSoundBuffer_GetStatus(dsound->buffer,&status);
 		DS_ASSERT(ret == DS_OK);
@@ -1208,7 +1208,7 @@ void sndSysUninit()
 			lpDSb = NULL;
 		PERFINFO_AUTO_STOP();
 	}
-	
+
 	if (theListener)
 	{
 		PERFINFO_AUTO_START("IDS3DL_Release", 1);
@@ -1229,7 +1229,7 @@ void sndSysUninit()
 void sndSysExit()
 {
 	int i;
-	
+
 	soundSystemStop();
 
 	for(i = 0; i < ARRAY_SIZE(channels); i++)
@@ -1296,12 +1296,12 @@ char *sndSysFormat(void *sound_data)
 void *sndSysLoad(char *fname)
 {
 	static U32		loadCount;
-	
+
 	SoundFileInfo*	info;
-	
+
 	PERFINFO_AUTO_START("sndSysLoad", 1);
 		info = calloc(sizeof(*info),1);
-		
+
 		info->loadIndex = ++loadCount;
 
 		if (g_audio_state.noaudio)
@@ -1309,12 +1309,12 @@ void *sndSysLoad(char *fname)
 			PERFINFO_AUTO_STOP();
 			return info;
 		}
-		
+
 		Strncpyt(info->name,fname);
 		info->data = fileAlloc(fname,&info->length);
 		dynArrayAddp(&sound_files.files,&sound_files.count,&sound_files.maxCount,info);
 	PERFINFO_AUTO_STOP();
-	
+
 	return info;
 }
 

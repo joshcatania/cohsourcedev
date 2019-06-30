@@ -3,7 +3,6 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include <assert.h>
 #include "entity.h"				// for Entity
 #include "EntPlayer.h"
 #include "entclient.h"			// for changeColor
@@ -17,7 +16,7 @@
 #include "costume_data.h"
 #include "npc.h"
 #include "clientcomm.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "SimpleParser.h"
 #include "cmdgame.h"
 #include "tex.h"
@@ -183,7 +182,7 @@ void load_ChestGeoLinkList(void)
 	ParserLoadFiles(0,pchFilename, pchBinFilename, 0, ParseChestGeoLinkList, &gChestGeoLinkList, NULL, NULL, NULL);
 	FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE, pchFilename, RebuildChestGeoLinkList);
 }
- 
+
 const char ** getChestGeoLink( Entity *e )
 {
 	int i;
@@ -322,7 +321,7 @@ void doChangeGeo( Entity *e, const BodyPart *bone, const char *name, const char 
 		STR_COMBINE_CAT(".GEO_");
 		STR_COMBINE_CAT(bone->name_geo);
 		STR_COMBINE_END();
-		
+
 		strcpy( geo_name, base_geo_name );
 
 		if( bone->num_parts == 2 )
@@ -582,7 +581,7 @@ void costume_Apply(Entity *pe)
 	assert(pe);
 	if( !pe->costume )
 		return;
-	
+
 	PERFINFO_AUTO_START("costume_Apply", 1);
 
 	// JE: Hackish code to have a separate entity operated on when in SHOW_TEMPLATE mode
@@ -601,7 +600,7 @@ void costume_Apply(Entity *pe)
 	STR_COMBINE_CAT(pe->name);
 	STR_COMBINE_CAT("type:");
 	STR_COMBINE_CAT_D(ENTTYPE(pe));
-	
+
 	if(pe->pl)
 	{
 		//sprintf(achDebug, "%s numparts:%d", achDebug, pe->costume->appearance.iNumParts);
@@ -630,7 +629,7 @@ void costume_Apply(Entity *pe)
 	if( !gCostumeCritter || pe != playerPtrForShell(0) )
 	{
 		//	Handling height changes -> sequencer updating
-		if ( pe->costume && pe->seq && (ENTTYPE(pe) == ENTTYPE_PLAYER) && !pe->npcIndex && isMenu(MENU_GAME) && (game_state.game_mode == SHOW_GAME) )	
+		if ( pe->costume && pe->seq && (ENTTYPE(pe) == ENTTYPE_PLAYER) && !pe->npcIndex && isMenu(MENU_GAME) && (game_state.game_mode == SHOW_GAME) )
 																																//	extra sanity check. Dont do this check if you aren't in game, and are a applicable entity
 		{
 			float newHeight = (100.0f + pe->costume->appearance.fScale) * 0.01;	//	this formula is in the NwRagdoll.cpp
@@ -649,7 +648,7 @@ void costume_Apply(Entity *pe)
 
 #ifndef TEST_CLIENT // TestClients don't care about sequencers
 	assertmsg(pe->seq, achDebug);
-#else 
+#else
 	return;
 #endif
 
@@ -811,7 +810,7 @@ void costume_Apply(Entity *pe)
 			doDelAllCostumeFx(pe, parts_max);
 		}
 	}
-	
+
 	PERFINFO_AUTO_STOP();
 }
 

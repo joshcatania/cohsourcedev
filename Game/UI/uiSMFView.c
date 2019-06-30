@@ -5,7 +5,7 @@
  ***************************************************************************/
 #define SMFVIEW_PRIVATE
 
-#include <assert.h>
+#include "SuperAssert.h"
 
 #include "wdwbase.h"
 #include "sprite_base.h"
@@ -284,7 +284,7 @@ void smfview_DrawWithCallback(SMFView *pview, int (*callback)(char *))
 			pview->bReformat,
 			pview->pattrs,
   			callback,
-			0, 
+			0,
 			true);
 
 		pview->bReparse = false;
@@ -337,7 +337,7 @@ void smfview_SetScrollBar(SMFView *pview, bool hasScrollBar)
 	{
 		return;
 	}
-	
+
 	pview->hasScrollBar = hasScrollBar;
 }
 

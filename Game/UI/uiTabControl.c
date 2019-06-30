@@ -1,6 +1,6 @@
 #include "uiTabControl.h"
 #include "earray.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "textureatlas.h"
 #include "sprite_text.h"
 #include "sprite_base.h"
@@ -39,7 +39,7 @@ typedef struct uiTabControl
 	int					selected;	 // index of active tab
 	int					offset;		 // offset of first tab to be displayed on the left side (used for scrolling)
 	int					lastSelected;// Last thing to be selected
-	TabType				type;		 // type of tab control, used for dragging ops. 
+	TabType				type;		 // type of tab control, used for dragging ops.
 	int					nextIterIdx; // for iteration -- index of the next tab data to return
 	Wdw*				wdw;		 // window index of containing window. Used to handle dragging tabs inside a draggable/resizable window
 	ContextMenu			*cm;		 // context menu for a tab
@@ -80,7 +80,7 @@ void buildTabTrayObj(TrayObj *pto, uiTab * tab )
 
 //---------------------------------------------------------------------------------------------------------|
 //	uiTab
-// 
+//
 
 
 uiTab * uiTabCreate(const char * name, uiTabData data, uiTabControl * parent)
@@ -143,7 +143,7 @@ void uiTabDestroyFreeData(void * data)
 	{
 		if( tab->name )
 			free(tab->name);
-	
+
 		if( tab->data )
 			free(tab->data);
 
@@ -161,7 +161,7 @@ void uiTabControlSetParentWindow(uiTabControl * tc, WindowName wdw)
 
 //---------------------------------------------------------------------------------------------------------|
 //	uiTabControl
-// 
+//
 
 void defaultTabColorFunc(uiTabData foo, bool selected)
 {
@@ -251,7 +251,7 @@ void uiTabControlRename(uiTabControl * tc, const char * text, uiTabData data)
 		if(tc->tabs[i]->data == data)
 		{
 			uiTab * tab = tc->tabs[i];
-			
+
 			assert(tab->name && text);
 			assert(tc == tab->parent);
 
@@ -277,8 +277,8 @@ void uiTabControlRemove(uiTabControl * tc, uiTabData data)
 			assert(tc == tab->parent);
 
 			// if we're dragging it, stop!
-			if(    cursor.dragging 
-				&& cursor.drag_obj.type == kTrayItemType_Tab 
+			if(    cursor.dragging
+				&& cursor.drag_obj.type == kTrayItemType_Tab
 				&& cursor.drag_obj.tab == tab)
 			{
 				trayobj_stopDragging();
@@ -307,16 +307,16 @@ int uiTabControlRemoveByName(uiTabControl * tc, const char * str)
 		if(strcmp(tc->tabs[i]->name,str)==0)
 		{
 			uiTab * tab;
-			
+
 			if( tc->selected == i )
 				retval = true;
-			
+
 			tab = eaRemove(&tc->tabs, i);
 			assert(tc == tab->parent);
 
 			// if we're dragging it, stop!
-			if(    cursor.dragging 
-				&& cursor.drag_obj.type == kTrayItemType_Tab 
+			if(    cursor.dragging
+				&& cursor.drag_obj.type == kTrayItemType_Tab
 				&& cursor.drag_obj.tab == tab)
 			{
 				trayobj_stopDragging();
@@ -361,12 +361,12 @@ void uiTabControlMergeControls(uiTabControl * dest, uiTabControl * src)
 	{
 		uiTab * tab = src->tabs[i];
 		// makes a copy
-		uiTabControlAdd(dest, tab->name, tab->data); 
+		uiTabControlAdd(dest, tab->name, tab->data);
 
 		assert(uiTabControlHasData(dest, tab->data));
 		assert(uiTabControlHasData(tab->parent, tab->data));
 
-		// destroys original 
+		// destroys original
 		uiTabControlRemove(tab->parent, tab->data);
 
 		if(src->onMovedCode)
@@ -401,7 +401,7 @@ void uiTabControlMoveTab(uiTabControl * tc, uiTab * tab)
  	assert(tc && tab);
 
 	// makes a copy
-	uiTabControlAdd(tc, tab->name, tab->data); 
+	uiTabControlAdd(tc, tab->name, tab->data);
 
 	assert(uiTabControlHasData(tc, tab->data));
 	assert(uiTabControlHasData(tab->parent, tab->data));
@@ -409,7 +409,7 @@ void uiTabControlMoveTab(uiTabControl * tc, uiTab * tab)
 	// the mover is set to the selected tab
 	uiTabControlSelect(tc, tab->data);
 
-	// destroys original 
+	// destroys original
 	uiTabControlRemove(tab->parent, tab->data);
 
 
@@ -535,7 +535,7 @@ bool uiTabControlSelectNext(uiTabControl * tc)
 		tc->selected = 0;
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -641,8 +641,8 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 	float origx = x;
 	float origy = y;
 
-	bool bDragging = (   cursor.dragging 
-			   		  && cursor.drag_obj.type == kTrayItemType_Tab 
+	bool bDragging = (   cursor.dragging
+			   		  && cursor.drag_obj.type == kTrayItemType_Tab
 					  && cursor.drag_obj.tab->parent->type == tc->type
 					  && tc->type != TabType_Undraggable);
 
@@ -668,7 +668,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 		AtlasTex * backArrow, *forwardArrow;
 
 
-		float arrowScaleY;		
+		float arrowScaleY;
 		float arrowScaleX;
 		CBox box;
 
@@ -700,7 +700,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 
 
 		// make arrow height == tab height
-		arrowScaleY = ((float)activeTex[MID]->height) / ((float) backArrow->height);		
+		arrowScaleY = ((float)activeTex[MID]->height) / ((float) backArrow->height);
 		arrowScaleX = 1.5 * arrowScaleY;
 
 		if (isVertical)
@@ -715,8 +715,8 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 		}
 
 		{
-   			BuildCBox(&box, arrowsStart, y, (width-(arrowsStart-x)), activeTex[MID]->height*scale);	
-			//BuildCBox(&clipBox, x, y, ((arrowsStart)-x), activeTex[MID]->height*scale);	
+   			BuildCBox(&box, arrowsStart, y, (width-(arrowsStart-x)), activeTex[MID]->height*scale);
+			//BuildCBox(&clipBox, x, y, ((arrowsStart)-x), activeTex[MID]->height*scale);
  			//drawBox(&box, z+1000, CLR_RED, 0);
 			//drawBox(&clipBox, z+1000, CLR_RED, 0);
 		}
@@ -821,7 +821,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 				}
 				texZ = z;
 			}
-  
+
 			tabScale = isVertical ? 25.f/tex[MID]->width : (((float)textWidth / scale ) / ((float) tex[MID]->width));
 			texWidth = isVertical ? tex[MID]->width*tabScale : tex[LEFT]->width + tex[MID]->width*tabScale + tex[RIGHT]->width;
 			texHeight = tex[MID]->height;
@@ -839,7 +839,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 			if(tabBorder >= arrowsStart)
 			{
 				// if it's the last one and we're not scrolling, see if it will fit
-				if(!(tc->offset == 0 
+				if(!(tc->offset == 0
 					&& i == (eaSize(&tc->tabs)-1)
 					&& tabBorder < clipBorder))
 				{
@@ -867,7 +867,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 			{
 				bSelectedVisible = true;
 			}
-			
+
 			// select font color...
 			tc->fontColorFunc(tab->data, (i==tc->selected));
 
@@ -886,12 +886,12 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 				display_sprite( tex[MID],   x + tex[LEFT]->width*scale, y, texZ, scale*tabScale, scale, tabColor);
 				display_sprite( tex[RIGHT], x + (tex[LEFT]->width + tex[MID]->width*tabScale)*scale, y, texZ, scale, scale, tabColor);
 			}
-			
+
  			// collisions & dragging...
 
-   			BuildCBox(&box, x+TAB_OVERLAP*scale, y, (texWidth -(2*TAB_OVERLAP))*scale, tex[MID]->height*scale);	
+   			BuildCBox(&box, x+TAB_OVERLAP*scale, y, (texWidth -(2*TAB_OVERLAP))*scale, tex[MID]->height*scale);
   			//drawBox(&box, z+1000, CLR_RED, 0);
- 
+
   			if( mouseClickHit( &box, MS_LEFT ) ||
 				tc->dragHoverSelect && hasDragHoveredLongEnough(i, tc, &box, 400) ) // 400ms is the Windows menu delay, no doubt chosen through dozens of experty-executed usability tests
 			{
@@ -923,7 +923,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
    				int top = (box.ly + 1*PIX3*scale);
 				BuildCBox(&box2, box.left, top, (box.right - box.left), box.bottom - top);
 		//		drawBox(&box2, z+1000, CLR_RED, 0);
-  				if(    mouseLeftDrag( &box2 ) 
+  				if(    mouseLeftDrag( &box2 )
 					&& ! (tc->wdw && tc->wdw->drag_mode)) // don't drag if we're resizing containing window
 				{
 					TrayObj tmp;
@@ -979,7 +979,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 			int backArrowX, backArrowY, forwardArrowX, forwardArrowY;
 			static float timer = 0;
 			static int butheld = 0;
-		
+
 			int bright = color|0xff;
 			int lefthit,righthit;
 			brightenColor(&bright, 50);
@@ -1052,7 +1052,7 @@ uiTabData drawTabControl(uiTabControl * tc, float x, float y, float z, float wid
 
 	// check for dragging tab into chat box
  	if(bDragging)
-	{	
+	{
 		if(mouseCollision(&controlBox) && !isDown( MS_LEFT ))
 		{
 			if(cursor.drag_obj.tab->parent != tc)

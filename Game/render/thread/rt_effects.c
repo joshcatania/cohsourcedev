@@ -9,7 +9,7 @@
 #include "rt_cgfx.h"
 #include "mathutil.h"
 #include "rt_model.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "cmdgame.h"
 #include "rt_pbuffer.h"
 #include "rt_prim.h"
@@ -46,49 +46,49 @@ typedef enum EffectShader {
 int shaderEffectsPrograms[SHADER_NUM_SPECIAL_SHADERS];
 const char* shaderEffectNames[2][SHADER_NUM_SPECIAL_SHADERS] = {
     {   //ARB
-      "shrink",                    
-	  "hblur",                    
-	  "vblur",                    
-	  "tonemap",                  
-  	  "shrink2x",                 
-	  "shrink2xDof",              
-	  "shrink4x",                 
-	  "shrink4xLum",              
-	  "shrink4xExp",              
-	  "lightAdaptation",          
-	  "log",                      
-	  "brightpass",               
-	  "tonemap2",                 
-	  "sunflareAdaptation",       
-	  "performanceTest",          
-	  "dofFinal",                 
-	  "dofBloomFinal",            
-	  "tonemap2_desaturate",      
-	  "dofFinal_desaturate",      
-	  "dofBloomFinal_desaturate", 
+      "shrink",
+	  "hblur",
+	  "vblur",
+	  "tonemap",
+  	  "shrink2x",
+	  "shrink2xDof",
+	  "shrink4x",
+	  "shrink4xLum",
+	  "shrink4xExp",
+	  "lightAdaptation",
+	  "log",
+	  "brightpass",
+	  "tonemap2",
+	  "sunflareAdaptation",
+	  "performanceTest",
+	  "dofFinal",
+	  "dofBloomFinal",
+	  "tonemap2_desaturate",
+	  "dofFinal_desaturate",
+	  "dofBloomFinal_desaturate",
 	  "simple_desaturate"
     },
     {   //Cg
-      "shrink",                    
-      "blur",                    
-      "blur",                    
-      "tonemap",                  
-      "shrink",                 
-      "shrink",              
-      "shrink4x",                 
-      "shrink4x",              
-      "shrink4x",              
-      "lightAdaptation",          
-      "log",                      
-      "brightpass",               
-      "tonemap2",                 
-      "sunflareAdaptation",       
-      "performanceTest",          
-      "dofFinal",                 
-      "dofBloomFinal",            
-      "tonemap2",      
-      "dofFinal",      
-      "dofBloomFinal", 
+      "shrink",
+      "blur",
+      "blur",
+      "tonemap",
+      "shrink",
+      "shrink",
+      "shrink4x",
+      "shrink4x",
+      "shrink4x",
+      "lightAdaptation",
+      "log",
+      "brightpass",
+      "tonemap2",
+      "sunflareAdaptation",
+      "performanceTest",
+      "dofFinal",
+      "dofBloomFinal",
+      "tonemap2",
+      "dofFinal",
+      "dofBloomFinal",
       "simple_desaturate"
     }
 };
@@ -123,14 +123,14 @@ bool getSpecialShaderName(int shader, char* nameBuff, size_t nameBuffLen, U32* p
 	bool bIsCG = rt_cgGetCgShaderMode()!=0;
 	if (shader < 0 || shader >= ARRAY_SIZE(shaderEffectNames[bIsCG]))
 		return false;
-		
+
 	if (( nameBuff != NULL ) && ( nameBuffLen > 0 ))
 	{
 		static const char* kCgRootPath	= RT_CGFX_SHADER_PATH_EFFECTS "/";
 		static const char* kArbRootPath	= "shaders/arb/effects/";
 		static const char* kCgFileExt	= "fp.cg";
 		static const char* kArbFileExt	= ".fp";
-		
+
 		const char* szRootPath	= ( bIsCG ) ? kCgRootPath : kArbRootPath;
 		const char* szFileExt	= ( bIsCG ) ? kCgFileExt : kArbFileExt;
 
@@ -445,7 +445,7 @@ static void setupPBuffers(PBuffer *pbFrameBuffer)
 	h = pbFrameBuffer->height;
 
 	rdrBeginMarker(__FUNCTION__);
-	
+
 	blur_w = (pbFrameBuffer->width+(blur_scale-1)) / blur_scale;
 	blur_h = (pbFrameBuffer->height+(blur_scale-1))/ blur_scale;
 	if (pbBlurBuffer.width != blur_w || pbBlurBuffer.height != blur_h || pbBlurBuffer.isFloat!=bUseFloatBuffers || pb1x1.isFloat != rdr_caps.supports_pixel_format_float)
@@ -702,7 +702,7 @@ void shrink4_1x1(PBuffer *pbSource, PBuffer *pbDest, EffectShader shader)
 	pbufReleaseDirect(pbSource);
 	rdrEndMarker();
 }
-	
+
 void rdrAddTexturesDirect(RdrAddTexturesParams *params)
 {
 	float s, t, s1, t1, s2, t2;
@@ -846,7 +846,7 @@ void sampleLog(PBuffer *pbSrc)
 	int w=64, h=64;
 	Vec4 texTransform = {((pbSrc->width/(F32)w)/pbSrc->virtual_width)/8.f, ((pbSrc->height/(F32)w)/pbSrc->virtual_height)/8.f};
 	bool useLogSampling=false;
-	
+
 	rdrBeginMarker(__FUNCTION__);
 	// Sample log of from pbSrc -> pb64
 	pbufMakeCurrentDirect(&pb64x64);
@@ -869,7 +869,7 @@ void sampleLog(PBuffer *pbSrc)
 	shrink4_1x1(&pb4x4, &pb1x1, useLogSampling?SHADER_SHRINK4EXP:SHADER_SHRINK4);
 	saveThumbnailPB(&pb1x1, "sampleLog4");
 	rdrEndMarker();
-}	
+}
 
 void lightAdaptation(PBuffer *pbSrc)
 {
@@ -1122,7 +1122,7 @@ void setupDOFBlurLookup()
 				circle = (focusDistance / distance - 1.f) * farDofValue;
 				circle += (1.f - circle / farDofDesired) * focusDesired;
 			}
-			
+
 		} else {
 			circle = (focusDistance / distance - 1.f) * nearDofValue;
 			circle += (1.f - circle / nearDofDesired) * focusDesired;
@@ -1145,7 +1145,7 @@ void setupDOFBlurLookup()
 			interpolator = (circle-ratio1)/((ratio2-ratio1));
 			interpolator = MAX(0.0f, interpolator);
 			interpolator = MIN(1.0f, interpolator);
-			interpolator = 0.5f * (1.0f + interpolator); 
+			interpolator = 0.5f * (1.0f + interpolator);
 		}
 		tex_data[i] = MINMAX(round(interpolator*255), 0, 255);
 		distance_debug[i] = distance;
@@ -1371,7 +1371,7 @@ void rdrPostprocessingDirect(PBuffer *pbFrameBuffer)
 		rdrDebugForceStall();
 		PERFINFO_AUTO_STOP();
 	);
-	if (0 && "nVidia demo") 
+	if (0 && "nVidia demo")
 	{
 		blur_scale = 2;
 		setupPBuffers(pbFrameBuffer);
@@ -1512,7 +1512,7 @@ void rdrRenderScaledDirect(PBuffer *pbFrameBuffer)
 		PERFINFO_AUTO_STOP();
 	);
 
-	
+
 //	rdrClearScreenDirect();
 	rdrSetup2DRenderingDirect();
 

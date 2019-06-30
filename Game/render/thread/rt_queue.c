@@ -1,7 +1,7 @@
 #define RT_PRIVATE
 #include "win_init.h"
 #include "rt_queue.h"
-#include "assert.h"
+#include "SuperAssert.h"
 #include "rendertree.h"
 #include "cmdgame.h"
 #include "file.h"
@@ -97,7 +97,7 @@ static void cmdDispatch(void *unused, DrawType type, void *data)
 {
 	// Copy to globals for debugging
 	cmdDispatch_last_type = type;
-	cmdDispatch_last_data = data;	
+	cmdDispatch_last_data = data;
 	INEXACT_CHECKGL;
 	switch(type)
 	{
@@ -253,12 +253,12 @@ static void cmdDispatch(void *unused, DrawType type, void *data)
 			rt_rdrShadowMapDebug3D();
 		xcase DRAWCMD_SHADOWMAP_SCENE_SPECS:
 			rt_shadowmap_scene_customizations(data);
-		
+
 		// Cubemaps
 		xcase DRAWCMD_INITCUBEMAPMENU:
 			rt_initCubeMapMenu();
 		xcase DRAWCMD_CUBEMAP_PRECALLBACK:
-			rt_cubemapViewportPreCallback(data);	
+			rt_cubemapViewportPreCallback(data);
 		xcase DRAWCMD_CUBEMAP_POSTCALLBACK:
 			rt_cubemapViewportPostCallback(data);
 		xcase DRAWCMD_CUBEMAP_SETINVCAMMATRIX:
@@ -301,7 +301,7 @@ static void cmdDispatch(void *unused, DrawType type, void *data)
 				bool bWasActive = ( game_state.normalmap_test_mode > 0 );
 				bool bNowActive = ( *(unsigned int*)data != 0 );
 				game_state.normalmap_test_mode = *(unsigned int*)data;
-				if ( bWasActive != bNowActive ) { 
+				if ( bWasActive != bNowActive ) {
 					reloadShaderCallbackDirect(NULL);
 				}
 			}

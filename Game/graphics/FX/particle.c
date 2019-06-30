@@ -1,19 +1,18 @@
-#include "wininclude.h" 
+#include "wininclude.h"
 #include <stdio.h>
 #include <string.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "mathutil.h"
 #include "error.h"
 #include "cmdgame.h"
 #include "model.h"
-#include "memcheck.h" 
-#include "assert.h" 
+#include "memcheck.h"
+#include "SuperAssert.h"
 #include "utils.h"
-#include "particle.h"  
+#include "particle.h"
 #include "render.h"
 #include "cmdcommon.h"
 #include "camera.h"
-#include "assert.h"
 #include "font.h"
 #include "fxutil.h"
 #include "genericlist.h"
@@ -222,7 +221,7 @@ static void vhAllocListRemove(VolatileHeapAllocation* alloc, VolatileHeapListInd
 	// Check that the list being removed from is the proper list.
 
 	assert(alloc->allocListIndex[j] == i);
-	
+
 	alloc->allocListIndex[j] = VHEAP_LIST_COUNT;
 
 	// Check that there is anything in the list.
@@ -263,13 +262,13 @@ static void vhSetAllocationSize(VolatileHeapAllocation* alloc, U32 size)
 	VolatileHeapChunk* chunk = alloc->chunk;
 	S32 delta = size - alloc->size;
 	S32 i;
-	
+
 	alloc->size = size;
-	
+
 	for(i = 0; i < ARRAY_SIZE(alloc->listNode); i++)
 	{
 		VolatileHeapListIndex j = alloc->allocListIndex[i];
-		
+
 		if(j < VHEAP_LIST_COUNT)
 		{
 			chunk->allocList[j].size += delta;
@@ -343,13 +342,13 @@ static void vhUpdateMaxFreeSize(VolatileHeapChunk* chunk)
 static void vhInitFreeAllocation(VolatileHeapAllocation* alloc)
 {
 	S32 i;
-	
+
 	// Set the footer.
-	
+
 	vhSetAllocationFooter(alloc);
 
 	// Set the lists.
-	
+
 	for(i = 0; i < ARRAY_SIZE(alloc->allocListIndex); i++)
 	{
 		alloc->allocListIndex[i] = VHEAP_LIST_COUNT;
@@ -413,9 +412,9 @@ static VolatileHeapChunk* vhGetFreeChunk(U32 size)
 	alloc->chunk = chunk;
 	alloc->self = alloc;
 	alloc->size = vhGetChunkMemory(chunk) + size - vhGetAllocationMemory(alloc) - sizeof(U32);
-	
+
 	vhInitFreeAllocation(alloc);
-	
+
 	// Set the chunk free size.
 
 	vhUpdateMaxFreeSize(chunk);
@@ -451,7 +450,7 @@ static VolatileHeapAllocation* vhGetNextAdjacentAllocation(VolatileHeapAllocatio
 static VolatileHeapAllocation* vhGetPrevAdjacentAllocation(VolatileHeapAllocation* alloc)
 {
 	VolatileHeapAllocationFooter* prevAllocFooter = (VolatileHeapAllocationFooter*)alloc - 1;
-	
+
 	return (VolatileHeapAllocation*)((U8*)prevAllocFooter - prevAllocFooter->size) - 1;
 }
 
@@ -473,10 +472,10 @@ static void vhCreateNewAllocation(VolatileHeapAllocation* alloc, U32 size)
 		VolatileHeapAllocation* newAlloc;
 
 		// Shrink the original allocation.
-		
+
 		vhSetAllocationSize(alloc, size);
 		vhSetAllocationFooter(alloc);
-		
+
 		// Create the new allocation.
 
 		newAlloc = vhGetNextAdjacentAllocation(alloc);
@@ -565,7 +564,7 @@ void vhFree(void** userPointer)
 	VolatileHeapAllocation* firstAlloc;
 	VolatileHeapChunk*		chunk;
 	S32						addToFreeList;
-	
+
 	if(!userPointer || !*userPointer)
 	{
 		return;
@@ -660,7 +659,7 @@ void vhFree(void** userPointer)
 		}
 
 		// Set the user pointer.
-		
+
 		alloc->userPointer = NULL;
 		*userPointer = NULL;
 
@@ -669,7 +668,7 @@ void vhFree(void** userPointer)
 
 void vhRealloc(void** userPointer, U32 newSize, S32 zeroMemory)
 {
-	
+
 }
 
 void vhCompact()
@@ -691,7 +690,7 @@ void vhCompact()
 
 				assert(alloc->self == alloc);
 				assert(alloc->chunk == writeChunk);
-				
+
 				nextAlloc = vhGetNextAdjacentAllocation(alloc);
 
 				if(alloc->userPointer)
@@ -703,7 +702,7 @@ void vhCompact()
 				}
 
 				// Next allocation is free, so merge with me.
-				
+
 				assert(nextAlloc->self == nextAlloc);
 				assert(nextAlloc->chunk == writeChunk);
 				assert(nextAlloc->userPointer);
@@ -947,7 +946,7 @@ StaticDefineInt	ParseParticleBlendMode[] =
 };
 
 
-TokenizerParseInfo SystemParseInfo[] = 
+TokenizerParseInfo SystemParseInfo[] =
 {
 	{ "System",					TOK_IGNORE,	0	}, // hack, so we can use the old list system for a bit..
 	{ "Name",					TOK_CURRENTFILE(ParticleSystemInfo,name)			},
@@ -2163,7 +2162,7 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		}
 		if( result_y >= sysInfo->burblethreshold  )  //result_y range == -1.0 to 1.0
 			new_buffer += (result_y + 1 ) * system->burbleamplitude * clampedTimestep;
-	
+
 	}
 
 	system->new_buffer    += new_buffer;
@@ -2179,7 +2178,7 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		if( parttex->animframes > 1.0)// && (system->framecurr[i] < parttex->animframes) )
 		{
 			system->framecurr[i] += parttex->animpace * timestep;
-			
+
 			if( parttex->animtype == PARTICLE_ANIM_LOOP )
 			{
 				if(system->framecurr[i] >= parttex->animframes)
@@ -2197,13 +2196,13 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 					system->framecurr[i] -= parttex->animframes;
 					system->animpong = system->animpong == 0 ? 1 : 0;
 				}
-			}	
-			
+			}
+
 			if( system->animpong )
 				frame = (int)( parttex->animframes - system->framecurr[i] );
 			else
 				frame = (int)system->framecurr[i];
-			
+
 			system->textranslate[i][0] = (frame%parttex->framewidth) * parttex->texscale[0];
 			system->textranslate[i][1] = (frame/parttex->framewidth) * parttex->texscale[1];
 		}
@@ -2217,8 +2216,8 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		}
 	}
 
-	///##### EMIT NEW PARTICLES  ######################################################### 
-	
+	///##### EMIT NEW PARTICLES  #########################################################
+
 	if( system->particle_count + num_new > maxParticles )//Speed or burble or frozen framerate can make this happen
 	{
 		tempf1 = maxParticles - system->particle_count;
@@ -2235,7 +2234,7 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 #define MINIMUM_PARTS_PER_SYSTEM ((system->fxtype == FX_ENTITYFX)?2:1)
 // debug/explicit version:
 //		int ok_new = MAX(game_state.maxParticles - particle_engine.particleTotal, 0);
-//		int required_allowed_new = MAX(MINIMUM_PARTS_PER_SYSTEM - system->particle_count, 0); 
+//		int required_allowed_new = MAX(MINIMUM_PARTS_PER_SYSTEM - system->particle_count, 0);
 //		int eff_req_new = MIN(required_allowed_new, num_new);
 //		num_new = MAX(ok_new, eff_req_new);
 // inlined:
@@ -2258,14 +2257,14 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 
 		//Initialize Particle Parameters (note all params need to be given a value as particle is no zeroed on alloc.
 		particle->age		= 0.0;
-		particle->theta		= 0; 
+		particle->theta		= 0;
 		particle->thetaAccum = 0;
 		particle->pulsedir	= 1;
-	
-		particle->size		= system->startsize; 
+
+		particle->size		= system->startsize;
 		if(sysInfo->startsizejitter)
 			particle->size += qfrand() * sysInfo->startsizejitter;
-	
+
 		particle->spin		= sysInfo->spin;
 		if(sysInfo->spin_jitter)
 		{
@@ -2274,14 +2273,14 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 
 		if(sysInfo->orientation_jitter)
 			particle->theta += qsirand()%(sysInfo->orientation_jitter+1);
-	
+
  		partVectorJitter(initial_velocity, initial_velocity_jitter, particle->velocity);
 		//if I want to do vector jitter right, I need to x form by velocity now, not earlier
-		
+
 		//Get Initial Position //TO DO figure out how local can use these
 		if(sysInfo->emission_type == PARTICLE_POINT)
 		{
-			copyVec3(emission_start, particle->position); 
+			copyVec3(emission_start, particle->position);
 		}
 		else if(sysInfo->emission_type == PARTICLE_LINE)
 		{
@@ -2297,9 +2296,9 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		}
 		else if (sysInfo->emission_type == PARTICLE_TRAIL)
 		{
-			F32 percent = (1.0 - ((F32)i / (F32)num_new));  
+			F32 percent = (1.0 - ((F32)i / (F32)num_new));
 			//TO DO this can be sped up, by finding the diff and then adding it to each particle
-			particle->position[0] = emission_start[0] - (systemPosChange[0] * percent); 
+			particle->position[0] = emission_start[0] - (systemPosChange[0] * percent);
 			particle->position[1] = emission_start[1] - (systemPosChange[1] * percent);
 			particle->position[2] = emission_start[2] - (systemPosChange[2] * percent);
 
@@ -2307,22 +2306,22 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		}
 		else if(sysInfo->emission_type == PARTICLE_LINE_EVEN)
 		{
-			//TO DO nake this work like PARTICLETRAIL. 
+			//TO DO nake this work like PARTICLETRAIL.
  			particle->position[0] = emission_start[0] + ((system->other[0] - emission_start[0] )/num_new) * i;
 			particle->position[1] = emission_start[1] + ((system->other[1] - emission_start[1] )/num_new) * i;
 			particle->position[2] = emission_start[2] + ((system->other[2] - emission_start[2] )/num_new) * i;
-	
+
 			/*  Hack in a Noise function
 				if(system->age == 0)
-					copyVec3(emission_start, particle->position); 
+					copyVec3(emission_start, particle->position);
 				else
 				{
 				Vec3 a, b, c, d,temp1, temp2;
 				//Vec3 r;
 				Vec3 len;
 				subVec3(emission_start, system->emission_start_prev, len);
-				 
-				temp1[0] =  1.0 , temp1[1] = 0 , temp1[2] = -1.0 * lengthVec3(len); 
+
+				temp1[0] =  1.0 , temp1[1] = 0 , temp1[2] = -1.0 * lengthVec3(len);
 				temp2[0] =  -1.0 , temp2[1] = 0 , temp2[2] = -1.0 * lengthVec3(len);
 
 				mulVecMat4(temp1, system->drawmat, a);
@@ -2333,11 +2332,11 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 				//mulVecMat4(temp, unitmat, d);
 
 				contrapulate( ((1.0/num_new) * (F32)i), a, b, c, d, particle->position);
-				xyprintf(8,8, "%f , %f, %f", particle->position[0],  particle->position[1], particle->position[2]);		
+				xyprintf(8,8, "%f , %f, %f", particle->position[0],  particle->position[1], particle->position[2]);
 				}
 			*/
 		}
-		else 
+		else
 			assert(0);
 
 		partVectorJitter(particle->position, emission_start_jitter, particle->position);
@@ -2352,26 +2351,26 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 	///##### UPDATE ALL PARTICLES  #########################################################
 	count = system->particle_count;  //because system->particle_count can change during loop
 	for( i = 0, partIdx = system->firstParticle ; i < count ; i++, partIdx++ )
-	{	
+	{
 		if( partIdx == system->maxParticles )
 			partIdx = 0;
-		particle = &system->particles[partIdx]; 
+		particle = &system->particles[partIdx];
 
 		//Kill old particles then Update live ones and write them to vert array
-		if( particle->age >= sysInfo->fade_out_by )  //KILL  
+		if( particle->age >= sysInfo->fade_out_by )  //KILL
 		{
 			system->firstParticle++;
 			if( system->firstParticle >= system->maxParticles )
 				system->firstParticle = 0;
 			system->particle_count--;
 			particle->age = -1; //debug
-		}                                    
-		else								 
+		}
+		else
 		{
 			//************** Update fade and kill invisible ones
 			{
 				F32 alphaPercent;
-	
+
 				//TO DO : a particle doesn't really even need an alpha value now,
 				//I could move all this to the post visibility updater.  A system can know it's average
 				//at any time automatically...
@@ -2394,12 +2393,12 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 					alphaPercent = 1.0;
 				}
 				tempi1 = round(((F32)system->alpha) * alphaPercent);
-				particle->alpha = MAX( 1, tempi1);  
+				particle->alpha = MAX( 1, tempi1);
 			}
 
 			//************ Update Absolute position and velocity
 			if (sysInfo->has_velocity_jitter)
-				partVectorJitter(particle->velocity, sysInfo->velocity_jitter, particle->velocity); 
+				partVectorJitter(particle->velocity, sysInfo->velocity_jitter, particle->velocity);
 			particle->velocity[1] -= gravity;
 			if(drag)
 			{
@@ -2409,14 +2408,14 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 			}
 
 			scaleVec3(particle->velocity, timestep, move);
-			addVec3(particle->position, move, particle->position);	
-			if(magnetism) 
+			addVec3(particle->position, move, particle->position);
+			if(magnetism)
 				partRunMagnet(particle->velocity, particle->position, system->magnet, magnetism);
 
 			if(sysInfo->terrain == PARTICLE_STICKTOTERRAIN)
-				adjustForTerrain(particle->position); 
+				adjustForTerrain(particle->position);
 
-			if( sysInfo->stickiness && particle->age ) 
+			if( sysInfo->stickiness && particle->age )
 				addVec3( system->stickinessVec, particle->position, particle->position );
 
 			//************ Update Size
@@ -2465,7 +2464,7 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 
 			if( system->currdrawstate == PART_UPDATE_AND_DRAW_ME )
 			{
-				//Build bounding box.  
+				//Build bounding box.
 				MIN1(system->perf.boxMin[0], particle->position[0]);
 				MIN1(system->perf.boxMin[1], particle->position[1]);
 				MIN1(system->perf.boxMin[2], particle->position[2]);
@@ -2475,16 +2474,16 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 				MAX1(system->perf.boxMax[2], particle->position[2]);
 
 				tempf1 = SQR(particle->size);
-				MAX1(system->perf.biggestParticleSquared, tempf1); 
+				MAX1(system->perf.biggestParticleSquared, tempf1);
 				system->perf.totalSize += tempf1;
 				system->perf.totalAlpha += particle->alpha;
-			}	
+			}
 
 			particle->age += timestep;
 		}
 	}
 
-	//Add the streak position to the bounding box 
+	//Add the streak position to the bounding box
 	if( sysInfo->streaktype == PARTICLE_MAGNET || sysInfo->streaktype == PARTICLE_OTHER )
 	{
 		Vec3 streakpos;
@@ -2500,7 +2499,7 @@ static int partUpdateSystem(ParticleSystem * system, F32 timestep, F32 clampedTi
 		MAX1(system->perf.boxMax[0], streakpos[0]);
 		MAX1(system->perf.boxMax[1], streakpos[1]);
 		MAX1(system->perf.boxMax[2], streakpos[2]);
-	}	
+	}
 
 	///##### DO END UPDATING  #########################################################
 	system->age += timestep;
@@ -2548,7 +2547,7 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 	//partDebugNewAllocing( system );
 
 	for( i = 0, partIdx = system->firstParticle ; i < system->particle_count ; i++, partIdx++ )
-	{	
+	{
 		if( partIdx == system->maxParticles )
 			partIdx = 0;
 
@@ -2557,10 +2556,10 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 
 		size = particle->size;
 
-		//************ Set up the Vectors in view space 
+		//************ Set up the Vectors in view space
 		// Get First Center Point:  part_pos_view
 		mulVecMat4(particle->position, system->facingmat, part_pos_view);
-		
+
 		if (sysInfo->tighten_up != 0.0f)
 		{
 			if (sysInfo->frontorlocalfacing)
@@ -2585,9 +2584,9 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 		{
 			copyVec3(part_pos_view, part_pos_view2);
 		}
-		else 
-		{	
-			copyVec3(particle->position, streakpos);     
+		else
+		{
+			copyVec3(particle->position, streakpos);
 			//subVec3( streakpos, system->stickinessVec, streakpos );
 
 			if(sysInfo->streaktype == PARTICLE_VELOCITY)
@@ -2632,7 +2631,7 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 			else if(sysInfo->streaktype == PARTICLE_OTHER)
 			{
 				copyVec3(system->other, streakpos);
-			}	
+			}
 			else if(sysInfo->streaktype == PARTICLE_CHAIN)
 			{
 				//New Allocing makes getting prev particle a little tricky
@@ -2641,7 +2640,7 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 					int prev = partIdx + 1;
 					if( prev == system->maxParticles )
 						prev = 0;
-					copyVec3(system->particles[prev].position, streakpos); 
+					copyVec3(system->particles[prev].position, streakpos);
 				}
 				else
 					copyVec3(emission_start, streakpos);
@@ -2651,8 +2650,8 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 			//	if(particle->prev)
 			//		copyVec3(
 			//}
-			
-			mulVecMat4(streakpos, system->facingmat, part_pos_view2); 
+
+			mulVecMat4(streakpos, system->facingmat, part_pos_view2);
 			if (sysInfo->tighten_up != 0.0f)
 			{
 				if (sysInfo->frontorlocalfacing)
@@ -2680,7 +2679,7 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 			if(sysInfo->streakdirection == PARTICLE_PUSH) //Switch the two vectors: tricky
 			{
 				Vec3 temp;
-				copyVec3(part_pos_view2, temp); 
+				copyVec3(part_pos_view2, temp);
 				copyVec3(part_pos_view, part_pos_view2);
 				copyVec3(temp, part_pos_view);
 			}
@@ -2719,24 +2718,24 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 		}
 
 		//*************** Do per frame writing to the vertarray top = pos1, bottom = pos2
-		ur_theta = theta + 32; 
+		ur_theta = theta + 32;
 		ul_theta = theta + 96;
 		ll_theta = theta + 160;
-		lr_theta = theta + 224; 
+		lr_theta = theta + 224;
 
-		//DrawArrays Quads goes ul, ur, lr, ll 
+		//DrawArrays Quads goes ul, ur, lr, ll
 
-		//upper left	
+		//upper left
 		*vertarray++ = part_pos_view[0] + (costable[ul_theta] * size) ;
-		*vertarray++ = part_pos_view[1] + (sintable[ul_theta] * size) ; 
-		*vertarray++ = part_pos_view[2]; 
+		*vertarray++ = part_pos_view[1] + (sintable[ul_theta] * size) ;
+		*vertarray++ = part_pos_view[2];
 
 		//upper right
-		*vertarray++ = part_pos_view[0] + (costable[ur_theta] * size) ; 
+		*vertarray++ = part_pos_view[0] + (costable[ur_theta] * size) ;
 		*vertarray++ = part_pos_view[1] + (sintable[ur_theta] * size) ;
-		*vertarray++ = part_pos_view[2]; 
+		*vertarray++ = part_pos_view[2];
 
-		if( isRibbon && i != 0) //RIBBON PARTICLES  
+		if( isRibbon && i != 0) //RIBBON PARTICLES
 		{
 			//lower left
 			*vertarray++ = lastul[0];
@@ -2748,7 +2747,7 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 			*vertarray++ = lastur[1];
 			*vertarray++ = lastur[2];
 		}
-		else 
+		else
 		{
 			//lower left
 			*vertarray++ = part_pos_view2[0] + (costable[ll_theta] * size) ;//lastul[0];//
@@ -2776,18 +2775,18 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 	}
 
 	//Calc and fill in the system's rgba
-	//New Alloc 
+	//New Alloc
 	//partDebugNewAllocing( system );
 
 	for( i = 0, partIdx = system->firstParticle ; i < system->particle_count ; i++, partIdx++ )
-	{	
+	{
 		if( partIdx == system->maxParticles )
 			partIdx = 0;
 
 		particle = &system->particles[partIdx];
 	//End
 
-		//************* Get new rgba if there is a colorpath		
+		//************* Get new rgba if there is a colorpath
  		if( system->effectiveColorPath->length > 1)
 		{
 			if(sysInfo->colorchangetype == PARTICLE_COLORSTOP)
@@ -2803,25 +2802,25 @@ void partBuildParticleArray( ParticleSystem * system, F32 total_alpha, F32 * ver
 				idx = 0;
 			rgb = &(system->effectiveColorPath->path[idx * 3]);
 		}
-		alpha = round( (F32)particle->alpha * total_alpha); //to do, make this smarter?  
+		alpha = round( (F32)particle->alpha * total_alpha); //to do, make this smarter?
 
 		//*************** Do per frame writing to the rgbas array
 		*rgbaarray++ = rgb[0];
 		*rgbaarray++ = rgb[1];
 		*rgbaarray++ = rgb[2];
-		*rgbaarray++ = alpha; 
+		*rgbaarray++ = alpha;
 
 		*rgbaarray++ = rgb[0];
 		*rgbaarray++ = rgb[1];
 		*rgbaarray++ = rgb[2];
 		*rgbaarray++ = alpha;
-		
+
 		if( 1 ) //!//RIBBON PARTICLES
 		{
 			*rgbaarray++ = rgb[0];
 			*rgbaarray++ = rgb[1];
 			*rgbaarray++ = rgb[2];
-			*rgbaarray++ = alpha; 
+			*rgbaarray++ = alpha;
 
 			*rgbaarray++ = rgb[0];
 			*rgbaarray++ = rgb[1];
@@ -2848,16 +2847,16 @@ void partKillSystem(ParticleSystem * system, int id)
 	PERFINFO_AUTO_STOP();
 }
 
-/*Shut down generator and Let the particles die off on their own, possibly changing behavior 
+/*Shut down generator and Let the particles die off on their own, possibly changing behavior
 to the death system. Once the system is set to dying don't do this again...
 */
 void partSoftKillSystem(ParticleSystem * system, int id)
-{	
+{
 	ParticleSystemInfo * sysInfo;
 	ParticleSystemInfo * newsys;
 	int deathagetozero;
 
-	if( !system || !system->inuse || system->unique_id != id ) 
+	if( !system || !system->inuse || system->unique_id != id )
 		return;
 	if( system->dying )
 		return;
@@ -2876,13 +2875,13 @@ void partSoftKillSystem(ParticleSystem * system, int id)
 				for(i = 0 ; i < system->maxParticles ; i++)
 					system->particles[i].age = 0;
 			}
-			printToScreenLog( 0, "PART: System %d converted to %s", system->unique_id, system->sysInfo->name); 
+			printToScreenLog( 0, "PART: System %d converted to %s", system->unique_id, system->sysInfo->name);
 		}
-		printToScreenLog( 0, "PART: System %d failed to convert to %s", system->unique_id, sysInfo->dielikethis); 
-	}	
-	//End 
-	system->new_per_frame	= 0; 
-	system->burbleamplitude	= 0; 
+		printToScreenLog( 0, "PART: System %d failed to convert to %s", system->unique_id, sysInfo->dielikethis);
+	}
+	//End
+	system->new_per_frame	= 0;
+	system->burbleamplitude	= 0;
 	system->kill_on_zero	= 1;
 	system->dying = 1;
 
@@ -2901,13 +2900,13 @@ void printVertexBufferObjectDebugInfo()
 {
 	static int maxAllocedAtATime;
 	static int maxAllocedOnAFrame;
-	int i = 20; 
+	int i = 20;
 	xyprintf( 20, i++, "totalVertMemAlloced    %d", totalVertMemAlloced );
 	xyprintf( 20, i++, "totalVertArraysAlloced %d", totalVertArraysAlloced );
 	xyprintf( 20, i++, "totalVertMemFreed      %d", totalVertMemFreed );
 	xyprintf( 20, i++, "totalVertArraysFreed   %d", totalVertArraysFreed );
 	xyprintf( 20, i++, "totalVertArraysCurr    %d", totalVertMemAlloced - totalVertMemFreed );
-	
+
 	if( totalVertMemAlloced - totalVertMemFreed > maxAllocedAtATime )
 		maxAllocedAtATime = totalVertMemAlloced - totalVertMemFreed;
 	if( maxAllocedOnAFrame < totalVertMemAllocedThisFrame )
@@ -2920,7 +2919,7 @@ void printVertexBufferObjectDebugInfo()
 	totalVertArraysAllocedThisFrame = 0;
 	totalVertMemFreedThisFrame = 0;
 	totalVertArraysFreedThisFrame = 0;
-	
+
 }
 
 void partEngineInitialize()
@@ -2936,7 +2935,7 @@ void partEngineInitialize()
 	vertsize  =	( sizeof(Vec3) * 4 * MAX_PARTSPERSYS );
 	colorsize =	( 4 * 4 * MAX_PARTSPERSYS );
 
-	texsize   =	( sizeof(F32)* 2 * 4 * MAX_PARTSPERSYS );	
+	texsize   =	( sizeof(F32)* 2 * 4 * MAX_PARTSPERSYS );
 	trisize   =	( sizeof(int)* 3 * 2 * MAX_PARTSPERSYS );
 
 	big_buffer = calloc( 1, vertsize + colorsize );
@@ -2949,26 +2948,26 @@ void partEngineInitialize()
 
 	//Get an ARRAY buffer for constant tex coords and stuff them into it
 	particle_engine.texarray = calloc( 1, texsize );
-	for(i = 0 ; i < MAX_PARTSPERSYS * 2 * 4; i+=8)  
+	for(i = 0 ; i < MAX_PARTSPERSYS * 2 * 4; i+=8)
 	{			  //MAX_PARTSPERSYS * the size of a Vec 2 * the four corners
-		//DrawArrays Quads goes 00 , 10, 11, 01 
-		particle_engine.texarray[i+0]  =  0; //ul    
+		//DrawArrays Quads goes 00 , 10, 11, 01
+		particle_engine.texarray[i+0]  =  0; //ul
 		particle_engine.texarray[i+1]  =  0;
 
 		particle_engine.texarray[i+2]  =  1; //ur
-		particle_engine.texarray[i+3]  =  0; 
+		particle_engine.texarray[i+3]  =  0;
 
 		particle_engine.texarray[i+4]  =  0; //ll
 		particle_engine.texarray[i+5]  =  1;
 
 		particle_engine.texarray[i+6]  =  1; //lr
-		particle_engine.texarray[i+7]  =  1; 
+		particle_engine.texarray[i+7]  =  1;
 	}
 
 
 	//Get an ELEMENT_ARRAY buffer for constant tri coords and stuff them into it
 	particle_engine.tris = calloc( 1, trisize );
-	for(i = 0, j = 0 ; i < MAX_PARTSPERSYS * 6 ; i+=6, j+=4) 
+	for(i = 0, j = 0 ; i < MAX_PARTSPERSYS * 6 ; i+=6, j+=4)
 	{
 		particle_engine.tris[i+0] = j + 2;
 		particle_engine.tris[i+1] = j + 0;
@@ -2979,8 +2978,8 @@ void partEngineInitialize()
 	}
 	particle_engine.systems_on = 1;
     partSystemListInit(particle_engine.particle_systems);
-	initQuickTrig(); 
-	srand(10);       
+	initQuickTrig();
+	srand(10);
 }
 
 partKickStartSystem( ParticleSystem * system )
@@ -3006,21 +3005,21 @@ F32 partCalculatePerformanceAlphaFade( ParticleSystem * system, Mat4 systemMatCa
 	F32 camDistEmit;
 	F32 camDistMid;
 	ParticleSystemInfo * sysInfo;
-	
-	sysInfo = system->sysInfo; 
+
+	sysInfo = system->sysInfo;
 
 	//Calculate Radius, particleMid, partMidWorldSpace, partMidCamSpace, do frustum check
 	{
 		int visible;
 		Vec3 r;
 
-		//Get particleMid( Middle of System ) and Radius, 
-		//TO DO we don't curently scale the radius by the scale factor on the local system 
+		//Get particleMid( Middle of System ) and Radius,
+		//TO DO we don't curently scale the radius by the scale factor on the local system
 		subVec3(system->perf.boxMax, system->perf.boxMin, r);
 		scaleVec3( r, 0.5, r );
 		radius = lengthVec3(r);
-		radius += sqrtf(system->perf.biggestParticleSquared); //Assume biggest particle is on the edge 
-		addVec3( system->perf.boxMin, r, particleMid ); 
+		radius += sqrtf(system->perf.biggestParticleSquared); //Assume biggest particle is on the edge
+		addVec3( system->perf.boxMin, r, particleMid );
 
 		//Do Frustum Check
 		if( sysInfo->worldorlocalposition == PARTICLE_LOCALPOS )
@@ -3028,8 +3027,8 @@ F32 partCalculatePerformanceAlphaFade( ParticleSystem * system, Mat4 systemMatCa
 		else //sysInfo->worldorlocalposition == PARTICLE_WORLDPOS
 			copyVec3( particleMid, partMidWorldSpace );
 
-		mulVecMat4( partMidWorldSpace, cam_info.viewmat, partMidCamSpace ); 
-		visible = gfxSphereVisible(partMidCamSpace, radius);      
+		mulVecMat4( partMidWorldSpace, cam_info.viewmat, partMidCamSpace );
+		visible = gfxSphereVisible(partMidCamSpace, radius);
 		if (visible && game_state.zocclusion && !((editMode() || game_state.see_everything & 1) && !edit_state.showvis))
 		{
 			if (!zoTestSphere(partMidCamSpace, radius, visible & CLIP_NEAR))
@@ -3070,25 +3069,25 @@ F32 partCalculatePerformanceAlphaFade( ParticleSystem * system, Mat4 systemMatCa
 
 			dp = dotVec3( eyeZ, sysZ ); //TO DO use projection mat for dp?
 		}
-		else 
+		else
 			dp = 1; //sysInfo->frontorlocalfacing == PARTICLE_FRONTFACING
 
 		//Average Alpha and Average Size, and Dist from Camera
 		avgAlpha = system->perf.totalAlpha / system->particle_count;
-		avgSize	 = system->perf.totalSize  / system->particle_count; 
+		avgSize	 = system->perf.totalSize  / system->particle_count;
 
 		//Calculate a total fill cost:
 		//TO DO consider FOV
 		{
 			F32 fillGuess;
-			fillGuess = 50 * system->perf.totalSize * (1/(camDistMid*camDistMid)) * ABS(dp) ;      
- 
+			fillGuess = 50 * system->perf.totalSize * (1/(camDistMid*camDistMid)) * ABS(dp) ;
+
 				//TO DO I think I should if visible this.
 				//TO DO alpha mimic by additive and cut colors. Consider?
 				//TO DO create fill rate guess and a system to compare with actual fill.
 
 				//Debug info
-				if( 0 && game_state.perf )  
+				if( 0 && game_state.perf )
 				{
 					Mat4 mat;
 					int i = 30;
@@ -3144,11 +3143,11 @@ void partRunSystem(ParticleSystem * system)
 
 		if( system->kickstart ) //Currently not used for anything
 		{
-			system->currdrawstate = PART_UPDATE_BUT_DONT_DRAW_ME; 
+			system->currdrawstate = PART_UPDATE_BUT_DONT_DRAW_ME;
 			partKickStartSystem( system );
 		}
 
-		//Figure out what you should do this frame based on your age, your own flags and your parent FX parameters. 
+		//Figure out what you should do this frame based on your age, your own flags and your parent FX parameters.
 		//Notice particles interpret fx's UPDATE_BUT_DONT_DRAW_ME as don't do anything.  This should help perf
 		if( system->parentFxDrawState == FX_UPDATE_AND_DRAW_ME || (system->sysInfo->flags & PART_ALWAYS_DRAW) )
 			system->currdrawstate = PART_UPDATE_AND_DRAW_ME;
@@ -3224,17 +3223,17 @@ void partRunSystem(ParticleSystem * system)
 				//TO DO what does this do?
 				{
 					F32 inheritedAlpha = (F32)system->inheritedAlpha / 255.0;
-					alpha = partCalculatePerformanceAlphaFade( system, systemMatCamSpace ); 
+					alpha = partCalculatePerformanceAlphaFade( system, systemMatCamSpace );
 					alpha = MIN( inheritedAlpha, alpha );
 				}
 
-				//xyprintf( 50, y++, "Alpha: %f", system->inheritedAlpha ); 
+				//xyprintf( 50, y++, "Alpha: %f", system->inheritedAlpha );
 				PERFINFO_AUTO_STOP_START("modelDrawParticleSys",1);
 				if( !(game_state.stopInactiveDisplay && game_state.inactiveDisplay) )
 				{
 					if( alpha > ( (F32)PARTICLE_ALPHACUTOFF / 255.0 ) )
 					{
-						modelDrawParticleSys( system, alpha, 0, systemMatCamSpace );						
+						modelDrawParticleSys( system, alpha, 0, systemMatCamSpace );
 					}
 				}
 				PERFINFO_AUTO_STOP();
@@ -3266,9 +3265,9 @@ void partRunShutdown()
 {
 	if(partialSystemRun_inited)
 	{
-		rdrCleanUpAfterRenderingParticleSystems(); 
+		rdrCleanUpAfterRenderingParticleSystems();
 		partialSystemRun_inited = 0;
-	}	
+	}
 }
 void particleSystemSetDisableMode(int mode)
 {
@@ -3292,7 +3291,7 @@ void partRunEngine()
 	// particle system has not been refactored for independent
 	// simulation and rendering
 	rdrBeginMarker(__FUNCTION__ " - Particle System Engine");
-	
+
 	//Debug
 	if( game_state.noparticles || s_particleDisableDrawMode)
 		particle_engine.systems_on = 0;
@@ -3300,7 +3299,7 @@ void partRunEngine()
 		particle_engine.systems_on = 1;
 
 //	if(0) printVertexBufferObjectDebugInfo();
-	
+
 	particleTotalUpdated	= 0;
 	particleTotalDrawn		= 0;
 	particleTotalSystemsUpdated	= 0;
@@ -3331,7 +3330,7 @@ PERFINFO_AUTO_STOP();
 #ifndef FINAL
 			// for debugging purposes we can limit only one system to updated and draw (1 based index)
 			// but this isn't very robust because the ordering can change from sorting and deaths, etc.
-			if ( g_client_debug_state.particles_only_index > 0 && g_client_debug_state.particles_only_index != ++iSystem)	
+			if ( g_client_debug_state.particles_only_index > 0 && g_client_debug_state.particles_only_index != ++iSystem)
 				continue;
 #endif
 
@@ -3347,16 +3346,16 @@ PERFINFO_AUTO_STOP();
 				PERFINFO_AUTO_STOP();
 				continue;
 			}
-			
+
 			PERFINFO_AUTO_START("partKickStartSystem and pals",1);
 
 				if( system->kickstart ) //Currently not used for anything
 				{
-					system->currdrawstate = PART_UPDATE_BUT_DONT_DRAW_ME; 
+					system->currdrawstate = PART_UPDATE_BUT_DONT_DRAW_ME;
 					partKickStartSystem( system );
 				}
 
-				//Figure out what you should do this frame based on your age, your own flags and your parent FX parameters. 
+				//Figure out what you should do this frame based on your age, your own flags and your parent FX parameters.
 				//Notice particles interpret fx's UPDATE_BUT_DONT_DRAW_ME as don't do anything.  This should help perf
 				if( system->parentFxDrawState == FX_UPDATE_AND_DRAW_ME || (system->sysInfo->flags & PART_ALWAYS_DRAW) )
 					system->currdrawstate = PART_UPDATE_AND_DRAW_ME;
@@ -3435,11 +3434,11 @@ PERFINFO_AUTO_STOP();
 						//TO DO what does this do?
 						{
 							F32 inheritedAlpha = (F32)system->inheritedAlpha / 255.0;
-							alpha = partCalculatePerformanceAlphaFade( system, systemMatCamSpace ); 
+							alpha = partCalculatePerformanceAlphaFade( system, systemMatCamSpace );
 							alpha = MIN( inheritedAlpha, alpha );
 						}
 
-						//xyprintf( 50, y++, "Alpha: %f", system->inheritedAlpha ); 
+						//xyprintf( 50, y++, "Alpha: %f", system->inheritedAlpha );
 						PERFINFO_AUTO_STOP_START("modelDrawParticleSys",1);
 						if( !(game_state.stopInactiveDisplay && game_state.inactiveDisplay) )
 						{
@@ -3472,14 +3471,14 @@ PERFINFO_AUTO_STOP();
 
 
 PERFINFO_AUTO_START("rdrCleanUpAfterRenderingParticleSystems",1);
-		rdrCleanUpAfterRenderingParticleSystems(); 
+		rdrCleanUpAfterRenderingParticleSystems();
 PERFINFO_AUTO_STOP();
 	}
 
 	particle_engine.particleTotal = particleTotal;
 
 #ifndef FINAL
-	//Debug 
+	//Debug
 	{
 		static currhigh = 0;
 		static high = 0;
@@ -3496,14 +3495,14 @@ PERFINFO_AUTO_STOP();
 			game_state.resetparthigh = 0;
 		}
 		if( game_state.fxdebug & FX_DEBUG_BASIC || game_state.renderinfo)
-		{	
-			xyprintf(0,480/8-12 + TEXT_JUSTIFY,"Particles Drawn    :%4d", particleTotalDrawn); 
+		{
+			xyprintf(0,480/8-12 + TEXT_JUSTIFY,"Particles Drawn    :%4d", particleTotalDrawn);
 			xyprintf(0,480/8-11 + TEXT_JUSTIFY,"Particles Updated  :%4d", particleTotalUpdated);
 			xyprintf(0,480/8-10 + TEXT_JUSTIFY,"Particles Total    :%4d (High%4d)", particleTotal, high);
 			xyprintf(0,480/8-9 + TEXT_JUSTIFY,"PartSys   Drawn    :%4d", particleTotalSystemsDrawn);
 			xyprintf(0,480/8-8 + TEXT_JUSTIFY,"PartSys   Updated  :%4d", particleTotalSystemsUpdated);
 			xyprintf(0,480/8-7 + TEXT_JUSTIFY,"PartSys   Total    :%4d", particle_engine.num_systems);
-	
+
 		}
 
 		if( isDevelopmentMode() && particle_engine.num_systems > MAX_SYSTEMS - 50 )
