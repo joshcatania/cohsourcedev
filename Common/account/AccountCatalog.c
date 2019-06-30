@@ -211,6 +211,7 @@ void accountCatalogInit(void)
 
 void accountCatalog_SetMtxEnvironment(const char* mtxEnvironment)
 {
+	assert(mtxEnvironment != NULL);
 	strcpy_s(s_MtxEnvironment, ARRAY_SIZE(s_MtxEnvironment), mtxEnvironment);
 }
 
@@ -513,6 +514,8 @@ static bool awardCostumeTokens(SkuId sku_id, char** costumeTokens, Entity* e)
 	bool retval = true;
 	int count;
 
+	assert(costumeTokens != NULL && *costumeTokens != NULL);
+
 	for (count = 0; count < eaSize(&costumeTokens); count++)
 	{
 		if (costumeTokens[count])
@@ -547,6 +550,8 @@ static bool awardBadges(SkuId sku_id, char** badges, Entity* e)
 	bool retval = true;
 	int count;
 
+	assert(badges != NULL && *badges != NULL);
+
 	for (count = 0; count < eaSize(&badges); count++)
 	{
 		if (badges[count])
@@ -574,6 +579,8 @@ static bool awardBadges(SkuId sku_id, char** badges, Entity* e)
 static bool checkOrAwardAuthBit(ProductAuthBit bit, Entity *e)
 {
 	bool retval = false;
+
+	assert(e != NULL);
 
 	// In development mode authbits are per-character rather than per-account
 	// so we rely on the inventory to tell us when to award global products
@@ -728,6 +735,9 @@ const AccountProduct* accountCatalogGetProduct(SkuId sku_id)
 const AccountProduct* accountCatalogGetProductByRecipe(const char* recipe)
 {
 	const AccountProduct* product = NULL;
+
+	assert(recipe != NULL);
+
 	if (!stashFindPointerConst(s_ProductCatalog.recipeIndex, recipe, &product)) {
 		Errorf("Catalog does not have an item with the recipe '%s'", recipe);
 		return NULL;

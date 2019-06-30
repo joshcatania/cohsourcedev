@@ -32,6 +32,8 @@
 //			accountInventoryRelayToClient in accountservercomm.c
 void AccountInventorySendItem(Packet * pak_out, AccountInventory *pInv)
 {
+	assert(pInv != NULL);
+
 	accountCatalogValidateSkuId(pInv->sku_id);
 
 	pktSendBitsAuto2(pak_out, pInv->sku_id.u64);
@@ -42,6 +44,8 @@ void AccountInventorySendItem(Packet * pak_out, AccountInventory *pInv)
 
 void AccountInventoryReceiveItem(Packet * pak_in, AccountInventory *pInv)
 {
+	assert(pInv != NULL);
+
 	pInv->sku_id.u64 = pktGetBitsAuto2(pak_in);
 	pInv->granted_total = pktGetBitsAuto(pak_in);
 	pInv->claimed_total = pktGetBitsAuto(pak_in);
@@ -69,7 +73,11 @@ void AccountInventoryCopyItem(AccountInventory *pInvSrc, AccountInventory *pInvD
 #if defined(SERVER) || defined(CLIENT)
 bool AccountInventoryAddProductData(AccountInventory *pInv)
 {
-	const AccountProduct *pProduct = accountCatalogGetProduct(pInv->sku_id);
+	const AccountProduct* pProduct = NULL;
+
+	assert(pInv != NULL);
+
+	pProduct = accountCatalogGetProduct(pInv->sku_id);
 	if (!devassert(pProduct))
 		return false;
 
@@ -422,6 +430,9 @@ int accountLoyaltyRewardGetNodesBought(U8 *loyalty)
 	U64 * loyaltyQWords = (U64*)loyalty;
 	unsigned i;
 	unsigned count = 0;
+
+	assert(loyalty != NULL);
+
 	for(i=0; i<LOYALTY_BITS/sizeof(U64)/8; i+=1){
 		U64 bits = loyaltyQWords[i];
 
@@ -635,6 +646,9 @@ bool AccountStorePublishProduct(U32 auth_id, SkuId sku_id, bool bPublish)
 
 static bool AccountInventoryIsExpiredAtTimeStamp( AccountInventory* pInv, const AccountProduct* prodInfo, U32 timeStamp )
 {
+	assert(pInv != NULL);
+	assert(prodInfo != NULL);
+
 	if ( prodInfo->expirationSecs == 0 )
 	{
 		return false;
@@ -786,6 +800,9 @@ int accountEval(AccountInventorySet* invSet, U8 *loyalty, int pointsEarned, U32 
 
 static int cmp_AccountInventory(const AccountInventory** a, const AccountInventory** b)
 {
+	assert(a != NULL && *a != NULL);
+	assert(b != NULL && *b != NULL);
+
 	if ((*a)->sku_id.u64 == (*b)->sku_id.u64)
 		return 0;
 	return ((*a)->sku_id.u64 > (*b)->sku_id.u64) ? 1 : -1;
@@ -793,6 +810,9 @@ static int cmp_AccountInventory(const AccountInventory** a, const AccountInvento
 
 static int find_AccountInventory(const SkuId* key, const AccountInventory** value)
 {
+	assert(key != NULL);
+	assert(value != NULL);
+
 	if (key->u64 == (*value)->sku_id.u64)
 		return 0;
 	return (key->u64 > (*value)->sku_id.u64) ? 1 : -1;
@@ -802,6 +822,8 @@ static int find_AccountInventory(const SkuId* key, const AccountInventory** valu
 static void AccountInventorySet_validate(AccountInventorySet* invSet)
 {
 	int i;
+
+	assert(invSet != NULL);
 
 	for (i=0; i<eaSize(&invSet->invArr); i++) {
 		AccountInventory *inv = invSet->invArr[i];
@@ -823,12 +845,18 @@ static void AccountInventorySet_validate(AccountInventorySet* invSet)
 
 void AccountInventorySet_InitMem( AccountInventorySet* invSet )
 {
+	assert(invSet != NULL);
+
 	memset(invSet, 0, sizeof(AccountInventorySet));
 }
 
 void AccountInventorySet_AddAndSort( AccountInventorySet* invSet, AccountInventory* item )
 {
-	int index = (int)eaBFind(invSet->invArr, cmp_AccountInventory, item);
+	int index = 0;
+	
+	assert(invSet != NULL);
+
+	index = (int)eaBFind(invSet->invArr, cmp_AccountInventory, item);
 
 	AccountInventorySet_validate(invSet);
 	eaInsert(&invSet->invArr, item, index);
@@ -837,6 +865,8 @@ void AccountInventorySet_AddAndSort( AccountInventorySet* invSet, AccountInvento
 
 void AccountInventorySet_Sort( AccountInventorySet* invSet )
 {
+	assert(invSet != NULL);
+
 	eaQSort(invSet->invArr, cmp_AccountInventory);
 	AccountInventorySet_validate(invSet);
 }

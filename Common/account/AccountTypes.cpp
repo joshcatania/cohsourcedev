@@ -29,6 +29,8 @@ SkuId skuIdFromString(const char * sku_string)
 	unsigned i;
 	bool valid_sku_id = true;
 
+	assert(sku_string != NULL);
+
 	for (i=0; i<sizeof(SkuId); i++) {
 		valid_sku_id &= (sku_string[i] != 0);
 		ret.c[i] = toupper(sku_string[i]);
@@ -106,7 +108,11 @@ OrderId orderIdFromString(const char * order_string)
 {
 	OrderId order_id = kOrderIdInvalid;
 	int ate = 0;
-	int got = sscanf(order_string, "%08x-%04hx-%04hx-%04hx-%04hx%08x%n", &order_id.u32[0], &order_id.u16[2], &order_id.u16[3], &order_id.u16[4], &order_id.u16[5], &order_id.u32[3], &ate);
+	int got = 0;
+	
+	assert(order_string != NULL);
+
+	got = sscanf(order_string, "%08x-%04hx-%04hx-%04hx-%04hx%08x%n", &order_id.u32[0], &order_id.u16[2], &order_id.u16[3], &order_id.u16[4], &order_id.u16[5], &order_id.u32[3], &ate);
 	if (!devassertmsg(got == 6 && ate == 36 && order_string[ate]==0, "Invalid OrderId '%s'", order_string))
 		return kOrderIdInvalid;
 	return orderIdEndianSwap(order_id);

@@ -17,6 +17,8 @@
 #include "svr_base.h"
 #endif
 
+#include "SuperAssert.h"
+
 #define CERTIFICATION_LOCK_TIMEOUT 300
 
 AccountInventory *AccountInventoryFindItem(Entity *pEnt, SkuId sku_id)
@@ -123,7 +125,11 @@ void AccountServerTransactionFinish(U32 auth_id, OrderId order_id, bool success)
 
 void sendAccountInventoryToClient(Entity * e, char *pShard, int bonus_slots)
 {
-	int i, size = eaSize(&e->pl->account_inventory.invArr);
+	int i, size = 0;
+	
+	assert(e != NULL && e->pl != NULL);
+
+	size = eaSize(&e->pl->account_inventory.invArr);
 	START_PACKET(pak_out, e, SERVER_ACCOUNTSERVER_INVENTORY);
 	pktSetOrdered(pak_out, 1);
 	pktSendBitsAuto(pak_out, e->db_id);
@@ -154,6 +160,9 @@ void sendAccountInventoryToClient(Entity * e, char *pShard, int bonus_slots)
 CertificationRecord* certificationRecordInHistory(Entity *pEnt, const char * recipe )
 {
 	int i;
+
+	assert(pEnt != NULL && pEnt->pl != NULL);
+
 	for( i = eaSize(&pEnt->pl->ppCertificationHistory)-1; i>=0; i-- )
 	{
 		if( stricmp( pEnt->pl->ppCertificationHistory[i]->pchRecipe, recipe) == 0 )
@@ -169,6 +178,8 @@ CertificationRecord* certificationRecord_Create()
 
 void certificationRecord_Destroy(CertificationRecord* pRecord)
 {
+	assert(pRecord != NULL);
+
 	estrDestroy(&pRecord->pchRecipe);
 	SAFE_FREE(pRecord);
 }
@@ -184,6 +195,8 @@ void certificationRecord_DestroyAll(Entity *pEnt)
 
 bool certificationRecord_Locked(CertificationRecord* pRecord)
 {
+	assert(pRecord != NULL);
+
 	if (pRecord->status != kCertStatus_None
 		&& timerSecondsSince2000() <= pRecord->timed_locked + CERTIFICATION_LOCK_TIMEOUT)
 	{
