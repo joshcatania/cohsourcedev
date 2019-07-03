@@ -41,7 +41,7 @@ ArenaEventList g_kiosk;
 ArenaEvent* g_event; // for now, just the last event we received full details about...
 
 bool arenaCountdown = false; // should I be displaying the countdown?
-unsigned long arenaCountdownMomentInitial = 0.0; // the (unknown big number) that defines the moment that the countdown began.
+unsigned long arenaCountdownMomentInitial = 0; // the (unknown big number) that defines the moment that the countdown began.
 int arenaCountdownTimerInitial = 0; // the number of seconds that the timer should countdown in total (the current time in the countdown at the moment the countdown began.)
 int arenaCountdownTimerCurrent = 0; // the current time in the countdown (this is the big red number)
 
@@ -390,11 +390,11 @@ char* getArenaInfoString()
 	}
 	else if (g_arena_stock)
 	{
-		sprintf(buf, "%d", g_arena_stock);
+		sprintf_s(buf, sizeof(buf), "%d", g_arena_stock);
 	}
 	else if (g_arena_kills)
 	{
-		sprintf(buf, "%d", g_arena_kills);
+		sprintf_s(buf, sizeof(buf), "%d", g_arena_kills);
 	}
 	else
 	{
@@ -490,202 +490,202 @@ void handleClientArenaPlayerUpdate(Packet * pak) {
 		char temp[2048];
 		
 		text[0]='\0';
-		sprintf(temp,"<span align=center>Rated Matches:</span><br>");
-		strcat(text,temp);
-		sprintf(temp,"<TABLE><TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD></TD>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("RatingString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("WinsString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("LossesString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("DrawsString"));
-		strcat(text,temp);
-		sprintf(temp,"</TR>");
-		strcat(text,temp);
+		sprintf_s(temp,sizeof(temp),"<span align=center>Rated Matches:</span><br>");
+		strcat_s(text,sizeof(text),temp);
+		sprintf_s(temp,sizeof(temp),"<TABLE><TR>");
+		strcat_s(text,sizeof(text),temp);
+		sprintf_s(temp,sizeof(temp),"<TD></TD>");
+		strcat_s(text,sizeof(text),temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("RatingString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("WinsString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("LossesString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("DrawsString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "</TR>");
+		strcat_s(text, sizeof(text), temp);
 
 		//duels
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text,sizeof(text),temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("DuelString"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("DuelString"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
 		//battle royale
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,3,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("BattleRoyale"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("BattleRoyale"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
 		//star
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_STAR,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_STAR,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_STAR,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_STAR,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_STAR,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("5TARString"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("5TARString"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
 		//team duel
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("TeamDuel"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("TeamDuel"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
 		//team battle royale
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,3,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,3,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("TeamBattleRoyale"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("TeamBattleRoyale"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
 		//supergroup rumble
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SUPERGROUP,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SUPERGROUP,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SUPERGROUP,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SUPERGROUP,ARENA_TOURNAMENT_NONE,2,0,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SUPERGROUP,ARENA_TOURNAMENT_NONE,2,0,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("SupergroupRumble"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("SupergroupRumble"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 		//Gladiator
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_SINGLE,ARENA_TOURNAMENT_NONE,2,1,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("GladiatorSingle"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("GladiatorSingle"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 		//Gladiator
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		rating		=ap->ratingsByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		provisional	=ap->provisionalByRatingIndex	[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		wins		=ap->winsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		losses		=ap->lossesByRatingIndex		[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,1,NULL)];
 		draws		=ap->drawsByRatingIndex			[EventGetRatingIndex(ARENA_FREEFORM,ARENA_TEAM,ARENA_TOURNAMENT_NONE,2,1,NULL)];
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("GladiatorTeam"));
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("GladiatorTeam"));
+		strcat_s(text, sizeof(text), temp);
 		if (provisional)
-			sprintf(temp,"<TD align=right><color gray>");
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color gray>");
 		else
-			sprintf(temp,"<TD align=right><color white>");
-		strcat(text,temp);
-		sprintf(temp,"%d</color></TD>",rating);
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
-		strcat(text,temp);
+			sprintf_s(temp, sizeof(temp), "<TD align=right><color white>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "%d</color></TD>",rating);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 		//overall
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
 		{
 			int i;
 			rating		=0;
@@ -703,16 +703,16 @@ void handleClientArenaPlayerUpdate(Packet * pak) {
 			else
 				rating=0;
 		}
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("OverallString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",rating,wins,losses,draws);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("OverallString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",rating,wins,losses,draws);
+		strcat_s(text, sizeof(text), temp);
 
 
 
 
-		sprintf(temp,"</TABLE>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "</TABLE>");
+		strcat_s(text, sizeof(text), temp);
 
 		if (requester==1)
 			info_replaceTab(textStd("ArenaTabString"),text,-1);
@@ -725,227 +725,227 @@ void handleClientArenaPlayerUpdate(Packet * pak) {
 		char temp[2048];
 		
 		text[0]='\0';
-		sprintf(temp,"<TABLE><TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD></TD>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("WinsString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("LossesString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right><color paragon>%s</color></TD>",textStd("DrawsString"));
-		strcat(text,temp);
-		sprintf(temp,"</TR>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TABLE><TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD></TD>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("WinsString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("LossesString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right><color paragon>%s</color></TD>",textStd("DrawsString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "</TR>");
+		strcat_s(text, sizeof(text), temp);
 
 		// overall
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("OverallString"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->wins,ap->losses,ap->draws);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("OverallString"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->wins,ap->losses,ap->draws);
+		strcat_s(text, sizeof(text), temp);
 
 		// event type
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaEventType"));
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeDuel"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[0],ap->lossesByEventType[0],ap->drawsByEventType[0]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeSwissDraw"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[1],ap->lossesByEventType[1],ap->drawsByEventType[1]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeFreeForAll"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[2],ap->lossesByEventType[2],ap->drawsByEventType[2]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeStar"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[3],ap->lossesByEventType[3],ap->drawsByEventType[3]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVillainStar"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[4],ap->lossesByEventType[4],ap->drawsByEventType[4]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVersusStar"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[5],ap->lossesByEventType[5],ap->drawsByEventType[5]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventType7Star"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[6],ap->lossesByEventType[6],ap->drawsByEventType[6]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVillain7Star"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[7],ap->lossesByEventType[7],ap->drawsByEventType[7]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVersus7Star"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[8],ap->lossesByEventType[8],ap->drawsByEventType[8]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeGladiator"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[9],ap->lossesByEventType[9],ap->drawsByEventType[9]);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaEventType"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeDuel"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[0],ap->lossesByEventType[0],ap->drawsByEventType[0]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeSwissDraw"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[1],ap->lossesByEventType[1],ap->drawsByEventType[1]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeFreeForAll"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[2],ap->lossesByEventType[2],ap->drawsByEventType[2]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeStar"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[3],ap->lossesByEventType[3],ap->drawsByEventType[3]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVillainStar"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[4],ap->lossesByEventType[4],ap->drawsByEventType[4]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVersusStar"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[5],ap->lossesByEventType[5],ap->drawsByEventType[5]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventType7Star"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[6],ap->lossesByEventType[6],ap->drawsByEventType[6]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVillain7Star"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[7],ap->lossesByEventType[7],ap->drawsByEventType[7]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeVersus7Star"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[8],ap->lossesByEventType[8],ap->drawsByEventType[8]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaEventTypeGladiator"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByEventType[9],ap->lossesByEventType[9],ap->drawsByEventType[9]);
+		strcat_s(text, sizeof(text), temp);
 
 		// team type
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaTeamType"));
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeSolo"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[0],ap->lossesByTeamType[0],ap->drawsByTeamType[0]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeTeam"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[1],ap->lossesByTeamType[1],ap->drawsByTeamType[1]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeSupergroup"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[2],ap->lossesByTeamType[2],ap->drawsByTeamType[2]);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaTeamType"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeSolo"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[0],ap->lossesByTeamType[0],ap->drawsByTeamType[0]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeTeam"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[1],ap->lossesByTeamType[1],ap->drawsByTeamType[1]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamTypeSupergroup"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByTeamType[2],ap->lossesByTeamType[2],ap->drawsByTeamType[2]);
+		strcat_s(text, sizeof(text), temp);
 
 		// victory type
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaVictoryType"));
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTimed"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[0],ap->lossesByVictoryType[0],ap->drawsByVictoryType[0]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamStock"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[1],ap->lossesByVictoryType[1],ap->drawsByVictoryType[1]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("LastManStanding"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[2],ap->lossesByVictoryType[2],ap->drawsByVictoryType[2]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaKills"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[3],ap->lossesByVictoryType[3],ap->drawsByVictoryType[3]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("ArenaStock"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[4],ap->lossesByVictoryType[4],ap->drawsByVictoryType[4]);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaVictoryType"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTimed"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[0],ap->lossesByVictoryType[0],ap->drawsByVictoryType[0]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaTeamStock"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[1],ap->lossesByVictoryType[1],ap->drawsByVictoryType[1]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("LastManStanding"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[2],ap->lossesByVictoryType[2],ap->drawsByVictoryType[2]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaKills"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[3],ap->lossesByVictoryType[3],ap->drawsByVictoryType[3]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("ArenaStock"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByVictoryType[4],ap->lossesByVictoryType[4],ap->drawsByVictoryType[4]);
+		strcat_s(text, sizeof(text), temp);
 
 		// weight class
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaWeightClass"));
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("AnyLevel"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[0],ap->lossesByWeightClass[0],ap->drawsByWeightClass[0]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("StrawWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[1],ap->lossesByWeightClass[1],ap->drawsByWeightClass[1]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("FlyWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[2],ap->lossesByWeightClass[2],ap->drawsByWeightClass[2]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("BantamWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[3],ap->lossesByWeightClass[3],ap->drawsByWeightClass[3]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("FeatherWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[4],ap->lossesByWeightClass[4],ap->drawsByWeightClass[4]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("LightWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[5],ap->lossesByWeightClass[5],ap->drawsByWeightClass[5]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("WelterWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[6],ap->lossesByWeightClass[6],ap->drawsByWeightClass[6]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("MiddleWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[7],ap->lossesByWeightClass[7],ap->drawsByWeightClass[7]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("CruiserWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[8],ap->lossesByWeightClass[8],ap->drawsByWeightClass[8]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("HeavyWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[9],ap->lossesByWeightClass[9],ap->drawsByWeightClass[9]);
-		strcat(text,temp);
-		sprintf(temp,"<TR>");
-		strcat(text,temp);
-		sprintf(temp,"<TD align=left><color paragon>%s</color></TD>",textStd("SuperHeavyWeight"));
-		strcat(text,temp);
-		sprintf(temp,"<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[10],ap->lossesByWeightClass[10],ap->drawsByWeightClass[10]);
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD></TR>",textStd("ArenaWeightClass"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("AnyLevel"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[0],ap->lossesByWeightClass[0],ap->drawsByWeightClass[0]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("StrawWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[1],ap->lossesByWeightClass[1],ap->drawsByWeightClass[1]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("FlyWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[2],ap->lossesByWeightClass[2],ap->drawsByWeightClass[2]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("BantamWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[3],ap->lossesByWeightClass[3],ap->drawsByWeightClass[3]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("FeatherWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[4],ap->lossesByWeightClass[4],ap->drawsByWeightClass[4]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("LightWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[5],ap->lossesByWeightClass[5],ap->drawsByWeightClass[5]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("WelterWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[6],ap->lossesByWeightClass[6],ap->drawsByWeightClass[6]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("MiddleWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[7],ap->lossesByWeightClass[7],ap->drawsByWeightClass[7]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("CruiserWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[8],ap->lossesByWeightClass[8],ap->drawsByWeightClass[8]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("HeavyWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[9],ap->lossesByWeightClass[9],ap->drawsByWeightClass[9]);
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TR>");
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=left><color paragon>%s</color></TD>",textStd("SuperHeavyWeight"));
+		strcat_s(text, sizeof(text), temp);
+		sprintf_s(temp, sizeof(temp), "<TD align=right>%d</TD><TD align=right>%d</TD><TD align=right>%d</TD></TR>",ap->winsByWeightClass[10],ap->lossesByWeightClass[10],ap->drawsByWeightClass[10]);
+		strcat_s(text, sizeof(text), temp);
 
-		sprintf(temp,"</TABLE>");
-		strcat(text,temp);
+		sprintf_s(temp, sizeof(temp), "</TABLE>");
+		strcat_s(text, sizeof(text), temp);
 
 		dialogStd(DIALOG_OK,text,NULL,NULL,NULL,NULL,0);
 	}

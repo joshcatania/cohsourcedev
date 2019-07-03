@@ -24,6 +24,8 @@
 #include "file.h"
 #include "log.h"
 
+#include "SuperAssert.h"
+
 typedef struct Character Character;
 
 ArenaWeightRange g_weightRanges[ARENA_NUM_WEIGHT_CLASSES] = {
@@ -53,6 +55,8 @@ int GetWeightClass(int level)
 void ArenaKioskSend(Packet* pak, ArenaEventList* list)
 {
 	int count, i, n;
+
+	assert(list != NULL);
 
 	count = 0;
 	n = eaSize(&list->events);
@@ -91,6 +95,8 @@ void EventKioskFilter(ArenaEvent * event, U32 dbid, const char* archetype, int l
 	int size;
 	int availableSlot=false;
 	ArenaParticipant* part;
+
+	assert(archetype != NULL);
 
 	// don't send down private or unlisted matches
 	if (!event) 
@@ -184,6 +190,8 @@ void EventKioskFilter(ArenaEvent * event, U32 dbid, const char* archetype, int l
 void ArenaEventSend(Packet* pak, ArenaEvent* event, int detailed)
 {
 	int i, j, n;
+
+	assert(event != NULL);
 
 	pktSendBitsPack(pak, 1, event->eventid);
 	pktSendBitsPack(pak, 1, event->uniqueid);
@@ -443,6 +451,8 @@ void ArenaPlayerSend(Packet* pak, ArenaPlayer* ap)
 {
 	int i;
 	
+	assert(ap != NULL);
+
 	pktSendBitsPack(pak, 1, ap->dbid);
 	pktSendBitsPack(pak, 1, ap->prizemoney);
 	pktSendString(pak, ap->arenaReward);
@@ -494,6 +504,8 @@ void ArenaPlayerReceive(Packet* pak, ArenaPlayer* ap)
 {
 	int i;
 
+	assert(ap != NULL);
+
 	ap->dbid = pktGetBitsPack(pak, 1);
 	ap->prizemoney = pktGetBitsPack(pak, 1);
 	strcpy( ap->arenaReward, pktGetString( pak ) );
@@ -544,7 +556,11 @@ void ArenaPlayerReceive(Packet* pak, ArenaPlayer* ap)
 
 void ArenaRankingTableSend(Packet * pak,ArenaRankingTable * art) {
 	int i;
-	int size=eaSize(&art->entries);
+	int size = 0;
+
+	assert(art != NULL);
+
+	size = eaSize(&art->entries);
 	pktSendBitsPack(pak,1,size);
 	for (i=0;i<size;i++) {
 		pktSendF32(pak,art->entries[i]->opp_oppAvgPts);
@@ -573,6 +589,9 @@ void ArenaRankingTableSend(Packet * pak,ArenaRankingTable * art) {
 
 void ArenaRankingTableReceive(Packet * pak,ArenaRankingTable * art) {
 	int i=pktGetBitsPack(pak,1);
+
+	assert(art != NULL);
+
 	while (i--) {
 		ArenaRankingTableEntry * arte=ArenaRankingTableEntryCreate();
 		arte->opp_oppAvgPts=pktGetF32(pak);
@@ -651,6 +670,8 @@ char* nameFromArenaParticipant(ArenaEvent* event, int dbid)
 {
 	int i, n;
 
+	assert(event != NULL);
+
 	n = eaSize(&event->participants);
 	for (i = 0; i < n; i++)
 	{
@@ -664,6 +685,8 @@ char* nameFromArenaParticipant(ArenaEvent* event, int dbid)
 void ArenaEventCopy(ArenaEvent* target, ArenaEvent* source)
 {
 	int i, n;
+
+	assert(source != NULL);
 
 	ArenaEventDestroyContents(target);
 	memcpy(target, source, sizeof(*source));
@@ -704,6 +727,8 @@ void ArenaEventCountPlayers(ArenaEvent* event)
 	int i, n;
 	int count = 0;
 
+	assert(event != NULL);
+
 	n = eaSize(&event->participants);
 	for (i = 0; i < n; i++)
 	{
@@ -716,12 +741,16 @@ void ArenaEventCountPlayers(ArenaEvent* event)
 char* ArenaConstructInfoString(int eventid, int seat)
 {
 	static char buf[100];
-	sprintf(buf, "A:%i:%i", eventid, seat);
+	sprintf_s(buf, sizeof(buf), "A:%i:%i", eventid, seat);
 	return buf;
 }
 
 int ArenaDeconstructInfoString(char* mapinfo, int *eventid, int *seat)
 {
+	assert(mapinfo != NULL);
+	assert(eventid != NULL);
+	assert(seat != NULL);
+
 	return 2 == sscanf(mapinfo, "A:%i:%i", eventid, seat);
 }
 
@@ -833,6 +862,8 @@ void ArenaEventDebugPrint(ArenaEvent* event, char** estr, U32 time)
 	// try to infer what kind of time we're dealing with
 	#define INFER_TIME(t) (t < 700000? t: (t < time? time-t: t-time))
 
+	assert(event != NULL);
+
 	ArenaEventCountPlayers(event);
 	estrClear(estr);
 	estrConcatf(estr, "Event %s (%i/%i)\n", event->description, event->eventid, event->uniqueid);
@@ -924,6 +955,9 @@ void ArenaEventDebugPrint(ArenaEvent* event, char** estr, U32 time)
 int ArenaError(char const *fmt, ...)
 {
 	va_list ap;
+
+	assert(fmt != NULL);
+
 	va_start(ap, fmt);
 	log_va( LOG_ERROR, LOG_LEVEL_DEPRECATED, 0, (char*)fmt, ap );
 	va_end(ap);
@@ -1012,11 +1046,15 @@ ArenaEventList* ArenaEventListCreate(void)
 }
 void ArenaEventListDestroy(ArenaEventList* al)
 {
+	assert(al != NULL);
+
 	eaDestroyEx(&al->events, ArenaEventDestroy);
 	MP_FREE(ArenaEventList, al);
 }
 void ArenaEventListDestroyContents(ArenaEventList* al)
 {
+	assert(al != NULL);
+
 	eaDestroyEx(&al->events, ArenaEventDestroy);
 }
 
@@ -1036,6 +1074,8 @@ void ArenaEventDestroy(ArenaEvent* ae)
 }
 void ArenaEventDestroyContents(ArenaEvent* ae)
 {
+	assert(ae != NULL);
+
 	eaDestroyEx(&ae->participants, ArenaParticipantDestroy);
 	eaDestroyEx(&ae->seating, ArenaSeatingDestroy);
 	if (ae->history)
@@ -1056,6 +1096,8 @@ ArenaParticipant* ArenaParticipantCreate(void)
 }
 void ArenaParticipantDestroy(ArenaParticipant* ap)
 {
+	assert(ap != NULL);
+
 	if (ap->name) free(ap->name);
 	MP_FREE(ArenaParticipant, ap);
 }
@@ -1084,6 +1126,8 @@ ArenaRankingTableEntry* ArenaRankingTableEntryCreate(void)
 }
 void ArenaRankingTableEntryDestroy(ArenaRankingTableEntry* entry)
 {
+	assert(entry != NULL);
+
 	if(entry->playername)
 		free(entry->playername);
 	MP_FREE(ArenaRankingTableEntry, entry);
@@ -1095,6 +1139,8 @@ ArenaRankingTable* ArenaRankingTableCreate(void)
 }
 void ArenaRankingTableDestroy(ArenaRankingTable* table)
 {
+	assert(table != NULL);
+
 	eaDestroyEx(&table->entries, ArenaRankingTableEntryDestroy);
 	MP_FREE(ArenaRankingTable, table);
 }
@@ -1105,6 +1151,8 @@ EventHistory* EventHistoryCreate(void)
 }
 void EventHistoryDestroy(EventHistory* hist)
 {
+	assert(hist != NULL);
+
 	eaDestroyEx(&hist->sides, EventHistoryEntryDestroy);
 
 	MP_FREE(EventHistory, hist);
@@ -1116,6 +1164,8 @@ EventHistoryEntry* EventHistoryEntryCreate(void)
 }
 void EventHistoryEntryDestroy(EventHistoryEntry* entry)
 {
+	assert(entry != NULL);
+
 	eaDestroy(&entry->p);
 	MP_FREE(EventHistoryEntry, entry);
 }
@@ -1131,6 +1181,8 @@ void ArenaPlayerDestroy(ArenaPlayer* entry)
 
 void ArenaCreatorUpdateSend( ArenaEvent * event, Packet * pak )
 {
+	assert(event != NULL);
+
 	pktSendBits( pak, 32, event->eventid );
 	pktSendBits( pak, 32, event->uniqueid );
 
@@ -1168,6 +1220,8 @@ void ArenaCreatorUpdateSend( ArenaEvent * event, Packet * pak )
 
 void ArenaCreatorUpdateRecieve( ArenaEvent * event, Packet * pak )
 {
+	assert(event != NULL);
+
 	event->eventid = pktGetBits( pak, 32 );
 	event->uniqueid = pktGetBits( pak, 32 );
 
@@ -1206,6 +1260,9 @@ void ArenaCreatorUpdateRecieve( ArenaEvent * event, Packet * pak )
 
 void ArenaParticipantUpdateSend( ArenaEvent * event, ArenaParticipant * ap, Packet * pak )
 {
+	assert(event != NULL);
+	assert(ap != NULL);
+
 	pktSendBits( pak, 32, event->eventid );
 	pktSendBits( pak, 32, event->uniqueid );
 
@@ -1229,6 +1286,9 @@ void ArenaParticipantUpdateSend( ArenaEvent * event, ArenaParticipant * ap, Pack
 
 void ArenaParticipantUpdateRecieve( ArenaEvent * event, ArenaParticipant * ap, Packet * pak )
 {
+	assert(event != NULL);
+	assert(ap != NULL);
+
 	event->eventid	= pktGetBits( pak, 32);
 	event->uniqueid = pktGetBits( pak, 32 );
 
@@ -1250,7 +1310,11 @@ void ArenaParticipantUpdateRecieve( ArenaEvent * event, ArenaParticipant * ap, P
 
 void ArenaFullParticipantUpdateSend( ArenaEvent *event, Packet * pak )
 {
-	int i, count = eaSize(&event->participants);
+	int i, count = 0;
+	
+	assert(event != NULL);
+
+	count = eaSize(&event->participants);
 
 	pktSendBitsPack( pak, 3, count );
 
@@ -1261,6 +1325,8 @@ void ArenaFullParticipantUpdateSend( ArenaEvent *event, Packet * pak )
 void ArenaFullParticipantUpdateRecieve( ArenaEvent * event, Packet * pak )
 {
 	int i, count = pktGetBitsPack(pak, 3);
+
+	assert(event != NULL);
 
 	if( !event->participants )
 		eaCreate(&event->participants);
@@ -1327,6 +1393,8 @@ void ArenaSelectMap(ArenaEvent* event)
 {
 	int i, mapCount;
 	static ArenaMap** maps = 0;
+
+	assert(event != NULL);
 
 	if (!maps) 
 		eaCreate(&maps);
