@@ -2,7 +2,7 @@
 #ifndef _MEGAGRID_H
 #define _MEGAGRID_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct MegaGridNode MegaGridNode;
 

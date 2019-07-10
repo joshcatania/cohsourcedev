@@ -12,7 +12,7 @@
 #define llex_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
 #include "ldo.h"
 #include "llex.h"
@@ -30,7 +30,7 @@
 
 
 
-#define currIsNewline(ls)	(ls->current == '\n' || ls->current == '\r')
+#define currIsNewline(ls)    (ls->current == '\n' || ls->current == '\r')
 
 
 /* ORDER RESERVED */

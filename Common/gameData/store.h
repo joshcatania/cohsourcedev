@@ -16,76 +16,76 @@ typedef struct Entity Entity;
 
 typedef struct StoreItem
 {
-	const char *pchName;
-	PowerNameRef power;
-	int iSell;
-	int iBuy;
-	int iCntPerStore;
-	const int *piDepartments;
+    const char *pchName;
+    PowerNameRef power;
+    int iSell;
+    int iBuy;
+    int iCntPerStore;
+    const int *piDepartments;
 
-	const BasePower *ppowBase;
+    const BasePower *ppowBase;
 } StoreItem;
 
 typedef struct StoreItems
 {
-	const StoreItem **ppItems;
+    const StoreItem **ppItems;
 
-	cStashTable hashItems; // Maps item names to StoreItem *s
+    cStashTable hashItems; // Maps item names to StoreItem *s
 } StoreItems;
 
 typedef struct Department
 {
-	int id;
-	const char *pchName;
+    int id;
+    const char *pchName;
 } Department;
 
 typedef struct Departments
 {
-	const Department **ppDepartments;
+    const Department **ppDepartments;
 } Departments;
 
 typedef struct DepartmentContent
 {
-	StoreItem **ppItems;
+    StoreItem **ppItems;
 } DepartmentContent;
 
 typedef struct DepartmentContents
 {
-	DepartmentContent **ppDepartments;
+    DepartmentContent **ppDepartments;
 } DepartmentContents;
 
 typedef struct Markup
 {
-	int iDepartment;
-	float fMarkup;
+    int iDepartment;
+    float fMarkup;
 } Markup;
 
 typedef struct Store
 {
-	char *pchName;
-	int iIdx;
+    char *pchName;
+    int iIdx;
 
-	Markup **ppSells;
-	Markup **ppBuys;
+    Markup **ppSells;
+    Markup **ppBuys;
 
-	const StoreItem **ppItems;
+    const StoreItem **ppItems;
 
-	float fBuySalvage;
-	float fBuyRecipe;
+    float fBuySalvage;
+    float fBuyRecipe;
 } Store;
 
 typedef struct Stores
 {
-	Store **ppStores;
-	StashTable hashStores; // Maps store names to Store *s	
+    Store **ppStores;
+    StashTable hashStores; // Maps store names to Store *s    
 } Stores;
 
 // This structure is both const and non-const in different circumstances
 typedef struct MultiStore
 {
-	int idNPC; // used on the client only
-	int iCnt;
-	char **ppchStores;
+    int idNPC; // used on the client only
+    int iCnt;
+    char **ppchStores;
 } MultiStore;
 
 typedef struct StoreIter StoreIter;

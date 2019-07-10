@@ -1,7 +1,7 @@
 #ifndef _GRIDFIND_H
 #define _GRIDFIND_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct Grid Grid;
 typedef struct GridCell GridCell;

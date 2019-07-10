@@ -15,7 +15,7 @@
 #ifndef CMDAUCTION_H
 #define CMDAUCTION_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct GenericHashTableImp *GenericHashTable;
 typedef struct HashTableImp *HashTable;

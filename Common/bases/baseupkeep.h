@@ -6,7 +6,7 @@
 #ifndef BASEUPKEEP_H
 #define BASEUPKEEP_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
@@ -18,25 +18,25 @@ typedef struct Supergroup Supergroup;
 
 typedef struct RentRange
 {
- 	int nRentMax;
-	F32 taxRate;
+     int nRentMax;
+    F32 taxRate;
 } RentRange;
 
 typedef struct BaseUpkeepPeriod
 {
-	int period;
-	bool shutBaseDown;
- 	bool denyBaseEntry;
+    int period;
+    bool shutBaseDown;
+     bool denyBaseEntry;
 } BaseUpkeepPeriod;
 
 typedef struct BaseUpkeep
 {
-	const char *filenameData;
-	int periodRent;				// seconds
-	const RentRange **ppRanges;		// always in order by prestige
+    const char *filenameData;
+    int periodRent;                // seconds
+    const RentRange **ppRanges;        // always in order by prestige
 
-	int periodResetRentDue;		// period at which rent due date resets to cur_time + period	
-	const BaseUpkeepPeriod **ppPeriods; // info about what a late-paying sgrp can do 
+    int periodResetRentDue;        // period at which rent due date resets to cur_time + period    
+    const BaseUpkeepPeriod **ppPeriods; // info about what a late-paying sgrp can do 
 } BaseUpkeep;
 
 extern SHARED_MEMORY BaseUpkeep g_baseUpkeep;

@@ -1,9 +1,9 @@
 #pragma once
-#include "net_link.h"
-#include "net_linklist.h"
+#include <utilitieslib/network/net_link.h>
+#include <utilitieslib/network/net_linklist.h>
 #include "auth/auth.h"
 #ifdef DBSERVER
-#include "servercfg.h"	//used for MAX_PLAYER_SLOTS
+#include "dbserver/servercfg.h"    //used for MAX_PLAYER_SLOTS
 #endif
 
 void initGameChecksum();
@@ -17,37 +17,37 @@ char *linkIpStr(NetLink *link);
 
 typedef enum GameClientLoginStatus
 {
-	GAMELLOGIN_UNINITIALIZED,
-	GAMELLOGIN_UNAUTHENTICATED,
-	GAMELLOGIN_QUEUED,
-	GAMELLOGIN_LOGGINGIN,
-	GAMELLOGIN_COUNT,
+    GAMELLOGIN_UNINITIALIZED,
+    GAMELLOGIN_UNAUTHENTICATED,
+    GAMELLOGIN_QUEUED,
+    GAMELLOGIN_LOGGINGIN,
+    GAMELLOGIN_COUNT,
 }GameClientLoginStatus;
 
 typedef struct
 {
-	U8		valid;
-	NetLink	*link;
-	U32		auth_id;
-	U32		container_id;
-	char	account_name[64];
+    U8        valid;
+    NetLink    *link;
+    U32        auth_id;
+    U32        container_id;
+    char    account_name[64];
 #ifdef DBSERVER
-	U32		players[MAX_PLAYER_SLOTS];
-	U8		players_offline[MAX_PLAYER_SLOTS];
+    U32        players[MAX_PLAYER_SLOTS];
+    U8        players_offline[MAX_PLAYER_SLOTS];
 #endif
-	U8		auth_user_data[AUTH_BYTES];
-	U32		payStat;
-	U32		loyalty;
-	U32		loyaltyLegacy;
-	U32		local_map_ip;
-	int		char_id;
-	int     getting_player;
-	char	*systemSpecs;	//this will be freed and zeroed when used, so hopefully shouldn't have to worry about managing.
-	U32		nonQueueIP;		//if using the queue server, what is the client's actual IP?
-	U32		linkId;			//how to find the queue server link that attaches to the client.
-	GameClientLoginStatus		loginStatus;		//player login status
-	U32		remove;
-	int		vipFlagReady;
-	int		vip;
+    U8        auth_user_data[AUTH_BYTES];
+    U32        payStat;
+    U32        loyalty;
+    U32        loyaltyLegacy;
+    U32        local_map_ip;
+    int        char_id;
+    int     getting_player;
+    char    *systemSpecs;    //this will be freed and zeroed when used, so hopefully shouldn't have to worry about managing.
+    U32        nonQueueIP;        //if using the queue server, what is the client's actual IP?
+    U32        linkId;            //how to find the queue server link that attaches to the client.
+    GameClientLoginStatus        loginStatus;        //player login status
+    U32        remove;
+    int        vipFlagReady;
+    int        vip;
 } GameClientLink;
 

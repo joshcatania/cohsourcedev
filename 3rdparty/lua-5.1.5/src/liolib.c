@@ -14,15 +14,15 @@
 #define liolib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
 
-#define IO_INPUT	1
-#define IO_OUTPUT	2
+#define IO_INPUT    1
+#define IO_OUTPUT    2
 
 
 static const char *const fnames[] = {"input", "output"};
@@ -52,7 +52,7 @@ static void fileerror (lua_State *L, int arg, const char *filename) {
 }
 
 
-#define tofilep(L)	((FILE **)luaL_checkudata(L, 1, LUA_FILEHANDLE))
+#define tofilep(L)    ((FILE **)luaL_checkudata(L, 1, LUA_FILEHANDLE))
 
 
 static int io_type (lua_State *L) {

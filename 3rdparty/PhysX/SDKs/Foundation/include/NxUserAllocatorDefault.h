@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 
-#if defined(WIN32) && NX_DEBUG_MALLOC
+#if defined(_WIN32) && NX_DEBUG_MALLOC
   #include <crtdbg.h>
 #endif
 
@@ -50,7 +50,7 @@ class NxUserAllocatorDefault : public NxUserAllocator
 		void* mallocDEBUG(size_t size, const char* fileName, int line, const char* className, NxMemoryType type)
 			{
 #ifdef _DEBUG
-	#if defined(WIN32) && NX_DEBUG_MALLOC
+	#if defined(_WIN32) && NX_DEBUG_MALLOC
 			return ::_malloc_dbg(size, _NORMAL_BLOCK, fileName, line);
 	#else
 			return ::malloc(size);
@@ -63,7 +63,7 @@ class NxUserAllocatorDefault : public NxUserAllocator
 		void* mallocDEBUG(size_t size, const char* fileName, int line)
 			{
 #ifdef _DEBUG
-	#if defined(WIN32) && NX_DEBUG_MALLOC
+	#if defined(_WIN32) && NX_DEBUG_MALLOC
 			return ::_malloc_dbg(size, _NORMAL_BLOCK, fileName, line);
 	#else
 			return ::malloc(size);
@@ -97,7 +97,7 @@ class NxUserAllocatorDefault : public NxUserAllocator
 
 		void check()
 		{
-#if defined(WIN32) && defined(_DEBUG)
+#if defined(_WIN32) && defined(_DEBUG)
 			_CrtCheckMemory();
 #endif
 		}

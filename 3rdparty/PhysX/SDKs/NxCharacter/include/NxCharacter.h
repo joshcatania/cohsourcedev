@@ -17,7 +17,7 @@
 	#define NXCHARACTER_API
 
 #elif defined NXCHARACTER_EXPORTS
-    #if defined(WIN32)
+    #if defined(_WIN32)
 	#define NXCHARACTER_API __declspec(dllexport)
     #elif defined(__linux__) && defined(NX_LINUX_USE_VISIBILITY)
 	#define NXCHARACTER_API __attribute__ ((visibility ("default")))
@@ -26,7 +26,7 @@
     #endif
 
 #else
-    #if defined(WIN32)
+    #if defined(_WIN32)
 	#define NXCHARACTER_API __declspec(dllimport)
     #elif defined(__linux__)
 	#define NXCHARACTER_API

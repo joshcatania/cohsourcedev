@@ -1,42 +1,42 @@
 #ifndef _PMOTION_H
 #define _PMOTION_H
 
-#include "cmdcommon.h"
-#include "groupgrid.h"
-#include "motion.h"
+#include "cmdparse/cmdcommon.h"
+#include "group/groupgrid.h"
+#include "entity/motion.h"
 
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
-typedef struct Entity				Entity;
-typedef struct FuturePush			FuturePush;
-typedef struct MotionState			MotionState;
-typedef struct PhysicsRecordingStep	PhysicsRecordingStep;
+typedef struct Entity                Entity;
+typedef struct FuturePush            FuturePush;
+typedef struct MotionState            MotionState;
+typedef struct PhysicsRecordingStep    PhysicsRecordingStep;
 
 typedef struct PhysicsRecordingStep {
-	U16						csc_net_id;
-	
-	#if CLIENT
-		U32					pak_id;
-	#endif
-	
-	struct {
-		Vec3				pos;
-		MotionState			motion;
-	} before, after;
+    U16                        csc_net_id;
+    
+    #if CLIENT
+        U32                    pak_id;
+    #endif
+    
+    struct {
+        Vec3                pos;
+        MotionState            motion;
+    } before, after;
 } PhysicsRecordingStep;
 
 typedef struct PhysicsRecording {
-	char*					name;
+    char*                    name;
 
-	struct {
-		PhysicsRecordingStep*	step;
-		int						maxCount;
-		int						count;
-	} steps;
+    struct {
+        PhysicsRecordingStep*    step;
+        int                        maxCount;
+        int                        count;
+    } steps;
 } PhysicsRecording;
 
 typedef struct GlobalPlayerMotionState {
-	StashTable htPhysicsRecording;
+    StashTable htPhysicsRecording;
 } GlobalPlayerMotionState;
 
 extern GlobalPlayerMotionState global_pmotion_state;
@@ -68,11 +68,11 @@ void pmotionRecordStateBeforePhysics(Entity* e, const char* trackName, ControlSt
 void pmotionRecordStateAfterPhysics(Entity* e, const char* trackName);
 
 #if SERVER
-	void pmotionSendPhysicsRecording(Packet* pak, Entity* e, const char* trackName);
+    void pmotionSendPhysicsRecording(Packet* pak, Entity* e, const char* trackName);
 #else
-	void pmotionReceivePhysicsRecording(Packet* pak, Entity* e);
-	void pmotionUpdateNetID(ControlStateChange* csc);
-	void pmotionClearUpdateNetIDs();
+    void pmotionReceivePhysicsRecording(Packet* pak, Entity* e);
+    void pmotionUpdateNetID(ControlStateChange* csc);
+    void pmotionClearUpdateNetIDs();
 #endif
 
 

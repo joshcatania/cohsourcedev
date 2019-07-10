@@ -6,8 +6,8 @@
 #ifndef REWARDITEMTYPE_H
 #define REWARDITEMTYPE_H
 
-#include "stdtypes.h"
-#include "utils.h"
+#include <utilitieslib/stdtypes.h>
+#include <utilitieslib/utils/utils.h>
 
 //------------------------------------------------------------
 // types of rewards. note that Power rewards themselves 
@@ -26,18 +26,18 @@
 //----------------------------------------------------------
 typedef enum RewardItemType
 {
-	kRewardItemType_Power,
-	kRewardItemType_Salvage,
-	kRewardItemType_Concept,
-	kRewardItemType_Proficiency,
-	kRewardItemType_DetailRecipe,
-	kRewardItemType_Detail,
-	kRewardItemType_Token,
-	kRewardItemType_RewardTable,
-	kRewardItemType_RewardTokenCount,
-	kRewardItemType_IncarnatePoints,
-	kRewardItemType_AccountProduct,
-	kRewardItemType_Count
+    kRewardItemType_Power,
+    kRewardItemType_Salvage,
+    kRewardItemType_Concept,
+    kRewardItemType_Proficiency,
+    kRewardItemType_DetailRecipe,
+    kRewardItemType_Detail,
+    kRewardItemType_Token,
+    kRewardItemType_RewardTable,
+    kRewardItemType_RewardTokenCount,
+    kRewardItemType_IncarnatePoints,
+    kRewardItemType_AccountProduct,
+    kRewardItemType_Count
 } RewardItemType;
 static INLINEDBG bool rewarditemtype_Valid(RewardItemType t) {return INRANGE(t, kRewardItemType_Power, kRewardItemType_Count  );} 
 char *rewarditemtype_Str(RewardItemType t);

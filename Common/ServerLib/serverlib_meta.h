@@ -5,6 +5,6 @@
 
 #pragma once
 //#include "ncstd.h"
-#include "UtilsNew/meta.h"
+#include "utilitieslib/UtilsNew/meta.h"
 
 void serverlib_meta_register(void);

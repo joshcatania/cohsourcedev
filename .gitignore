@@ -26,6 +26,10 @@ ipch/
 # Visual Studio 2019
 .vs/
 
+# New build layout
+bin/
+!/bin
+
 # Visual C++ debug database
 *.pdb
 
@@ -43,7 +47,6 @@ logs/
 /Utilities/pig/PigLibTest/
 /Utilities/bin/
 /bin/*/
-
 
 # Except the folders below
 !/bin/beaconizer/

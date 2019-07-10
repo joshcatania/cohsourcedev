@@ -3,20 +3,20 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include "SgrpBasePermissions.h"
-#include "utils.h"
-#include "assert.h"
-#include "error.h"
-#include "mathutil.h"
-#include "earray.h"
-#include "MemoryPool.h"
-#include "StashTable.h"
+#include "entity/SgrpBasePermissions.h"
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/assert/assert.h>
+#include <utilitieslib/utils/error.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/components/MemoryPool.h>
+#include <utilitieslib/components/StashTable.h>
 
 
 bool sgrpbaseentrypermission_Valid( int perm )
 {
-	int max = (1<<kSgrpBaseEntryPermission_Count) - 1;
-	return (perm >= 0 && perm <= max);
+    int max = (1<<kSgrpBaseEntryPermission_Count) - 1;
+    return (perm >= 0 && perm <= max);
 }
 
 //----------------------------------------
@@ -24,12 +24,12 @@ bool sgrpbaseentrypermission_Valid( int perm )
 //----------------------------------------
 char *sgrpbaseentrypermission_ToMenuMsg(SgrpBaseEntryPermission e )
 {
-	static char *s_strs[] = 
-		{
-			"SgBaseEntryPermissionNone",
-			"SgBaseEntryPermissionCoalition",
-			"SgBaseEntryPermissionLeaderTeammates",
-		};
-	STATIC_INFUNC_ASSERT( ARRAY_SIZE( s_strs ) == kSgrpBaseEntryPermission_Count );
-	return AINRANGE( e, s_strs ) ? s_strs[e] : NULL;
+    static char *s_strs[] = 
+        {
+            "SgBaseEntryPermissionNone",
+            "SgBaseEntryPermissionCoalition",
+            "SgBaseEntryPermissionLeaderTeammates",
+        };
+    STATIC_INFUNC_ASSERT( ARRAY_SIZE( s_strs ) == kSgrpBaseEntryPermission_Count );
+    return AINRANGE( e, s_strs ) ? s_strs[e] : NULL;
 }

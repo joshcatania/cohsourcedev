@@ -3,8 +3,8 @@
 
 #ifndef CLIENT
 
-#define MINEACC_NAME_LEN		255
-#define MINEACC_FIELD_LEN		255
+#define MINEACC_NAME_LEN        255
+#define MINEACC_FIELD_LEN        255
 
 typedef struct NetLink NetLink;
 typedef struct Packet Packet;

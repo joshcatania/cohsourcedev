@@ -1,8 +1,8 @@
 /*\
  *
- *	container_store.h/c - Copyright 2004, 2005 Cryptic Studios
- *		All Rights Reserved
- *		Confidential property of Cryptic Studios
+ *    container_store.h/c - Copyright 2004, 2005 Cryptic Studios
+ *        All Rights Reserved
+ *        Confidential property of Cryptic Studios
  *
  *  Offers a standard container store - an EArray of containers based on a template
  *
@@ -11,7 +11,7 @@
 #ifndef CONTAINER_STORE_H
 #define CONTAINER_STORE_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 typedef struct StructDesc StructDesc;
@@ -25,16 +25,16 @@ typedef struct Packet Packet;
 // merge with DbList sometime?
 typedef struct ContainerStore
 {
-	StashTable	items;
-	U32					max_session_id;		// high-water mark of id's touched while dbserver is running
+    StashTable    items;
+    U32                    max_session_id;        // high-water mark of id's touched while dbserver is running
 
-	U32					list_id;
-	char*				name;				// name of store for debug purposes
-	StructDesc*			struct_desc;		// pack/unpack description
+    U32                    list_id;
+    char*                name;                // name of store for debug purposes
+    StructDesc*            struct_desc;        // pack/unpack description
 
-	void*				(*create)(U32);		// (U32 cid)
-	void				(*destroy)(void*);	// (void* container)	
-	void				(*clear)(void*,U32);// (void* container, U32 cid)
+    void*                (*create)(U32);        // (U32 cid)
+    void                (*destroy)(void*);    // (void* container)    
+    void                (*clear)(void*,U32);// (void* container, U32 cid)
 } ContainerStore;
 
 void* cstoreAdd(ContainerStore* cstore);
@@ -58,33 +58,33 @@ void cstoreHandleReflectUpdate(ContainerStore* cstore, int* ids, int deleting, P
 // - use if you just want your structures in a memory pool, you must have a StructDesc named Struct_desc
 
 #define CONTAINERSTRUCT_INTERFACE(Struct) \
-	Struct* Struct##Create(U32 cid); \
-	void Struct##Destroy(Struct* container); \
-	void Struct##Clear(Struct* container, U32 cid); \
-	extern ContainerStore g_##Struct##Store[]; 
+    Struct* Struct##Create(U32 cid); \
+    void Struct##Destroy(Struct* container); \
+    void Struct##Clear(Struct* container, U32 cid); \
+    extern ContainerStore g_##Struct##Store[]; 
 
 #define CONTAINERSTRUCT_IMPL(Struct, ListId) \
-	ContainerStore g_##Struct##Store[] = \
-	{ 0, 0, ListId, #Struct, Struct##_desc, Struct##Create, Struct##Destroy, Struct##Clear}; \
-	\
+    ContainerStore g_##Struct##Store[] = \
+    { 0, 0, ListId, #Struct, Struct##_desc, Struct##Create, Struct##Destroy, Struct##Clear}; \
+    \
     MP_DEFINE(Struct); \
-	Struct* Struct##Create(U32 cid)	\
-	{	\
-		Struct* ret; \
-		MP_CREATE(Struct, 100);		\
-		ret = MP_ALLOC(Struct);		\
-		ret->id = cid;				\
-		return ret;					\
-	}	\
-	void Struct##Destroy(Struct* container)	\
-	{	\
-		MP_FREE(Struct, container); \
-	}	\
-	void Struct##Clear(Struct* container, U32 cid) \
-	{	\
-		memset(container, 0, sizeof(*container));	\
-		container->id = cid;	\
-	}	
+    Struct* Struct##Create(U32 cid)    \
+    {    \
+        Struct* ret; \
+        MP_CREATE(Struct, 100);        \
+        ret = MP_ALLOC(Struct);        \
+        ret->id = cid;                \
+        return ret;                    \
+    }    \
+    void Struct##Destroy(Struct* container)    \
+    {    \
+        MP_FREE(Struct, container); \
+    }    \
+    void Struct##Clear(Struct* container, U32 cid) \
+    {    \
+        memset(container, 0, sizeof(*container));    \
+        container->id = cid;    \
+    }    
 
 
 #endif // CONTAINER_STORE_H

@@ -24,7 +24,7 @@
 #define ltable_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
 #include "ldebug.h"
 #include "ldo.h"
@@ -39,12 +39,12 @@
 ** max size of array part is 2^MAXBITS
 */
 #if LUAI_BITSINT > 26
-#define MAXBITS		26
+#define MAXBITS        26
 #else
-#define MAXBITS		(LUAI_BITSINT-2)
+#define MAXBITS        (LUAI_BITSINT-2)
 #endif
 
-#define MAXASIZE	(1 << MAXBITS)
+#define MAXASIZE    (1 << MAXBITS)
 
 
 #define hashpow2(t,n)      (gnode(t, lmod((n), sizenode(t))))
@@ -57,20 +57,20 @@
 ** for some types, it is better to avoid modulus by power of 2, as
 ** they tend to have many 2 factors.
 */
-#define hashmod(t,n)	(gnode(t, ((n) % ((sizenode(t)-1)|1))))
+#define hashmod(t,n)    (gnode(t, ((n) % ((sizenode(t)-1)|1))))
 
 
-#define hashpointer(t,p)	hashmod(t, IntPoint(p))
+#define hashpointer(t,p)    hashmod(t, IntPoint(p))
 
 
 /*
 ** number of ints inside a lua_Number
 */
-#define numints		cast_int(sizeof(lua_Number)/sizeof(int))
+#define numints        cast_int(sizeof(lua_Number)/sizeof(int))
 
 
 
-#define dummynode		(&dummynode_)
+#define dummynode        (&dummynode_)
 
 static const Node dummynode_ = {
   {{NULL}, LUA_TNIL},  /* value */
@@ -320,7 +320,7 @@ static void resize (lua_State *L, Table *t, int nasize, int nhsize) {
       setobjt2t(L, luaH_set(L, t, key2tval(old)), gval(old));
   }
   if (nold != dummynode)
-    luaM_freearray(L, nold, twoto(oldhsize), Node);  /* free old array */
+    luaM_freearray(L, nold, (size_t)twoto(oldhsize), Node);  /* free old array */
 }
 
 
@@ -373,7 +373,7 @@ Table *luaH_new (lua_State *L, int narray, int nhash) {
 
 void luaH_free (lua_State *L, Table *t) {
   if (t->node != dummynode)
-    luaM_freearray(L, t->node, sizenode(t), Node);
+    luaM_freearray(L, t->node, (size_t)sizenode(t), Node);
   luaM_freearray(L, t->array, t->sizearray, TValue);
   luaM_free(L, t);
 }

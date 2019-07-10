@@ -1,9 +1,9 @@
 #ifndef AUCTIONDATA_H
 #define AUCTIONDATA_H
 
-#include "StashTable.h"
-#include "trayCommon.h"
-#include "Auction.h"
+#include <utilitieslib/components/StashTable.h>
+#include "gameComm/trayCommon.h"
+#include "auction/auction.h"
 
 void auctiondata_Init(void);
 
@@ -13,55 +13,55 @@ typedef struct DetailRecipe DetailRecipe;
 
 typedef struct AuctionItem
 {
-	int id;
+    int id;
 
-	char * pchIdentifier;
-	char * sortName;
-	const char * displayName;
-	TrayItemType type;
+    char * pchIdentifier;
+    char * sortName;
+    const char * displayName;
+    TrayItemType type;
 
-	union
-	{
-		void *pItem;
-		SalvageItem *salvage;
-		BasePower *enhancement;
-		BasePower *inspiration;
-		BasePower *temp_power;
-		const DetailRecipe *recipe;
-	};
+    union
+    {
+        void *pItem;
+        SalvageItem *salvage;
+        BasePower *enhancement;
+        BasePower *inspiration;
+        BasePower *temp_power;
+        const DetailRecipe *recipe;
+    };
 
-	int lvl;
-	int numForSale;
-	int numForBuy;
-	int buyPrice;
-	int playerType;
+    int lvl;
+    int numForSale;
+    int numForBuy;
+    int buyPrice;
+    int playerType;
 
-	/*** these correspond to the values in AuctionInvItem */
-	/**/	int auction_id;
-	/**/	AuctionInvItemStatus auction_status;
-	/**/	int amtCancelled;
-	/**/	int amtStored;
-	/**/	int infStored;
-	/**/	int amtOther;
-	/**/	int infPrice;
-	/**/	bool bMergedBid;
-	/******************************************************/
+    /*** these correspond to the values in AuctionInvItem */
+    /**/    int auction_id;
+    /**/    AuctionInvItemStatus auction_status;
+    /**/    int amtCancelled;
+    /**/    int amtStored;
+    /**/    int infStored;
+    /**/    int amtOther;
+    /**/    int infPrice;
+    /**/    bool bMergedBid;
+    /******************************************************/
 
 } AuctionItem;
 
 typedef struct AuctionItemDict
 {
-	AuctionItem **ppItems;
-	StashTable stAuctionItems;
+    AuctionItem **ppItems;
+    StashTable stAuctionItems;
 } AuctionItemDict;
 
 extern AuctionItemDict g_AuctionItemDict;
 
 static INLINEDBG AuctionItemDict *auctionData_GetDict(void)
 {
-	if ( !g_AuctionItemDict.ppItems )
-		auctiondata_Init();
-	return &g_AuctionItemDict;
+    if ( !g_AuctionItemDict.ppItems )
+        auctiondata_Init();
+    return &g_AuctionItemDict;
 }
 
 char* auction_identifierFromItem(void * item, TrayItemType type, int level );

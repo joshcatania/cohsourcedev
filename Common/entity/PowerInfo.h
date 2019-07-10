@@ -9,7 +9,7 @@
 
 typedef struct Packet Packet;
 typedef struct Character Character;
-#include "powers.h"
+#include "entity/powers.h"
 
 //-------------------------------------------------------------------------------------------
 // PowerRechargeTimer
@@ -22,8 +22,8 @@ typedef struct Character Character;
 
 typedef struct PowerRechargeTimer
 {
-	PowerRef	ppowRef;              // Which power are we describing?
-	float       rechargeCountdown;  // How much time left until the power can be used again?
+    PowerRef    ppowRef;              // Which power are we describing?
+    float       rechargeCountdown;  // How much time left until the power can be used again?
 } PowerRechargeTimer;
 
 PowerRechargeTimer* powerRechargeTimer_Create(void);
@@ -41,8 +41,8 @@ void powerRechargeTimer_Destroy(PowerRechargeTimer* timer);
  */
 typedef struct PowerInfo
 {
-	PowerRef** activePowers;               // What powers do I have turned on?
-	PowerRechargeTimer** rechargeTimers;    // Which powers am I waiting on?
+    PowerRef** activePowers;               // What powers do I have turned on?
+    PowerRechargeTimer** rechargeTimers;    // Which powers am I waiting on?
 } PowerInfo;
 
 PowerInfo* powerInfo_Create(void);

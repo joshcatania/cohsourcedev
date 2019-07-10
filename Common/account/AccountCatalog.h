@@ -1,15 +1,15 @@
 #ifndef ACCOUNTCATALOG_H
 #define ACCOUNTCATALOG_H
 
-#include "AccountData.h"
+#include "account/AccountData.h"
 
 C_DECLARATIONS_BEGIN
 
 typedef enum
 {
-	READINESS_NONE = 0,
-	READINESS_CACHED = 1,
-	READINESS_FULL = 2,
+    READINESS_NONE = 0,
+    READINESS_CACHED = 1,
+    READINESS_FULL = 2,
 } AccountCatalogReadiness;
 
 #if defined(SERVER)
@@ -44,37 +44,37 @@ bool accountCatalogServerFulfillCategory(SkuId sku_id, Entity *e, bool order_own
 void accountCatalogServerAwardGlobalProducts(Entity *e);
 #endif
 
-void		accountCatalog_SetMtxEnvironment(const char* mtxEnvironment);
-const char*	accountCatalog_GetMtxEnvironment();
-void		accountCatalog_SetCatalogTimeStamp( U32 secsSince2000 );
-U32			accountCatalog_GetCatalogTimeStamp( void );
-void		accountCatalog_SetTimeStampTestOffsetSecs( U32 numSecs );
-U32			accountCatalog_GetTimeStampTestOffsetSecs( void );
+void        accountCatalog_SetMtxEnvironment(const char* mtxEnvironment);
+const char*    accountCatalog_GetMtxEnvironment();
+void        accountCatalog_SetCatalogTimeStamp( U32 secsSince2000 );
+U32            accountCatalog_GetCatalogTimeStamp( void );
+void        accountCatalog_SetTimeStampTestOffsetSecs( U32 numSecs );
+U32            accountCatalog_GetTimeStampTestOffsetSecs( void );
 
 
 typedef enum
 {
-	STOREFLAG_NO_LOCALIZATION   = ( 1 << 0 ),
-	STOREFLAG_AUTO_BUY_PRODUCTS = ( 1 << 1 ),
+    STOREFLAG_NO_LOCALIZATION   = ( 1 << 0 ),
+    STOREFLAG_AUTO_BUY_PRODUCTS = ( 1 << 1 ),
 } AccountOnlineStoreFlags;
 
 typedef struct _AccountStoreAccessInfo
 {
-	// Memory management: 
-	//   - Strings must be malloc'd memory. 
-	//   - Call accountCatalog_ReleaseStoreAccessInfo() to release old values.
+    // Memory management: 
+    //   - Strings must be malloc'd memory. 
+    //   - Call accountCatalog_ReleaseStoreAccessInfo() to release old values.
     const char* playSpanCatalog;
-	//----------------------------
-	U32			playSpanStoreFlags;	// AccountOnlineStoreFlags OR'd together
+    //----------------------------
+    U32            playSpanStoreFlags;    // AccountOnlineStoreFlags OR'd together
 } AccountStoreAccessInfo;
 
-const AccountStoreAccessInfo*	accountCatalog_GetStoreAccessInfo( void );
-bool					accountCatalog_IsAutoBuyEnabled();
-void					accountCatalog_ReleaseStoreAccessInfo( void );
-void					accountCatalog_CacheAcctServerCatalogUpdate( Packet* pak_in );
-void					accountCatalog_AddAcctServerCatalogToPacket( Packet* pak_out );
+const AccountStoreAccessInfo*    accountCatalog_GetStoreAccessInfo( void );
+bool                    accountCatalog_IsAutoBuyEnabled();
+void                    accountCatalog_ReleaseStoreAccessInfo( void );
+void                    accountCatalog_CacheAcctServerCatalogUpdate( Packet* pak_in );
+void                    accountCatalog_AddAcctServerCatalogToPacket( Packet* pak_out );
 
-void					accountCatalog_RelayServerCatalogPacket( Packet* pak_in, Packet* pak_out );
+void                    accountCatalog_RelayServerCatalogPacket( Packet* pak_in, Packet* pak_out );
 
 bool accountCatalogIsProductAvailable(SkuId sku_id); // included, enabled, published
 const char* accountCatalogGetTitle(SkuId sku_id);

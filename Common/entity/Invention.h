@@ -6,7 +6,7 @@
 #ifndef INVENTION_H
 #define INVENTION_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 
 typedef struct Character Character;
@@ -23,13 +23,13 @@ typedef struct PowerVar PowerVar;
 //----------------------------------------------------------
 typedef enum InventionState
 {
-	kInventionState_None,      // no inventing going on.
-	kInventionState_Started,  // when starting but no level chosen yet (so nothing on server)
-	kInventionState_Invent, // server sets this state and sends it back to client
-	kInventionState_Updating,  // client status changes being sent to server. response: Invent
-	kInventionState_Finalizing,// client asks server to create the boost. response: Finished
-	kInventionState_Finished,  // server sets this and sends it back to client. Identical to None except with final info about the invented item.
-	kInventionState_Count
+    kInventionState_None,      // no inventing going on.
+    kInventionState_Started,  // when starting but no level chosen yet (so nothing on server)
+    kInventionState_Invent, // server sets this state and sends it back to client
+    kInventionState_Updating,  // client status changes being sent to server. response: Invent
+    kInventionState_Finalizing,// client asks server to create the boost. response: Finished
+    kInventionState_Finished,  // server sets this and sends it back to client. Identical to None except with final info about the invented item.
+    kInventionState_Count
 } InventionState;
 
 bool inventionstate_Valid(InventionState state);
@@ -41,11 +41,11 @@ char *inventionstate_Str(InventionState s);
 //----------------------------------------------------------
 typedef enum SlotState
 {
-	kSlotState_Empty,
-	kSlotState_Slotted,       
-	kSlotState_HardenSuccess, 
-	kSlotState_HardenFailure,
-	kSlotState_Count
+    kSlotState_Empty,
+    kSlotState_Slotted,       
+    kSlotState_HardenSuccess, 
+    kSlotState_HardenFailure,
+    kSlotState_Count
 } SlotState;
 bool slotstate_Valid(SlotState state);
 char *slotstate_Str(SlotState state);
@@ -53,8 +53,8 @@ char *slotstate_Str(SlotState state);
 
 typedef struct InventionSlot
 {
-	SlotState state;
- 	ConceptItem **concepts; // the first of these has to be slottble, the rest affect the first.
+    SlotState state;
+     ConceptItem **concepts; // the first of these has to be slottble, the rest affect the first.
 } InventionSlot;
 bool invention_SlotHardened(InventionSlot *s);
 
@@ -64,13 +64,13 @@ bool invention_SlotHardened(InventionSlot *s);
 
 typedef struct Invention
 {
-	InventionState state;
-	int boostInvIdx;
-	RecipeItem *recipe;
-	InventionSlot slots[INVENTION_SLOTS_MAX_COUNT];
+    InventionState state;
+    int boostInvIdx;
+    RecipeItem *recipe;
+    InventionSlot slots[INVENTION_SLOTS_MAX_COUNT];
 
 #if SERVER
-	bool statusChange;
+    bool statusChange;
 #endif // SERVER
 } Invention;
 

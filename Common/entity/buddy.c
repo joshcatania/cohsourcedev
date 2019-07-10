@@ -3,16 +3,16 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include <assert.h>
+#include <utilitieslib/assert/assert.h>
 #include <float.h>
 
-#include "mathutil.h"
+#include <utilitieslib/utils/mathutil.h>
 
-#include "entity.h"
-#include "character_base.h"
-#include "character_level.h"
-#include "teamCommon.h"
-#include "Supergroup.h"
+#include "entity/entity.h"
+#include "entity/character_base.h"
+#include "entity/character_level.h"
+#include "entity/teamCommon.h"
+#include "entity/Supergroup.h"
 
 
 /**********************************************************************func*
@@ -21,22 +21,22 @@
 */
 bool character_IsExemplar(Character *p, int pending_counts)
 {
-	Entity *e = NULL;
+    Entity *e = NULL;
 
-	assert(p!=NULL);
+    assert(p!=NULL);
 
-	e = p->entParent;
+    e = p->entParent;
 
-	if( !e || !e->teamup )
-		return false;
+    if( !e || !e->teamup )
+        return false;
 
-	if( !pending_counts && p->buddy.eType == kBuddyType_Pending )
-		return false;
+    if( !pending_counts && p->buddy.eType == kBuddyType_Pending )
+        return false;
 
-	if( character_CalcExperienceLevel(p) > e->teamup->team_level )
-		return true;
+    if( character_CalcExperienceLevel(p) > e->teamup->team_level )
+        return true;
 
-	return false;
+    return false;
 }
 
 /**********************************************************************func*
@@ -45,21 +45,21 @@ bool character_IsExemplar(Character *p, int pending_counts)
 */
 bool character_IsSidekick(Character *p, int pending_counts)
 {
-	Entity *e = NULL;
-	assert(p!=NULL);
+    Entity *e = NULL;
+    assert(p!=NULL);
 
-	e = p->entParent;
+    e = p->entParent;
 
-	if( !e || !e->teamup )
-		return false;
+    if( !e || !e->teamup )
+        return false;
 
-	if( !pending_counts && p->buddy.eType == kBuddyType_Pending )
-		return false;
+    if( !pending_counts && p->buddy.eType == kBuddyType_Pending )
+        return false;
 
-	if( character_CalcExperienceLevel(p) < e->teamup->team_level-1 )
-		return true;
+    if( character_CalcExperienceLevel(p) < e->teamup->team_level-1 )
+        return true;
 
-	return false;
+    return false;
 }
 
 /**********************************************************************func*
@@ -68,20 +68,20 @@ bool character_IsSidekick(Character *p, int pending_counts)
 */
 bool character_IsMentor(Character *p)
 {
-	Entity *e = NULL;
+    Entity *e = NULL;
 
 
-	assert(p!=NULL);
+    assert(p!=NULL);
 
-	e = p->entParent;
+    e = p->entParent;
 
-	if( !e || !e->teamup )
-		return false;
+    if( !e || !e->teamup )
+        return false;
 
-	if( e->teamup->team_mentor == p->entParent->db_id && e->teamup->members.count > 1  )
-		return true;
+    if( e->teamup->team_mentor == p->entParent->db_id && e->teamup->members.count > 1  )
+        return true;
 
-	return false;
+    return false;
 }
 
 /**********************************************************************func*
@@ -90,19 +90,19 @@ bool character_IsMentor(Character *p)
 */
 bool character_IsPending(Character *p)
 {
-	Entity *e = NULL;
+    Entity *e = NULL;
 
-	assert(p!=NULL);
+    assert(p!=NULL);
 
-	e = p->entParent;
+    e = p->entParent;
 
-	if( !e || !e->teamup )
-		return false;
+    if( !e || !e->teamup )
+        return false;
 
-	if( p->buddy.eType == kBuddyType_Pending )
-		return true;
+    if( p->buddy.eType == kBuddyType_Pending )
+        return true;
 
-	return false;
+    return false;
 }
 
 
@@ -112,16 +112,16 @@ bool character_IsPending(Character *p)
 */
 int character_TeamLevel(Character *p)
 {
-	Entity *e = NULL;
+    Entity *e = NULL;
 
-	assert(p!=NULL);
+    assert(p!=NULL);
 
-	e = p->entParent;
+    e = p->entParent;
 
-	if( !e || !e->teamup )
-		return 0;
+    if( !e || !e->teamup )
+        return 0;
 
-	return e->teamup->team_level;
+    return e->teamup->team_level;
 }
 
 /* End of File */

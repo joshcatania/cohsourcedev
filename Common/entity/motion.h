@@ -1,7 +1,7 @@
 #ifndef _MOTION_H
 #define _MOTION_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct Entity Entity;
 typedef struct ControlState ControlState;
@@ -12,53 +12,53 @@ typedef struct DefTracker DefTracker;
 #define DO_BOUNCE 1
 
 typedef struct GlobalMotionState {
-	int		noEntCollisions;
-	int		noDynamicCollisions;
-	int		noDetailCollisions; // Used for architects of bases
-	
-	#if CLIENT
-		int	doNotSetAnimBits;
-	#endif
+    int        noEntCollisions;
+    int        noDynamicCollisions;
+    int        noDetailCollisions; // Used for architects of bases
+    
+    #if CLIENT
+        int    doNotSetAnimBits;
+    #endif
 } GlobalMotionState;
 
 extern GlobalMotionState global_motion_state;
 
 typedef struct SurfaceParams
 {
-	F32     traction;
-	F32     friction;
-	F32		bounce;
-	F32		gravity;
-	F32		max_speed;
+    F32     traction;
+    F32     friction;
+    F32        bounce;
+    F32        gravity;
+    F32        max_speed;
 } SurfaceParams;
 
 typedef enum SurfParamIndex
 {
-	SURFPARAM_GROUND,
-	SURFPARAM_AIR,
-	SURFPARAM_MAX
+    SURFPARAM_GROUND,
+    SURFPARAM_AIR,
+    SURFPARAM_MAX
 } SurfParamIndex;
 
 typedef struct
 {
-	F32		length;
-	F32		radius;
-	int		dir;
-	int		has_offset;
-	Vec3	offset;
-	F32		max_coll_dist;
+    F32        length;
+    F32        radius;
+    int        dir;
+    int        has_offset;
+    Vec3    offset;
+    F32        max_coll_dist;
 } EntityCapsule;
 
 typedef enum
 {
-	STUCK_SLIDE = 1,
-	STUCK_COMPLETELY,
+    STUCK_SLIDE = 1,
+    STUCK_COMPLETELY,
 } StuckType;
 
 typedef enum LastSurfType
 {
-	SURFTYPE_WALL,
-	SURFTYPE_GROUND,
+    SURFTYPE_WALL,
+    SURFTYPE_GROUND,
 } LastSurfType;
 
 /****************************************************************************************************
@@ -69,62 +69,62 @@ typedef enum LastSurfType
 ****************************************************************************************************/
 
 typedef struct MotionStateInput {
-	Vec3    			vel;            // Only valid for last frame. want to go this way
+    Vec3                vel;            // Only valid for last frame. want to go this way
 
-	F32					max_speed_scale;
-	F32					max_jump_height;
+    F32                    max_speed_scale;
+    F32                    max_jump_height;
 
-	SurfaceParams		surf_mods[SURFPARAM_MAX];
+    SurfaceParams        surf_mods[SURFPARAM_MAX];
 
-	U32					flying			: 1;// am I flying?
-	U32					no_slide_physics: 1;// so monsters have a chance to navigate the terrain
-	U32					no_ent_collision: 1;
-	U32					stunned			: 1;
-	U32					jump_released	: 1;
+    U32                    flying            : 1;// am I flying?
+    U32                    no_slide_physics: 1;// so monsters have a chance to navigate the terrain
+    U32                    no_ent_collision: 1;
+    U32                    stunned            : 1;
+    U32                    jump_released    : 1;
 } MotionStateInput;
 
 typedef struct MotionState
 {
-	Vec3				vel;                // currently going this way
-	Vec3    			last_pos;           // where it was last frame
-	U32     			falling			: 1;// am I falling?
-	U32     			bigfall			: 1;// am I falling?
-	U32					jumping			: 1;
-	U32					jump_held		: 1;// am I holding the jump button?
-	U32					jump_still_held	: 1;// was jump released yet?
-	U32					jump_not_landed	: 1;// have I landed since initiating the jump?
-	U32					sliding			: 3;// am I sliding right now? plus a time of sorts for how long you've been in hte air
-	U32					bouncing		: 1;// am I colliding with an entity that bounces instead of rigidly collides?
-	U32					on_poly_edge	: 1;// standing on edge (rather than face) of poly, so force slope to be flat
-	U32					on_surf			: 1;// on a surface
-	U32					was_on_surf		: 1;
-	U32					hit_stumble     : 1;//am in hit stumble mode
-	U32					hit_stumble_kill_velocity_on_impact     : 1;//as soon as you hit the ground, kill impact
+    Vec3                vel;                // currently going this way
+    Vec3                last_pos;           // where it was last frame
+    U32                 falling            : 1;// am I falling?
+    U32                 bigfall            : 1;// am I falling?
+    U32                    jumping            : 1;
+    U32                    jump_held        : 1;// am I holding the jump button?
+    U32                    jump_still_held    : 1;// was jump released yet?
+    U32                    jump_not_landed    : 1;// have I landed since initiating the jump?
+    U32                    sliding            : 3;// am I sliding right now? plus a time of sorts for how long you've been in hte air
+    U32                    bouncing        : 1;// am I colliding with an entity that bounces instead of rigidly collides?
+    U32                    on_poly_edge    : 1;// standing on edge (rather than face) of poly, so force slope to be flat
+    U32                    on_surf            : 1;// on a surface
+    U32                    was_on_surf        : 1;
+    U32                    hit_stumble     : 1;//am in hit stumble mode
+    U32                    hit_stumble_kill_velocity_on_impact     : 1;//as soon as you hit the ground, kill impact
 
-	StuckType			stuck;              // able to move last frame?
-	StuckType			stuck_head;         // able to move up or down last frame?
-	F32     			move_time;          // timer used for nocoll motion
+    StuckType            stuck;              // able to move last frame?
+    StuckType            stuck_head;         // able to move up or down last frame?
+    F32                 move_time;          // timer used for nocoll motion
 
-	Vec3				surf_normal;		// vector pointing normal to the ground you're standing on. (0,1,0) means flat ground
-	F32					jump_height;
-	F32					highest_height;
-	F32					heightILastTouchedTheGround;
-	int					jump_time;			// last time ent jumped
-	int					lastSurfFlags;		// Triangle this guy was last known to be on.  FOr friction and traction and bounciness
-	int					lastGroundSurfFlags;// Flags before leaving the ground.
-	Vec3				addedVel;			// for rubbery entity collisions (could be a local in movement code, is only used in a single frame
-	U32					tickCounter;		//how many physics ticks have been run on this guy
-	U32					lastEntCollidedWith; //svr_idx of the last entity you collided with
-	U32					tickOfLastEntCollision; //when you hit that entity (from tickCounter)
-	LastSurfType		last_surf_type;
-	Vec3				last_surf_normal;
-	Vec3				prev_surf_normal;
-	S32					low_traction_steps_remaining;	// # of phys steps to force low traction.
-	F32					hitStumbleTractionLoss;
+    Vec3                surf_normal;        // vector pointing normal to the ground you're standing on. (0,1,0) means flat ground
+    F32                    jump_height;
+    F32                    highest_height;
+    F32                    heightILastTouchedTheGround;
+    int                    jump_time;            // last time ent jumped
+    int                    lastSurfFlags;        // Triangle this guy was last known to be on.  FOr friction and traction and bounciness
+    int                    lastGroundSurfFlags;// Flags before leaving the ground.
+    Vec3                addedVel;            // for rubbery entity collisions (could be a local in movement code, is only used in a single frame
+    U32                    tickCounter;        //how many physics ticks have been run on this guy
+    U32                    lastEntCollidedWith; //svr_idx of the last entity you collided with
+    U32                    tickOfLastEntCollision; //when you hit that entity (from tickCounter)
+    LastSurfType        last_surf_type;
+    Vec3                last_surf_normal;
+    Vec3                prev_surf_normal;
+    S32                    low_traction_steps_remaining;    // # of phys steps to force low traction.
+    F32                    hitStumbleTractionLoss;
 
-	EntityCapsule		capsule;
+    EntityCapsule        capsule;
 
-	MotionStateInput	input;
+    MotionStateInput    input;
 } MotionState;
 
 // Generated by mkproto

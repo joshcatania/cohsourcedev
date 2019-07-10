@@ -12,7 +12,7 @@ DLL export macros
 */
 #ifndef NXC_DLL_EXPORT
 	#ifdef NX_COOKING_DLL
-           #if defined(WIN32)
+           #if defined(_WIN32)
 		#define NXC_DLL_EXPORT __declspec(dllexport)
            #elif defined(__linux__) && defined(NX_LINUX_USE_VISIBILITY)
 		#define NXC_DLL_EXPORT __attribute__ ((visibility ("default")))
@@ -24,7 +24,7 @@ DLL export macros
 		#define NXC_DLL_EXPORT
 
 	#elif defined NX_USE_SDK_DLLS
-            #if defined(WIN32)
+            #if defined(_WIN32)
 		#define NXC_DLL_EXPORT __declspec(dllimport)
             #elif defined(__linux__)
 		#define NXC_DLL_EXPORT
@@ -37,7 +37,7 @@ DLL export macros
 		#define NXC_DLL_EXPORT
 
 	#else
-            #if defined(WIN32)
+            #if defined(_WIN32)
 		#define NXC_DLL_EXPORT __declspec(dllimport)
             #elif defined(__linux__)
 		#define NXC_DLL_EXPORT

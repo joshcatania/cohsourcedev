@@ -22,7 +22,7 @@ DLL export macros
 #endif
 
 #ifndef NX_CALL_CONV
-	#if defined WIN32
+	#if defined _WIN32
 		#define NX_CALL_CONV __cdecl
 	#elif defined __linux__
 		#define NX_CALL_CONV
@@ -50,9 +50,9 @@ DLL export macros
 		#error PhysX SDK: Platforms pointer size ambiguous!  The defines WIN64 and NX32 are in conflict.  
 	#endif
 	#define NX64
-#elif defined WIN32
+#elif defined _WIN32
 	#ifdef NX64
-		#error PhysX SDK: Platforms pointer size ambiguous!  The defines WIN32 and NX64 are in conflict.  
+		#error PhysX SDK: Platforms pointer size ambiguous!  The defines _WIN32 and NX64 are in conflict.  
 	#endif
 	#define NX32
 #elif defined __CELLOS_LV2__ 
@@ -99,7 +99,7 @@ DLL export macros
 	#endif
 #endif
 
-#if (defined(WIN32) || ((defined(__APPLE__) || defined(__linux__)) && defined(__SSE__))) && !defined(_XBOX)
+#if (defined(_WIN32) || ((defined(__APPLE__) || defined(__linux__)) && defined(__SSE__))) && !defined(_XBOX)
 	#define NX_SUPPORT_SSE
 #endif
 

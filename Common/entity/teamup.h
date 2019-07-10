@@ -40,11 +40,11 @@ int league_getTeamMemberCount(League *league, int teamIndex);
 int league_getTeamLockStatus(League *league, int teamIndex);
 
 // useful supergroup defines
-#define SGROUP_TITHE_FACTOR		100							// displayed in whole percentage points
-#define SGROUP_DEMOTE_FACTOR	(24 * 60 * 60)				// displayed in whole days
-#define SGROUP_TITHE_MIN		(0 * SGROUP_TITHE_FACTOR)		
-#define SGROUP_TITHE_MAX		(100 * SGROUP_TITHE_FACTOR)		
-#define SGROUP_DEMOTE_MIN		(15 * SGROUP_DEMOTE_FACTOR)		
-#define SGROUP_DEMOTE_MAX		(45 * SGROUP_DEMOTE_FACTOR)		
+#define SGROUP_TITHE_FACTOR        100                            // displayed in whole percentage points
+#define SGROUP_DEMOTE_FACTOR    (24 * 60 * 60)                // displayed in whole days
+#define SGROUP_TITHE_MIN        (0 * SGROUP_TITHE_FACTOR)        
+#define SGROUP_TITHE_MAX        (100 * SGROUP_TITHE_FACTOR)        
+#define SGROUP_DEMOTE_MIN        (15 * SGROUP_DEMOTE_FACTOR)        
+#define SGROUP_DEMOTE_MAX        (45 * SGROUP_DEMOTE_FACTOR)        
 
 #endif

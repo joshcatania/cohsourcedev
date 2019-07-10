@@ -6,20 +6,20 @@
 #ifndef SGRPBASEPERMISSIONS_H
 #define SGRPBASEPERMISSIONS_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
 
 typedef enum SgrpBaseEntryPermission
 {
-	kSgrpBaseEntryPermission_None,
-// 	kSgrpBaseEntryPermission_All,
-	kSgrpBaseEntryPermission_Coalition,
-	kSgrpBaseEntryPermission_LeaderTeammates,
+    kSgrpBaseEntryPermission_None,
+//     kSgrpBaseEntryPermission_All,
+    kSgrpBaseEntryPermission_Coalition,
+    kSgrpBaseEntryPermission_LeaderTeammates,
 
-	// last
-	kSgrpBaseEntryPermission_Count,
+    // last
+    kSgrpBaseEntryPermission_Count,
 } SgrpBaseEntryPermission;
 
 bool sgrpbaseentrypermission_Valid( SgrpBaseEntryPermission e );

@@ -3,11 +3,11 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include <assert.h>
+#include <utilitieslib/assert/assert.h>
 #include <stdio.h>
 
-#include "entity.h"
-#include "entityRef.h"
+#include "entity/entity.h"
+#include "entity/entityRef.h"
 
 /****************************************************
  * Entity Reference
@@ -15,12 +15,12 @@
 
 typedef union
 {
-	struct
-	{
-		unsigned long owner;
-		unsigned long UID;
-	};
-	EntityRef ref;
+    struct
+    {
+        unsigned long owner;
+        unsigned long UID;
+    };
+    EntityRef ref;
 } EntityRefImp;
 
 #define DB_ID_BIT  (0x80000000)
@@ -35,27 +35,27 @@ typedef union
  */
 EntityRef erGetRef(Entity* ent)
 {
-	EntityRefImp ref;
+    EntityRefImp ref;
 
-	if(!ent)
-	{
-		return 0;
-	}
+    if(!ent)
+    {
+        return 0;
+    }
 
-	assert(ent && ent->owner > 0 && ent->owner < entities_max);
+    assert(ent && ent->owner > 0 && ent->owner < entities_max);
 
-	if(ent->db_id>0)
-	{
-		ref.UID = ent->db_id | DB_ID_BIT;
-	}
-	else
-	{
-		ref.UID = ent->id & ~DB_ID_BIT;
-	}
+    if(ent->db_id>0)
+    {
+        ref.UID = ent->db_id | DB_ID_BIT;
+    }
+    else
+    {
+        ref.UID = ent->id & ~DB_ID_BIT;
+    }
 
-	ref.owner = ent->owner;
+    ref.owner = ent->owner;
 
-	return ref.ref;
+    return ref.ref;
 }
 
 #pragma warning(push)
@@ -71,31 +71,31 @@ EntityRef erGetRef(Entity* ent)
  */
 Entity* erGetEnt(EntityRefImp ref)
 {
-	if(ref.owner != 0
-		&& ref.owner < (U32)entities_max
-		&& entity_state[ref.owner] & ENTITY_IN_USE
-		&& entities[ref.owner])
-	{
-		if(ref.UID & DB_ID_BIT)
-		{
-			int db_id = (ref.UID & ~DB_ID_BIT);
+    if(ref.owner != 0
+        && ref.owner < (U32)entities_max
+        && entity_state[ref.owner] & ENTITY_IN_USE
+        && entities[ref.owner])
+    {
+        if(ref.UID & DB_ID_BIT)
+        {
+            int db_id = (ref.UID & ~DB_ID_BIT);
 
-			if(entities[ref.owner]->db_id==db_id)
-			{
-				return entities[ref.owner];
-			}
-			else
-			{
-				return entFromDbId(db_id);
-			}
-		}
-		else if ((entities[ref.owner]->id & ~DB_ID_BIT)==ref.UID)
-		{
-			return entities[ref.owner];
-		}
-	}
+            if(entities[ref.owner]->db_id==db_id)
+            {
+                return entities[ref.owner];
+            }
+            else
+            {
+                return entFromDbId(db_id);
+            }
+        }
+        else if ((entities[ref.owner]->id & ~DB_ID_BIT)==ref.UID)
+        {
+            return entities[ref.owner];
+        }
+    }
 
-	return NULL;
+    return NULL;
 }
 
 /***************************************************************************
@@ -104,32 +104,32 @@ Entity* erGetEnt(EntityRefImp ref)
  */
 S32 erGetEntID(EntityRefImp ref)
 {
-	if(ref.owner != 0
-		&& ref.owner < (U32)entities_max
-		&& entity_state[ref.owner] & ENTITY_IN_USE
-		&& entities[ref.owner])
-	{
-		if(ref.UID & DB_ID_BIT)
-		{
-			int db_id = (ref.UID & ~DB_ID_BIT);
+    if(ref.owner != 0
+        && ref.owner < (U32)entities_max
+        && entity_state[ref.owner] & ENTITY_IN_USE
+        && entities[ref.owner])
+    {
+        if(ref.UID & DB_ID_BIT)
+        {
+            int db_id = (ref.UID & ~DB_ID_BIT);
 
-			if(entities[ref.owner]->db_id==db_id)
-			{
-				return ref.owner;
-			}
-			else
-			{
-				Entity* ent = entFromDbId(db_id);
-				return ent ? ent->owner : 0;
-			}
-		}
-		else if ((entities[ref.owner]->id & ~DB_ID_BIT)==ref.UID)
-		{
-			return ref.owner;
-		}
-	}
+            if(entities[ref.owner]->db_id==db_id)
+            {
+                return ref.owner;
+            }
+            else
+            {
+                Entity* ent = entFromDbId(db_id);
+                return ent ? ent->owner : 0;
+            }
+        }
+        else if ((entities[ref.owner]->id & ~DB_ID_BIT)==ref.UID)
+        {
+            return ref.owner;
+        }
+    }
 
-	return 0;
+    return 0;
 }
 
 /**********************************************************************func*
@@ -144,12 +144,12 @@ S32 erGetEntID(EntityRefImp ref)
  */
 int erGetDbId(EntityRefImp ref)
 {
-	if(ref.UID & DB_ID_BIT)
-	{
-		return ref.UID & ~DB_ID_BIT;
-	}
+    if(ref.UID & DB_ID_BIT)
+    {
+        return ref.UID & ~DB_ID_BIT;
+    }
 
-	return 0;
+    return 0;
 }
 
 /***************************************************************************
@@ -166,21 +166,21 @@ int erGetDbId(EntityRefImp ref)
  */
 char* erGetRefString(Entity* ent)
 {
-#define MAX_STRREFS		8
+#define MAX_STRREFS        8
 #define MAX_STRREF_LEN 30
 
-	static char buf[MAX_STRREFS][MAX_STRREF_LEN];
-	static int idx = 0;
+    static char buf[MAX_STRREFS][MAX_STRREF_LEN];
+    static int idx = 0;
 
-	EntityRef er = erGetRef(ent);
+    EntityRef er = erGetRef(ent);
 
-	idx++;
-	if(idx>=MAX_STRREFS)
-		idx=0;
+    idx++;
+    if(idx>=MAX_STRREFS)
+        idx=0;
 
-	sprintf(buf[idx], "%I64x", er);
+    sprintf(buf[idx], "%I64x", er);
 
-	return buf[idx];
+    return buf[idx];
 }
 
 /***************************************************************************
@@ -189,9 +189,9 @@ char* erGetRefString(Entity* ent)
  */
 Entity* erGetEntFromString(const char* refstring)
 {
-	EntityRefImp er = {0};
-	sscanf(refstring, "%I64x", &er.ref);
-	return erGetEnt(er);
+    EntityRefImp er = {0};
+    sscanf(refstring, "%I64x", &er.ref);
+    return erGetEnt(er);
 }
 
 #pragma warning(pop)

@@ -505,7 +505,7 @@ NX_INLINE NxI32 NxMath::sign(NxI32 a)
 	return (a >= 0) ? 1 : -1;
 	}
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include "win/NxMath_WIN.h"
 #elif defined(__linux__) || defined(__APPLE__) || defined(ANDROID)
 #include "linux/NxMath_LINUX.h"
@@ -703,7 +703,7 @@ NX_INLINE NxF64 NxMath::cos(NxF64 a)
 // Calling fsincos instead of fsin+fcos
 NX_INLINE void NxMath::sinCos(NxF32 f, NxF32& s, NxF32& c)
 	{
-#if defined(WIN32) && !defined(_WIN64)
+#if defined(_WIN32) && !defined(_WIN64)
 		NxF32 localCos, localSin;
 		NxF32 local = f;
 		_asm	fld		local

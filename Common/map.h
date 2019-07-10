@@ -1,7 +1,7 @@
 #ifndef	_map_h
 #define	_map_h
 
-#include "Entity.h" // This is needed only for MAX_NAME_LEN, dammit
+#include "entity/Entity.h" // This is needed only for MAX_NAME_LEN, dammit
 typedef struct Entity Entity;
 					
 

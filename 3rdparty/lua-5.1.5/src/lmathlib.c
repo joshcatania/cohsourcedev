@@ -11,10 +11,10 @@
 #define lmathlib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
 #undef PI

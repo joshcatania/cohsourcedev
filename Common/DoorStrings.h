@@ -6,7 +6,7 @@
 #ifndef DOORSTRINGS_H
 #define DOORSTRINGS_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 extern char const *plainFormatTop2;
 extern char const *teleEmptyFormatTop4;

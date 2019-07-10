@@ -1,18 +1,18 @@
 #ifndef _BASESYSTEMS_H
 #define _BASESYSTEMS_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 #define BASE_UPDATE_INTERVAL 0.125f
 
-typedef struct Base			Base;
-typedef struct BaseRoom		BaseRoom;
-typedef struct RoomDetail	RoomDetail;
+typedef struct Base            Base;
+typedef struct BaseRoom        BaseRoom;
+typedef struct RoomDetail    RoomDetail;
 
 typedef struct RoomDetailPosition
 {
-	RoomDetail *detail;
-	Vec3 pos;
+    RoomDetail *detail;
+    Vec3 pos;
 } RoomDetailPosition;
 
 // Returns the number of active anchors in this base

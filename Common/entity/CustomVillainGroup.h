@@ -1,33 +1,33 @@
 #ifndef CUSTOM_VILLAIN_GROUP_H__
 #define CUSTOM_VILLAIN_GROUP_H__
 
-#include "textparser.h"
+#include <utilitieslib/utils/textparser.h>
 
 typedef struct Entity Entity;
 typedef struct PCC_Critter PCC_Critter;
 typedef struct CustomNPCCostume CustomNPCCostume;
 typedef struct CVG_ExistingVillain
 {
-	char *costumeIdx;
-	char *pchName;
-	char *displayName;
-	char *description;
-	int levelIdx;
-	int setNum;
-	CustomNPCCostume *npcCostume;
+    char *costumeIdx;
+    char *pchName;
+    char *displayName;
+    char *description;
+    int levelIdx;
+    int setNum;
+    CustomNPCCostume *npcCostume;
 }CVG_ExistingVillain;
 
 typedef struct CustomVG
 {
-	char *displayName;
-	CVG_ExistingVillain **existingVillainList;
-	PCC_Critter ** customVillainList;
-	char *sourceFile;
-	char **dontAutoSpawnEVs;
-	char **dontAutoSpawnPCCs;
-	int *badCritters;
-	int *badStandardCritters;
-	int reinsertRemovedCritter;
+    char *displayName;
+    CVG_ExistingVillain **existingVillainList;
+    PCC_Critter ** customVillainList;
+    char *sourceFile;
+    char **dontAutoSpawnEVs;
+    char **dontAutoSpawnPCCs;
+    int *badCritters;
+    int *badStandardCritters;
+    int reinsertRemovedCritter;
 }CustomVG;
 
 extern CustomVG **g_CustomVillainGroups;
@@ -35,26 +35,26 @@ extern CustomVG **g_CustomVillainGroups;
 
 typedef struct CompressedCVG
 {
-	char *displayName;
-	CVG_ExistingVillain **existingVillainList;
-	char **dontAutoSpawnEVs;
-	char **dontAutoSpawnPCCs;
-	int * customCritterIdx;
-	int spawnCount[8];
+    char *displayName;
+    CVG_ExistingVillain **existingVillainList;
+    char **dontAutoSpawnEVs;
+    char **dontAutoSpawnPCCs;
+    int * customCritterIdx;
+    int spawnCount[8];
 }CompressedCVG;
 
 typedef enum CVG_LoadErrors
 {
-	CVG_LE_VALID = 0,
-	CVG_LE_NONAME = 1,
-	CVG_LE_INVALID_NAME = 1 << 1,
-	CVG_LE_INVALID_CRITTER = 1 << 2,
-	CVG_LE_INVALID_STANDARD = 1 << 3,
-	CVG_LE_INVALID_CRITTER_RANK = 1 << 4,
-	CVG_LE_NO_CRITTERS = 1 << 5,
-	CVG_LE_LEVELRANGE_HOLES = 1 << 6,
-	CVG_LE_PROFANITY = 1 << 7,
-	CVG_LE_NON_UNIQUE_EXISTING_VILLAINS = 1 << 8,
+    CVG_LE_VALID = 0,
+    CVG_LE_NONAME = 1,
+    CVG_LE_INVALID_NAME = 1 << 1,
+    CVG_LE_INVALID_CRITTER = 1 << 2,
+    CVG_LE_INVALID_STANDARD = 1 << 3,
+    CVG_LE_INVALID_CRITTER_RANK = 1 << 4,
+    CVG_LE_NO_CRITTERS = 1 << 5,
+    CVG_LE_LEVELRANGE_HOLES = 1 << 6,
+    CVG_LE_PROFANITY = 1 << 7,
+    CVG_LE_NON_UNIQUE_EXISTING_VILLAINS = 1 << 8,
 }CVG_LoadErrors;
 
 void CVG_clearVillains(CustomVG *cvg);

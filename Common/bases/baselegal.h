@@ -27,7 +27,7 @@ int baseConnected(Base *base);
 
 bool basePlotFit(Base *base, int w, int h, Vec3 pos, int update);
 bool addOrChangeRooomIsLegal( Base * base, int room_id, int size[2], int rotation, Vec3 pos, 
-							 F32 ht[2], const RoomTemplate *info, RoomDoor *doors, int door_count );
+                             F32 ht[2], const RoomTemplate *info, RoomDoor *doors, int door_count );
 
 int baseIsLegal(Base *base, int *error);
 char *getBaseErr(int kBaseErrCode);

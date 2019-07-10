@@ -6,16 +6,16 @@
 #ifndef AUTHUSERDATA_H__
 #define AUTHUSERDATA_H__
 
-#include "stdtypes.h"
-#include "auth.h"
+#include <utilitieslib/stdtypes.h>
+#include "auth/auth.h"
 
 typedef enum
 {
-	PREORDER_NONE                = 0,
-	PREORDER_ELECTRONICSBOUTIQUE = 1,
-	PREORDER_GAMESTOP            = 2,
-	PREORDER_BESTBUY             = 3,
-	PREORDER_GENERIC             = 4,
+    PREORDER_NONE                = 0,
+    PREORDER_ELECTRONICSBOUTIQUE = 1,
+    PREORDER_GAMESTOP            = 2,
+    PREORDER_BESTBUY             = 3,
+    PREORDER_GENERIC             = 4,
 } PreorderCode;
 
 int authUserGetFieldByName(U32 *data, const char *field); // returns -1 on failure
@@ -25,7 +25,7 @@ int authUserIsReactivationActive();
 
 #ifndef DBSERVER
 #ifdef SERVER
-#include "svr_base.h"
+#include "svr/svr_base.h"
 bool conShowAuthUserData(ClientLink *client);
 bool conSetAuthUserData(ClientLink *client, char *pch, int i);
 #else

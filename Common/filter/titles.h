@@ -9,18 +9,18 @@
 
 typedef struct TitleList
 {
-	char *pchOrigin;
-	char **ppchTitles;
-	char **ppchChooseList;
-	int  *piGenders;
-	int  *piAttach;
-	int  *piListGenders;
-	int  *piAdjectiveGenders;
+    char *pchOrigin;
+    char **ppchTitles;
+    char **ppchChooseList;
+    int  *piGenders;
+    int  *piAttach;
+    int  *piListGenders;
+    int  *piAdjectiveGenders;
 } TitleList;
 
 typedef struct TitleDictionary
 {
-	TitleList **ppOrigins;
+    TitleList **ppOrigins;
 
 } TitleDictionary;
 

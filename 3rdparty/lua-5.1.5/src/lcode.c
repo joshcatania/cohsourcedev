@@ -10,7 +10,7 @@
 #define lcode_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
 #include "lcode.h"
 #include "ldebug.h"
@@ -24,7 +24,7 @@
 #include "ltable.h"
 
 
-#define hasjumps(e)	((e)->t != (e)->f)
+#define hasjumps(e)    ((e)->t != (e)->f)
 
 
 static int isnumeral(expdesc *e) {

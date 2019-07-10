@@ -14,10 +14,10 @@
 #define lbaselib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
 
@@ -479,10 +479,10 @@ static const luaL_Reg base_funcs[] = {
 ** =======================================================
 */
 
-#define CO_RUN	0	/* running */
-#define CO_SUS	1	/* suspended */
-#define CO_NOR	2	/* 'normal' (it resumed another coroutine) */
-#define CO_DEAD	3
+#define CO_RUN    0    /* running */
+#define CO_SUS    1    /* suspended */
+#define CO_NOR    2    /* 'normal' (it resumed another coroutine) */
+#define CO_DEAD    3
 
 static const char *const statnames[] =
     {"running", "suspended", "normal", "dead"};

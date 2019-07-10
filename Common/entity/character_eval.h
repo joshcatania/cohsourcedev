@@ -18,7 +18,7 @@ void chareval_Validate(const char **ppchExpr, const char *dataFilename);
 void chareval_AddDefaultFuncs(EvalContext *pContext);
 
 #if SERVER
-#include "storyarcprivate.h"
+#include "storyarc/storyarcprivate.h"
 extern int g_scriptCharEvalResult;
 
 int chareval_EvalWithTask(Character *p, const char **ppchExpr, StoryTaskInfo *pTask, const char *dataFilename);

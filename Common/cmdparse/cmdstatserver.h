@@ -6,7 +6,7 @@
 #ifndef CMDSTATSERVER_H
 #define CMDSTATSERVER_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
  
 typedef struct Cmd Cmd;
 extern Cmd client_sgstat_cmds[];

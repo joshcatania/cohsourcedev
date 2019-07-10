@@ -15,19 +15,17 @@
 #ifndef APPSERVERCMD_H
 #define APPSERVERCMD_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct GenericHashTableImp *GenericHashTable;
 typedef struct HashTableImp *HashTable;
 
-#include "stdtypes.h"
-
 typedef struct AppServerCmdState
 {
-	int idEnt;
-	int idSgrp;
-	char strs[2][9000];		// Less than CMDMAXLENGTH, which is 10000
-	int ints[8];
+    int idEnt;
+    int idSgrp;
+    char strs[2][9000];        // Less than CMDMAXLENGTH, which is 10000
+    int ints[8];
 } AppServerCmdState;
 extern AppServerCmdState g_appserver_cmd_state;
 

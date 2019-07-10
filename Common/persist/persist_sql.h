@@ -4,9 +4,9 @@ C_DECLARATIONS_BEGIN
 
 #include "sql/sqlconn.h"
 #include "sql/sqlinclude.h"
-#include "utils/textparser.h"
+#include <utilitieslib/utils/textparser.h>
 
-bool plSqlPrepare(HSTMT* stmt, char* cmd, int cmd_len, SqlConn conn);
+bool plSqlPrepare(HSTMT* stmt, char const* cmd, int cmd_len, SqlConn conn);
 bool plSqlExecute(HSTMT stmt, const char* original_command, SqlConn conn);
 bool plSqlReadCrc(const char* table, U32* ver, SqlConn conn);
 bool plSqlWriteCrc(const char* table, U32 ver, SqlConn conn);

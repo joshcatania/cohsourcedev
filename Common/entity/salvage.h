@@ -6,13 +6,13 @@
 #ifndef SALVAGE_H__
 #define SALVAGE_H__ 
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 #include "TokenizerUiWidget.h"
 
 typedef struct ParseLink ParseLink;
 typedef struct Detail Detail;
 typedef struct StaticDefineInt StaticDefineInt;
-typedef const struct StashTableImp*	cStashTable;
+typedef const struct StashTableImp*    cStashTable;
 
 //------------------------------------------------------------
 // the rarity of the salvage item
@@ -25,36 +25,36 @@ typedef const struct StashTableImp*	cStashTable;
 
 typedef enum SalvageRarity
 {
-	kSalvageRarity_Ubiquitous,
-	kSalvageRarity_Common,
-	kSalvageRarity_Uncommon,
-	kSalvageRarity_Rare,
-	kSalvageRarity_VeryRare,
-	kSalvageRarity_Unique,
-	kSalvageRarity_Count,
+    kSalvageRarity_Ubiquitous,
+    kSalvageRarity_Common,
+    kSalvageRarity_Uncommon,
+    kSalvageRarity_Rare,
+    kSalvageRarity_VeryRare,
+    kSalvageRarity_Unique,
+    kSalvageRarity_Count,
 
-	// helper enums
-	kSalvageRarity_Invalid = kSalvageRarity_Count
+    // helper enums
+    kSalvageRarity_Invalid = kSalvageRarity_Count
 } SalvageRarity;
 
 extern StaticDefineInt RarityEnum[];
 
 typedef enum SalvageType
 {
-	kSalvageType_Base,					// used to build base items
-	kSalvageType_Invention,				// used to build IOs
-	kSalvageType_Token,					// used by NPCs/Events to grant players bonuses/special rewards
-	kSalvageType_Incarnate,				// used to build Incarnate Abilities
-	kSalvageType_Count,
+    kSalvageType_Base,                    // used to build base items
+    kSalvageType_Invention,                // used to build IOs
+    kSalvageType_Token,                    // used by NPCs/Events to grant players bonuses/special rewards
+    kSalvageType_Incarnate,                // used to build Incarnate Abilities
+    kSalvageType_Count,
 
-	// helper enums
-	kSalvageType_Invalid = kSalvageType_Count
+    // helper enums
+    kSalvageType_Invalid = kSalvageType_Count
 } SalvageType;
 
 typedef enum SalvageImmediateUseStatus {
-	kSalvageImmediateUseFlag_OK             = 0,
-	kSalvageImmediateUseFlag_NotApplicable  = ( 1 << 0 ),
-	kSalvageImmediateUseFlag_MissingPrereqs = ( 1 << 1 ),
+    kSalvageImmediateUseFlag_OK             = 0,
+    kSalvageImmediateUseFlag_NotApplicable  = ( 1 << 0 ),
+    kSalvageImmediateUseFlag_MissingPrereqs = ( 1 << 1 ),
 } SalvageImmediateUseStatus;
 
 char const* salvage_RarityToStr( SalvageRarity r );
@@ -65,51 +65,51 @@ int salvage_ValidRarity( int rarity );
 //----------------------------------------------------------
 typedef enum SalvageId
 {
-	kSalvageId_Invalid = 0,
+    kSalvageId_Invalid = 0,
 } SalvageIndex;
 
 //------------------------------------------------------------
 // flags
 //------------------------------------------------------------
-#define	SALVAGE_NOTRADE			(1 << 0)	// this salvage cannot be traded in person or email or base storage
-#define	SALVAGE_NODELETE		(1 << 1)	// this salvage cannot be deleted
-#define SALVAGE_IMMEDIATE       (1 << 2)	// this salvage can be used from the salvage tray
-#define SALVAGE_AUTO_OPEN		(1 << 3)	// this salvage is automatically opened as soon as its awarded
-											// doesn't work with SALVAGE_IMMEDIATE
-#define SALVAGE_NOAUCTION		(1 << 4)	// this salvage cannot be traded on the AH
+#define    SALVAGE_NOTRADE            (1 << 0)    // this salvage cannot be traded in person or email or base storage
+#define    SALVAGE_NODELETE        (1 << 1)    // this salvage cannot be deleted
+#define SALVAGE_IMMEDIATE       (1 << 2)    // this salvage can be used from the salvage tray
+#define SALVAGE_AUTO_OPEN        (1 << 3)    // this salvage is automatically opened as soon as its awarded
+                                            // doesn't work with SALVAGE_IMMEDIATE
+#define SALVAGE_NOAUCTION        (1 << 4)    // this salvage cannot be traded on the AH
 
 //------------------------------------------------------------
 // Info about a salvage item.
 //----------------------------------------------------------
 typedef struct SalvageItem
 {
-	U32 salId;					            // the id of the item by rarity (for the db)
-	const char *pchName;				    // internal name
-	TokenizerUiWidget ui;
+    U32 salId;                                // the id of the item by rarity (for the db)
+    const char *pchName;                    // internal name
+    TokenizerUiWidget ui;
 
-	const char *pchDisplayTabName;          // designer-specified replacement for rarity
-	const char *pchDisplayDropMsg;	        // override for floater message when found
-	SalvageType	type;			            // what kind of salvage is this?	
-	SalvageRarity rarity;
+    const char *pchDisplayTabName;          // designer-specified replacement for rarity
+    const char *pchDisplayDropMsg;            // override for floater message when found
+    SalvageType    type;                        // what kind of salvage is this?    
+    SalvageRarity rarity;
 
-	U32 maxInvAmount;						// the max number in inventory, 0 -> unlimited
-	U32 sellAmount;							// the amount this salvage will sell for
+    U32 maxInvAmount;                        // the max number in inventory, 0 -> unlimited
+    U32 sellAmount;                            // the amount this salvage will sell for
 
-	int challenge_points;					// how hard it is to reverse engineer
-	U32 minRevEngLevel;						// the minimum level to reverse engineer
+    int challenge_points;                    // how hard it is to reverse engineer
+    U32 minRevEngLevel;                        // the minimum level to reverse engineer
 
-	const char **ppchRewardTables;			// table when opened
-	const char **ppchOpenRequires;			// requirement to open
-	const char *pchDisplayOpenRequiresFail;	// message displayed if open requires fails.
+    const char **ppchRewardTables;            // table when opened
+    const char **ppchOpenRequires;            // requirement to open
+    const char *pchDisplayOpenRequiresFail;    // message displayed if open requires fails.
 
-	const char **ppchAuctionRequires;		// The requirements expression to determine if this salvage can be listed in the AuctionHouse. 
-											// If empty, there are no requirements needed to be listed in the AuctionHouse.
+    const char **ppchAuctionRequires;        // The requirements expression to determine if this salvage can be listed in the AuctionHouse. 
+                                            // If empty, there are no requirements needed to be listed in the AuctionHouse.
 
-	const Detail **ppWorkshops;		        // Workshops where this salvage can be used. This is informational, not a restriction.
+    const Detail **ppWorkshops;                // Workshops where this salvage can be used. This is informational, not a restriction.
 
-	int	flags;					            // cannot trade or place on CH/BM
+    int    flags;                                // cannot trade or place on CH/BM
 
-	const char *pchStoreProduct;		    // store product linked to this salvage
+    const char *pchStoreProduct;            // store product linked to this salvage
 
 } SalvageItem;
 
@@ -124,25 +124,25 @@ typedef const struct StashTableImp *cStashTable;
 //----------------------------------------------------------
 typedef struct SalvageDictionary
 {
-	// Defines a set of related categories. (Examples include character and
-	// villain)
-	const SalvageItem **ppSalvageItems;
-	cStashTable haItemNames;
-	const SalvageItem **itemsById;
+    // Defines a set of related categories. (Examples include character and
+    // villain)
+    const SalvageItem **ppSalvageItems;
+    cStashTable haItemNames;
+    const SalvageItem **itemsById;
 
-	cStashTable itemsFromTabName; // SalvageItem**
+    cStashTable itemsFromTabName; // SalvageItem**
 } SalvageDictionary;
 
 typedef struct SalvageTrackedByEnt
 {
-	char *salvageName;
-	const SalvageItem *item;
-	char *displayName;
+    char *salvageName;
+    const SalvageItem *item;
+    char *displayName;
 }SalvageTrackedByEnt;
 
 typedef struct SalvageTrackedByEntList
 {
-	SalvageTrackedByEnt **ppTrackedSalvage;
+    SalvageTrackedByEnt **ppTrackedSalvage;
 }SalvageTrackedByEntList;
 // global inst of dict
 extern SHARED_MEMORY SalvageDictionary g_SalvageDict;

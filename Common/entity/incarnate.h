@@ -1,8 +1,8 @@
 #ifndef __INCARNATE_H
 #define __INCARNATE_H
 
-#include "entity.h"
-#include "powers.h"
+#include "entity/entity.h"
+#include "entity/powers.h"
 
 ///////////////////////////////////////////////////////////
 // Incarnate Slots
@@ -10,33 +10,33 @@
 
 typedef enum IncarnateSlot
 {
-	kIncarnateSlot_Alpha,
-	kIncarnateSlot_Destiny,
-	kIncarnateSlot_Genesis,
-	kIncarnateSlot_Hybrid,
-	kIncarnateSlot_Interface,
-	kIncarnateSlot_Judgement,
-	kIncarnateSlot_Lore,
-	kIncarnateSlot_Mind,
-	kIncarnateSlot_Vitae,
-	kIncarnateSlot_Omega,
-	kIncarnateSlot_Count,
+    kIncarnateSlot_Alpha,
+    kIncarnateSlot_Destiny,
+    kIncarnateSlot_Genesis,
+    kIncarnateSlot_Hybrid,
+    kIncarnateSlot_Interface,
+    kIncarnateSlot_Judgement,
+    kIncarnateSlot_Lore,
+    kIncarnateSlot_Mind,
+    kIncarnateSlot_Vitae,
+    kIncarnateSlot_Omega,
+    kIncarnateSlot_Count,
 } IncarnateSlot;
 
 extern StaticDefineInt ParseIncarnateSlotNames[];
 
 static char *incarnateEnableBadgeNames[] =
 {
-	"IncarnateAlphaSlot",
-	"IncarnateDestinySlot",
-	"IncarnateGenesisSlot",
-	"IncarnateHybridSlot",
-	"IncarnateInterfaceSlot",
-	"IncarnateJudgementSlot",
-	"IncarnateLoreSlot",
-	"IncarnateMindSlot",
-	"IncarnateVitaeSlot",
-	"IncarnateOmegaSlot"
+    "IncarnateAlphaSlot",
+    "IncarnateDestinySlot",
+    "IncarnateGenesisSlot",
+    "IncarnateHybridSlot",
+    "IncarnateInterfaceSlot",
+    "IncarnateJudgementSlot",
+    "IncarnateLoreSlot",
+    "IncarnateMindSlot",
+    "IncarnateVitaeSlot",
+    "IncarnateOmegaSlot"
 };
 
 IncarnateSlot IncarnateSlot_getByInternalName(const char *name);

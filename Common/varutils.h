@@ -6,7 +6,7 @@
 #ifndef VARUTILS_H__
 #define VARUTILS_H__
 
-#include "entity_enum.h"
+#include "entity/entity_enum.h"
 
 typedef struct Entity Entity;
 

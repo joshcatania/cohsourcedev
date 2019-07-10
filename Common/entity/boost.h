@@ -6,7 +6,7 @@
 #if (!defined(BOOST_H__)) || (defined(BOOST_PARSE_INFO_DEFINITIONS)&&!defined(BOOST_PARSE_INFO_DEFINED))
 #define BOOST_H__
 
-#include "RewardSlot.h"
+#include "entity/RewardSlot.h"
 
 // Can't include powers.h due to circular include
 typedef struct CharacterOrigin CharacterOrigin;
@@ -24,8 +24,8 @@ typedef struct AttribModTemplate AttribModTemplate;
 //----------------------------------------------------------
 typedef struct PowerupSlot
 { 
-	RewardSlot reward;
-	bool filled;
+    RewardSlot reward;
+    bool filled;
 } PowerupSlot;
 
 bool powerupslot_Valid( PowerupSlot const *slot );
@@ -37,37 +37,37 @@ typedef struct uiEnhancement uiEnhancement;
 
 typedef struct Boost
 {
-	const BasePower *ppowBase;
+    const BasePower *ppowBase;
 
-	int iLevel;
-		// The base level of this boost.
+    int iLevel;
+        // The base level of this boost.
 
-	int iNumCombines;
-		// The number of times this boost has been combined.
+    int iNumCombines;
+        // The number of times this boost has been combined.
 
-	Power *ppowParent;
-		// The Power which contains this Boost. If NULL, the boost is
-		// in the inventory.
+    Power *ppowParent;
+        // The Power which contains this Boost. If NULL, the boost is
+        // in the inventory.
 
-	Power *ppowParentRespec;
-		// The Power which contains this Boost before a respec. If NULL, the boost is
-		// in the inventory.  This should only be not NULL during an active respec.
+    Power *ppowParentRespec;
+        // The Power which contains this Boost before a respec. If NULL, the boost is
+        // in the inventory.  This should only be not NULL during an active respec.
 
-	int idx;
-		// The index of the Boost within the Power or Inventory.
+    int idx;
+        // The index of the Boost within the Power or Inventory.
 
-	float fTimer;
-		// Timer used for enhancements which have non-boost attribs on them.
-		// It handles how often the non-boost attribs go off (controlled
-		// by the Boost's fActivationPeriod.
+    float fTimer;
+        // Timer used for enhancements which have non-boost attribs on them.
+        // It handles how often the non-boost attribs go off (controlled
+        // by the Boost's fActivationPeriod.
 
-	float afVars[POWER_VAR_MAX_COUNT];
-		// Values for each of the power's vars. (Defined in the BasePower.)
+    float afVars[POWER_VAR_MAX_COUNT];
+        // Values for each of the power's vars. (Defined in the BasePower.)
 
-	PowerupSlot aPowerupSlots[POWERUP_COST_SLOTS_MAX_COUNT];
-		// slots needed to activate this
+    PowerupSlot aPowerupSlots[POWERUP_COST_SLOTS_MAX_COUNT];
+        // slots needed to activate this
 
-	uiEnhancement *pUI;
+    uiEnhancement *pUI;
 
 } Boost;
 
@@ -113,10 +113,10 @@ extern SHARED_MEMORY float *g_pfBoostEffectivenessBoosters;
 
 typedef struct ExemplarHandicaps
 {
-	const float *pfLimits;
-	const float *pfHandicaps;
-	const float *pfPreClamp;
-	const float *pfPostClamp;
+    const float *pfLimits;
+    const float *pfHandicaps;
+    const float *pfPreClamp;
+    const float *pfPostClamp;
 } ExemplarHandicaps;
 
 extern SHARED_MEMORY ExemplarHandicaps g_ExemplarHandicaps;
@@ -124,29 +124,29 @@ extern SHARED_MEMORY ExemplarHandicaps g_ExemplarHandicaps;
 #ifdef BOOST_PARSE_INFO_DEFINITIONS
 TokenizerParseInfo ParseBoostChanceTable[] =
 {
-	{ "{",                TOK_START,    0 },
-	{ "CombineChances",   TOK_EARRAY | TOK_F32_X, 0 },
-	{ "}",                TOK_END,      0 },
-	{ "", 0, 0 }
+    { "{",                TOK_START,    0 },
+    { "CombineChances",   TOK_EARRAY | TOK_F32_X, 0 },
+    { "}",                TOK_END,      0 },
+    { "", 0, 0 }
 };
 
 TokenizerParseInfo ParseBoostEffectivenessTable[] =
 {
-	{ "{",                TOK_START,    0 },
-	{ "Effectiveness",    TOK_EARRAY | TOK_F32_X, 0 },
-	{ "}",                TOK_END,      0 },
-	{ "", 0, 0 }
+    { "{",                TOK_START,    0 },
+    { "Effectiveness",    TOK_EARRAY | TOK_F32_X, 0 },
+    { "}",                TOK_END,      0 },
+    { "", 0, 0 }
 };
 
 TokenizerParseInfo ParseBoostExemplarTable[] =
 {
-	{ "{",                TOK_START,    0 },
-	{ "Limits",           TOK_F32ARRAY(ExemplarHandicaps, pfLimits)    },
-	{ "Weights",          TOK_F32ARRAY(ExemplarHandicaps, pfHandicaps) },
-	{ "PreClamp",         TOK_F32ARRAY(ExemplarHandicaps, pfPreClamp)  },
-	{ "PostClamp",        TOK_F32ARRAY(ExemplarHandicaps, pfPostClamp) },
-	{ "}",                TOK_END,      0 },
-	{ "", 0, 0 }
+    { "{",                TOK_START,    0 },
+    { "Limits",           TOK_F32ARRAY(ExemplarHandicaps, pfLimits)    },
+    { "Weights",          TOK_F32ARRAY(ExemplarHandicaps, pfHandicaps) },
+    { "PreClamp",         TOK_F32ARRAY(ExemplarHandicaps, pfPreClamp)  },
+    { "PostClamp",        TOK_F32ARRAY(ExemplarHandicaps, pfPostClamp) },
+    { "}",                TOK_END,      0 },
+    { "", 0, 0 }
 };
 
 #endif

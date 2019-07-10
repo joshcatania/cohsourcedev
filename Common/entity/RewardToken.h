@@ -6,19 +6,19 @@
 #ifndef REWARDTOKEN_H
 #define REWARDTOKEN_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
-#define TOKEN_NONE			(0)
-#define TOKEN_AQUIRED		(1<<0)
-#define TOKEN_USED			(1<<1)
+#define TOKEN_NONE            (0)
+#define TOKEN_AQUIRED        (1<<0)
+#define TOKEN_USED            (1<<1)
 
 
 
 typedef struct RewardToken
 {
-	const char *	reward;
-	int				val;	// arbitrary value associated with this string
-	U32				timer;	// arbitrary timer associated with this string, usually last rewarded time
+    const char *    reward;
+    int                val;    // arbitrary value associated with this string
+    U32                timer;    // arbitrary timer associated with this string, usually last rewarded time
 }RewardToken;
 
 

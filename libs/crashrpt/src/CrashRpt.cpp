@@ -8,8 +8,8 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "stdafx.h"
-#include "CrashRpt.h"
+#include "pch.h"
+#include "../include/crashrpt/CrashRpt.h"
 #include "CrashHandler.h"
 
 #ifdef _DEBUG
@@ -23,7 +23,7 @@
 BOOL WINAPI
 DllMain(HINSTANCE hinstDLL,ULONG fdwReason,LPVOID lpvReserved)
 {
-	return TRUE;
+    return TRUE;
 }
 
 LPVOID CrashRptInstall(LPGETLOGFILE pfn)
@@ -55,49 +55,49 @@ void CrashRptAddFile(LPVOID lpState, LPCTSTR lpFile, LPCTSTR lpDesc)
 
 void CrashRptGenerateErrorReport(LPVOID lpState, PEXCEPTION_POINTERS pExInfo)
 {
-	CCrashHandler *pImpl = (CCrashHandler*)lpState;
-	CRASH_ASSERT(pImpl);
+    CCrashHandler *pImpl = (CCrashHandler*)lpState;
+    CRASH_ASSERT(pImpl);
 
-	pImpl->GenerateErrorReport(pExInfo, "UnknownAuth", "UnknownEntity", "UnknownShard", "UnknownShardTime", "UnknownVersion", "UnknownMessage", "UnknownGLFileName", "UnknownLauncherLogFile", GetCurrentThreadId());
+    pImpl->GenerateErrorReport(pExInfo, "UnknownAuth", "UnknownEntity", "UnknownShard", "UnknownShardTime", "UnknownVersion", "UnknownMessage", "UnknownGLFileName", "UnknownLauncherLogFile", GetCurrentThreadId());
 }
 
 int CrashRptGenerateErrorReport2(LPVOID lpState, PEXCEPTION_POINTERS pExInfo, const char *szAuth, const char *szEntity, const char *szShard, const char *szShardTime, const char *szVersion, const char *szMessage, const char *glReportFileName, const char *launcherLogFileName)
 {
-	CCrashHandler *pImpl = (CCrashHandler*)lpState;
-	CRASH_ASSERT(pImpl);
+    CCrashHandler *pImpl = (CCrashHandler*)lpState;
+    CRASH_ASSERT(pImpl);
 
-	pImpl->GenerateErrorReport(pExInfo, szAuth, szEntity, szShard, szShardTime, szVersion, szMessage, glReportFileName, launcherLogFileName, GetCurrentThreadId());
+    pImpl->GenerateErrorReport(pExInfo, szAuth, szEntity, szShard, szShardTime, szVersion, szMessage, glReportFileName, launcherLogFileName, GetCurrentThreadId());
 
-	return EXCEPTION_EXECUTE_HANDLER;
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 int CrashRptGenerateErrorReport3(LPVOID lpState, PEXCEPTION_POINTERS pExInfo, const char *szAuth, const char *szEntity, const char *szShard, const char *szShardTime, const char *szVersion, const char *szMessage, const char *glReportFileName, const char *launcherLogFileName, DWORD dwThreadID)
 {
-	CCrashHandler *pImpl = (CCrashHandler*)lpState;
-	CRASH_ASSERT(pImpl);
+    CCrashHandler *pImpl = (CCrashHandler*)lpState;
+    CRASH_ASSERT(pImpl);
 
-	pImpl->GenerateErrorReport(pExInfo, szAuth, szEntity, szShard, szShardTime, szVersion, szMessage, glReportFileName, launcherLogFileName, dwThreadID);
+    pImpl->GenerateErrorReport(pExInfo, szAuth, szEntity, szShard, szShardTime, szVersion, szMessage, glReportFileName, launcherLogFileName, dwThreadID);
 
-	return EXCEPTION_EXECUTE_HANDLER;
+    return EXCEPTION_EXECUTE_HANDLER;
 }
 
 void CrashRptAbortErrorReport(LPVOID lpState)
 {
-	CCrashHandler *pImpl = (CCrashHandler*)lpState;
-	CRASH_ASSERT(pImpl);
+    CCrashHandler *pImpl = (CCrashHandler*)lpState;
+    CRASH_ASSERT(pImpl);
 
-	pImpl->AbortErrorReport();	
+    pImpl->AbortErrorReport();    
 }
 
 void CrashRptSetFTPConduit(LPVOID lpState, LPCTSTR hostname, LPCTSTR username, LPCTSTR password)
 {
-	CCrashHandler *pImpl = (CCrashHandler*)lpState;
-	CRASH_ASSERT(pImpl);
+    CCrashHandler *pImpl = (CCrashHandler*)lpState;
+    CRASH_ASSERT(pImpl);
 
-	if(pImpl->m_reportConduit)
-	{
-		delete pImpl->m_reportConduit;
-		pImpl->m_reportConduit = NULL;
-	}
-	pImpl->m_reportConduit = new CFtpConduit(hostname, username, password);
+    if(pImpl->m_reportConduit)
+    {
+        delete pImpl->m_reportConduit;
+        pImpl->m_reportConduit = NULL;
+    }
+    //pImpl->m_reportConduit = new CFtpConduit(hostname, username, password);
 }

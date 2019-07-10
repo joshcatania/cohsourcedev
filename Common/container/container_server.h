@@ -1,10 +1,10 @@
 /*\
  *
- *	container_server.h/c - Copyright 2004, 2005 Cryptic Studios
- *		All Rights Reserved
- *		Confidential property of Cryptic Studios
+ *    container_server.h/c - Copyright 2004, 2005 Cryptic Studios
+ *        All Rights Reserved
+ *        Confidential property of Cryptic Studios
  *
- *	Common functions for container servers (raidserver, etc.)
+ *    Common functions for container servers (raidserver, etc.)
  *
  */
 
@@ -16,11 +16,11 @@
 typedef struct ContainerStore ContainerStore;
 typedef struct Packet Packet;
 
-void csvrInit(ContainerStore** stores);	// null terminated list of stores
-int csvrRegisterSync(void);	// waits indefinitely
+void csvrInit(ContainerStore** stores);    // null terminated list of stores
+int csvrRegisterSync(void);    // waits indefinitely
 void csvrGetNotifications(U32 notify_mask);
 ContainerStore* csvrStore(U32 list_id);
-void csvrDbConnect(void);	// make initial connection to DB, exit()'s if it fails
+void csvrDbConnect(void);    // make initial connection to DB, exit()'s if it fails
 void csvrLoadContainers(void);
 void csvrDbMessage(int cmd,Packet* pak);
 

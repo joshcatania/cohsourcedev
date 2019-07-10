@@ -7,7 +7,7 @@
 #define CHARACTER_TARGET_H__
 
 #ifndef POWERS_H__
-#include "powers.h" // for TargetType
+#include "entity/powers.h" // for TargetType
 #endif
 
 typedef struct Character Character;
@@ -15,9 +15,9 @@ typedef struct PNPCDef PNPCDef;
 
 typedef enum CalcTeleportTargetResult_t
 {
-	TELEPORT_TARGET_OK = 0,
-	TELEPORT_TARGET_FEET,
-	TELEPORT_TARGET_HEAD
+    TELEPORT_TARGET_OK = 0,
+    TELEPORT_TARGET_FEET,
+    TELEPORT_TARGET_HEAD
 } CalcTeleportTargetResult;
 
 void setGangTestFunction(int (*_GangTestFunction)(int, int));

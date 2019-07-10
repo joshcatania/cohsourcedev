@@ -1,21 +1,22 @@
-#include "AccountTypes.h"
-#include "structDefines.h"
-#include "components/HashFunctions.h"
-#include "components/StashTable.h"
-#include "utils/endian.h"
-#include "utils/SuperAssert.h"
+#include <utilitieslib/stdtypes.h>
+#include "account/AccountTypes.h"
+#include <utilitieslib/utils/structDefines.h>
+#include <utilitieslib/components/HashFunctions.h>
+#include <utilitieslib/components/StashTable.h>
+#include <utilitieslib/utils/endian.h>
+#include <utilitieslib/utils/SuperAssert.h>
 
 const SkuId kSkuIdInvalid = {0};
 const OrderId kOrderIdInvalid = {0,0};
 
 StaticDefineInt AccountTypes_RarityEnum[] =
 {
-	DEFINE_INT
-	{ "Common", 1},
-	{ "Uncommon", 2},
-	{ "Rare", 3},
-	{ "VeryRare", 4},
-	DEFINE_END
+    DEFINE_INT
+    { "Common", 1},
+    { "Uncommon", 2},
+    { "Rare", 3},
+    { "VeryRare", 4},
+    DEFINE_END
 };
 
 STATIC_ASSERT(ORDER_ID_BITS == sizeof(OrderId)*8);
@@ -25,19 +26,19 @@ STATIC_ASSERT(ORDER_ID_BITS == sizeof(OrderId)*8);
 */
 SkuId skuIdFromString(const char * sku_string)
 {
-	SkuId ret = {0};
-	unsigned i;
-	bool valid_sku_id = true;
+    SkuId ret = {0};
+    unsigned i;
+    bool valid_sku_id = true;
 
-	for (i=0; i<sizeof(SkuId); i++) {
-		valid_sku_id &= (sku_string[i] != 0);
-		ret.c[i] = toupper(sku_string[i]);
-	}
-	valid_sku_id &= (sku_string[i] == 0);
+    for (i=0; i<sizeof(SkuId); i++) {
+        valid_sku_id &= (sku_string[i] != 0);
+        ret.c[i] = toupper(sku_string[i]);
+    }
+    valid_sku_id &= (sku_string[i] == 0);
 
-	if (!devassertmsg(valid_sku_id, "Invalid SkuId '%s'", sku_string))
-		return kSkuIdInvalid;
-	return ret;
+    if (!devassertmsg(valid_sku_id, "Invalid SkuId '%s'", sku_string))
+        return kSkuIdInvalid;
+    return ret;
 }
 
 /**
@@ -46,10 +47,10 @@ SkuId skuIdFromString(const char * sku_string)
 */
 char * skuIdAsString(SkuId sku_id)
 {
-	static char buf[9];
-	memcpy(buf, sku_id.c, sizeof(SkuId));
-	buf[8] = 0;
-	return buf;
+    static char buf[9];
+    memcpy(buf, sku_id.c, sizeof(SkuId));
+    buf[8] = 0;
+    return buf;
 }
 
 /**
@@ -57,9 +58,9 @@ char * skuIdAsString(SkuId sku_id)
 */
 int skuIdCmp(SkuId a, SkuId b)
 {
-	if (a.u64 == b.u64)
-		return 0;
-	return a.u64 > b.u64 ? 1 : -1;
+    if (a.u64 == b.u64)
+        return 0;
+    return a.u64 > b.u64 ? 1 : -1;
 }
 
 /**
@@ -67,7 +68,7 @@ int skuIdCmp(SkuId a, SkuId b)
 */
 bool skuIdEquals(SkuId a, SkuId b)
 {
-	return a.u64 == b.u64;
+    return a.u64 == b.u64;
 }
 
 /**
@@ -75,7 +76,7 @@ bool skuIdEquals(SkuId a, SkuId b)
 */
 bool skuIdIsNull(SkuId sku_id)
 {
-	return sku_id.u64 == 0;
+    return sku_id.u64 == 0;
 }
 
 /**
@@ -83,19 +84,19 @@ bool skuIdIsNull(SkuId sku_id)
 */
 static INLINEDBG OrderId orderIdEndianSwap(OrderId order_id)
 {
-	if (isBigEndian())
-	{
-		order_id.u32[0] = endianSwapU32(order_id.u32[0]);
-		order_id.u16[2] = endianSwapU16(order_id.u16[2]);
-		order_id.u16[3] = endianSwapU16(order_id.u16[3]);
-	}
-	else
-	{
-		order_id.u16[4] = endianSwapU16(order_id.u16[4]);
-		order_id.u16[5] = endianSwapU16(order_id.u16[5]);
-		order_id.u32[3] = endianSwapU32(order_id.u32[3]);
-	}
-	return order_id;
+    if (isBigEndian())
+    {
+        order_id.u32[0] = endianSwapU32(order_id.u32[0]);
+        order_id.u16[2] = endianSwapU16(order_id.u16[2]);
+        order_id.u16[3] = endianSwapU16(order_id.u16[3]);
+    }
+    else
+    {
+        order_id.u16[4] = endianSwapU16(order_id.u16[4]);
+        order_id.u16[5] = endianSwapU16(order_id.u16[5]);
+        order_id.u32[3] = endianSwapU32(order_id.u32[3]);
+    }
+    return order_id;
 }
 
 /**
@@ -104,12 +105,12 @@ static INLINEDBG OrderId orderIdEndianSwap(OrderId order_id)
 */
 OrderId orderIdFromString(const char * order_string)
 {
-	OrderId order_id = kOrderIdInvalid;
-	int ate = 0;
-	int got = sscanf(order_string, "%08x-%04hx-%04hx-%04hx-%04hx%08x%n", &order_id.u32[0], &order_id.u16[2], &order_id.u16[3], &order_id.u16[4], &order_id.u16[5], &order_id.u32[3], &ate);
-	if (!devassertmsg(got == 6 && ate == 36 && order_string[ate]==0, "Invalid OrderId '%s'", order_string))
-		return kOrderIdInvalid;
-	return orderIdEndianSwap(order_id);
+    OrderId order_id = kOrderIdInvalid;
+    int ate = 0;
+    int got = sscanf(order_string, "%08x-%04hx-%04hx-%04hx-%04hx%08x%n", &order_id.u32[0], &order_id.u16[2], &order_id.u16[3], &order_id.u16[4], &order_id.u16[5], &order_id.u32[3], &ate);
+    if (!devassertmsg(got == 6 && ate == 36 && order_string[ate]==0, "Invalid OrderId '%s'", order_string))
+        return kOrderIdInvalid;
+    return orderIdEndianSwap(order_id);
 }
 
 /**
@@ -119,10 +120,10 @@ OrderId orderIdFromString(const char * order_string)
 */
 char * orderIdAsString(OrderId order_id)
 {
-	static char buf[ORDER_ID_STRING_LENGTH];
-	order_id = orderIdEndianSwap(order_id);
-	snprintf(buf, sizeof(buf), "%08x-%04hx-%04hx-%04hx-%04hx%08x", order_id.u32[0], order_id.u16[2], order_id.u16[3], order_id.u16[4], order_id.u16[5], order_id.u32[3]);
-	return buf;
+    static char buf[ORDER_ID_STRING_LENGTH];
+    order_id = orderIdEndianSwap(order_id);
+    snprintf(buf, sizeof(buf), "%08x-%04hx-%04hx-%04hx-%04hx%08x", order_id.u32[0], order_id.u16[2], order_id.u16[3], order_id.u16[4], order_id.u16[5], order_id.u32[3]);
+    return buf;
 }
 
 /**
@@ -130,11 +131,11 @@ char * orderIdAsString(OrderId order_id)
 */
 int orderIdCmp(OrderId a, OrderId b)
 {
-	if (a.u64[0] != b.u64[0])
-		return a.u64[0] > b.u64[0] ? 1 : -1;
-	if (a.u64[1] == b.u64[1])
-		return 0;
-	return a.u64[1] > b.u64[1] ? 1 : -1;
+    if (a.u64[0] != b.u64[0])
+        return a.u64[0] > b.u64[0] ? 1 : -1;
+    if (a.u64[1] == b.u64[1])
+        return 0;
+    return a.u64[1] > b.u64[1] ? 1 : -1;
 }
 
 /**
@@ -142,7 +143,7 @@ int orderIdCmp(OrderId a, OrderId b)
 */
 bool orderIdEquals(OrderId a, OrderId b)
 {
-	return a.u64[0] == b.u64[0] && a.u64[1] == b.u64[1];
+    return a.u64[0] == b.u64[0] && a.u64[1] == b.u64[1];
 }
 
 /**
@@ -150,17 +151,17 @@ bool orderIdEquals(OrderId a, OrderId b)
 */
 bool orderIdIsNull(OrderId order_id)
 {
-	return order_id.u64[0] == 0 && order_id.u64[1] == 0;
+    return order_id.u64[0] == 0 && order_id.u64[1] == 0;
 }
 
 /// Custom @ref StashTable hash function for @ref SkuId keys
 static unsigned int skuIndexHash(void* userData, const void* key, int hashSeed) {
-	return burtlehash2(reinterpret_cast<const ub4*>(key), sizeof(SkuId)/sizeof(ub4), hashSeed);
+    return burtlehash2(reinterpret_cast<const ub4*>(key), sizeof(SkuId)/sizeof(ub4), hashSeed);
 }
 
 /// Custom @ref StashTable comparison function for @ref SkuId keys.
 static int skuIndexCmp(void* userData, const void* key1, const void* key2) {
-	return skuIdCmp(*reinterpret_cast<const SkuId*>(key1), *reinterpret_cast<const SkuId*>(key2));
+    return skuIdCmp(*reinterpret_cast<const SkuId*>(key1), *reinterpret_cast<const SkuId*>(key2));
 }
 
 /**
@@ -168,5 +169,5 @@ static int skuIndexCmp(void* userData, const void* key1, const void* key2) {
 */
 StashTable stashTableCreateSkuIndexEx(U32 uiInitialSize, const char* pcFile, U32 uiLine)
 {
-	return stashTableCreateExternalFunctionsEx(uiInitialSize, StashDefault, skuIndexHash, skuIndexCmp, NULL, pcFile, uiLine);
+    return stashTableCreateExternalFunctionsEx(uiInitialSize, StashDefault, skuIndexHash, skuIndexCmp, NULL, pcFile, uiLine);
 }

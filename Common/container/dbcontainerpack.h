@@ -1,20 +1,20 @@
 #ifndef _DBCONTAINERPACK_H
 #define _DBCONTAINERPACK_H
 
-#include "stdtypes.h"
-#include "utils.h"
-//#include "cmdoldparse.h"
+#include <utilitieslib/stdtypes.h>
+#include <utilitieslib/utils/utils.h>
+//#include <utilitieslib/utils/cmdoldparse.h>
 
 #define SIZE_INT32 sizeof(int)
 #define SIZE_INT16 sizeof(short)
 #define SIZE_INT8 sizeof(char)
 #define SIZE_FLOAT32 sizeof(float)
 #define LINEDESCFLAG_INDEXEDCOLUMN (1 << 0)
-#define LINEDESCFLAG_READONLY	(1 << 1)
+#define LINEDESCFLAG_READONLY    (1 << 1)
 
 // Max levels of indirection per line description
-#define MAX_INDIRECTIONS	4
-#define IGNORE_LINE_DESC	-1
+#define MAX_INDIRECTIONS    4
+#define IGNORE_LINE_DESC    -1
 #define MAX_CONTAINER_EARRAY_SIZE 9999
 
 #define INDIRECTION(struct_name,field_name,is_ptr) {OFFSETOF(struct_name,field_name), is_ptr, #struct_name, #field_name}
@@ -43,88 +43,88 @@ typedef intptr_t IntFromPtrAndStr(void *parent_ptr,void *struct_ptr,const char *
 typedef const char *StrFromPtrAndInt(void *parent_ptr,void *struct_ptr,intptr_t num);
 
 typedef struct{
-	intptr_t offset;
-	int isPointer;		// Perform indirection assuming the parent is a pointer?
-	char* structName;	// For debug only.	What is the name of the parent structure this indirection operates on?
-	char* fieldName;	// For debug only.  What is the name of the field this indirection is supposed to access?
+    intptr_t offset;
+    int isPointer;        // Perform indirection assuming the parent is a pointer?
+    char* structName;    // For debug only.    What is the name of the parent structure this indirection operates on?
+    char* fieldName;    // For debug only.  What is the name of the field this indirection is supposed to access?
 } StructIndirection;
 
 typedef enum ContainerPackType 
 {
-	PACKTYPE_INT = 1,
-	PACKTYPE_FLOAT,
-	PACKTYPE_ATTR, // String indexed as an integer in the database
-	PACKTYPE_CONREF, // Integer reference to a ContainerId
-	PACKTYPE_DATE,
-	PACKTYPE_SUB,
-	PACKTYPE_EARRAY,
-	PACKTYPE_STR_UTF8, // Unicode string in a character array
-	PACKTYPE_STR_ASCII, // Ascii string in a character array
-	PACKTYPE_ESTRING_UTF8, // Unicode string in an EString
-	PACKTYPE_ESTRING_ASCII, // Ascii string in an EString
-	PACKTYPE_STR_UTF8_CACHED, // Unicode string that is permanently stored as a reference in the runtime with allocAddString'ed
-	PACKTYPE_STR_ASCII_CACHED, // Ascii string that is permanently stored as a reference in the runtime with allocAddString'ed
-	PACKTYPE_BIN_STR, // The size that follows this tag should be the # of bytes in the binary string array.
+    PACKTYPE_INT = 1,
+    PACKTYPE_FLOAT,
+    PACKTYPE_ATTR, // String indexed as an integer in the database
+    PACKTYPE_CONREF, // Integer reference to a ContainerId
+    PACKTYPE_DATE,
+    PACKTYPE_SUB,
+    PACKTYPE_EARRAY,
+    PACKTYPE_STR_UTF8, // Unicode string in a character array
+    PACKTYPE_STR_ASCII, // Ascii string in a character array
+    PACKTYPE_ESTRING_UTF8, // Unicode string in an EString
+    PACKTYPE_ESTRING_ASCII, // Ascii string in an EString
+    PACKTYPE_STR_UTF8_CACHED, // Unicode string that is permanently stored as a reference in the runtime with allocAddString'ed
+    PACKTYPE_STR_ASCII_CACHED, // Ascii string that is permanently stored as a reference in the runtime with allocAddString'ed
+    PACKTYPE_BIN_STR, // The size that follows this tag should be the # of bytes in the binary string array.
 
-	// These types must come last when used in a table due to ODBC restrictions
-	PACKTYPE_LARGE_ESTRING_BINARY, // Large binary data in an EString
-	PACKTYPE_LARGE_ESTRING_UTF8, // Largey Unicode string in an EString
-	PACKTYPE_LARGE_ESTRING_ASCII, // Large Ascii string in an EString
+    // These types must come last when used in a table due to ODBC restrictions
+    PACKTYPE_LARGE_ESTRING_BINARY, // Large binary data in an EString
+    PACKTYPE_LARGE_ESTRING_UTF8, // Largey Unicode string in an EString
+    PACKTYPE_LARGE_ESTRING_ASCII, // Large Ascii string in an EString
 
-	// Deprecated
-	PACKTYPE_TEXTBLOB,		// never use this, there's no actual handling for it.  use PACKTYPE_LARGE_ESTRING_BINARY instead.
+    // Deprecated
+    PACKTYPE_TEXTBLOB,        // never use this, there's no actual handling for it.  use PACKTYPE_LARGE_ESTRING_BINARY instead.
 } ContainerPackType;
 
 //---------------------------------------------------------------------------------
 // "Line" description
-//	Describes a single field in a structure and how to convert it to/from text.
+//    Describes a single field in a structure and how to convert it to/from text.
 //---------------------------------------------------------------------------------
 typedef struct LineDesc
 {
-	struct 
-	{
+    struct 
+    {
         ContainerPackType type;
-		intptr_t size;
-		char	*name;
-		StructIndirection indirection[MAX_INDIRECTIONS];
-		IntFromStr	*int_from_str_func;
-		StrFromInt	*str_from_int_func;
-		IntFromPtrAndStr	*int_from_ptr_and_str_func;
-		StrFromPtrAndInt	*str_from_ptr_and_int_func;
-		int		flags;
-		int		dbsize;	// For TYPE_STR: Size of field in Database if not equal to 2*size
-	};
-	struct
-	{
-		char *desc;
-	};
+        intptr_t size;
+        char    *name;
+        StructIndirection indirection[MAX_INDIRECTIONS];
+        IntFromStr    *int_from_str_func;
+        StrFromInt    *str_from_int_func;
+        IntFromPtrAndStr    *int_from_ptr_and_str_func;
+        StrFromPtrAndInt    *str_from_ptr_and_int_func;
+        int        flags;
+        int        dbsize;    // For TYPE_STR: Size of field in Database if not equal to 2*size
+    };
+    struct
+    {
+        char *desc;
+    };
 } LineDesc;
 
 //---------------------------------------------------------------------------------
 // Array description
-//	Describes the type of array the structure being described is.
+//    Describes the type of array the structure being described is.
 //---------------------------------------------------------------------------------
 typedef enum{
-	AT_NOT_ARRAY,
-	AT_STRUCT_ARRAY,
-	AT_POINTER_ARRAY,
-	AT_EARRAY,
+    AT_NOT_ARRAY,
+    AT_STRUCT_ARRAY,
+    AT_POINTER_ARRAY,
+    AT_EARRAY,
 } ArrayType;
 
 typedef struct{
-	ArrayType type;										// What type of array is it?
-	StructIndirection indirection[MAX_INDIRECTIONS];	// How do I get to the base of this array?
+    ArrayType type;                                        // What type of array is it?
+    StructIndirection indirection[MAX_INDIRECTIONS];    // How do I get to the base of this array?
 } ArrayDesc;
 
 //---------------------------------------------------------------------------------
 // Structure description
-//	Describes a collection of fields in an structure to be converted to/from text.
+//    Describes a collection of fields in an structure to be converted to/from text.
 //---------------------------------------------------------------------------------
 typedef struct StructDesc {
-	unsigned int structureSize;
-	ArrayDesc arrayDesc;
-	LineDesc* lineDescs;
-	char *desc;
+    unsigned int structureSize;
+    ArrayDesc arrayDesc;
+    LineDesc* lineDescs;
+    char *desc;
 } StructDesc;
 
 

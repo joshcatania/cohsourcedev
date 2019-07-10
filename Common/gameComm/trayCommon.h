@@ -6,11 +6,11 @@
 #ifndef TRAYCOMMON_H__
 #define TRAYCOMMON_H__
 
-#include "character_inventory.h"
+#include "entity/character_inventory.h"
 
-#define TRAY_WD					( 10 )
-#define TRAY_HT					( 1 )
-#define TRAY_SLOTS				( TRAY_WD * TRAY_HT )
+#define TRAY_WD                    ( 10 )
+#define TRAY_HT                    ( 1 )
+#define TRAY_SLOTS                ( TRAY_WD * TRAY_HT )
 
 typedef struct BasePower BasePower;
 
@@ -26,7 +26,7 @@ typedef enum
     kCurTrayType_Primary,
     kCurTrayType_Alt,
     kCurTrayType_Alt2,
-	kCurTrayType_Razer,
+    kCurTrayType_Razer,
     // NOTE: you must update containerloadsave.c if you add elems here
     
     // enum counter
@@ -71,33 +71,33 @@ typedef struct SalvageInventoryItem SalvageInventoryItem;
 
 typedef enum TrayItemType
 {
-	kTrayItemType_None,
-	kTrayItemType_Power,
-	kTrayItemType_Inspiration,
-	kTrayItemType_BodyItem,
-	kTrayItemType_SpecializationPower,
-	kTrayItemType_SpecializationInventory,
-	kTrayItemType_Macro,
-	kTrayItemType_RespecPile,
-	kTrayItemType_Tab,
-	kTrayItemType_ConceptInvItem,
-	kTrayItemType_PetCommand,
-	kTrayItemType_Salvage,
-	kTrayItemType_Recipe,
-	kTrayItemType_StoredInspiration,
-	kTrayItemType_StoredEnhancement,
-	kTrayItemType_StoredSalvage,
-	kTrayItemType_StoredRecipe,
-	kTrayItemType_MacroHideName,
-	kTrayItemType_PersonalStorageSalvage,
-	kTrayItemType_PlayerSlot,
-	kTrayItemType_PlayerCreatedMission,
-	kTrayItemType_PlayerCreatedDetail,
-	kTrayItemType_GroupMember,
-// 	kTrayItemType_BaseDetail,
+    kTrayItemType_None,
+    kTrayItemType_Power,
+    kTrayItemType_Inspiration,
+    kTrayItemType_BodyItem,
+    kTrayItemType_SpecializationPower,
+    kTrayItemType_SpecializationInventory,
+    kTrayItemType_Macro,
+    kTrayItemType_RespecPile,
+    kTrayItemType_Tab,
+    kTrayItemType_ConceptInvItem,
+    kTrayItemType_PetCommand,
+    kTrayItemType_Salvage,
+    kTrayItemType_Recipe,
+    kTrayItemType_StoredInspiration,
+    kTrayItemType_StoredEnhancement,
+    kTrayItemType_StoredSalvage,
+    kTrayItemType_StoredRecipe,
+    kTrayItemType_MacroHideName,
+    kTrayItemType_PersonalStorageSalvage,
+    kTrayItemType_PlayerSlot,
+    kTrayItemType_PlayerCreatedMission,
+    kTrayItemType_PlayerCreatedDetail,
+    kTrayItemType_GroupMember,
+//     kTrayItemType_BaseDetail,
 
-	// --------------------
-	kTrayItemType_Count,
+    // --------------------
+    kTrayItemType_Count,
 
 } TrayItemType;
 InventoryType InventoryType_FromTrayItemType(TrayItemType type); 
@@ -105,8 +105,8 @@ InventoryType InventoryType_FromTrayItemType(TrayItemType type);
 
 enum
 {
-	TO_NONE,
-	TO_SCALE_DOWN,
+    TO_NONE,
+    TO_SCALE_DOWN,
 };
 
 #define IS_TRAY_MACRO(type) (type==kTrayItemType_Macro||type==kTrayItemType_MacroHideName)
@@ -116,69 +116,69 @@ typedef void (*trayobj_display)(TrayObj *obj, F32 x, F32 y, F32 z, F32 sc);
 
 typedef enum TrayCategory
 {
-	kTrayCategory_Unknown,
-	kTrayCategory_PlayerControlled,
-	kTrayCategory_ServerControlled,
-	kTrayCategory_Count
+    kTrayCategory_Unknown,
+    kTrayCategory_PlayerControlled,
+    kTrayCategory_ServerControlled,
+    kTrayCategory_Count
 } TrayCategory;
 
 typedef struct TrayObj
 {
-	TrayItemType    type;
-	AtlasTex*		icon;
+    TrayItemType    type;
+    AtlasTex*        icon;
 
-	int             state;
-	float           scale;
-	float			fall_offset;
-	float           angle;
-	float			flash_scale;
-	F32				z;
+    int             state;
+    float           scale;
+    float            fall_offset;
+    float           angle;
+    float            flash_scale;
+    F32                z;
 
-	// ARM NOTE: these used to be only for the copy operation
-	// I've tried to alter them so they are always correct for items in the tray
-	// TrayObjs are used in some non-tray applications... which makes it a bit weird.
-	TrayCategory	icat;
-	int				itray;
-	int				islot;
+    // ARM NOTE: these used to be only for the copy operation
+    // I've tried to alter them so they are always correct for items in the tray
+    // TrayObjs are used in some non-tray applications... which makes it a bit weird.
+    TrayCategory    icat;
+    int                itray;
+    int                islot;
 
-	// Only for powers and inspirations
-	int             ipow;
+    // Only for powers and inspirations
+    int             ipow;
 
-	// Only for powers
-	int             iset;
-	int				autoPower;
-	const char      *pchPowerName;
-	const char      *pchPowerSetName;
-	const char      *pchCategory;
+    // Only for powers
+    int             iset;
+    int                autoPower;
+    const char      *pchPowerName;
+    const char      *pchPowerSetName;
+    const char      *pchCategory;
 
-	// for macros
-	char			command[256];
-	char			shortName[32];
-	char			iconName[256];
+    // for macros
+    char            command[256];
+    char            shortName[32];
+    char            iconName[256];
 
-	// only for specializations
-	int				ispec;
+    // only for specializations
+    int                ispec;
 
-	// for respecialization (where indices become meaningless)
-	Boost *pBoost;
+    // for respecialization (where indices become meaningless)
+    Boost *pBoost;
 
-	// for Tabs
-	uiTab*			tab;
+    // for Tabs
+    uiTab*            tab;
 
-	// for stored items
-	union
-	{
-		const char *nameSalvage;
-		const char *nameRecipe;
-		const BasePower *ppow;
-		Boost *enhancement;
-	};
-	int idDetail;
-	
-	// for random inventory items
+    // for stored items
+    union
+    {
+        const char *nameSalvage;
+        const char *nameRecipe;
+        const BasePower *ppow;
+        Boost *enhancement;
+    };
+    int idDetail;
+    
+    // for random inventory items
 
-	trayobj_display displayCb;
-	int invIdx;	
+    trayobj_display displayCb;
+    int invIdx;    
 
 } TrayObj;
 
@@ -188,11 +188,11 @@ typedef struct TrayInternals TrayInternals;
 // and we could get rid of all the public members.  Yay modularity!
 typedef struct Tray
 {
-	int	current_trays[kCurTrayType_Count];
-	int	mode;					// used to serialize whether the alt trays are open to the database
-	int	mode_alt2;				// "
-	int	trayIndexes;			// contains 8 four-bit numbers that are the indices of the eight possible trays (1-9)
-	TrayInternals	*internals;	// private data that shouldn't be exposed to the external world.
+    int    current_trays[kCurTrayType_Count];
+    int    mode;                    // used to serialize whether the alt trays are open to the database
+    int    mode_alt2;                // "
+    int    trayIndexes;            // contains 8 four-bit numbers that are the indices of the eight possible trays (1-9)
+    TrayInternals    *internals;    // private data that shouldn't be exposed to the external world.
 } Tray;
 
 typedef struct Packet Packet;
@@ -240,11 +240,11 @@ void trimExcessTrayObjs(Tray *tray, int buildCount);
 
 typedef struct TrayItemIdentifier // only for boosts, inspirations, recipes and salvage
 {
-	char *name;
-	int buyPrice; // for things you can buy from the auction house that players don't put up for sale
-	TrayItemType type;
-	int level;
-	int playerType; // 0 for all, 1 for heroes only, 2 for villains only
+    char *name;
+    int buyPrice; // for things you can buy from the auction house that players don't put up for sale
+    TrayItemType type;
+    int level;
+    int playerType; // 0 for all, 1 for heroes only, 2 for villains only
 } TrayItemIdentifier;
 
 char* TrayItemIdentifier_Str(TrayItemIdentifier *ptii);

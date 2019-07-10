@@ -26,9 +26,9 @@ void sqlConnGetTimes(int * count, long * avg_usec, long * worst_usec, float * fo
 HSTMT sqlConnStmtAlloc(SqlConn conn);
 void sqlConnStmtFree(HSTMT stmt);
 void sqlConnStmtPrintBinds(HSTMT stmt);
-int sqlConnStmtPrepare(HSTMT stmt, char *cmd, int str_len, SqlConn conn);
-int sqlConnStmtExecDirect(HSTMT stmt, char *cmd, int str_len, SqlConn conn, bool utf8);
-int sqlConnStmtExecDirectMany(HSTMT stmt, char *cmd, int str_len, SqlConn conn, bool utf8);
+int sqlConnStmtPrepare(HSTMT stmt, char const* cmd, int str_len, SqlConn conn);
+int sqlConnStmtExecDirect(HSTMT stmt, char const* cmd, int str_len, SqlConn conn, bool utf8);
+int sqlConnStmtExecDirectMany(HSTMT stmt, char const* cmd, int str_len, SqlConn conn, bool utf8);
 
 // statement commands that do not report errors automatically
 int _sqlConnStmtExecute(HSTMT stmt, SqlConn conn);
@@ -52,7 +52,7 @@ int sqlConnExecDirectMany(char *cmd, int cmd_len, SqlConn conn, bool utf8);
 int sqlConnStmtBindParamArray(HSTMT stmt, size_t count, size_t row_size);
 int sqlConnStmtSetBindOffset(HSTMT stmt, size_t *offset);
 int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, ssize_t* strlen);
-int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t *tabletype, ssize_t *numrows);
+int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t const* tabletype, ssize_t *numrows);
 int sqlConnStmtEndBindParamTableValued(HSTMT stmt);
 int sqlConnStmtUnbindParams(HSTMT stmt);
 

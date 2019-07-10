@@ -1,19 +1,19 @@
 #ifndef LWC_COMMON_H
 #define LWC_COMMON_H
 // Header file for Light Weight Client common information
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct Entity Entity;
 
 typedef enum
 {
-	LWC_STAGE_INVALID	= 0,
-	LWC_STAGE_1			= 1,
-	LWC_STAGE_2			= 2,
-	LWC_STAGE_3			= 3,
-	LWC_STAGE_4			= 4,
+    LWC_STAGE_INVALID    = 0,
+    LWC_STAGE_1            = 1,
+    LWC_STAGE_2            = 2,
+    LWC_STAGE_3            = 3,
+    LWC_STAGE_4            = 4,
 
-	LWC_STAGE_LAST		= LWC_STAGE_4,
+    LWC_STAGE_LAST        = LWC_STAGE_4,
 } LWC_STAGE;
 
 LWC_STAGE LWC_GetRequiredDataStageForMap(const char *map_name);

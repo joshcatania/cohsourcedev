@@ -7,7 +7,7 @@
 #ifndef AUCTION_H
 #define AUCTION_H
 
-#include "textparser.h"
+#include <utilitieslib/utils/textparser.h>
 #include "basetsd.h"
 
 typedef struct Packet Packet;
@@ -19,17 +19,17 @@ typedef struct AuctionEnt AuctionEnt;
 #define AUCTION_INV_MAX_SIZE 32
 #define AUCTION_INV_DEFAULT_SIZE 2
 
-#define AUCTION_AUTO_FULFILL_MIN_TIME	600
-#define AUCTION_AUTO_SELL_MIN_PRICE		10000
-#define AUCTION_AUTO_BUY_MIN_PRICE		10000
-#define AUCTION_MAX_INFLUENCE			2000000000
+#define AUCTION_AUTO_FULFILL_MIN_TIME    600
+#define AUCTION_AUTO_SELL_MIN_PRICE        10000
+#define AUCTION_AUTO_BUY_MIN_PRICE        10000
+#define AUCTION_MAX_INFLUENCE            2000000000
 
 typedef enum AuctionServerType
 {
-	kAuctionServerType_Heroes,
-	kAuctionServerType_Villains,
-	kAuctionServerType_Count,
-	kAuctionServerType_Invalid = -1,
+    kAuctionServerType_Heroes,
+    kAuctionServerType_Villains,
+    kAuctionServerType_Count,
+    kAuctionServerType_Invalid = -1,
 } AuctionServerType;
 
 const char *AuctionServerType_ToStr( AuctionServerType s);
@@ -38,14 +38,14 @@ extern StaticDefineInt AuctionServerTypeEnum[];
 bool auctionservertype_Valid( AuctionServerType e );
 
 typedef enum AuctionInvItemStatus
-{	
-	AuctionInvItemStatus_None,
-	AuctionInvItemStatus_Stored,  // they have placed the item in the auction inventory, but not put it up for sale yet
-	AuctionInvItemStatus_ForSale,
-	AuctionInvItemStatus_Sold,
-	AuctionInvItemStatus_Bidding,
-	AuctionInvItemStatus_Bought,
-	AuctionInvItemStatus_Count
+{    
+    AuctionInvItemStatus_None,
+    AuctionInvItemStatus_Stored,  // they have placed the item in the auction inventory, but not put it up for sale yet
+    AuctionInvItemStatus_ForSale,
+    AuctionInvItemStatus_Sold,
+    AuctionInvItemStatus_Bidding,
+    AuctionInvItemStatus_Bought,
+    AuctionInvItemStatus_Count
 } AuctionInvItemStatus;
 
 extern StaticDefineInt AuctionInvItemStatusEnum [];
@@ -54,27 +54,27 @@ const char *AuctionInvItemStatus_ToStr(AuctionInvItemStatus status);
 
 typedef struct AuctionInvItem
 {
-	int id;	// unique to an AuctionEnt
-	const char *pchIdentifier;	// serialized TrayItemIdentifier, in string pool
+    int id;    // unique to an AuctionEnt
+    const char *pchIdentifier;    // serialized TrayItemIdentifier, in string pool
 
-	AuctionInvItemStatus auction_status;
-	int amtCancelled;	// number of cancelled items (refund sellers posting fee)
-	int amtStored;		// number of actual items
-	int infStored;		// actual influence
-	int amtOther;		// remaining bid count or number sold
-	int infPrice;		// minimum sell price or bid, per-item
-	
-	// TextParser knows about these, but AuctionServer defaults them before persisting
-	int iMapSide;		// identifier (e.g. tray slot), used during AddInv
-	bool bDeleteMe;		// during Xaction finalization, alert the mapserver that the item is being deleted
-	bool bMergedBid;	// bids that were made pre-merger and thus invalid
+    AuctionInvItemStatus auction_status;
+    int amtCancelled;    // number of cancelled items (refund sellers posting fee)
+    int amtStored;        // number of actual items
+    int infStored;        // actual influence
+    int amtOther;        // remaining bid count or number sold
+    int infPrice;        // minimum sell price or bid, per-item
+    
+    // TextParser knows about these, but AuctionServer defaults them before persisting
+    int iMapSide;        // identifier (e.g. tray slot), used during AddInv
+    bool bDeleteMe;        // during Xaction finalization, alert the mapserver that the item is being deleted
+    bool bMergedBid;    // bids that were made pre-merger and thus invalid
 
-	// not persisted below
+    // not persisted below
 #if AUCTIONSERVER
-	AuctionEnt *ent;
-	int lockid;
-	int subid;
-	U32 autofulfilltime;
+    AuctionEnt *ent;
+    int lockid;
+    int subid;
+    U32 autofulfilltime;
 #endif
 } AuctionInvItem;
 
@@ -93,23 +93,23 @@ typedef struct AuctionHistoryItem AuctionHistoryItem;
 
 typedef struct AuctionHistoryItemDetail
 {
-	char *buyer;
-	char *seller;
-	U32 date; // SS2000
-	int price;
+    char *buyer;
+    char *seller;
+    U32 date; // SS2000
+    int price;
 } AuctionHistoryItemDetail;
 
 typedef struct AuctionHistoryItem
 {
-	const char *pchIdentifier;	// serialized TrayItemIdentifier, in string pool
-	AuctionHistoryItemDetail **histories;
+    const char *pchIdentifier;    // serialized TrayItemIdentifier, in string pool
+    AuctionHistoryItemDetail **histories;
 } AuctionHistoryItem;
 
 typedef struct AuctionConfig
 {
-	F32 fSellFeePercent;
-	F32 fBuyFeePercent;
-	U32 iMinFee;
+    F32 fSellFeePercent;
+    F32 fBuyFeePercent;
+    U32 iMinFee;
 } AuctionConfig;
 
 extern TokenizerParseInfo ParseAuctionConfig[];
@@ -118,11 +118,11 @@ extern SHARED_MEMORY AuctionConfig g_AuctionConfig;
 
 typedef struct AuctionInventory
 {
-	AuctionInvItem **items;
-	int invSize;
+    AuctionInvItem **items;
+    int invSize;
 
-	// auction server only
-	AuctionEnt *owner;
+    // auction server only
+    AuctionEnt *owner;
 } AuctionInventory;
 
 void AuctionInventory_ToStr(AuctionInventory *inv, char **hestr);

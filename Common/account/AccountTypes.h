@@ -31,9 +31,9 @@ typedef struct StashTableImp *StashTable;
 * @note Sometimes referred to as the "Product Code"
 */
 typedef union SkuId {
-	U64 u64;
-	U32 u32[2];
-	char c[8]; // adding room for a null terminator would dealign the type
+    U64 u64;
+    U32 u32[2];
+    char c[8]; // adding room for a null terminator would dealign the type
 } SkuId;
 
 extern const SkuId kSkuIdInvalid;
@@ -44,10 +44,10 @@ extern const SkuId kSkuIdInvalid;
 *       are little-endian and the upper 16 bytes are big-endian.
 */
 typedef union OrderId {
-	U64 u64[2];
-	U32 u32[4];
-	U16 u16[8];
-	char c[16]; // adding room for a null terminator would dealign the type
+    U64 u64[2];
+    U32 u32[4];
+    U16 u16[8];
+    char c[16]; // adding room for a null terminator would dealign the type
 } OrderId;
 
 extern const OrderId kOrderIdInvalid;

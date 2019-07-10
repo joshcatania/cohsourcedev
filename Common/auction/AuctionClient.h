@@ -18,8 +18,8 @@ typedef struct AuctionItem AuctionItem;
 
 typedef struct AuctionMultiContext
 {
-	XactCmdType type;
-	char *context;
+    XactCmdType type;
+    char *context;
 } AuctionMultiContext;
 #endif
 

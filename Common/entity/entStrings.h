@@ -11,7 +11,7 @@
 typedef struct EntStrings EntStrings;
 typedef struct Packet Packet;
 
-void sendEntStrings(	Packet *Pak, EntStrings * strings );
+void sendEntStrings(    Packet *Pak, EntStrings * strings );
 void receiveEntStrings( Packet *Pak, EntStrings * strings );
 
 void initEntStrings( EntStrings *strings );

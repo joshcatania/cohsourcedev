@@ -14,19 +14,19 @@ typedef const struct StashTableImp *cStashTable;
 
 typedef struct StoreIndex
 {
-	StashTable hashBuy;
-	StashTable hashSell;
+    StashTable hashBuy;
+    StashTable hashSell;
 } StoreIndex;
 
 typedef struct StoreHashes // Shared, generated store related hashtables
 {
-	StashTable hashItemsByPower;
-		// Maps BasePower*+level  to StoreItem *s
+    StashTable hashItemsByPower;
+        // Maps BasePower*+level  to StoreItem *s
 
-	StoreIndex **StoreIndicies;
-		// Indicies for looking up existance and dept of an item in a store. Unshared.
-		// This is a parallel EArray to g_Stores.ppStores.
-		//    i.e. g_Stores.ppStores[foo] goes with g_StoreIndicies[foo]
+    StoreIndex **StoreIndicies;
+        // Indicies for looking up existance and dept of an item in a store. Unshared.
+        // This is a parallel EArray to g_Stores.ppStores.
+        //    i.e. g_Stores.ppStores[foo] goes with g_StoreIndicies[foo]
 } StoreHashes;
 
 extern StoreHashes g_StoreHashes;

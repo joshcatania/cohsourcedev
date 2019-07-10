@@ -9,7 +9,7 @@
 #define lgc_c
 #define LUA_CORE
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
 #include "ldebug.h"
 #include "ldo.h"
@@ -23,25 +23,25 @@
 #include "ltm.h"
 
 
-#define GCSTEPSIZE	1024u
-#define GCSWEEPMAX	40
-#define GCSWEEPCOST	10
-#define GCFINALIZECOST	100
+#define GCSTEPSIZE    1024u
+#define GCSWEEPMAX    40
+#define GCSWEEPCOST    10
+#define GCFINALIZECOST    100
 
 
-#define maskmarks	cast_byte(~(bitmask(BLACKBIT)|WHITEBITS))
+#define maskmarks    cast_byte(~(bitmask(BLACKBIT)|WHITEBITS))
 
-#define makewhite(g,x)	\
+#define makewhite(g,x)    \
    ((x)->gch.marked = cast_byte(((x)->gch.marked & maskmarks) | luaC_white(g)))
 
-#define white2gray(x)	reset2bits((x)->gch.marked, WHITE0BIT, WHITE1BIT)
-#define black2gray(x)	resetbit((x)->gch.marked, BLACKBIT)
+#define white2gray(x)    reset2bits((x)->gch.marked, WHITE0BIT, WHITE1BIT)
+#define black2gray(x)    resetbit((x)->gch.marked, BLACKBIT)
 
-#define stringmark(s)	reset2bits((s)->tsv.marked, WHITE0BIT, WHITE1BIT)
+#define stringmark(s)    reset2bits((s)->tsv.marked, WHITE0BIT, WHITE1BIT)
 
 
-#define isfinalized(u)		testbit((u)->marked, FINALIZEDBIT)
-#define markfinalized(u)	l_setbit((u)->marked, FINALIZEDBIT)
+#define isfinalized(u)        testbit((u)->marked, FINALIZEDBIT)
+#define markfinalized(u)    l_setbit((u)->marked, FINALIZEDBIT)
 
 
 #define KEYWEAK         bitmask(KEYWEAKBIT)
@@ -53,7 +53,7 @@
   if (iscollectable(o) && iswhite(gcvalue(o))) reallymarkobject(g,gcvalue(o)); }
 
 #define markobject(g,t) { if (iswhite(obj2gco(t))) \
-		reallymarkobject(g, obj2gco(t)); }
+        reallymarkobject(g, obj2gco(t)); }
 
 
 #define setthreshold(g)  (g->GCthreshold = (g->estimate/100) * g->gcpause)
@@ -285,7 +285,7 @@ static l_mem propagatemark (global_State *g) {
       if (traversetable(g, h))  /* table is weak? */
         black2gray(o);  /* keep it gray */
       return sizeof(Table) + sizeof(TValue) * h->sizearray +
-                             sizeof(Node) * sizenode(h);
+                             sizeof(Node) * (size_t)sizenode(h);
     }
     case LUA_TFUNCTION: {
       Closure *cl = gco2cl(o);
@@ -401,7 +401,7 @@ static void freeobj (lua_State *L, GCObject *o) {
 
 
 
-#define sweepwholelist(L,p)	sweeplist(L,p,MAX_LUMEM)
+#define sweepwholelist(L,p)    sweeplist(L,p,MAX_LUMEM)
 
 
 static GCObject **sweeplist (lua_State *L, GCObject **p, lu_mem count) {

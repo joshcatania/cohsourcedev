@@ -1,23 +1,23 @@
 #ifndef _ANIMTRACKANIMATE_H
 #define _ANIMTRACKANIMATE_H
 
-#include "stdtypes.h"
-#include "mathutil.h"
-#include "animtrack.h"
-#include "assert.h"
+#include <utilitieslib/stdtypes.h>
+#include <utilitieslib/utils/mathutil.h>
+#include "seq/animtrack.h"
+#include <utilitieslib/assert/assert.h>
 
 
 // GetAnimation only struct.  Converted into a BoneAnimTrack
 typedef struct AnimKeys
 {
-	U16		* corrections;  
-	int		count;	
+    U16        * corrections;  
+    int        count;    
 
-	void	*vals;			//rename fullkeys?
-	int		fullkeycount;
+    void    *vals;            //rename fullkeys?
+    int        fullkeycount;
 
-	F32		*times;			//thrown away 
-	U8		flags;	//compression type
+    F32        *times;            //thrown away 
+    U8        flags;    //compression type
 
 } AnimKeys;
 
@@ -25,12 +25,12 @@ typedef struct AnimKeys
 //For animating textures with tricks or in fx
 typedef struct StAnim
 {
-	const BoneAnimTrack * btTex0;  
-	const BoneAnimTrack * btTex1;
-	char	*name;				//skeleton name of animation in tscroll.anm, corresponds to a WRL file
-	F32		speed_scale;
-	F32		st_scale;
-	int		flags;
+    const BoneAnimTrack * btTex0;  
+    const BoneAnimTrack * btTex1;
+    char    *name;                //skeleton name of animation in tscroll.anm, corresponds to a WRL file
+    F32        speed_scale;
+    F32        st_scale;
+    int        flags;
 } StAnim;
 
 

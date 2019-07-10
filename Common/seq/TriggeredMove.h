@@ -6,12 +6,12 @@
 
 typedef struct TriggeredMove  //figure out where to put this...
 {
-	int		ticksToDelay;		// condition: how many 1/30's of a second to delay - or - 
-	int		triggerFxNetId;  // condition: fx whose hit will trigger this move.
-	int		idx;	// move to play
-	F32		timeCreated;
-	U8		move_found;		//has this triggeredmove been evaluated by the sequencer yet? server only
-	U32		state[STATE_ARRAY_SIZE]; //state to use to find the move. server only
+    int        ticksToDelay;        // condition: how many 1/30's of a second to delay - or - 
+    int        triggerFxNetId;  // condition: fx whose hit will trigger this move.
+    int        idx;    // move to play
+    F32        timeCreated;
+    U8        move_found;        //has this triggeredmove been evaluated by the sequencer yet? server only
+    U32        state[STATE_ARRAY_SIZE]; //state to use to find the move. server only
 
 } TriggeredMove;
 

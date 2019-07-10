@@ -6,9 +6,9 @@
 #ifndef PROFICIENCY_H
 #define PROFICIENCY_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 #include "TokenizerUiWidget.h"
-#include "structDefines.h"
+#include <utilitieslib/utils/structDefines.h>
 
 // --------------------
 // forward decls
@@ -24,23 +24,23 @@ typedef struct Character Character;
 
 typedef enum ProfOriginType
 {
-	kProfOriginType_Tech,
-	kProfOriginType_Science,
-	kProfOriginType_Mutant,
-	kProfOriginType_Magic,
-	kProfOriginType_Natural,
-	kProfOriginType_Count
+    kProfOriginType_Tech,
+    kProfOriginType_Science,
+    kProfOriginType_Mutant,
+    kProfOriginType_Magic,
+    kProfOriginType_Natural,
+    kProfOriginType_Count
 } ProfOriginType;
 
 
 typedef enum ProfRarityType
 {
-	kProfRarityType_Ubiquitous,
-	kProfRarityType_Common,
-	kProfRarityType_Uncommon,
-	kProfRarityType_Rare,
-	kProfRarityType_Unique,
-	kProfRarityType_Count,
+    kProfRarityType_Ubiquitous,
+    kProfRarityType_Common,
+    kProfRarityType_Uncommon,
+    kProfRarityType_Rare,
+    kProfRarityType_Unique,
+    kProfRarityType_Count,
 } ProfRarityType;
 
 
@@ -52,22 +52,22 @@ typedef enum ProfRarityType
 //----------------------------------------------------------
 typedef struct ProficiencyItem
 { 
-	int id;
-	char *name;
-	TokenizerUiWidget	ui;
-	ProfOriginType origin;
-	ProfRarityType rarity;
+    int id;
+    char *name;
+    TokenizerUiWidget    ui;
+    ProfOriginType origin;
+    ProfRarityType rarity;
 } ProficiencyItem;
 
 
 // GenericInventoryDict member-compatible
 typedef struct ProficiencyDictionary
 {
-	// Defines a set of related categories. (Examples include character and
-	// villain)
-	const ProficiencyItem **ppProficiencyItems;
-	cStashTable haItemNames;
-	const ProficiencyItem **itemsById;
+    // Defines a set of related categories. (Examples include character and
+    // villain)
+    const ProficiencyItem **ppProficiencyItems;
+    cStashTable haItemNames;
+    const ProficiencyItem **itemsById;
 } ProficiencyDictionary;
 
 // global inst of dict

@@ -21,7 +21,7 @@
 typedef HRESULT (*MIPcallback)(void * data, int miplevel, DWORD size, int width, int height, void * user_data);
             
 
-_inline char * GetDXTCVersion() { return "Version 6.74";}
+_inline char const* GetDXTCVersion() { return "Version 6.74";}
 
 
 enum

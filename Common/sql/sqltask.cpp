@@ -1,5 +1,6 @@
+#include <utilitieslib/stdtypes.h>
 #include "sqltask.h"
-#include "criticalsection.hpp"
+#include <utilitieslib/UtilsCXX/criticalsection.hpp>
 
 /// Enable to support pre-Vista operating systems by using slower synchronization primitives
 #define ENABLE_COMPAT_CONDITION
@@ -10,35 +11,35 @@
 #define APC_WORKERPOOL // QueueUserAPC based workers that rely on the kernel to schedule tasks but are fairly slow
 
 #ifdef ENABLE_COMPAT_CONDITION
-	#include "keyedcondition.hpp"
-	typedef KeyedCondition SqlTaskCondition;
+#include <utilitieslib/UtilsCXX/keyedcondition.hpp>
+    typedef KeyedCondition SqlTaskCondition;
 #else
-	#include "condition.hpp"
-	typedef Condition SqlTaskCondition;
+    #include "condition.hpp"
+    typedef Condition SqlTaskCondition;
 #endif
 
 #if defined(LOCKLESS_WORKERPOOL)
-	#include "locklessworkerpool.hpp"
-	typedef LocklessMultiQueueWorkerPool SqlTaskWorkerPool;
+    #include "locklessworkerpool.hpp"
+    typedef LocklessMultiQueueWorkerPool SqlTaskWorkerPool;
 #elif defined(SEMAPHORE_WORKERPOOL)
-	#include "semaphoreworkerpool.hpp"
-	typedef SemaphoreWorkerPool<Semaphore> SqlTaskWorkerPool;
+#include <utilitieslib/UtilsCXX/semaphoreworkerpool.hpp>
+    typedef SemaphoreWorkerPool<Semaphore> SqlTaskWorkerPool;
 #elif defined(APC_WORKERPOOL)
-	#include "apcworkerpool.hpp"
-	typedef APCWorkerPool SqlTaskWorkerPool;
+    #include "apcworkerpool.hpp"
+    typedef APCWorkerPool SqlTaskWorkerPool;
 #else
-	#include "nullworkerpool.hpp"
-	#define NO_BARRIERS
-	typedef NullWorkerPool SqlTaskWorkerPool;
+    #include "nullworkerpool.hpp"
+    #define NO_BARRIERS
+    typedef NullWorkerPool SqlTaskWorkerPool;
 #endif
 
 template <class MUTEX, class CONDITION>
 struct sqlTaskGlobals {
-	SqlTaskWorkerPool pool;
-	MUTEX barrier_lock;
-	CONDITION barrier_condition;
-	unsigned barrier_count;
-	unsigned num_workers;
+    SqlTaskWorkerPool pool;
+    MUTEX barrier_lock;
+    CONDITION barrier_condition;
+    unsigned barrier_count;
+    unsigned num_workers;
 };
 
 sqlTaskGlobals<CriticalSection, SqlTaskCondition> sqltask;
@@ -46,63 +47,63 @@ sqlTaskGlobals<CriticalSection, SqlTaskCondition> sqltask;
 C_DECLARATIONS_BEGIN
 
 void sql_task_init(unsigned workers, unsigned count) {
-	assert(workers);
-	assert(count);
+    assert(workers);
+    assert(count);
 
-	assert(!sqltask.num_workers);
+    assert(!sqltask.num_workers);
 
-	PointerRingChain::Initialize();
-	sqltask.pool.construct(workers, count);
-	sqltask.barrier_count = sqltask.num_workers = workers;
+    PointerRingChain::Initialize();
+    sqltask.pool.construct(workers, count);
+    sqltask.barrier_count = sqltask.num_workers = workers;
 }
 
 void sql_task_shutdown(void) {
-	if (!sqltask.num_workers)
-		return;
+    if (!sqltask.num_workers)
+        return;
 
-	sqltask.pool.destruct();
-	PointerRingChain::Shutdown();
-	sqltask.num_workers = 0;
+    sqltask.pool.destruct();
+    PointerRingChain::Shutdown();
+    sqltask.num_workers = 0;
 }
 
 void sql_task_set_callback(unsigned worker, TaskCallback callback, void * user) {
-	sqltask.pool.set_worker_callback(worker, callback, user);
+    sqltask.pool.set_worker_callback(worker, callback, user);
 }
 
 void sql_task_push(unsigned worker, void * data) {
-	sqltask.pool.push_worker(worker, data);
+    sqltask.pool.push_worker(worker, data);
 }
 
 void * sql_task_trypop(void) {
-	return sqltask.pool.trypop();
+    return sqltask.pool.trypop();
 }
 
 void * sql_task_pop(void) {
-	return sqltask.pool.pop();
+    return sqltask.pool.pop();
 }
 
 void sql_task_freeze(void) {
-	sqltask.pool.freeze();
+    sqltask.pool.freeze();
 }
 
 void sql_task_thaw(void) {
-	sqltask.pool.thaw();
+    sqltask.pool.thaw();
 }
 
 void sql_task_worker_barrier(void) {
 #ifdef NO_BARRIERS
-	return;
+    return;
 #endif
 
-	// decrement the barrier count until the count is zero and then wake everyone back up
-	sqltask.barrier_lock.lock();
-	if(--sqltask.barrier_count) {
-		sqltask.barrier_condition.wait(&sqltask.barrier_lock);
-	} else {
-		sqltask.barrier_count = sqltask.num_workers;
-		sqltask.barrier_condition.broadcast();
-	}
-	sqltask.barrier_lock.unlock();
+    // decrement the barrier count until the count is zero and then wake everyone back up
+    sqltask.barrier_lock.lock();
+    if(--sqltask.barrier_count) {
+        sqltask.barrier_condition.wait(&sqltask.barrier_lock);
+    } else {
+        sqltask.barrier_count = sqltask.num_workers;
+        sqltask.barrier_condition.broadcast();
+    }
+    sqltask.barrier_lock.unlock();
 }
 
 C_DECLARATIONS_END

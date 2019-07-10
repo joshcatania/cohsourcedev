@@ -13,7 +13,7 @@
 #include "PhysX_GUIDS.h"
 
 #ifdef NX_PHYSX_LOADER_EXPORTS
-    #if defined(WIN32)
+    #if defined(_WIN32)
 	#define NXPHYSXLOADERDLL_API extern "C" __declspec(dllexport)
 #elif defined(__linux__)
       #if defined(NX_LINUX_USE_VISIBILITY)
@@ -27,7 +27,7 @@
 #elif defined NX_USE_SDK_STATICLIBS
 	#define NXPHYSXLOADERDLL_API
 #else
-    #if defined(WIN32)
+    #if defined(_WIN32)
 	#define NXPHYSXLOADERDLL_API extern "C" __declspec(dllimport)
     #elif defined(__linux__)
 	#define NXPHYSXLOADERDLL_API extern "C" 

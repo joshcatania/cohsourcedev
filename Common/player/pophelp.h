@@ -2,21 +2,21 @@
 
 typedef struct PopHelpItem
 {
-	char *name;
-	char *text;
-	char *tag;
-	char *soundName;
-	bool inYourFace;
-	S64 timeTriggered;
+    char *name;
+    char *text;
+    char *tag;
+    char *soundName;
+    bool inYourFace;
+    S64 timeTriggered;
 } PopHelpItem;
 
 typedef enum PopHelpState
 {
-	PopHelpState_Untriggered,
-	PopHelpState_Unread,
-	PopHelpState_Read,
-	PopHelpState_Hidden,
-	PopHelpState_Dismissed
+    PopHelpState_Untriggered,
+    PopHelpState_Unread,
+    PopHelpState_Read,
+    PopHelpState_Hidden,
+    PopHelpState_Dismissed
 } PopHelpState;
 
 PopHelpItem *getPopHelpItem(int event);

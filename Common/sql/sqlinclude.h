@@ -1,7 +1,7 @@
 #ifndef _SQLINCLUDE_H
 #define _SQLINCLUDE_H
 
-#include "wininclude.h"
+#include <utilitieslib/utils/wininclude.h>
 #include <sqlext.h>
 
 #if 1
@@ -17,15 +17,15 @@
 #define SQLAllocEnv ODBC_deprecated
 #define SQLAllocStmt ODBC_deprecated
 #define SQLBindParam ODBC_deprecated
-#define SQLColAttributes ODBC_deprecated
-#define SQLError ODBC_deprecated
+//#define SQLColAttributes ODBC_deprecated
+//#define SQLError ODBC_deprecated
 #define SQLFreeConnect ODBC_deprecated
 #define SQLFreeEnv ODBC_deprecated
 //#define SQLFreeStmt ODBC_deprecated
-#define SQLGetConnectOption ODBC_deprecated
+//#define SQLGetConnectOption ODBC_deprecated
 #define SQLGetStmtOption ODBC_deprecated
 #define SQLParamOptions ODBC_deprecated
-#define SQLSetConnectOption ODBC_deprecated
+//#define SQLSetConnectOption ODBC_deprecated
 #define SQLSetParam ODBC_deprecated
 #define SQLSetScrollOption ODBC_deprecated
 #define SQLSetStmtOption ODBC_deprecated

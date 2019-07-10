@@ -1,7 +1,7 @@
 #ifndef _GROUPNOVODEX_H
 #define _GROUPNOVODEX_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct DefTracker DefTracker;
 typedef struct Entity Entity;

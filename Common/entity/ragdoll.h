@@ -1,7 +1,7 @@
 #ifndef RAGDOLL_H__
 #define RAGDOLL_H__
 
-#include "bones.h"
+#include "seq/bones.h"
 
 #if (defined CLIENT || defined SERVER) && !defined TEST_CLIENT && !BEACONIZER
 #define RAGDOLL 1
@@ -13,20 +13,20 @@
 
 typedef struct Ragdoll
 {
-	struct Ragdoll* child;
-	struct Ragdoll* next;
-	struct Ragdoll* parent;
-	BoneId			boneId;
-	void* pActor;
-	void* pJointToParent;
-	U8			numBones;
-	Quat	qCurrentRot;
-//	Vec3		vCurrentPos;
-	U8			hist_latest;
-	Quat	qRotHist[RAGDOLL_HIST_MAX];
-	U32			absTimeHist[RAGDOLL_HIST_MAX];
-	F32			fRecursiveMass;
-	int			iSceneNum;
+    struct Ragdoll* child;
+    struct Ragdoll* next;
+    struct Ragdoll* parent;
+    BoneId            boneId;
+    void* pActor;
+    void* pJointToParent;
+    U8            numBones;
+    Quat    qCurrentRot;
+//    Vec3        vCurrentPos;
+    U8            hist_latest;
+    Quat    qRotHist[RAGDOLL_HIST_MAX];
+    U32            absTimeHist[RAGDOLL_HIST_MAX];
+    F32            fRecursiveMass;
+    int            iSceneNum;
 } Ragdoll;
 
 typedef struct SeqInst SeqInst;

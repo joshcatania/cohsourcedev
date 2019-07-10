@@ -1,21 +1,21 @@
 /*\
  *
- *	dbstub.c - Copyright 2004, 2005 Cryptic Studios
- *		All Rights Reserved
- *		Confidential property of Cryptic Studios
+ *    dbstub.c - Copyright 2004, 2005 Cryptic Studios
+ *        All Rights Reserved
+ *        Confidential property of Cryptic Studios
  *
- *	Stub functions for servers that connect to the db as mapservers
+ *    Stub functions for servers that connect to the db as mapservers
  *  and need a bunch of stubs for dbcomm.c and dbcontainer.c
  *
  */
 
-#include "dbcomm.h"
-#include "dbcontainer.h"
-#include "error.h"
-#include "entity.h"
-#include "entsend.h"
+#include "dbcomm/dbcomm.h"
+#include "dbcomm/dbcontainer.h"
+#include <utilitieslib/utils/error.h>
+#include "entity/entity.h"
+#include "entity/entsend.h"
 #include "comm_backend.h"
-#include "svr_player.h"
+#include "svr/svr_player.h"
 
 // Externs
 int last_db_error_code;

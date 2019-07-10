@@ -5,44 +5,44 @@ typedef struct DefineIntList DefineIntList;
 typedef struct ParseTable ParseTable;
 #define TokenizerParseInfo ParseTable
 
-#define PROPERTY_STRLEN		1024
+#define PROPERTY_STRLEN        1024
 
 typedef enum EditorPropertyType {
-	PROPTYPE_NONE,
-	PROPTYPE_CATEGORY,
-	PROPTYPE_TEXTBOX,
-	PROPTYPE_COMBOBOX,
-	PROPTYPE_RADIOBUTTONS,
-	PROPTYPE_SLIDER,
-	PROPTYPE_INTEGERSLIDER,
-	PROPTYPE_CHECKBOX,
-	PROPTYPE_CHECKBOXLIST,
-	PROPTYPE_BUTTON,
-	PROPTYPE_PROPLIST,
-	PROPTYPE_COMBOTEXTBOX,
+    PROPTYPE_NONE,
+    PROPTYPE_CATEGORY,
+    PROPTYPE_TEXTBOX,
+    PROPTYPE_COMBOBOX,
+    PROPTYPE_RADIOBUTTONS,
+    PROPTYPE_SLIDER,
+    PROPTYPE_INTEGERSLIDER,
+    PROPTYPE_CHECKBOX,
+    PROPTYPE_CHECKBOXLIST,
+    PROPTYPE_BUTTON,
+    PROPTYPE_PROPLIST,
+    PROPTYPE_COMBOTEXTBOX,
 } EditorPropertyType;
 
 typedef struct PropertyDef PropertyDef;
 
 typedef struct PropertyDef {
-	// Values that are parsed in by the text parser
-	char*				name;
-	EditorPropertyType	type;
-	char**				texts;
-	char*				callback;
-	int					min;
-	int					max;
-	bool				forceAutoSave;
-	PropertyDef**		props;
+    // Values that are parsed in by the text parser
+    char*                name;
+    EditorPropertyType    type;
+    char**                texts;
+    char*                callback;
+    int                    min;
+    int                    max;
+    bool                forceAutoSave;
+    PropertyDef**        props;
 
-	// Values that are not used by the text parser
-	void*				data;
-	int					widgetId;
+    // Values that are not used by the text parser
+    void*                data;
+    int                    widgetId;
 } PropertyDef;
 
 typedef struct PropertyDefList
 {
-	PropertyDef ** list;
+    PropertyDef ** list;
 } PropertyDefList;
 
 extern DefineIntList ParsePropertyTypeEnum[];

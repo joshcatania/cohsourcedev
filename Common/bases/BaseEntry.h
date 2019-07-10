@@ -6,8 +6,8 @@
 #ifndef BASEENTRY_H
 #define BASEENTRY_H
 
-#include "stdtypes.h"
-#include "sgrpbasepermissions.h"
+#include <utilitieslib/stdtypes.h>
+#include "entity/sgrpbasepermissions.h"
 
 typedef struct StashTableImp *StashTable;
 typedef const struct StashTableImp *cStashTable;
@@ -15,12 +15,12 @@ typedef struct Supergroup Supergroup;
 
 typedef enum BaseAccess
 {
-	kBaseAccess_None,
-	kBaseAccess_Allowed,
-	kBaseAccess_PermissionDenied,
-	kBaseAccess_RentOwed,
-	kBaseAccess_RaidScheduled,
-	kBaseAccess_Count
+    kBaseAccess_None,
+    kBaseAccess_Allowed,
+    kBaseAccess_PermissionDenied,
+    kBaseAccess_RentOwed,
+    kBaseAccess_RaidScheduled,
+    kBaseAccess_Count
 } BaseAccess;
 
 BaseAccess sgrp_BaseAccessFromSgrp(Supergroup *sg, SgrpBaseEntryPermission bep);

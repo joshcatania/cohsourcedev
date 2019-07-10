@@ -10,13 +10,13 @@
 #define ltablib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
-#define aux_getn(L,n)	(luaL_checktype(L, n, LUA_TTABLE), luaL_getn(L, n))
+#define aux_getn(L,n)    (luaL_checktype(L, n, LUA_TTABLE), luaL_getn(L, n))
 
 
 static int foreachi (lua_State *L) {

@@ -8,14 +8,14 @@
 
 typedef enum ValidateNameResult
 {
-	VNR_Valid = 0, // must be 0
-	VNR_Malformed,
-	VNR_Profane,
-	VNR_Reserved,
-	VNR_Titled,
-	VNR_WrongLang,
-	VNR_TooLong,
-	VNR_TooShort,
+    VNR_Valid = 0, // must be 0
+    VNR_Malformed,
+    VNR_Profane,
+    VNR_Reserved,
+    VNR_Titled,
+    VNR_WrongLang,
+    VNR_TooLong,
+    VNR_TooShort,
 } ValidateNameResult;
 
 int IsTitledName(const char *pch);

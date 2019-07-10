@@ -1,8 +1,8 @@
 #ifndef POWER_CUSTOMIZATION_H__
 #define POWER_CUSTOMIZATION_H__
 
-#include "textparser.h"
-#include "Color.h"
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/Color.h>
 
 typedef struct Entity Entity;
 typedef struct Packet Packet;
@@ -10,49 +10,49 @@ typedef struct BasePowerSet BasePowerSet;
 typedef struct BasePower BasePower;
 typedef struct PowerCustomization
 {
-	const char *powerFullName; // sometimes this points at an allocated string, sometimes it points into a BasePower
-	const BasePower *power;
-	ColorPair customTint;
-	const char* token;
+    const char *powerFullName; // sometimes this points at an allocated string, sometimes it points into a BasePower
+    const BasePower *power;
+    ColorPair customTint;
+    const char* token;
 } PowerCustomization;
 typedef struct DBPowerCustomization
 {
-	const char * powerCatName;
-	const char * powerSetName;
-	const char * powerName;
-	ColorPair customTint;
-	const char* token;
-	int slotId;					//	base 1
+    const char * powerCatName;
+    const char * powerSetName;
+    const char * powerName;
+    ColorPair customTint;
+    const char* token;
+    int slotId;                    //    base 1
 }DBPowerCustomization;
 typedef struct PowerCustomizationList
 {
-	PowerCustomization **powerCustomizations;
+    PowerCustomization **powerCustomizations;
 }PowerCustomizationList;
 
 typedef struct PowerCustomizationCost
 {
-	int min_level;
-	int max_level;
-	int entry_fee;
-	int power_token_cost;
-	int power_color_cost;
+    int min_level;
+    int max_level;
+    int entry_fee;
+    int power_token_cost;
+    int power_color_cost;
 
 }PowerCustomizationCost;
 
 typedef struct PowerCustomizationLevelsCost
 {
-	PowerCustomizationCost **powerCustCostList;
+    PowerCustomizationCost **powerCustCostList;
 }PowerCustomizationLevelsCost;
 
 typedef struct PowerCustomizationMenuCategory
 {
-	char *categoryName;
-	char *hideIf;
-	char **powerSets;
+    char *categoryName;
+    char *hideIf;
+    char **powerSets;
 }PowerCustomizationMenuCategory;
 typedef struct PowerCustomizationMenu
 {
-	PowerCustomizationMenuCategory **pCategories;
+    PowerCustomizationMenuCategory **pCategories;
 }PowerCustomizationMenu;
 extern TokenizerParseInfo ParsePowerCustomization[];
 extern TokenizerParseInfo ParsePowerCustomizationList[];

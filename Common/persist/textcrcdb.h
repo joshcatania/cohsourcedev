@@ -3,11 +3,11 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  *
- *	To use these functions, the struct you are persisting should include
- *		two U32 members, one to store the CRC of the ParseTable (ver), the
- *		other to store the CRC of the data (crc)
- *	All of these functions return true on success and false on failure
- *	TODO: make this process more automated
+ *    To use these functions, the struct you are persisting should include
+ *        two U32 members, one to store the CRC of the ParseTable (ver), the
+ *        other to store the CRC of the data (crc)
+ *    All of these functions return true on success and false on failure
+ *    TODO: make this process more automated
  *
  ***************************************************************************/
 

@@ -7,7 +7,7 @@
 #define ATTRIB_NET_H__
 
 #include "character_attribs.h"
-#include "structNet.h"
+#include <utilitieslib/utils/structNet.h>
 
 typedef struct ParseTable ParseTable;
 #define TokenizerParseInfo ParseTable

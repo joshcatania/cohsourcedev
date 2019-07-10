@@ -2,7 +2,7 @@
 #ifndef ATTRIB_DESCRIPTION_H
 #define ATTRIB_DESCRIPTION_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct StaticDefineInt StaticDefineInt;
 typedef struct TokenizerParseInfo TokenizerParseInfo;
@@ -14,85 +14,85 @@ typedef struct AttribModTemplate AttribModTemplate;
 
 typedef enum AttribType
 {
-	kAttribType_Cur,
-	kAttribType_Str,
-	kAttribType_Res,
-	kAttribType_Max,
-	kAttribType_Mod,
-	kAttribType_Abs,
-	kAttribType_Special,
-	kAttribType_Count,
+    kAttribType_Cur,
+    kAttribType_Str,
+    kAttribType_Res,
+    kAttribType_Max,
+    kAttribType_Mod,
+    kAttribType_Abs,
+    kAttribType_Special,
+    kAttribType_Count,
 }AttribType;
 
 
 typedef enum AttribStyle
 {
-	kAttribStyle_None,
-	kAttribStyle_Percent,
-	kAttribStyle_Magnitude,
-	kAttribStyle_Distance,
-	kAttribStyle_PercentMinus100,
-	kAttribStyle_PerSecond,
-	kAttribStyle_Speed,
-	kAttribStyle_ResistanceDuration,
-	kAttribStyle_Multiply,
-	kAttribStyle_Integer,
-	kAttribStyle_EnduranceReduction,
-	kAttribStyle_InversePercent,
+    kAttribStyle_None,
+    kAttribStyle_Percent,
+    kAttribStyle_Magnitude,
+    kAttribStyle_Distance,
+    kAttribStyle_PercentMinus100,
+    kAttribStyle_PerSecond,
+    kAttribStyle_Speed,
+    kAttribStyle_ResistanceDuration,
+    kAttribStyle_Multiply,
+    kAttribStyle_Integer,
+    kAttribStyle_EnduranceReduction,
+    kAttribStyle_InversePercent,
 }AttribStyle;
 
 typedef enum AttribSource
 {
-	kAttribSource_Unknown,
-	kAttribSource_Self,
-	kAttribSource_Player,
-	kAttribSource_Critter,
+    kAttribSource_Unknown,
+    kAttribSource_Self,
+    kAttribSource_Player,
+    kAttribSource_Critter,
 }AttribSource;
 
 typedef struct AttribContributer
 {
-	const BasePower *ppow;
-	char *pchSrcDisplayName;
-	F32 fMag;
-	F32 fChance;
-	int svr_id;
-	AttribSource eSrcType;
+    const BasePower *ppow;
+    char *pchSrcDisplayName;
+    F32 fMag;
+    F32 fChance;
+    int svr_id;
+    AttribSource eSrcType;
 }AttribContributer;
 
 typedef struct AttribDescription
 {
-	char *pchName;
-	char *pchDisplayName;
-	char *pchToolTip;
-	AttribType eType;
-	AttribStyle eStyle;
-	int iKey;
-	int offAttrib;
-	F32 fVal;
-	int buffOrDebuff;
-	AttribContributer **ppContributers;
-	bool bHide;
-	bool bShowBase;
+    char *pchName;
+    char *pchDisplayName;
+    char *pchToolTip;
+    AttribType eType;
+    AttribStyle eStyle;
+    int iKey;
+    int offAttrib;
+    F32 fVal;
+    int buffOrDebuff;
+    AttribContributer **ppContributers;
+    bool bHide;
+    bool bShowBase;
 }AttribDescription;
 
 
 typedef struct AttribCategory
 {
-	char *pchDisplayName;
-	AttribDescription **ppAttrib;
-	bool bOpen;
+    char *pchDisplayName;
+    AttribDescription **ppAttrib;
+    bool bOpen;
 }AttribCategory;
 
 typedef struct AttribCategoryList
 {
-	const AttribCategory ** ppCategories;
+    const AttribCategory ** ppCategories;
 }AttribCategoryList;
 extern SERVER_SHARED_MEMORY AttribCategoryList g_AttribCategoryList;
 
 typedef struct CombatMonitorStat
 {
-	int iKey;
-	int iOrder;
+    int iKey;
+    int iOrder;
 }CombatMonitorStat;
 
 #define MAX_COMBAT_STATS 10

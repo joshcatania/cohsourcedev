@@ -3,23 +3,23 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include "assert.h"
-#include "error.h"
-#include "utils.h"
-#include "file.h"
-#include "mathutil.h"
-#include "StashTable.h"
-#include "EArray.h"
-#include "EString.h"
-#include "textparser.h" // for TokenizerParseInfo
-#include "character_inventory.h"
-#include "salvage.h"
-#include "basedata.h"
-#include "baseparse.h"
-#include "trayCommon.h"
-#include "SharedMemory.h"
-#include "SharedHeap.h"
-#include "character_eval.h"
+#include <utilitieslib/assert/assert.h>
+#include <utilitieslib/utils/error.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/components/StashTable.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/components/estring.h>
+#include <utilitieslib/utils/textparser.h> // for TokenizerParseInfo
+#include "entity/character_inventory.h"
+#include "entity/salvage.h"
+#include "bases/basedata.h"
+#include "bases/baseparse.h"
+#include "gameComm/trayCommon.h"
+#include <utilitieslib/components/SharedMemory.h>
+#include <utilitieslib/components/SharedHeap.h>
+#include "entity/character_eval.h"
 
 // ------------------------------------------------------------
 // globals
@@ -41,10 +41,10 @@ STATIC_ASSERT(IS_GENERICINVENTORYDICT_COMPATIBLE(SalvageDictionary,ppSalvageItem
 
 ParseLink g_salvageInfoLink =
 {
-	(void*)&g_SalvageDict.ppSalvageItems,
-	{
-		{ offsetof( SalvageItem, pchName ), 0 },
-	}
+    (void*)&g_SalvageDict.ppSalvageItems,
+    {
+        { offsetof( SalvageItem, pchName ), 0 },
+    }
 };
 
 
@@ -54,15 +54,15 @@ ParseLink g_salvageInfoLink =
 //----------------------------------------------------------
 StaticDefineInt RarityEnum[] =
 {
-	DEFINE_INT
-	{ "Ubiquitous", kSalvageRarity_Ubiquitous },
-	{ "Common",     kSalvageRarity_Common },
-	{ "Uncommon",   kSalvageRarity_Uncommon },
-	{ "Rare",       kSalvageRarity_Rare },
-	{ "VeryRare",	kSalvageRarity_VeryRare },
-	{ "Unique",     kSalvageRarity_Unique },
-	{ "Count",      kSalvageRarity_Count },
-	DEFINE_END
+    DEFINE_INT
+    { "Ubiquitous", kSalvageRarity_Ubiquitous },
+    { "Common",     kSalvageRarity_Common },
+    { "Uncommon",   kSalvageRarity_Uncommon },
+    { "Rare",       kSalvageRarity_Rare },
+    { "VeryRare",    kSalvageRarity_VeryRare },
+    { "Unique",     kSalvageRarity_Unique },
+    { "Count",      kSalvageRarity_Count },
+    DEFINE_END
 };
 
 //------------------------------------------------------------
@@ -70,50 +70,50 @@ StaticDefineInt RarityEnum[] =
 //----------------------------------------------------------
 StaticDefineInt TypeEnum[] =
 {
-	DEFINE_INT
-	{ "Base",			kSalvageType_Base },
-	{ "Invention",		kSalvageType_Invention },
-	{ "Token",			kSalvageType_Token },
-	{ "Incarnate",		kSalvageType_Incarnate },
-	{ "Count",			kSalvageType_Count },
-	DEFINE_END
+    DEFINE_INT
+    { "Base",            kSalvageType_Base },
+    { "Invention",        kSalvageType_Invention },
+    { "Token",            kSalvageType_Token },
+    { "Incarnate",        kSalvageType_Incarnate },
+    { "Count",            kSalvageType_Count },
+    DEFINE_END
 };
 
 
 StaticDefineInt ParseSalvageFlags[] =
 {
-	DEFINE_INT
-	{ "NoTrade",		SALVAGE_NOTRADE },
-	{ "NoDelete",		SALVAGE_NODELETE },
-	{ "ImmediateUse",	SALVAGE_IMMEDIATE },
-	{ "AutoOpen",		SALVAGE_AUTO_OPEN },
-	{ "NoAuction",		SALVAGE_NOAUCTION },
-	DEFINE_END
+    DEFINE_INT
+    { "NoTrade",        SALVAGE_NOTRADE },
+    { "NoDelete",        SALVAGE_NODELETE },
+    { "ImmediateUse",    SALVAGE_IMMEDIATE },
+    { "AutoOpen",        SALVAGE_AUTO_OPEN },
+    { "NoAuction",        SALVAGE_NOAUCTION },
+    DEFINE_END
 };
 
 #define SALVAGECATEGORY_DEFAULT "none"
 
 static TokenizerParseInfo ParseSalvageDef[] = {
-	{ "{",							TOK_START,                           0},
-	{ "Name",						TOK_STRING(SalvageItem, pchName, 0) },
-	TOKENIZERUIWIDGET_INLINEPARSEINFO(SalvageItem),
-	{ "DisplayTabName",				TOK_STRING(SalvageItem, pchDisplayTabName, 0) },
-	{ "DisplayDropMessage",			TOK_STRING(SalvageItem, pchDisplayDropMsg, 0) },
-	{ "Rarity",						TOK_INT(SalvageItem,rarity, 0), RarityEnum },
-	{ "Type",						TOK_INT(SalvageItem, type, 0), TypeEnum },
-	{ "Workshop",					TOK_LINKARRAY(SalvageItem, ppWorkshops, &g_base_detailInfoLink) },
-	{ "ChallengePoints",			TOK_INT(SalvageItem, challenge_points, 0) },
-	{ "RewardTableName",			TOK_STRINGARRAY(SalvageItem, ppchRewardTables) },
-	{ "OpenRequires",				TOK_STRINGARRAY(SalvageItem, ppchOpenRequires) },
-	{ "AuctionRequires",			TOK_STRINGARRAY(SalvageItem, ppchAuctionRequires) },
-	{ "DisplayOpenRequiresFailed",	TOK_STRING(SalvageItem, pchDisplayOpenRequiresFail, 0) },
-	{ "MinReverseEngineerLevel",	TOK_INT(SalvageItem, minRevEngLevel, 0) },
-	{ "MaxInventoryAmount",			TOK_INT(SalvageItem, maxInvAmount, 0) },
-	{ "SellAmount",					TOK_INT(SalvageItem, sellAmount, 0) },
-	{ "Flags",						TOK_FLAGS(SalvageItem,flags,0), ParseSalvageFlags }, 
-	{ "StoreProduct",				TOK_STRING(SalvageItem, pchStoreProduct, 0) },
-	{ "}",							TOK_END,0 },
-	{ "", 0, 0 }
+    { "{",                            TOK_START,                           0},
+    { "Name",                        TOK_STRING(SalvageItem, pchName, 0) },
+    TOKENIZERUIWIDGET_INLINEPARSEINFO(SalvageItem),
+    { "DisplayTabName",                TOK_STRING(SalvageItem, pchDisplayTabName, 0) },
+    { "DisplayDropMessage",            TOK_STRING(SalvageItem, pchDisplayDropMsg, 0) },
+    { "Rarity",                        TOK_INT(SalvageItem,rarity, 0), RarityEnum },
+    { "Type",                        TOK_INT(SalvageItem, type, 0), TypeEnum },
+    { "Workshop",                    TOK_LINKARRAY(SalvageItem, ppWorkshops, &g_base_detailInfoLink) },
+    { "ChallengePoints",            TOK_INT(SalvageItem, challenge_points, 0) },
+    { "RewardTableName",            TOK_STRINGARRAY(SalvageItem, ppchRewardTables) },
+    { "OpenRequires",                TOK_STRINGARRAY(SalvageItem, ppchOpenRequires) },
+    { "AuctionRequires",            TOK_STRINGARRAY(SalvageItem, ppchAuctionRequires) },
+    { "DisplayOpenRequiresFailed",    TOK_STRING(SalvageItem, pchDisplayOpenRequiresFail, 0) },
+    { "MinReverseEngineerLevel",    TOK_INT(SalvageItem, minRevEngLevel, 0) },
+    { "MaxInventoryAmount",            TOK_INT(SalvageItem, maxInvAmount, 0) },
+    { "SellAmount",                    TOK_INT(SalvageItem, sellAmount, 0) },
+    { "Flags",                        TOK_FLAGS(SalvageItem,flags,0), ParseSalvageFlags }, 
+    { "StoreProduct",                TOK_STRING(SalvageItem, pchStoreProduct, 0) },
+    { "}",                            TOK_END,0 },
+    { "", 0, 0 }
 };
 
 
@@ -123,21 +123,21 @@ static TokenizerParseInfo ParseSalvageDef[] = {
 //----------------------------------------------------------
 TokenizerParseInfo ParseSalvageDictionary[] =
 {
-	{ "Salvage", TOK_STRUCT(SalvageDictionary, ppSalvageItems, ParseSalvageDef) },
-	{ "", 0, 0 }
+    { "Salvage", TOK_STRUCT(SalvageDictionary, ppSalvageItems, ParseSalvageDef) },
+    { "", 0, 0 }
 };
 
 static TokenizerParseInfo ParseTrackedSalvage[] = {
-	{ "{",							TOK_START,                           0},
-	{ "SalvageName",				TOK_STRING(SalvageTrackedByEnt, salvageName, 0) },
-	{ "DisplayName",				TOK_STRING(SalvageTrackedByEnt, displayName, 0) },
-	{ "}",							TOK_END,0 },
-	{ "", 0, 0 }
+    { "{",                            TOK_START,                           0},
+    { "SalvageName",                TOK_STRING(SalvageTrackedByEnt, salvageName, 0) },
+    { "DisplayName",                TOK_STRING(SalvageTrackedByEnt, displayName, 0) },
+    { "}",                            TOK_END,0 },
+    { "", 0, 0 }
 };
 TokenizerParseInfo ParseTrackedSalvageParseInfo[] =
 {
-	{ "TrackedSalvage", TOK_STRUCT(SalvageTrackedByEntList, ppTrackedSalvage, ParseTrackedSalvage) },
-	{ "", 0, 0 }
+    { "TrackedSalvage", TOK_STRUCT(SalvageTrackedByEntList, ppTrackedSalvage, ParseTrackedSalvage) },
+    { "", 0, 0 }
 };
 
 /**
@@ -145,55 +145,55 @@ TokenizerParseInfo ParseTrackedSalvageParseInfo[] =
 */
 static bool salvage_CreateTabNameHash(SalvageDictionary *pdict, bool shared_memory)
 {
-	bool ret = true;
-	int i;
+    bool ret = true;
+    int i;
 
-	StashTableIterator iter;
-	StashElement elem;
+    StashTableIterator iter;
+    StashElement elem;
 
-	StashTable tempItemsFromTabName = stashTableCreateWithStringKeys(eaSize(&pdict->ppSalvageItems), 0);
+    StashTable tempItemsFromTabName = stashTableCreateWithStringKeys(eaSize(&pdict->ppSalvageItems), 0);
 
-	// hash lists into a temporary table
-	for (i = 0; i < eaSize(&pdict->ppSalvageItems); i++)
-	{
-		SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
-		SalvageItem **ppSal = NULL;
+    // hash lists into a temporary table
+    for (i = 0; i < eaSize(&pdict->ppSalvageItems); i++)
+    {
+        SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
+        SalvageItem **ppSal = NULL;
 
-		if (!stashFindElementConst(tempItemsFromTabName, salvage->pchDisplayTabName, &elem))
-		{
-			eaCreateWithCapacity(&ppSal, 16);
-			stashAddPointerAndGetElement(tempItemsFromTabName, salvage->pchDisplayTabName, ppSal, false, &elem);
-		}
+        if (!stashFindElementConst(tempItemsFromTabName, salvage->pchDisplayTabName, &elem))
+        {
+            eaCreateWithCapacity(&ppSal, 16);
+            stashAddPointerAndGetElement(tempItemsFromTabName, salvage->pchDisplayTabName, ppSal, false, &elem);
+        }
 
-		ppSal = stashElementGetPointer(elem);
-		eaPush(&ppSal, salvage);
-		stashElementSetPointer(elem, ppSal);
-	}
+        ppSal = stashElementGetPointer(elem);
+        eaPush(&ppSal, salvage);
+        stashElementSetPointer(elem, ppSal);
+    }
 
-	assert(!pdict->itemsFromTabName);
-	pdict->itemsFromTabName = stashTableCreateWithStringKeys(stashOptimalSize(stashGetValidElementCount(tempItemsFromTabName)), stashShared(shared_memory));
+    assert(!pdict->itemsFromTabName);
+    pdict->itemsFromTabName = stashTableCreateWithStringKeys(stashOptimalSize(stashGetValidElementCount(tempItemsFromTabName)), stashShared(shared_memory));
 
-	// build the final table from the temporary one
-	stashGetIterator(tempItemsFromTabName, &iter);	
-	while (stashGetNextElement(&iter, &elem))
-	{
-		SalvageItem **tempSal = stashElementGetPointer(elem);
-		SalvageItem **sharedSal = NULL;
-		
-		if (shared_memory)
-		{
-			eaCompress(&sharedSal, &tempSal, customSharedMalloc, NULL);
-			eaDestroy(&tempSal);
-		}
-		else
-			sharedSal = tempSal;
-	
-		stashAddPointerConst(pdict->itemsFromTabName, stashElementGetStringKey(elem), sharedSal, false);
-	}
+    // build the final table from the temporary one
+    stashGetIterator(tempItemsFromTabName, &iter);    
+    while (stashGetNextElement(&iter, &elem))
+    {
+        SalvageItem **tempSal = stashElementGetPointer(elem);
+        SalvageItem **sharedSal = NULL;
+        
+        if (shared_memory)
+        {
+            eaCompress(&sharedSal, &tempSal, customSharedMalloc, NULL);
+            eaDestroy(&tempSal);
+        }
+        else
+            sharedSal = tempSal;
+    
+        stashAddPointerConst(pdict->itemsFromTabName, stashElementGetStringKey(elem), sharedSal, false);
+    }
 
-	stashTableDestroy(tempItemsFromTabName);
+    stashTableDestroy(tempItemsFromTabName);
 
-	return ret;
+    return ret;
 }
 
 //------------------------------------------------------------
@@ -201,96 +201,96 @@ static bool salvage_CreateTabNameHash(SalvageDictionary *pdict, bool shared_memo
 //----------------------------------------------------------
 bool salvage_FinalProcess(TokenizerParseInfo pti[], SalvageDictionary *pdict, bool shared_memory)
 {
-	bool ret = true;
-	int i,j;
-	int rarityCount = 0;
+    bool ret = true;
+    int i,j;
+    int rarityCount = 0;
 
-	SalvageItem **tempItemsById = NULL;
+    SalvageItem **tempItemsById = NULL;
 
-	struct MaxIdxHashTablePair
-	{
-		U32 nextIdx;
-		cStashTable ht;
-	} idHt = {0};
+    struct MaxIdxHashTablePair
+    {
+        U32 nextIdx;
+        cStashTable ht;
+    } idHt = {0};
 
-	// get the id hashes
-	AttribFileDict const*dict = inventorytype_GetAttribs( kInventoryType_Salvage );
-	idHt.ht = dict->idHash;
+    // get the id hashes
+    AttribFileDict const*dict = inventorytype_GetAttribs( kInventoryType_Salvage );
+    idHt.ht = dict->idHash;
 
-	// set the next index
-	// returns max index found, so we count after that. works even for zero case
-	idHt.nextIdx = 1 + dict->maxId;
+    // set the next index
+    // returns max index found, so we count after that. works even for zero case
+    idHt.nextIdx = 1 + dict->maxId;
 
-	assert(!pdict->haItemNames);
-	pdict->haItemNames = stashTableCreateWithStringKeys( stashOptimalSize(eaSize(&pdict->ppSalvageItems)), stashShared(shared_memory) );
+    assert(!pdict->haItemNames);
+    pdict->haItemNames = stashTableCreateWithStringKeys( stashOptimalSize(eaSize(&pdict->ppSalvageItems)), stashShared(shared_memory) );
 
-	// --------------------
-	// fill hash, set ids
+    // --------------------
+    // fill hash, set ids
 
-	for( i = 0; i < eaSize( &pdict->ppSalvageItems ); ++i )
-	{
-		SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
-		int idx;
+    for( i = 0; i < eaSize( &pdict->ppSalvageItems ); ++i )
+    {
+        SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
+        int idx;
 
-		// --------------------
-		// hash of names
+        // --------------------
+        // hash of names
 
-		for(j = strlen(salvage->pchName)-1; j >= 0; --j)
-			if(!isalnum(salvage->pchName[j]) && salvage->pchName[j] != '_')
-			{
-				Errorf("bad salvage name \"%s\", only alphanumerics and underscore are allowed",salvage->pchName);
-				ret =  false;
-				break;
-			}
+        for(j = (int)strlen(salvage->pchName)-1; j >= 0; --j)
+            if(!isalnum(salvage->pchName[j]) && salvage->pchName[j] != '_')
+            {
+                Errorf("bad salvage name \"%s\", only alphanumerics and underscore are allowed",salvage->pchName);
+                ret =  false;
+                break;
+            }
 
-		// set id
-		if( stashFindInt( idHt.ht, salvage->pchName, &idx ) )
-		{
-			salvage->salId = idx; // use the existing value
-		}
-		else
-		{
-			salvage->salId = idHt.nextIdx++; // grab the highest and incr
-		}
+        // set id
+        if( stashFindInt( idHt.ht, salvage->pchName, &idx ) )
+        {
+            salvage->salId = idx; // use the existing value
+        }
+        else
+        {
+            salvage->salId = idHt.nextIdx++; // grab the highest and incr
+        }
 
-		// add the hash
-		if( !stashAddPointerConst(pdict->haItemNames, salvage->pchName, salvage, false) )
-		{
-			Errorf("duplicate salvage name %s", salvage->pchName);
-			ret =  false;
-		}
+        // add the hash
+        if( !stashAddPointerConst(pdict->haItemNames, salvage->pchName, salvage, false) )
+        {
+            Errorf("duplicate salvage name %s", salvage->pchName);
+            ret =  false;
+        }
 
-		if (salvage->ppchAuctionRequires)
-			chareval_Validate(salvage->ppchAuctionRequires, "defs/invention/salvage.salvage");
-		if (salvage->ppchOpenRequires)
-			chareval_Validate(salvage->ppchOpenRequires, "defs/invention/salvage.salvage");
-	}
+        if (salvage->ppchAuctionRequires)
+            chareval_Validate(salvage->ppchAuctionRequires, "defs/invention/salvage.salvage");
+        if (salvage->ppchOpenRequires)
+            chareval_Validate(salvage->ppchOpenRequires, "defs/invention/salvage.salvage");
+    }
 
-	ret &= salvage_CreateTabNameHash(pdict, shared_memory);
+    ret &= salvage_CreateTabNameHash(pdict, shared_memory);
 
-	// --------------------
-	// do the items by id
+    // --------------------
+    // do the items by id
 
-	eaCreateWithCapacityConst(&tempItemsById, idHt.nextIdx);
-	eaSetSize(&tempItemsById, idHt.nextIdx);
+    eaCreateWithCapacityConst(&tempItemsById, idHt.nextIdx);
+    eaSetSize(&tempItemsById, idHt.nextIdx);
 
-	for( i = eaSize( &pdict->ppSalvageItems ) - 1; i >= 0; --i)
-	{
-		SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
-		assert(eaSet(&tempItemsById, salvage, salvage->salId));
-	}
+    for( i = eaSize( &pdict->ppSalvageItems ) - 1; i >= 0; --i)
+    {
+        SalvageItem *salvage = cpp_const_cast(SalvageItem*)(pdict->ppSalvageItems[i]);
+        assert(eaSet(&tempItemsById, salvage, salvage->salId));
+    }
 
-	// Pack into shared memory
-	if (shared_memory)
-	{
-		assert(!pdict->itemsById);
-		eaCompressConst(&pdict->itemsById, &tempItemsById, customSharedMalloc, NULL);
-		eaDestroy(&tempItemsById);
-	}
-	else
-		pdict->itemsById = tempItemsById;
+    // Pack into shared memory
+    if (shared_memory)
+    {
+        assert(!pdict->itemsById);
+        eaCompressConst(&pdict->itemsById, &tempItemsById, customSharedMalloc, NULL);
+        eaDestroy(&tempItemsById);
+    }
+    else
+        pdict->itemsById = tempItemsById;
 
-	return ret;
+    return ret;
 }
 
 //------------------------------------------------------------
@@ -299,12 +299,12 @@ bool salvage_FinalProcess(TokenizerParseInfo pti[], SalvageDictionary *pdict, bo
 //----------------------------------------------------------
 TokenizerParseInfo* salvage_GetParseInfo()
 {
-	return ParseSalvageDictionary;
+    return ParseSalvageDictionary;
 }
 
 TokenizerParseInfo* salvageTrackedByEntParseInfo()
 {
-	return ParseTrackedSalvageParseInfo;
+    return ParseTrackedSalvageParseInfo;
 }
 
 //------------------------------------------------------------
@@ -314,7 +314,7 @@ TokenizerParseInfo* salvageTrackedByEntParseInfo()
 const SalvageItem*
 salvage_GetItem( char const *name )
 {
-	return (const SalvageItem*)stashFindPointerReturnPointerConst( g_SalvageDict.haItemNames, name );
+    return (const SalvageItem*)stashFindPointerReturnPointerConst( g_SalvageDict.haItemNames, name );
 }
 
 //------------------------------------------------------------
@@ -324,7 +324,7 @@ salvage_GetItem( char const *name )
 char const*
 salvage_RarityToStr( SalvageRarity r )
 {
-	return verify( INRANGE( r, 0, kSalvageRarity_Count+1 )) ? StaticDefineIntRevLookup( RarityEnum, r ) : "<invalid rarity>";
+    return verify( INRANGE( r, 0, kSalvageRarity_Count+1 )) ? StaticDefineIntRevLookup( RarityEnum, r ) : "<invalid rarity>";
 }
 
 
@@ -336,7 +336,7 @@ salvage_RarityToStr( SalvageRarity r )
 const SalvageItem*
 salvage_GetItemById( int id )
 {
-	return EAINRANGE( id, g_SalvageDict.itemsById ) ? g_SalvageDict.itemsById[id] : NULL;
+    return EAINRANGE( id, g_SalvageDict.itemsById ) ? g_SalvageDict.itemsById[id] : NULL;
 }
 
 //------------------------------------------------------------
@@ -346,7 +346,7 @@ salvage_GetItemById( int id )
 int
 salvage_ValidRarity( int rarity )
 {
-	return INRANGE( rarity, 0, kSalvageRarity_Count );
+    return INRANGE( rarity, 0, kSalvageRarity_Count );
 }
 
 

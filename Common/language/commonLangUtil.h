@@ -2,9 +2,9 @@
 #ifndef COMMONLANGUTIL_H
 #define COMMONLANGUTIL_H
 
-typedef struct Entity			Entity;
-typedef struct StaticDefineInt	StaticDefineInt;
-typedef struct MessageStore		MessageStore;
+typedef struct Entity            Entity;
+typedef struct StaticDefineInt    StaticDefineInt;
+typedef struct MessageStore        MessageStore;
 
 extern StaticDefineInt ParseGender[];
 extern StaticDefineInt ParseStatus[];

@@ -2,21 +2,21 @@
 #define _IMAGESERVER_H
 
 
-#include "stdtypes.h"
-#include "costume.h"
+#include <utilitieslib/stdtypes.h>
+#include "entity/costume.h"
 
 #define MAX_CAPTION 200
 
 typedef struct ImageServerParams
 {
     int x_res;
-	int y_res;
-	int bgcolor;
-	char bgtexture[256];
-	char outputname[MAX_PATH];
-	char caption[MAX_CAPTION];
-	int headshot;
-	int deleteCSV;
+    int y_res;
+    int bgcolor;
+    char bgtexture[256];
+    char outputname[MAX_PATH];
+    char caption[MAX_CAPTION];
+    int headshot;
+    int deleteCSV;
 } ImageServerParams;
 
 

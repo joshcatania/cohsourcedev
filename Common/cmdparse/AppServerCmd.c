@@ -12,6 +12,6 @@
  * Revision History:
  *
  ***************************************************************************/
-#include "AppServerCmd.h"
+#include "cmdparse/AppServerCmd.h"
 
 AppServerCmdState g_appserver_cmd_state;

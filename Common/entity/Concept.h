@@ -6,7 +6,7 @@
 #ifndef CONCEPT_H
 #define CONCEPT_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 #include "TokenizerUiWidget.h"
 
 // --------------------
@@ -22,16 +22,16 @@ typedef struct RewardSlot RewardSlot;
 
 typedef enum UiConceptAttribmodGroupFlags
 {
-	kUiConceptAttribmodGroupFlags_NONE,
-	kUiConceptAttribmodGroupFlags_ShowAttribmodGroup = 1,
-	kUiConceptAttribmodGroupFlags_ShowRange = kUiConceptAttribmodGroupFlags_ShowAttribmodGroup<<1,
-	kUiConceptAttribmodGroupFlags_ALL = (kUiConceptAttribmodGroupFlags_ShowRange | kUiConceptAttribmodGroupFlags_ShowAttribmodGroup | kUiConceptAttribmodGroupFlags_NONE),
+    kUiConceptAttribmodGroupFlags_NONE,
+    kUiConceptAttribmodGroupFlags_ShowAttribmodGroup = 1,
+    kUiConceptAttribmodGroupFlags_ShowRange = kUiConceptAttribmodGroupFlags_ShowAttribmodGroup<<1,
+    kUiConceptAttribmodGroupFlags_ALL = (kUiConceptAttribmodGroupFlags_ShowRange | kUiConceptAttribmodGroupFlags_ShowAttribmodGroup | kUiConceptAttribmodGroupFlags_NONE),
 } UiConceptAttribmodGroupFlags;
 
 
 typedef enum ConceptId
 {
-	kConceptId_Invalid = 0,
+    kConceptId_Invalid = 0,
 } ConceptId;
 
 
@@ -42,12 +42,12 @@ typedef enum ConceptId
 //----------------------------------------------------------
 typedef struct AttribModGroup
 { 
-	const char *name;
-	float min;
-	float max;
+    const char *name;
+    float min;
+    float max;
 
-	// optional
-	UiConceptAttribmodGroupFlags uiFlags;
+    // optional
+    UiConceptAttribmodGroupFlags uiFlags;
 } AttribModGroup;
 
 // ============================================================
@@ -57,12 +57,12 @@ typedef struct AttribModGroup
 
 typedef enum PECreationRewardType
 {
-	kPECreationReward_ChangeHardenLevel,  // change harden level
-	kPECreationReward_ChangeSellback,     // increase sellback by factor
-	kPECreationReward_SpawnAmbush,        // create an ambush
-	kPECreationReward_WisdomMultiplier,   // increase wisdom reward by factor
-	kPECreationReward_PrefillPowerupCost, // after hardened, fill some slots
-	kPECreationReward_Count,
+    kPECreationReward_ChangeHardenLevel,  // change harden level
+    kPECreationReward_ChangeSellback,     // increase sellback by factor
+    kPECreationReward_SpawnAmbush,        // create an ambush
+    kPECreationReward_WisdomMultiplier,   // increase wisdom reward by factor
+    kPECreationReward_PrefillPowerupCost, // after hardened, fill some slots
+    kPECreationReward_Count,
 } PECreationRewardType;
 
 //------------------------------------------------------------
@@ -72,8 +72,8 @@ typedef enum PECreationRewardType
 //----------------------------------------------------------
 typedef struct PECreationRewardDef
 {
-	PECreationRewardType type;
-	char const *param;
+    PECreationRewardType type;
+    char const *param;
 } PECreationRewardDef;
 
 // ============================================================
@@ -81,11 +81,11 @@ typedef struct PECreationRewardDef
 
 typedef enum HardenedAttribsTarget
 {
-	kHardenedAttribsTarget_AllPrev,
-	kHardenedAttribsTarget_Prev,
-	kHardenedAttribsTarget_Next,
-	kHardenedAttribsTarget_AllNext,
-	kHardenedAttribsTarget_Count 
+    kHardenedAttribsTarget_AllPrev,
+    kHardenedAttribsTarget_Prev,
+    kHardenedAttribsTarget_Next,
+    kHardenedAttribsTarget_AllNext,
+    kHardenedAttribsTarget_Count 
 } HardenedAttribsTarget;
 
 //------------------------------------------------------------
@@ -94,10 +94,10 @@ typedef enum HardenedAttribsTarget
 //----------------------------------------------------------
 typedef enum ConceptHardeningRewardType
 { 
-	kConceptHardeningRewardType_Reward, // <tablename> <level>
-	kConceptHardeningRewardType_ChangeHardenedAttribs, // <HardenedAttribsTarget> <amount> 
-	kConceptHardeningRewardType_ReducePowerupCost, // <HardenedAttribsTarget> <amount>
-	kConceptHardeningRewardType_Count
+    kConceptHardeningRewardType_Reward, // <tablename> <level>
+    kConceptHardeningRewardType_ChangeHardenedAttribs, // <HardenedAttribsTarget> <amount> 
+    kConceptHardeningRewardType_ReducePowerupCost, // <HardenedAttribsTarget> <amount>
+    kConceptHardeningRewardType_Count
 } ConceptHardeningRewardType;
 
 
@@ -107,9 +107,9 @@ typedef enum ConceptHardeningRewardType
 //----------------------------------------------------------
 typedef struct ConceptHardeningRewardDef
 {
-	ConceptHardeningRewardType type;
-	char const *param0;
-	char const *param1;
+    ConceptHardeningRewardType type;
+    char const *param0;
+    char const *param1;
 } ConceptHardeningRewardDef;
 
 
@@ -121,15 +121,15 @@ typedef struct ConceptHardeningRewardDef
 
 typedef enum SlottedConceptAffectingRewardType
 {
-	kSlottedConceptAffectingRewardType_IncreaseHardeningChance, // <amount> increases hardening chance
-	kSlottedConceptAffectingRewardType_Count,
+    kSlottedConceptAffectingRewardType_IncreaseHardeningChance, // <amount> increases hardening chance
+    kSlottedConceptAffectingRewardType_Count,
 } SlottedConceptAffectingRewardType;
 
 
 typedef struct SlottedConceptAffectingRewardDef
 {
-	SlottedConceptAffectingRewardType type;
-	char const *param;
+    SlottedConceptAffectingRewardType type;
+    char const *param;
 } SlottedConceptAffectingRewardDef;
 
 
@@ -145,14 +145,14 @@ typedef struct SlottedConceptAffectingRewardDef
 //----------------------------------------------------------
 typedef enum HardenedAffectingRewardType
 {
-	kHardenedAffectingRewardType_EmptySlot, // clears the slot its dropped on
-	kHardenedAffectingRewardType_Count
+    kHardenedAffectingRewardType_EmptySlot, // clears the slot its dropped on
+    kHardenedAffectingRewardType_Count
 } HardenedAffectingRewardType;
 
 typedef struct HardenedConceptAffectingRewardDef
 {
-	HardenedAffectingRewardType type;
-	char const *param;
+    HardenedAffectingRewardType type;
+    char const *param;
 } HardenedConceptAffectingRewardDef;
 
 
@@ -169,25 +169,25 @@ typedef struct HardenedConceptAffectingRewardDef
 //----------------------------------------------------------
 typedef struct ConceptDef
 {
-	int id;
-	const char *name;
-	TokenizerUiWidget	ui;
-	const AttribModGroup* const* attribMods;
-	const RewardSlot* const* powerupCostSlots;
-	int modSellback; // amount to add/subtract to sellback
-	F32 modEndurance; // as a percent multiplier
-	const char* const* slotRewardTables;
-	F32 slotSuccessChance;
-	int slotsUsed; // slots used when slotted
+    int id;
+    const char *name;
+    TokenizerUiWidget    ui;
+    const AttribModGroup* const* attribMods;
+    const RewardSlot* const* powerupCostSlots;
+    int modSellback; // amount to add/subtract to sellback
+    F32 modEndurance; // as a percent multiplier
+    const char* const* slotRewardTables;
+    F32 slotSuccessChance;
+    int slotsUsed; // slots used when slotted
 
-	// --------------------
-	// rewards
+    // --------------------
+    // rewards
 
-	const PECreationRewardDef* const* peCreationRewards;
-	const ConceptHardeningRewardDef* const* hardeningRewards;
+    const PECreationRewardDef* const* peCreationRewards;
+    const ConceptHardeningRewardDef* const* hardeningRewards;
 
-	const SlottedConceptAffectingRewardDef* const* slottedAffectingRewards;
-	const HardenedConceptAffectingRewardDef* const* hardenedAffectingRewards;
+    const SlottedConceptAffectingRewardDef* const* slottedAffectingRewards;
+    const HardenedConceptAffectingRewardDef* const* hardenedAffectingRewards;
 } ConceptDef;
 
 const ConceptDef* conceptdef_Get(char const *name);
@@ -209,8 +209,8 @@ int conceptdef_MaxId();
 //----------------------------------------------------------
 typedef struct ConceptItem
 { 
-	const ConceptDef *def;
-	F32 afVars[CONCEPTITEM_MAX_VARS];
+    const ConceptDef *def;
+    F32 afVars[CONCEPTITEM_MAX_VARS];
 } ConceptItem;
 
 ConceptItem* conceptitem_Create( int defId, F32 *afVars );
@@ -222,11 +222,11 @@ void conceptitem_Destroy( ConceptItem *item );
 
 typedef struct ConceptDictionary
 {
-	// Defines a set of related categories. (Examples include character and
-	// villain)
-	const ConceptDef **ppConceptDefs;
-	StashTable haItemNames;
-	const ConceptDef **itemsById;
+    // Defines a set of related categories. (Examples include character and
+    // villain)
+    const ConceptDef **ppConceptDefs;
+    StashTable haItemNames;
+    const ConceptDef **itemsById;
 } ConceptDictionary;
 
 // global inst of dict

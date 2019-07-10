@@ -12,10 +12,10 @@
 #define ldblib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
 
@@ -316,8 +316,8 @@ static int db_debug (lua_State *L) {
 }
 
 
-#define LEVELS1	12	/* size of the first part of the stack */
-#define LEVELS2	10	/* size of the second part of the stack */
+#define LEVELS1    12    /* size of the first part of the stack */
+#define LEVELS2    10    /* size of the second part of the stack */
 
 static int db_errorfb (lua_State *L) {
   int level;

@@ -1,16 +1,16 @@
 #ifndef _GRIDCACHE_H
 #define _GRIDCACHE_H
 
-#include "grid.h"
-#include "gridcoll.h"
-#include "ctri.h"
+#include "gridcoll/grid.h"
+#include "gridcoll/gridcoll.h"
+#include "gridcoll/ctri.h"
 
 typedef struct
 {
-	Vec3	start,end;
-	F32		radius;
-	int		flags;
-	int		find_type;
+    Vec3    start,end;
+    F32        radius;
+    int        flags;
+    int        find_type;
 } CollParams;
 
 int gridSetCacheDisabled(int disabled);

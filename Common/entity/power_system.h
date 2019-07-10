@@ -12,10 +12,10 @@ typedef struct StaticDefineInt StaticDefineInt;
 
 typedef enum PowerSystem
 {
-	// Which power system to use for advancement, level lookup, etc.
+    // Which power system to use for advancement, level lookup, etc.
 
-	kPowerSystem_Powers = 0,
-	kPowerSystem_Count
+    kPowerSystem_Powers = 0,
+    kPowerSystem_Count
 } PowerSystem;
 
 #define kPowerSystem_Numbits 1
@@ -26,46 +26,46 @@ typedef enum PowerSystem
 
 typedef struct Schedule
 {
-	const int *piFreeBoostSlotsOnPower;
-		// Defines when free boost slots are opened on a power. It is based on
-		// how many security levels a character has owned a particular power.
+    const int *piFreeBoostSlotsOnPower;
+        // Defines when free boost slots are opened on a power. It is based on
+        // how many security levels a character has owned a particular power.
 
-	const int *piPoolPowerSet;
-		// Defines when the character gets a new pool power set.
+    const int *piPoolPowerSet;
+        // Defines when the character gets a new pool power set.
 
-	const int *piEpicPowerSet;
-		// Defines when the character gets a new epic power set.
+    const int *piEpicPowerSet;
+        // Defines when the character gets a new epic power set.
 
-	const int *piPower;
-		// Defines when the player can buy a new power. Based on security level.
+    const int *piPower;
+        // Defines when the player can buy a new power. Based on security level.
 
-	const int *piAssignableBoost;
-		// Defines when the player can buy a new boost. Based on security level.
+    const int *piAssignableBoost;
+        // Defines when the player can buy a new boost. Based on security level.
 
-	const int *piInspirationCol;
-		// Defines when inspiration column opens up
+    const int *piInspirationCol;
+        // Defines when inspiration column opens up
 
-	const int *piInspirationRow;
-		// Defines when inspiration row opens up
+    const int *piInspirationRow;
+        // Defines when inspiration row opens up
 
-	const int *piFreeExpertiseSlotsOnSkill;
-		// Defines when free expertise slots are opened on a skill. It is 
-		// based on how many skill levels a character has owned a particular 
-		// skill.
+    const int *piFreeExpertiseSlotsOnSkill;
+        // Defines when free expertise slots are opened on a skill. It is 
+        // based on how many skill levels a character has owned a particular 
+        // skill.
 
-	const int *piSkill;
-		// Defines when the player can buy a new skill. Based on skill level.
+    const int *piSkill;
+        // Defines when the player can buy a new skill. Based on skill level.
 
-	const int *piAssignableExpertise;
-		// Defines when the player can buy a new expertise slot. Based on 
-		// skill level.
+    const int *piAssignableExpertise;
+        // Defines when the player can buy a new expertise slot. Based on 
+        // skill level.
 
 } Schedule;
 
 
 typedef struct Schedules
 {
-	Schedule aSchedules;
+    Schedule aSchedules;
 } Schedules;
 
 /***************************************************************************/
@@ -73,13 +73,13 @@ typedef struct Schedules
 
 typedef struct ExperienceTable
 {
-	const int *piRequired;
-	const int *piDefeatPenalty;
+    const int *piRequired;
+    const int *piDefeatPenalty;
 } ExperienceTable;
 
 typedef struct ExperienceTables
 {
-	ExperienceTable aTables;
+    ExperienceTable aTables;
 } ExperienceTables;
 
 /***************************************************************************/
@@ -119,8 +119,8 @@ extern int g_aiRequiredSecurityLevel[];
 
 
 int CountForLevel(int iLevel, const int *piSchedule);
-	// Given a schedule and a level, calculates how many <whatever> are
-	//   available at that level.
+    // Given a schedule and a level, calculates how many <whatever> are
+    //   available at that level.
 
 
 #endif /* #ifndef POWER_SYSTEM_H__ */

@@ -1,7 +1,8 @@
 #ifndef _BASESEND_H
 #define _BASESEND_H
 
-#include "Color.h"
+#include <utilitieslib/utils/Color.h>
+
 typedef struct Packet Packet;
 typedef struct RoomDetail RoomDetail;
 typedef struct BaseRoom BaseRoom;
@@ -9,9 +10,9 @@ typedef struct RoomTemplate RoomTemplate;
 
 typedef enum BaseSendType
 {
-	kBaseSend_Single,
-	kBaseSend_Room,
-	kBaseSend_Base,
+    kBaseSend_Single,
+    kBaseSend_Room,
+    kBaseSend_Base,
 }BaseSendType;
 
 void baseSendDetails(Packet *pak,BaseRoom *room,RoomDetail **details,int count,int reset);

@@ -3,11 +3,11 @@
  *     All Rights Reserved
  *     Confidential Property of Cryptic Studios
  ***************************************************************************/
-#include "earray.h"
-#include "MemoryPool.h"
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/components/MemoryPool.h>
 
-#include "bases.h"
-#include "basedata.h"
+#include "bases/bases.h"
+#include "bases/basedata.h"
 
 RoomDetail **g_ppDetailInv;
 
@@ -19,16 +19,16 @@ MP_DEFINE(RoomDetail);
  */
 RoomDetail * baseinv_Add(const Detail *info)
 {
-	RoomDetail *pRoomDetail;
-	MP_CREATE(RoomDetail, 20);
+    RoomDetail *pRoomDetail;
+    MP_CREATE(RoomDetail, 20);
 
-	pRoomDetail = MP_ALLOC(RoomDetail);
-	pRoomDetail->id;
-	pRoomDetail->info = info;
+    pRoomDetail = MP_ALLOC(RoomDetail);
+    pRoomDetail->id;
+    pRoomDetail->info = info;
 
-	eaPush(&g_ppDetailInv, pRoomDetail);
+    eaPush(&g_ppDetailInv, pRoomDetail);
 
-	return pRoomDetail;
+    return pRoomDetail;
 }
 
 /**********************************************************************func*
@@ -37,12 +37,12 @@ RoomDetail * baseinv_Add(const Detail *info)
  */
 void baseinv_RemoveIdx(int idx)
 {
-	RoomDetail *p = eaRemove(&g_ppDetailInv, idx);
+    RoomDetail *p = eaRemove(&g_ppDetailInv, idx);
 
-	if(p)
-	{
-		MP_FREE(RoomDetail, p);
-	}
+    if(p)
+    {
+        MP_FREE(RoomDetail, p);
+    }
 }
 
 /**********************************************************************func*
@@ -51,19 +51,19 @@ void baseinv_RemoveIdx(int idx)
  */
 void baseinv_Remove(RoomDetail *p)
 {
-	int i;
-	int n = eaSize(&g_ppDetailInv);
-	
-	for(i=0; i<n; i++)
-	{
-		if(g_ppDetailInv[i] == p)
-		{
-			eaRemove(&g_ppDetailInv, i);
-			break;
-		}
-	}
+    int i;
+    int n = eaSize(&g_ppDetailInv);
+    
+    for(i=0; i<n; i++)
+    {
+        if(g_ppDetailInv[i] == p)
+        {
+            eaRemove(&g_ppDetailInv, i);
+            break;
+        }
+    }
 
-	MP_FREE(RoomDetail, p);
+    MP_FREE(RoomDetail, p);
 }
 
 /* End of File */

@@ -14,7 +14,7 @@
 //this header should be included first thing in all headers in physics/include
 #ifndef NXP_DLL_EXPORT
 	#if defined NX_PHYSICS_DLL
-             #if defined(WIN32)
+             #if defined(_WIN32)
 		#define NXP_DLL_EXPORT __declspec(dllexport)
 		//new: default foundation to static lib:
 		#define NXF_DLL_EXPORT //__declspec(dllimport)
@@ -29,7 +29,7 @@
 		#define NXP_DLL_EXPORT
 		#define NXF_DLL_EXPORT
 	#elif defined NX_USE_SDK_DLLS
-             #if defined(WIN32)
+             #if defined(_WIN32)
 		#define NXP_DLL_EXPORT __declspec(dllimport)
 		//new: default foundation to static lib:
 		#define NXF_DLL_EXPORT //__declspec(dllimport)
@@ -47,7 +47,7 @@
 
 	#else
 
-             #if defined(WIN32)
+             #if defined(_WIN32)
 		//#error Please define either NX_USE_SDK_DLLS or NX_USE_SDK_STATICLIBS in your project settings depending on the kind of libraries you use!
 		//new: default foundation to static lib:
 		#define NXP_DLL_EXPORT __declspec(dllimport)
@@ -149,7 +149,7 @@ AM: PLEASE MAKE SURE TO HAVE AN 'NX_' PREFIX ON ALL NEW DEFINES YOU ADD HERE!!!!
 #endif
 
 //Exposing of the RRB backdoor
-#ifdef WIN32
+#ifdef _WIN32
 #define RRB_SUPPORTED_PLATFORM
 #endif
 

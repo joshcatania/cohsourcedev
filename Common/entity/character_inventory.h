@@ -6,8 +6,8 @@
 #ifndef CHARACTER_INVENTORY_H
 #define CHARACTER_INVENTORY_H
 
-#include "stdtypes.h"
-#include "assert.h"
+#include <utilitieslib/stdtypes.h>
+#include <utilitieslib/assert/assert.h>
 
 // forward decls
 typedef struct StashTableImp *StashTable;
@@ -28,25 +28,25 @@ typedef struct DetailCategoryDict DetailCategoryDict;
 //------------------------------------------------------------
 //  The types of inventory.
 // do not reorder, if you want to add an enum see:
-//	  - character_GetInvInfo: (0 for id if NA)
+//      - character_GetInvInfo: (0 for id if NA)
 //    - character_GetInvHandleByType: (NULL if NA)
 //    - character_AddInventory: (assert if NA, should not happen)
 //    - character_SetInventory: (assert if NA, should not happen)
 //    - GetItemsByIdArrayRef: (NULL if NA)
-//	  - s_GetInvAndItem: 
-//	  - inventory_GetDbTableName
+//      - s_GetInvAndItem: 
+//      - inventory_GetDbTableName
 //    - also handle loading the hashes:
 //       * basedetail_CreateDetailInvHashes
 //----------------------------------------------------------
 typedef enum InventoryType
 { 
- 	kInventoryType_Salvage,
-	kInventoryType_Concept,
- 	kInventoryType_Recipe,
-	kInventoryType_BaseDetail,
-	kInventoryType_StoredSalvage, // personal invention storage
-	// # of items
-	kInventoryType_Count,
+     kInventoryType_Salvage,
+    kInventoryType_Concept,
+     kInventoryType_Recipe,
+    kInventoryType_BaseDetail,
+    kInventoryType_StoredSalvage, // personal invention storage
+    // # of items
+    kInventoryType_Count,
 } InventoryType;
 
 #define CONCEPT_NUM_FIELDS 5
@@ -62,7 +62,7 @@ char *inventorytype_StrFromType(InventoryType t);
 
 typedef enum InventoryId
 {
-	kInventoryId_Invalid = 0,
+    kInventoryId_Invalid = 0,
 } InventoryId;
 
 
@@ -72,31 +72,31 @@ typedef enum InventoryId
 
 typedef struct InventorySizeDefinition
 {
-	const int *piAmountAtLevel;
-	const int *piAmountAtLevelFree;
+    const int *piAmountAtLevel;
+    const int *piAmountAtLevelFree;
 } InventorySizeDefinition;
 
 typedef struct InventorySizes 
 {
-	InventorySizeDefinition		salvageSizes;
-	InventorySizeDefinition		recipeSizes;
-	InventorySizeDefinition		auctionSizes;
-	InventorySizeDefinition		storedSalvageSizes;
+    InventorySizeDefinition        salvageSizes;
+    InventorySizeDefinition        recipeSizes;
+    InventorySizeDefinition        auctionSizes;
+    InventorySizeDefinition        storedSalvageSizes;
 } InventorySizes;
 
 typedef struct InventoryLoyaltyBonusSizeDefinition
 {
-	const char *name;
-	int salvageBonus;
-	int recipeBonus;
-	int vaultBonus;
-	int auctionBonus;
+    const char *name;
+    int salvageBonus;
+    int recipeBonus;
+    int vaultBonus;
+    int auctionBonus;
 } InventoryLoyaltyBonusSizeDefinition;
 
 typedef struct InventoryLoyaltyBonusSizes 
 {
-	const InventoryLoyaltyBonusSizeDefinition **bonusList;
-	cStashTable st_LoyaltyBonus;
+    const InventoryLoyaltyBonusSizeDefinition **bonusList;
+    cStashTable st_LoyaltyBonus;
 } InventoryLoyaltyBonusSizes;
 
 extern SHARED_MEMORY InventorySizes g_InventorySizeDefs;
@@ -109,8 +109,8 @@ extern TokenizerParseInfo ParseInventoryLoyaltyBonusDefinitions[];
 //----------------------------------------------------------
 typedef struct GenericInventoryType
 {
-	int id;
-	char const *name;
+    int id;
+    char const *name;
 } GenericInventoryType;
 
 #define IS_GENERICINVENTORYTYPE_COMPATIBLE(typeName, tid, tname) \
@@ -122,8 +122,8 @@ typedef struct GenericInventoryType
 //----------------------------------------------------------
 typedef struct GenericInvItem
 {
-	void const *item;
-	U32 amount;
+    void const *item;
+    U32 amount;
 } GenericInvItem; 
 
 // helper for checking struct compatibility with GenericInvItem, 1 if compatible
@@ -139,8 +139,8 @@ typedef struct GenericInvItem
 //----------------------------------------------------------
 typedef struct SalvageInventoryItem
 {
-	SalvageItem const *salvage;
-	U32 amount;
+    SalvageItem const *salvage;
+    U32 amount;
 } SalvageInventoryItem;
 STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( SalvageInventoryItem, salvage, amount ));
 
@@ -149,8 +149,8 @@ STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( SalvageInventoryItem, salvage, amount )
 //----------------------------------------------------------
 typedef struct ConceptInventoryItem
 {
-	ConceptItem *concept;
-	U32 amount;
+    ConceptItem *concept;
+    U32 amount;
 } ConceptInventoryItem;
 STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( ConceptInventoryItem, concept, amount ));
 
@@ -162,9 +162,9 @@ STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( ConceptInventoryItem, concept, amount )
 //----------------------------------------------------------
 typedef struct RecipeItem
 { 
-	int id;
-	const char *name;
-	const BasePower *recipe;
+    int id;
+    const char *name;
+    const BasePower *recipe;
 } RecipeItem;
 STATIC_ASSERT(IS_GENERICINVENTORYTYPE_COMPATIBLE(RecipeItem,id,name));
 
@@ -173,8 +173,8 @@ STATIC_ASSERT(IS_GENERICINVENTORYTYPE_COMPATIBLE(RecipeItem,id,name));
 //----------------------------------------------------------
 typedef struct RecipeInventoryItem
 { 
-	DetailRecipe *recipe;
-	U32 amount;
+    DetailRecipe *recipe;
+    U32 amount;
 } RecipeInventoryItem;
 STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( RecipeInventoryItem, recipe, amount ));
 
@@ -183,8 +183,8 @@ STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( RecipeInventoryItem, recipe, amount ));
 //----------------------------------------------------------
 typedef struct DetailInventoryItem
 { 
-	const Detail *item;
-	U32 amount;
+    const Detail *item;
+    U32 amount;
 } DetailInventoryItem;
 STATIC_ASSERT(GENERICINVITEM_COMPATIBLE( DetailInventoryItem, item, amount ));
 
@@ -195,14 +195,14 @@ DetailInventoryItem *detailinventoryitem_Create();
 //----------------------------------------------------------
 typedef struct GenericInvDictionary
 {
-	const GenericInventoryType* const* ppItems;
-	cStashTable haItemNames;
-	const GenericInventoryType* const* itemsById;
+    const GenericInventoryType* const* ppItems;
+    cStashTable haItemNames;
+    const GenericInventoryType* const* itemsById;
 } GenericInvDictionary;
 #define IS_GENERICINVENTORYDICT_COMPATIBLE(typeName, tppItems, thaItemNames, titemsById) \
-	(OFFSETOF(typeName,tppItems) == OFFSETOF(GenericInvDictionary,ppItems)) \
-	&& (OFFSETOF(typeName,thaItemNames) == OFFSETOF(GenericInvDictionary,haItemNames)) \
-	&& (OFFSETOF(typeName,titemsById) == OFFSETOF(GenericInvDictionary,itemsById))
+    (OFFSETOF(typeName,tppItems) == OFFSETOF(GenericInvDictionary,ppItems)) \
+    && (OFFSETOF(typeName,thaItemNames) == OFFSETOF(GenericInvDictionary,haItemNames)) \
+    && (OFFSETOF(typeName,titemsById) == OFFSETOF(GenericInvDictionary,itemsById))
 
 // -------------------
 // loading
@@ -354,23 +354,23 @@ bool character_IsSalvageUseful(Character *p, SalvageItem const *pSalvageItem, co
 const Detail *detail_GetItem( char const *name );
  
 int character_AddBaseDetail(Character *p,char const *detailName, const char *context);
-	//simple helper function. use adjustInventory for anything more complicated
+    //simple helper function. use adjustInventory for anything more complicated
 
 // ------------------------------------------------------------
 // attribfile 
 
 typedef struct AttribFileItem
 {
-	int id;
-	const char *name;
+    int id;
+    const char *name;
 } AttribFileItem;
 
 typedef struct AttribFileDict
 { 
-	const AttribFileItem **ppAttribItems;
-	cStashTable idHash;
-	cStashTable nameFromId;
-	int maxId;
+    const AttribFileItem **ppAttribItems;
+    cStashTable idHash;
+    cStashTable nameFromId;
+    int maxId;
 } AttribFileDict;
 
 TokenizerParseInfo *attribfiledict_GetParseInfo();

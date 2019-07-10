@@ -16,7 +16,7 @@
 
 #include <stdlib.h>
 
-#if defined(WIN32) && NX_DEBUG_MALLOC
+#if defined(_WIN32) && NX_DEBUG_MALLOC
 	#include <crtdbg.h>
 #endif
 /**
@@ -55,7 +55,7 @@ class NxAllocatorDefault
 			NX_UNREFERENCED_PARAMETER(type);
 			NX_UNREFERENCED_PARAMETER(className);
 #ifdef _DEBUG
-	#if defined(WIN32) && NX_DEBUG_MALLOC
+	#if defined(_WIN32) && NX_DEBUG_MALLOC
 			return ::_malloc_dbg(size, _NORMAL_BLOCK, fileName, line);
 	#else
 			NX_UNREFERENCED_PARAMETER(fileName);

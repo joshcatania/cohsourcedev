@@ -14,10 +14,10 @@
 #define lstrlib_c
 #define LUA_LIB
 
-#include "lua.h"
+#include "../include/lua/lua.h"
 
-#include "lauxlib.h"
-#include "lualib.h"
+#include "../include/lua/lauxlib.h"
+#include "../include/lua/lualib.h"
 
 
 /* macro to `unsign' a character */
@@ -164,8 +164,8 @@ static int str_dump (lua_State *L) {
 */
 
 
-#define CAP_UNFINISHED	(-1)
-#define CAP_POSITION	(-2)
+#define CAP_UNFINISHED    (-1)
+#define CAP_POSITION    (-2)
 
 typedef struct MatchState {
   const char *src_init;  /* init of source string */
@@ -179,8 +179,8 @@ typedef struct MatchState {
 } MatchState;
 
 
-#define L_ESC		'%'
-#define SPECIALS	"^$*+?.([%-"
+#define L_ESC        '%'
+#define SPECIALS    "^$*+?.([%-"
 
 
 static int check_capture (MatchState *ms, int l) {
@@ -683,14 +683,14 @@ static int str_gsub (lua_State *L) {
 
 
 /* maximum size of each formatted item (> len(format('%99.99f', -1e308))) */
-#define MAX_ITEM	512
+#define MAX_ITEM    512
 /* valid flags in a format specification */
-#define _LUA_FLAGS	"-+ #0"  // COH specific Lua fix (renamed from FLAGS)
+#define _LUA_FLAGS    "-+ #0"  // COH specific Lua fix (renamed from FLAGS)
 /*
 ** maximum size of each format specification (such as '%-099.99d')
 ** (+10 accounts for %99.99x plus margin of error)
 */
-#define MAX_FORMAT	(sizeof(_LUA_FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
+#define MAX_FORMAT    (sizeof(_LUA_FLAGS) + sizeof(LUA_INTFRMLEN) + 10)
 
 
 static void addquoted (lua_State *L, luaL_Buffer *b, int arg) {

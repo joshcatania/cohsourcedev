@@ -6,7 +6,7 @@
 #ifndef CHARACTER_WORKSHOP_H
 #define CHARACTER_WORKSHOP_H
 
-#include "stdtypes.h"
+#include <utilitieslib/stdtypes.h>
 
 typedef struct Character Character;
 typedef struct RecipeItem RecipeItem; 
@@ -27,12 +27,12 @@ typedef struct PowerVar PowerVar;
 //----------------------------------------------------------
 typedef enum WorkshopState
 {
-	kWorkshopState_None,
-	kWorkshopState_Invent,
-	kWorkshopState_Updating,
-	kWorkshopState_Error,
-	// count
-	kWorkshopState_Count	
+    kWorkshopState_None,
+    kWorkshopState_Invent,
+    kWorkshopState_Updating,
+    kWorkshopState_Error,
+    // count
+    kWorkshopState_Count    
 } WorkshopState;
 
 //------------------------------------------------------------
@@ -40,12 +40,12 @@ typedef enum WorkshopState
 //----------------------------------------------------------
 typedef enum WorkshopType
 {
-	kWorkshopType_None,
-	kWorkshopType_Invention_Basic,
-	kWorkshopType_Invention_Arcane,
-	kWorkshopType_Invention_Tech,
-	// count
-	kWorkshopType_Count	
+    kWorkshopType_None,
+    kWorkshopType_Invention_Basic,
+    kWorkshopType_Invention_Arcane,
+    kWorkshopType_Invention_Tech,
+    // count
+    kWorkshopType_Count    
 
 } WorkshopType; 
 
@@ -56,11 +56,11 @@ char const *workshopstate_ToStr( WorkshopState s );
 
 typedef struct Workshop
 {
- 	WorkshopState state;
-	int iInvCreatedDetail; // where the last item went after finishing
-	char *error; // EString
+     WorkshopState state;
+    int iInvCreatedDetail; // where the last item went after finishing
+    char *error; // EString
 #if SERVER
-	bool changed;
+    bool changed;
 #endif
 } Workshop;
 
@@ -69,9 +69,9 @@ typedef struct Workshop
 
 #if CLIENT
 /*bool character_IsWorkshopping(Character *p);
-		// is the character in workshop mode
+        // is the character in workshop mode
 bool character_WorkshopCanSendCmd(Character *p);
-		// can the character execute a workshop command (if they are workshopping)
+        // can the character execute a workshop command (if they are workshopping)
 
 void character_WorkshopStart(Character *p);*/
 bool character_WorkshopSendDetailRecipeBuild(Character *p, char const *nameDetailRecipe, int iLevel, int bUseCoupon);
