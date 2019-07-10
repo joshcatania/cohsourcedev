@@ -57,6 +57,7 @@
 #include "container/league.h"
 #include <utilitieslib/utils/log.h>
 #include "svr_tick.h"
+#include "entity/mapHistory.h"
 
 
 void checkPlayerPowers(Entity* e, int reset)
@@ -2740,6 +2741,68 @@ Entity* svrFindPlayerInTeamup(int teamID, PlayerEntType type)
 
     return NULL;
 }
+
+// Not ideal, but the best we can do at the moment
+static const char* safeVolumes[] = {
+	"DJ_ArachnosControlled",
+	"DJ_Architect",
+	"DJ_Arena",
+	"DJ_AuctionHouse",
+	"DJ_CityHall",
+	"DJ_Docks",
+	"DJ_Hospital",
+	"DJ_Marconeville",
+	"DJ_Midnighter",
+	"DJ_Stores",
+	"DJ_Tailor",
+	"DJ_TrainStation",
+	"DJ_PoliceStation"
+	"DJ_University",
+	"DJ_VanguardBase",
+	"DJ_Vault",
+	"University",
+	0 };
+
+static StashTable safeVolumeTable = 0;
+
+
+static bool entity_InSafeZone(Entity* e)
+{
+	int i;
+	VolumeList* volumeList;
+
+	if (!safeVolumeTable) {
+		// Build hash table the first time this is called
+		const char** v = safeVolumes;
+		safeVolumeTable = stashTableCreateWithStringKeys(sizeof(safeVolumes) / sizeof(const char*), StashDefault);
+		while (v && *v) {
+			stashAddInt(safeVolumeTable, *v, 1, true);
+			++v;
+		}
+	}
+
+	if (db_state.map_id == MAP_POCKET_D ||
+		db_state.map_id == MAP_MIDNIGHTER_CLUB ||
+		db_state.map_id == MAP_OUROBOROS)
+		return true;
+
+	if (getMapType() == MAPTYPE_BASE)
+		return true;
+	if (getMapType() != MAPTYPE_STATIC)
+		return false;
+
+	volumeList = &e->volumeList;
+	for (i = 0; i < volumeList->volumeCount; i++)
+	{
+		DefTracker* volume = volumeList->volumes[i].volumePropertiesTracker;
+		PropertyEnt* prop = (volume && volume->def) ? stashFindPointerReturnPointer(volume->def->properties, "NamedVolume") : 0;
+		if (prop && stashFindElement(safeVolumeTable, prop->value_str, NULL))
+			return true;
+	}
+
+	return false;
+}
+
 
 void svrPlayerSetDisconnectTimer(Entity *e,int bad_connection)
 {
