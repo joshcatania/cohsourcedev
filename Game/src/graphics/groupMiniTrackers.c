@@ -549,7 +549,7 @@ void groupDrawBuildMiniTrackers(void)
 {
     TraverserDrawParams draw={0};
 
-    loadstart_printf("Applying texture swaps...");
+    writeConsole(OUTPUT_DEBUG, "Applying texture swaps");
 
     // Free old TexBinds and MiniTrackers
     if (gmts) {
@@ -575,7 +575,7 @@ void groupDrawBuildMiniTrackers(void)
 
     gfxNodeBuildMiniTrackerRecurse(gfx_tree_root);
 
-    loadend_printf("%d different, %d same", dbg_different_count, dbg_same_count);
+	writeConsole(OUTPUT_INFO, "Applied %d different, %d same texture swaps", dbg_different_count, dbg_same_count);
 }
 
 void groupDrawPushMiniTrackers(void)

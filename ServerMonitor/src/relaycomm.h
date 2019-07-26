@@ -1,8 +1,8 @@
 #ifndef _RELAYCOMM_H
 #define _RELAYCOMM_H
 
-#include "netio.h"
-#include "textparser.h"
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/utils/textparser.h>
 #include "comm_backend.h"
 #include "serverMonitorCmdRelay.h"
 
@@ -22,10 +22,10 @@ extern TokenizerParseInfo CmdRelayConNetInfo[];
 #ifdef RELAYCOMM_PARSE_INFO_DEFS
 
 
-#include "ListView.h"
+#include <utilitieslib/utils/ListView.h>
 #include "container.h"
-#include "net_structdefs.h"
-#include "structnet.h"
+#include <utilitieslib/network/net_structdefs.h>
+#include <utilitieslib/utils/structnet.h>
 
 
 

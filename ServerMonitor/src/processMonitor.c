@@ -1,15 +1,16 @@
+#include <utilitieslib/components/EString.h>
+#include <utilitieslib/utils/process_util.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/winutil.h>
+
+#include <direct.h>
+#include <psapi.h>
+#include <Shellapi.h>
+
 #include "processMonitor.h"
 #include "serverMonitorCommon.h"
-#include <windows.h> 
-#include <Shellapi.h>
-#include <psapi.h>
-#include <direct.h>
-#include "timing.h"
-#include "winutil.h"
 #include "resource.h"
-#include "utils.h"
-#include "process_util.h"
-#include "EString.h"
 
 static char cwd[MAX_PATH];
 
@@ -66,7 +67,7 @@ static BOOL CALLBACK EnumProcCountCrashedServers(HWND hwnd, LPARAM lParam)
 		if (entry)
 		{
 			char title[500];
-			if(GetWindowText(hwnd, title, ARRAY_SIZE(title)))
+			if(GetWindowTextA(hwnd, title, ARRAY_SIZE(title)))
 			{
 				if(stricmp(title, "City Of Heroes")==0)
 				{
@@ -147,7 +148,7 @@ static void updateRunningList()
 			if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
 				&cbNeeded) )
 			{
-				GetModuleBaseName( hProcess, hMod, szProcessName, 
+				GetModuleBaseNameA( hProcess, hMod, szProcessName, 
 					sizeof(szProcessName) );
 			}
 			else {
@@ -250,7 +251,7 @@ static void processMonTick(HWND hDlg)
 			}
 		}
 		if (setStatus && processmonitors[j].idcStatus) {
-			SetDlgItemText(hDlg, processmonitors[j].idcStatus, status);
+			SetDlgItemTextA(hDlg, processmonitors[j].idcStatus, status);
 		}
 	}
 }

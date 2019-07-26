@@ -645,11 +645,11 @@ void groupWeldAll(void)
 {
     PERFINFO_AUTO_START("groupWeldAll",1);
     welds_this_frame = 0;
-    loadstart_printf("Welding interior models.. ");
+	writeConsole(OUTPUT_DEBUG, "Welding interior models");
     do_weld_limiting = 0;
     groupTreeTraverse(groupWeldAllCallback, 0);
     do_weld_limiting = 1;
-    loadend_printf("%d welded", welds_this_frame);
+	writeConsole(OUTPUT_INFO, "Welded %d interior models", welds_this_frame);
     PERFINFO_AUTO_STOP();
 }
 

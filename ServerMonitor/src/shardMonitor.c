@@ -1,28 +1,29 @@
-#include "shardMonitor.h"
-#include "shardMonitorConfigure.h"
-#include "shardMonitorComm.h"
-#include "serverMonitorCommon.h"
-#include "serverMonitorNet.h"
-#include "serverMonitor.h"
-#include "serverMonitorCrashMsg.h"
-#include "serverMonitorOverload.h"
-#include "ListView.h"
-#include "resource.h"
-#include "netio.h"
-#include "comm_backend.h"
-#include "structNet.h"
-#include "entVarUpdate.h"
-#include "containerbroadcast.h"
-#include "prompt.h"
-#include "timing.h"
-#include "structHist.h"
-#include "winutil.h"
-#include "utils.h"
-#include "svrmoncomm.h"
-#include "shardMonitorCmdRelay.h"
+#include <comm_backend.h>
+#include <container/containerbroadcast.h>
+#include <entity/entVarUpdate.h>
+#include <svrmoncomm.h>
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/utils/structHist.h>
+#include <utilitieslib/utils/structNet.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/WinTabUtil.h>
+#include <utilitieslib/utils/winutil.h>
+
 #include "processMonitor.h"
-#include "WinTabUtil.h"
-#include "mathutil.h"
+#include "prompt.h"
+#include "resource.h"
+#include "serverMonitor.h"
+#include "serverMonitorCommon.h"
+#include "serverMonitorCrashMsg.h"
+#include "serverMonitorNet.h"
+#include "serverMonitorOverload.h"
+#include "shardMonitor.h"
+#include "shardMonitorCmdRelay.h"
+#include "shardMonitorComm.h"
+#include "shardMonitorConfigure.h"
 
 #define maxtps 10
 #define DEFAULT_RECONNECT_TIME maxtps*30
@@ -641,7 +642,7 @@ void updateShardMonCrashMsg(HWND hDlg, char *text)
 	static char old_text[4096];
 	if (text && text[0] && strcmp(old_text, text)==0)
 		return;
-	SetDlgItemText(hDlg, IDC_EDIT_CRASH_MSG, text?text:"");
+	SetDlgItemTextA(hDlg, IDC_EDIT_CRASH_MSG, text?text:"");
 	Strncpyt(old_text, text);
 }
 

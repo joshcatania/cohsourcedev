@@ -1,16 +1,17 @@
-#include "wininclude.h"
-#include "serverMonitorListener.h"
-#include "comm_backend.h"
-#include "sock.h"
+#include <comm_backend.h>
+#include <utilitieslib/network/sock.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/wininclude.h>
+
 #include <process.h>
 #include <stdio.h>
-#include "serverMonitor.h"
-#include "processMonitor.h"
-#include "utils.h"
-#include "serverMonitorNet.h"
-#include "serverMonitorCmdRelay.h"
-#include "chatMonitor.h"
 
+#include "chatMonitor.h"
+#include "processMonitor.h"
+#include "serverMonitor.h"
+#include "serverMonitorCmdRelay.h"
+#include "serverMonitorListener.h"
+#include "serverMonitorNet.h"
 
 static bool g_listenThreadRunning=false;
 static bool g_listenThreadStarting=false;
@@ -48,7 +49,7 @@ static DWORD WINAPI listenThreadMain(void *data) {
 		g_listenThreadRunning=false;
 		g_listenThreadStarting=false;
 		// Error binding to port!
-		MessageBox(NULL, "Error binding to port, perhaps another ServerMonitor is running?\r\nThis ServerMonitor will not monitor processes, start new processes or do CmdRelay.", "Error binding to port", MB_OK|MB_ICONERROR);
+		MessageBoxA(NULL, "Error binding to port, perhaps another ServerMonitor is running?\r\nThis ServerMonitor will not monitor processes, start new processes or do CmdRelay.", "Error binding to port", MB_OK|MB_ICONERROR);
 		return 0;
 	}
 	g_listenThreadStarting=false;
@@ -56,7 +57,7 @@ static DWORD WINAPI listenThreadMain(void *data) {
 	if(result)
 	{
 		// Intentionally left this running so we don't get a large number of threads spiraling out of control
-		MessageBox(NULL, "Error returned from listen(), SNMP-like stuff is now disabled", "Error", MB_OK|MB_ICONERROR);
+		MessageBoxA(NULL, "Error returned from listen(), SNMP-like stuff is now disabled", "Error", MB_OK|MB_ICONERROR);
 		return 0;
 	}
 	do {
@@ -319,7 +320,7 @@ static DWORD WINAPI commandThreadMain(void *data)
 		g_commandThreadRunning=false;
 		g_commandThreadStarting=false;
 		// Error binding to port!
-		MessageBox(NULL, "Error binding to port, perhaps another ServerMonitor is running?\r\nThis ServerMonitor will not accept connectionless commands.", "Error binding to port", MB_OK|MB_ICONERROR);
+		MessageBoxA(NULL, "Error binding to port, perhaps another ServerMonitor is running?\r\nThis ServerMonitor will not accept connectionless commands.", "Error binding to port", MB_OK|MB_ICONERROR);
 		return 0;
 	}
 	g_commandThreadStarting=false;
@@ -327,7 +328,7 @@ static DWORD WINAPI commandThreadMain(void *data)
 	if(result)
 	{
 		// Intentionally left this running so we don't get a large number of threads spiraling out of control
-		MessageBox(NULL, "Error returned from listen(), command port will be disabled", "Error", MB_OK|MB_ICONERROR);
+		MessageBoxA(NULL, "Error returned from listen(), command port will be disabled", "Error", MB_OK|MB_ICONERROR);
 		return 0;
 	}
 

@@ -554,6 +554,7 @@ void FolderCacheSetCallback(int when, const char *filespec, FolderCacheCallback 
         return;
     }
 
+	writeConsole(OUTPUT_DEBUG, "\tSet folder cache callback for %s", filespec);
     assert(when!=0);
     newitem = listAddNewMember(&fccallbacks, sizeof(FolderCacheCallbackInfo));
     strcpy(fccallbacks->filespec, filespec);
@@ -1431,6 +1432,7 @@ void FolderCacheRequestTree(FolderCache *fc, const char *relpath) { // If we're 
         ht_added_trees = stashTableCreateWithStringKeys(10000, StashDeepCopyKeys);
     }
 
+	writeConsole(OUTPUT_DEBUG, "\t%s", relpath);
     while (relpath[0]=='/') relpath++;
     strcpy(path, relpath);
     relpath = path;

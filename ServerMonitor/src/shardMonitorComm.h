@@ -1,5 +1,8 @@
+#ifndef _SHARD_MONITOR_COMM_H
+#define _SHARD_MONITOR_COMM_H
+
 // Code defining communication between ServerMonitor and ShardMonitor
-#include "net_structdefs.h"
+#include <utilitieslib/network/net_structdefs.h>
 
 enum {
 	SVRMONSHARDMON_STATS = COMM_MAX_CMD,
@@ -20,3 +23,5 @@ enum {
 
 void svrMonShardMonCommInit(void);
 void svrMonShardMonCommSendUpdates(void);
+
+#endif // _SHARD_MONITOR_COMM_H

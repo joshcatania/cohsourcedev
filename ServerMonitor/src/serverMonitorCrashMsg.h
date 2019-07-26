@@ -1,7 +1,7 @@
-#ifndef SERVER_MONITOR_CRASH_MSG_H
-#define SERVER_MONITOR_CRASH_MSG_H
+#ifndef _SERVER_MONITOR_CRASH_MSG_H
+#define _SERVER_MONITOR_CRASH_MSG_H
 
-#include "ListView.h"
+#include <utilitieslib/utils/ListView.h>
 #include <winsock2.h>
 #include <windows.h>
 
@@ -16,4 +16,4 @@ LRESULT CALLBACK DlgSvrMonCrashMsgProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPA
 
 
 
-#endif //SERVER_MONITOR_CRASH_MSG_H
+#endif // _SERVER_MONITOR_CRASH_MSG_H

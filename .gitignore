@@ -26,10 +26,6 @@ ipch/
 # Visual Studio 2019
 .vs/
 
-# New build layout
-bin/
-!/bin
-
 # Visual C++ debug database
 *.pdb
 
@@ -43,33 +39,9 @@ AutoGen/
 logs/
 .moc/
 
-# Assets installed by external means
-/Utilities/pig/PigLibTest/
-/Utilities/bin/
-/bin/*/
-
-# Except the folders below
-!/bin/beaconizer/
-!/bin/qt_plugins/
-!/bin/textclientdebug/
-
-# Build artefacts
-/3rdparty/zeromq2-1/src/platform.hpp
-/Utilities/bin/StructParser.exe
-/bin/libzmq.dll
-/3rdparty/bin/
-/bin/*.dll
-/bin/*.exe
-obj/
-
-Win32/
+bin/
+x86/
 x64/
 
-
-/start-ourodev.bat
-
-# VS Code configuration directory
 .vscode
 *.dsn
-/bin/cohphysx.7z
-/bin/GlobalAuthError.txt

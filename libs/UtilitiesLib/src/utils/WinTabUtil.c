@@ -1,12 +1,18 @@
-#ifndef _XBOX
+#ifndef _WIN_TAB_UTIL_H
+#define _WIN_TAB_UTIL_H
+
+#ifdef UNICODE
+#undef UNICODE
+#define WAS_UNICODE
+#endif // UNICODE
 
 #include "utilitieslib/utils/wintabutil.h"
 #include "utilitieslib/components/earray.h"
 #include "utilitieslib/utils/strings_opt.h"
 #include "utilitieslib/utils/SuperAssert.h"
 #include "utilitieslib/utils/utils.h"
-#include <commctrl.h>
 
+#include <CommCtrl.h>
 
 //---------------------------------------------------------------------------------------
 // TAB CONTROL UTILITIES
@@ -199,4 +205,9 @@ void TabDlgFinalize(HWND hwndDlg)
     TabDlgOnSelChanged(hwndDlg); 
 }
 
-#endif
+#ifdef WAS_UNICODE
+#define UNICODE
+#undef WAS_UNICODE
+#endif // WAS_UNICODE
+
+#endif // _WIN_TAB_UTIL_H

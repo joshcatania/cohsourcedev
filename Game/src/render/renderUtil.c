@@ -533,15 +533,88 @@ void rdrGetSystemSpecs( SystemSpecs * systemSpecs )
     systemSpecs->isFilledIn = 1;
 }
 
-void rdrPrintSystemSpecs( SystemSpecs * systemSpecs )
-{
-    char buf[SPEC_BUF_SIZE];
+static const char *dateToString(time_t date) {
+	static char result[16];
 
-    rdrGetSystemSpecs( systemSpecs );
-    rdrGetSystemSpecString( systemSpecs, buf );
-    printf( "%s", buf );
+	if (date) {
+		strftime(result, sizeof(result), "%m-%d-%Y", localtime(&date));
+	} else {
+		sprintf_s(result, sizeof(result), "Unknown");
+	}
 
-    setAssertExtraInfo2(buf);
+	return result;
+}
+
+void rdrPrintSystemSpecs(SystemSpecs *systemSpecs){
+	rdrGetSystemSpecs(systemSpecs);
+
+	if (systemSpecs->CPUSpeed) {
+		writeConsole(OUTPUT_VERBOSE, "CPU Frequency: %0.0f MHz", systemSpecs->CPUSpeed / 1000000.0);
+	} else {
+		writeConsole(OUTPUT_VERBOSE, "CPU Frequency: Unknown");
+	}
+
+	if (systemSpecs->maxPhysicalMemory) {
+		writeConsole(OUTPUT_VERBOSE, "RAM: %u MB", systemSpecs->maxPhysicalMemory / (1024 * 1024));
+	} else {
+		writeConsole(OUTPUT_VERBOSE, "RAM: Unknown");
+	}
+
+	if (systemSpecs->availablePhysicalMemory) {
+		writeConsole(OUTPUT_VERBOSE, "Free RAM: %u MB", (systemSpecs->availablePhysicalMemory / (1024 * 1024)));
+	} else {
+		writeConsole(OUTPUT_VERBOSE, "Free RAM: Unknown");
+	}
+
+	writeConsole(OUTPUT_VERBOSE, "OS Version: Windows %d.%d.%d", systemSpecs->highVersion, systemSpecs->lowVersion, systemSpecs->build);
+	writeConsole(OUTPUT_VERBOSE, "Command Line Arguments: %s", g_GameArguments);
+
+	{
+		int i = 0;
+		DISPLAY_DEVICE dd;
+		dd.cb = sizeof(DISPLAY_DEVICE);
+		while (EnumDisplayDevices(NULL, i, &dd, 0)) {
+			char buf[128] = { 0 };
+			sprintf(buf, "Video Device %d: %s, ID: %s, Flags: 0x%08x", i, dd.DeviceString, dd.DeviceID, dd.StateFlags);
+			if (dd.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE) {
+				strcat(buf, " (PRIMARY)");
+			}
+			writeConsole(OUTPUT_VERBOSE, "%s", buf);
+
+			i++;
+		}
+
+	}
+	writeConsole(OUTPUT_VERBOSE, "Driver Date: %s", dateToString(systemSpecs->videoDriverDate));
+	if (systemSpecs->videoMemory) {
+		writeConsole(OUTPUT_VERBOSE, "VRAM: %u MB", systemSpecs->videoMemory);
+	} else {
+		writeConsole(OUTPUT_VERBOSE, "VRAM: Unknown");
+	}
+	writeConsole(OUTPUT_VERBOSE, "Video Device Vendor ID: 0x%X", systemSpecs->videoCardVendorID);
+	writeConsole(OUTPUT_VERBOSE, "Video Device Device ID: 0x%X", systemSpecs->videoCardDeviceID);
+
+	if (!rdr_caps.filled) {
+		writeConsole(OUTPUT_VERBOSE, "Missing OpenGL Context -- OUTDATED VIDEO CARD DRIVER");
+	} else {
+		writeConsole(OUTPUT_VERBOSE, "Render settings: VBOs %d", rdr_caps.use_vbos);
+		{
+			char path[SPEC_BUF_SIZE] = { 0 };
+			int i = 0;
+			for (; i < 32; i++) {
+				if ((1 << i) & rdr_caps.chip) {
+					char *chipname = rdrChipToString(1 << i);
+					strcatf(path, "%s ", chipname);
+				}
+			}
+			writeConsole(OUTPUT_VERBOSE, "Render path: %s", path);
+		}
+		writeConsole(OUTPUT_VERBOSE, "Render features: %s", rdrFeaturesString(false));
+
+		if (game_state.oldDriver) {
+			writeConsole(OUTPUT_VERBOSE, "OUTDATED VIDEO CARD DRIVER");
+		}
+	}
 }
 
 char *rdrFeaturesString(bool onlyUsed)
@@ -562,17 +635,6 @@ char *rdrFeaturesString(bool onlyUsed)
     }
 
     return buf;
-}
-
-static const char* dateToString(time_t date) {
-    static char result[16];
-
-    if (date)
-        strftime(result, sizeof(result), "%m-%d-%Y", localtime(&date));
-    else
-        sprintf_s(result, sizeof(result), "Unknown");
-
-    return result;
 }
 
 void rdrGetSystemSpecString( SystemSpecs * systemSpecs, char * buf )
@@ -1310,7 +1372,7 @@ void rdrSetChipOptions()
     //Warn if the chip is just bad  ////////////////////////////////////////////
     if ( 0 == rdr_caps.chip || failure )
     {
-        printf( "Bad driver or video card detected\n");
+		writeConsole(OUTPUT_ERROR, "Your video driver is missing support for required extensions. Bailing");
         
         // Make sure this pop-up is not ignored
         if (!isGuiDisabled())

@@ -187,7 +187,7 @@ int main(int argc, char **argv)
     
     game_beforeFolderCacheIgnore(timer, argc, argv);
 
-    printf("CityOfHeroes client count: %d\n", game_runningCohClientCount());
+	//writeConsole(OUTPUT_INFO, "CityOfHeroes client count: %d", game_runningCohClientCount());
 
     // cov and dev file ignore
     FolderCacheIgnoreStdPrefixes();
@@ -236,8 +236,8 @@ int main(int argc, char **argv)
     //Do after getAutoResumeInfo() so game_state.fullscreen will be correct
     parseArgs(argc,argv);
 
-    if (isDevelopmentMode())
-        printf("%s\n", GetCommandLine());
+    /*if (isDevelopmentMode())
+        printf("%s\n", GetCommandLine());*/
 
     // queue all loading errors
     ErrorvBeginQueueing();
@@ -263,11 +263,10 @@ int main(int argc, char **argv)
     if(game_state.ask_quick_login)
         game_state.quick_login = winMsgYesNo("Do you want to use QUICK LOGIN?");
 
-    UPDATE_PROGRESS_STRING("Initializing hardware lights...");
-    hwlightInitialize();
-    if (!game_state.enableHardwareLights)
-        hwlightShutdown();
-    loadend_printf("done");
+	if (game_state.enableHardwareLights) {
+		hwlightInitialize();
+		writeConsole(OUTPUT_INFO, "Initialized hardware lights");
+	}
 
     seqLoadStateBits();
 

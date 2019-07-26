@@ -1,13 +1,13 @@
-#include "serverMonitorCrashMsg.h"
-#include "serverMonitorCommon.h"
-#include "resource.h"
-#include "container.h"
-#include "earray.h"
-#include "sysutil.h"
-#include "estring.h"
-#include "netio.h"
-#include "utils.h"
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/components/estring.h>
+#include <utilitieslib/utils/sysutil.h>
+#include <utilitieslib/utils/utils.h>
 
+#include "container.h"
+#include "serverMonitorCommon.h"
+#include "serverMonitorCrashMsg.h"
+#include "resource.h"
 
 static HWND hCrashMsgDialog	= NULL;
 static bool bSmStatusUp		= false;
@@ -44,7 +44,7 @@ void updateCrashMsg(HWND parent, char *text)
 		smCrashMsgShow();	// make sure that it's up
 		SetFocus(parent);	// status dialog should not steal the focus
 
-		ret = SetDlgItemText(hCrashMsgDialog, IDC_EDIT_CRASH_MSG, text);
+		ret = SetDlgItemTextA(hCrashMsgDialog, IDC_EDIT_CRASH_MSG, text);
 		assert(ret);
 	} else {
 		smCrashMsgHide();
@@ -111,7 +111,7 @@ LRESULT CALLBACK DlgSvrMonCrashMsgProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPA
 		case IDC_BUTTON_STATUS_COPY:
 			{
 				char buf[10000];
-				GetDlgItemText(hCrashMsgDialog, IDC_EDIT_CRASH_MSG, buf, (sizeof(buf) / sizeof(char)));
+				GetDlgItemTextA(hCrashMsgDialog, IDC_EDIT_CRASH_MSG, buf, (sizeof(buf) / sizeof(char)));
 				winCopyToClipboard(buf);
 				break;
 			}

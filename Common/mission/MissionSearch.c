@@ -220,6 +220,7 @@ char *getMissionPath(char * filename)
     return buff;
 }
 
+// TODO: This should be the current working directory, not executable path
 char* missionMakerPath(void)
 {
     static char path[MAX_PATH];

@@ -21,11 +21,11 @@
 typedef std::map<std::string, std::string, iless> StringMap;
 
 // These values are duplicated in Common/auth/auth.h
-#define USA_AUTH_PROTOCOL_VERSION            30206    // version of the auth used in us/europe production coh from 2004/4/28 - ???
-#define ASIA_AUTH_PROTOCOL_VERSION            30207    // version of the auth used in asia
+#define USA_AUTH_PROTOCOL_VERSION           30206    // version of the auth used in us/europe production coh from 2004/4/28 - ???
+#define ASIA_AUTH_PROTOCOL_VERSION          30207    // version of the auth used in asia
 #define GLOBAL_AUTH_PROTOCOL_VERSION        30810    // version used for worldwide release
-#define GR_REACTIVATION_PROTOCOL_VERSION    100903    // First version to support GR reactivation
-#define OUROBOROS_PROTOCOL_VERSION_1        190516  // Enables sending of server name in server list packet
+#define GR_REACTIVATION_PROTOCOL_VERSION    100903   // First version to support GR reactivation
+#define OUROBOROS_PROTOCOL_VERSION_1        190516   // Enables sending of server name in server list packet
 
 class Config {
 public:
@@ -115,6 +115,8 @@ public:
     bool enableVerboseLogging;
     bool enableDebugLogging;
 
+	const char *connectionString;
+
 private:
     StringMap map;
 
@@ -129,4 +131,5 @@ public:
 };
 
 extern Config config;
+
 #endif // !defined(AFX_CONFIG_H__3512F1FE_5606_4C80_AE8E_840467086630__INCLUDED_)

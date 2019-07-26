@@ -208,6 +208,7 @@ void LoadMessageStore( MessageStore **pStore, char **files, char **dirs, int loc
     // Load from bins?
     if(persistfile && !reloading && !(flags & MSLOAD_FORCEBINS))
     {
+		writeConsole(OUTPUT_DEBUG, "Reading from %s", persistfilepath);
         if(fileLocateRead(persistfilepath, buf))
         {
             bool timely_bin = true;

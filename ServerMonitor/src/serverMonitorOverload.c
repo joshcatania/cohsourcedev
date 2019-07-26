@@ -1,14 +1,16 @@
+#include <container.h>
+#include <svrmoncomm.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/utils/ListView.h>
+
 #include <winsock2.h>
-#include "serverMonitorOverload.h"
+#include <stdio.h>
+
+#include "resource.h"
 #include "serverMonitor.h"
 #include "serverMonitorCommon.h"
 #include "serverMonitorNet.h"
-#include "resource.h"
-#include "ListView.h"
-#include "earray.h"
-#include "svrmoncomm.h"
-#include <stdio.h>
-#include "container.h"
+#include "serverMonitorOverload.h"
 
 // Overload Protection dialog box
 
@@ -128,16 +130,16 @@ void smoverloadUpdate()
 		strcpy(new_text, "Overload Protection is not enabled");
 	}
 
-	SetDlgItemText(hOverloadDialog, IDC_EDIT_OVERLOAD_MSG, new_text);
+	SetDlgItemTextA(hOverloadDialog, IDC_EDIT_OVERLOAD_MSG, new_text);
 
 	// Update the button text
 	if (smoverloadIsManualOverride(&state->stats))
 	{
-		SetDlgItemText(hOverloadDialog, IDC_BUTTON1, "Disable Manual Overload Protection");
+		SetDlgItemTextA(hOverloadDialog, IDC_BUTTON1, "Disable Manual Overload Protection");
 	}
 	else
 	{
-		SetDlgItemText(hOverloadDialog, IDC_BUTTON1, "Enable Manual Overload Protection");
+		SetDlgItemTextA(hOverloadDialog, IDC_BUTTON1, "Enable Manual Overload Protection");
 	}
 	
 }

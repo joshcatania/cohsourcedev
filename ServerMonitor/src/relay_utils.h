@@ -1,9 +1,10 @@
-#pragma once
+#ifndef _RELAY_UTILS_H
+#define _RELAY_UTILS_H
 
-#include "ListView.h"
+#include <utilitieslib/utils/ListView.h>
 #include "serverMonitorCommon.h"
 #include "serverMonitorCmdRelay.h"
-#include "netio_core.h"
+#include <utilitieslib/network/netio_core.h>
 #include "relay_types.h"
 #include "resource.h"
 
@@ -28,3 +29,5 @@ static VarMap relayMapping[2] = {
 	{IDC_COMBO_RELAY_UPDATE_SVR, true, 0, TOK_STRING_X, (int)&g_updateServerAddr, sizeof(g_updateServerAddr)},
 	{IDC_COMBO_RELAY_CUSTOM_CMD, true, 0, TOK_STRING_X, (int)&g_customCmd, sizeof(g_customCmd) },
 };
+
+#endif // _RELAY_UTILS_H

@@ -1138,6 +1138,7 @@ static FileScanAction preloadFxGeometryCallback(char* dir, struct _finddata32_t*
 
 static void fxPreloadGeometryHelper(const char* dir, const char* matchStr)
 {
+	writeConsole(OUTPUT_DEBUG, "\tPreloading %s/", dir);
     staticMatchStr = matchStr;
     fileScanAllDataDirs(dir, preloadFxGeometryCallback);
 }

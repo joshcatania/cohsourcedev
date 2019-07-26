@@ -496,52 +496,47 @@ int authLogin(char *name,char *password)
         Strncpyt(auth_info.servers[0].name,game_state.cs_address);
         return 1;
     }
-    loadstart_printf("Auth:Connecting to %s:%d (TCP)... ",game_state.auth_address,2106);
-    ret = authConnect(game_state.auth_address,2106);
+    writeConsole(OUTPUT_INFO, "Connecting to AuthServer %s:%d (TCP)", game_state.auth_address, AUTH_SERVER_PORT);
+    ret = authConnect(game_state.auth_address, AUTH_SERVER_PORT);
     if (!ret)
     {
-        loadend_printf("failed");
+        writeConsole(OUTPUT_ERROR, "Failed to connect to AuthServer");
         auth_info.fail_type = -1;
         auth_info.reason = -1;
         return 0;
     }
-    loadend_printf("ok");
 
     authSetKey(1234, 1);        // turn on encryption for first packet, key is ignored for blowfish
-    loadstart_printf("Auth:Waiting for protocol version... ");
+    writeConsole(OUTPUT_INFO, "Waiting for AuthServer protocol version");
     if (!authWaitFor(AC_PROTOCOL_VER)) {
-        loadend_printf("failed");
+        writeConsole(OUTPUT_ERROR, "Failed to receive protocol version");
         return 0;
     }
-    loadend_printf("ok");
 
-    loadstart_printf("Auth:Sending password... ");
+    writeConsole(OUTPUT_INFO, "Validating credentials");
     acSendLogin(name,password,0,IsUsingCider()?AuthFlags_MAC:AuthFlags_PC); 
     if (!authWaitFor(AC_LOGIN_OK)) {
-        loadend_printf("failed");
+        writeConsole(OUTPUT_WARNING, "Authentication failed");
         return 0;
     }
-    loadend_printf("ok");
 
     setAssertAuthName(auth_info.name);
 
-    loadstart_printf("Auth:Requesting server list... ");
+    writeConsole(OUTPUT_INFO, "Requesting server list");
     acSendServerList();
     if (!authWaitFor(AC_SEND_SERVER_LIST)) {
-        loadend_printf("failed");
+        writeConsole(OUTPUT_ERROR, "Failed to receive server list");
         return 0;
     }
-    loadend_printf("ok");
 
     if(auth_info.auth2_enabled == Auth2EnabledState_QueueServer) 
     {
-        loadstart_printf("Auth:Recv queue info...");
+        writeConsole(OUTPUT_INFO, "Receiving queue information");
         // what is this queue for?
         if(!authWaitFor(AC_QUEUESIZE)){
-            loadend_printf("failed");
+            writeConsole(OUTPUT_ERROR, "Failed to receive queue information");
             return 0;
         }
-        loadend_printf("ok");
     }
     return 1;
 }

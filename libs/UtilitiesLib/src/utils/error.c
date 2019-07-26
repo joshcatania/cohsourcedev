@@ -603,7 +603,7 @@ void errorLogStart(void)
     char str[128] = "";
     char **ignored;
     char fullpath[MAX_PATH];
-    sprintf_s(SAFESTR(fullpath), "%s/%s.log", getLogDir(), errorLogFile);
+    sprintf_s(SAFESTR(fullpath), "%s%s.log", getLogDir(), errorLogFile);
     if (fileSize(fullpath) > 200000) {
         // Reset the log every 200K
         fileForceRemove(fullpath);
@@ -614,7 +614,7 @@ void errorLogStart(void)
         if (num>1)
             strcat(str, ",");
     }
-    printf( "ERRORLOG STARTING IGNORE:%s\n", str);
+	writeConsole(OUTPUT_INFO, "Initialized error log %s", fullpath);
 }
 
 void errorLogFileHasError(const char *file)

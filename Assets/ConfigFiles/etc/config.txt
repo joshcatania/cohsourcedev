@@ -135,6 +135,8 @@ underAgeTimeLimitTo = 16
 ;---------------------------------------------------------------
 ; ETC
 
+connectionString = "Driver={ODBC Driver 17 for SQL Server};Database=cohauth;Server=localhost;Persist Security Info=False;Trusted_Connection=yes;"
+
 ; log files directory
 logDirectory = "logs"
 

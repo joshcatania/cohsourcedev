@@ -68,13 +68,13 @@ const char *getDevVersion(void)
 {
     static    char version[100];
     char    name[1000];
-    char    timestr[26];
+    char    timestr[100];
     SYSTEMTIME sys;
 
     getExecutableDir(name);
     strcatf(name,"/%s", appGetClientName());
     fileLastChangedWindows(name, &sys);
-    sprintf_s(SAFESTR(timestr),"%04hd-%02hd-%02hd %02hd:%02hd:%02hd",sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond);
+    sprintf_s(SAFESTR(timestr),"%04hu-%02hu-%02hu %02hu:%02hu:%02hu",sys.wYear,sys.wMonth,sys.wDay,sys.wHour,sys.wMinute,sys.wSecond);
     sprintf_s(SAFESTR(version),"dev: %s",timestr);
     return version;
 }

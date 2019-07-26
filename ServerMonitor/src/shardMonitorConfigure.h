@@ -1,5 +1,8 @@
-#include "wininclude.h"
-#include "textparser.h"
+#ifndef _SHARD_MONITOR_CONFIGURE_H
+#define _SHARD_MONITOR_CONFIGURE_H
+
+#include <utilitieslib/utils/wininclude.h>
+#include <utilitieslib/utils/textparser.h>
 
 void shardMonConfigure(HINSTANCE hinst, HWND hwndParent, char *configfile);
 
@@ -18,3 +21,5 @@ extern TokenizerParseInfo shardMonitorConfigEntryDispInfo[];
 extern TokenizerParseInfo shardMonitorConfigInfo[];
 
 extern ShardMonitorConfig shmConfig;
+
+#endif // _SHARD_MONITOR_CONFIGURE_H

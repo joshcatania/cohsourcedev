@@ -112,7 +112,7 @@ static TokenizerContext* OpenTokenFile(const char* filename)
     ret->contextisstring = 0;
     if (!ret->handle)
     {
-        verbose_printf("Tokenizer: couldn't open %s\n", filename);
+        writeConsole(OUTPUT_VERBOSE, "Tokenizer: couldn't open %s", filename);
         memFree(ret);
         return NULL;
     }
@@ -269,7 +269,7 @@ TokenizerHandle TokenizerCreateEx(const char* filename, int ignore_empty)
             free(tok);
             tok = NULL;
             if (!ignore_empty)
-                ErrorFilenamef(filename, "Tokenizer: %s is empty\n", filename);
+                writeConsole(OUTPUT_VERBOSE, "Tokenizer: %s is empty", filename);
         }
     }
     return (TokenizerHandle)tok;

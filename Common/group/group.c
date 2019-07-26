@@ -1743,14 +1743,14 @@ void groupReset()
     nx_state.gameInPhysicsPossibleState = 0;
     if ( nwEnabled() )
     {
-        loadstart_printf("Shutting down novodex...");
+        writeConsole(OUTPUT_DEBUG, "Deinitializing PhysX");
         if ( nwDeinitializeNovodex() )
         {
-            loadend_printf("success");
+            writeConsole(OUTPUT_INFO, "Deinitialized PhysX");
         }
         else
         {
-            loadend_printf("failed");
+            writeConsole(OUTPUT_ERROR, "Failed to deinitialize PhysX");
         }
     }
 #endif

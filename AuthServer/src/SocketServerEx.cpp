@@ -645,7 +645,7 @@ void CSocketServerEx::OnCreate()
         NonEncSend("cdddbdb", AC_PROTOCOL_VER, oneTimeKey, config.ProtocolVer,
             expByteCount, expByteCount, expBuffer, modByteCount, modByteCount, modBuffer);
     }
-    AS_LOG_VERBOSE( "SND: AC_PROTOCOL_VER,onetimekey:%d,buildNumber:%d", oneTimeKey, buildNumber );
+    AS_LOG_VERBOSE( "SND: AC_PROTOCOL_VER,onetimekey:%d,buildVersion:%s", oneTimeKey, buildVersion);
     OnRead();
 }
 

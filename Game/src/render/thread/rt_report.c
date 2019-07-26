@@ -61,9 +61,9 @@ const char *makeReportFile()
     /* ---------------------------------------------------------------------- */
     /* output header information */
     /* OpenGL extensions */
-    fprintf(file, "OpenGL vendor string: %s\n", glGetString(GL_VENDOR));
-    fprintf(file, "OpenGL renderer string: %s\n", glGetString(GL_RENDERER));
-    fprintf(file, "OpenGL version string: %s\n", glGetString(GL_VERSION));
+    //fprintf(file, "OpenGL vendor string: %s\n", glGetString(GL_VENDOR));
+    //fprintf(file, "OpenGL renderer string: %s\n", glGetString(GL_RENDERER));
+    //fprintf(file, "OpenGL version string: %s\n", glGetString(GL_VERSION));
     fprintf(file, "OpenGL extensions (GL_): \n");
     PrintExtensions((const char*)glGetString(GL_EXTENSIONS));
     PrintHypnos((const char*)glGetString(GL_EXTENSIONS));

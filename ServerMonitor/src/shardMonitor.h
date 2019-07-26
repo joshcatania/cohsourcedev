@@ -1,8 +1,9 @@
-#pragma once
+#ifndef _SHARD_MONITOR_H
+#define _SHARD_MONITOR_H
 
 #include <winsock2.h>
 #include <windows.h>
-#include "textparser.h"
+#include <utilitieslib/utils/textparser.h>
 
 LRESULT CALLBACK DlgShardMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
@@ -15,3 +16,5 @@ LRESULT CALLBACK DlgShardMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lP
 //#define COLOR_DIVIDER RGB(0,0,0), RGB(0,0,0)
 #define COLOR_DIVIDER RGB(255,255,255), RGB(255,255,255)
 #define COLOR_BAD_VERSION LISTVIEW_DEFAULT_COLOR, LISTVIEW_BAD_VERSION_COLOR
+
+#endif // _SHARD_MONITOR_H

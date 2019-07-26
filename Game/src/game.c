@@ -199,9 +199,9 @@ void parseArgs(int argc,char **argv)
                 
             strcat(buf," 1");
         }
-        printf("%s\n",buf);
+        //printf("%s\n",buf);
         if (!cmdParse(buf)) {
-            winMsgAlert(textStd("CommandLineErr", buf));
+            //winMsgAlert(textStd("CommandLineErr", buf));
         }
     }
     cmdAccessOverride(0);
@@ -1249,7 +1249,7 @@ void parseArgs0(int argc, char **argv)
      else
          renderThreadSetThreading(0);
 
-    printf("num cpus = %d / %d\n",getNumRealCpus(),getNumVirtualCpus());
+    //writeConsole(OUTPUT_INFO, "num cpus = %d / %d", getNumRealCpus(), getNumVirtualCpus());
 
     for(i=1;i<argc;i++)
     {
@@ -1491,31 +1491,25 @@ static void AttachConsoleIfAvail(void)
     }
 }
 
-void parseArgsForConsole(int argc, char **argv)
-{
-    int i;
+void parseArgsForConsole(int argc, char** argv) {
+	int i;
 
-    for(i=1;i<argc;i++)
-    {
-        if (CHECKARG("-console")) { // Do this early!
-            newConsoleWindow();
-            consoleStarted = true;
-        }
-        else if (CHECKARG("-nogui"))
-        {
-            AttachConsoleIfAvail();
-            newConsoleWindow();
-            consoleStarted = true;
-            ShowWindow(compatibleGetConsoleWindow(), SW_SHOW);
+	for (i = 1; i < argc; i++) {
+		if (CHECKARG("-console")) { // Do this early!
+			newConsoleWindow();
+			consoleStarted = true;
+		} else if (CHECKARG("-nogui")) {
+			AttachConsoleIfAvail();
+			newConsoleWindow();
+			consoleStarted = true;
+			ShowWindow(compatibleGetConsoleWindow(), SW_SHOW);
 
-            setGuiDisable(true);
-            g_win_ignore_popups = 1;
-        }
-        else if (CHECKARG("-showLoadMemUsage"))
-        {
-            setShowLoadMemUsage(true);
-        }
-    }
+			setGuiDisable(true);
+			g_win_ignore_popups = 1;
+		} else if (CHECKARG("-showLoadMemUsage")) {
+			setShowLoadMemUsage(true);
+		}
+	}
 }
 
 void startHiddenConsole()
@@ -1553,7 +1547,9 @@ void game_beforeFolderCacheIgnore(int timer, int argc, char **argv)
     parseArgsForCovFlag(argc, argv);
 
     windowInit();
-    printf("Running %s\n", argv[0]);
+	writeConsole(OUTPUT_INFO, "Project: Ouroboros");
+	writeConsole(OUTPUT_INFO, "Git Commit Hash: %s", build_version);
+    writeConsole(OUTPUT_INFO, "Running %s", argv[0]);
 
     acquireCountMutex();
     
@@ -1659,18 +1655,14 @@ void game_beforeParseArgs(int doLogging)
         setCurrentLocale(locGetIDInRegistry());
 
     // @todo ab: this should be enabled at some point, if it is safe.
-//    setlocale(LC_CTYPE,"");
-    UPDATE_PROGRESS_STRING("Loading message stores...");
-    if(game_state.create_bins)
-    {
-        reloadClientMessageStores(LOCALE_ID_ENGLISH);
-    }
-    else
-    {
-        reloadClientMessageStores(getCurrentLocale());
-    }
-
-    loadend_printf("done.");
+	//setlocale(LC_CTYPE,"");
+	writeConsole(OUTPUT_DEBUG, "Loading message stores");
+	if (game_state.create_bins) {
+		reloadClientMessageStores(LOCALE_ID_ENGLISH);
+	} else {
+		reloadClientMessageStores(getCurrentLocale());
+	}
+	writeConsole(OUTPUT_INFO, "Loaded message stores");
 
     // See if we crashed last time
     checkForCrash();
@@ -1788,9 +1780,9 @@ static void finalizeRenderer(void)
         // there must have been a problem in the finalization that caused some features
         // to be disabled. Go ahead and log the new feature string to the console for
         // information.
-        printf("Reduced Render Features: %s\n", rdrFeaturesString(false));
+        writeConsole(OUTPUT_WARNING, "Reduced Render Features: %s", rdrFeaturesString(false));
     }
-    printf("Renderer initialization complete.\n");
+	writeConsole(OUTPUT_INFO, "Renderer initialization complete");
 
     //**
     // Reapply graphics settings in case we forced something off
@@ -1822,21 +1814,21 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
     //TO DO move up more to be next to gfxApplySettings to reduce confustion
     maximize = game_state.maximized;  //this here because windowResize clears out maximize
 
-    if (!game_state.texWordEdit) { // these don't get loaded/used for the texWordEditor
-        UPDATE_PROGRESS_STRING("Caching relevant folders.. ");
+    if (!game_state.texWordEdit && FolderCacheGetMode() != FOLDER_CACHE_MODE_DEVELOPMENT_DYNAMIC) { // these don't get loaded/used for the texWordEditor
         cacheRelevantFolders();
-        loadend_printf("done");
+		writeConsole(OUTPUT_INFO, "Cached relevant folders");
 
-        UPDATE_PROGRESS_STRING("loading sounds.. ");
         sndInit();
-        loadend_printf("done");
+		writeConsole(OUTPUT_INFO, "Loaded sounds");
     }
-    UPDATE_PROGRESS_STRING("loading tricks.. ");
+	writeConsole(OUTPUT_DEBUG, "Loading tricks");
     trickLoad();
-    loadend_printf("done");
+	writeConsole(OUTPUT_INFO, "Loaded tricks");
     conCreate();
     texWordsAllowLoading(true);
+	writeConsole(OUTPUT_DEBUG, "Loading texWords");
     texWordsLoad(locGetName(getCurrentLocale())); // Before texLoadHeaders
+	writeConsole(OUTPUT_INFO, "Loaded texWords");
 
     if (!game_state.create_bins) {
         game_setProgressString("INIT: before rdrInitTopOfFrame()", "CrashPromptSafeMode", PROGRESSDIALOGTYPE_SAFEMODE);
@@ -1863,9 +1855,8 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
         fontNew(&sysfont_info); // font #0
 
         // Must be before loadBG because the BG might be a composited image with a font
-        UPDATE_PROGRESS_STRING("loadFonts...");
         loadFonts();
-        loadend_printf("");
+        writeConsole(OUTPUT_INFO, "Loaded fonts");
     }
     
     fontInitCriticalSection();
@@ -1925,11 +1916,10 @@ void game_initWindow(int maximize)
 
 void game_networkStart(void)
 {
-    UPDATE_PROGRESS_STRING("Networking startup...");
     packetStartup(game_state.packet_mtu,1);
     commNewInputPak();
     sockStart();
-    loadend_printf("");
+    writeConsole(OUTPUT_INFO, "Initialized network library");
     inpClear();
 }
 
@@ -1945,9 +1935,9 @@ void game_loadData(int isCostumeCreator)
     {
         PERFINFO_AUTO_STOP_START("middle", 1);
         groupLoadLibs();    // Must be before FX and Sequencers
-        UPDATE_PROGRESS_STRING("loading lod infos.. ");
+		writeConsole(OUTPUT_DEBUG, "Loading LOD info");
         lodinfoLoad();
-        loadend_printf("done");
+		writeConsole(OUTPUT_INFO, "Loaded LOD info");
         modelInitReload();
         makeBaseMakeReferenceArrays();
     }
@@ -1955,28 +1945,27 @@ void game_loadData(int isCostumeCreator)
     if (!game_state.minimal_loading)
     {
         //Preloading sequencers
-        UPDATE_PROGRESS_STRING("loading sequencers...");
+		writeConsole(OUTPUT_DEBUG, "Loading sequencers");
         loadClothWindInfo(); // Must be before loading sequencers
         loadClothColInfo();
 
         PERFINFO_AUTO_STOP_START("middle3", 1);
 
         seqPreloadSeqInfos(); // Must be after groupLoadLibs
-        loadend_printf("");
+        writeConsole(OUTPUT_INFO, "Loaded sequencers");
     }
 
     PERFINFO_AUTO_STOP_START("middle4", 1);
 
     //Misc
-    UPDATE_PROGRESS_STRING("Loading misc...");
-    UPDATE_PROGRESS_STRING("Loading message stores.. ");
+    writeConsole(OUTPUT_DEBUG, "Loading message stores");
     commInit();
 
     PERFINFO_AUTO_STOP_START("middle5", 1);
 
     // Load the profanity filter words.
     LoadProfanity();
-    loadend_printf("");
+    writeConsole(OUTPUT_INFO, "Loaded message stores");
 
     if (!isCostumeCreator && !game_state.minimal_loading)
     {
@@ -1985,9 +1974,9 @@ void game_loadData(int isCostumeCreator)
         PERFINFO_AUTO_STOP_START("middle7", 1);
 
         // Load the new classes, origins, and power stuff.
-        UPDATE_PROGRESS_STRING("Loading powers.. ");
+        writeConsole(OUTPUT_DEBUG, "Loading powers");
         load_AllDefs();
-        loadend_printf("");
+        writeConsole(OUTPUT_INFO, "Loaded powers");
 
         MissionMapPreload();
         PNPCPreload();
@@ -1995,9 +1984,9 @@ void game_loadData(int isCostumeCreator)
         PERFINFO_AUTO_STOP_START("middle8", 1);
 
         // store defs
-        UPDATE_PROGRESS_STRING("Loading items.. ");
+        writeConsole(OUTPUT_DEBUG, "Loading items");
         load_Stores();
-        loadend_printf("");
+        writeConsole(OUTPUT_INFO, "Loaded items");
     }
 
     PERFINFO_AUTO_STOP_START("middle9", 1);
@@ -2010,8 +1999,6 @@ void game_loadData(int isCostumeCreator)
         PERFINFO_AUTO_STOP_START("middle10", 1);
 
         init_menus();
-
-        loadend_printf("");
 
         PERFINFO_AUTO_STOP_START("middle11", 1);
 
@@ -2081,22 +2068,22 @@ void game_loadData(int isCostumeCreator)
 
     if (!game_state.minimal_loading)
     {
-        UPDATE_PROGRESS_STRING("Pre-loading character animations...");
+		writeConsole(OUTPUT_DEBUG, "Preloading character animations");
         seqPreLoadPlayerCharacterAnimations( SEQ_LOAD_FULL ); //after PreloadSeqInfos
-        loadend_printf("done");
+        writeConsole(OUTPUT_INFO, "Preloaded character animations");
 
         PERFINFO_AUTO_STOP_START("middle19", 1);
 
-        UPDATE_PROGRESS_STRING("Pre-loading fx geometry...");
+		writeConsole(OUTPUT_DEBUG, "Preloading FX geometry");
         fxPreloadGeometry();
-        loadend_printf("done");
+        writeConsole(OUTPUT_INFO, "Preloaded FX geometry");
     }
     PERFINFO_AUTO_STOP();
 
     PERFINFO_AUTO_STOP_START("middle19", 1);
-    UPDATE_PROGRESS_STRING("Creating Auction Data...");
+	writeConsole(OUTPUT_DEBUG, "Creating auction data");
     auction_Init();
-    loadend_printf("done");
+    writeConsole(OUTPUT_INFO, "Created auction data");
     PERFINFO_AUTO_STOP();
 }
 
@@ -2158,11 +2145,7 @@ void game_beforeLoop(int isCostumeCreator, int timer)
 
     server_visible_state.timestepscale = 1;
 
-    i = printf("Done loading.");
-    for(;i<70;i++) printf(" ");
-    consoleSetFGColor(COLOR_GREEN | COLOR_BRIGHT);
-    printf("(%0.2f)\n",timerElapsed(timer));
-    consoleSetFGColor(COLOR_RED|COLOR_BLUE|COLOR_GREEN);
+	writeConsole(OUTPUT_INFO, "Loaded all data!");
 
     if (!isCostumeCreator)
         windows_initDefaults(0);
@@ -2328,13 +2311,9 @@ int game_mainLoop(int timer)
         {
             static bool b=false;
             if (!b) {
-                char buf[1024];
-                //FILE *f;
+                /* char buf[1024];
                 sprintf(buf, "Time to load game and get into a map: %1.3gs\n", timerElapsed(timer));
-                printf("%s", buf);
-                //f=fopen("C:\\jimb.txt", "a");
-                //fprintf(f, "%s", buf);
-                //fclose(f);
+                printf("%s", buf); */
                 timerFree(timer);
                 b=true;
             }

@@ -1058,7 +1058,7 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
 
     PERFINFO_AUTO_START("dbConnect", 1);
 
-        loadstart_printf("Connecting to DbServer %s:%d (UDP) cookie: %x..",server,port,cookie);
+        writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (UDP) Cookie: %x", server, port, cookie);
         Strncpyt(db_info.address, makeIpStr(ipFromString(server)));
         if (db_comm_link.socket)
             netSendDisconnect(&db_comm_link,1);
@@ -1066,7 +1066,7 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
         if (!ret)
         {
             Strncpyt(db_info.error_msg,"CantConnectDbServer");
-            loadend_printf("failed");
+			writeConsole(OUTPUT_ERROR, "Failed to connect to DBServer");
             PERFINFO_AUTO_STOP();
             return 0;
         }
@@ -1132,13 +1132,12 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
 
         if (!(commandFound=dbWaitForStartOrQueue(timeout)))
         {
-            loadend_printf("failed");
+			writeConsole(OUTPUT_ERROR, "Failed to connect to DBServer");
             PERFINFO_AUTO_STOP();
             return 0;
         }
 
         testClientRandomDisconnect(TCS_dbConnect_3);
-        loadend_printf("ok");
 
     PERFINFO_AUTO_STOP();
 

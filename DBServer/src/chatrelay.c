@@ -215,38 +215,58 @@ void shardChatInit()
 
 void shardChatMonitor()
 {
-    char    buf[1000];
-    static int timer;
+	char    buf[1000];
+	static int timer;
 
-    if (!server_cfg.chat_server[0])
-        return;
-    sendStatusAll();
-    if (!shard_comm.connected)
-    {
-        shardChatInit();
-        if (timer && timerElapsed(timer) < 10)
-            return;
-        if (!timer)
-            timer = timerAlloc();
-        timerStart(timer);
-        if (!netConnect(&shard_comm,server_cfg.chat_server,DEFAULT_CHATSERVER_PORT,NLT_TCP,1,NULL))
-        {
-            printf("Can't connect to chatserver - make sure it's running\n");
-            return;
-        }
-        if (server_cfg.shard_name[0])
-        {
-            sprintf(buf,"ShardLogin \"%s\"",server_cfg.shard_name);
-            shardSend(0,buf);
-            flushAggregate();
-        }
-        if( server_cfg.isLoggingMaster )    
-            sendLogLevels(&shard_comm, SHARDCOMM_SET_LOG_LEVELS);
-        netLinkSetMaxBufferSize(&shard_comm, BothBuffers, 8*1024*1024); // Set max size to auto-grow to
-        netLinkSetBufferSize(&shard_comm, BothBuffers, 1*1024*1024);
-    }
-    netLinkMonitor(&shard_comm, 0, shardMessageCallback);
-    lnkBatchSend(&shard_comm);
-    flushAggregate();
+	if (!server_cfg.chat_server[0])
+		return;
+	sendStatusAll();
+	if (!shard_comm.connected)
+	{
+		if (!shard_comm.pending)
+		{
+			shardChatInit();
+			if (timer && timerElapsed(timer) < 10)
+				return;
+			if (!timer)
+				timer = timerAlloc();
+			timerStart(timer);
+
+			int connectResult = netConnectAsync(&shard_comm, server_cfg.chat_server, DEFAULT_CHATSERVER_PORT, NLT_TCP, 1);
+			if (connectResult != 1)
+			{
+				printf("Can't start connecting to chatserver - make sure it's running\n");
+			}
+			return;
+		}
+
+		int result = netConnectPoll(&shard_comm);
+		switch (result)
+		{
+		case -1: // Error; fall through
+			printf("Can't connect to chatserver - make sure it's running\n");
+			return;
+		case 0: // Still trying
+			return;
+		}
+
+		// Success
+		if (server_cfg.shard_name[0])
+		{
+			sprintf(buf, "ShardLogin \"%s\"", server_cfg.shard_name);
+			shardSend(0, buf);
+			flushAggregate();
+		}
+		if (server_cfg.isLoggingMaster)
+		{
+			sendLogLevels(&shard_comm, SHARDCOMM_SET_LOG_LEVELS);
+		}
+		netLinkSetMaxBufferSize(&shard_comm, BothBuffers, 8 * 1024 * 1024); // Set max size to auto-grow to
+		netLinkSetBufferSize(&shard_comm, BothBuffers, 1 * 1024 * 1024);
+	}
+
+	netLinkMonitor(&shard_comm, 0, shardMessageCallback);
+	lnkBatchSend(&shard_comm);
+	flushAggregate();
 }
 

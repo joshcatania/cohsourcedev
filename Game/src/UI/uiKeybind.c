@@ -69,7 +69,6 @@ void ParseBindings()
 {
     clock_t start, finish;
     double duration;
-    verbose_printf( "Load Keybind " );
     start = clock();
     
     if (game_state.create_bins)
@@ -106,7 +105,7 @@ void ParseBindings()
 
     finish = clock();
     duration = (double)(finish - start) / CLOCKS_PER_SEC;
-    verbose_printf("Time to load: %2.3f\n", duration);
+	writeConsole(OUTPUT_VERBOSE, "Loaded keybinds in %2.3fs", duration);
 }
 
 

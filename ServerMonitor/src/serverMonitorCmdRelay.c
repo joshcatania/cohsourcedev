@@ -1,41 +1,39 @@
-#include <winsock2.h>
-#include <windows.h> 
-#include "relaycomm.h"
+#include <container.h>
+#include <relay_util.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/network/net_linklist.h>
+#include <utilitieslib/network/netio_core.h>
+#include <utilitieslib/network/sock.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/utils/MemoryMonitor.h>
+#include <utilitieslib/utils/RegistryReader.h>
+#include <utilitieslib/utils/sysutil.h>
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/winutil.h>
+
+#include <assert.h>
+#include <CommCtrl.h>
+#include <direct.h>
+#include <process.h>
+#include <Shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
-#include "RegistryReader.h"
-#include "earray.h"
-#include <Shellapi.h>
-#include "ListView.h"
-#include "textparser.h"
-#include "resource.h"
-#include "assert.h"
-#include "timing.h"
-#include "utils.h"
-#include "container.h"
-#include "MemoryMonitor.h"
-#include "winutil.h"
-#include "relay_utils.h"
-#include "relay_util.h"
-#include <CommCtrl.h>
-#include "prompt.h"
-#include "serverMonitorCommon.h"
-#include "netio_core.h"
-#include <direct.h>
-#include "sysutil.h"
-#include "shardMonitorComm.h"
-#include "serverMonitor.h"
-#include "serverMonitorNet.h"
-#include "net_linklist.h"
-#include "sock.h"
+
 #include "chatMonitor.h"
-#include "mathutil.h"
-#include "file.h"
+#include "relay_utils.h"
+#include "relaycomm.h"
+#include "resource.h"
+#include "prompt.h"
+#include "serverMonitor.h"
 #include "serverMonitorCmdRelay.h"
-
-
+#include "serverMonitorCommon.h"
+#include "serverMonitorNet.h"
+#include "shardMonitorComm.h"
 
 HWND g_hRelayStatusBar = NULL;
 ListView *lvRelays = NULL;
@@ -125,7 +123,7 @@ void cmdRelayAutoApplyPatch(Packet * pak)
 		if(con && con->actionResult == CMDRELAY_ACTION_STATUS_BUSY)
 		{
 			// error -- one of the relays is busy!
-			MessageBox(NULL, "One or more relays is busy!", "Error", MB_ICONERROR);
+			MessageBoxA(NULL, "One or more relays is busy!", "Error", MB_ICONERROR);
 			return;
 		}
 	}
@@ -146,14 +144,14 @@ void cmdRelayAutoApplyPatch(Packet * pak)
 	{
 		if(!safeRenameFile(newFilename, backupFilename))
 		{
-			MessageBox(NULL, "Unable to rename .bak to .bak.bak!", "Error", MB_ICONERROR);
+			MessageBoxA(NULL, "Unable to rename .bak to .bak.bak!", "Error", MB_ICONERROR);
 			return;
 		}
 	}
 
 	if(!safeRenameFile(oldFilename, newFilename))
 	{
-		MessageBox(NULL, "Unable to rename self!", "Error", MB_ICONERROR);
+		MessageBoxA(NULL, "Unable to rename self!", "Error", MB_ICONERROR);
 		return;
 	}
 
@@ -319,10 +317,10 @@ void cmdRelayTick(HWND hDlg)
 						}
 
 						// add flag to kill previous servermonitors, if necessary
-						if(strstri(GetCommandLine(), "-killprev"))
-							strcpy(cmd, GetCommandLine());	
+						if(strstri(GetCommandLineA(), "-killprev"))
+							strcpy(cmd, GetCommandLineA());	
 						else
-							sprintf(cmd, "%s -killprev", GetCommandLine());
+							sprintf(cmd, "%s -killprev", GetCommandLineA());
 
 						// add flag to auto-connect, if necessary
 						if(!strstri(cmd, "-connect"))
@@ -339,7 +337,7 @@ void cmdRelayTick(HWND hDlg)
 
 						if(!execAndQuit(getExecutableName(), cmd))
 						{
-							MessageBox(NULL, "Failed to auto-restart ServerMonitor.exe! You will have to manually restart it", "Error", MB_ICONERROR);
+							MessageBoxA(NULL, "Failed to auto-restart ServerMonitor.exe! You will have to manually restart it", "Error", MB_ICONERROR);
 						}
 					}
 
@@ -487,7 +485,7 @@ void onCustomCmdDelete(HWND hDlg)
 
 	getText(hDlg, NULL, relayMapping, ARRAY_SIZE(relayMapping));
 
-	SetDlgItemText(hDlg, IDC_COMBO_RELAY_CUSTOM_CMD, "");
+	SetDlgItemTextA(hDlg, IDC_COMBO_RELAY_CUSTOM_CMD, "");
 	removeNameFromList("CustomCmd", g_customCmd);
 	i = SendMessage(GetDlgItem(hDlg, IDC_COMBO_RELAY_CUSTOM_CMD), CB_FINDSTRING, 0, (WPARAM) &g_customCmd[0]);
 	if(i != CB_ERR)
@@ -509,24 +507,24 @@ LRESULT CALLBACK DlgCmdRelayProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lP
 
 			getNameList("UpdateSvr");
 			for (i=0; i<name_count; i++) 
-				SendMessage(GetDlgItem(hDlg, IDC_COMBO_RELAY_UPDATE_SVR), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
+				SendMessageA(GetDlgItem(hDlg, IDC_COMBO_RELAY_UPDATE_SVR), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
 
 			getNameList("CustomCmd");
 			for (i=0; i<name_count; i++) 
-				SendMessage(GetDlgItem(hDlg, IDC_COMBO_RELAY_CUSTOM_CMD), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
+				SendMessageA(GetDlgItem(hDlg, IDC_COMBO_RELAY_CUSTOM_CMD), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
 
 
 			initText(hDlg, NULL, relayMapping, ARRAY_SIZE(relayMapping));
 
 			// Status bar stuff
-			g_hRelayStatusBar = CreateStatusWindow( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
+			g_hRelayStatusBar = CreateStatusWindowA( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
 			{
 				int temp[4];
 				temp[0]=100;
 				temp[1]=200;
 				temp[2]=300;
 				temp[3]=-1;
-				SendMessage(g_hRelayStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
+				SendMessageA(g_hRelayStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
 			}
 
 			strcpy(g_shardRelayClientStatus, "Ready");

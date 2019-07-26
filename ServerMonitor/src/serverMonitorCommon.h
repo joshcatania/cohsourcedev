@@ -1,11 +1,11 @@
 #ifndef SERVER_MONITOR_COMMON_H
 #define SERVER_MONITOR_COMMON_H
 
-//#define WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <windows.h>
-#include "textparser.h"
-#include "RegistryReader.h"
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/RegistryReader.h>
 #include <commctrl.h>
 
 typedef enum VarMapFlags {

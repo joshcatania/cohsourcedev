@@ -1098,7 +1098,7 @@ void partPreloadParticles()
     char *filetype=game_state.nofx?"fx/Generic/Generic_pow.part":".part";
     int flags=0;
     char *binFilename = game_state.nofx?0:"particles.bin";
-    loadstart_printf("Preloading particles..");
+    writeConsole(OUTPUT_DEBUG, "Preloading particles");
     // Absolutely cannot be shared (members get modified/added to)
     ParserLoadFiles(dir, filetype, binFilename, flags, ParticleParseInfo, &particle_info, NULL, NULL, NULL);
 
@@ -1129,7 +1129,7 @@ void partPreloadParticles()
             }
         }
     }
-    loadend_printf("");
+    writeConsole(OUTPUT_INFO, "Preloaded particles");
     //ParserWriteBinaryFile("particles2.bin", ParticleParseInfo, &particle_info);
 }
 

@@ -1,3 +1,7 @@
+#ifndef _SERVER_MONITOR_NET_H
+#define _SERVER_MONITOR_NET_H
+
+#include <utilitieslib/stdtypes.h>
 
 typedef struct ListView ListView;
 typedef struct MapCon MapCon;
@@ -41,3 +45,5 @@ void smcbSaKill(ListView *lv, void *structptr, ServerMonitorState *state);
 void smcbSaRemoteDesktop(ListView *lv, void *structptr, ServerMonitorState *state);
 
 void launchRemoteDesktop(U32 ip, const char *name);
+
+#endif // _SERVER_MONITOR_NET_H

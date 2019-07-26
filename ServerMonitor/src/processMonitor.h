@@ -1,6 +1,9 @@
-#pragma once
+#ifndef _PROCESS_MONITOR_H
+#define _PROCESS_MONITOR_H
 
-#define  WIN32_LEAN_AND_MEAN
+#include <utilitieslib/stdtypes.h>
+
+#define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>
 #include <windows.h>
 
@@ -47,3 +50,5 @@ enum {
 };
 
 int executeServer(char *cmd, int minimized);
+
+#endif // _PROCESS_MONITOR_H

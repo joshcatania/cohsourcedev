@@ -1,18 +1,19 @@
+#include <comm_backend.h>
+#include <dbdispatch.h>
+#include <launchercomm.h>
+#include <utilitieslib/network/netio_core.h>
+#include <utilitieslib/utils/error.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/structNet.h>
+#include <utilitieslib/utils/timing.h>
+
+#include <assert.h>
+#include <stdio.h>
+
 #define RELAYCOMM_PARSE_INFO_DEFS
 #include "relaycomm.h"
-#include "error.h"
-#include "comm_backend.h"
-#include <stdio.h>
-#include "assert.h"
-#include "structNet.h"
-#include "netio_core.h"
-#include "dbdispatch.h"
-#include "launchercomm.h"
-#include "timing.h"
-#include "ListView.h"
 #include "serverMonitorCmdRelay.h"
-#include "file.h"
-
 
 #define MAX_CLIENTS 50
 
@@ -139,7 +140,7 @@ BOOL DetermineValidCmdRelayFilename()
 				}
 				else
 				{
-					MessageBox(NULL, "Unable to locate CmdRelay.exe. Auto-update is disabled", "ERROR", MB_ICONERROR);
+					MessageBoxA(NULL, "Unable to locate CmdRelay.exe. Auto-update is disabled", "ERROR", MB_ICONERROR);
 					exe = 0;
 				}
 			}
@@ -190,7 +191,7 @@ void receiveProtocolFromClient(Packet * pak, NetLink * link)
 
 			if(!data)
 			{
-				MessageBox(NULL, "Failed to read file", "ERROR", MB_ICONERROR);
+				MessageBoxA(NULL, "Failed to read file", "ERROR", MB_ICONERROR);
 				return;
 			}
 

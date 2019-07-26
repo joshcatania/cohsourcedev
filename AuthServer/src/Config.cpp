@@ -45,13 +45,8 @@ void* LoadBinary(const char* name, int* size, bool appendNull)
     return pBuf;
 }
 
-Config::Config()
-{
-}
-
-Config::~Config()
-{
-}
+Config::Config() {}
+Config::~Config() {}
 
 bool Config::Load(const char *filename)
 {
@@ -220,6 +215,8 @@ bool Config::Load(const char *filename)
         
         enableVerboseLogging = GetBool("enableVerboseLogging", DEFAULT_VERBOSE_LOGGING );
         enableDebugLogging = GetBool("enableDebugLogging", DEFAULT_DEBUG_LOGGING );
+
+		connectionString = Get("connectionString");
     }
     
     return configFileLoaded;

@@ -679,7 +679,7 @@ void CIPSocket::OnCreate()
 {
     AddRef();
     OnRead();
-    Send( "cdc", AI_SERVER_VERSION, buildNumber, config.gameId );
+    Send( "csc", AI_SERVER_VERSION, buildVersion, config.gameId );
 }
 
 void CIPSocket::OnRead()

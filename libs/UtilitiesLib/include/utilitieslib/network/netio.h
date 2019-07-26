@@ -150,7 +150,6 @@ int pktGet(Packet **pakptr,NetLink *link);
 char *makeIpStr(U32 ip);
 char *makeHostNameStr(U32 ip);
 int isLocalIp(U32 ip);
-void setIpList(struct hostent *host_ent,U32 *ip_list);
 int setHostIpList(U32 ip_list[2]);
 U32 getHostLocalIp();
 U32 ipFromString(const char *s);

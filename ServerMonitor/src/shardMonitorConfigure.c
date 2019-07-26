@@ -1,12 +1,13 @@
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/utils.h>
+
+#include "resource.h"
+#include "serverMonitorCommon.h"
+#include "shardMonitor.h"
 #include "shardMonitorConfigure.h"
 #include "shardMonitorConfigureNewShard.h"
-#include "shardMonitor.h"
-#include "serverMonitorCommon.h"
-#include "utils.h"
-#include "resource.h"
-#include "ListView.h"
-#include "earray.h"
-#include "file.h"
 
 TokenizerParseInfo shardMonitorConfigEntryInfo[] = {
 	{ "Name",		TOK_STRUCTPARAM | TOK_FIXEDSTR(ShardMonitorConfigEntry, name)},

@@ -1,14 +1,16 @@
+#include <container.h>
+#include <svrmoncomm.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/utils/ListView.h>
+
+#include <stdio.h>
 #include <winsock2.h>
-#include "serverMonitorEnts.h"
+
 #include "serverMonitor.h"
 #include "serverMonitorCommon.h"
+#include "serverMonitorEnts.h"
 #include "serverMonitorNet.h"
 #include "resource.h"
-#include "ListView.h"
-#include "earray.h"
-#include "svrmoncomm.h"
-#include <stdio.h>
-#include "container.h"
 
 HWND hEntsDialog = NULL;
 bool bSmentsUp=false;

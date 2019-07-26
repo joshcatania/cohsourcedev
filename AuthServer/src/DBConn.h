@@ -56,6 +56,7 @@ public:
     void Destroy();
     bool Login(bool reset=false);
     void AllocSQLPool();
+	bool LoadConnStrFromConfig();
     bool LoadConnStrFromReg();
     void SaveConnStrToReg();
 };

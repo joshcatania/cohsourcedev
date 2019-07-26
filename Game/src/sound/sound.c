@@ -1535,6 +1535,7 @@ void sndInit()
     g_audio_state.maxSoundSpheres = game_state.maxSoundSpheres;
     sound_name_hashes = stashTableCreateWithStringKeys(1000,StashDeepCopyKeys);
     
+	writeConsole(OUTPUT_DEBUG, "Loading sounds");
     fileScanAllDataDirs("sound", soundLoadCallback);
     FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE_AND_DELETE, "sound/*", noteChangedSounds);
     LoadSoundDefs();

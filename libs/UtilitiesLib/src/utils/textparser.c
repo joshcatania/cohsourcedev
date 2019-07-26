@@ -2427,6 +2427,7 @@ bool ParserLoadFiles(const char* dir, const char* filemask, const char* persistf
     {
         char *path=NULL;
 
+		writeConsole(OUTPUT_DEBUG, "\tParsing %s from %s", filemask, persistfile);
         path = fileLocateRead(persistfilepath, buf);
         if (path)
         {
@@ -2511,7 +2512,7 @@ bool ParserLoadFiles(const char* dir, const char* filemask, const char* persistf
         if (persistfile && !(flags & PARSER_OPTIONALFLAG)) {
             Errorf("ParserLoadFiles: couldn't find any files while creating %s", persistfile);
         } else {
-            verbose_printf("ParserLoadFiles: couldn't find any files\n");
+            writeConsole(OUTPUT_VERBOSE, "ParserLoadFiles: couldn't find any files");
         }
     }
     if (persistfile)

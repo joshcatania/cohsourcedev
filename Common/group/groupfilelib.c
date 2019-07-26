@@ -553,7 +553,6 @@ void objectLibraryLoadNames(int force_rebuild)
     if (init)
         return;
     init = 1;
-    loadstart_printf("loading grouplibs..");
     group_file_hashes = stashTableCreateWithStringKeys(600, StashDefault); // No deep copy
 
     strcpy(binfile_fullpath,"bin/defnames.bin");
@@ -572,8 +571,7 @@ void objectLibraryLoadNames(int force_rebuild)
     for(i=eaSize(&group_names.group_libnames)-1; i>=0; i--)
         addLibNameToHashes(group_names.group_libnames[i], i);
 
-    loadend_printf("%d files, %d names",eaSize(&group_names.group_files),eaSize(&group_names.group_libnames));
-
+	writeConsole(OUTPUT_INFO, "Loaded grouplibs: %d files, %d names", eaSize(&group_names.group_files), eaSize(&group_names.group_libnames));
 }
 
 void objectLibraryClearTags()

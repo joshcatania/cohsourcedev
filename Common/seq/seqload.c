@@ -1121,6 +1121,7 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
     SeqInfo * seqInfo;
     char seqInfoNameCleanedUp[SEQ_MAX_PATH];
 
+	writeConsole(OUTPUT_DEBUG, "\tReading %s", seqInfoName);
     PERFINFO_AUTO_START("top", 1);
         seqCleanSeqFileName(SAFESTR(seqInfoNameCleanedUp), seqInfoName);
         seqInfo = cpp_const_cast(SeqInfo*)(findSequencerByName(seqInfoNameCleanedUp));

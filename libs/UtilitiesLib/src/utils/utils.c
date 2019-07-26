@@ -457,6 +457,10 @@ void newConsoleWindow()
         fixStdio(0, STD_INPUT_HANDLE);
         fixStdio(1, STD_OUTPUT_HANDLE);
         fixStdio(2, STD_ERROR_HANDLE);
+
+        freopen("CONIN$", "r", stdin);
+        freopen("CONOUT$", "w", stdout);
+        freopen("CONOUT$", "w", stderr);
     }
 
     setvbuf( stdout, NULL, _IONBF, 0 );
@@ -2264,4 +2268,50 @@ int isHexChar(char h)
     return INRANGE(h,'0','9'+1)
         || INRANGE(h,'A','Z'+1)
         || INRANGE(h,'a','z'+1);
+}
+
+void writeConsole(OutputLevel level, const char *format, ...) {
+#ifndef _DEBUG
+	if (level == OUTPUT_DEBUG) {
+		return;
+	}
+#endif // _DEBUG
+
+	if (level == OUTPUT_VERBOSE && errorGetVerboseLevel() == 0) {
+		return;
+	}
+
+	va_list args = 0;
+	SYSTEMTIME systemTime = { 0 };
+	HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+
+	GetSystemTime(&systemTime);
+	va_start(args, format);
+	printf("[%02i-%02i-%02i %02i:%02i:%02i.%03i] [", systemTime.wYear, systemTime.wMonth, systemTime.wDay, systemTime.wHour, systemTime.wMinute, systemTime.wSecond, systemTime.wMilliseconds);
+	switch (level) {
+	case OUTPUT_INFO:
+		printf("INFO");
+		break;
+	case OUTPUT_VERBOSE:
+		consoleSetColor(COLOR_BLUE, 0);
+		printf("VERBOSE");
+		break;
+	case OUTPUT_DEBUG:
+		consoleSetColor(COLOR_GREEN, 0);
+		printf("DEBUG");
+		break;
+	case OUTPUT_WARNING:
+		consoleSetColor(COLOR_YELLOW, 0);
+		printf("WARNING");
+		break;
+	case OUTPUT_ERROR:
+		consoleSetColor(COLOR_RED, 0);
+		printf("ERROR");
+		break;
+	}
+	consoleSetDefaultColor();
+	printf("] ");
+	vprintf(format, args);
+	printf("\n");
+	va_end(args);
 }

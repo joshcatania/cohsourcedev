@@ -117,7 +117,7 @@ static void clientZowie_Destroy(Zowie *pZowie)
 void clientZowie_Load()
 {
     GroupDefTraverser traverser = {0};
-    loadstart_printf("Loading zowie locations.. ");
+    writeConsole(OUTPUT_DEBUG, "Loading zowie locations");
 
     // If we're doing a reload, clear out old data first.
     if (g_Zowies)
@@ -139,7 +139,7 @@ void clientZowie_Load()
     // Singal that we have valid def pointers
     defsAreValid = 1;
 
-    loadend_printf("%d zowies found", eaSize(&g_Zowies));
+    writeConsole(OUTPUT_INFO, "Loaded %d zowies", eaSize(&g_Zowies));
 }
 
 static void clientZowie_SetUpIndices(TaskStatus *task)

@@ -865,7 +865,7 @@ void shaderMgr_InitFPs(void)
     bool bUseCG = rt_cgGetCgShaderMode();
 
     //consoleSetColor(COLOR_GREEN|COLOR_BLUE, 0);
-    printf("Initializing fragment shaders...\n");
+	writeConsole(OUTPUT_INFO, "Compiling fragment shaders");
     //consoleSetDefaultColor();
 
     PERFINFO_AUTO_START("shaderMgr_InitFPs", 1);
@@ -1043,7 +1043,7 @@ void shaderMgr_InitVPs(void)
     }
     
     //consoleSetColor(COLOR_GREEN, 0);
-    printf("Initializing vertex shaders...\n");
+	writeConsole(OUTPUT_INFO, "Compiling vertex shaders");
     //consoleSetDefaultColor();
 
     PERFINFO_AUTO_START("shaderMgr_InitVPs", 1);

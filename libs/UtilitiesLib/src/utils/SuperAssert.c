@@ -1870,7 +1870,7 @@ int assertExcept(unsigned int code, PEXCEPTION_POINTERS info)
 
     generateVirtualMemoryLayout();
 
-    printf("%s PROGRAM CRASH OCCURRED!\n", timerGetTimeString());
+	writeConsole(OUTPUT_ERROR, "Program crash detected");
 
     // MAK - why do hardware engineers feel that div-zero is so important?
 

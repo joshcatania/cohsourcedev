@@ -8,6 +8,9 @@
 
 C_DECLARATIONS_BEGIN
 
+// Defined here so any software that depends on UtilitiesLib will include the networking library implicitly
+#pragma comment(lib, "Ws2_32.lib")
+
 typedef struct _CHAR_INFO CHAR_INFO;
 typedef struct _COORD COORD;
 
@@ -212,10 +215,6 @@ typedef const struct StashTableImp *cStashTable;
 StashTable receiveHashTable(Packet * pak, int mode);
 void sendHashTable(Packet * pak, StashTable table);
 
-#ifndef _XBOX
-#pragma comment (lib, "ws2_32.lib") //    for getHostName()
-#endif
-
 //JE: Changed this to a function, since where it was used, there was lots of dereferencing
 //    going on in the parameters... sped it up by ~20% acording to VTune
 static INLINEDBG F32 CLAMPF32(F32 var, F32 min, F32 max) {
@@ -303,6 +302,15 @@ uintptr_t x_beginthreadex(void *security, unsigned stack_size,
 void reverse_bytes(U8 *s,int len);
 
 char *loadCmdline(char *cmdFname,char *buf,int bufsize); // for loading cmdline.txt
+
+typedef enum OutputLevel {
+	OUTPUT_INFO,
+	OUTPUT_VERBOSE,
+	OUTPUT_DEBUG,
+	OUTPUT_WARNING,
+	OUTPUT_ERROR
+} OutputLevel;
+void writeConsole(OutputLevel level, const char *format, ...);
 
 C_DECLARATIONS_END
 

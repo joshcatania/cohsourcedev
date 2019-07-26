@@ -1,37 +1,35 @@
-#include <winsock2.h>
-#include <windows.h> 
-#include "relaycomm.h"
+#include <container.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/network/netio_core.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/MemoryMonitor.h>
+#include <utilitieslib/utils/RegistryReader.h>
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/winutil.h>
+
+#include <assert.h>
+#include <CommCtrl.h>
+#include <direct.h>
+#include <process.h>
+#include <Shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
-#include "RegistryReader.h"
-#include "earray.h"
-#include <Shellapi.h>
-#include "ListView.h"
-#include "textparser.h"
+#include <winsock2.h>
+
+#include "relaycomm.h"
 #include "resource.h"
-#include "assert.h"
-#include "timing.h"
-#include "utils.h"
-#include "container.h"
-#include "MemoryMonitor.h"
-#include "winutil.h"
 #include "relay_utils.h"
-#include <CommCtrl.h>
 #include "prompt.h"
-#include "serverMonitorCommon.h"
-#include "netio_core.h"
 #include "serverMonitor.h"
+#include "serverMonitorCommon.h"
 #include "shardMonitorComm.h"
-#include <direct.h>
 
 extern ListView *lvShardRelays;
 extern ListView *lvSmShards2;
 HWND g_hShardRelayStatusBar;
-
-
-
 
 void onShardRelayTick(HWND hDlg)
 {
@@ -157,21 +155,21 @@ LRESULT CALLBACK DlgShardRelayProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM 
 
 			getNameList("UpdateSvr");
 			for (i=0; i<name_count; i++) 
-				SendMessage(GetDlgItem(hDlg, IDC_COMBO_RELAY_UPDATE_SVR), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
+				SendMessageA(GetDlgItem(hDlg, IDC_COMBO_RELAY_UPDATE_SVR), CB_ADDSTRING, 0, (LPARAM)namelist[i]);
 
 			initText(hDlg, NULL, relayMapping, ARRAY_SIZE(relayMapping));
 
-			SetDlgItemText(hDlg, IDC_STATIC_CONNECTED_RELAYS, "Connected Shards:");
+			SetDlgItemTextA(hDlg, IDC_STATIC_CONNECTED_RELAYS, "Connected Shards:");
 
 			// Status bar stuff
-			g_hShardRelayStatusBar = CreateStatusWindow( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
+			g_hShardRelayStatusBar = CreateStatusWindowA( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
 			{
 				int temp[4];
 				temp[0]=100;
 				temp[1]=200;
 				temp[2]=300;
 				temp[3]=-1;
-				SendMessage(g_hShardRelayStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
+				SendMessageA(g_hShardRelayStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
 			}
 
 			SetTimer(hDlg, 0, 1000, NULL);

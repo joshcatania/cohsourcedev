@@ -1,11 +1,11 @@
-#ifndef SERVER_MONITOR_CMD_RELAY_H
-#define SERVER_MONITOR_CMD_RELAY_H
+#ifndef _SERVER_MONITOR_CMD_RELAY_H
+#define _SERVER_MONITOR_CMD_RELAY_H
 
 #include <winsock2.h>
 #include <windows.h>
 #include "container.h"
 #include "relay_types.h"
-#include "ListView.h"
+#include <utilitieslib/utils/ListView.h>
 #include "serverMonitor.h"
 
 #define RELAY_TICK_SEC	(2)		// update timer interval in seconds
@@ -70,4 +70,4 @@ void onRelayStopAll(ListView *lv, void *structptr, int cmd);
 
 void updateServerRelayStats(ServerStats *stats);
 
-#endif		// SERVER_MONITOR_CMD_RELAY_H
+#endif // _SERVER_MONITOR_CMD_RELAY_H

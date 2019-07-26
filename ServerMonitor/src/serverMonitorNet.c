@@ -1,36 +1,36 @@
+#include <comm_backend.h>
+#include <container.h>
+#define SVRMONCOMM_PARSE_INFO_DEFS
+#include <container/containerbroadcast.h>
+#include <entity/entVarUpdate.h>
+#include <launcher_common.h>
+#include <svrmoncomm.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/components/StashTable.h>
+#include <utilitieslib/network/net_link.h>
+#include <utilitieslib/network/net_socket.h>
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/network/netio_core.h>
+#include <utilitieslib/network/sock.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/utils/structHist.h>
+#include <utilitieslib/utils/structNet.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+
+#include <assert.h>
+#include <direct.h>
+#include <psapi.h>
+#include <windowsx.h>
+
+#include "processMonitor.h"
 #include "serverMonitorNet.h"
 #include "serverMonitor.h"
 #include "serverMonitorEnts.h"
-#include "netio.h"
-#include "net_socket.h"
-#include "comm_backend.h"
-#include "net_link.h"
-#include "netio_core.h"
-#include "sock.h"
-#include "container.h"
-#include "earray.h"
-#include "assert.h"
-#include "ListView.h"
-#include "structNet.h"
-#include "utils.h"
-#define SVRMONCOMM_PARSE_INFO_DEFS
-#include "svrmoncomm.h"
-#include <psapi.h>
-#include <direct.h>
-#include "timing.h"
-#include "entVarUpdate.h"
-#include "containerbroadcast.h"
-#include "structHist.h"
-#include "file.h"
-#include "processMonitor.h"
-#include <windowsx.h>
-#include "StashTable.h"
-#include "mathutil.h"
-#include "shardMonitor.h"
 #include "serverMonitorCrashMsg.h"
-#include "launcher_common.h"
-
-#pragma comment(lib, "psapi.lib")
+#include "shardMonitor.h"
 
 U32 timestamp=0; // Set globally
 bool g_someDataOutOfSync = false;
@@ -85,7 +85,7 @@ void startServersIfNotRunning(void)
 			if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod), 
 				&cbNeeded) )
 			{
-				GetModuleBaseName( hProcess, hMod, szProcessName, 
+				GetModuleBaseNameA( hProcess, hMod, szProcessName, 
 					sizeof(szProcessName) );
 			}
 			else {
@@ -783,7 +783,7 @@ int svrMonHandleMsg(Packet *pak,int cmd, NetLink *link)
 				} else {
 					sprintf(err_buf, "Error connecting to DbServer, network parse table (%d) CRCs do not match:\n  Server: %08x\n  Client: %08x", crc_num, server_crc, my_crc);
 				}
-				MessageBox(NULL, err_buf, "Error", MB_ICONWARNING);
+				MessageBoxA(NULL, err_buf, "Error", MB_ICONWARNING);
 			} else {
 				// Connected fine
 //				if (!received_update) {
@@ -1058,14 +1058,14 @@ void launchRemoteDesktop(U32 ip, const char *name)
 	_chdir("\\");
 
 	// see if the x64 file system redirection functions exist
-	kernel32_dll = LoadLibrary( "Kernel32.dll" );
+	kernel32_dll = LoadLibraryA( "Kernel32.dll" );
 	disableFsRedirectionFunc = (DisableFsRedirectionProc) GetProcAddress( kernel32_dll, "Wow64DisableWow64FsRedirection" );
 	revertFsRedirectionFunc = (RevertFsRedirectionProc) GetProcAddress( kernel32_dll, "Wow64RevertWow64FsRedirection" );
 	// 64 bit machines must disable the file system redirection in order to call mstsc.exe from the system32 directory
 	if ( disableFsRedirectionFunc && revertFsRedirectionFunc )
 	{
 		disableFsRedirectionFunc(&oldFsRedirection);
-		ShellExecute(NULL, "open", "C:/WINDOWS/system32/mstsc.exe", tempFileName, NULL, SW_SHOW);
+		ShellExecuteA(NULL, "open", "C:/WINDOWS/system32/mstsc.exe", tempFileName, NULL, SW_SHOW);
 		revertFsRedirectionFunc(oldFsRedirection);
 	}
 	else

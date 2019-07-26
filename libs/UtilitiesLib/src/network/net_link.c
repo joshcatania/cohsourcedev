@@ -431,6 +431,15 @@ int netConnectAsync(NetLink *link, const char *ip_str_in, int port, NetLinkType 
     return result;
 }
 
+/* Function netConnectPoll()
+ *    Check the current connection of a link with an async connection attempt
+ *
+ * Return value:
+ *  -1: Failed
+ *   0: Either link is not pending (an attempt wasn't made), or the attempt is still in progress
+ *   1: Connection has been made successfully
+ *
+ */
 int netConnectPoll(NetLink *link)
 {
     Packet*    pak;

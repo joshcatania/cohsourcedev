@@ -1,7 +1,8 @@
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/StringUtil.h> // Include order required here. StringUtil.h includes no headers.
+
 #include "prompt.h"
-#include "utils.h"
 #include "resource.h"
-#include "StringUtil.h"
 
 static DWORD dwValue;
 static char cpValue[4096];
@@ -51,11 +52,11 @@ static BOOL CALLBACK GetValueDlgProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARA
 				case PROMPT_MODE_STRING:
 					UTF8ToWideStrConvert(cpValue, wbuffer, ARRAY_SIZE(wbuffer)-1);
 					SetDlgItemTextW(hDlg, IDC_VALUE, wbuffer);
-					SetDlgItemText(hDlg, IDC_NAME, cpName);
+					SetDlgItemTextA(hDlg, IDC_NAME, cpName);
 					break;
 				case PROMPT_MODE_INT:
 					SetDlgItemInt(hDlg, IDC_VALUE, dwValue, FALSE);
-					SetDlgItemText(hDlg, IDC_NAME, cpName);
+					SetDlgItemTextA(hDlg, IDC_NAME, cpName);
 					break;
 			}
 			break;
@@ -75,7 +76,7 @@ static BOOL CALLBACK GetValueDlgProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARA
 						break;
 					case PROMPT_MODE_INT:
 						dwValue = GetDlgItemInt(hDlg, IDC_VALUE, &b, FALSE);
-						if (!b) { SetDlgItemText(hDlg, IDC_VALUE, "#INVALID#"); break; }
+						if (!b) { SetDlgItemTextA(hDlg, IDC_VALUE, "#INVALID#"); break; }
 						EndDialog(hDlg, LOWORD (wParam));
 						return TRUE;
 						break;

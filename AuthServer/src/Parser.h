@@ -30,7 +30,7 @@ enum Token
     eEOF
 };
 
-#define MAX_TOKEN_LEN    70
+#define MAX_TOKEN_LEN 256
 
 extern Token GetToken(std::istream& stream, char* value, bool strOnly);
 

@@ -30,27 +30,27 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
+    <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -110,6 +110,9 @@
       <Command>$(Projectdir)..\..\..\Utilities\StructParser\bin\$(PlatformTarget)\$(Configuration)\StructParser.exe PrjPath=$(ProjectPath);SrcDir=$(ProjectDir)..\..\src\;CommonDir=$(ProjectDir)..\..\..\Common\;OutDir=$(OutDir);IntDir=$(IntDir);Platform=$(Platform);Configuration=$(Configuration);SlnPath=$(SolutionPath)</Command>
       <Message>Running StructParser</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(SolutionDir)..\..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -132,6 +135,9 @@
       <Command>$(Projectdir)..\..\..\Utilities\StructParser\bin\$(PlatformTarget)\$(Configuration)\StructParser.exe PrjPath=$(ProjectPath);SrcDir=$(ProjectDir)..\..\src\;CommonDir=$(ProjectDir)..\..\..\Common\;OutDir=$(OutDir);IntDir=$(IntDir);Platform=$(Platform);Configuration=$(Configuration);SlnPath=$(SolutionPath)</Command>
       <Message>Running StructParser</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(SolutionDir)..\..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -157,6 +163,9 @@
       <Command>$(Projectdir)..\..\..\Utilities\StructParser\bin\$(PlatformTarget)\$(Configuration)\StructParser.exe PrjPath=$(ProjectPath);SrcDir=$(ProjectDir)..\..\src\;CommonDir=$(ProjectDir)..\..\..\Common\;OutDir=$(OutDir);IntDir=$(IntDir);Platform=$(Platform);Configuration=$(Configuration);SlnPath=$(SolutionPath)</Command>
       <Message>Running StructParser</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(SolutionDir)..\..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -183,6 +192,9 @@
       <Command>$(Projectdir)..\..\..\Utilities\StructParser\bin\$(PlatformTarget)\$(Configuration)\StructParser.exe PrjPath=$(ProjectPath);SrcDir=$(ProjectDir)..\..\src\;CommonDir=$(ProjectDir)..\..\..\Common\;OutDir=$(OutDir);IntDir=$(IntDir);Platform=$(Platform);Configuration=$(Configuration);SlnPath=$(SolutionPath)</Command>
       <Message>Running StructParser</Message>
     </PreBuildEvent>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(SolutionDir)..\..\bin</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Common\account\AccountCatalog.h" />

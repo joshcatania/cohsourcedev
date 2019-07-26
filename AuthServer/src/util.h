@@ -6,6 +6,8 @@
 #define RAND_MAX 0x7fff
 #define PRIVATE_KEY 0x87546CA100000000
 
+extern const char *buildVersion;
+
 int LNStrNCpy(char *dst, const char *src, int len);
 int Assemble(char* buf, int bufLen, const char* format, va_list ap);
 int Assemble(char *buf, int bufLen, const char *format, ...);

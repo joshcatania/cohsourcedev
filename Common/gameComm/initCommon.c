@@ -42,8 +42,8 @@
 #endif
 
 
-void cacheRelevantFolders()
-{
+void cacheRelevantFolders() {
+	writeConsole(OUTPUT_DEBUG, "Caching relevant folders");
     FolderCacheRequestTree(folder_cache, "Defs"); // If we're in dynamic mode, this will load this tree for faster file access
     FolderCacheRequestTree(folder_cache, "Menu");
     if (!quickload) {
@@ -64,27 +64,27 @@ void init_menus()
     if (!write_templates)
 #endif
     {
-        loadstart_printf("Loading FX info.. ");
-            fxPreloadFxInfo();
-        loadend_printf("done");
+		writeConsole(OUTPUT_DEBUG, "Loading FX info");
+        fxPreloadFxInfo();
+        writeConsole(OUTPUT_INFO, "Loaded FX info");
 
-        loadstart_printf("Building FX string handles.. ");
-            fxBuildFxStringHandles();
-        loadend_printf("done");
+		writeConsole(OUTPUT_DEBUG, "Generating FX string handles");
+        fxBuildFxStringHandles();
+        writeConsole(OUTPUT_INFO, "Generated FX string handles");
     }
 
-    loadstart_printf("Loading Loyalty Rewards.. ");
-        accountLoyaltyRewardTreeLoad();
-    loadend_printf("done");
+	writeConsole(OUTPUT_DEBUG, "Loading loyalty reward tree");
+    accountLoyaltyRewardTreeLoad();
+    writeConsole(OUTPUT_INFO, "Loaded loyalty reward tree");
 
 #ifdef CLIENT
-    loadstart_printf("Loading FX behaviors.. ");
-        fxPreloadBhvrInfo();
-    loadend_printf("done");
+	writeConsole(OUTPUT_DEBUG, "Loaded FX behaviors");
+    fxPreloadBhvrInfo();
+    writeConsole(OUTPUT_INFO, "Loaded FX behaviors");
 
-    loadstart_printf("Loading villain defs.. ");
-        villainReadDefFiles();
-    loadend_printf("done");
+	writeConsole(OUTPUT_DEBUG, "Loaded villain definitions");
+    villainReadDefFiles();
+    writeConsole(OUTPUT_INFO, "Loaded villain definitions");
 
 #ifdef NOVODEX_FLUIDS
     loadstart_printf("Loading FX fluids.. ");
@@ -93,34 +93,34 @@ void init_menus()
 #endif
 
     if (!STATE_STRUCT.nofx) {
-        loadstart_printf("Loading FX capes.. ");
-            fxPreloadCapeInfo();
-        loadend_printf("done");
+		writeConsole(OUTPUT_DEBUG, "Loading cape FX");
+        fxPreloadCapeInfo();
+        writeConsole(OUTPUT_INFO, "Loaded cape FX");
     }
 #endif
 
     // FIXME!!!
     //    Move these two somewhere else.
-    loadstart_printf("Loading body parts.. ");
-        bpReadBodyPartFiles();
-    loadend_printf("done");
+	writeConsole(OUTPUT_DEBUG, "Loading body parts");
+    bpReadBodyPartFiles();
+	writeConsole(OUTPUT_INFO, "Loaded body parts");
 
 #ifdef SERVER
     if (!server_state.levelEditor)
 #endif
 
-    loadstart_printf("Loading NPC defs.. ");
-        npcReadDefFiles();
-    loadend_printf("done");
+	writeConsole(OUTPUT_DEBUG, "Loading NPC definitions");
+    npcReadDefFiles();
+	writeConsole(OUTPUT_INFO, "Loaded NPC definitions");
 
 
 #ifdef SERVER
     if (!server_state.tsr)
 #endif
     {
-        loadstart_printf("Loading ent_types.. ");
-            seqTypeLoadFiles();
-        loadend_printf("done");
+		writeConsole(OUTPUT_DEBUG, "Loading ent_types");
+        seqTypeLoadFiles();
+		writeConsole(OUTPUT_INFO, "Loaded ent_types");
     }
 
 

@@ -137,8 +137,7 @@ void checkDoneResumingMapServerEntity()
     force_fade = 1;
     gLoggingIn = false;
     showBgAdd(-2); // Matches up with the one in commReqScene()
-    loadend_printf("");
-    printf("starting game\n");
+    writeConsole(OUTPUT_INFO, "Established successful MapServer connection");
 }
 
 //

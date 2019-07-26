@@ -1051,7 +1051,7 @@ void loadCostumes()
     if (game_state.editnpc)
         fileToLoad = "Menu/Costume/Costume.ctm"; // So we don't have to work in the localized directory
 
-    loadstart_printf("loading Costume bins..." );
+    writeConsole(OUTPUT_DEBUG, "Loading costume bins");
     if (!ParserLoadFiles(NULL, fileToLoad, "costume.bin", 0, ParseCostumeSet, &gCostumeMaster, NULL, NULL, costume_preprocess))
     {
         printf("Couldn't load Costume!!\n");
@@ -1074,15 +1074,12 @@ void loadCostumes()
         printf("Couldn't load Tailor Data!!\n");
     }
 
-
-    loadend_printf("done");    
-
-
     costume_initHashTable();
     costume_fillExtraData( NULL, &gCostumeMaster, false );
     costumeVerifyTextures( NULL, &gCostumeMaster );
 
     FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE, "menu/Costume/*.ctm", reloadCostumesCallback);
+	writeConsole(OUTPUT_INFO, "Loaded costume bins");
 }
 
 void reloadCostumes(void)

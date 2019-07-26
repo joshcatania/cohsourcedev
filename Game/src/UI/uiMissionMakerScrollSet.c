@@ -2143,31 +2143,29 @@ void MMScrollSet_Load(void)
 {
     int i;
 
-    loadstart_printf("Loading Player Created StoryArc Data...");
+	writeConsole(OUTPUT_DEBUG, "Loading player created story arc data");
     playerCreatedStoryarc_LoadData(game_state.create_bins);
-    loadend_printf("done");
+    writeConsole(OUTPUT_INFO, "Loaded player created story arc data");
 
-    loadstart_printf("Loading Custom Critters...");
+	writeConsole(OUTPUT_DEBUG, "Loading custom critters");
     loadPCCFromFiles();
-    loadend_printf("done");
+	writeConsole(OUTPUT_INFO, "Loaded custom critters");
 
-    loadstart_printf("Loading Custom Villain Groups");
+	writeConsole(OUTPUT_DEBUG, "Loading custom villain groups");
     loadCVGFromFiles();
-    loadend_printf("done");
+	writeConsole(OUTPUT_INFO, "Loaded custom villain groups");
 
-    loadstart_printf("Loading Mission Comments");
+	writeConsole(OUTPUT_DEBUG, "Loading mission comments");
     loadMissionComments();
-    loadend_printf("done");
+	writeConsole(OUTPUT_INFO, "Loaded mission comments");
 
     if(game_state.create_bins)
         return;
 
-    loadstart_printf("Generating Mission Maker Data...");
-
+    writeConsole(OUTPUT_DEBUG, "Generating mission maker data");
 
     for( i = 0; i < eaSize(&mmScrollSet_template.ppRegion); i++ )
     {
-        loadstart_printf("%s...", mmScrollSet_template.ppRegion[i]->pchName);
         populateRegion( mmScrollSet_template.ppRegion[i] );
 
         if( stricmp( mmScrollSet_template.ppRegion[i]->pchName, "StoryArcTemplate" )==0 )
@@ -2205,7 +2203,7 @@ void MMScrollSet_Load(void)
                     Errorf( "Duplicate Mission Maker Data Loaded!" );
             }
         }
-        loadend_printf("done");
+        writeConsole(OUTPUT_DEBUG, "\tGenerated %s", mmScrollSet_template.ppRegion[i]->pchName);
     }
 
     for( i = 0; i < eaSize(&mmScrollSet_template.ppButton); i++ )
@@ -2213,7 +2211,7 @@ void MMScrollSet_Load(void)
         if( mmScrollSet_template.ppButton[i]->pchSpecialAction && stricmp( mmScrollSet_template.ppButton[i]->pchSpecialAction, "AddButton" )==0 )
             eaPush(&ppAddButtonTemplate, mmScrollSet_template.ppButton[i]);
     }
-    loadend_printf("done");
+	writeConsole(OUTPUT_INFO, "Generated mission maker data");
 }
 
 

@@ -85,6 +85,8 @@ static int setupPFD()
     return 1;
 }
 
+#include <utilitieslib/utils/utils.h>
+
 static int createContext(int major, int minor, int forward, int debug)
 {
     // Delete the old context
@@ -118,7 +120,21 @@ static int setupContext()
         return 0;
     }
 
-    return glewInit() == GL_NO_ERROR;
+	writeConsole(OUTPUT_VERBOSE, "Initializing GLEW %s", glewGetString(GLEW_VERSION));
+	glewExperimental = GL_TRUE;
+	GLenum err = glewInit();
+	if (GLEW_OK != err) {
+		writeConsole(OUTPUT_ERROR, "Failed to load GLEW %s: %s", glewGetString(GLEW_VERSION), glewGetErrorString(err));
+		return FALSE;
+	}
+
+	writeConsole(OUTPUT_VERBOSE, "OpenGL Vendor: %s", glGetString(GL_VENDOR));
+	writeConsole(OUTPUT_VERBOSE, "OpenGL Renderer: %s", glGetString(GL_RENDERER));
+	writeConsole(OUTPUT_VERBOSE, "OpenGL Version: %s", glGetString(GL_VERSION));
+	if (glGetString(GL_SHADING_LANGUAGE_VERSION)) {
+		writeConsole(OUTPUT_VERBOSE, "OpenGL Shading Language Version: %s", glGetString(GL_SHADING_LANGUAGE_VERSION));
+	}
+	return TRUE;
 }
 
 #if defined(_FINAL)
@@ -142,14 +158,14 @@ static int setupGL(int reinit)
     }
 
     // initial GLEW setup
-    if(!reinit) {
+    /*if(!reinit) {
         if(!createContext(0,0,0,0)) {
             return 0;
         }
         if(!setupContext()) {
             return 0;
         }
-    }
+    }*/
 
     // try for a new GL context
     if(createContext(3, 0, forward, debug)) {
@@ -203,15 +219,15 @@ static void windowPostInit(void)
     // and to the caps to aid in resolving configuration problems.
     // These are also recorded in the database with the users configuration information
     s = glGetString(GL_VENDOR);
-    printf("OpenGL vendor string: %s\n", s);
+    //printf("OpenGL vendor string: %s\n", s);
     strncpy_s(rdr_caps.gl_vendor, sizeof(rdr_caps.gl_vendor), s, _TRUNCATE );
 
     s = glGetString(GL_RENDERER);
-    printf("OpenGL renderer string: %s\n", s);
+    //printf("OpenGL renderer string: %s\n", s);
     strncpy_s(rdr_caps.gl_renderer, sizeof(rdr_caps.gl_renderer), s, _TRUNCATE );
 
     s = glGetString(GL_VERSION);
-    printf("OpenGL version string: %s\n", s);
+    //printf("OpenGL version string: %s\n", s);
     strncpy_s(rdr_caps.gl_version, sizeof(rdr_caps.gl_version), s, _TRUNCATE );
 
     // create ids for use by graphfps

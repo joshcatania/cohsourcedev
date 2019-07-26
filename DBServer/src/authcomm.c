@@ -324,28 +324,20 @@ void authSendShardTransfer(int auth_id, int shard)
 
 ///////////////////////////// receive from auth //////////////////////////////////
 
-static void handleVersion(AuthPacket *pak)
-{
-    U32        build,protocol, reactivationActive;
-    int        day,month,year;
+static void handleVersion(AuthPacket *pak) {
+    U32 protocol, reactivationActive;
+	const char *build;
 
-    build        = authGetU32(pak);
-    protocol    = authGetU32(pak);
+	build = authGetStr(pak);
+    protocol = authGetU32(pak);
 
-    day        = build % 100;
-    month    = (build / 100) % 100;
-    year    = (build / 10000) + 2000;
-    printf("Auth server built on: %d/%d/%d  Protocol: %d\n",month,day,year,protocol);
+    printf("AuthServer Git Commit Hash: %s, Protocol: %d\n", build, protocol);
 
-    if (build == 31218 && protocol >= 1)
-    {
-        authSetKey(0,1);
-        authSendCurrentPlayers();
-        authSendSetConnect();
-    }
+    authSetKey(0,1);
+    authSendCurrentPlayers();
+    authSendSetConnect();
 
-    if (protocol >= GR_REACTIVATION_PROTOCOL_VERSION)
-    {
+    if (protocol >= GR_REACTIVATION_PROTOCOL_VERSION) {
         reactivationActive = authGetU32(pak);
         printf("Reactivation is %sactive.\n", reactivationActive ? "" : "not ");
         authUserSetReactivationActive(reactivationActive);

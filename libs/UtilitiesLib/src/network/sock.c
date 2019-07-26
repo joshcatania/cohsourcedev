@@ -4,6 +4,7 @@
 #include "utilitieslib/utils/timing.h"
 #include <string.h>
 #include <stdio.h>
+#include <ws2tcpip.h>
 #include "utilitieslib/utils/SuperAssert.h"
 #include "utilitieslib/utils/utils.h"
 #include "utilitieslib/utils/endian.h"
@@ -241,36 +242,54 @@ int isLocalIp(U32 ip)
     return 0;
 }
 
-void setIpList(struct hostent *host_ent,U32 *ip_list)
-{
-U32        ip_local,ip_remote,*addr,t;
-
-    ip_local = *((U32 *)host_ent->h_addr_list[0]);
-    addr = (U32*)host_ent->h_addr_list[1];
-    if (addr)
-        ip_remote = *addr;
-    else
-        ip_remote = ip_local;
-
-    if (isLocalIp(ip_remote))
-    {
-        t = ip_local;
-        ip_local = ip_remote;
-        ip_remote = t;
-    }
-    ip_list[0] = ip_local;
-    ip_list[1] = ip_remote;
-}
-
 int setHostIpList(U32 ip_list[2])
 {
-    struct hostent    *host_ent;
-    host_ent = gethostbyname(NULL);
-    if (!host_ent) {
-        printWinErr("setHostIpList", __FILE__, __LINE__, WSAGetLastError());
+	struct addrinfo hints;
+	memset(&hints, 0, sizeof(struct addrinfo));
+	hints.ai_family = AF_INET;
+
+	struct addrinfo *addr;
+	int result = getaddrinfo("localhost", NULL, &hints, &addr);
+	if (result != 0)
+	{
+		printf("setHostIpList, %s, %i: %d", __FILE__, __LINE__, result);
         return 0;
     }
-    setIpList(host_ent,ip_list);
+
+	//
+	devassert(addr->ai_family == AF_INET);
+	struct sockaddr_in* addr41 = (struct sockaddr_in*)(addr->ai_addr);
+	int ip_remote = addr41->sin_addr.S_un.S_addr;
+	
+	char str[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &(addr41->sin_addr), str, INET_ADDRSTRLEN);
+
+	//
+	addr = addr->ai_next;
+	int ip_local = ip_remote;
+	if (addr)
+	{
+		devassert(addr->ai_family == AF_INET);
+		struct sockaddr_in* addr42 = (struct sockaddr_in*)(addr->ai_addr);
+		ip_local = addr42->sin_addr.S_un.S_addr;
+
+		char str2[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &(addr42->sin_addr), str2, INET_ADDRSTRLEN);
+
+		if (isLocalIp(ip_remote))
+		{
+			int tmp = ip_remote;
+			ip_remote = ip_local;
+			ip_local = tmp;
+		}
+	}
+
+	ip_list[0] = ip_local;
+	ip_list[0] = ip_remote;
+
+	//
+	freeaddrinfo(addr);
+
     return 1;
 }
 

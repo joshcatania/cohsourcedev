@@ -1,11 +1,12 @@
-#ifndef __CHAT_MONITOR_H
-#define __CHAT_MONITOR_H
+#ifndef _CHAT_MONITOR_H
+#define _CHAT_MONITOR_H
 
-#include <winsock2.h>
-#include <windows.h>
 #include <utilitieslib/network/net_structdefs.h>
 #include <utilitieslib/utils/textparser.h>
 #include <utilitieslib/utils/listView.h>
+
+#include <winsock2.h>
+#include <windows.h>
 
 
 #define CHATMON_PROTOCOL_VERSION	( 20050106 )
@@ -35,4 +36,4 @@ BOOL chatMonConnected();
 BOOL chatMonExpectedConnection();
 int chatMonConnect(void);
 
-#endif // __CHAT_MONITOR_H
+#endif // _CHAT_MONITOR_H

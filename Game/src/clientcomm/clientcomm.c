@@ -1479,8 +1479,9 @@ static int commHandleMessage(Packet *pak,int cmd,NetLink *link)
                     int pos = bsGetCursorBitPosition(&pak->stream);
                     int cmd = pktGetBitsPack(pak, 1);
                     bsSetCursorBitPosition(&pak->stream, pos);
-                    if (cmd && cmd != SERVER_SEND_CHAT_MSG)
-                        printf("Warning: Message from server, %d (""%s""), was sent before we are receiving entity updates!\n", cmd, getServerCmdName(cmd));
+					if (cmd && cmd != SERVER_SEND_CHAT_MSG) {
+						writeConsole(OUTPUT_VERBOSE, "Message from server, %d ('%s'), was sent before receiving entity updates", cmd, getServerCmdName(cmd));
+					}
                     handleGameCmd(pak, -1);
                 }
             STOP_BIT_COUNT(pak);
@@ -1995,7 +1996,7 @@ int commConnect(char *addr,int port,int cookie)
 {
     int result;
     
-    loadstart_printf("Connecting to mapserver %s:%d (UDP) cookie: %x..",addr,port,cookie);
+    writeConsole(OUTPUT_INFO, "Connecting to MapServer %s:%d (UDP) Cookie: %x", addr, port, cookie);
 
     PERFINFO_AUTO_START("commStart", 1);
         result = commStart(addr,port,cookie);
@@ -2024,8 +2025,6 @@ int commConnect(char *addr,int port,int cookie)
     }
 
     lastRecvId = comm_link.last_recv_id;
-
-    loadend_printf("");
 
     // Tell the server to enable file checking if the client has it enabled.
 

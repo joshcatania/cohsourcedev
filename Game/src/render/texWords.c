@@ -605,9 +605,9 @@ void texWordsLoadInfo()
             }
         }
         if (count2) {
-            verbose_printf("Loaded %d texWords for current locale, %d textures assigned texWords\n", count, count2);
+            writeConsole(OUTPUT_VERBOSE, "Loaded %d texWords for current locale, %d textures assigned texWords", count, count2);
         } else {
-            verbose_printf("Loaded %d texWords for current locale\n", count);
+            writeConsole(OUTPUT_VERBOSE, "Loaded %d texWords for current locale", count);
         }
     }
 }

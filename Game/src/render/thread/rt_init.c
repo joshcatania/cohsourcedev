@@ -133,13 +133,7 @@ bool extInitCheck(const char *extension, bool windows_extension)
 
 void extInitFail(char *extension)
 {
-    char buf[256];
-    sprintf(buf, "Your card or driver doesn't support %s",extension);
-
-    // rdrSetChipOptions() will issue the "BadDriver" warning so no need to spam the player with extra dialogs
-    //winMsgAlert(buf);
-
-    printf("%s\n", buf);
+	writeConsole(OUTPUT_VERBOSE, "Your video driver is missing support for %s", extension);
 }
 
 void rebuildCachedShadersCallbackDirect(const char* relpath)

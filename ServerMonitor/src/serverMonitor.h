@@ -1,8 +1,9 @@
-#pragma once
+#ifndef _SERVER_MONITOR_H
+#define _SERVER_MONITOR_H
 
 #include <winsock2.h>
 #include <windows.h>
-#include "net_structdefs.h"
+#include <utilitieslib/network/net_structdefs.h>
 
 typedef struct MapCon MapCon;
 typedef struct ServerCon ServerCon;
@@ -210,3 +211,5 @@ extern bool g_primaryServerMonitor;
 LRESULT CALLBACK DlgSvrMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lParam);
 void svrMonConnectWrap(ServerMonitorState *state, HWND hDlg);
 void svrMonSetAutoDelink(ServerMonitorState *state, bool bSet, HWND hDlg);
+
+#endif // _SERVER_MONITOR_H

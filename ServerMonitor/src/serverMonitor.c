@@ -1,40 +1,40 @@
-#include "serverMonitor.h"
-#include "serverMonitorNet.h"
-#include "serverMonitorEnts.h"
-#include "serverMonitorCrashMsg.h"
-#include "serverMonitorCommon.h"
-#include "shardMonitorComm.h"
-#include "serverMonitorCmdRelay.h"
-#include "serverMonitorOverload.h"
-#include "svrmoncomm.h"
-#include "processMonitor.h"
+#include <container.h>
+#include <launcher_common.h>
+#include <svrmoncomm.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/utils/MemoryMonitor.h>
+#include <utilitieslib/utils/structHist.h>
+#include <utilitieslib/utils/structNet.h>
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/WinTabUtil.h>
+#include <utilitieslib/utils/winutil.h>
+
+#include <assert.h>
+#include <CommCtrl.h>
+#include <process.h>
+#include <Shellapi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <process.h>
-#include "earray.h"
-#define  WIN32_LEAN_AND_MEAN
-#include <windows.h> 
-#include <Shellapi.h>
-#include "ListView.h"
-#include "textparser.h"
-#include "resource.h"
-#include "assert.h"
-#include "timing.h"
-#include "utils.h"
-#include "container.h"
-#include "MemoryMonitor.h"
-#include "winutil.h"
-#include <CommCtrl.h>
-#include "prompt.h"
-#include "structHist.h"
-#include "structNet.h"
+
 #include "chatMonitor.h"
-#include "shardMonitor.h"
-#include "WinTabUtil.h"
-#include "mathutil.h"
+#include "processMonitor.h"
+#include "prompt.h"
+#include "resource.h"
+#include "serverMonitor.h"
+#include "serverMonitorCmdRelay.h"
+#include "serverMonitorCommon.h"
+#include "serverMonitorCrashMsg.h"
+#include "serverMonitorEnts.h"
 #include "serverMonitorListener.h"
-#include "launcher_common.h"
+#include "serverMonitorNet.h"
+#include "serverMonitorOverload.h"
+#include "shardMonitor.h"
+#include "shardMonitorComm.h"
 
 extern bool g_someDataOutOfSync;
 
@@ -410,7 +410,7 @@ void fixConnectButtons(HWND hDlg, ServerMonitorState *state)
 	if (svrMonConnected(state)) {
 		if (state->connectButtons_enabled) {
 			EnableWindow(GetDlgItem(hDlg, IDC_TXT_DBSERVER), FALSE);
-			SetDlgItemText(hDlg, IDC_BTN_CONNECT, "Disconnect");
+			SetDlgItemTextA(hDlg, IDC_BTN_CONNECT, "Disconnect");
 			listSetBgColor(IDC_LST_LAUNCHERS, GetSysColor(COLOR_WINDOW));
 			listSetBgColor(IDC_LST_MS, GetSysColor(COLOR_WINDOW));
 			UpdateWindow(GetDlgItem(hDlg, IDC_LST_LAUNCHERS));
@@ -425,9 +425,9 @@ void fixConnectButtons(HWND hDlg, ServerMonitorState *state)
 			if (!g_shardmonitor_mode)
 				EnableWindow(GetDlgItem(hDlg, IDC_TXT_DBSERVER), TRUE);
 			if (g_shardmonitor_mode) {
-				SetDlgItemText(hDlg, IDC_BTN_CONNECT, "Connect");
+				SetDlgItemTextA(hDlg, IDC_BTN_CONNECT, "Connect");
 			} else {
-				SetDlgItemText(hDlg, IDC_BTN_CONNECT, "Connect/Start");
+				SetDlgItemTextA(hDlg, IDC_BTN_CONNECT, "Connect/Start");
 			}
 			listSetBgColor(IDC_LST_LAUNCHERS, GetSysColor(COLOR_BTNFACE));
 			listSetBgColor(IDC_LST_MS, GetSysColor(COLOR_BTNFACE));
@@ -534,7 +534,7 @@ void checkAutoReconnect(HWND hDlg, ServerMonitorState *state)
 {
 	if (!svrMonConnected(state) && state->connection_expected) {
 		// auto re-connect
-		SetDlgItemText(hDlg, IDC_BTN_CONNECT, "Reconnecting...");
+		SetDlgItemTextA(hDlg, IDC_BTN_CONNECT, "Reconnecting...");
 		svrMonConnect(state, state->dbserveraddr, state->autostart_expected);
 		state->autostart_expected = 0; // Only auto-start the first time, leave it to the Processes tab for the rest
 	}
@@ -570,9 +570,9 @@ void countStuckMaps(ListView *lv, void *structptr, void *data)
 void setTextQuick(HWND hDlg, int id, char *str)
 {
 	char stemp[256];
-	GetDlgItemText(hDlg, id, stemp, ARRAY_SIZE(stemp));
+	GetDlgItemTextA(hDlg, id, stemp, ARRAY_SIZE(stemp));
 	if (stricmp(stemp, str)!=0) {
-		SetDlgItemText(hDlg, id, str);
+		SetDlgItemTextA(hDlg, id, str);
 	}
 }
 
@@ -580,7 +580,7 @@ void svrMonSetAutoDelink(ServerMonitorState *state, bool bSet, HWND hDlg)
 {
 	if( state->autoDelinkButtons_enabled ) {
 		state->stats.autodelink = bSet;
-		SendMessage(GetDlgItem(hDlg, IDC_CHK_AUTODELINK), BM_SETCHECK, (bSet?1:0), 0);
+		SendMessageA(GetDlgItem(hDlg, IDC_CHK_AUTODELINK), BM_SETCHECK, (bSet?1:0), 0);
 	}
 }
 
@@ -875,7 +875,7 @@ static void onTimer(HWND hDlg, ServerMonitorState *state)
 void svrMonConnectWrap(ServerMonitorState *state, HWND hDlg)
 {
 	if (!svrMonConnect(state, state->dbserveraddr, g_shardmonitor_mode?false:true)) {
-		MessageBox(hDlg, "Error connecting to DBServer", "Error", MB_ICONWARNING);
+		MessageBoxA(hDlg, "Error connecting to DBServer", "Error", MB_ICONWARNING);
 		state->connection_expected = false;
 	} else {
 		state->connection_expected = true;
@@ -958,31 +958,31 @@ LRESULT CALLBACK DlgSvrMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lPar
 			SetTimer(hDlg, 0, 10, NULL);
 
 			// Status bar stuff
-			state->hStatusBar = CreateStatusWindow( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
+			state->hStatusBar = CreateStatusWindowA( WS_CHILD | WS_VISIBLE, "Status bar", hDlg, 1);
 			{
 				int temp[4];
 				temp[0]=100;
 				temp[1]=200;
 				temp[2]=300;
 				temp[3]=-1;
-				SendMessage(state->hStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
+				SendMessageA(state->hStatusBar, SB_SETPARTS, ARRAY_SIZE(temp), (LPARAM)temp);
 			}
 
 			GetClientRect(hDlg, &rect); 
 			// Initialize initial values
 			doDialogOnResize(hDlg, (WORD)(rect.right - rect.left), (WORD)(rect.bottom - rect.top), IDC_ALIGNME, IDC_UPPERLEFT);
-			SendMessage(state->hStatusBar, SB_SETMINHEIGHT, 32, (LPARAM)0);
-			SendMessage(state->hStatusBar, WM_SIZE, 0, (LPARAM)0);
+			SendMessageA(state->hStatusBar, SB_SETMINHEIGHT, 32, (LPARAM)0);
+			SendMessageA(state->hStatusBar, WM_SIZE, 0, (LPARAM)0);
 
 			if (g_autoconnect_addr[0]) {
 				strcpy(state->dbserveraddr, g_autoconnect_addr);
-				SetDlgItemText(hDlg, IDC_TXT_DBSERVER, g_autoconnect_addr);
+				SetDlgItemTextA(hDlg, IDC_TXT_DBSERVER, g_autoconnect_addr);
 				svrMonConnectWrap(state, hDlg);
 				g_autoconnect_addr[0] = 0;
 			}
 
 			if (g_shardmonitor_mode) {
-				SetDlgItemText(hDlg, IDCANCEL, "Close Tab");
+				SetDlgItemTextA(hDlg, IDCANCEL, "Close Tab");
 			}
 		}
 		return FALSE;
@@ -1072,14 +1072,14 @@ LRESULT CALLBACK DlgSvrMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lPar
 				listViewDoOnSelected(state->lvServerApps, (ListViewCallbackFunc)smcbSaKill, state);
 				break;
 			case IDC_BTN_SHUTDOWNALL:
-				if (IDYES==MessageBox(hDlg, "Are you sure you want to shutdown all servers connected to this dbserver?", "Confirm Shutdown", MB_YESNO)) {
+				if (IDYES==MessageBoxA(hDlg, "Are you sure you want to shutdown all servers connected to this dbserver?", "Confirm Shutdown", MB_YESNO)) {
 					char *reason = promptGetString(g_hInst, hDlg, "Shutdown message:", "Servers are shutting down");
 					svrMonShutdownAll(state, reason);
 					state->connection_expected = false;
 				}
 				break;
 			case IDC_BTN_RESETMISSION:
-				if (IDYES==MessageBox(hDlg, "Are you sure you want to reset the link between this dbserver and the Mission Server?", "Confirm Reset", MB_YESNO)) {
+				if (IDYES==MessageBoxA(hDlg, "Are you sure you want to reset the link between this dbserver and the Mission Server?", "Confirm Reset", MB_YESNO)) {
 					svrMonResetMission(state);
 				}
 				break;

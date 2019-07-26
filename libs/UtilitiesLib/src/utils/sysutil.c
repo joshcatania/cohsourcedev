@@ -441,124 +441,13 @@ unsigned long getProcessPageFileUsage()
     return pmc.PagefileUsage;
 }
 
-void preloadDLLs(int silent)
-{
-    if (!silent)
-    {
-        loadstart_printf("Preloading DLLs...");
-    }
-
-    // These are dlls that we try to load no matter what
-
-    LoadLibraryA("C:\\Program Files\\Google\\Google Desktop Search\\GoogleDesktopNetwork1.dll"); // just in case our other trick didn't work
-    
-     LoadLibraryA("PhysXCooking.dll");
-     LoadLibraryA("PhysXCore.dll");
+void preloadDLLs(int silent) {
+    LoadLibraryA("PhysXCooking.dll");
+    LoadLibraryA("PhysXCore.dll");
     LoadLibraryA("PhysXLoader.dll");
 
-
-    // these are just so that the debugger doesn't get confused when you load a dll while debugging
-#if 0 // MSVS2005 doesn't have the bug that requires this.
-    if (IsDebuggerPresent()) {
-        LoadLibrary("uxtheme.dll");
-        LoadLibrary("version.dll");
-        LoadLibrary("msctfime.ime");
-        LoadLibrary("ole32.dll");
-        LoadLibrary("comctl32.dll");
-        LoadLibrary("winmm.dll");
-        LoadLibrary("comdlg32.dll");
-        LoadLibrary("shlwapi.dll");
-        LoadLibrary("shell32.dll");
-        LoadLibrary("Syncor11.dll");
-        LoadLibrary("DbgHelp.dll");
-        LoadLibrary("CrashRpt.dll");
-        LoadLibrary("hid.dll");
-        // check to see if nVidia fixed their DLL yet
-        //{ unsigned int fp; SAVE_FP_CONTROL_WORD(fp); assert((fp & 0xffff)==0x007f); }
-        //LoadLibrary("nvoglnt.dll");
-        //{ unsigned int fp; SAVE_FP_CONTROL_WORD(fp); assert((fp & 0xffff)==0x007f); }
-        //SET_FP_CONTROL_WORD_DEFAULT
-        LoadLibrary("mcd32.dll");
-        LoadLibrary("setupapi.dll");
-        LoadLibrary("wintrust.dll");
-        LoadLibrary("crypt32.dll");
-        LoadLibrary("msasn1.dll");
-        LoadLibrary("imagehlp.dll");
-        LoadLibrary("ntmarta.dll");
-        LoadLibrary("wldap32.dll");
-        LoadLibrary("samlib.dll");
-        LoadLibrary("mscms.dll");
-        LoadLibrary("winspool.drv");
-        LoadLibrary("icm32.dll");
-        LoadLibrary("opengl32.dll");
-        LoadLibrary("msvcrt.dll");
-        LoadLibrary("advapi32.dll");
-        LoadLibrary("rpcrt4.dll");
-        LoadLibrary("gdi32.dll");
-        LoadLibrary("user32.dll");
-        LoadLibrary("glu32.dll");
-        LoadLibrary("ddraw.dll");
-        LoadLibrary("dciman32.dll");
-        LoadLibrary("dsound.dll");
-        LoadLibrary("dinput8.dll");
-        LoadLibrary("ws2_32.dll");
-        LoadLibrary("ws2help.dll");
-        LoadLibrary("imm32.dll");
-        LoadLibrary("shimeng.dll");
-        LoadLibrary("acgenral.dll");
-        LoadLibrary("oleaut32.dll");
-        LoadLibrary("msacm32.dll");
-        LoadLibrary("userenv.dll");
-        LoadLibrary("lpk.dll");
-        LoadLibrary("usp10.dll");
-        LoadLibrary("psapi.dll");
-        LoadLibrary("wsock32.dll");
-        LoadLibrary("wdmaud.drv");
-        LoadLibrary("msacm32.drv");
-        LoadLibrary("midimap.dll");
-        LoadLibrary("ksuser.dll");
-        LoadLibrary("mswsock.dll");
-        LoadLibrary("dnsapi.dll");
-        LoadLibrary("winrnr.dll");
-        LoadLibrary("rasadhlp.dll");
-        LoadLibrary("secur32.dll");
-        LoadLibrary("hnetcfg.dll");
-        LoadLibrary("wshtcpip.dll");
-        LoadLibrary("apphelp.dll");
-        LoadLibrary("clbcatq.dll");
-        LoadLibrary("comres.dll");
-        LoadLibrary("cscui.dll");
-        LoadLibrary("cscdll.dll");
-        LoadLibrary("browseui.dll");
-        LoadLibrary("ntshrui.dll");
-        LoadLibrary("atl.dll");
-        LoadLibrary("netapi32.dll");
-        LoadLibrary("shdocvw.dll");
-        LoadLibrary("cryptui.dll");
-        LoadLibrary("wininet.dll");
-        LoadLibrary("riched20.dll");
-        LoadLibrary("mpr.dll");
-        LoadLibrary("drprov.dll");
-        LoadLibrary("ntlanman.dll");
-        LoadLibrary("netui0.dll");
-        LoadLibrary("netui1.dll");
-        LoadLibrary("netrap.dll");
-        LoadLibrary("davclnt.dll");
-        LoadLibrary("endpnp.dll");
-        LoadLibrary("EBUtil2.dll");
-        LoadLibrary("C:\\Program Files\\Logitech\\iTouch\\itchhk.dll");
-        LoadLibrary("C:\\Program Files\\Common Files\\Logitech\\Scrolling\\LGMSGHK.DLL");
-        LoadLibrary("console.dll");
-        LoadLibrary("msctf.dll");
-        LoadLibrary("imjp81.ime");
-        LoadLibrary("imjp81k.dll");
-        LoadLibrary("C:\\WINDOWS\\ime\\imjp8_1\\DICTS\\imjpcd.dic");
-    }
-#endif
-
-    if (!silent)
-    {
-        loadend_printf("done.");
+    if (!silent) {
+        writeConsole(OUTPUT_INFO, "Preloaded PhysX DLLs");
     }
 }
 

@@ -1,32 +1,35 @@
-#include "serverMonitorCommon.h"
-#include "serverMonitor.h"
-#include "serverMonitorEnts.h"
-#include "serverMonitorCmdRelay.h"
-#include "serverMonitorListener.h"
-#include "shardMonitorCmdRelay.h"
-#include "shardMonitorComm.h"
-#include "shardMonitor.h"
-#include "updateserverList.h"
+#include <utilitieslib/components/BitStream.h>
+#include <utilitieslib/components/earray.h>
+#include <utilitieslib/network/net_packet.h>
+#include <utilitieslib/network/net_version.h>
+#include <utilitieslib/network/sock.h>
+#include <utilitieslib/utils/error.h>
+#include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/log.h>
+#include <utilitieslib/utils/MemoryMonitor.h>
+#include <utilitieslib/utils/process_util.h>
+#include <utilitieslib/utils/textparser.h>
+#include <utilitieslib/utils/textparserUtils.h>
+#include <utilitieslib/utils/tokenstore.h>
+#include <utilitieslib/utils/UnitSpec.h>
+#include <utilitieslib/utils/utils.h>
+#include <utilitieslib/utils/WinTabUtil.h>
+#include <utilitieslib/utils/winutil.h>
+
+#include <conio.h>
+
+#include "chatMonitor.h"
 #include "processMonitor.h"
 #include "resource.h"
-#include "BitStream.h"
-#include "net_packet.h"
-#include "sock.h"
-#include "utils.h"
-#include "earray.h"
-#include "UnitSpec.h"
-#include "process_util.h"
-#include "error.h"
-#include "chatMonitor.h"
-#include <conio.h>
-#include "MemoryMonitor.h"
-#include "winutil.h"
-#include "WinTabUtil.h"
-#include "file.h"
-#include "net_version.h"
-#include "tokenstore.h"
-#include "textparserUtils.h"
-#include "log.h"
+#include "serverMonitor.h"
+#include "serverMonitorCommon.h"
+#include "serverMonitorCmdRelay.h"
+#include "serverMonitorEnts.h"
+#include "serverMonitorListener.h"
+#include "shardMonitor.h"
+#include "shardMonitorCmdRelay.h"
+#include "shardMonitorComm.h"
+#include "updateserverList.h"
 
 HINSTANCE   g_hInst=NULL;			        // instance handle
 HWND g_hDlg=NULL;
@@ -164,14 +167,14 @@ BOOL SetDlgItemInt64(IN HWND hDlg, IN int nIDDlgItem, IN S64 uValue, IN BOOL bSi
 {
 	char buf[64];
 	sprintf_s(SAFESTR(buf), "%I64d", uValue);
-	return SetDlgItemText(hDlg, nIDDlgItem, buf);
+	return SetDlgItemTextA(hDlg, nIDDlgItem, buf);
 }
 
 S64 GetDlgItemInt64(IN HWND hDlg, IN int nIDDlgItem, OUT BOOL *lpTranslated, IN BOOL bSigned)
 {
 	char buf[64];
 	S64 ret;
-	GetDlgItemText(hDlg, nIDDlgItem, buf, ARRAY_SIZE(buf)-1);
+	GetDlgItemTextA(hDlg, nIDDlgItem, buf, ARRAY_SIZE(buf)-1);
 	errno = 0;
 	ret = _atoi64(buf);
 	if (lpTranslated)
@@ -190,18 +193,18 @@ static void initSingleElement(HWND hDlg, char *base, VarMap *mapping)
 		TOK_GET_TYPE(mapping->parse.type) == TOK_BOOLFLAG_X) // checkbox messages
 	{
 		bool val = TokenStoreGetU8(&mapping->parse, 0, base, 0);
-		b = (int)SendMessage(GetDlgItem(hDlg, mapping->id), BM_GETCHECK, 0, 0)? 1: 0;
+		b = (int)SendMessageA(GetDlgItem(hDlg, mapping->id), BM_GETCHECK, 0, 0)? 1: 0;
 		if (b != val) {
-			SendMessage(GetDlgItem(hDlg, mapping->id), BM_SETCHECK, val, 0);
+			SendMessageA(GetDlgItem(hDlg, mapping->id), BM_SETCHECK, val, 0);
 		}
 	}
 	else // all other types just set a simple string
 	{
 		stemp[0] = stemp2[0] = 0;
 		TokenToSimpleString(&mapping->parse, 0, base, SAFESTR(stemp), 0);
-		GetDlgItemText(hDlg, mapping->id, SAFESTR(stemp2));
+		GetDlgItemTextA(hDlg, mapping->id, SAFESTR(stemp2));
 		if (strcmp(stemp, stemp2))
-			SetDlgItemText(hDlg, mapping->id, stemp);
+			SetDlgItemTextA(hDlg, mapping->id, stemp);
 	}
 }
 
@@ -299,7 +302,7 @@ void getText(HWND hDlg, void *vpbase, VarMap mapping[], int count)
 		else // all other token types are just text controls
 		{
 			TokenToSimpleString(&mapping[i].parse, 0, base, SAFESTR(oldval), 0);
-			GetDlgItemText(hDlg, mapping[i].id, SAFESTR(stemp));
+			GetDlgItemTextA(hDlg, mapping[i].id, SAFESTR(stemp));
 			if (strcmp(oldval, stemp))
 			{
 				bChanged = true;
@@ -520,10 +523,7 @@ void serverMonitorOuterLoop(void)
 	}
 }
 
-
-int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, 
-					LPSTR lpCmdLine, int nCmdShow )
-{
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
 	int quit=0;
 
 	g_hInst = hInstance;
@@ -549,23 +549,23 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance,
 			serverMonitorListenThreadBegin();
 			svrMonShardMonCommInit();
 		} else {
-			MessageBox(NULL, "The ServerMonitor appears to have been started from an invalid path (can't find Ouroboros.exe), disabling Processes and CmdRelay tabs.", "Wrong Working Directory", MB_OK);
+			MessageBoxA(NULL, "The ServerMonitor appears to have been started from an invalid path (can't find Ouroboros.exe), disabling Processes and CmdRelay tabs.", "Wrong Working Directory", MB_OK);
 			g_primaryServerMonitor = false;
 		}
 	}
 
-	g_hDlg = CreateDialog(hInstance, (LPCTSTR)(intptr_t)(IDD_DLG_MAIN), NULL, (DLGPROC)DlgMainProc); 
+	g_hDlg = CreateDialogA(hInstance, (LPCSTR)(intptr_t)(IDD_DLG_MAIN), NULL, (DLGPROC)DlgMainProc); 
 	assert(g_hDlg);
 	ShowWindow(g_hDlg, SW_SHOW);
 	{
-		HICON hIcon  = LoadIcon(GetModuleHandle(NULL), MAKEINTRESOURCE(g_shardmonitor_mode?IDI_ICON2:IDI_ICON1));
+		HICON hIcon  = LoadIconA(GetModuleHandleA(NULL), MAKEINTRESOURCEA(g_shardmonitor_mode?IDI_ICON2:IDI_ICON1));
 		if(hIcon) {
-			SendMessage(g_hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
-			SendMessage(g_hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
+			SendMessageA(g_hDlg, WM_SETICON, ICON_BIG, (LPARAM)hIcon);
+			SendMessageA(g_hDlg, WM_SETICON, ICON_SMALL, (LPARAM)hIcon);
 		}
 	}
 	if (g_shardmonitor_mode) {
-		SendMessage(g_hDlg, WM_SETTEXT, 0, (LPARAM)"ShardMonitor");
+		SendMessageA(g_hDlg, WM_SETTEXT, 0, (LPARAM)"ShardMonitor");
 	}
 
 	serverMonitorOuterLoop();

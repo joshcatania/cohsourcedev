@@ -1,14 +1,13 @@
-#include "relay_utils.h"
-#include "netio.h"
-#include "relay_types.h"
-#include <direct.h>
-#include "file.h"
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/utils/file.h>
 
+#include <direct.h>
+
+#include "relay_utils.h"
+#include "relay_types.h"
 
 char g_updateServerAddr[512];
 char g_customCmd[1024];
-
-
 
 BOOL OpenAndAllocFile(char * title, char * pattern, FileAllocInfo * file)
 {
@@ -26,7 +25,7 @@ BOOL OpenAndAllocFile(char * title, char * pattern, FileAllocInfo * file)
 		return TRUE;
 	else
 	{
-		MessageBox(NULL, "Failed to read file", "ERROR", MB_ICONERROR);
+		MessageBoxA(NULL, "Failed to read file", "ERROR", MB_ICONERROR);
 		return FALSE;
 	}
 
@@ -58,7 +57,7 @@ void sendBatchFileToClient(ListView *lv, CmdRelayCon *con, FileAllocInfo * file)
 
 char *OpenFileDlg(char * title, char *fileMask,char *fileName)
 {
-	OPENFILENAME theFileInfo;
+	OPENFILENAMEA theFileInfo;
 	//char filterStrs[256];
 	int		ret;
 	char	base[_MAX_PATH];
@@ -79,7 +78,7 @@ char *OpenFileDlg(char * title, char *fileMask,char *fileName)
 	theFileInfo.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
 	theFileInfo.lpstrDefExt = NULL;
 
-	ret = GetOpenFileName(&theFileInfo);
+	ret = GetOpenFileNameA(&theFileInfo);
 
 	_chdir(base);
 

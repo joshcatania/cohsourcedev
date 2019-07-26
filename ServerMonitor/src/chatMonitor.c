@@ -1,17 +1,18 @@
+#include <comm_backend.h>
+#include <performance.h>
+#include <utilitieslib/components/StashTable.h>
+#include <utilitieslib/network/netio.h>
+#include <utilitieslib/network/netio_core.h>
+#include <utilitieslib/utils/ListView.h>
+#include <utilitieslib/utils/winutil.h>
+#include <utilitieslib/utils/timing.h>
+#include <utilitieslib/utils/structNet.h>
+#include <utilitieslib/utils/utils.h>
+
 #include "chatMonitor.h"
-#include "netio.h"
-#include "ListView.h"
-#include "comm_backend.h"
-#include "netio_core.h"
 #include "resource.h"
 #include "serverMonitorCommon.h"
-#include "winutil.h"
-#include "timing.h"
 #include "prompt.h"
-#include "performance.h"
-#include "structNet.h"
-#include "StashTable.h"
-#include "utils.h"
 #include "serverMonitor.h"
 #include "shardMonitor.h"
 
@@ -309,7 +310,7 @@ int chatMonHandleMsg(Packet *pak,int cmd, NetLink *link)
 
 				sprintf(buf,"Protocol version mismatch:\n servermonitor: %d\n chatserver %d\n",DBSERVER_PROTOCOL_VERSION,protocol);
 				
-				MessageBox(NULL, buf, "Error", MB_ICONERROR);
+				MessageBoxA(NULL, buf, "Error", MB_ICONERROR);
 				chatMonDisconnect();
 			}
 			break;
@@ -358,7 +359,7 @@ void fixChatConnectButtons(HWND hDlg)
 			EnableWindow(GetDlgItem(hDlg, IDC_TXT_CHATSERVER), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BTN_SENDALL), TRUE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BTN_CHATSVR_SHUTDOWN), TRUE);
-			SetDlgItemText(hDlg, IDC_BTN_CHATCONNECT, "Disconnect");
+			SetDlgItemTextA(hDlg, IDC_BTN_CHATCONNECT, "Disconnect");
 			UpdateWindow(GetDlgItem(hDlg, IDC_LST_CHATSERVERS));
 			gChatCon.connectButtons_enabled=false;
 		}
@@ -367,7 +368,7 @@ void fixChatConnectButtons(HWND hDlg)
 			EnableWindow(GetDlgItem(hDlg, IDC_TXT_CHATSERVER), TRUE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BTN_SENDALL), FALSE);
 			EnableWindow(GetDlgItem(hDlg, IDC_BTN_CHATSVR_SHUTDOWN), FALSE);
-			SetDlgItemText(hDlg, IDC_BTN_CHATCONNECT, "Connect");
+			SetDlgItemTextA(hDlg, IDC_BTN_CHATCONNECT, "Connect");
 			UpdateWindow(GetDlgItem(hDlg, IDC_LST_CHATSERVERS));
 			gChatCon.connectButtons_enabled=true;
 		}
@@ -379,7 +380,7 @@ void fixChatConnectButtons(HWND hDlg)
 void chatMonConnectWrap(HWND hDlg)
 {
 	if (!chatMonConnect()) {
-		MessageBox(hDlg, "Error connecting to ChatServer", "Error", MB_ICONWARNING);
+		MessageBoxA(hDlg, "Error connecting to ChatServer", "Error", MB_ICONWARNING);
 		chatSetAutoConnect(false);
 	} else {
 		chatSetAutoConnect(true);
@@ -469,7 +470,7 @@ void checkChatAutoReconnect(HWND hDlg)
 
 		sprintf(buf, "Reconnecting... (%d s)", sec);
 
-		SetDlgItemText(hDlg, IDC_BTN_CHATCONNECT, buf);		
+		SetDlgItemTextA(hDlg, IDC_BTN_CHATCONNECT, buf);		
 		
 		if(sec <= 0)
 		{
@@ -607,7 +608,7 @@ LRESULT CALLBACK DlgChatMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM lPa
 			break;
 		case IDC_BTN_CHATSVR_SHUTDOWN:
 			{
-				if (MessageBox( 0, "This command will shutdown the Chatsever. Continue?", "Shutdown Confirmation", (MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2)) == IDYES)
+				if (MessageBoxA( 0, "This command will shutdown the Chatsever. Continue?", "Shutdown Confirmation", (MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2)) == IDYES)
 				{
 					chatMonSendAdminMessage(promptGetString(g_hInst, hDlg, "Shutdown message: ", ""), SVRMONTOCHATSVR_SHUTDOWN);
 				}

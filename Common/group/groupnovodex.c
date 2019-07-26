@@ -250,8 +250,7 @@ int createNxWorldShapes()
     int i;
     int iTotalShapes = 0;
 
-    loadstart_printf("loading novodex shapes...");
-
+	writeConsole(OUTPUT_DEBUG, "Loading PhysX objects");
 
     // Create all of the shapes
     for(i = 0; i < group_info.ref_count; i++)
@@ -279,11 +278,11 @@ int createNxWorldShapes()
 
     if ( iTotalShapes == -1 )
     {
-        loadend_printf("failed: invalid shape found." );
+        writeConsole(OUTPUT_WARNING, "Invalid shape found");
         return 0;
     }
     else
-        loadend_printf("done: %d shapes created.", iTotalShapes);
+        writeConsole(OUTPUT_INFO, "Created %i PhysX objects", iTotalShapes);
 
     return iTotalShapes;
 }
@@ -331,7 +330,7 @@ void destroyNxWorldShapes( )
     int i;
     iFreeCount = 0;
 
-    loadstart_printf("freeing all novodex shapes...");
+    writeConsole(OUTPUT_DEBUG, "Releasing all PhysX objects");
 
     // Create all of the shapes
     for(i = 0; i < group_info.ref_count; i++)
@@ -342,7 +341,7 @@ void destroyNxWorldShapes( )
         }
     }
 
-    loadend_printf("done: freed %d shapes.", iFreeCount);
+	writeConsole(OUTPUT_INFO, "Released %d PhysX objects", iFreeCount);
 }
 
 
@@ -440,11 +439,11 @@ static int createGroupDefActorSpore(GroupDef* def, Mat4 mXform)
 
 void initActorSporeGrid()
 {
-    loadstart_printf("initActorSporeGrid...");
+    writeConsole(OUTPUT_DEBUG, "Loading actor spore grid");
 
     groupProcessDef(&group_info, createGroupDefActorSpore);
 
-    loadend_printf("done.");
+    writeConsole(OUTPUT_INFO, "Loaded actor spore grid");
 }
 
 static void expandActorSpore( NxActorSpore* pActorSpore )
@@ -478,7 +477,7 @@ void deinitActorSporeGrid()
 {
     NxActorSpore* pActorSpore;
     int iCount = 0;
-    loadstart_printf("deiniting actor spore grid...");
+    writeConsole(OUTPUT_DEBUG, "Deinitializing actor spore grid");
     nx_state.actorSporeCount = 0;
 
     if ( nxActorSporeGrid )
@@ -500,7 +499,7 @@ void deinitActorSporeGrid()
     eaDestroy(&nxActorSporeList);
     nxActorSporeList = NULL;
 
-    loadend_printf("done (%d).", iCount);
+    writeConsole(OUTPUT_INFO, "Deinitialized %d actor spore grids", iCount);
 }
 
 
