@@ -178,9 +178,6 @@
     <ClCompile Include="..\..\..\Common\Playspan\JSONParser.cpp">
       <Filter>Source Files\Common\Playspan</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Common\sql\sqlconn.c">
-      <Filter>Source Files\Common\sql</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Common\sql\sqltask.cpp">
       <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
@@ -207,6 +204,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Common\persist\textcrcjournal.c">
       <Filter>Source Files\Common\persist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\sql\sqlconn.cpp">
+      <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

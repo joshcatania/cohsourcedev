@@ -496,7 +496,7 @@ void sqlContainerUpdateInternal(ContainerTemplate *tplt, int container_id, LineL
     eaDestroyEx(&bind_temps[conn], NULL);
 }
 
-static void* s_getDataAtExec(HSTMT stmt, ColumnInfo *field, int column_idx, ssize_t *results, char *original_command, SqlConn conn)
+static const char* s_getDataAtExec(HSTMT stmt, ColumnInfo *field, int column_idx, ssize_t *results, char *original_command, SqlConn conn)
 {
     return sqlConnStmtGetData(stmt, column_idx+1, g_containerfieldinfo[field->data_type].access_type, results, original_command, conn);
 }
@@ -518,9 +518,9 @@ static void s_bindField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data
     (*data_idx) += field->num_bytes;
 }
 
-static void* s_getField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data_idx, SqlConn conn, char *original_command)
+static const char* s_getField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data_idx, SqlConn conn, char *original_command)
 {
-    S8 *data = &row_data[conn][*data_idx];
+    const char*data = &row_data[conn][*data_idx];
     SQLLEN *results = row_results[conn] + column_idx;
 
     switch(field->data_type)
@@ -528,7 +528,7 @@ static void* s_getField(HSTMT stmt, ColumnInfo *field, int column_idx, int *data
         case CFTYPE_TEXTBLOB:
         {
             data = s_getDataAtExec(stmt, field, column_idx, results, original_command, conn);
-            if (strncmp(data, "HEXX", 4)==0)
+            if ((*results) && strncmp(data, "HEXX", 4)==0)
                 hexStrToBinStr2(data + 4, data);
             return data;
         }
@@ -672,7 +672,7 @@ static int readRow(HSTMT stmt, ContainerTemplate *tplt, TableInfo *table, LineLi
     for(col = 0; col < table->num_columns; col++)
     {
         ColumnInfo *field = &table->columns[col];
-        void *data;
+        const char *data;
         int cmd_idx;
         int line_count;
         LineTracker    *line;
@@ -1073,7 +1073,7 @@ char *sqlReadColumnsInternal(TableInfo *table, char *limit, char *col_names, cha
 
         for(i = 0; i < col_count; i++)
         {
-            void *data = s_getField(stmt, field_ptrs[i], i, &idx, conn, cmd_buf[conn]);
+            const char *data = s_getField(stmt, field_ptrs[i], i, &idx, conn, cmd_buf[conn]);
             if(!data)
                 break;
         }

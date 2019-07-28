@@ -95,9 +95,6 @@
     <ClCompile Include="..\..\..\Common\filter\validate_name.c">
       <Filter>Source Files\MapServer\filter</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Common\sql\sqlconn.c">
-      <Filter>Source Files\Common\sql</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\Common\sql\sqltask.cpp">
       <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
@@ -121,6 +118,9 @@
     </ClCompile>
     <ClCompile Include="..\..\..\Common\persist\textcrcjournal.c">
       <Filter>Source Files\Common\perist</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\Common\sql\sqlconn.cpp">
+      <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

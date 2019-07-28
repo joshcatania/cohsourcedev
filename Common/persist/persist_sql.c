@@ -103,7 +103,7 @@ bool plSqlReadData(HSTMT* stmt, const char* table, ParseTable pti[], size_t stru
     while ((ret = _sqlConnStmtFetch(*stmt, 0)) != SQL_NO_DATA)
     {
         ssize_t actual_bytes;
-        void* data;
+        const char* data;
         void* mem;
 
         if (ret != SQL_SUCCESS)
@@ -117,7 +117,7 @@ bool plSqlReadData(HSTMT* stmt, const char* table, ParseTable pti[], size_t stru
             FatalErrorf("Data could not be read or was empty: %d", actual_bytes);
 
         mem = StructAllocRaw(structsize);
-        if (!ParserReadText((char*)data, actual_bytes, pti, mem))
+        if (!ParserReadText(data, actual_bytes, pti, mem))
             FatalErrorf("Data could not be parsed: %s", data);
 
         eaPush(earray, mem);

@@ -51,17 +51,17 @@ int sqlConnExecDirectMany(char *cmd, int cmd_len, SqlConn conn, bool utf8);
 // parameter binding
 int sqlConnStmtBindParamArray(HSTMT stmt, size_t count, size_t row_size);
 int sqlConnStmtSetBindOffset(HSTMT stmt, size_t *offset);
-int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, ssize_t* strlen);
-int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t const* tabletype, ssize_t *numrows);
+int sqlConnStmtBindParam(HSTMT stmt, int param, int paramtype, int ctype, int sqltype, size_t colsize, int decimals, void* data, size_t buflen, long* strlen);
+int sqlConnStmtStartBindParamTableValued(HSTMT stmt, int param, int maxrows, wchar_t const* tabletype, long *numrows);
 int sqlConnStmtEndBindParamTableValued(HSTMT stmt);
 int sqlConnStmtUnbindParams(HSTMT stmt);
 
 // column binding
-int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, ssize_t* strlen);
+int sqlConnStmtBindCol(HSTMT stmt, int col, int ctype, void* data, size_t buflen, long* strlen);
 int sqlConnStmtUnbindCols(HSTMT stmt);
 
 // streaming data
-void* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, ssize_t *length, const char *original_command, SqlConn conn);
+const char* sqlConnStmtGetData(HSTMT stmt, int param, int ctype, ssize_t *length, const char *original_command, SqlConn conn);
 
 // cursor
 int sqlConnStmtCloseCursor(HSTMT stmt);

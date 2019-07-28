@@ -550,7 +550,7 @@ void estrWideConcatCharString(unsigned short** str, unsigned short* src)
     estrConcatFixedWidth((char**)str, (char*)src, (int)wcslen(src)*2); 
 }
 
-void estrConvertToNarrow(char **output, unsigned short *input)
+void estrConvertToNarrow(char **output, const wchar_t *input)
 {
     int requiredLength;
     if(!input || !output)
@@ -561,7 +561,7 @@ void estrConvertToNarrow(char **output, unsigned short *input)
     WideToUTF8StrConvert(input, *output, requiredLength);
 }
 
-void estrConvertToWide(unsigned short **output, char *input)
+void estrConvertToWide(wchar_t **output, const char *input)
 {
     int requiredLength;
     if(!input || !output)

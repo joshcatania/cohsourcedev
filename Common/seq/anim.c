@@ -134,7 +134,7 @@ Model * modelFind( const char *name, const char * filename, int load_type, int u
         assert(use_type & GEO_USE_MASK);
         if(!name || !filename || !name[0] || !filename[0] ) //debug
         {
-			char buf[256] = { NULL };
+			char buf[256] = { 0 };
 			sprintf(buf, "Bad geometry request");
 			if (filename) {
 				sprintf(buf, " (Model: '%s')", name);

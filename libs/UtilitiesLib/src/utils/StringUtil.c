@@ -186,7 +186,7 @@ bool utf8StrValid(char const * str)
     return cont == 0; // NULL is a valid utf8 str...
 }
 
-int WideToUTF8StrConvert(const unsigned short* str, char* outBuffer, int outBufferMaxLength){
+int WideToUTF8StrConvert(const wchar_t* str, char* outBuffer, int outBufferMaxLength){
     int result;
     int bufferSize;
 
@@ -219,7 +219,7 @@ int WideToUTF8StrConvert(const unsigned short* str, char* outBuffer, int outBuff
     return result;
 }
 
-char* WideToUTF8StrTempConvert(const unsigned short* str, int* newStrLength){
+char* WideToUTF8StrTempConvert(const wchar_t* str, int* newStrLength){
     int strLength;
     #define bufferSize TempBufferCharacterLength
     static char outputBuffer[bufferSize];
@@ -231,7 +231,7 @@ char* WideToUTF8StrTempConvert(const unsigned short* str, int* newStrLength){
     #undef bufferSize
 }
 
-char* WideToUTF8CharConvert(unsigned short character){
+char* WideToUTF8CharConvert(wchar_t character){
     // Max UTF8 character length should be 6 bytes, add one for null terminating character.
     static char outputBuffer[7];
     unsigned short unicodeString[2];

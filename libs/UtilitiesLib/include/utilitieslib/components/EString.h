@@ -116,8 +116,8 @@ static INLINEDBG void estrWideRemove(unsigned short** str, int index, int count)
 // EString: wide<->narrow conversion
 //---------------------------------------------------------------------------------
 
-void estrConvertToNarrow(char **output, unsigned short *input);
-void estrConvertToWide(unsigned short **output, char *input);
+void estrConvertToNarrow(char **output, const wchar_t *input);
+void estrConvertToWide(wchar_t**output, const char *input);
 
 
 //---------------------------------------------------------------------------------

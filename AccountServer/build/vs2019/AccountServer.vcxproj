@@ -216,7 +216,7 @@
     <ClCompile Include="..\..\..\Common\persist\textcrcdb.c" />
     <ClCompile Include="..\..\..\Common\persist\textcrcjournal.c" />
     <ClCompile Include="..\..\..\Common\Playspan\JSONParser.cpp" />
-    <ClCompile Include="..\..\..\Common\sql\sqlconn.c" />
+    <ClCompile Include="..\..\..\Common\sql\sqlconn.cpp" />
     <ClCompile Include="..\..\..\Common\sql\sqltask.cpp" />
     <ClCompile Include="..\..\src\accountcmds.cpp" />
     <ClCompile Include="..\..\src\AccountDb.cpp" />

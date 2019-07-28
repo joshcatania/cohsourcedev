@@ -92,10 +92,10 @@
     <ClCompile Include="..\..\..\Common\auction\Xact.c">
       <Filter>Source Files\Common\auction</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Common\sql\sqlconn.c">
+    <ClCompile Include="..\..\..\Common\sql\sqltask.cpp">
       <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\Common\sql\sqltask.cpp">
+    <ClCompile Include="..\..\..\Common\sql\sqlconn.cpp">
       <Filter>Source Files\Common\sql</Filter>
     </ClCompile>
   </ItemGroup>

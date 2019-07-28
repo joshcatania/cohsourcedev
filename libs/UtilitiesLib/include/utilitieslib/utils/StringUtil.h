@@ -7,9 +7,9 @@ int UTF8ToWideStrConvert(const char* str, unsigned short* outBuffer, int outBuff
 unsigned short* UTF8ToWideStrConvertStatic(const char *str);
 unsigned short UTF8ToWideCharConvert(const char* str);
 bool utf8StrValid(char const * str);
-int WideToUTF8StrConvert(const unsigned short* str, char* outBuffer, int outBufferMaxLength);
-char* WideToUTF8StrTempConvert(const unsigned short* str, int* newStrLength);
-char* WideToUTF8CharConvert(unsigned short character);
+int WideToUTF8StrConvert(const wchar_t* str, char* outBuffer, int outBufferMaxLength);
+char* WideToUTF8StrTempConvert(const wchar_t* str, int* newStrLength);
+char* WideToUTF8CharConvert(wchar_t character);
 
 int UTF8GetCharacterLength(const char* str);
 char* UTF8GetNextCharacter(const char* str);

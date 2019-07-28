@@ -282,7 +282,7 @@
     <ClCompile Include="..\..\..\Common\entity\LoadDefCommon.c" />
     <ClCompile Include="..\..\..\Common\mission\MissionSearch.c" />
     <ClCompile Include="..\..\..\Common\mission\missionserver_meta.c" />
-    <ClCompile Include="..\..\..\Common\sql\sqlconn.c" />
+    <ClCompile Include="..\..\..\Common\sql\sqlconn.cpp" />
     <ClCompile Include="..\..\..\Common\sql\sqltask.cpp" />
     <ClCompile Include="..\..\..\Common\turnstile\TurnstileCommon.c" />
     <ClCompile Include="..\..\..\Common\turnstile\TurnstileServerCommon.c" />
