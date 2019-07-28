@@ -54,7 +54,7 @@ typedef struct MultiMessageStore {
 //   files is a null-terminated list of alternating message and type files
 //   dirs is a null-terminated list of directories, whose contents will be added
 //   files and dirs should not contain locale folder names, they will be inserted when each locale is loaded
-void LoadMultiMessageStore(MultiMessageStore **pmms, char *bin_name, char *sm_name, int locale,
+void LoadMultiMessageStore(MultiMessageStore **pmms, const char *bin_name, char *sm_name, int locale,
                             char *idPrepend, char **files, char **folders, MMSPostProcessor process,
                             MessageStoreLoadFlags flags);
 void mmsLoadLocale(MultiMessageStore *mms, int locale); // in case you want to make sure a locale is loaded

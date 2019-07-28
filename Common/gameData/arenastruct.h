@@ -69,7 +69,7 @@ typedef struct Packet Packet;
 
 #define ARENA_RANDOMMAP_ID            9999
 
-static char *arenaArchetype[] = { 
+static const char *arenaArchetype[] = { 
     "Class_Blaster",
     "Class_Controller",
     "Class_Defender",
@@ -169,7 +169,7 @@ typedef enum
     ARENA_NUM_INSPIRATION_SETTINGS
 } ArenaInspirationSetting;
 
-static char * g_PhaseTranslationKeys[] = { "ScheduledStr",        // ARENA_SCHEDULED
+static const char * g_PhaseTranslationKeys[] = { "ScheduledStr",        // ARENA_SCHEDULED
                                             "NegotiatingStr",    // ARENA_NEGOTIATING
                                             "InProgressStr",    // ARENA_STARTROUND
                                             "InProgressStr",    // ARENA_RUNROUND
@@ -577,11 +577,11 @@ ArenaEvent* ArenaEventCreate(void);
 void ArenaEventDestroy(ArenaEvent* ae);
 void ArenaEventDestroyContents(ArenaEvent* ae);
 ArenaParticipant* ArenaParticipantCreate(void);
-void ArenaParticipantDestroy(ArenaParticipant* ap);
+void ArenaParticipantDestroy(void* data);
 ArenaSeating* ArenaSeatingCreate(void);
 void ArenaSeatingDestroy(ArenaSeating* ap);
 ArenaRef* ArenaRefCreate(void);
-void ArenaRefDestroy(ArenaRef* ap);
+void ArenaRefDestroy(void* data);
 ArenaRankingTableEntry* ArenaRankingTableEntryCreate(void);
 void ArenaRankingTableEntryDestroy(ArenaRankingTableEntry* entry);
 ArenaRankingTable* ArenaRankingTableCreate(void);
@@ -589,7 +589,7 @@ void ArenaRankingTableDestroy(ArenaRankingTable* table);
 EventHistory* EventHistoryCreate(void);
 void EventHistoryDestroy(EventHistory* hist);
 EventHistoryEntry* EventHistoryEntryCreate(void);
-void EventHistoryEntryDestroy(EventHistoryEntry* entry);
+void EventHistoryEntryDestroy(void* data);
 ArenaPlayer* ArenaPlayerCreate(void);
 void ArenaPlayerDestroy(ArenaPlayer* entry);
 

@@ -14,8 +14,8 @@ typedef struct EncounterGroup EncounterGroup;
 
 char *dbg_LocationStr(const Vec3 vec);
 char *dbg_BasePowerStr(const BasePower *ppow);
-char *dbg_NameStr(const Entity *e);
-char *dbg_FillNameStr(char *pch, size_t iBufSize, Entity *e);
+const char *dbg_NameStr(const Entity *e);
+const char *dbg_FillNameStr(char *pch, size_t iBufSize, Entity *e);
 char *dbg_EncounterGroupStr(const EncounterGroup * group);
 
 #endif /* #ifndef DBGHELPER_H__ */

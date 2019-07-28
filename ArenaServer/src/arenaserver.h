@@ -23,7 +23,7 @@ extern char g_request_name[32];
 extern int g_arenaVerbose;
 
 void ArenaCommandStart(Packet* pak);
-void ArenaCommandResult(NetLink* link, ArenaServerResult res, U32 num, char* err);
+void ArenaCommandResult(NetLink* link, ArenaServerResult res, U32 num, const char* err);
 void UpdateArenaTitle(void);
 char* ArenaLocalize(char* string); // returns static buffer
 

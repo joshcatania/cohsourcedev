@@ -121,7 +121,7 @@ static void ensureLocaleIsLoaded(MultiMessageStore* store, int localeID, bool er
     eaDestroyEx(&files,NULL); // free strings
 }
 
-void LoadMultiMessageStore(MultiMessageStore **pmms, char *bin_name, char *sm_name, int locale,
+void LoadMultiMessageStore(MultiMessageStore **pmms, const char *bin_name, char *sm_name, int locale,
                             char *idPrepend, char **files, char **folders, MMSPostProcessor process,
                             MessageStoreLoadFlags flags)
 {

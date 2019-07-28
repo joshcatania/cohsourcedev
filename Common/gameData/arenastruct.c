@@ -1054,8 +1054,9 @@ ArenaParticipant* ArenaParticipantCreate(void)
     MP_CREATE(ArenaParticipant, 100);
     return MP_ALLOC(ArenaParticipant);
 }
-void ArenaParticipantDestroy(ArenaParticipant* ap)
+void ArenaParticipantDestroy(void* data)
 {
+	ArenaParticipant* ap = cpp_reinterpret_cast(ArenaParticipant*)data;
     if (ap->name) free(ap->name);
     MP_FREE(ArenaParticipant, ap);
 }
@@ -1073,8 +1074,9 @@ ArenaRef* ArenaRefCreate(void)
     MP_CREATE(ArenaRef, 100);
     return MP_ALLOC(ArenaRef);
 }
-void ArenaRefDestroy(ArenaRef* ap)
+void ArenaRefDestroy(void* data)
 {
+	ArenaRef* ap = cpp_reinterpret_cast(ArenaRef*)(data);
     MP_FREE(ArenaRef, ap);
 }
 ArenaRankingTableEntry* ArenaRankingTableEntryCreate(void)
@@ -1114,8 +1116,9 @@ EventHistoryEntry* EventHistoryEntryCreate(void)
     MP_CREATE(EventHistoryEntry, 100);
     return MP_ALLOC(EventHistoryEntry);
 }
-void EventHistoryEntryDestroy(EventHistoryEntry* entry)
+void EventHistoryEntryDestroy(void* data)
 {
+	EventHistoryEntry* entry = cpp_reinterpret_cast(EventHistoryEntry*)(data);
     eaDestroy(&entry->p);
     MP_FREE(EventHistoryEntry, entry);
 }

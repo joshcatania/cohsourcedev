@@ -190,12 +190,12 @@
     <ClCompile Include="..\..\..\MapServer\src\container\containerArena.c" />
     <ClCompile Include="..\..\..\MapServer\src\dbcomm\dbcomm.c" />
     <ClCompile Include="..\..\..\MapServer\src\dbcomm\dbcontainer.c" />
-    <ClCompile Include="..\..\src\arenadb.c" />
-    <ClCompile Include="..\..\src\arenaevent.c" />
-    <ClCompile Include="..\..\src\arenaplayer.c" />
-    <ClCompile Include="..\..\src\arenaranking.c" />
-    <ClCompile Include="..\..\src\arenaserver.c" />
-    <ClCompile Include="..\..\src\arenaupdates.c" />
+    <ClCompile Include="..\..\src\arenadb.cpp" />
+    <ClCompile Include="..\..\src\arenaevent.cpp" />
+    <ClCompile Include="..\..\src\arenaplayer.cpp" />
+    <ClCompile Include="..\..\src\arenaranking.cpp" />
+    <ClCompile Include="..\..\src\arenaserver.cpp" />
+    <ClCompile Include="..\..\src\arenaupdates.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\Common\container\container_store.h" />

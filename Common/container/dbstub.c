@@ -26,8 +26,8 @@ U8 entity_state[MAX_ENTITIES_PRIVATE];
 int entities_max;
 EntityInfo entinfo[MAX_ENTITIES_PRIVATE];
 
-char* teamTypeName(ContainerType type) { return ""; }
-char *dbg_FillNameStr(char *pchDest, size_t iDestSize, Entity *e) { return ""; }
+const char* teamTypeName(ContainerType type) { return ""; }
+const char *dbg_FillNameStr(char *pchDest, size_t iDestSize, Entity *e) { return ""; }
 StaticMapInfo* staticMapInfoFind(int mapID) { return NULL; }
 Entity *entFromDbId(int db_id) { return NULL; }
 

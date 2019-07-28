@@ -81,7 +81,7 @@ char *dbg_LocationStr(const Vec3 vec)
  * dbg_FillNameStr
  *
  */
-char *dbg_FillNameStr(char *pchDest, size_t iDestSize, const Entity *e)
+const char *dbg_FillNameStr(char *pchDest, size_t iDestSize, const Entity *e)
 {
     const char *pch = entGetName(e);
 
@@ -118,7 +118,7 @@ char *dbg_FillNameStr(char *pchDest, size_t iDestSize, const Entity *e)
 * dbg_NameStr
 *
 */
-char *dbg_NameStr(const Entity *e)
+const char *dbg_NameStr(const Entity *e)
 {
     static char s_ach[256];
     return dbg_FillNameStr(SAFESTR(s_ach), e);

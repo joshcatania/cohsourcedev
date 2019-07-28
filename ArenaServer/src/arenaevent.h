@@ -19,7 +19,7 @@ extern ArenaEventList g_events;
 
 typedef struct EventHistoryEntry EventHistoryEntry;
 
-ArenaEvent* EventAdd(char* name);                // returns event
+ArenaEvent* EventAdd(const char* name);                // returns event
 ArenaEvent* EventGet(U32 eventid);
 int EventGetId(ArenaEvent *event);
 ArenaEvent* EventGetByDbid(U32 dbid);
@@ -32,7 +32,7 @@ void EventIter(int(*func)(ArenaEvent*));
 void EventAddParticipant(ArenaEvent* event, NetLink* link, U32 dbid, const char* archetype, int level, U32 sgid, int sgleader);
 void EventRemoveParticipant(ArenaEvent* event, U32 dbid);
 ArenaParticipant* EventGetParticipant(ArenaEvent* event, U32 dbid);
-void EventLog(ArenaEvent* event, char* logfile);
+void EventLog(ArenaEvent* event, const char* logfile);
 
 void arenaLoadMaps();
 
