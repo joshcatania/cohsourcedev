@@ -616,14 +616,13 @@ void consoleInit(int minWidth, int minHeight, int bufferLines)
     // Use Ctrl+C instead.
     DeleteMenu(GetSystemMenu(hDlg, FALSE), SC_CLOSE, MF_BYCOMMAND);
 
-    // print time
-    printf_stderr("started %s\n", timerGetTimeString());
+    writeConsole(OUTPUT_INFO, "Initializing console");
 
     // Disable QuickEdit because an accidental mouse click could pause a server indefinately.
     ret = GetConsoleMode(hStdIn, &mode);
     if (ret && mode & ENABLE_QUICK_EDIT_MODE)
     {
-        printf_stderr("detected QuickEdit, disabling...\n");
+        writeConsole(OUTPUT_VERBOSE, "Disabling QuickEdit");
         mode &= ~ENABLE_QUICK_EDIT_MODE;
         mode |= ENABLE_EXTENDED_FLAGS; // MSDN for SetConsoleMode says you need this
         ret = SetConsoleMode(hStdIn, mode);

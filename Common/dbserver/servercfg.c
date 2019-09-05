@@ -100,7 +100,7 @@ void serverCfgLoad()
 
     realFilename = fileLocateRead(relFilename,realFilenameBuffer);
 
-    printf("Loading %s\n", realFilename);
+    writeConsole(OUTPUT_INFO, "Loading %s", realFilename);
 
     // The server config file can be reloaded many times, make sure
     // to restore defaults in order to correctly reflect changes to the configuration.
@@ -152,7 +152,7 @@ void serverCfgLoad()
 
     if (!realFilename || !(file = fopen(realFilename, "rt")))
     {
-        printf("Can't load server/db/servers.cfg!\n");
+        writeConsole(OUTPUT_ERROR, "Can't load server/db/servers.cfg");
         return;
     }
     for(;;)
@@ -635,7 +635,7 @@ void serverCfgLoad()
     if ((!server_cfg.auth_server[0]) == (!server_cfg.fake_auth))
         FatalErrorf("Either one of UseFakeAuth or AuthServer needs to be enabled in servers.cfg");
 
-    printf("  Loading %s done\n", realFilename);
+    writeConsole(OUTPUT_VERBOSE, "Loaded %s", realFilename);
 
 #ifdef DBSERVER
     overloadProtection_ManualOverride(force_overload_protection);

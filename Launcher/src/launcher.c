@@ -59,19 +59,6 @@ static int g_process_starts = 0;    // total launch requests handled by launcher
 
 static int launcherHandleMsg(Packet *pak,int cmd, NetLink *link);
 
-static void printf_timestamp(char *fmt, ...)
-{
-    char date_buf[100];
-    va_list argptr;
-
-    timerMakeDateString(date_buf);
-    printf("%s ", date_buf);
-
-    va_start(argptr, fmt);
-    vprintf(fmt, argptr);
-    va_end(argptr);
-}
-
 // Launcher can request that dbserver place it in the 'suspended' state.
 // When in the suspended state the dbserver will no longer attempt to launch
 // maps on the host machine however the launcher will still report stats
@@ -87,7 +74,7 @@ static void setSuspendedState(bool suspend)
     // monitor only launchers can't launch anyway
     if (local_launcher && suspend)
     {
-        printf("error: monitor only launchers cannot be suspended.\n");
+        writeConsole(OUTPUT_ERROR, "Monitor-only launchers cannot be suspended");
         return;
     }
 
@@ -95,12 +82,12 @@ static void setSuspendedState(bool suspend)
 
     if (s_is_launcher_suspended)
     {
-        printf_timestamp("** SUSPENDING LAUNCHER ** - press 's' again to end suspension\n");
+        writeConsole(OUTPUT_WARNING, "Suspending Launcher -- press 's' again to end suspension");
         setConsoleTitle("Launcher  -** SUSPENDED **--");
     }
     else
     {
-        printf_timestamp("launching has been resumed.\n");
+        writeConsole(OUTPUT_INFO, "Launching has been resumed");
         setConsoleTitle("Launcher");
     }
 }
@@ -131,7 +118,7 @@ static void handleControl(Packet* pak)
 // Start a connection attempt to a Dbserver.  This is non-blocking.
 static void connectDbStart(char *dbServerName, NetLink *netLink)
 {
-    printf_timestamp("Starting connection to %s\n", dbServerName);
+    writeConsole(OUTPUT_INFO, "Starting connection to %s", dbServerName);
     netConnectAsync(netLink,dbServerName,DEFAULT_DBLAUNCHER_PORT,NLT_TCP,5.0f);
 }
 
@@ -150,7 +137,7 @@ static int connectDbPoll(char *dbServerName, NetLink *netLink)
         if (ret == -1)
         {
             // Print a message.  The NetLink will be left in a disconnected state, which we detct in the main loop and react as needed.
-            printf_timestamp("Connection to %s failed\n", dbServerName);
+            writeConsole(OUTPUT_WARNING, "Connection to %s failed", dbServerName);
         }
         // Anything else (i.e. zero) means it's still in progress so do nothing.
         return ret;
@@ -178,12 +165,12 @@ static int connectDbPoll(char *dbServerName, NetLink *netLink)
     {
         if (version_match || launcher_no_version_check)
         {
-            printf_timestamp("Connected to %s\n", dbServerName);
+            writeConsole(OUTPUT_INFO, "Connected to %s", dbServerName);
             NMAddLink(netLink, launcherHandleMsg);
         }
         else
         {
-            printf_timestamp("Version mismatch Local version: %s\n  DbServer @ %s version: %s\n", getCompatibleGameVersion(), dbServerName, dbserver_version);
+            writeConsole(OUTPUT_WARNING, "Version mismatch Local version: %s\n  DbServer @ %s version: %s", getCompatibleGameVersion(), dbServerName, dbserver_version);
             clearNetLink(netLink);
             // Make this dbserver's name the empty string, which will cause us to start ignoring it.  Mismatched versions
             // should never happen anyway, and this will cause the dbserver in question to have a hard time starting maps,
@@ -194,7 +181,7 @@ static int connectDbPoll(char *dbServerName, NetLink *netLink)
     }
     else
     {
-        printf_timestamp("Version check to %s returned 0\n", dbServerName);
+        writeConsole(OUTPUT_ERROR, "Version check to %s returned 0", dbServerName);
         clearNetLink(netLink);
         // Artificially turn this into an error.  That way the five second delay code will cut in and prevent this from spamming over and over.
         // The cause of spam was tracked down and fixed.  However this still wants to be considered an error, therefore we will leave this returning -1
@@ -241,11 +228,11 @@ void handleStartProcess(Packet *pak, NetLink *link)
         pid = trackProcessByExename(container_id, cookie, launch_type, s, (void *) link);
         if (pid != 0) {
             // Already running!
-            printf("launcher already running: %s\n",s);
+            writeConsole(OUTPUT_WARNING, "Launcher already running: %s",s);
         }
     }
     if (!pid && !monitorOnly) {
-        printf("launcher starting: %s\n",s);
+        writeConsole(OUTPUT_INFO, "Launcher starting: %s",s);
         pid = system_detach(s, 1);
         trackProcessByContainerId(container_id, pid, cookie, launch_type, (void *) link);
     }
@@ -435,12 +422,8 @@ int main(int argc,char **argv)
     EXCEPTION_HANDLER_BEGIN
     setAssertMode(ASSERTMODE_MINIDUMP | ASSERTMODE_DEBUGBUTTONS);
     memMonitorInit();
-    for(i = 0; i < argc; i++){
-        printf("%s ", argv[i]);
-    }
-    printf("\n");
 
-    consoleInit(110, 128, 0);
+    consoleInit(115, 58, 0);
     setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'L', 0x8080ff);
 
     FolderCacheChooseMode();
@@ -453,17 +436,11 @@ int main(int argc,char **argv)
     if (isProductionMode())
         autoRegisterCrypticStuff();
 
-    preloadDLLs(0);
-    //trickGoogleDesktopDll(0); // we also have shared memory, so trick the google desktop dll into mapping somewhere reasonable
-
-    printf( "SVN Revision: %s\n", build_version);
+    errorSetVerboseLevel(1);
+    writeConsole(OUTPUT_VERBOSE, "Git Commit Hash: %s", build_version);
+    writeConsole(OUTPUT_VERBOSE, "Built at: %s", build_time);
 
     setConsoleTitle("Launcher");
-
-    if (0)
-    {
-        TestTextParser();
-    }
 
     logSetDir("launcher");
     sockStart();
@@ -507,12 +484,12 @@ int main(int argc,char **argv)
         }
     }
 
-    loadstart_printf("Starting system performance counters...");
+    writeConsole(OUTPUT_INFO, "Starting system performance counters");
     system_monitor_init(); // Doing this early seems to open up access for querying more processes?  Weird.
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Started system performance counters");
 
 #ifdef LAUNCHER_TRACKS_SHARED_HEAP
-    loadstart_printf("initializing shared heap memory manager...");
+    writeConsole(OUTPUT_INFO, "Initializing shared heap memory manager");
     {
         initSharedHeapMemoryManager();
 
@@ -528,11 +505,11 @@ int main(int argc,char **argv)
         }
         */
 
-        loadend_printf("done");
+        writeConsole(OUTPUT_VERBOSE, "Initialized shared heap memory manager");
     }
 #endif
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     timer = timerAlloc();
     timerStart(timer);
     packetStartup(0,0);
@@ -540,7 +517,7 @@ int main(int argc,char **argv)
     while (!netInit(&net_links,0,DEFAULT_LAUNCHER_PORT))
         Sleep(1);
     NMAddLinkList(&net_links, launcherHandleMsg);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
 
     // Initialise the connection retry timers.
     for (i = 0; i < MAX_DBSERVER; i++)
