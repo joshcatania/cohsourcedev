@@ -2194,7 +2194,7 @@ int __cdecl main(int argc,char **argv)
     // stop queueing errors
     ErrorvEndQueueing();
 
-    printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "Server ready.");
+    printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "Server ready");
     printf(" (took %f seconds)\n",timerElapsed(startup_timer));
 
     // If we are spawned from a launcher notify it that we are ready for players.

@@ -420,7 +420,7 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
         }
         if(!client)
         {
-            printf("Received client ID %s which could not be found!  Command %d.  Ignoring.\n", clientId, cmd);
+            writeConsole(OUTPUT_WARNING, "Received client ID %s which could not be found!  Command %d.  Ignoring.", clientId, cmd);
             return 0;
         }
         pak_out = pktCreateEx(client,cmd);
@@ -446,14 +446,14 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
         }
         else
         {
-            loadend_printf("Dbserver not setup to use Queue Server.");
+            writeConsole(OUTPUT_ERROR, "DBServer not configured to use QueueServer.");
             exit(0);
         }
     }
 
     xcase QUEUESERVER_SVR_ERROR:
     {
-        printf("CLOSING DUE TO ERROR: %s\n", pktGetStringTemp(pak_in));
+        writeConsole(OUTPUT_ERROR, "CLOSING DUE TO ERROR: %s\n", pktGetStringTemp(pak_in));
     }
 
     xcase QUEUESERVER_SVR_ENQUEUESTATUS:
@@ -501,7 +501,7 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
             }
             else
             {
-                printf("Queuing Command for %s, but %s found with net ID %d\n", clientId, gameLink->account_name, clientId);
+                writeConsole(OUTPUT_WARNING, "Queuing Command for %s, but %s found with net ID %d\n", clientId, gameLink->account_name, clientId);
             }
         }
     }
@@ -651,7 +651,7 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
 
 
 xdefault:
-    printf("invalid msg %i\n", cmd);
+    writeConsole(OUTPUT_WARNING, "Invalid msg %i", cmd);
     };
 
     if(pak_out && client)
@@ -714,7 +714,7 @@ void queueserver_init(void)
         else
         {
             strcpy(g_queueServerState.server_name, "localhost");
-            printf("No dbserver specified.  Using localhost by default.\n");
+            writeConsole(OUTPUT_WARNING, "No DBServer specified. Using localhost");
         }
     }
 }
@@ -734,24 +734,12 @@ int netGameClientLinkDelCallback(NetLink *link)
 
 /////////////////////////////////////////////////////////////////////////////////////////
 // Async connect stuff
-static void printf_timestamp(char *fmt, ...)
-{
-    char date_buf[100];
-    va_list argptr;
-
-    timerMakeDateString(date_buf);
-    printf("%s ", date_buf);
-
-    va_start(argptr, fmt);
-    vprintf(fmt, argptr);
-    va_end(argptr);
-}
 
 // Start a connection attempt to a Dbserver.  This is non-blocking.
 void connectDbStart(char *dbServerName, NetLink *netLink)
 {
-    printf_timestamp("Starting connection to %s\n", dbServerName);
-    netConnectAsync(netLink,dbServerName,DEFAULT_QUEUESERVER_PORT,NLT_TCP,5.0f);
+    writeConsole(OUTPUT_INFO, "Starting connection to %s:%d", dbServerName, DEFAULT_QUEUESERVER_PORT);
+    netConnectAsync(netLink, dbServerName, DEFAULT_QUEUESERVER_PORT, NLT_TCP, 5.0f);
 }
 
 // Once a connection attempt has been started, call this each loop to see if the connection has succeeded.
@@ -768,7 +756,7 @@ int connectDbPoll(char *dbServerName, NetLink *netLink)
         if (ret == -1)
         {
             // Print a message.  The NetLink will be left in a disconnected state, which we detct in the main loop and react as needed.
-            printf_timestamp("Connection to %s failed\n", dbServerName);
+            writeConsole(OUTPUT_ERROR, "Connection to %s failed", dbServerName);
         }
         // Anything else (i.e. zero) means it's still in progress so do nothing.
         return ret;
@@ -843,7 +831,7 @@ void queueserver_tick(void)
         timerStart(retryTimer);
         // add -25, so that the elapsed > 5 below really becomes elapsed > 30
         timerAdd(retryTimer, -25.0f);
-        printf_timestamp("Starting artificial 30 second delay\n");
+        writeConsole(OUTPUT_INFO, "Starting artificial 30 second delay");
     }
 #else
     static int retryTimer = 0;                // timer used to throttle reconnect attempts

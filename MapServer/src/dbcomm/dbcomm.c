@@ -2072,7 +2072,7 @@ int dbMessageCallback(Packet *pak,int cmd,NetLink *link)
 #endif
 
         xdefault:
-            printf("Unknown dbserver command: %d\n",cmd);
+            writeConsole(OUTPUT_DEBUG, "Unknown dbserver command: %d", cmd);
             return 0;
     }
     return 1;

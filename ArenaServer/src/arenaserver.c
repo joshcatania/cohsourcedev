@@ -97,13 +97,13 @@ static void ArenaDbConnect(void)
         if (dbTryConnect(15.0, DEFAULT_DBARENA_PORT)) break;
         if (i < DB_CONNECT_TRIES-1)
         {
-            printf("failed to connect to dbserver, retrying..\n");
+            writeConsole(OUTPUT_WARNING, "Failed to connect to DBServer, retrying");
             Sleep(60);
         }
     }
     if (i == DB_CONNECT_TRIES)
     {
-        printf("failed to connect to dbserver, exiting..\n");
+        writeConsole(OUTPUT_ERROR, "Failed to connect to DBServer after %d times, exiting", DB_CONNECT_TRIES);
         exit(1);
     }
 #undef DB_CONNECT_TRIES
@@ -127,7 +127,7 @@ static void ArenaLoadContainers(void)
 {
     dbSyncContainerRequest(CONTAINER_ARENAEVENTS, 0, CONTAINER_CMD_LOAD_ALL, 0);
     EventListInit();
-    printf("%i events, %i players loaded\n", EventTotal(), PlayerTotal());
+    writeConsole(OUTPUT_INFO, "%i events, %i players loaded", EventTotal(), PlayerTotal());
     // MAKTODO - provide a way to clear arena players here or on dbserver, if the 
     // parent ent has been deleted
     UpdateArenaTitle();
@@ -790,22 +790,21 @@ int        i,timer;
         }
         else
         {
-            printf("-----INVALID PARAMETER: %s\n", argv[i]);
+            // printf("-----INVALID PARAMETER: %s\n", argv[i]);
         }
     }
     strcpy(db_state.server_name, server_cfg.db_server);
-    printf("Server locale: %s\n", locGetName(g_arenaLocale));
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     timer = timerAlloc();
     timerStart(timer);
     packetStartup(0,0);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
 
-    loadstart_printf("Connecting to dbserver (%s)..", db_state.server_name);
+    writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (TCP)", db_state.server_name, DEFAULT_DBARENA_PORT);
     ArenaDbConnect();
     ArenaLoadContainers();
-    loadend_printf("");
+    writeConsole(OUTPUT_INFO, "Connected to DBServer");
 
     if (g_clearEventsOnStart)
     {
@@ -814,25 +813,24 @@ int        i,timer;
         loadend_printf("");
     }
 
-    loadstart_printf("Opening client port..");
+    writeConsole(OUTPUT_INFO, "Opening client port");
     netLinkListAlloc(&net_links,MAX_CLIENTS,sizeof(ArenaClientLink),ArenaClientConnect);
     net_links.destroyCallback = ArenaClientDisconnect;
     while (!netInit(&net_links,0,DEFAULT_ARENASERVER_PORT))
         Sleep(1);
     NMAddLinkList(&net_links, ArenaServerHandleMsg);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Opened client port");
 
-    loadstart_printf("Building leaderboard..");
+    writeConsole(OUTPUT_INFO, "Building leaderboard");
     EventInitLeaderList();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Built leaderboard");
 
-    loadstart_printf("Misc other..");
+    writeConsole(OUTPUT_INFO, "Running miscellaneous actions");
     arenaLoadMaps();
     LoadScheduledEvents();
     SetTTLForNegotiatingPlayers();
-    loadend_printf("");
 
-    printf("Ready.\n");
+    writeConsole(OUTPUT_INFO, "Listening for connections");
     for(;;)
     {
         dbComm();

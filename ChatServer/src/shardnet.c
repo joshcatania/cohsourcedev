@@ -965,7 +965,7 @@ int main(int argc,char **argv)
         net_links.destroyCallback = 0;
         NMAddLinkList(&aux_links, handleAuxMessage);
 
-        printf("shard chat waiting for reserved names from mapserver..\n(Use \"-noreserved\" flag to skip, or run mapserver with \"-chatservernames localhost\"\n");
+        writeConsole(OUTPUT_INFO, "Waiting for reserved names from MapServer");
         while( ! GetReservedNameCount())
         {
             NMMonitor(200);
@@ -980,7 +980,7 @@ int main(int argc,char **argv)
 
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) s_CtrlHandler, TRUE); // add to list
 
-    printf("shard chat waiting for users..\n");
+    writeConsole(OUTPUT_INFO, "Waiting for users");
     estrConcatf(&log_str,"%s chatserver started\r\n",timerMakeLogDateStringFromSecondsSince2000(datestr,timerSecondsSince2000()));
 
     while (!s_shutting_down)
@@ -1016,7 +1016,7 @@ int main(int argc,char **argv)
     {
         int        i;
         User **users;
-        printf("\tLogging off users...\n");
+        writeConsole(OUTPUT_INFO, "Logging out users");
         users = chatUserGetAll();
         for(i = eaSize(&users)-1; i >= 0; --i)
         {
@@ -1025,8 +1025,7 @@ int main(int argc,char **argv)
         }
     }
 
-    // Flush the db and exit()
-    printf("\tSaving database...\n");
+    writeConsole(OUTPUT_INFO, "Saving database");
     chatDBShutDown();
 
     EXCEPTION_HANDLER_END 

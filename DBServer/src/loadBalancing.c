@@ -8,6 +8,7 @@
 #include <utilitieslib/utils/tokenstore.h>
 #include <utilitieslib/utils/log.h>
 #include "dbserver/servercfg.h"
+#include <utilitieslib/utils/utils.h>
 
 LoadBalanceConfig load_balance_config;
 
@@ -199,7 +200,7 @@ bool loadBalanceConfigLoad()
     bool ret = true;
 
     fullpath = fileLocateRead("server/db/loadBalanceDefault.cfg", buf);
-    printf("Loading %s... ", fullpath);
+    writeConsole(OUTPUT_INFO, "Loading %s", fullpath);
     default_loaded = ParserLoadFiles(NULL, "server/db/loadBalanceDefault.cfg", NULL, 0, ParseLoadBalanceConfig, &default_config, NULL, NULL, NULL);
     if (!default_loaded) 
     {
@@ -210,20 +211,20 @@ bool loadBalanceConfigLoad()
         } 
         else 
         {
-            printf("Failed to load server/db/loadBalanceDefault.cfg!\n");
+            writeConsole(OUTPUT_ERROR, "Failed to load server/db/loadBalanceDefault.cfg!\n");
         }
         return false; // Do nothing if reloading and failed to load
     }
-    printf("done.\n");
+    writeConsole(OUTPUT_VERBOSE, "Loaded %s", fullpath);
 
     if (!fileLocateRead("server/db/loadBalanceShardSpecific.cfg", buf))
         strcpy(buf, "server/db/loadBalanceShardSpecific.cfg");
-    printf("Loading %s... ", buf);
+    writeConsole(OUTPUT_INFO, "Loading %s", buf);
     shard_loaded = ParserLoadFiles(NULL, "server/db/loadBalanceShardSpecific.cfg", NULL, 0, ParseLoadBalanceConfig, &shard_config, NULL, NULL, NULL);
     if (!shard_loaded) 
     {
         LOG_OLD_ERR( "failed to load loadBalanceShardSpecific.cfg");
-        printf("not found, using defaults.\n");
+        writeConsole(OUTPUT_WARNING, "%s not found, using defaults from loadBalanceDefault", buf);
         // Just use default file
         ParserDestroyStruct(ParseLoadBalanceConfig, &load_balance_config);
     } 
@@ -238,7 +239,7 @@ bool loadBalanceConfigLoad()
             eaInsert(&default_config.serverRoles, shard_config.serverRoles[i], i);
         }
         eaDestroy(&shard_config.serverRoles);
-        printf("done.\n");
+        writeConsole(OUTPUT_VERBOSE, "Loaded %s", buf);
     }
 
     // Verification

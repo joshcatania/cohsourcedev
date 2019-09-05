@@ -123,7 +123,7 @@ void WeeklyTFCfgLoad()
     FILE    *file = NULL;
     char*    relFilename = "server/db/weeklyTF.cfg";
     static bool loaded_once = false;
-    printf("Loading %s\n", relFilename);
+    writeConsole(OUTPUT_INFO, "Loading %s", relFilename);
     
     StructClear(ParseWeeklyTFConfigList, &wtf_list);
     ParserLoadFiles(NULL, relFilename, NULL, 0, ParseWeeklyTFConfigList, &wtf_list, NULL, NULL, NULL);
@@ -143,7 +143,8 @@ void WeeklyTFCfgLoad()
         estrDestroy(&dateTimeStr);
         eaQSort(wtf_list.weeklyTF_cfg, wtf_comparator);
     }
-    
+
+    // writeConsole(OUTPUT_VERBOSE, "Loaded %s", relFilename);
     
     if (!loaded_once) {
         FolderCacheSetCallback(FOLDER_CACHE_CALLBACK_UPDATE|FOLDER_CACHE_CALLBACK_CAN_USE_SHARED_MEM, "server/db/WeeklyTF.cfg", WeeklyTFReloadCallback);

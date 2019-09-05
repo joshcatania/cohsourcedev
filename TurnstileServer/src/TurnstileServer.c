@@ -17,6 +17,7 @@
 #include "turnstileservermsg.h"
 #include "TurnstileServerEvent.h"
 #include "turnstileserver.h"
+#include <utilitieslib/utils/utils.h>
 
 static NetLink db_links[MAX_DBSERVER];
 static int retryTimers[MAX_DBSERVER];                // timers used to throttle reconnect attempts
@@ -69,19 +70,6 @@ static char *timeToString(int seconds)
     return buffer;
 }
 
-static void printf_timestamp(char *fmt, ...)
-{
-    char date_buf[100];
-    va_list argptr;
-
-    timerMakeDateString(date_buf);
-    printf("%s ", date_buf);
-
-    va_start(argptr, fmt);
-    vprintf(fmt, argptr);
-    va_end(argptr);
-}
-
 int dbserverCount()
 {
     return MAX_DBSERVER;
@@ -122,8 +110,8 @@ static void turnstileServer_handleRegisterAck(Packet *pak)
         }
         else
         {
-            printf("**** Error mismatched shardname for dbserver at %s: %s != %s\n", curDBServer->serverName, curDBServer->shardName, shardName);
-            printf("     Please check turnstile_servers.cfg and servers.cfg for this shard\n");
+            writeConsole(OUTPUT_ERROR, "Mismatched ShardName for DBServer at %s: %s != %s", curDBServer->serverName, curDBServer->shardName, shardName);
+            writeConsole(OUTPUT_ERROR, "Check turnstile_servers.cfg and servers.cfg");
         }
     }
     else
@@ -176,7 +164,7 @@ static int turnstileServer_HandleMsg(Packet *pak, int cmd, NetLink *link)
         xcase DBSERVER_TS_ADD_BAN_DBID:
             turnstileServer_handleAddBanID(pak);
         xdefault:
-            printf("Unknown command %d\n", cmd);
+            writeConsole(OUTPUT_INFO, "Unknown command %d", cmd);
             return 0;
     }
     return 1;
@@ -185,7 +173,7 @@ static int turnstileServer_HandleMsg(Packet *pak, int cmd, NetLink *link)
 // Start a connection attempt to a Dbserver.  This is non-blocking.
 static void connectDbStart(char *dbServerName, NetLink *netLink)
 {
-    printf_timestamp("Starting connection to %s\n", dbServerName);
+    writeConsole(OUTPUT_INFO, "Starting connection to %s", dbServerName);
     netConnectAsync(netLink, dbServerName, DEFAULT_DBTURNSTILE_PORT, NLT_TCP, 10.0f);
 }
 
@@ -207,7 +195,7 @@ static int connectDbPoll(char *dbServerName, NetLink *netLink)
         if (ret == -1)
         {
             // Print a message.  The NetLink will be left in a disconnected state, which we detct in the main loop and react as needed.
-            printf_timestamp("Connection to %s failed\n", dbServerName);
+            writeConsole(OUTPUT_WARNING, "Connection to %s failed", dbServerName);
         }
         // Anything else (i.e. zero) means it's still in progress so do nothing.
         return ret;
@@ -240,19 +228,19 @@ static int connectDbPoll(char *dbServerName, NetLink *netLink)
     {
         if (register_ack)
         {
-            printf_timestamp("Connected to %s\n", dbServerName);
+            writeConsole(OUTPUT_INFO, "Connected to %s\n", dbServerName);
             register_ack = 0;
         }
         else
         {
-            printf_timestamp("Handshake fail with DbServer @ %s\n", dbServerName);
+            writeConsole(OUTPUT_ERROR, "Handshake fail with DbServer @ %s", dbServerName);
             clearNetLink(netLink);
             ret = -1;
         }
     }
     else
     {
-        printf_timestamp("Handshake check to %s returned 0\n", dbServerName);
+        writeConsole(OUTPUT_ERROR, "Handshake check to %s returned 0", dbServerName);
         clearNetLink(netLink);
         // Artificially turn this into an error.  That way the five second delay code will cut in and prevent this from spamming over and over.
         // The cause of spam was tracked down and fixed.  However this still wants to be considered an error, therefore we will leave this returning -1
@@ -266,7 +254,7 @@ static void turnstileServer_init(void)
 {
     int i;
 
-    loadstart_printf("Loading configuration...");
+    writeConsole(OUTPUT_INFO, "Loading configuration");
     if (!turnstileParseTurnstileConfig(TURNSTILE_LOAD_CONFIG | TURNSTILE_LOAD_DEF))
     {
         FatalErrorf("Error: failure loading config and def files");
@@ -282,13 +270,12 @@ static void turnstileServer_init(void)
     //    FatalErrorf("Error: no missions specified in turnstile_server.def");
     //    exit(3);
     //}
-
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded configuration");
 
     if (eaSize(&turnstileConfigCfg.dbservers) > MAX_DBSERVER)
     {
-        printf("Warning: Too many shards specified in turnstile_server.cfg: %d, max is %d\n", eaSize(&turnstileConfigCfg.dbservers), MAX_DBSERVER);
-        printf("Truncating list\n");
+        writeConsole(OUTPUT_WARNING, "Too many shards specified in turnstile_server.cfg: %d, max is %d", eaSize(&turnstileConfigCfg.dbservers), MAX_DBSERVER);
+        writeConsole(OUTPUT_WARNING, "Truncating list");
         while (eaSize(&turnstileConfigCfg.dbservers) > MAX_DBSERVER)
         {
             eaPop(&turnstileConfigCfg.dbservers);

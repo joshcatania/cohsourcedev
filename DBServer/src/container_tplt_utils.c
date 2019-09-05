@@ -350,7 +350,7 @@ void odbcInitialSetup(void)
     int on_conn_str_len;
     int timeout;
 
-    printf_stderr("SQL_GETDATA_EXTENSIONS = 0x%08x\n", sqlConnGetInfo(SQL_GETDATA_EXTENSIONS, false, SQLCONN_FOREGROUND));
+    writeConsole(OUTPUT_DEBUG, "SQL_GETDATA_EXTENSIONS = 0x%08x", sqlConnGetInfo(SQL_GETDATA_EXTENSIONS, false, SQLCONN_FOREGROUND));
 
     // Verify connection timeout
     timeout = sqlConnGetInfo(SQL_ATTR_QUERY_TIMEOUT, false, SQLCONN_FOREGROUND);

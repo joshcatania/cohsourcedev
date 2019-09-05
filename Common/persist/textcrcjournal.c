@@ -177,7 +177,7 @@ void TextCRCJournal_RollJournal(TextCRCJournal *journal)
 
     if(!fileExists(journal->fn_journal))
     {
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "journal %s does not exist (attempted to roll to part%.3i)",journal->fn_journal,new_part_id);
+        writeConsole(OUTPUT_VERBOSE, "Journal %s does not exist (attempted to roll to part%.3i)", journal->fn_journal, new_part_id);
     }
     else
     {
@@ -274,7 +274,7 @@ void TextCRCJournal_DoMerge(TextCRCJournal *journal, bool (*process)(void*,void*
     int highest_part = s_FindHighestLogPart(journal->directory,journal->fn_merge);
     void *line_struct = _alloca(size);
 
-    LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"playlogs:starting");
+    writeConsole(OUTPUT_VERBOSE, "playlogs:starting");
 
     for(i = 1; i <= highest_part; ++i)
     {
@@ -297,8 +297,8 @@ void TextCRCJournal_DoMerge(TextCRCJournal *journal, bool (*process)(void*,void*
         journal->merge_pending = true;
 
         // TODO: make merge process spam not mix with main process spam
-        loadstart_printf("merging %s...",fn);
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "playlogs:recovering file %s",fn);
+        writeConsole(OUTPUT_VERBOSE, "merging %s", fn);
+        writeConsole(OUTPUT_VERBOSE, "playlogs:recovering file %s", fn);
         line = strtok_s(buf,"\n",&strtok_context);
 
         // first line is header
@@ -331,9 +331,8 @@ void TextCRCJournal_DoMerge(TextCRCJournal *journal, bool (*process)(void*,void*
             i_line++;
         }
         free(buf);
-        loadend_printf("");
     }
-    LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "playlogs:done");
+    writeConsole(OUTPUT_VERBOSE, "playlogs:done");
 }
 
 void TextCRCJournal_CleanupMerge(TextCRCJournal *journal, bool archive)
@@ -398,7 +397,7 @@ void TextCRCJournal_WriteMergeFiles(TextCRCJournal *journal)
     int log_tail_version = s_FindHighestLogPart(journal->directory,journal->fn_journal)+1;
     int merge_highest_version = s_FindHighestLogPart(journal->directory,journal->fn_merge);
 
-    LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "write merge files. highest existing: %i, moving %i more",merge_highest_version,log_tail_version-1);
+    writeConsole(OUTPUT_VERBOSE, "Write merge files. Highest existing: %i, moving %i more", merge_highest_version, log_tail_version - 1);
     // move from oldest to newest for consistency. 
     for(i = 1; i < log_tail_version; ++i)
     {

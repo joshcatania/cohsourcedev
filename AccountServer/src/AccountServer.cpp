@@ -1311,12 +1311,12 @@ void shardNetConnectTick(AccountServerState *state)
                 if (shard->last_connect + SHARDRECONNECT_RETRY_TIME > now)
                     continue;
 
-                printf_stderr("Asynchronously connecting to dbserver at %s\n", shard->ip);
+                writeConsole(OUTPUT_INFO, "Asynchronously connecting to DBServer %s:%d (TCP)", shard->ip, DEFAULT_ACCOUNTSERVER_PORT);
 
                 char *ipstr = makeIpStr(ipFromString(shard->ip));
                 int result = netConnectAsync(link, ipstr, DEFAULT_ACCOUNTSERVER_PORT, NLT_TCP, 20.f);
                 if (!result)
-                    printf_stderr("Failed to connect to dbserver at %s. Retrying in %is\n", shard->ip, SHARDRECONNECT_RETRY_TIME);
+                    writeConsole(OUTPUT_WARNING, "Failed to connect to DBServer. Retrying in %is", SHARDRECONNECT_RETRY_TIME);
 
                 shard->last_connect = now;
             }
@@ -1333,12 +1333,12 @@ void shardNetConnectTick(AccountServerState *state)
 
                         link->userData = shard;
 
-                        printf_stderr("Connected to dbserver at %s\n", shard->ip);
+                        writeConsole(OUTPUT_INFO, "Connected to DBServer");
                         NMAddLink(link, shardMsgCallback);
                     }
                     break;
                 case -1:
-                    printf_stderr("Failed to connect to dbserver at %s. Retrying in %is\n", shard->ip, SHARDRECONNECT_RETRY_TIME);
+                    writeConsole(OUTPUT_WARNING, "Failed to connect to DBServer. Retrying in %is", SHARDRECONNECT_RETRY_TIME);
                     break;
                 case 0:
                 default:
@@ -1482,7 +1482,7 @@ void reloadConfig(void)
         FatalErrorf("AccountServer cannot use 'master' as your SQL database.");
     }
 
-    printf_stderr("Listening for MicroTransactions in the environment '%s'\n", g_accountServerState.cfg.mtxEnvironment);
+    writeConsole(OUTPUT_INFO, "Listening for MicroTransactions in the environment '%s'", g_accountServerState.cfg.mtxEnvironment);
 }
 
 static void stress_test()
@@ -1560,10 +1560,6 @@ int main(int argc,char **argv)
     FatalErrorfSetCallback(NULL); // assert, log, and exit
 
     cryptInit();
-    for(i = 0; i < argc; i++){
-        printf("%s \n", argv[i]);
-    }
-    printf("\n");
 
     atexit( at_exit_func );
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) s_CtrlHandler, TRUE); // add to list
@@ -1598,8 +1594,6 @@ int main(int argc,char **argv)
             g_disableLastAuthor = 1;
         else if (strcmp(argv[i], "-stresstest")==0)
             do_stress_test = true;
-        else
-            printf("-----INVALID PARAMETER: %s\n", argv[i]);
     }
 
     logSetDir("accountserver");
@@ -1611,28 +1605,27 @@ int main(int argc,char **argv)
     LOG( LOG_ACCOUNT, LOG_LEVEL_VERBOSE, 0, "starting %s", GetCommandLine());
 
     // ensure only one accountserver
-    loadstart_printf("Checking for other copies of AccountServer...");
+    writeConsole(OUTPUT_INFO, "Checking for other copies of AccountServer");
     HANDLE mx = CreateMutexA(NULL, FALSE, "Global\\coh_accountserver_mutex");
     if(!mx || WAIT_TIMEOUT == WaitForSingleObject(mx, 0))
         FatalErrorf("Another AccountServer is already running");
-    loadend_printf("done");
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     timer = timerAlloc(); 
     timerStart(timer);
     packetStartup(0,0);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
 
-    loadstart_printf("loading config...");
+    writeConsole(OUTPUT_INFO, "Loading config");
     reloadConfig();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded config");
 
     // product ID to generic category stuff - will load product defs
     // here when we need them
-    loadstart_printf("loading product catalog and mapping..");
+    writeConsole(OUTPUT_INFO, "Loading product catalog and mapping");
     accountCatalogInit();
     accountLoyaltyRewardTreeLoad();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded product catalog and mapping");
 
     AccountServer_SlashInit();
     asql_open();
@@ -1643,8 +1636,7 @@ int main(int argc,char **argv)
     AccountRequest::Init();
     AccountServer_InitDelayedQueue();
 
-    printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "AccountServer ready.");
-    printf(" (took %f seconds)\n\n",timerElapsed(startup_timer));
+    writeConsole(OUTPUT_INFO, "AccountServer ready");
 
     send_timer = timerAlloc();
     g_flush_timer = timerAlloc();

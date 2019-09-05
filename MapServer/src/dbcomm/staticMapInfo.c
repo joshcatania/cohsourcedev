@@ -577,11 +577,14 @@ void staticMapInfosLoad()
         staticMapInfos = NULL;
     }
 
+    writeConsole(OUTPUT_INFO, "Loading maps.db");
+
     // Binary persistance for 'maps.db' is disallowed so that its contents can
     // be updated without being overridden by the pigg'ed binary version.
-    if(!ParserLoadFiles(NULL, MAPS_DB_FILENAME, NULL, flags, ParseStaticMapInfoList, &staticMapInfoList, NULL, NULL, staticMapInfosVerify))
-    {
-        printf("Unable to load maps.db!\n");
+    if(!ParserLoadFiles(NULL, MAPS_DB_FILENAME, NULL, flags, ParseStaticMapInfoList, &staticMapInfoList, NULL, NULL, staticMapInfosVerify)) {
+        writeConsole(OUTPUT_WARNING, "Unable to load maps.db");
+    } else {
+        writeConsole(OUTPUT_VERBOSE, "Loaded maps.db");
     }
 
     staticMapInfos = staticMapInfoList.staticMapInfos;

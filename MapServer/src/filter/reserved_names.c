@@ -95,7 +95,7 @@ void receiveReservedNames(Packet * pak)
 
     s_hashReservedNames = receiveHashTable(pak, StashDeepCopyKeys);
 
-    printf("Received %d reserved names\n", stashGetValidElementCount(s_hashReservedNames));
+    writeConsole(OUTPUT_INFO, "Received %d reserved names", stashGetValidElementCount(s_hashReservedNames));
 }
 
 

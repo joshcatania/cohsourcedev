@@ -89,19 +89,17 @@ static bool TextCRCDb_LoadFileInternal(char *fn, ParseTable *pti, U32 *ver, U32 
     U32 ver_read;
     U32 crc_read;
 
-    loadstart_printf("%s %s...\n",action,fn);
+    // loadstart_printf("%s %s...\n",action,fn);
 
     if(!fileExists(fn))
     {
-        loadend_printf("");
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"Warning: %s does not exist, assuming new database",fn);
+        writeConsole(OUTPUT_VERBOSE, "Warning: %s does not exist, assuming new database", fn);
         return true; 
     }
 
     if(!ParserReadTextFile(fn,pti,structptr))
     {
-        loadend_printf("");
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"Error: %s could not be parsed, data is corrupted!",fn);
+        writeConsole(OUTPUT_VERBOSE, "Error: %s could not be parsed, data is corrupted", fn);
         return false; // should this be fatal?
     }
 
@@ -111,21 +109,18 @@ static bool TextCRCDb_LoadFileInternal(char *fn, ParseTable *pti, U32 *ver, U32 
 
     if(ver_read != (U32)ParseTableCRC(pti,NULL))
     {
-        loadend_printf("");
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"Warning: %s had its parse table changed, ignoring crc.  This is normal for a new publish.",fn);
+        writeConsole(OUTPUT_VERBOSE, "Warning: %s had its parse table changed, ignoring crc. This is normal for a new publish.", fn);
         return true;
     }
 
     if(crc_read != StructCRC(pti,structptr))
     {
-        loadend_printf("");
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"Error: %s failed its crc check, data is corrupted!",fn);
+        writeConsole(OUTPUT_VERBOSE, "Error: %s failed its CRC check, data is corrupted", fn);
         return false;
     }
 
     *ver = ver_read;
     *crc = crc_read;
-    loadend_printf("");
     return true;
 }
 
@@ -134,11 +129,11 @@ bool TextCRCDb_ValidateNewFile(char *fn, ParseTable *pti, U32 *ver, U32 *crc, vo
     char fn_new[MAX_PATH];
     sprintf(fn_new,"%s.new",fn);
 
-    LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"verifying %s",fn_new);
+    writeConsole(OUTPUT_VERBOSE, "Verifying %s", fn_new);
 
     if(!fileExists(fn_new))
     {
-        LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"%s does not exist to be verified",fn_new);
+        writeConsole(OUTPUT_VERBOSE, "%s does not exist to be verified", fn_new);
         return false;
     }
     
@@ -153,7 +148,7 @@ bool TextCRCDb_ValidateNewFile(char *fn, ParseTable *pti, U32 *ver, U32 *crc, vo
 
 bool TextCRCDb_LoadFile(char *fn, ParseTable *pti, U32 *ver, U32 *crc, void *structptr)
 {
-    LOG( LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS,"loading %s",fn);
+    writeConsole(OUTPUT_VERBOSE, "Loading %s", fn);
     return TextCRCDb_LoadFileInternal(fn,pti,ver,crc,structptr,"loading");
 }
 

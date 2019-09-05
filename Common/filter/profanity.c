@@ -314,7 +314,7 @@ void receiveProfanity(Packet * pak)
 
     s_hashFilth = receiveHashTable(pak, StashDeepCopyKeys);
 
-    printf("Received %d profane words\n", stashGetValidElementCount(s_hashFilth));
+    writeConsole(OUTPUT_INFO, "Received %d profane words", stashGetValidElementCount(s_hashFilth));
 }
 void sendProfanity(Packet * pak)
 {

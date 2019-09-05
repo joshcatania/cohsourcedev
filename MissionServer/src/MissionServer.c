@@ -3496,7 +3496,7 @@ static void shardNetConnectTick(MissionServerState *state)
         else if( !link->connected && shard->ip && (!shard->failed_connect || retry_failed_ok) )
         {
             char *ipstr;
-            loadstart_printf("connecting to %s...",shard->ip);
+            writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (TCP)", shard->ip, DEFAULT_MISSIONSERVER_PORT);
             ipstr = makeIpStr(ipFromString(shard->ip));
             if(!netConnect(link,ipstr, DEFAULT_MISSIONSERVER_PORT,NLT_TCP,1.f,NULL))
             {
@@ -3507,7 +3507,7 @@ static void shardNetConnectTick(MissionServerState *state)
                 state->last_failed_time = timerSecondsSince2000(); // don't try a known failure again for while
                 retry_failed_ok = false;
 
-                loadend_printf("failed, retry in %is",retry_time);
+                writeConsole(OUTPUT_WARNING, "Failed, retry in %is", retry_time);
             }
             else
             {
@@ -3518,7 +3518,7 @@ static void shardNetConnectTick(MissionServerState *state)
                 link->userData = shard;
                 shard->failed_connect = false;
 
-                loadend_printf("done");
+                writeConsole(OUTPUT_INFO, "Connected to DBServer");
             }
         }
     }
@@ -3657,7 +3657,7 @@ void missionserver_init(void)
 
     fileDisableWinIO(1);
 
-    loadstart_printf("Loading configuration...");
+    writeConsole(OUTPUT_INFO, "Loading configuration");
     StructInit(cfg, sizeof(*cfg), parse_MissionServerCfg);
     if(    !fileLocateRead("server/db/mission_server.cfg", buf) ||
         !ParserLoadFiles(NULL, buf, NULL, 0, parse_MissionServerCfg, cfg, NULL, NULL, NULL) )
@@ -3703,10 +3703,11 @@ void missionserver_init(void)
     s_setPersistDefaults(&cfg->substringpersist,"substring",PERSIST_MEMORY);
     s_setPersistDefaults(&cfg->quotedpersist,    "quoted",    PERSIST_MEMORY);
     s_setPersistDefaults(&cfg->varspersist,        "vars",        PERSIST_FLAT);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded configuration");
+
     missionserversearch_initTokenLists();
 
-    loadstart_printf("Registering types..");
+    writeConsole(OUTPUT_INFO, "Registering types");
     missionserver_registerJournaledUserPersist(cfg->userpersist);
     missionserver_registerJournaledArcPersist(cfg->arcpersist); // SORTED!
     plRegisterQuick(MissionServerSearch,            parse_MissionServerSearch,            cfg->searchpersist,        PERSIST_STRICTDEFAULT);
@@ -3718,7 +3719,7 @@ void missionserver_init(void)
 
     // FIXME: move these into the serverlib config
     meta_registerPrintfMessager(s_remoteMetaPrintf);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Registered types");
 }
 
 #define REBUILD_DB_FOR_LIVE 0
@@ -4336,7 +4337,7 @@ static void dump_StartCompleteData(void)
 }
 void missionserver_load(void)
 {
-    loadstart_printf("loading live config...");
+    writeConsole(OUTPUT_INFO, "Loading live config");
     g_missionServerState.vars = plFind(MissionServerVars);
     if(!g_missionServerState.vars)
     {
@@ -4347,14 +4348,14 @@ void missionserver_load(void)
 
         g_missionServerState.vars = vars;
     }
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded live config");
 
-    loadstart_printf("removing partial publishes...");
+    writeConsole(OUTPUT_INFO, "Removing partial publishes");
     s_arcsPreLoad();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Removing partial publishes");
 
 #if MISSIONSERVER_LOADALL_HOGGS
-    loadstart_printf("loading arc data..");
+    writeConsole(OUTPUT_INFO, "Loading arc data");
     missionserver_LoadAllArcData(plGetAll(MissionServerArc), plCount(MissionServerArc));
     if(g_missionServerState.forceLoadDb)
     {
@@ -4369,17 +4370,16 @@ void missionserver_load(void)
 
         missionserver_clearLoadMismatches();
     }
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded arc data");
 #endif
 
 #if REBUILD_DB_FOR_LIVE
     rebuildDBForLive();
 #endif
 
-    loadstart_printf("fixup etc..");
+    writeConsole(OUTPUT_INFO, "Running post-load steps");
     s_arcsPostLoad();
     s_usersPostLoad();
-    loadend_printf("");
 
     if (g_missionServerState.dumpStats)
     {

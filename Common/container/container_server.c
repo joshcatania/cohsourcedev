@@ -15,6 +15,7 @@
 #include "comm_backend.h"
 #include <utilitieslib/utils/error.h>
 #include <utilitieslib/utils/log.h>
+#include <utilitieslib/utils/utils.h>
 
 ContainerStore** g_storelist; // null-terminated list of container stores
 
@@ -46,13 +47,13 @@ void csvrDbConnect(void)
         if (dbTryConnect(15.0, DEFAULT_DB_PORT)) break;
         if (i < DB_CONNECT_TRIES-1)
         {
-            printf("failed to connect to dbserver, retrying..\n");
+            writeConsole(OUTPUT_WARNING, "Failed to connect to DBServer, retrying");
             Sleep(60);
         }
     }
     if (i == DB_CONNECT_TRIES)
     {
-        printf("failed to connect to dbserver, exiting..\n");
+        writeConsole(OUTPUT_ERROR, "Failed to connect to DBServer, exiting");
         exit(1);
     }
 #undef DB_CONNECT_TRIES
@@ -86,7 +87,7 @@ int csvrRegisterSync(void)
     int success = 1;
 
     do {
-        printf("Registering to serve %s..\n", (*s)->name);
+        writeConsole(OUTPUT_VERBOSE, "Registering to serve %s", (*s)->name);
         pak = pktCreateEx(&db_comm_link,DBCLIENT_REGISTER_CONTAINER_SERVER);
         pktSendBitsPack(pak, 1, (*s)->list_id);
         pktSend(&pak, &db_comm_link);
@@ -94,7 +95,7 @@ int csvrRegisterSync(void)
         g_registered_list = 0;
         dbMessageScanUntil(__FUNCTION__, &perfInfo);
         success = success && (g_registered_list == (*s)->list_id);
-        printf(" %s.\n", success? "succeeded": "failed");
+        writeConsole(OUTPUT_VERBOSE, "%s", success ? "Sucessfully registered" : "Failed to register");
         s++;
     } while (*s && success);
     return success;
@@ -167,7 +168,7 @@ void csvrLoadContainers(void)
     while (*s)
     {
         dbSyncContainerRequest((*s)->list_id, 0, CONTAINER_CMD_LOAD_ALL, 0);
-        printf("%i %s loaded\n", cstoreCount(*s), (*s)->name);
+        writeConsole(OUTPUT_INFO, "%i %s loaded", cstoreCount(*s), (*s)->name);
         s++;
     }
 }

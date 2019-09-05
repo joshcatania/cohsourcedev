@@ -727,25 +727,25 @@ static void AuctionServer_InitData(void)
 
     // we need shards first, for text parser links
     // note: new shards are written to disk before the journal can reference them
-    loadstart_printf("Loading Shards...");
+    writeConsole(OUTPUT_INFO, "Loading shards");
     AuctionDb_LoadShards();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded shards");
 
     // load the ents database and merge in journals
-    loadstart_printf("Loading Auction Ents...");
+    writeConsole(OUTPUT_INFO, "Loading auction ents");
     AuctionDb_LoadEnts();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded auction ents");
 
     // we are in the main process, do any other loading/fixup/prep
     // if we recovered any journals, then we will be spawning a merge process next tick
-    loadstart_printf("Fixup Auction Ents...");
+    writeConsole(OUTPUT_INFO, "Fixing up auction ents");
     AuctionDb_Fixup();
     s_AuctionServer_PrepFulfiller();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Fixed up auction ents");
 
-    loadstart_printf("Loading Auction History...");
+    writeConsole(OUTPUT_INFO, "Loading auction history");
     AuctionHistory_Load();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded auction history");
 
     CloseHandle(h_initmtx);
 }
@@ -883,7 +883,7 @@ void shardNetConnectTick(AuctionServerState *state)
             if( !link->connected && (!(state->failed_shards & (1<<shardip_idx)) || retry_failed_ok) )
             {
                 char *ipstr;
-                loadstart_printf("connecting (%i) to %s...",j+1,shardip);
+                writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (TCP)", shardip, DEFAULT_AUCTIONSERVER_HEROES_PORT);
                 ipstr = makeIpStr(ipFromString(shardip));
                 if(!netConnect(link,ipstr, DEFAULT_AUCTIONSERVER_HEROES_PORT,NLT_TCP,1.f,NULL))
                 {
@@ -894,7 +894,7 @@ void shardNetConnectTick(AuctionServerState *state)
                     state->last_failed_time = timerSecondsSince2000(); // don't try a known failure again for while
                     retry_failed_ok = false;
 
-                    loadend_printf("failed, retry in %is",retry_time);
+                    writeConsole(OUTPUT_WARNING, "Failed, retrying in %is", retry_time);
                 }
                 else
                 {
@@ -907,7 +907,7 @@ void shardNetConnectTick(AuctionServerState *state)
 
                     state->failed_shards &= ~(1<<shardip_idx); // take this shard off the failure list
 
-                    loadend_printf("done");
+                    writeConsole(OUTPUT_INFO, "Connected to DBServer");
                 }
             }
         }
@@ -1055,7 +1055,6 @@ char g_exe_name[MAX_PATH];
 int main(int argc,char **argv)
 {
 //     HANDLE h_servertypemtx; // a little too crazy, don't worry about this.
-    int i;
     int timer;
     int send_timer;
     int startup_timer = 0;
@@ -1073,10 +1072,6 @@ int main(int argc,char **argv)
     setAssertMode(ASSERTMODE_MINIDUMP | ASSERTMODE_DEBUGBUTTONS);
     FatalErrorfSetCallback(NULL); // assert, log, and exit
     cryptInit();
-    for(i = 0; i < argc; i++){
-        printf("%s ", argv[i]);
-    }
-    printf("\n");
 
     atexit( at_exit_func );
     SetConsoleCtrlHandler((PHANDLER_ROUTINE) s_CtrlHandler, TRUE); // add to list
@@ -1107,49 +1102,19 @@ int main(int argc,char **argv)
     sockStart();
     packetStartup(0,0);
 
-    {
-        char *stemp = strrchr(argv[0], '.');
-        const char *progname = getFileName(argv[0]);
-        
-        if (stemp)
-        {
-            *stemp = 0;
-            if (strstriConst(progname,"villain")) // only one auctionhouse now
-                printf("-----INVALID PROGRAM NAME: %s\n", argv[0]);
-            else
-                g_auctionstate.type = kAuctionServerType_Heroes;
-        }
-    }
-
-    for(i=1;i<argc;i++)
-    {
-        if(0==stricmp(argv[i], "-type"))
-        {
-            if(strstri(argv[++i],"hero"))
-                g_auctionstate.type = kAuctionServerType_Heroes;
-            else
-                printf("-----INVALID PARAMETER: %s\n", argv[i]);
-        }
-        else
-        {
-            printf("-----INVALID PARAMETER: %s\n", argv[i]);
-        }
-    }
-
-    printf("auction server type: %s\n",AuctionServerType_ToStr(g_auctionstate.type));
     logSetDir("auctionserver_combined");
     errorLogStart();
 
     if(!g_auctionstate.server_name)
         g_auctionstate.server_name = AuctionServerType_ToStr(g_auctionstate.type);
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     timer = timerAlloc(); 
     timerStart(timer);
     packetStartup(0,0);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
     
-    loadstart_printf("loading config...");
+    writeConsole(OUTPUT_INFO, "Loading config");
     if(!auctionSvrCfgLoad(&g_auctionstate.cfg))
     {
         if(!isDevelopmentMode())
@@ -1160,7 +1125,7 @@ int main(int argc,char **argv)
         printf("console: no config specified. in development mode. adding localhost\n");
         eaPush(&g_auctionstate.cfg.shardIps,"localhost");
     }
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded config");
 
     // Special dummy shard entry for all fake auctions to belong to.
     AuctionDb_InitFakeShard();
@@ -1176,10 +1141,10 @@ int main(int argc,char **argv)
 
     // ensure only one auction at a time.
     {
-        char *hn = (g_auctionstate.type == kAuctionServerType_Heroes)?"Global\\heroes_auctionserver_mutex":"Global\\villains_auctionserver_mutex";
+        char *hn = "Global\\auctionserver_mutex";
         HANDLE mx;
         mx = CreateMutexA(0,0,hn);
-        loadstart_printf("aquiring mutex %s...",hn);
+        writeConsole(OUTPUT_INFO, "Aquiring mutex %s", hn);
         if(!mx)
             FatalErrorf("failed to allocate mutex %s",hn);
         else if(WAIT_TIMEOUT == WaitForSingleObject(mx,0))
@@ -1187,22 +1152,10 @@ int main(int argc,char **argv)
             FatalErrorf("ERROR: couldn't aquire mutex %s two auction servers of this type running at same time.",hn);
         }
         // CloseHandle(mx); - deliberately leak the handle, not released until exit.
-        loadend_printf("done");
+        writeConsole(OUTPUT_VERBOSE, "Aquired mutex");
     }
-    
-//     if(*server_cfg.cfg.log_server)
-//     {
-//         loadstart_printf("Connecting to logserver (%s)...", db_state.log_server);
-//         logNetInit();
-//         loadend_printf("done");
-//     }
-//     else
-//     {
-        printf("no logserver specified. only printing logs locally.\n");
-//     }
 
-    printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "AuctionServer ready.");
-    printf(" (took %f seconds)\n\n",timerElapsed(startup_timer));
+    writeConsole(OUTPUT_INFO, "AuctionServer ready");
 
     g_frame_timer = timerAlloc();
     timerStart(g_frame_timer);

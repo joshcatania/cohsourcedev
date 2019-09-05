@@ -893,7 +893,7 @@ static void RaidPrompt(void)
 
 static void PrintRaidVars(void)
 {
-    printf("Raid Length: %i \tRaid Size %i\n", BaseRaidLength(), BaseRaidSize());
+    writeConsole(OUTPUT_INFO, "Raid Length: %i \tRaid Size %i", BaseRaidLength(), BaseRaidSize());
 }
 
 static void PrintCurrentTime(void)
@@ -1108,39 +1108,28 @@ int        i,timer;
     MakeDummyDetailMP(); //For loading Supergroups without def files loaded
     LoadItemOfPowerInfos();
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     timer = timerAlloc();
     timerStart(timer);
     packetStartup(0,0);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
     
     // container server startup
-    loadstart_printf("Connecting to dbserver (%s)..", db_state.server_name);
+    writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (TCP)", db_state.server_name, DEFAULT_DB_PORT);
     csvrInit(storedefs);
     csvrDbConnect();
-    loadend_printf("");
+    writeConsole(OUTPUT_INFO, "Connected to DBServer");
 
-    if(*server_cfg.log_server)
-    {
-        loadstart_printf("Connecting to logserver (%s)...", db_state.log_server);
-        logNetInit();
-        loadend_printf("done");
-    }
-    else
-    {
-        printf("no logserver specified. only printing logs locally.\n");
-    }
-
-    loadstart_printf("Registering with db...");
+    writeConsole(OUTPUT_INFO, "Registering with DBServer");
     if (!csvrRegisterSync())
         FatalErrorf("Could not register as container server");
     csvrGetNotifications((1 << CONTAINER_SUPERGROUPS)); // we only send stuff related to supergroups
     csvrLoadContainers();
     UpdateConsoleTitle();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Registered with DBServer");
 
     PrintRaidVars();
-    printf("Ready.\n");
+    writeConsole(OUTPUT_INFO, "Listening for connections");
     CheckItemOfPowerGame(); //Get one tick to jump start game if needed
 
     for(;;)

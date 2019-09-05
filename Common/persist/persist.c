@@ -1340,12 +1340,11 @@ int persist_LoadAll(void)
         PersistInfo *info = s_infolist[i];
         if(info->state == PERSISTINFO_NOTLOADED)
         {
-            loadstart_printf("Loading %s...", s_getName(info)); // TODO: put in a control for noise
+            writeConsole(OUTPUT_INFO, "Loading %s", s_getName(info)); // TODO: put in a control for noise
             if(!s_loadInfo(info, 0, NULL, NULL))
                 success = 0;
             else if(info->merging == PERSISTINFO_MERGEPENDING)
                 ap_push(&pending_merges, info);
-            loadend_printf("");
         }
     }
     s_mergeChanges(pending_merges, ap_size(&pending_merges));

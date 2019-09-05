@@ -371,27 +371,27 @@ void chatDbInit(void)
     logSetDir("chatserver");
     chatsql_open();
 
-    loadstart_printf("Loading Users...");
+    writeConsole(OUTPUT_INFO, "Loading users");
     ChatDb_LoadUsers();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded users");
     
-    loadstart_printf("Loading Channels...");
+    writeConsole(OUTPUT_INFO, "Loading channels");
     ChatDb_LoadChannels();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded channels");
 
-    loadstart_printf("Loading Gmail...");
+    writeConsole(OUTPUT_INFO, "Loading gmail");
     ChatDb_LoadUserGmail();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded gmail");
 
-    loadstart_printf("Initializing Users...");
+    writeConsole(OUTPUT_INFO, "Initializing users");
     initUsers();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized users");
 
-    loadstart_printf("Initializing Channels...");
+    writeConsole(OUTPUT_INFO, "Initializing channels");
     initChannels();
-    loadend_printf("");
-
-    LOG(LOG_TEXT_JOURNAL, LOG_LEVEL_VERBOSE, LOG_CONSOLE_ALWAYS, "Loaded %d channels and %d users.", chatChannelGetCount(), chatUserGetCount());
+    writeConsole(OUTPUT_VERBOSE, "Initialized channels ");
+    
+    writeConsole(OUTPUT_INFO, "Loaded %d channels and %d users", chatChannelGetCount(), chatUserGetCount());
 
     ChatDb_FlushChanges();
 }

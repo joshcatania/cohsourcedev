@@ -18,6 +18,7 @@
 #include <utilitieslib/utils/timing.h>
 #include "dbcomm/dbcomm.h"
 #include <utilitieslib/utils/log.h>
+#include <utilitieslib/utils/utils.h>
 
 #define SCHEDULE_MIN_TIME_BEFORE_START        120        // we won't schedule an event within this many seconds of when it should go
 
@@ -312,7 +313,7 @@ int IncrementScheduledEvent(ArenaEvent* event)
 
     if (g_disableScheduledEvents)
     {
-        printf("not rescheduling event %i (scheduled events disabled)\n", event->eventid);
+        writeConsole(OUTPUT_VERBOSE, "Not rescheduling event %i (scheduled events disabled)", event->eventid);
         return 0;
     }
 

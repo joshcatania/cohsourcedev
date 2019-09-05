@@ -761,7 +761,7 @@ bool sqlConnDatabaseConnect(const char * db_name, const char * app_name)
         SQLGetInfo(sql.connections[SQLCONN_FOREGROUND], SQL_DRIVER_NAME, name, sizeof(name), NULL);
         SQLGetInfo(sql.connections[SQLCONN_FOREGROUND], SQL_DRIVER_VER, sqlver, sizeof(sqlver), NULL);
         SQLGetInfo(sql.connections[SQLCONN_FOREGROUND], SQL_DRIVER_ODBC_VER, odbcver, sizeof(odbcver), NULL);
-        printf_stderr("SQL %s %s / ODBC %s\n", name, sqlver, odbcver);
+        writeConsole(OUTPUT_INFO, "SQL %s %s / ODBC %s", name, sqlver, odbcver);
     }
 
     return true;

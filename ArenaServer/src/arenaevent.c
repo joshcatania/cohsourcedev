@@ -2386,7 +2386,7 @@ int EventProcessEach(ArenaEvent* event)
                 {
                     if (IncrementScheduledEvent(event)) // also resets ASAP events here, btw
                     {
-                        printf("Rescheduling event %i-%i\n", event->eventid, event->uniqueid);
+                        writeConsole(OUTPUT_INFO, "Rescheduling event %i-%i", event->eventid, event->uniqueid);
                         dirty = 1;
                     }
                     else

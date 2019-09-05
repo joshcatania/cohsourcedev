@@ -1976,7 +1976,7 @@ int main(int argc,char **argv)
 
     dbInit(start_static);
     
-    printf_stderr("%s DbServer Ready.\n", timerGetTimeString());
+    printf_stderr("%s DbServer ready\n", timerGetTimeString());
 
     for(;;)
     {

@@ -168,7 +168,7 @@ void meta_handleCommandLine(int argc, char **argv)
         if(    !argv[i] || argv[i][0] != '-' ||
             !stashFindPointer(s_calllookup[CALLTYPE_COMMANDLINE], argv[i]+1, &object))
         {
-            printf("Warning: Meta Invalid parameter %s", argv[i]);
+            // printf("Warning: Meta Invalid parameter %s", argv[i]);
             continue;
         }
 
