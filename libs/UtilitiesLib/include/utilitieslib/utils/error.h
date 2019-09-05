@@ -6,7 +6,8 @@
 
 C_DECLARATIONS_BEGIN
 
-extern const char* build_version;
+extern const char *build_version;
+extern const char *build_time;
 
 typedef void (*ErrorCallback)(char* errMsg);
 typedef int (*LogVprintfFptr)(char *fname,char const *fmt, va_list ap);
