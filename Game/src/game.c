@@ -1498,6 +1498,11 @@ void parseArgsForConsole(int argc, char** argv) {
         if (CHECKARG("-console")) { // Do this early!
             newConsoleWindow();
             consoleStarted = true;
+#ifdef _DEBUG
+            consoleInit(115, 58, 0);
+#else
+            consoleInit(115, 29, 256);
+#endif // _DEBUG
         } else if (CHECKARG("-nogui")) {
             AttachConsoleIfAvail();
             newConsoleWindow();

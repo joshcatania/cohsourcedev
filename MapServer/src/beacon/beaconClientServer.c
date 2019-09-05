@@ -2801,8 +2801,12 @@ void beaconizerInitConsoleWindow(){
     if(!beaconizerInit.clientServerType){
         return;
     }
-    
-    consoleInit(110, 128, 0);
+
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
 
     switch(beaconizerInit.clientServerType){
         xcase BEACONIZER_TYPE_CLIENT:

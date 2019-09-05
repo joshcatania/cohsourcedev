@@ -423,7 +423,11 @@ int main(int argc,char **argv)
     setAssertMode(ASSERTMODE_MINIDUMP | ASSERTMODE_DEBUGBUTTONS);
     memMonitorInit();
 
+#ifdef _DEBUG
     consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'L', 0x8080ff);
 
     FolderCacheChooseMode();

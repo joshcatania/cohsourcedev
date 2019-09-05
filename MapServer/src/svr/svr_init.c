@@ -250,15 +250,14 @@ static void startupInfo(int argc,char **argv)
     getcwd(buffer, MAX_PATH);
 
     if (!server_state.silent) {
-        printf(    "(%d) %s %s\n",_getpid(),getExecutableName(),program_parms);
-        printf( "working dir: %s\n", buffer);
-        printf( "SVN Revision: %s\n", build_version);
+        writeConsole(OUTPUT_VERBOSE, "Git Commit Hash: %s", build_version);
+        writeConsole(OUTPUT_VERBOSE, "Built at: %s", build_time);
     }
 
     if (isProductionMode()) {
-        consoleInit(80, 10, 256);
+        consoleInit(115, 29, 256);
     } else {
-        consoleInit(110, 128, 0); // A width of 110 will fit nicely on most resolutions, and be wide enough for us to see stuff
+        consoleInit(115, 58, 0);
     }
 
     logSetDir("mapserver");
@@ -1406,7 +1405,7 @@ void parseArgs2(int argc,char **argv)
         }
         else if (argv[i][0])
         {
-            Errorf("Invalid command line parameter passed to mapserver.exe: %s", argv[i]);
+            // Errorf("Invalid command line parameter passed to mapserver.exe: %s", argv[i]);
         }
     }
 }

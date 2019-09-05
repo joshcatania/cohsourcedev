@@ -1570,7 +1570,6 @@ int main(int argc,char **argv)
 
     setWindowIconColoredLetter(compatibleGetConsoleWindow(), '%', 0xffff00);
     FolderCacheChooseMode();
-    preloadDLLs(0);
 
     if (fileIsUsingDevData()) { 
         bsAssertOnErrors(true);
@@ -1584,7 +1583,11 @@ int main(int argc,char **argv)
     }
 
     srand((unsigned int)time(NULL));
-    consoleInit(110, 128, 0);
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     UpdateConsoleTitle();
     sockStart();
     packetStartup(0,0);

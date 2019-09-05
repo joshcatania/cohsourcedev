@@ -99,11 +99,11 @@ int main(int argc,char **argv)
 {
     int timer;
 
-    memCheckInit();
-
-    EXCEPTION_HANDLER_BEGIN 
+    EXCEPTION_HANDLER_BEGIN
     setAssertMode(ASSERTMODE_MINIDUMP | ASSERTMODE_DEBUGBUTTONS);
     FatalErrorfSetCallback(NULL); // assert, log, and exit
+
+    memCheckInit();
 
     timer = timerAlloc(); // startup time
     g_serverlibstate.started = timerSecondsSince2000();
@@ -123,7 +123,6 @@ int main(int argc,char **argv)
     {
         FolderCacheSetMode(FOLDER_CACHE_MODE_FILESYSTEM_ONLY);
     }
-    preloadDLLs(0);
 
     if(fileIsUsingDevData())
     {
@@ -142,7 +141,11 @@ int main(int argc,char **argv)
 
     if(g_serverlibconfig.icon_letter)
         setWindowIconColoredLetter(compatibleGetConsoleWindow(), g_serverlibconfig.icon_letter, g_serverlibconfig.icon_color);
-    consoleInit(110, 128, 0);
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     {
         char *buf = Str_temp();
         Str_catf(&buf, "%d: %s", _getpid(), g_serverlibconfig.name);
@@ -159,8 +162,6 @@ int main(int argc,char **argv)
     g_serverlibstate.argc = argc;
     g_serverlibstate.argv = argv;
 
-    printf("%s: ", g_serverlibstate.started_readable);
-    printf("Starting: %s", g_serverlibstate.cmd_line);
     if(g_serverlibconfig.init_handler)
         g_serverlibconfig.init_handler();
 
@@ -189,7 +190,7 @@ int main(int argc,char **argv)
         HANDLE mx;
         sprintf(hn,"Global\\%s_mutex", g_serverlibconfig.name);
         mx = CreateMutexA(0,0,hn);
-        loadstart_printf("acquiring mutex %s...",hn);
+        writeConsole(OUTPUT_INFO, "Acquiring mutex %s", hn);
         if(!mx)
             FatalErrorf("failed to allocate mutex %s",hn);
         else if(WAIT_TIMEOUT == WaitForSingleObject(mx,0))
@@ -197,14 +198,14 @@ int main(int argc,char **argv)
             FatalErrorf("ERROR: couldn't acquire mutex %s two auction servers of this type running at same time.",hn);
         }
         // CloseHandle(mx); - deliberately leak the handle, not released until exit.
-        loadend_printf("done");
+        writeConsole(OUTPUT_VERBOSE, "Acquired mutex");
     }
 
-    loadstart_printf("Networking startup...");
+    writeConsole(OUTPUT_INFO, "Initializing networking");
     packetStartup(0, (g_serverlibconfig.flags & kServerLibNetEncryption) != 0 ? 1 : 0);
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Initialized networking");
     
-    loadstart_printf("Loading data...");
+    writeConsole(OUTPUT_INFO, "Loading data");
     if(!plLoadAll())
     {
         FatalErrorf("Error while loading data.\nPlease see the console/logs for more information.");
@@ -212,9 +213,9 @@ int main(int argc,char **argv)
     }
     if(g_serverlibconfig.load_handler)
         g_serverlibconfig.load_handler();
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded data");
 
-    loadstart_printf("Etc...");
+    writeConsole(OUTPUT_INFO, "Loading miscellaneous");
     {
         ConsoleDebugMenu *configmenu = g_serverlibconfig.consoledebugmenu;
         int count = 0, max_count = 0;
@@ -231,10 +232,9 @@ int main(int argc,char **argv)
         }
         dynArrayAddStruct(&s_debugmenu, &count, &max_count); // terminator
     }
-    loadend_printf("");
+    writeConsole(OUTPUT_VERBOSE, "Loaded miscellaneous");
 
-    printfColor(COLOR_RED|COLOR_GREEN|COLOR_BLUE | COLOR_BRIGHT, "%s ready.", g_serverlibconfig.name);
-    printf(" (in %f seconds)\n\n", timerElapsed(timer));
+    writeConsole(OUTPUT_INFO, "%s ready", g_serverlibconfig.name);
 
     while(!g_serverlibstate.quitting)
     {

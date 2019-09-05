@@ -2672,8 +2672,12 @@ void beaconProcess(S32 noFileCheck, S32 removeOldFiles, S32 generateOnly){
     // Intialize the timer.
     
     beaconCurTimeString(1);
-        
-    consoleInit(110, 128, 0);
+
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     
     // Clear all entity variables that may be pointing at beacons.
     

@@ -902,7 +902,11 @@ int main(int argc,char **argv)
         noreserved = 0;
     }
 
-    consoleInit(110, 128, 0);
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'C', 0xffff00);
 
     locOverrideIDInRegistryForServersOnly(0);

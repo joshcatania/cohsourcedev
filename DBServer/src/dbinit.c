@@ -1093,7 +1093,7 @@ void dbInit(int start_static)
     odbcInitialSetup();
     queryDatabaseVersion();
 
-    printf_stderr("%s SQL server %d connected\n", timerGetTimeString(), gDatabaseVersion);
+    writeConsole(OUTPUT_INFO, "SQL Server v%d Connected", gDatabaseVersion);
     sqlFifoInit();
 
     loadstart_printf("Loading templates...");
@@ -1485,21 +1485,8 @@ void dbInit(int start_static)
 
 static void startupInfo(int argc,char **argv)
 {
-    static char program_parms[1000];
-    int        i;
-    char    buffer[MAX_PATH];
-
-    for(i=0;i<argc;i++)
-    {
-        strcat(program_parms,argv[i]);
-        strcat(program_parms," ");
-    }
-
-    getcwd(buffer, MAX_PATH);
-
-    printf_stderr(    "(%d) %s %s\n",_getpid(),getExecutableName(),program_parms);
-    printf_stderr( "working dir: %s\n", buffer);
-    printf_stderr( "SVN Revision: %s\n", build_version);
+    writeConsole(OUTPUT_VERBOSE, "Git Commit Hash: %s", build_version);
+    writeConsole(OUTPUT_VERBOSE, "Built at: %s", build_time);
 }
 
 void memtest()
@@ -1764,12 +1751,16 @@ extern int g_force_production_mode;
 
 int main(int argc,char **argv)
 {
-    int        i,start_static=0,flat_to_sql=0,is_log_server=0,init_encryption = 1;
-
-    memCheckInit();
+    int i, start_static = 0, flat_to_sql = 0, is_log_server = 0, init_encryption = 1;
 
     EXCEPTION_HANDLER_BEGIN
-    
+    memCheckInit();
+
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'D', 0x00ff00);
 
     regSetAppName("CoH");
@@ -1791,6 +1782,8 @@ int main(int argc,char **argv)
             ASSERTMODE_DATEDMINIDUMPS | ASSERTMODE_ZIPPED);
     }
     setAssertCallback(dbserverAsserCallback);
+
+    errorSetVerboseLevel(1);
     startupInfo(argc, argv);
 
     if (strstri(argv[0],"logserver"))
@@ -1857,11 +1850,10 @@ int main(int argc,char **argv)
         system(buf);
         system_detach(logserver_name, 0);
     }
-    consoleInit(110, 128, 0);
     if (server_cfg.client_project[0]){
         regSetAppName(server_cfg.client_project);
     }
-    printf_stderr("dbserver starting\n");
+    writeConsole(OUTPUT_INFO, "DBServer starting");
     errorSetVerboseLevel(1);
     for(i=1;i<argc;i++)
     {

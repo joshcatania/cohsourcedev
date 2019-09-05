@@ -1061,8 +1061,6 @@ int        i,timer;
 
     FolderCacheChooseMode();
 
-    preloadDLLs(0);
-
     if (fileIsUsingDevData()) {
         bsAssertOnErrors(true);
         setAssertMode(ASSERTMODE_DEBUGBUTTONS |
@@ -1075,7 +1073,11 @@ int        i,timer;
     }
 
     srand((unsigned int)time(NULL));
-    consoleInit(110, 128, 0);
+#ifdef _DEBUG
+    consoleInit(115, 58, 0);
+#else
+    consoleInit(115, 29, 256);
+#endif // _DEBUG
     UpdateConsoleTitle();
 
     logSetDir("raidserver");
