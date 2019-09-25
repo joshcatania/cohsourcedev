@@ -6,8 +6,11 @@ function sql_db_connect($addr, $user, $pass, $db, $fail = false)
 {
     global $mssql_dbs;
 
-    //$link = odbc_connect("Driver={SQL Server};Server={$addr};Database={$db}",$user,$pass);
-    $link = @mssql_connect($addr, $user, $pass);
+    $link = sqlsrv_connect($addr, [
+        "Database" => $db,
+        "UID" => $user,
+        "PWD" => $pass,
+    ]);
     $mssql_db = array('addr' => $addr, 'link' => $link, 'db' => $db);
     if ($link === false) {
         if ($fail) {
@@ -40,10 +43,10 @@ function sql_query($query, $db = 0)
     }
 
     if (!sql_selectdb($mssql_dbs[$db])) {
-        sql_fatal_error("Could not connect to server", $mssql_db[$db]);
+        sql_fatal_error("Could not connect to server", $mssql_dbs[$db]);
     }
 
-    $result = @mssql_query($query, $mssql_dbs[$db]['link']);
+    $result = sqlsrv_query($mssql_dbs[$db]['link'], $query);
     if ($result === false) {
         sql_fatal_error("Database query failed.", $mssql_dbs[$db], $query);
     }
@@ -52,18 +55,18 @@ function sql_query($query, $db = 0)
 }
 
 // returns an array for the first result, only
-function sql_fetch($query, $db = 0, $result_type = MSSQL_BOTH)
+function sql_fetch($query, $db = 0, $result_type = SQLSRV_FETCH_BOTH)
 {
-    return mssql_fetch_array(sql_query($query, $db), $result_type);
+    return sqlsrv_fetch_array(sql_query($query, $db), $result_type);
 }
 
 // returns an array of arrays, with an entry for each result row
 // in general you should use a QueryIterator instead
-function sql_fetch_all($query, $db = 0, $result_type = MSSQL_BOTH)
+function sql_fetch_all($query, $db = 0, $result_type = SQLSRV_FETCH_BOTH)
 {
     $all = array();
     $result = sql_query($query, $db);
-    while (($row = mssql_fetch_array($result, $result_type)) !== false) {
+    while (($row = sqlsrv_fetch_array($result, $result_type)) !== false) {
         $all[] = $row;
     }
 
@@ -85,7 +88,6 @@ function sql_date($string = '')
     } else {
         return 'GETDATE()';
     }
-
 }
 
 // To be used in a foreach loop
@@ -95,7 +97,7 @@ function sql_date($string = '')
 // Keys are simply the first column in a result
 class QueryIterator implements Iterator
 {
-    public function __construct($query, $db = 0, $result_type = MSSQL_BOTH)
+    public function __construct($query, $db = 0, $result_type = SQLSRV_FETCH_BOTH)
     {
         $this->query = $query;
         $this->result = false;
@@ -120,7 +122,7 @@ class QueryIterator implements Iterator
     }
     public function next()
     {
-        return $this->value = mssql_fetch_array($this->result, $this->type);
+        return $this->value = sqlsrv_fetch_array($this->result, $this->type);
     }
     //    function next()        { return $this->value = $this->result === true ? false : mssql_fetch_array($this->result,$this->type); }
     public function valid()
@@ -131,7 +133,7 @@ class QueryIterator implements Iterator
     // this function returns false until the object has been rewound
     public function num_rows()
     {
-        return $this->result === false ? false : mssql_num_rows($this->result);
+        return $this->result === false ? false : sqlsrv_num_rows($this->result);
     }
 
     private $query;
@@ -156,7 +158,7 @@ $mssql_error_user_func = false;
 
 function sql_selectdb($db, $fail = true)
 {
-    if (!$db || ($db['db'] && !@mssql_select_db($db['db'], $db['link']))) {
+    if (!$db || ($db['db'] && !sqlsrv_query($db['link'], "USE " . $db['db']))) {
         if ($fail) {
             sql_fatal_error("Could not select database", $db);
         } else {
@@ -177,22 +179,24 @@ function sql_fatal_error($message, $db = false, $query = '')
         $mssql_error_user_func();
     }
 
-    $last = mssql_get_last_message();
+	$last = sqlsrv_errors()[0]["message"];
 
-    $sMssql_get_last_message = mssql_get_last_message();
-    $sQuery_added = "BEGIN TRY\n";
-    $sQuery_added .= "\t" . $query . "\n";
-    $sQuery_added .= "END TRY\n";
-    $sQuery_added .= "BEGIN CATCH\n";
-    $sQuery_added .= "\tSELECT 'Error: '  + ERROR_MESSAGE()\n";
-    $sQuery_added .= "END CATCH";
-    $rRun2 = mssql_query($query, $db);
-    $aReturn = mssql_fetch_assoc($rRun2);
-    if (empty($aReturn)) {
-        echo $sError . '. MSSQL returned1: ' . $sMssql_get_last_message . '.<br>Executed query: ' . nl2br($query);
-    } elseif (isset($aReturn['computed'])) {
-        echo $sError . '. MSSQL returned2: ' . $aReturn['computed'] . '.<br>Executed query: ' . nl2br($query);
-    }
+	if ($db) {
+		$sMssql_get_last_message = sqlsrv_errors()[0]["message"];
+		$sQuery_added = "BEGIN TRY\n";
+		$sQuery_added .= "\t" . $query . "\n";
+		$sQuery_added .= "END TRY\n";
+		$sQuery_added .= "BEGIN CATCH\n";
+		$sQuery_added .= "\tSELECT 'Error: '  + ERROR_MESSAGE()\n";
+		$sQuery_added .= "END CATCH";
+		$rRun2 = sqlsrv_query($db['link'], $query);
+		$aReturn = sqlsrv_fetch($rRun2, SQLSRV_FETCH_ASSOC);
+		if (empty($aReturn)) {
+			echo 'MSSQL returned (1): ' . $sMssql_get_last_message . '<br>Executed query: ' . nl2br($query);
+		} elseif (isset($aReturn['computed'])) {
+			echo 'MSSQL returned (2): ' . $aReturn['computed'] . '<br>Executed query: ' . nl2br($query);
+		}
+	}
 
     $err = "<div class='mssql_error'>" .
     "Error: <span class='mssql_error_error'>$message</span><br>" . ($db ? "Database: <span class='mssql_error_db'>$db[addr] $db[db]</span><br>" : "") . ($last ? "Last Reply: <span class='mssql_error_message'>$last</span><br>" : "") . ($query ? "Query:<br><span class='mssql_error_query'>$query</span><br>" : "") .
