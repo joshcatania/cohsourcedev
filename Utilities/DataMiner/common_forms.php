@@ -26,17 +26,20 @@ function select_miner_category($name = '', $default = false)
     $selected = false;
 
     $r = "<select name='$name' onChange='this.nextSibling.style.display=(this.options[this.selectedIndex].value==0)?\"inline-block\":\"none\";'>";
-    $r .= "<option value='0'>Other (Specify)";
-    foreach (new QueryIterator("SELECT DISTINCT category FROM miners") as $k => $v) {
-        $r .= "<option value='" . htmlspecialchars($k, ENT_QUOTES) . "'";
-        if ($k == $default) {
-            $r .= ' selected';
-            $selected = true;
-        }
-        $r .= ">" . htmlspecialchars($k);
-    }
+	$r .= "<option value='0'>Other (Specify)";
+	$values = new QueryIterator("SELECT DISTINCT category FROM miners");
+	if ($values->valid()) {
+		foreach (new QueryIterator("SELECT DISTINCT category FROM miners") as $k => $v) {
+			$r .= "<option value='" . htmlspecialchars($k, ENT_QUOTES) . "'";
+			if ($k == $default) {
+				$r .= ' selected';
+				$selected = true;
+			}
+			$r .= ">" . htmlspecialchars($k);
+		}
+	}
     $r .= "</select>";
-    $r .= "<input type=text id='${name}_other' name='${name}_other' value='" . htmlspecialchars($default, ENT_QUOTES) . "'" . ($selected ? " style='display:none'" : '') . ">";
+	$r .= "<input type=text id='${name}_other' name='${name}_other' value='" . htmlspecialchars($default, ENT_QUOTES) . "'" . ($selected ? " style='display:none'" : '') . ">";
     return $r;
 }
 
@@ -140,7 +143,7 @@ $common_email_address = array(
 
 function form_mining_prolog()
 {
-    global $common_aggregation, $common_comparison, $common_form_containers, $common_frequencies;
+    global $common_aggregation, $common_comparison, $common_form_containers, $common_frequencies, $common_email_address;
     $r = '';
 
     if ($common_form_containers) {
@@ -150,29 +153,32 @@ function form_mining_prolog()
     $common_form_containers = array();
 
     $templates = array();
-    $templated = array();
-    foreach (new QueryIterator("SELECT * FROM containers WHERE groupok=1 OR dataok=1 OR whereok=1 ORDER BY container") as $v) {
-        if (substr($v['tablename'], 0, 7) != 'mineacc') { // donotcheckin
-            if (substr($v['tablename'], 0, 7) == 'mineacc') {
-                $v['container'] .= '.%'; // FIXME: make this naming convention pervasive?
-                $tablename = ucfirst($v['container']);
-            } else {
-                $templated[$v['container']] = true;
-                $tablename = substr($v['tablename'], 0, strcspn($v['tablename'], '0123456789'));
-            }
-            if (@!$templates[$v['container']]) {
-                $templates[$v['container']] = array();
-            }
+	$templated = array();
+	$values = new QueryIterator("SELECT * FROM containers WHERE groupok=1 OR dataok=1 OR whereok=1 ORDER BY container");
+	if ($values->valid()) {
+		foreach (values as $v) {
+			if (substr($v['tablename'], 0, 7) != 'mineacc') { // donotcheckin
+				if (substr($v['tablename'], 0, 7) == 'mineacc') {
+					$v['container'] .= '.%'; // FIXME: make this naming convention pervasive?
+					$tablename = ucfirst($v['container']);
+				} else {
+					$templated[$v['container']] = true;
+					$tablename = substr($v['tablename'], 0, strcspn($v['tablename'], '0123456789'));
+				}
+				if (@!$templates[$v['container']]) {
+					$templates[$v['container']] = array();
+				}
 
-            if (@!$templates[$v['container']][$tablename]) {
-                $templates[$v['container']][$tablename] = array();
-            }
+				if (@!$templates[$v['container']][$tablename]) {
+					$templates[$v['container']][$tablename] = array();
+				}
 
-            $templates[$v['container']][$tablename][$v['name']] = $v;
+				$templates[$v['container']][$tablename][$v['name']] = $v;
 
-            $common_form_containers[$v['container']] = true;
-        }
-    }
+				$common_form_containers[$v['container']] = true;
+			}
+		}
+	}
 
     // sorts columns by name, with tablename## merged
     foreach ($templates as $k => $v) {
@@ -394,10 +400,12 @@ function form_mining_prolog()
     $r .= "<div id='emailline_' style='display:none'>";
     $r .= "<a href='javascript:' onClick='this.parentNode.parentNode.removeChild(this.parentNode);'><img src='img/listrem.png' title='Remove Email' class='listicon'></a>";
     $r .= "<input type=text name='emailval_'>";
-    $r .= "<select name='emailaddr_'>";
-    foreach ($common_email_address as $k => $val) {
-        $r .= "<option value='$val'>$val</option>";
-    }
+	$r .= "<select name='emailaddr_'>";
+	if ($common_email_address) {
+		foreach ($common_email_address as $k => $val) {
+			$r .= "<option value='$val'>$val</option>";
+		}
+	}
 
     $r .= "</select>";
     $r .= "</div>\n";

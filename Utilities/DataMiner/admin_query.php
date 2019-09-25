@@ -48,6 +48,9 @@ echo "<form action=admin_query.php class='newbox' method=post>\n";
 
 echo form_mining_prolog();
 
+$description = '';
+$category = false;
+
 echo "<div class='formrow'><div class='label'>Name</div><input type=text name='name' value=''></div>\n";
 echo "<div class='formrow'><div class='label'>Description:</div><textarea name='description' cols=100 rows=3>$description</textarea></div>\n";
 echo "<div class='formrow'><div class='label'>Category:</div>" . select_miner_category('category', $category) . "</div>\n";
