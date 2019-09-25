@@ -1,9 +1,9 @@
 <?php
-require_once('config.php');
+require_once 'config.php';
 
 $template_title = 'Admin';
 $template_admin_menu = true;
-include('template_top.php');
+include 'template_top.php';
 
 echo "<table>\n";
 echo "<tr><th class='rowt'>Admin Actions\n";
@@ -14,5 +14,4 @@ echo "<tr><td class='rowf'><a href='admin_pstrings.php'><img src='img/pstring.pn
 echo "<tr><td class='rowf'><a href='admin_attributes.php'><img src='img/pstring.png' class='icon'> Go to Attributes</a>\n";
 echo "</table>\n";
 
-include('template_bottom.php');
-?>
+include 'template_bottom.php';

@@ -24,5 +24,3 @@ $template_admin_menu = false;
 $template_infobox = array();
 $template_warnbox = array();
 $template_errorbox = array();
-
-?>

@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Put this file in a web-accessible directory as index.php (or similar)
  * and point your webbrowser to it.
@@ -15,18 +16,18 @@ $pear_dir = '@pear_dir@'; // default of install
 // custom way, then uncomment to disable the 'not protected' warning:
 //$pear_frontweb_protected = true;
 
-
 /***********************************************************
  * Following code tests $pear_dir and loads the webfrontend:
  */
-if (!file_exists($pear_dir.'/PEAR.php')) {
-    trigger_error('No PEAR.php in supplied PEAR directory: '.$pear_dir,
-                    E_USER_ERROR);
+if (!file_exists($pear_dir . '/PEAR.php')) {
+    trigger_error(
+        'No PEAR.php in supplied PEAR directory: ' . $pear_dir,
+        E_USER_ERROR
+    );
 }
 ini_set('include_path', $pear_dir);
-require_once('PEAR.php');
+require_once 'PEAR.php';
 
 // Include WebInstaller
-putenv('PHP_PEAR_INSTALL_DIR='.$pear_dir); // needed if unexisting config
-require_once('pearfrontendweb.php');
-?>
+putenv('PHP_PEAR_INSTALL_DIR=' . $pear_dir); // needed if unexisting config
+require_once 'pearfrontendweb.php';

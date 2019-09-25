@@ -1,18 +1,19 @@
 <?php
-require_once('common.php');
+require_once 'common.php';
 
 // mktime(0, 0, 0, 1, 1, 2000) == 946713600
-if(@$_POST['lookup'])
-{
-	if(isset($_POST['timestamp']))
-		$template_infobox[] = (int)$_POST['timestamp'].": <b>".date($config_datetimeformat,$_POST['timestamp']+946713600)."</b>";
-	else
-		$template_errorbox[] = "Please enter a SecondsSince2000 timestamp.";
+if (@$_POST['lookup']) {
+    if (isset($_POST['timestamp'])) {
+        $template_infobox[] = (int) $_POST['timestamp'] . ": <b>" . date($config_datetimeformat, $_POST['timestamp'] + 946713600) . "</b>";
+    } else {
+        $template_errorbox[] = "Please enter a SecondsSince2000 timestamp.";
+    }
+
 }
 
 $template_title = 'Admin: SecondsSince2000';
 $template_admin_menu = true;
-include('template_top.php');
+include 'template_top.php';
 
 echo "<form method=post>\n";
 echo "<table>\n";
@@ -22,5 +23,4 @@ echo "<tr><td class='rowf'><a href='admin.php'><img src='img/admin.png' class='i
 echo "</table>\n";
 echo "</form>\n";
 
-include('template_bottom.php');
-?>
+include 'template_bottom.php';
