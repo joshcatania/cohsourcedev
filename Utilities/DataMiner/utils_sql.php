@@ -105,7 +105,7 @@ function create_miner(
         // donotcheckin : more checking
         $row = sql_fetch("SELECT * FROM containers WHERE id=$whereids[$i]");
         if (!$row) {
-            die("Error: No column definition was found for constraint (#$whereid).");
+            die("Error: No column definition was found for constraint (#$whereids[i]).");
         }
 
         if ($mineacc != (substr($row['tablename'], 0, 7) == 'mineacc')) {
