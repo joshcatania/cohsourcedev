@@ -73,7 +73,7 @@ if (@$_GET['container'] && @$_GET['name'] && @$_GET['server']) {
 
     $server = sql_fetch("SELECT * FROM servers WHERE name='All Servers'");
     $db = sql_server_connect($server, true);
-    $result = sql_fetch("SELECT * FROM .COXSHARDVIEW.dbo.$container WHERE name='$name' AND ShardName='$servername'", $db);
+    $result = sql_fetch("SELECT * FROM dbo.$container WHERE name='$name' AND ShardName='$servername'", $db);
     $shardid = $result['ShardId'];
     $id = $result['ContainerId'];
 
@@ -94,7 +94,7 @@ if (@$_GET['container'] && @$_GET['name'] && @$_GET['server']) {
         echo ("<table align=left width=1000 id='" . $tablename . "'>");
         echo ("<tr><th style='width:200px'></th><th style='width:400px'></th><th style='width:400px'></th></tr>");
         echo ("<tr><th class='rowt' colspan=3>" . $tablename . "</th></tr>");
-        $query = new QueryIterator("SELECT * FROM .COXSHARDVIEW.dbo.$tablename WHERE ContainerId='$id' AND ShardId='$shardid'", $db);
+        $query = new QueryIterator("SELECT * FROM dbo.$tablename WHERE ContainerId='$id' AND ShardId='$shardid'", $db);
         $i = 0;
         $count = 0;
 
@@ -115,14 +115,14 @@ if (@$_GET['container'] && @$_GET['name'] && @$_GET['server']) {
                 $value = $result[$colname];
 
                 if ($type == "attribute") {
-                    $attribute = sql_fetch("SELECT DISTINCT Name FROM .COXSHARDVIEW.dbo.Attributes WHERE Id='$value'", $db);
+                    $attribute = sql_fetch("SELECT DISTINCT Name FROM dbo.Attributes WHERE Id='$value'", $db);
                     $value = $attribute['Name'];
                 }
 
                 if ($value) {
                     $count++;
                     if ($v['isDbid'] > 0) {
-                        $newplayer = sql_fetch("SELECT Name FROM .COXSHARDVIEW.dbo.Ents WHERE ContainerId='$value' AND ShardId='$shardid'", $db);
+                        $newplayer = sql_fetch("SELECT Name FROM dbo.Ents WHERE ContainerId='$value' AND ShardId='$shardid'", $db);
                         if ($newplayer) {
                             $newname = $newplayer['Name'];
                             echo ("<tr><td class='rowf' width=200>" . $displayname . "</td><td class='rowf' width=400><a href='singletonqueries.php?name=" . $newname . "&server=" . $servername . "&container=Ents'>" . $newname . "</a></td><td class='rowf' width=400>" . $description . "</td></tr>");
@@ -149,13 +149,13 @@ if (@$_POST['auth']) {
     $server = sql_fetch("SELECT * FROM servers WHERE name='All Servers'");
     $db = sql_server_connect($server, true);
 
-    $query = new QueryIterator("Select name, ShardName FROM .COXSHARDVIEW.dbo.Ents WHERE authname='$_POST[auth]'", $db);
+    $query = new QueryIterator("Select name FROM dbo.Ents WHERE authname='$_POST[auth]'", $db);
 
     echo ("<table align=left>");
-    echo ("<tr><th class='rowt' colspan=2>Characters with the Authname " . $_POST[auth] . "</th>");
+    echo ("<tr><th class='rowt' colspan=2>Characters with the Authname " . $_POST['auth'] . "</th>");
     echo ("<tr><th class='rowh'>Name</th><th class='rowh'>Server</th></tr>");
     foreach ($query as $row) {
-        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $row['name'] . "&server=" . $row['ShardName'] . "&container=Ents'>" . $row['name'] . "</a></td><td class='rowf'>" . $row['ShardName'] . "</td></tr>");
+        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $row['name'] . "&server=" . "&container=Ents'>" . $row['name'] . "</a></td><td class='rowf'>" . "</td></tr>");
     }
     echo ("</table>");
 }
@@ -164,13 +164,13 @@ if (@$_POST['player']) {
     $server = sql_fetch("SELECT * FROM servers WHERE name='All Servers'");
     $db = sql_server_connect($server, true);
 
-    $query = new QueryIterator("Select AuthName, ShardName FROM .COXSHARDVIEW.dbo.Ents WHERE name='$_POST[player]'", $db);
+    $query = new QueryIterator("Select AuthName FROM dbo.Ents WHERE name='$_POST[player]'", $db);
 
     echo ("<table align=left>");
-    echo ("<tr><th class='rowt' colspan=3>Characters with the Player Name " . $_POST[player] . "</th>");
+    echo ("<tr><th class='rowt' colspan=3>Characters with the Player Name " . $_POST['player'] . "</th>");
     echo ("<tr><th class='rowh'>Auth Name</th><th class='rowh'>Server</th></tr>");
     foreach ($query as $row) {
-        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $_POST[player] . "&server=" . $row['ShardName'] . "&container=Ents'>" . $row['AuthName'] . "</a></td><td class='rowf'>" . $row['ShardName'] . "</td></tr>");
+        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $_POST['player'] . "&server=" . "&container=Ents'>" . $row['AuthName'] . "</a></td><td class='rowf'>" . "</td></tr>");
     }
     echo ("</table>");
 }
@@ -179,13 +179,13 @@ if (@$_POST['super']) {
     $server = sql_fetch("SELECT * FROM servers WHERE name='All Servers'");
     $db = sql_server_connect($server, true);
 
-    $query = new QueryIterator("Select name, ShardName FROM .COXSHARDVIEW.dbo.Supergroups WHERE Name='$_POST[super]'", $db);
+    $query = new QueryIterator("Select name FROM dbo.Supergroups WHERE Name='$_POST[super]'", $db);
 
     echo ("<table align=left>");
-    echo ("<tr><th class='rowt' colspan=2>Supergroups with the name: " . $_POST[super] . "</th>");
+    echo ("<tr><th class='rowt' colspan=2>Supergroups with the name: " . $_POST['super'] . "</th>");
     echo ("<tr><th class='rowh'>Name</th><th class='rowh'>Server</th></tr>");
     foreach ($query as $row) {
-        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $row['name'] . "&server=" . $row['ShardName'] . "&container=Supergroups'>" . $row['name'] . "</a></td><td class='rowf'>" . $row['ShardName'] . "</td></tr>");
+        echo ("<tr><td class='rowf'><a href='singletonqueries.php?name=" . $row['name'] . "&server=" . "&container=Supergroups'>" . $row['name'] . "</a></td><td class='rowf'>" . "</td></tr>");
     }
     echo ("</table>");
 }

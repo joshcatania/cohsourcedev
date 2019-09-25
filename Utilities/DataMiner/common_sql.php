@@ -5,7 +5,7 @@ require_once 'config.php';
 // takes a row from the servers database
 function sql_server_connect($server, $fail = false)
 {
-    return sql_db_connect($server['loginaddr'], $server['loginuser'], $server['loginpass'], false, $fail);
+    return sql_db_connect($server['loginaddr'], $server['loginuser'], $server['loginpass'], $server['serverdb'], $fail);
 }
 
 function common_sql_error_include()
