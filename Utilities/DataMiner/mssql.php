@@ -118,7 +118,11 @@ class QueryIterator implements Iterator
     }
     public function key()
     {
-        return reset($this->value);
+		if ($this->value) {
+			return reset($this->value);
+		} else {
+			return false;
+		}
     }
     public function next()
     {
