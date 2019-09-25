@@ -38,27 +38,27 @@ function table_servers($handle = false, $id = false, $check_links = false)
             $query = new QueryIterator("SELECT * FROM servers ORDER BY name");
         }
 
-        foreach ($query as $v) {
-            echo "<tr>";
-            echo "<td class='row$row'" . ($check_links ? '' : ' colspan=2') . ">"
-                . (check_server($v) ? "<a href='admin_servers.php?i=$v[id]&amp;a=d'><img src='img/drop.png' class='icon'></a>" : "<img src='img/blank.png' class='icon'>")
-                . "<a href='admin_servers.php?i=$v[id]&amp;a=n'><img src='img/copy.png' class='icon'></a>"
-                . "<a href='admin_servers.php?i=$v[id]&amp;a=e'><img src='img/edit.png' class='icon'></a>"
-                . " <a href='admin_servers.php?i=$v[id]'>$v[name]</a>";
-            // hack to see all the ip addresses at once
-            //            echo "<td class='row$row'>$v[loginaddr]";
-            if ($check_links) {
-                flush();
-                ob_flush();
-                echo "<td class='row$row'><img src='img/link" . (sql_server_connect($v) ? 'good' : 'bad') . ".png' class='icon'>";
-            }
-            echo "\n";
-            $row = $row ? 0 : 1;
+        if ($query->num_rows()) {
+			foreach ($query as $v) {
+				echo "<tr>";
+				echo "<td class='row$row'" . ($check_links ? '' : ' colspan=2') . ">"
+					. (check_server($v) ? "<a href='admin_servers.php?i=$v[id]&amp;a=d'><img src='img/drop.png' class='icon'></a>" : "<img src='img/blank.png' class='icon'>")
+					. "<a href='admin_servers.php?i=$v[id]&amp;a=n'><img src='img/copy.png' class='icon'></a>"
+					. "<a href='admin_servers.php?i=$v[id]&amp;a=e'><img src='img/edit.png' class='icon'></a>"
+					. " <a href='admin_servers.php?i=$v[id]'>$v[name]</a>";
+				// hack to see all the ip addresses at once
+				//            echo "<td class='row$row'>$v[loginaddr]";
+				if ($check_links) {
+					flush();
+					ob_flush();
+					echo "<td class='row$row'><img src='img/link" . (sql_server_connect($v) ? 'good' : 'bad') . ".png' class='icon'>";
+				}
+				echo "\n";
+				$row = $row ? 0 : 1;
+			}
+		} else {
+            echo "<tr><td colspan=2 class='row$row nodata'>No servers" . ($handle ? '' : ' in this group') . "\n";
         }
-        if (!$query->num_rows()) {
-            echo "<tr><td colspan=2 class='row$row nodata'>No servers" . ($handle ? '' : 'in this group') . "\n";
-        }
-
     }
 
     if (!$handle) {
@@ -69,19 +69,20 @@ function table_servers($handle = false, $id = false, $check_links = false)
             $query = new QueryIterator("SELECT * FROM serverhandles WHERE single=0 ORDER BY name");
         }
 
-        foreach ($query as $v) {
-            list($count) = sql_fetch("SELECT COUNT(*) FROM serverlookup WHERE handle=$v[id]");
-            echo "<tr>";
-            echo "<td class='row$row'>"
-                . (check_group($v) ? "<a href='admin_servers.php?h=$v[id]&amp;a=d'><img src='img/drop.png' class='icon'></a>" : "<img src='img/blank.png' class='icon'>")
-                . "<a href='admin_servers.php?h=$v[id]&amp;a=h'><img src='img/copy.png' class='icon'></a>"
-                . "<a href='admin_servers.php?h=$v[id]&amp;a=e'><img src='img/edit.png' class='icon'></a>"
-                . " <a href='admin_servers.php?h=$v[id]'>$v[name]</a>";
-            echo "<td class='row$row'>$count";
-            echo "\n";
-            $row = $row ? 0 : 1;
-        }
-        if (!$query->num_rows()) {
+        if ($query->num_rows()) {
+			foreach ($query as $v) {
+				list($count) = sql_fetch("SELECT COUNT(*) FROM serverlookup WHERE handle=$v[id]");
+				echo "<tr>";
+				echo "<td class='row$row'>"
+					. (check_group($v) ? "<a href='admin_servers.php?h=$v[id]&amp;a=d'><img src='img/drop.png' class='icon'></a>" : "<img src='img/blank.png' class='icon'>")
+					. "<a href='admin_servers.php?h=$v[id]&amp;a=h'><img src='img/copy.png' class='icon'></a>"
+					. "<a href='admin_servers.php?h=$v[id]&amp;a=e'><img src='img/edit.png' class='icon'></a>"
+					. " <a href='admin_servers.php?h=$v[id]'>$v[name]</a>";
+				echo "<td class='row$row'>$count";
+				echo "\n";
+				$row = $row ? 0 : 1;
+			}
+		} else {
             echo "<tr><td colspan=2 class='row$row nodata'>" . ($id ? 'Not in any' : 'No') . " server groups\n";
         }
 
