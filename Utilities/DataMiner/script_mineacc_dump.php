@@ -25,5 +25,6 @@ foreach (new QueryIterator("SELECT * FROM servers") as $v) {
 ?>
 			</select>
 			<input type=submit value='Dump MineAcc Data'>
+		</form>
 	</body>
 </html>
