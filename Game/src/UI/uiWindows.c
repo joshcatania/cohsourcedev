@@ -2940,14 +2940,8 @@ static int window_drawStatusJelly()
 
     if (!e || !e->pchar || !e->pchar->pclass)
         showRage = 0;
-    else if (strncmp(e->pchar->pclass->pchName,"Class_Blaster",13) == 0)
-        showRage = 0;
-    else if (strncmp(e->pchar->pclass->pchName,"Class_Brute",11) == 0)
-        showRage = 2;
-    else if (strncmp(e->pchar->pclass->pchName,"Class_Dominator",15) == 0)
-        showRage = 3;
     else 
-        showRage = 0;
+        showRage = e->pchar->pclass->iShowRageBar;
 
     BuildCBox( &box, x, y, jelly->width*scale, jelly->height*scale );
 

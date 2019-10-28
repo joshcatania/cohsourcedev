@@ -90,23 +90,15 @@ static int isValidClass(const CharacterClass * pClass, int inPraetoria)
 {
     if (pClass)
     {
-        if (inPraetoria &&
-            (class_MatchesSpecialRestriction(pClass, "Kheldian") ||
-             class_MatchesSpecialRestriction(pClass, "ArachnosSoldier") ||
-             class_MatchesSpecialRestriction(pClass, "ArachnosWidow")))
-        {
-            // no epic AT's in praetoria
+        // check for unpublished product
+        if (pClass->pchProductCode != NULL && !AccountHasStoreProductOrIsPublished(inventoryClient_GetAcctInventorySet(), skuIdFromString(pClass->pchProductCode)))
             return 0;
-        }
+        else if (inPraetoria != 0 && pClass->iStartingRestriction == CSR_NO_PRAETORIA)
+            return 0;
+        else if (inPraetoria == 0 && pClass->iStartingRestriction == CSR_NO_PRIMAL)
+            return 0;
         else
-        {
-            // check for unpublished product
-            if (pClass->pchProductCode != NULL && !AccountHasStoreProductOrIsPublished(inventoryClient_GetAcctInventorySet(), skuIdFromString(pClass->pchProductCode)))
-                return 0;
-            else
-                // currently no restrictions in primal earth    
-                return 1;
-        }
+            return 1;
     }
     else
     {
@@ -123,56 +115,56 @@ typedef struct ArchetypeStats
 
 //hardcoded stats
 char * statTypes[] = {"ArchetypeSurvivabilityString", "ArchetypeMeleeDamageString", "ArchetypeRangedDamageString", "ArchetypeCrowdControlString", "ArchetypeSupportString", "ArchetypePetsString"};
-static ArchetypeStats aStats[] = 
-{
-    {"",                    {0,    2,    4,    6,    8,    10}}, //no case
-    {"Class_Blaster",                {4,    8,    10,    4,    2,    2}},
-    {"Class_Controller",            {4,    2,    3,    10,    7,    5}},
-    {"Class_Defender",            {4,    2,    6,    4,    10,    2}},
-    {"Class_Scrapper",            {7,    10,    2,    4,    2,    2}},
-    {"Class_Tanker",                {10, 7,    2,    5,    3,    2}},
-    {"Class_Peacebringer",    {5,    5,    5,    5,    5,    5}},
-    {"Class_Warshade",    {5,    5,    5,    5,    5,    5}},
-    {"Class_Brute",                {8,    9,    2,    5,    2,    2}},
-    {"Class_Corruptor",            {4,    2,    7,    4,    8,    2}},
-    {"Class_Dominator",            {3,    6,    6,    10,    2,    5}},
-    {"Class_Mastermind",            {7,    3,    4,    3,    5,    10}},
-    {"Class_Stalker",                {7,    10,    2,    4,    2,    2}},
-    {"Class_Arachnos_Soldier",    {7,    6,    7,    3,    5,    3}},
-    {"Class_Arachnos_Widow",    {7,    8,    5,    2,    5,    2}},
-    {"Class_Primalist",    {8,    8,    2,    5,    8,    5}},
-};
+static ArchetypeStats aStats[MAX_ARCHETYPES];
+//{
+//    {"",                    {0,    2,    4,    6,    8,    10}}, //no case
+//    {"Class_Blaster",                {4,    8,    10,    4,    2,    2}},
+//    {"Class_Controller",            {4,    2,    3,    10,    7,    5}},
+//    {"Class_Defender",            {4,    2,    6,    4,    10,    2}},
+//    {"Class_Scrapper",            {7,    10,    2,    4,    2,    2}},
+//    {"Class_Tanker",                {10, 7,    2,    5,    3,    2}},
+//    {"Class_Peacebringer",    {5,    5,    5,    5,    5,    5}},
+//    {"Class_Warshade",    {5,    5,    5,    5,    5,    5}},
+//    {"Class_Brute",                {8,    9,    2,    5,    2,    2}},
+//    {"Class_Corruptor",            {4,    2,    7,    4,    8,    2}},
+//    {"Class_Dominator",            {3,    6,    6,    10,    2,    5}},
+//    {"Class_Mastermind",            {7,    3,    4,    3,    5,    10}},
+//    {"Class_Stalker",                {7,    10,    2,    4,    2,    2}},
+//    {"Class_Arachnos_Soldier",    {7,    6,    7,    3,    5,    3}},
+//    {"Class_Arachnos_Widow",    {7,    8,    5,    2,    5,    2}},
+//    {"Class_Primalist",    {8,    8,    2,    5,    8,    5}},
+//};
 
 typedef struct ClassImages
 {
     char * name;
-    char * imageName[NUM_ARCHETYPE_IMAGES];
+    char imageName[NUM_ARCHETYPE_IMAGES][MAX_PATH];
     AtlasTex * imagePtr[NUM_ARCHETYPE_IMAGES];
     const CharacterClass * pClass;
 }ClassImages;
 
-static ClassImages sImages[] =
-{
-    {"Class_Blaster",                {"archetypeshots_blaster_0", "archetypeshots_blaster_1", "archetypeshots_blaster_2"}},
-    {"Class_Controller",            {"archetypeshots_controller_0", "archetypeshots_controller_1", "archetypeshots_controller_2"}},
-    {"Class_Defender",                {"archetypeshots_defender_0", "archetypeshots_defender_1", "archetypeshots_defender_2"}},
-    {"Class_Scrapper",                {"archetypeshots_scrapper_0", "archetypeshots_scrapper_1", "archetypeshots_scrapper_2"}},
-    {"Class_Tanker",                {"archetypeshots_tanker_0", "archetypeshots_tanker_1", "archetypeshots_tanker_2"}},
-    {"Class_Peacebringer",            {"archetypeshots_peacebringer_0", "archetypeshots_peacebringer_1", "archetypeshots_peacebringer_2"}},
-    {"Class_Warshade",                {"archetypeshots_warshade_0", "archetypeshots_warshade_1", "archetypeshots_warshade_2"}},
-    {"Class_Brute",                    {"archetypeshots_brute_0", "archetypeshots_brute_1", "archetypeshots_brute_2"}},
-    {"Class_Corruptor",                {"archetypeshots_corruptor_0", "archetypeshots_corruptor_1", "archetypeshots_corruptor_2"}},
-    {"Class_Dominator",                {"archetypeshots_dominator_0", "archetypeshots_dominator_1", "archetypeshots_dominator_2"}},
-    {"Class_Mastermind",            {"archetypeshots_mastermind_0", "archetypeshots_mastermind_1", "archetypeshots_mastermind_2"}},
-    {"Class_Stalker",                {"archetypeshots_stalker_0", "archetypeshots_stalker_1", "archetypeshots_stalker_2"}},
-    {"Class_Arachnos_Soldier",        {"archetypeshots_arachnos_soldier_0", "archetypeshots_arachnos_soldier_1", "archetypeshots_arachnos_soldier_2"}},
-    {"Class_Arachnos_Widow",        {"archetypeshots_arachnos_widow_0", "archetypeshots_arachnos_widow_1", "archetypeshots_arachnos_widow_2"}},
-    {"Class_Primalist",                {"archetypeshots_primalist_0", "archetypeshots_primalist_1", "archetypeshots_primalist_2"}},
-};
+static ClassImages sImages[MAX_ARCHETYPES];
+//{
+//    {"Class_Blaster",                {"archetypeshots_blaster_0", "archetypeshots_blaster_1", "archetypeshots_blaster_2"}},
+//    {"Class_Controller",            {"archetypeshots_controller_0", "archetypeshots_controller_1", "archetypeshots_controller_2"}},
+//    {"Class_Defender",                {"archetypeshots_defender_0", "archetypeshots_defender_1", "archetypeshots_defender_2"}},
+//    {"Class_Scrapper",                {"archetypeshots_scrapper_0", "archetypeshots_scrapper_1", "archetypeshots_scrapper_2"}},
+//    {"Class_Tanker",                {"archetypeshots_tanker_0", "archetypeshots_tanker_1", "archetypeshots_tanker_2"}},
+//    {"Class_Peacebringer",            {"archetypeshots_peacebringer_0", "archetypeshots_peacebringer_1", "archetypeshots_peacebringer_2"}},
+//    {"Class_Warshade",                {"archetypeshots_warshade_0", "archetypeshots_warshade_1", "archetypeshots_warshade_2"}},
+//    {"Class_Brute",                    {"archetypeshots_brute_0", "archetypeshots_brute_1", "archetypeshots_brute_2"}},
+//    {"Class_Corruptor",                {"archetypeshots_corruptor_0", "archetypeshots_corruptor_1", "archetypeshots_corruptor_2"}},
+//    {"Class_Dominator",                {"archetypeshots_dominator_0", "archetypeshots_dominator_1", "archetypeshots_dominator_2"}},
+//    {"Class_Mastermind",            {"archetypeshots_mastermind_0", "archetypeshots_mastermind_1", "archetypeshots_mastermind_2"}},
+//    {"Class_Stalker",                {"archetypeshots_stalker_0", "archetypeshots_stalker_1", "archetypeshots_stalker_2"}},
+//    {"Class_Arachnos_Soldier",        {"archetypeshots_arachnos_soldier_0", "archetypeshots_arachnos_soldier_1", "archetypeshots_arachnos_soldier_2"}},
+//    {"Class_Arachnos_Widow",        {"archetypeshots_arachnos_widow_0", "archetypeshots_arachnos_widow_1", "archetypeshots_arachnos_widow_2"}},
+//    {"Class_Primalist",                {"archetypeshots_primalist_0", "archetypeshots_primalist_1", "archetypeshots_primalist_2"}},
+//};
 
 //indices of special cases to display "?" for their stats
-#define Q_PEACEBRINGER 6
-#define Q_WARSHADE 7
+//#define Q_PEACEBRINGER 6
+//#define Q_WARSHADE 7
 
 F32 lastStat[] = {0,0,0,0,0,0};
 F32 fSpeed[] = {0,0,0,0,0,0};
@@ -219,7 +211,11 @@ static void drawArchetypeStats( F32 x, F32 y, F32 z)
         F32 desiredStat;
 
         //increment
-        desiredStat = currentArchetype->stats[i]/5.f-1.f;
+        if ( currentArchetype->stats[i] < 0 )
+            desiredStat = 5.0 / 5.f - 1.f;
+        else
+            desiredStat = currentArchetype->stats[i] / 5.f - 1.f;
+
         if (lastStat[i] != desiredStat && fSpeed[i] != 0.f)
         {
             lastStat[i] += fSpeed[i];
@@ -240,7 +236,7 @@ static void drawArchetypeStats( F32 x, F32 y, F32 z)
             playSliderSound = 1;
         }
 
-        if (currentArchetype == aStats+Q_PEACEBRINGER || currentArchetype == aStats+Q_WARSHADE)
+        if (currentArchetype->stats[i] == -1)
         {
             drawHybridSlider( x, y + i*spacingY*yposSc, z, 1.f, fullWd, sliderWidth, lastStat[i], statTypes[i], -1, '?');
         }
@@ -284,6 +280,7 @@ static ClassImages * getClassImages(const CharacterClass * cclass)
                 // get textures
                 for(j = 0; j < NUM_ARCHETYPE_IMAGES; ++j)
                 {
+                    verbose_printf("Atlas Loaded %s", sImages[i].imageName[j]);
                     sImages[i].imagePtr[j] = atlasLoadTexture(sImages[i].imageName[j]);
                 }
             }
@@ -339,9 +336,10 @@ static int recreateClassList()
     {
         int updatedSelectedArchetype = 0;
         eaCreate(&ppClassesLocked);
-        
+
+        int i = 0;
         //rebuild
-        for(i = 0; i < eaSize(ppClassesNew); ++i )
+        for(; i < eaSize(ppClassesNew); ++i )
         {
             if (isValidClass((*ppClassesNew)[i], originLocation))
             {
@@ -360,6 +358,47 @@ static int recreateClassList()
                     updatedSelectedArchetype = 1;
                 }
             }
+            verbose_printf("Loading Array Element %d...", i);
+            if (i < MAX_ARCHETYPES) {
+                // Load the playstyle stats
+                verbose_printf("%s...", (*ppClassesNew)[i]->pchName);
+                ArchetypeStats as = { (*ppClassesNew)[i]->pchName, {(*ppClassesNew)[i]->iPlayStyleSurvivability, (*ppClassesNew)[i]->iPlayStyleMeleeDamage,
+                (*ppClassesNew)[i]->iPlayStyleRangedDamage, (*ppClassesNew)[i]->iPlayStyleCrowdControl, (*ppClassesNew)[i]->iPlayStyleSupport, (*ppClassesNew)[i]->iPlayStylePets} };
+                aStats[i] = as;
+
+                verbose_printf("%d %d %d %d %d %d ",
+                    (*ppClassesNew)[i]->iPlayStyleSurvivability, (*ppClassesNew)[i]->iPlayStyleMeleeDamage,
+                    (*ppClassesNew)[i]->iPlayStyleRangedDamage, (*ppClassesNew)[i]->iPlayStyleCrowdControl,
+                    (*ppClassesNew)[i]->iPlayStyleSupport, (*ppClassesNew)[i]->iPlayStylePets);
+
+                ClassImages ci = { (*ppClassesNew)[i]->pchName, {"white", "white", "white"} };
+                sImages[i] = ci;
+
+                // Load the playstyle images
+                if ((*ppClassesNew)[i]->pchClassImage0)
+                    strncpy(sImages[i].imageName[0], (*ppClassesNew)[i]->pchClassImage0, sizeof(sImages[i].imageName[0]));
+                verbose_printf("%s ", sImages[i].imageName[0]);
+
+                if ((*ppClassesNew)[i]->pchClassImage1)
+                    strncpy(sImages[i].imageName[1], (*ppClassesNew)[i]->pchClassImage1, sizeof(sImages[i].imageName[1]));
+                verbose_printf("%s ", sImages[i].imageName[1]);
+
+                if ((*ppClassesNew)[i]->pchClassImage2)
+                    strncpy(sImages[i].imageName[2], (*ppClassesNew)[i]->pchClassImage2, sizeof(sImages[i].imageName[2]));
+                verbose_printf("%s ", sImages[i].imageName[2]);
+
+                verbose_printf("done\n");
+            }
+        }
+        for (; i < MAX_ARCHETYPES; i++)
+        {
+            char archetypeName[64];
+            snprintf(archetypeName, sizeof(archetypeName), "Archetype%d", i);
+            ArchetypeStats as = { archetypeName, {0,0,0,0,0,0} };
+            ClassImages ci = { archetypeName, {"white", "white", "white"} };
+
+            aStats[i] = as;
+            sImages[i] = ci;
         }
 
         if (pcc && !updatedSelectedArchetype)
