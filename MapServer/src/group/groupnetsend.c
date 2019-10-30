@@ -438,9 +438,9 @@ void worldSendUpdate(NetLink *link,int full_update)
     pktSendBits(pak, 32, groupInfoCrcRefs());
 
     
-    errorSetVerboseLevel(10);
+    errorSetTempVerboseLevel(10);
     verbose_printf("world update: %d bytes\n",pktGetSize(pak));
-    errorSetVerboseLevel(0);
+    errorSetTempVerboseLevel(0);
 
 #if 0
     {

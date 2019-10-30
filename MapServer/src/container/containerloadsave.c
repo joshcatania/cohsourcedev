@@ -731,7 +731,11 @@ LineDesc costume_part_line_desc[] =
     {{ PACKTYPE_INT,     SIZE_INT32,         "Color4",        OFFSET(CostumePart,    color[3]),            },
         "Color - the quaternary color to apply to this piece"},
 
-    { 0 },
+    {{ PACKTYPE_INT,     SIZE_INT32,         "CostumeSlot",        OFFSET(CostumePart,    costumeSlot),            },
+        "The index of the body part that this piece belongs to"},
+
+
+{ 0 },
 };
 
 

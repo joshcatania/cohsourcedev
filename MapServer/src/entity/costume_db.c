@@ -52,7 +52,9 @@ void packageCostumes( Entity * e, StuffBuff *psb, StructDesc *desc)
                     dbcostumes.part[(i*MAX_COSTUME_PARTS)+j].regionName = NULL;
                 if( dbcostumes.part[(i*MAX_COSTUME_PARTS)+j].bodySetName && stricmp( dbcostumes.part[(i*MAX_COSTUME_PARTS)+j].bodySetName, "none") == 0 )
                     dbcostumes.part[(i*MAX_COSTUME_PARTS)+j].bodySetName = NULL;
-                
+
+                dbcostumes.part[(i * MAX_COSTUME_PARTS) + j].costumeSlot = j;
+
                 dbcostumes.part[(i*MAX_COSTUME_PARTS)+j].displayName = NULL;
             }
         }
@@ -123,26 +125,58 @@ void unpackCostumes( Entity * e, DBCostume *dbcostumes)
     if (e && e->pl)
         numCostumes = MIN(MAX_COSTUMES, MAX(e->pl->num_costumes_stored, numCostumes));
 
+    int dbMaxCostumeParts = 0;
+    bool newCostume = false;
+
     for( i = 0; i < numCostumes; i++ )
     { 
 
         for( j = 0; j < MAX_COSTUME_PARTS; j++ )
         {
+            int costumeNum = dbcostumes->part[(i * MAX_COSTUME_PARTS) + j].costumeNum;
+            int costumeSlot = dbcostumes->part[(i * MAX_COSTUME_PARTS) + j].costumeSlot;
+
+            // Ok, here is the logic:
+            // if costumeSlot> 0, this costume was saved with new code, we just read the costume slot and num in and use those, also set a flag
+            // if costumeSlot is 0 and costumeNum is 0, then we are loading slot 0 num 0 in the new code, or any slot 0 num J in the old code, so just use J
+            // in either case, we can safely just use J
+            // if costumeNum > 0 and costumeSlot is 0, then we are loading an old costume, and need to calculate how big MAX_COSTUME_PARTS was when we saved the DB
+            // As we progress, we will either flag it as a new costume or set dbMaxCostume parts, once either of these is set, we can ignore all the below and calculate our costumeNum
+
+            if (costumeSlot > 0) {
+                newCostume = true;
+            }
+            else if (!newCostume && costumeNum == 0 && costumeSlot == 0) {
+                // Even for old costumes, it doesn't matter what MAX_COSTUME_PARTS was for costume 0, as it's right at the start of the array
+                costumeSlot = j;
+            }
+            else if (!newCostume && costumeNum == 1 && dbMaxCostumeParts == 0 && costumeSlot == 0) {
+                //We are making an assumption here that slot 0 will *always* have something in it
+                //Who knows if this will go wrong
+                //Note that this will trigger on costume 1 slot 0, UNLESS, costume 0 set the newCostume flag
+                dbMaxCostumeParts = (i * MAX_COSTUME_PARTS) + j;    // If MAX_COSTUME_PARTS is 60 but the costume was saved with 30, we hit costume 1 at I=0, J=30 not I=1, J=0
+                assert(dbMaxCostumeParts >= MAX_COSTUME_PARTS);
+                verbose_printf("Loading old costume, detected %d old MAX_COSTUME_PARTS", dbMaxCostumeParts);
+            }
+ 
+            if (costumeSlot == 0 && dbMaxCostumeParts > 0)
+                costumeSlot = ((i * MAX_COSTUME_PARTS) + j) % dbMaxCostumeParts;
+
              if( dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].pchGeom || dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].pchFxName || 
                 dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].pchTex1 || dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].pchTex2 ||
                 dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].regionName || dbcostumes->part[(i*MAX_COSTUME_PARTS)+j].bodySetName)
             {    
-                StructCopy(ParseCostumePart, &dbcostumes->part[(i*MAX_COSTUME_PARTS)+j],e->pl->costume[i]->parts[j], 0,0);
+                StructCopy(ParseCostumePart, &dbcostumes->part[(i*MAX_COSTUME_PARTS)+j],e->pl->costume[costumeNum]->parts[costumeSlot], 0,0);
             }
 
-            if( !e->pl->costume[i]->parts[j]->pchGeom || !e->pl->costume[i]->parts[j]->pchGeom[0] )
-                e->pl->costume[i]->parts[j]->pchGeom = none_str;
-            if( !e->pl->costume[i]->parts[j]->pchFxName || !e->pl->costume[i]->parts[j]->pchFxName[0] ) 
-                e->pl->costume[i]->parts[j]->pchFxName = none_str;
-            if( !e->pl->costume[i]->parts[j]->pchTex1 || !e->pl->costume[i]->parts[j]->pchTex1[0] )
-                e->pl->costume[i]->parts[j]->pchTex1 = none_str;
-            if( !e->pl->costume[i]->parts[j]->pchTex2 || !e->pl->costume[i]->parts[j]->pchTex2[0] )
-                e->pl->costume[i]->parts[j]->pchTex2 = none_str;
+            if( !e->pl->costume[costumeNum]->parts[costumeSlot]->pchGeom || !e->pl->costume[costumeNum]->parts[costumeSlot]->pchGeom[0] )
+                e->pl->costume[costumeNum]->parts[costumeSlot]->pchGeom = none_str;
+            if( !e->pl->costume[costumeNum]->parts[costumeSlot]->pchFxName || !e->pl->costume[costumeNum]->parts[costumeSlot]->pchFxName[0] )
+                e->pl->costume[costumeNum]->parts[costumeSlot]->pchFxName = none_str;
+            if( !e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex1 || !e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex1[0] )
+                e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex1 = none_str;
+            if( !e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex2 || !e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex2[0] )
+                e->pl->costume[costumeNum]->parts[costumeSlot]->pchTex2 = none_str;
             //if( !e->pl->costume[i]->parts[j]->regionName || !e->pl->costume[i]->parts[j]->regionName[0] )
             //    e->pl->costume[i]->parts[j]->regionName = none_str;
             //if(! e->pl->costume[i]->parts[j]->bodySetName || !e->pl->costume[i]->parts[j]->bodySetName[0] )

@@ -72,6 +72,7 @@ typedef struct CostumePart
     const char *bodySetName;    // meta-category name
 
     int costumeNum;                // Which costume this is a part of
+    int costumeSlot;               // Which slot in the costume this piece belongs to
 
     const char *sourceFile;        // which file this came from
 } CostumePart;

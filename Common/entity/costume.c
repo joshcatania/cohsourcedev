@@ -1740,6 +1740,9 @@ TokenizerParseInfo ParseCostumePart[] =
     {    "Color3",        TOK_RGB(CostumePart, color[2].rgb)                                        },
     {    "Color4",        TOK_RGB(CostumePart, color[3].rgb)                                        },
 
+    // This is set when loading from the db
+    {    "CostumeSlot",   TOK_INT(CostumePart, costumeSlot, 0)                                      },
+
     {    "{",            TOK_START                                                                },
     {    "}",            TOK_END                                                                    },
     {    "", 0, 0 }
