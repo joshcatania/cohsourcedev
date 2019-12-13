@@ -58,7 +58,7 @@ static ToolTip HealthTip = {0}, EnduranceTip = {0}, ExperienceTip = {0}, RageTip
 static ToolTipParent StatusTipParent = {0};
 ContextMenu *gXpcm;
 static int inSupergroupMode = 0;
-static int showRage = 0;
+static int showRage = 1;
 
 
 char * statuscm_hp(void * unused)
@@ -1311,11 +1311,17 @@ int statusWindow()
 	if (!e || !e->pchar || !e->pchar->pclass)
 		showRage = 0;
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Blaster",13) == 0)
-		showRage = 0;
+		showRage = 1;
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Brute",11) == 0)
 		showRage = 2;
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Dominator",15) == 0)
 		showRage = 3;
+	else if (strncmp(e->pchar->pclass->pchName, "Class_Primalist", 15) == 0)
+		showRage = 4;
+	else if (strncmp(e->pchar->pclass->pchName, "Class_Rescued_Devoured", 21) == 0)
+		showRage = 5;
+	else if (strncmp(e->pchar->pclass->pchName, "Class_Sentinel", 15) == 0)
+		showRage = 6;
 	else 
 		showRage = 0;
 
@@ -1449,6 +1455,12 @@ int statusWindow()
 				setToolTip( &RageTip, &box, textStd("RageTip", (int)(meter*100), (int)(meter_total*100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS );
 			else if (showRage == 3)
 				setToolTip( &RageTip, &box, textStd("DominationTip", (int)(meter*100), (int)(meter_total*100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS );
+			else if (showRage == 4)
+				setToolTip(&RageTip, &box, textStd("PrimalEnergyTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
+			else if (showRage == 5)
+				setToolTip(&RageTip, &box, textStd("BattleEuphoriaTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
+			else if (showRage == 6)
+				setToolTip(&RageTip, &box, textStd("OpportunityTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
 		}
 
 		drawFrame( PIX2, R4, x+36*scale, y + (health_yoff+2)*scale, z+22, wd - (HEALTH_XOFF+4)*scale, (bar_ht*3+4)*scale, scale, 0, CLR_BLACK );
