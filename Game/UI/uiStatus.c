@@ -97,6 +97,8 @@ char * statuscm_rage(void * unused)
 		return textStd( "RageTip", (int)(e->pchar->attrCur.fMeter*100), (int)(e->pchar->attrMax.fMeter*100) );
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Dominator",13) == 0)
 		return textStd( "DominationTip", (int)(e->pchar->attrCur.fMeter*100), (int)(e->pchar->attrMax.fMeter*100) );
+	else if (strncmp(e->pchar->pclass->pchName, "Class_Primalist", 13) == 0)
+		return textStd("PrimalEnergyTip", (int)(e->pchar->attrCur.fMeter * 100), (int)(e->pchar->attrMax.fMeter * 100));
 	else 
 		return "";
 }
@@ -1277,6 +1279,7 @@ int rageVisible( void *foo )
 	if (strncmp(e->pchar->pclass->pchName,"Class_Blaster",13) == 0) return CM_HIDE;
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Brute",11) == 0) return CM_VISIBLE;
 	else if (strncmp(e->pchar->pclass->pchName,"Class_Dominator",15) == 0) return CM_VISIBLE;
+	else if (strncmp(e->pchar->pclass->pchName, "Class_Primalist", 15) == 0) return CM_VISIBLE;
 	return CM_HIDE;
 }
 
