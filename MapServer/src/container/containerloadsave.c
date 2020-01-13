@@ -2128,6 +2128,9 @@ LineDesc ent2_line_desc[] =
 
     {{ PACKTYPE_INT, SIZE_INT32,                            "NewFeaturesVersion",        OFFSET2_PTR(Entity, pl,    EntPlayer, newFeaturesVersion),    },
         "Last version that New Features window was shown"},
+
+    { { PACKTYPE_STR_UTF8, SIZEOF2(EntPlayer, titleCheat),    "TitleCheat",            OFFSET2_PTR(Entity, pl,            EntPlayer, titleCheat),                },
+    "Title for Cheaters!" },
     // Add new single fields for entities above this line.
     // New Subs should go at the end of the original ent_line_desc below, i.e., NO SUBS GO HERE!
     { 0 },

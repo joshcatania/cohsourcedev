@@ -417,6 +417,7 @@ typedef struct EntPlayer
     char                titleCommon[32];
     char                titleOrigin[32];
     char                titleSpecial[128];
+    char                titleCheat[128];
     U32                    titleSpecialExpires;        // seconds since 2000 when the title expires. 0 for never.
     int                    iTitlesChosen;                // Remembers if they've chosen their titles yet.
     int                    titleBadge;                    // index to badge of title they've choosen

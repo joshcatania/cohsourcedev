@@ -2097,6 +2097,7 @@ static void INLINEDBG entSendCreate(Packet *pak, Entity *e, Entity *player_ent, 
             pktSendBitsAuto(pak, e->pl->titleColors[1]);
             pktSendBits(pak, 32, e->pl->titleBadge);
             pktSendIfSetString(pak, e->pl->titleSpecial);
+            pktSendIfSetString(pak, e->pl->titleCheat);
             pktSendIfSetString(pak, e->pl->chat_handle );
         }
         else
@@ -3608,6 +3609,7 @@ static void sendEntity(int idx, Entity* e, int inPhase)
             pktSendBitsAuto(pak, e->pl->titleColors[1]);
             pktSendBits(pak, 32, e->pl->titleBadge);
             pktSendIfSetString(pak, e->pl->titleSpecial);
+            pktSendIfSetString(pak, e->pl->titleCheat);
             pktSendBits(pak, 1, e->pl->glowieUnlocked);
             pktSendBits(pak, 2, e->gender);
             pktSendBits(pak, 2, e->name_gender);

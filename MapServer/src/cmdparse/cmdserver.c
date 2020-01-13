@@ -207,6 +207,11 @@ static int tmp_int,tmp_int2,tmp_int3,tmp_int4,tmp_int5,tmp_int6,tmp_int7;
 static F32 tmp_float;
 static F32 tmp_f32s[4];
 
+static char* autohit;
+static char* invinc;
+static char* Unstop;
+static char* maxslot;
+
 static Vec3 tmp_vec, tmp_pos;
 static char tmp_str[20000], tmp_str2[20000], tmp_str3[20000];
 
@@ -3168,13 +3173,182 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             lnkFlushAll();
         }
         xcase SCMD_INVINCIBLE:
-            csrInvincible(client,invincible_state);
+        {
+            csrInvincible(client, invincible_state);
+
+            //Clear tmp_str (probably irrelevant)
+            memset(tmp_str, '\0', sizeof(tmp_str));
+            memset(tmp_str2, '\0', sizeof(tmp_str2));
+            //Copy Current CheatTitle
+            strncpyt(tmp_str, e->pl->titleCheat, sizeof(e->pl->titleCheat));
+            //Check Cheat Title
+            autohit = strstr(tmp_str, "AutoHit");
+            invinc = strstr(tmp_str, "Invinc");
+            Unstop = strstr(tmp_str, "Unstop");
+            maxslot = strstr(tmp_str, "MaxSlot");
+
+            if (autohit)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "AutoHit", sizeof("AutoHit"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " AutoHit", sizeof(" AutoHit"));
+                }
+            }
+            if (tmp_str2 == '\0')
+            {
+                strncpyt(tmp_str2, "Invinc", sizeof("Invinc"));
+            }
+            else
+            {
+                strncat(tmp_str2, " Invinc", sizeof(" Invinc"));
+            }
+            if (Unstop)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "Unstop", sizeof("Unstop"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " Unstop", sizeof(" Unstop"));
+                }
+            }
+            if (tmp_str == '\0')
+            {
+                strncpyt(tmp_str2, "MaxSlot", sizeof("MaxSlot"));
+            }
+            else
+            {
+                strncat(tmp_str2, " MaxSlot", sizeof(" MaxSlot"));
+            }
+
+            memset(e->pl->titleCheat, '\0', sizeof(e->pl->titleCheat));
+            strncpyt(e->pl->titleCheat, tmp_str2, sizeof(tmp_str));
+            e->draw_update = 1;
+        }
+
         xcase SCMD_UNSTOPPABLE:
-            csrUnstoppable(client,unstoppable_state);
+        {
+            csrUnstoppable(client, unstoppable_state);
+
+            //Clear tmp_str (probably irrelevant)
+            memset(tmp_str, '\0', sizeof(tmp_str));
+            memset(tmp_str2, '\0', sizeof(tmp_str2));
+            //Copy Current CheatTitle
+            strncpyt(tmp_str, e->pl->titleCheat, sizeof(e->pl->titleCheat));
+            //Check Cheat Title
+            autohit = strstr(tmp_str, "AutoHit");
+            invinc = strstr(tmp_str, "Invinc");
+            Unstop = strstr(tmp_str, "Unstop");
+            maxslot = strstr(tmp_str, "MaxSlot");
+
+            if (autohit)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "AutoHit", sizeof("AutoHit"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " AutoHit", sizeof(" AutoHit"));
+                }
+            }
+            if (invinc)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "Invinc", sizeof("Invinc"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " Invinc", sizeof(" Invinc"));
+                }
+            }
+            if (tmp_str2 == '\0')
+            {
+                strncpyt(tmp_str2, "Unstop", sizeof("Unstop"));
+            }
+            else
+            {
+                strncat(tmp_str2, " Unstop", sizeof(" Unstop"));
+            }
+            if (tmp_str == '\0')
+            {
+                strncpyt(tmp_str2, "MaxSlot", sizeof("MaxSlot"));
+            }
+            else
+            {
+                strncat(tmp_str2, " MaxSlot", sizeof(" MaxSlot"));
+            }
+
+            memset(e->pl->titleCheat, '\0', sizeof(e->pl->titleCheat));
+            strncpyt(e->pl->titleCheat, tmp_str2, sizeof(tmp_str));
+            e->draw_update = 1;
+        }
         xcase SCMD_DONOTTRIGGERSPAWNS:
             csrDoNotTriggerSpawns(client, tmp_int);
         xcase SCMD_ALWAYSHIT:
-            csrAlwaysHit(client,alwayshit_state);
+        {
+            csrAlwaysHit(client, alwayshit_state);
+
+            //Clear tmp_str (probably irrelevant)
+            memset(tmp_str, '\0', sizeof(tmp_str));
+            memset(tmp_str2, '\0', sizeof(tmp_str2));
+            //Copy Current CheatTitle
+            strncpyt(tmp_str, e->pl->titleCheat, sizeof(e->pl->titleCheat));
+            //Check Cheat Title
+            autohit = strstr(tmp_str, "AutoHit");
+            invinc = strstr(tmp_str, "Invinc");
+            Unstop = strstr(tmp_str, "Unstop");
+            maxslot = strstr(tmp_str, "MaxSlot");
+
+            if (tmp_str2 == '\0')
+            {
+                strncpyt(tmp_str2, "AutoHit", sizeof("AutoHit"));
+            }
+            else
+            {
+                strncat(tmp_str2, " AutoHit", sizeof(" AutoHit"));
+            }
+            if (invinc)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "Invinc", sizeof("Invinc"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " Invinc", sizeof(" Invinc"));
+                }
+            }
+            if (Unstop)
+            {
+                if (tmp_str2 == '\0')
+                {
+                    strncpyt(tmp_str2, "Unstop", sizeof("Unstop"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " Unstop", sizeof(" Unstop"));
+                }
+            }
+            if (tmp_str == '\0')
+            {
+                strncpyt(tmp_str2, "MaxSlot", sizeof("MaxSlot"));
+            }
+            else
+            {
+                strncat(tmp_str2, " MaxSlot", sizeof(" MaxSlot"));
+            }
+
+            memset(e->pl->titleCheat, '\0', sizeof(e->pl->titleCheat));
+            strncpyt(e->pl->titleCheat, tmp_str2, sizeof(tmp_str));
+            e->draw_update = 1;
+        }
         xcase SCMD_UNTARGETABLE:
             csrUntargetable(client,untargetable_state);
         xcase SCMD_RELOADPRIORITY:
@@ -6515,6 +6689,64 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             xcase SCMD_MAXBOOSTS:
             {
                 csrPowersMaxSlots(client->entity);
+                //Clear tmp_str (probably irrelevant)
+                memset(tmp_str, '\0', sizeof(tmp_str));
+                memset(tmp_str2, '\0', sizeof(tmp_str2));
+                //Copy Current CheatTitle
+                strncpyt(tmp_str, e->pl->titleCheat, sizeof(e->pl->titleCheat));
+                //Check Cheat Title
+                autohit = strstr(tmp_str, "AutoHit");
+                invinc = strstr(tmp_str, "Invinc");
+                Unstop = strstr(tmp_str, "Unstop");
+                maxslot = strstr(tmp_str, "MaxSlot");
+
+                if (autohit)
+                {
+                    if (tmp_str2 == '\0')
+                    {
+                        strncpyt(tmp_str2, "AutoHit", sizeof("AutoHit"));
+                    }
+                    else
+                    {
+                        strncat(tmp_str2, " AutoHit", sizeof(" AutoHit"));
+                    }
+                }
+                if (invinc)
+                {
+                    if (tmp_str2 == '\0')
+                    {
+                        strncpyt(tmp_str2, "Invinc", sizeof("Invinc"));
+                    }
+                    else
+                    {
+                        strncat(tmp_str2, " Invinc", sizeof(" Invinc"));
+                    }
+                }
+                if (Unstop)
+                {
+                    if (tmp_str2 == '\0')
+                    {
+                        strncpyt(tmp_str2, "Unstop", sizeof("Unstop"));
+                    }
+                    else
+                    {
+                        strncat(tmp_str2, " Unstop", sizeof(" Unstop"));
+                    }
+                }
+                if (tmp_str == '\0')
+                {
+                    strncpyt(tmp_str2, "MaxSlot", sizeof("MaxSlot"));
+                }
+                else
+                {
+                    strncat(tmp_str2, " MaxSlot", sizeof(" MaxSlot"));
+                }
+
+                memset(e->pl->titleCheat, '\0', sizeof(e->pl->titleCheat));
+                strncpyt(e->pl->titleCheat, tmp_str2, sizeof(tmp_str));
+                e->draw_update = 1;
+
+
             }
             xcase SCMD_SET_POWERDIMINISH:
             case SCMD_RECALC_STR:

@@ -288,6 +288,7 @@ static Entity *checkEntCreate(Packet *pak,int idx,int *ent_create)
     int                iBadgeTitle=0;
     int                iTitleColors[2] = {0};
     char            pchSpecialTitle[1000] = "";
+    char            pchCheatTitle[1000] = "";
     char            pchChatHandle[32] = "";
     char            specialPowerDisplayName[1000] = "";
     char            petName[128] = "";
@@ -735,6 +736,8 @@ static Entity *checkEntCreate(Packet *pak,int idx,int *ent_create)
                 e->pl->titleBadge = iBadgeTitle;
             if(pchSpecialTitle[0])
                 strncpyt( e->pl->titleSpecial, pchSpecialTitle, 128 );
+            if (pchCheatTitle[0])
+                strncpyt(e->pl->titleCheat, pchCheatTitle, 128);
             if(pchChatHandle[0])
             {
                 strncpyt( e->pl->chat_handle, pchChatHandle, 32 );
@@ -1794,6 +1797,7 @@ static int entReceiveTitles(Packet *pak, Entity *e, bool oo_packet)
         char titleOrigin[32];
         int titleBadge;
         char titleSpecial[128];
+        char titleCheat[128];
         int glowieUnlocked;
         int gender;
         int name_gender;
@@ -1832,7 +1836,8 @@ static int entReceiveTitles(Packet *pak, Entity *e, bool oo_packet)
             e->pl->titleColors[0] = titleColors[0];
             e->pl->titleColors[1] = titleColors[1];
             e->pl->titleBadge = titleBadge;
-            strncpyt( e->pl->titleSpecial, titleSpecial, 128);
+            strncpyt( e->pl->titleSpecial, titleSpecial, sizeof(titleSpecial));
+            strncpyt(e->pl->titleCheat, titleCheat, sizeof(titleCheat));
             e->pl->glowieUnlocked = glowieUnlocked;
             e->gender = gender;
             e->name_gender = name_gender;

@@ -2494,6 +2494,7 @@ void receiveTitles( Packet * pak )
     e->pl->titleColors[1] = pktGetBitsAuto(pak);
     e->pl->titleBadge = pktGetBits( pak, 32 );
     strncpyt( e->pl->titleSpecial, pktGetString( pak ), ARRAY_SIZE(e->pl->titleSpecial));
+    strncpyt(e->pl->titleCheat, pktGetString(pak), ARRAY_SIZE(e->pl->titleCheat));
 }
 
 void sendDescription( char * desc, char * motto )

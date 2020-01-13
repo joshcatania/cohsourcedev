@@ -1732,6 +1732,15 @@ static void drawStuffOnEntity(Entity *e, float fScale, int iAlpha, bool bDrawBar
                                 cprnt(xp, yy, z, fScale*.75, fScale*.75, text);
                                 if(width>iTextWidth) iTextWidth=width;
                             }
+                            if (e->pl->titleCheat[0] != '\0')
+                            {
+                                yy -= 18 * fScale * .75;
+                                int width = str_wd(font_grp, fScale * .75, fScale * .75, e->pl->titleCheat);
+                                font_color(CLR_WHITE & 0xff000000 | iAlpha,
+                                    CLR_YELLOW & 0xff000000 | iAlpha);
+                                cprnt(xp, yy, z, fScale * .75, fScale * .75, e->pl->titleCheat);
+                                if (width > iTextWidth) iTextWidth = width;
+                            }
                         }
                     }
 

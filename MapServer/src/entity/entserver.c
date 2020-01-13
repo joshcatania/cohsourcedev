@@ -1319,6 +1319,7 @@ void sendCharacterToClient( Packet *pak, Entity *e)
     pktSendBitsAuto(pak, e->pl->titleColors[1]);
     pktSendBits( pak, 32, e->pl->titleBadge );
     pktSendString( pak, e->pl->titleSpecial );
+    pktSendString(pak, e->pl->titleCheat);
     pktSendString( pak, e->strings->playerDescription );
     pktSendString( pak, e->strings->motto );
     pktSendString( pak, e->pl->comment ); 
