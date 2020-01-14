@@ -488,6 +488,7 @@ static Entity *checkEntCreate(Packet *pak,int idx,int *ent_create)
                         iTitleColors[1] = pktGetBitsAuto(pak);
                         iBadgeTitle = pktGetBits(pak, 32);
                         strcpy(pchSpecialTitle, pktGetIfSetString(pak));
+                        strcpy(pchCheatTitle, pktGetIfSetString(pak));
                         strcpy(pchChatHandle, pktGetIfSetString(pak));
                     }
 
@@ -1818,6 +1819,7 @@ static int entReceiveTitles(Packet *pak, Entity *e, bool oo_packet)
         titleColors[1] = pktGetBitsAuto(pak);
         titleBadge = pktGetBits( pak, 32 );
         strncpyt( titleSpecial, pktGetIfSetString( pak ), 128);
+        strncpyt(titleCheat, pktGetIfSetString(pak), 128);
         glowieUnlocked = pktGetBits(pak, 1);
         gender = pktGetBits(pak, 2);
         name_gender = pktGetBits( pak, 2 );
