@@ -1749,12 +1749,16 @@ static void msPrintParam(    const char* messageID,
                     // try the villains string first
                     if( store->idPrepend )
                     {
-                        char villainsMessageID[16 * 1024];
+                        char* villainsMessageID = calloc(1, 16 * 1024);
 
-                        Strncpyt( villainsMessageID, store->idPrepend );
-                        Strncatt( villainsMessageID, keyString );
-                        if (!stashFindPointerConst(store->messageIDStash, villainsMessageID, &referencedMessage))
-                            referencedMessage = NULL;
+                        if (villainsMessageID) {
+                            strncpyt( villainsMessageID, store->idPrepend, 16 * 1024);
+                            strncat_s( villainsMessageID, 16 * 1024, keyString, _TRUNCATE );
+                            if (!stashFindPointerConst(store->messageIDStash, villainsMessageID, &referencedMessage))
+                                referencedMessage = NULL;
+
+                            free(villainsMessageID);
+                        }
                     }
 
                     if(!referencedMessage)
@@ -1990,7 +1994,7 @@ static char *resizeTempBuffer(char *buffer, int *size, char **cursor, char **buf
 // MAK - <rant>I'd really like to take the sprintf compatibility out.  I don't know why
 // callers use both msPrintf and sprintf interchangeably.  You can't call
 // msPrintf with a string containing {Param} and get the results you expect.</rant>
-int msvaPrintfInternalEx(    MessageStore* store,
+int msvaPrintfInternalEx(   MessageStore* store,
                             char* outputBuffer,
                             int bufferLength,
                             const char* messageID,
@@ -2002,11 +2006,11 @@ int msvaPrintfInternalEx(    MessageStore* store,
 {
     #define BUFFER_SIZE 16 * 1024
     const TextMessage* textMessage = NULL;
-    int     newMessageSize = 0;
+    int  newMessageSize = 0;
     char *newMessage = NULL;
     char *newMessageEnd = NULL;
 //    char newMessage[BUFFER_SIZE];
-    char paramBuf[BUFFER_SIZE];
+    char* paramBuf = calloc(1, BUFFER_SIZE);
     const char* oldMessageCursor;
     char* newMessageCursor;
     const char* varEnd = NULL; // where the start of a var from '{}' is
@@ -2034,26 +2038,33 @@ int msvaPrintfInternalEx(    MessageStore* store,
         // try loyalist-specific text first
         if( store->idPrepend && !(flags&TRANSLATE_NOPREPEND) && flags&TRANSLATE_PREPEND_L_P )
         {
-            char loyalistMessageID[BUFFER_SIZE];
-            Strncpyt( loyalistMessageID, "L_" );
-            Strncatt( loyalistMessageID, messageID );
-            if( !stashFindPointerConst( store->messageIDStash, loyalistMessageID, &textMessage ) )
-                textMessage = NULL;
+            char* loyalistMessageID = calloc(1, BUFFER_SIZE);
+            if (loyalistMessageID) {
+                strncpyt( loyalistMessageID, "L_", BUFFER_SIZE);
+                strncpyt( loyalistMessageID, messageID, BUFFER_SIZE);
+                if( !stashFindPointerConst( store->messageIDStash, loyalistMessageID, &textMessage ) )
+                    textMessage = NULL;
+
+                free(loyalistMessageID);
+            }
         }
 
         // try the villains/praetorians string first
         if( !textMessage && store->idPrepend && !(flags&TRANSLATE_NOPREPEND) )
         {
-            char villainsMessageID[BUFFER_SIZE];
+            char* villainsMessageID = calloc(1, BUFFER_SIZE);
+            if (villainsMessageID) {
+                if( ( flags&TRANSLATE_PREPEND_P ) || ( flags&TRANSLATE_PREPEND_L_P ) )
+                    strncpyt( villainsMessageID, "P_", BUFFER_SIZE);
+                else
+                    strncpyt( villainsMessageID, store->idPrepend, BUFFER_SIZE);
 
-            if( ( flags&TRANSLATE_PREPEND_P ) || ( flags&TRANSLATE_PREPEND_L_P ) )
-                Strncpyt( villainsMessageID, "P_" );
-            else
-                Strncpyt( villainsMessageID, store->idPrepend );
+                strncat_s( villainsMessageID, BUFFER_SIZE, messageID, _TRUNCATE);
+                if (!stashFindPointerConst(store->messageIDStash, villainsMessageID, &textMessage))
+                    textMessage = NULL;
 
-            Strncatt( villainsMessageID, messageID );
-            if (!stashFindPointerConst(store->messageIDStash, villainsMessageID, &textMessage))
-                textMessage = NULL;
+                free(villainsMessageID);
+            }
         }
         
         // fallback to the coh string
@@ -2156,7 +2167,7 @@ int msvaPrintfInternalEx(    MessageStore* store,
 
                 strncpyt(variableName, oldMessageCursor, endvar - oldMessageCursor + 1);
 
-                msPrintParam(messageID, paramBuf, ARRAY_SIZE(paramBuf), variableName, store, messageTypeDef, vars, recur_depth, flags, arg);
+                msPrintParam(messageID, paramBuf, BUFFER_SIZE, variableName, store, messageTypeDef, vars, recur_depth, flags, arg);
 
                 while (strlen(paramBuf) + newMessageCursor >= newMessageEnd) 
                 {
@@ -2306,6 +2317,11 @@ int msvaPrintfInternalEx(    MessageStore* store,
     if (newMessage) {
         free(newMessage);
     }
+
+    if (paramBuf) {
+        free(paramBuf);
+    }
+
     return newMessageSize;
     
     #undef BUFFER_SIZE
