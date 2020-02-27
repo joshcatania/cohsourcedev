@@ -18,7 +18,7 @@
 #include <utilitieslib/components/genericlist.h>
 #include <utilitieslib/utils/textparser.h>
 #include "entity/entGameActions.h" // for serveDamage
-#include "gamecomm/sendToClient.h"   // inexplicably for sendInfoBox
+#include "gamecomm/sendToClient.h" // inexplicably for sendInfoBox
 #include "gameComm/npc.h"
 #include "dbcomm/dbcomm.h"
 #include "dbghelper.h"
@@ -63,36 +63,31 @@
 #include "ailib/aiBehaviorPublic.h"
 #include "TeamReward.h"
 #include "script/scripthook/ScriptHookCallbacks.h"
-#endif 
+#endif
 
 MP_DEFINE(AttribMod);
 MP_DEFINE(AttribModEvalInfo);
 
-static const char **combatPhaseNames = 0;
+static const char** combatPhaseNames = 0;
 
 /**********************************************************************/
 /**********************************************************************/
 
-TokenizerParseInfo ParseCharacterAspects[] =
-{
-    { "Cur", TOK_IGNORE, offsetof(CharacterAttribSet, pattrMod)  },
-    { "Max", TOK_IGNORE, offsetof(CharacterAttribSet, pattrMax)  },
-    { "Str", TOK_IGNORE, offsetof(CharacterAttribSet, pattrStrength)  },
-    { "Res", TOK_IGNORE, offsetof(CharacterAttribSet, pattrResistance)  },
-    { "Abs", TOK_IGNORE, offsetof(CharacterAttribSet, pattrAbsolute)  },
-    { 0 }
-};
+TokenizerParseInfo ParseCharacterAspects[] = {
+    {"Cur", TOK_IGNORE, offsetof(CharacterAttribSet, pattrMod)},      {"Max", TOK_IGNORE, offsetof(CharacterAttribSet, pattrMax)},
+    {"Str", TOK_IGNORE, offsetof(CharacterAttribSet, pattrStrength)}, {"Res", TOK_IGNORE, offsetof(CharacterAttribSet, pattrResistance)},
+    {"Abs", TOK_IGNORE, offsetof(CharacterAttribSet, pattrAbsolute)}, {0}};
 
 extern TokenizerParseInfo ParseCharacterAttributes[];
-char const* dbg_GetParseName(TokenizerParseInfo atpi[] , int offset)
+char const* dbg_GetParseName(TokenizerParseInfo atpi[], int offset)
 {
     int i = 0;
-    while(atpi[i].name != NULL)
+    while (atpi[i].name != NULL)
     {
-        if(atpi[i].storeoffset == offset)
+        if (atpi[i].storeoffset == offset)
         {
             // HACK!
-            if(atpi!=ParseCharacterAspects)
+            if (atpi != ParseCharacterAspects)
             {
                 return dbg_AttribName(offset, atpi[i].name);
             }
@@ -104,165 +99,165 @@ char const* dbg_GetParseName(TokenizerParseInfo atpi[] , int offset)
         i++;
     }
 
-    if(atpi==ParseCharacterAttributes)
+    if (atpi == ParseCharacterAttributes)
     {
-        if(offset==kSpecialAttrib_Translucency)
+        if (offset == kSpecialAttrib_Translucency)
         {
             return "(translucency)";
         }
-        else if(offset==kSpecialAttrib_EntCreate)
+        else if (offset == kSpecialAttrib_EntCreate)
         {
             return "(ent create)";
         }
-        else if(offset==kSpecialAttrib_ClearDamagers)
+        else if (offset == kSpecialAttrib_ClearDamagers)
         {
             return "(clear damagers)";
         }
-        else if(offset==kSpecialAttrib_SilentKill)
+        else if (offset == kSpecialAttrib_SilentKill)
         {
             return "(silent kill)";
         }
-        else if(offset==kSpecialAttrib_XPDebtProtection)
+        else if (offset == kSpecialAttrib_XPDebtProtection)
         {
             return "(xp debt protection)";
         }
-        else if(offset==kSpecialAttrib_SetMode)
+        else if (offset == kSpecialAttrib_SetMode)
         {
             return "(set mode)";
         }
-        else if(offset==kSpecialAttrib_SetCostume)
+        else if (offset == kSpecialAttrib_SetCostume)
         {
             return "(set costume)";
         }
-        else if(offset==kSpecialAttrib_Glide)
+        else if (offset == kSpecialAttrib_Glide)
         {
             return "(glide)";
         }
-        else if(offset==kSpecialAttrib_Avoid)
+        else if (offset == kSpecialAttrib_Avoid)
         {
             return "(avoid)";
         }
-        else if(offset==kSpecialAttrib_Reward)
+        else if (offset == kSpecialAttrib_Reward)
         {
             return "(reward)";
         }
-        else if(offset==kSpecialAttrib_XPDebt)
+        else if (offset == kSpecialAttrib_XPDebt)
         {
             return "(xp debt)";
         }
-        else if(offset==kSpecialAttrib_DropToggles)
+        else if (offset == kSpecialAttrib_DropToggles)
         {
             return "(drop toggles)";
         }
-        else if(offset==kSpecialAttrib_GrantPower)
+        else if (offset == kSpecialAttrib_GrantPower)
         {
             return "(grant power)";
         }
-        else if(offset==kSpecialAttrib_RevokePower)
+        else if (offset == kSpecialAttrib_RevokePower)
         {
             return "(revoke power)";
         }
-        else if(offset==kSpecialAttrib_UnsetMode)
+        else if (offset == kSpecialAttrib_UnsetMode)
         {
             return "(unset mode)";
         }
-        else if(offset==kSpecialAttrib_GlobalChanceMod)
+        else if (offset == kSpecialAttrib_GlobalChanceMod)
         {
             return "(global chance mod)";
         }
-        else if(offset==kSpecialAttrib_PowerChanceMod)
+        else if (offset == kSpecialAttrib_PowerChanceMod)
         {
             return "(power chance mod)";
         }
-        else if(offset==kSpecialAttrib_GrantBoostedPower)
+        else if (offset == kSpecialAttrib_GrantBoostedPower)
         {
             return "(grant boosted power)";
         }
-        else if(offset==kSpecialAttrib_ViewAttrib)
+        else if (offset == kSpecialAttrib_ViewAttrib)
         {
             return "ViewAttributes";
-        }            
-        else if(offset==kSpecialAttrib_RewardSource)
+        }
+        else if (offset == kSpecialAttrib_RewardSource)
         {
             return "(rewardsource)";
         }
-        else if(offset==kSpecialAttrib_RewardSourceTeam)
+        else if (offset == kSpecialAttrib_RewardSourceTeam)
         {
             return "(rewardsourceteam)";
         }
-        else if(offset==kSpecialAttrib_ClearFog)
+        else if (offset == kSpecialAttrib_ClearFog)
         {
             return "(clearfog)";
         }
-        else if(offset==kSpecialAttrib_CombatPhase)
+        else if (offset == kSpecialAttrib_CombatPhase)
         {
             return "CombatPhase";
         }
-        else if(offset==kSpecialAttrib_CombatModShift)
+        else if (offset == kSpecialAttrib_CombatModShift)
         {
             return "CombatModShift";
         }
-        else if(offset==kSpecialAttrib_RechargePower)
+        else if (offset == kSpecialAttrib_RechargePower)
         {
             return "RechargePower";
         }
-        else if(offset==kSpecialAttrib_VisionPhase)
+        else if (offset == kSpecialAttrib_VisionPhase)
         {
             return "VisionPhase";
         }
-        else if(offset==kSpecialAttrib_NinjaRun)
+        else if (offset == kSpecialAttrib_NinjaRun)
         {
             return "NinjaRun";
         }
-        else if(offset==kSpecialAttrib_Walk)
+        else if (offset == kSpecialAttrib_Walk)
         {
             return "Walk";
         }
-        else if(offset==kSpecialAttrib_BeastRun)
+        else if (offset == kSpecialAttrib_BeastRun)
         {
             return "BeastRun";
         }
-        else if(offset==kSpecialAttrib_SteamJump)
+        else if (offset == kSpecialAttrib_SteamJump)
         {
             return "SteamJump";
         }
-        else if(offset==kSpecialAttrib_ExclusiveVisionPhase)
+        else if (offset == kSpecialAttrib_ExclusiveVisionPhase)
         {
             return "ExclusiveVisionPhase";
         }
-        else if(offset==kSpecialAttrib_DesignerStatus)
+        else if (offset == kSpecialAttrib_DesignerStatus)
         {
             return "DesignerStatus";
         }
-        else if(offset==kSpecialAttrib_SetSZEValue)
+        else if (offset == kSpecialAttrib_SetSZEValue)
         {
             return "SetSZEValue";
         }
-        else if(offset==kSpecialAttrib_AddBehavior)
+        else if (offset == kSpecialAttrib_AddBehavior)
         {
             return "AddBehavior";
         }
-        else if(offset==kSpecialAttrib_PowerRedirect)
+        else if (offset == kSpecialAttrib_PowerRedirect)
         {
             return "PowerRedirect";
         }
-        else if(offset==kSpecialAttrib_MagicCarpet)
+        else if (offset == kSpecialAttrib_MagicCarpet)
         {
             return "MagicCarpet";
         }
-        else if(offset==kSpecialAttrib_TokenAdd)
+        else if (offset == kSpecialAttrib_TokenAdd)
         {
             return "TokenAdd";
         }
-        else if(offset==kSpecialAttrib_TokenSet)
+        else if (offset == kSpecialAttrib_TokenSet)
         {
             return "TokenSet";
         }
-        else if(offset==kSpecialAttrib_TokenClear)
+        else if (offset == kSpecialAttrib_TokenClear)
         {
             return "TokenClear";
         }
-        else if(offset==kSpecialAttrib_ParkourRun)
+        else if (offset == kSpecialAttrib_ParkourRun)
         {
             return "ParkourRun";
         }
@@ -271,128 +266,130 @@ char const* dbg_GetParseName(TokenizerParseInfo atpi[] , int offset)
     return "(unknown)";
 }
 
-static void ReportAttribMod(Character *pchar, float fMag, float fRate, AttribMod *pmod)
+static void ReportAttribMod(Character* pchar, float fMag, float fRate, AttribMod* pmod)
 {
-    Entity *eSrc = erGetEnt(pmod->erSource);
+    Entity* eSrc = erGetEnt(pmod->erSource);
 
     float fTmp;
 
-    const char *pchSrc = eSrc?eSrc->name:NULL;
-    const char *pchDest = pchar->entParent->name;
-    const char *pchFloat = pmod->ptemplate->pchDisplayFloat;
+    const char* pchSrc = eSrc ? eSrc->name : NULL;
+    const char* pchDest = pchar->entParent->name;
+    const char* pchFloat = pmod->ptemplate->pchDisplayFloat;
 
     size_t offAttrib = pmod->ptemplate->offAttrib;
     size_t offAspect = pmod->ptemplate->offAspect;
     int translateSrcName = 0;
     int translateDestName = 0;
-    int statusEffectFlipper = 1;        //    status effects (not hp or end) work a bit different
-                                        //    -hp or -end means you "hurt" the opponent
-                                        //    -status effect means you "helped" (or buffed their res)
-                                        //    so we flip the mag when reporting to spam
+    int statusEffectFlipper = 1; //    status effects (not hp or end) work a bit different
+                                 //    -hp or -end means you "hurt" the opponent
+                                 //    -status effect means you "helped" (or buffed their res)
+                                 //    so we flip the mag when reporting to spam
 
     // Fix up Hitpoints and Endurance which most people think of as numbers,
     // not percentages. (Gosh, what a mess this is.)
-    if(IS_HITPOINTS(offAttrib))
+    if (IS_HITPOINTS(offAttrib))
     {
-        if(offAspect==offsetof(CharacterAttribSet, pattrMod))
+        if (offAspect == offsetof(CharacterAttribSet, pattrMod))
         {
             // TODO: Technically, this is just an estimate
             fMag *= pchar->attrMax.fHitPoints;
         }
     }
-    else if(offAttrib==offsetof(CharacterAttributes, fEndurance)
-        && offAspect==offsetof(CharacterAttribSet, pattrMod))
+    else if (offAttrib == offsetof(CharacterAttributes, fEndurance) && offAspect == offsetof(CharacterAttribSet, pattrMod))
     {
         // TODO: Technically, this is just an estimate
         fMag *= pchar->attrMax.fEndurance;
     }
     // STATUS EFFECTS
-    else if( (offAttrib>=offsetof(CharacterAttributes, fConfused) && offAttrib<=offsetof(CharacterAttributes, fOnlyAffectsSelf)) ||
-        (offAttrib>=offsetof(CharacterAttributes, fKnockup) && offAttrib<=offsetof(CharacterAttributes, fRepel)) )
+    else if ((offAttrib >= offsetof(CharacterAttributes, fConfused) && offAttrib <= offsetof(CharacterAttributes, fOnlyAffectsSelf)) ||
+             (offAttrib >= offsetof(CharacterAttributes, fKnockup) && offAttrib <= offsetof(CharacterAttributes, fRepel)))
     {
         statusEffectFlipper = -1;
     }
 
     if (!eSrc)
         translateSrcName = 1;
-    else if(ENTTYPE(eSrc)==ENTTYPE_CRITTER && (pchDest==NULL || pchSrc[0]=='\0'))
+    else if (ENTTYPE(eSrc) == ENTTYPE_CRITTER && (pchDest == NULL || pchSrc[0] == '\0'))
     {
         pchSrc = npcDefList.npcDefs[eSrc->npcIndex]->displayName;
         translateSrcName = 1;
     }
 
-    fTmp = ((int)(fMag*100+0.5f))/100.0f;
+    fTmp = ((int)(fMag * 100 + 0.5f)) / 100.0f;
 
-    if(ENTTYPE(pchar->entParent)==ENTTYPE_CRITTER && (pchDest==NULL || pchDest[0]=='\0'))
+    if (ENTTYPE(pchar->entParent) == ENTTYPE_CRITTER && (pchDest == NULL || pchDest[0] == '\0'))
     {
         pchDest = npcDefList.npcDefs[pchar->entParent->npcIndex]->displayName;
         translateDestName = 1;
     }
 
-    if(pmod->ptemplate->pchDisplayVictimHit && (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f))
+    if (pmod->ptemplate->pchDisplayVictimHit && (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f))
     {
         char message[1024] = {0};
-        Entity * owner = erGetEnt(pchar->entParent->erOwner);
+        Entity* owner = erGetEnt(pchar->entParent->erOwner);
         owner = owner ? owner : pchar->entParent;
-        if( ENTTYPE(owner) == ENTTYPE_PLAYER )
+        if (ENTTYPE(owner) == ENTTYPE_PLAYER)
         {
             if (pmod->ptemplate->offAttrib != kSpecialAttrib_DesignerStatus)
             {
-                sendCombatMessage(pchar->entParent, (fTmp * statusEffectFlipper) < 0 ? INFO_DAMAGE : INFO_HEAL, CombatMessageType_DamagingMod, 1, pmod->ptemplate->ppowBase->crcFullName, pmod->ptemplate->ppowBaseIndex, pchSrc ? pchSrc : "UnknownSource", fTmp < 0 ? -fTmp : fTmp, 0.f);
+                sendCombatMessage(pchar->entParent, (fTmp * statusEffectFlipper) < 0 ? INFO_DAMAGE : INFO_HEAL, CombatMessageType_DamagingMod, 1,
+                                  pmod->ptemplate->ppowBase->crcFullName, pmod->ptemplate->ppowBaseIndex, pchSrc ? pchSrc : "UnknownSource",
+                                  fTmp < 0 ? -fTmp : fTmp, 0.f);
             }
         }
     }
 
-    if(pmod->ptemplate->pchDisplayAttackerHit && eSrc && (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f) )
+    if (pmod->ptemplate->pchDisplayAttackerHit && eSrc && (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f))
     {
         char message[1024] = {0};
-        Entity * owner = erGetEnt(eSrc->erOwner);
+        Entity* owner = erGetEnt(eSrc->erOwner);
         owner = owner ? owner : eSrc;
-        if( ENTTYPE(owner) == ENTTYPE_PLAYER)
+        if (ENTTYPE(owner) == ENTTYPE_PLAYER)
         {
-            sendCombatMessage(eSrc, (fTmp * statusEffectFlipper) < 0 ? INFO_COMBAT : INFO_HEAL_OTHER, CombatMessageType_DamagingMod, 0, pmod->ptemplate->ppowBase->crcFullName, pmod->ptemplate->ppowBaseIndex, pchDest, fTmp < 0 ? -fTmp : fTmp, 0.f);
+            sendCombatMessage(eSrc, (fTmp * statusEffectFlipper) < 0 ? INFO_COMBAT : INFO_HEAL_OTHER, CombatMessageType_DamagingMod, 0,
+                              pmod->ptemplate->ppowBase->crcFullName, pmod->ptemplate->ppowBaseIndex, pchDest, fTmp < 0 ? -fTmp : fTmp, 0.f);
         }
     }
 
-    if(IS_HITPOINTS(offAttrib))
+    if (IS_HITPOINTS(offAttrib))
     {
         if (offAttrib == offsetof(CharacterAttributes, fAbsorb)
-            ? offAspect == offsetof(CharacterAttribSet, pattrMax)
-            : offAspect == offsetof(CharacterAttribSet, pattrMod)
-                || offAspect == offsetof(CharacterAttribSet, pattrAbsolute))
+                ? offAspect == offsetof(CharacterAttribSet, pattrMax)
+                : offAspect == offsetof(CharacterAttribSet, pattrMod) || offAspect == offsetof(CharacterAttribSet, pattrAbsolute))
         {
             // This artificially inflates the numbers a bit when they round, but I like that better than 0s.
             int iAmt = (int)fMag;
-            if(iAmt == 0)
+            if (iAmt == 0)
             {
-                if(fMag<-FLT_EPSILON)
+                if (fMag < -FLT_EPSILON)
                     iAmt = -1;
-                else if(fMag>FLT_EPSILON)
+                else if (fMag > FLT_EPSILON)
                     iAmt = 1;
             }
-            else if(iAmt < 0)
+            else if (iAmt < 0)
             {
-                iAmt = (int)(fMag-0.5);
+                iAmt = (int)(fMag - 0.5);
             }
             else
             {
-                iAmt = (int)(fMag+0.5);
+                iAmt = (int)(fMag + 0.5);
             }
 
-            if(iAmt && pmod->ptemplate->bShowFloaters)
-                serveDamage(pchar->entParent, eSrc, -iAmt, pmod->bUseLocForReport?pmod->vecLocation:0, pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fAbsorb));
+            if (iAmt && pmod->ptemplate->bShowFloaters)
+                serveDamage(pchar->entParent, eSrc, -iAmt, pmod->bUseLocForReport ? pmod->vecLocation : 0,
+                            pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fAbsorb));
 
             // All the rest is for balancing
             // These numbers are approximate.
             {
-                Power *ppow;
-                if(fMag<0 && pchar->attrCur.fHitPoints>0)
+                Power* ppow;
+                if (fMag < 0 && pchar->attrCur.fHitPoints > 0)
                 {
                     pchar->stats.fDamageReceived += -fMag;
-                    if(eSrc && eSrc->pchar)
+                    if (eSrc && eSrc->pchar)
                     {
                         eSrc->pchar->stats.fDamageGiven += -fMag;
-                        if((ppow = character_OwnsPower(eSrc->pchar, pmod->ptemplate->ppowBase))!=NULL)
+                        if ((ppow = character_OwnsPower(eSrc->pchar, pmod->ptemplate->ppowBase)) != NULL)
                         {
                             ppow->stats.fDamageGiven += -fMag;
                             if (isDevelopmentMode() && !isSharedMemory(ppow->ppowBase))
@@ -400,13 +397,13 @@ static void ReportAttribMod(Character *pchar, float fMag, float fRate, AttribMod
                         }
                     }
                 }
-                else if(fMag>0 && pchar->attrCur.fHitPoints<pchar->attrMax.fHitPoints)
+                else if (fMag > 0 && pchar->attrCur.fHitPoints < pchar->attrMax.fHitPoints)
                 {
                     pchar->stats.fHealingReceived += fMag;
-                    if(eSrc && eSrc->pchar)
+                    if (eSrc && eSrc->pchar)
                     {
                         eSrc->pchar->stats.fHealingGiven += fMag;
-                        if((ppow = character_OwnsPower(eSrc->pchar, pmod->ptemplate->ppowBase))!=NULL)
+                        if ((ppow = character_OwnsPower(eSrc->pchar, pmod->ptemplate->ppowBase)) != NULL)
                         {
                             ppow->stats.fHealingGiven += fMag;
                             if (isDevelopmentMode() && !isSharedMemory(ppow->ppowBase))
@@ -418,24 +415,23 @@ static void ReportAttribMod(Character *pchar, float fMag, float fRate, AttribMod
         }
     }
 
-    if(pchFloat && (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f)) // If there's one specified, always show it (unless we request not to if it's zero)
+    if (pchFloat &&
+        (!pmod->ptemplate->bDisplayTextOnlyIfNotZero || fTmp != 0.0f)) // If there's one specified, always show it (unless we request not to if it's zero)
     {
         char message[1024] = {0};
         if (character_combatGetLocalizedMessage(message, ARRAY_SIZE(message), pchar->entParent, translateSrcName, translateDestName, pchFloat, pchDest,
-            pmod->ptemplate->ppowBase->pchDisplayName,
-            fTmp < 0 ? -fTmp : fTmp,
-            pchSrc?pchSrc:"UnknownSource"))
+                                                pmod->ptemplate->ppowBase->pchDisplayName, fTmp < 0 ? -fTmp : fTmp, pchSrc ? pchSrc : "UnknownSource"))
         {
-            serveDamageMessage(pchar->entParent, eSrc, message, pmod->bUseLocForReport?pmod->vecLocation:0, pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fAbsorb));
+            serveDamageMessage(pchar->entParent, eSrc, message, pmod->bUseLocForReport ? pmod->vecLocation : 0,
+                               pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fAbsorb));
         }
     }
-
 }
 
 /**********************************************************************/
 /**********************************************************************/
 
-void attribMod_decrementRefCount(AttribMod *pmod)
+void attribMod_decrementRefCount(AttribMod* pmod)
 {
 #if SERVER
     if (!pmod || !pmod->parentPowerInstance)
@@ -447,7 +443,7 @@ void attribMod_decrementRefCount(AttribMod *pmod)
         eaFindAndRemove(&g_deletedPowers, pmod->parentPowerInstance);
         if (pmod->parentPowerInstance->ppowBase)
         {
-            LOG_OLD( "DeletedPower: Removed %s, new g_deletedPowers array size: %d", pmod->parentPowerInstance->ppowBase->pchName, eaSize(&g_deletedPowers));
+            LOG_OLD("DeletedPower: Removed %s, new g_deletedPowers array size: %d", pmod->parentPowerInstance->ppowBase->pchName, eaSize(&g_deletedPowers));
         }
         power_Destroy(pmod->parentPowerInstance, NULL);
     }
@@ -458,23 +454,22 @@ void attribMod_decrementRefCount(AttribMod *pmod)
  * attribmod_Create
  *
  */
-AttribMod *attribmod_Create(void)
+AttribMod* attribmod_Create(void)
 {
     MP_CREATE(AttribMod, 1000);
     return MP_ALLOC(AttribMod);
 }
 
-
 /**********************************************************************func*
  * attribmod_Destroy
  *
  */
-void attribmod_Destroy(AttribMod *pmod)
+void attribmod_Destroy(AttribMod* pmod)
 {
     if (!pmod)
         return;
 
-    if(pmod->evalInfo)
+    if (pmod->evalInfo)
     {
         attribModEvalInfo_Destroy(pmod->evalInfo);
         pmod->evalInfo = NULL;
@@ -490,9 +485,9 @@ void attribmod_Destroy(AttribMod *pmod)
     MP_FREE(AttribMod, pmod);
 }
 
-AttribModEvalInfo *attribModEvalInfo_Create(void)
+AttribModEvalInfo* attribModEvalInfo_Create(void)
 {
-    AttribModEvalInfo *evalInfo;
+    AttribModEvalInfo* evalInfo;
 
     MP_CREATE(AttribModEvalInfo, 100);
     evalInfo = MP_ALLOC(AttribModEvalInfo);
@@ -501,21 +496,21 @@ AttribModEvalInfo *attribModEvalInfo_Create(void)
     return evalInfo;
 }
 
-void attribModEvalInfo_Destroy(AttribModEvalInfo *evalInfo)
+void attribModEvalInfo_Destroy(AttribModEvalInfo* evalInfo)
 {
-    if(evalInfo)
-    {    
+    if (evalInfo)
+    {
         devassertmsg(evalInfo->refCount > 0, "Free of already freed eval info");
         evalInfo->refCount--;
 
-        if(evalInfo->refCount <= 0)
+        if (evalInfo->refCount <= 0)
         {
             MP_FREE(AttribModEvalInfo, evalInfo);
         }
     }
 }
 
-void attribmod_SetParentPowerInstance(AttribMod *pmod, Power *ppow)
+void attribmod_SetParentPowerInstance(AttribMod* pmod, Power* ppow)
 {
     if (!pmod || !ppow)
         return;
@@ -536,12 +531,12 @@ void attribmod_SetParentPowerInstance(AttribMod *pmod, Power *ppow)
  * modlist_GetNextMod
  *
  */
-AttribMod *modlist_GetNextMod(AttribModListIter *piter)
+AttribMod* modlist_GetNextMod(AttribModListIter* piter)
 {
-    assert(piter!=NULL);
+    assert(piter != NULL);
 
     piter->pposCur = piter->pposNext;
-    if(piter->pposNext!=NULL)
+    if (piter->pposNext != NULL)
     {
         piter->pposNext = piter->pposNext->next;
     }
@@ -553,9 +548,9 @@ AttribMod *modlist_GetNextMod(AttribModListIter *piter)
  * modlist_GetFirstMod
  *
  */
-AttribMod *modlist_GetFirstMod(AttribModListIter *piter, AttribModList *plist)
+AttribMod* modlist_GetFirstMod(AttribModListIter* piter, AttribModList* plist)
 {
-    assert(plist!=NULL);
+    assert(plist != NULL);
 
     piter->plist = plist;
     piter->pposNext = piter->plist->phead;
@@ -567,10 +562,10 @@ AttribMod *modlist_GetFirstMod(AttribModListIter *piter, AttribModList *plist)
  * modlist_RemoveCurrentMod
  *
  */
-void modlist_RemoveAndDestroyCurrentMod(AttribModListIter *piter)
+void modlist_RemoveAndDestroyCurrentMod(AttribModListIter* piter)
 {
-    assert(piter!=NULL);
-    assert(piter->pposCur!=NULL);
+    assert(piter != NULL);
+    assert(piter->pposCur != NULL);
 
     if (piter->pposCur == piter->plist->ptail)
     {
@@ -585,10 +580,10 @@ void modlist_RemoveAndDestroyCurrentMod(AttribModListIter *piter)
  * modlist_AddMod
  *
  */
-void modlist_AddMod(AttribModList *plist, AttribMod *pmod)
+void modlist_AddMod(AttribModList* plist, AttribMod* pmod)
 {
-    assert(plist!=NULL);
-    assert(pmod!=NULL);
+    assert(plist != NULL);
+    assert(pmod != NULL);
 
     listAddForeignMember(&plist->phead, pmod);
 
@@ -597,7 +592,7 @@ void modlist_AddMod(AttribModList *plist, AttribMod *pmod)
 }
 
 // Tails aren't supported by GenericList, so I'm adding this code at this level instead of there
-void modlist_AddModToTail(AttribModList *plist, AttribMod *pmod)
+void modlist_AddModToTail(AttribModList* plist, AttribMod* pmod)
 {
     assert(plist != NULL);
     assert(pmod != NULL);
@@ -614,10 +609,10 @@ void modlist_AddModToTail(AttribModList *plist, AttribMod *pmod)
         plist->phead = pmod;
 }
 
-void modlist_RemoveAndDestroyMod(AttribModList *plist, AttribMod *pmod)
+void modlist_RemoveAndDestroyMod(AttribModList* plist, AttribMod* pmod)
 {
-    assert(plist!=NULL);
-    assert(pmod!=NULL);
+    assert(plist != NULL);
+    assert(pmod != NULL);
 
     if (plist->ptail == pmod)
     {
@@ -628,9 +623,9 @@ void modlist_RemoveAndDestroyMod(AttribModList *plist, AttribMod *pmod)
     attribmod_Destroy(pmod);
 }
 
-AttribMod* modlist_FindEarlierMod(AttribModList *plist, AttribMod *modA, AttribMod *modB)
+AttribMod* modlist_FindEarlierMod(AttribModList* plist, AttribMod* modA, AttribMod* modB)
 {
-    AttribMod *iterMod;
+    AttribMod* iterMod;
 
     assert(plist != NULL);
 
@@ -650,7 +645,7 @@ AttribMod* modlist_FindEarlierMod(AttribModList *plist, AttribMod *modA, AttribM
     return NULL;
 }
 
-void modlist_MoveModToTail(AttribModListIter *piter, AttribMod *pmod)
+void modlist_MoveModToTail(AttribModListIter* piter, AttribMod* pmod)
 {
     assert(piter != NULL);
     assert(pmod != NULL);
@@ -672,24 +667,22 @@ void modlist_MoveModToTail(AttribModListIter *piter, AttribMod *pmod)
  * modlist_RemoveAll
  *
  */
-void modlist_RemoveAll(AttribModList *plist)
+void modlist_RemoveAll(AttribModList* plist)
 {
-    assert(plist!=NULL);
+    assert(plist != NULL);
 
     listDestroyList(&plist->phead, attribmod_Destroy);
     plist->ptail = NULL;
 }
 
-AttribMod *modlist_FindUnsuppressed(AttribModList *plist, const AttribModTemplate *ptemplate, Power *ppower, Character *pSrc)
+AttribMod* modlist_FindUnsuppressed(AttribModList* plist, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc)
 {
     EntityRef er = pSrc ? erGetRef(pSrc->entParent) : 0;
-    AttribMod *pmod;
+    AttribMod* pmod;
     AttribModListIter iter;
     bool templateStacking;
 
-    for(pmod = modlist_GetFirstMod(&iter, plist);
-        pmod!=NULL;
-        pmod = modlist_GetNextMod(&iter))
+    for (pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
     {
         if (pmod->bSuppressedByStacking)
             continue;
@@ -703,7 +696,7 @@ AttribMod *modlist_FindUnsuppressed(AttribModList *plist, const AttribModTemplat
             templateStacking = (pmod->ptemplate->iStackKey == ptemplate->iStackKey);
         }
 
-        if ((!er || pmod->erSource==er) && templateStacking)
+        if ((!er || pmod->erSource == er) && templateStacking)
         {
             if (!ptemplate->bMatchExactPower || ppower == pmod->parentPowerInstance)
                 return pmod;
@@ -713,17 +706,15 @@ AttribMod *modlist_FindUnsuppressed(AttribModList *plist, const AttribModTemplat
     return NULL;
 }
 
-AttribMod *modlist_FindLargestMagnitudeSuppressed(AttribModList *plist, const AttribModTemplate *ptemplate, Power *ppower, Character *pSrc)
+AttribMod* modlist_FindLargestMagnitudeSuppressed(AttribModList* plist, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc)
 {
     EntityRef er = pSrc ? erGetRef(pSrc->entParent) : 0;
-    AttribMod *pmod;
-    AttribMod *largestMod = NULL;
+    AttribMod* pmod;
+    AttribMod* largestMod = NULL;
     AttribModListIter iter;
     bool templateStacking;
 
-    for(pmod = modlist_GetFirstMod(&iter, plist);
-        pmod!=NULL;
-        pmod = modlist_GetNextMod(&iter))
+    for (pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
     {
         if (!pmod->bSuppressedByStacking)
             continue;
@@ -737,7 +728,7 @@ AttribMod *modlist_FindLargestMagnitudeSuppressed(AttribModList *plist, const At
             templateStacking = (pmod->ptemplate->iStackKey == ptemplate->iStackKey);
         }
 
-        if ((!er || pmod->erSource==er) && templateStacking)
+        if ((!er || pmod->erSource == er) && templateStacking)
         {
             if (!ptemplate->bMatchExactPower || ppower == pmod->parentPowerInstance)
             {
@@ -752,17 +743,15 @@ AttribMod *modlist_FindLargestMagnitudeSuppressed(AttribModList *plist, const At
     return largestMod;
 }
 
-int modlist_Count(AttribModList *plist, const AttribModTemplate *ptemplate, Power *ppower, Character *pSrc)
+int modlist_Count(AttribModList* plist, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc)
 {
     int count = 0;
     EntityRef er = pSrc ? erGetRef(pSrc->entParent) : 0;
-    AttribMod *pmod;
+    AttribMod* pmod;
     AttribModListIter iter;
     bool templateStacking;
 
-    for(pmod = modlist_GetFirstMod(&iter, plist);
-        pmod!=NULL;
-        pmod = modlist_GetNextMod(&iter))
+    for (pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
     {
         if (ptemplate->iStackKey == -1)
         {
@@ -773,7 +762,7 @@ int modlist_Count(AttribModList *plist, const AttribModTemplate *ptemplate, Powe
             templateStacking = (pmod->ptemplate->iStackKey == ptemplate->iStackKey);
         }
 
-        if ((!er || pmod->erSource==er) && templateStacking)
+        if ((!er || pmod->erSource == er) && templateStacking)
         {
             if (!ptemplate->bMatchExactPower || ppower == pmod->parentPowerInstance)
                 count++;
@@ -783,17 +772,17 @@ int modlist_Count(AttribModList *plist, const AttribModTemplate *ptemplate, Powe
     return count;
 }
 
-static AttribMod *modlist_GetNextMatchingMod(AttribModListIter *iter, const AttribModTemplate *ptemplate, Power *ppower, Character *pSrc)
+static AttribMod* modlist_GetNextMatchingMod(AttribModListIter* iter, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc)
 {
     EntityRef er = pSrc ? erGetRef(pSrc->entParent) : 0;
-    AttribMod *pmod;
+    AttribMod* pmod;
 
-    if(!iter)
+    if (!iter)
         return NULL;
 
-    for(pmod = modlist_GetNextMod(iter); pmod != NULL; pmod = modlist_GetNextMod(iter))
+    for (pmod = modlist_GetNextMod(iter); pmod != NULL; pmod = modlist_GetNextMod(iter))
     {
-        if((!er || pmod->erSource==er) && pmod->ptemplate==ptemplate)
+        if ((!er || pmod->erSource == er) && pmod->ptemplate == ptemplate)
         {
             if (ptemplate->bMatchExactPower)
             {
@@ -808,10 +797,9 @@ static AttribMod *modlist_GetNextMatchingMod(AttribModListIter *iter, const Attr
     return NULL;
 }
 
-static AttribMod *modlist_GetFirstMatchingMod(AttribModListIter *iter, AttribModList *plist, const AttribModTemplate *ptemplate, Power *ppower, 
-                                                Character *pSrc)
+static AttribMod* modlist_GetFirstMatchingMod(AttribModListIter* iter, AttribModList* plist, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc)
 {
-    assert(plist!=NULL);
+    assert(plist != NULL);
 
     iter->plist = plist;
     iter->pposNext = iter->plist->phead;
@@ -819,17 +807,17 @@ static AttribMod *modlist_GetFirstMatchingMod(AttribModListIter *iter, AttribMod
     return modlist_GetNextMatchingMod(iter, ptemplate, ppower, pSrc);
 }
 
-void modlist_RefreshAllMatching(AttribModList *plist, const AttribModTemplate *ptemplate, Power *ppower, Character *pSrc, float fDuration)
+void modlist_RefreshAllMatching(AttribModList* plist, const AttribModTemplate* ptemplate, Power* ppower, Character* pSrc, float fDuration)
 {
-    AttribMod *pmod;
+    AttribMod* pmod;
     AttribModListIter iter;
 
-    if(!plist)
+    if (!plist)
         return;
 
     pmod = modlist_GetFirstMatchingMod(&iter, plist, ptemplate, ppower, pSrc);
 
-    while(pmod != NULL)
+    while (pmod != NULL)
     {
         // Refresh the duration of the matching mod; this could shorten the mod if fDuration < pmod->fDuration
         pmod->fDuration = fDuration;
@@ -842,19 +830,19 @@ void modlist_RefreshAllMatching(AttribModList *plist, const AttribModTemplate *p
  * modlist_CancelNonContinuous
  *
  */
-void modlist_CancelAll(AttribModList *plist, Character *pchar)
+void modlist_CancelAll(AttribModList* plist, Character* pchar)
 {
-    AttribMod *pmod;
+    AttribMod* pmod;
     AttribModListIter iter;
 
-    for(pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
+    for (pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
     {
         if (pmod && pmod->ptemplate && pmod->ptemplate->ppowBase && pmod->ptemplate->ppowBase->bShowBuffIcon && pchar && pchar->entParent)
         {
             pchar->entParent->team_buff_update = true;
         }
-        mod_CancelFX(pmod,pchar);
-        mod_Cancel(pmod,pchar);
+        mod_CancelFX(pmod, pchar);
+        mod_Cancel(pmod, pchar);
         modlist_RemoveAndDestroyCurrentMod(&iter);
     }
 }
@@ -866,28 +854,25 @@ void modlist_CancelAll(AttribModList *plist, Character *pchar)
  * mod_Fill
  *
  */
-void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
-    unsigned int uiInvokeID, Power *ppow, const AttribModTemplate *ptemplate,
-    const Vec3 vec, float fTimeBeforeHit, float fDelay, float fEffectiveness,
-    float fToHitRoll, float fToHit, float fChance)
+void mod_Fill(AttribMod* pmod, Character* pTarget, Character* pSrc, unsigned int uiInvokeID, Power* ppow, const AttribModTemplate* ptemplate, const Vec3 vec,
+              float fTimeBeforeHit, float fDelay, float fEffectiveness, float fToHitRoll, float fToHit, float fChance)
 {
     float f;
     float fVal;
     float fStr = 1.0f;
     int iDelta;
-    CombatMod *pcm;
+    CombatMod* pcm;
     int iEffCombatLevel;
-    const char *token;
-    assert(pmod!=NULL);
-    assert(pSrc!=NULL);
-    assert(ppow!=NULL);
-    assert(ptemplate!=NULL);
+    const char* token;
+    assert(pmod != NULL);
+    assert(pSrc != NULL);
+    assert(ppow != NULL);
+    assert(ptemplate != NULL);
 
     pmod->ptemplate = ptemplate;
     pmod->uiTint = power_IsTinted(ppow) ? power_GetTint(ppow) : colorPairNone;
     pmod->fx = power_GetFX(ppow);
-    if (ppow && ppow->psetParent && ppow->psetParent->pcharParent && 
-        ppow->psetParent->pcharParent->ppowCreatedMe) // Is the character a pet?
+    if (ppow && ppow->psetParent && ppow->psetParent->pcharParent && ppow->psetParent->pcharParent->ppowCreatedMe) // Is the character a pet?
     {
         Power* creationPower = power_GetPetCreationPower(ppow->psetParent->pcharParent);
         token = power_GetToken(creationPower);
@@ -912,7 +897,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
 
     // If we're ignoring combat mods, then tweak with the effective level
     // of the attack.
-    if(pSrc->bIgnoreCombatMods)
+    if (pSrc->bIgnoreCombatMods)
     {
         // If the source is a scary monster, then they always hit at the
         // level of the target.
@@ -925,7 +910,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
             iEffCombatLevel = 0;
         }
     }
-    else if(pTarget->bIgnoreCombatMods)
+    else if (pTarget->bIgnoreCombatMods)
     {
         // If the source is hitting a scary monster, then hit at most at the
         // level of the monster. This keeps high level players from ganking
@@ -937,7 +922,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
         // I'm not too happy using these bools for this test, but Design says this
         // is exactly what is meant when they set them. I'm think there might
         // be some sloppy thinking there, but I'm rolling with it for now.
-        if(!ptemplate->bUseDurationCombatMods && !ptemplate->bUseMagnitudeCombatMods)
+        if (!ptemplate->bUseDurationCombatMods && !ptemplate->bUseMagnitudeCombatMods)
         {
             iEffCombatLevel = pSrc->iCombatLevel;
         }
@@ -959,7 +944,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
         iEffCombatLevel = pSrc->iCombatLevel;
     }
 
-    if(ptemplate->iVarIndex<0)
+    if (ptemplate->iVarIndex < 0)
     {
         fVal = class_GetNamedTableValue(pSrc->pclass, ptemplate->pchTable, iEffCombatLevel);
         // if(pmod->ptemplate->ppowBase->eType == kPowerType_Click)
@@ -974,11 +959,8 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
 
 #ifdef SERVER
     // hard-code the duration of all mezzes in pvp zones to be no more than 4 seconds long
-    if (server_visible_state.isPvP && ptemplate->eType == kModType_Duration
-        && ptemplate->offAttrib >= offsetof(CharacterAttributes, fConfused)
-        && ptemplate->offAttrib <= offsetof(CharacterAttributes, fSleep)
-        && ptemplate->fScale > 4.0f
-        && ENTTYPE(pTarget->entParent) == ENTTYPE_PLAYER)
+    if (server_visible_state.isPvP && ptemplate->eType == kModType_Duration && ptemplate->offAttrib >= offsetof(CharacterAttributes, fConfused) &&
+        ptemplate->offAttrib <= offsetof(CharacterAttributes, fSleep) && ptemplate->fScale > 4.0f && ENTTYPE(pTarget->entParent) == ENTTYPE_PLAYER)
     {
         f *= 4.0f;
     }
@@ -993,7 +975,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
     // if(pmod->ptemplate->ppowBase->eType == kPowerType_Click)
     //     verbose_printf("mod_Fill:          Scaled by       %6.3f to %6.3f\n", ptemplate->fScale, f);
 
-    if(ptemplate->bAllowStrength && ptemplate->offAttrib<sizeof(CharacterAttributes))
+    if (ptemplate->bAllowStrength && ptemplate->offAttrib < sizeof(CharacterAttributes))
     {
         fStr = *(ATTRIB_GET_PTR(ppow->pattrStrength, ptemplate->offAttrib));
         f *= fStr;
@@ -1001,12 +983,12 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
         //     verbose_printf("mod_Fill:          Strengthened by %6.3f to %6.3f\n", fStr, f);
     }
 
-    if(vec!=NULL)
+    if (vec != NULL)
     {
         copyVec3(vec, pmod->vecLocation);
     }
 
-    switch(ptemplate->eType)
+    switch (ptemplate->eType)
     {
         case kModType_Duration:
             pmod->fMagnitude = ptemplate->fMagnitude;
@@ -1020,21 +1002,23 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
 
         case kModType_SkillMagnitude:
             pmod->fMagnitude = f;
-            f = 1+(fToHit-fToHitRoll)*4;
-            if(f>1.0f) f=1.0f;
-            if(f<0.0f) f=0.0f;
+            f = 1 + (fToHit - fToHitRoll) * 4;
+            if (f > 1.0f)
+                f = 1.0f;
+            if (f < 0.0f)
+                f = 0.0f;
             pmod->fMagnitude *= f;
 
             pmod->fDuration = ptemplate->fDuration;
             break;
 
         case kModType_Expression:
-            if(!ptemplate->bDelayEval)
+            if (!ptemplate->bDelayEval)
             {
-                if(ptemplate->evalFlags & ATTRIBMOD_EVAL_CALC_INFO)
+                if (ptemplate->evalFlags & ATTRIBMOD_EVAL_CALC_INFO)
                     combateval_StoreAttribCalcInfo(f, fVal, ptemplate->fScale, fEffectiveness, fStr);
 
-                if(ptemplate->ppchMagnitude)
+                if (ptemplate->ppchMagnitude)
                 {
                     pmod->fMagnitude = combateval_Eval(pSrc->entParent, pTarget->entParent, ppow, ptemplate->ppchMagnitude, ppow->ppowBase->pchSourceFile);
                 }
@@ -1042,8 +1026,8 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
                 {
                     pmod->fMagnitude = ptemplate->fMagnitude;
                 }
-            
-                if(ptemplate->ppchDuration)
+
+                if (ptemplate->ppchDuration)
                 {
                     pmod->fDuration = combateval_Eval(pSrc->entParent, pTarget->entParent, ppow, ptemplate->ppchDuration, ppow->ppowBase->pchSourceFile);
                 }
@@ -1055,7 +1039,7 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
             else
             {
                 // We are delaying evaluation of the expression until mod_process and storing the relevant eval information til then
-                if(!pmod->evalInfo)
+                if (!pmod->evalInfo)
                 {
                     pmod->evalInfo = attribModEvalInfo_Create();
                     pmod->evalInfo->refCount++;
@@ -1081,9 +1065,9 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
     //     verbose_printf("mod_Fill:          Mag: %6.3f  Dur: %6.3f\n", pmod->fMagnitude, pmod->fDuration);
 
     // OK, now modify these values depending on the combat mods
-    if(ptemplate->bUseDurationCombatMods || ptemplate->bUseMagnitudeCombatMods)
+    if (ptemplate->bUseDurationCombatMods || ptemplate->bUseMagnitudeCombatMods)
     {
-        if(!combatmod_Ignored(pSrc, pTarget))
+        if (!combatmod_Ignored(pSrc, pTarget))
         {
             combatmod_Get(pSrc, iEffCombatLevel + pSrc->iCombatModShift, pTarget->iCombatLevel + pTarget->iCombatModShift, &pcm, &iDelta);
         }
@@ -1092,10 +1076,10 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
             combatmod_Get(pSrc, iEffCombatLevel, iEffCombatLevel, &pcm, &iDelta);
         }
 
-        if(ptemplate->bUseMagnitudeCombatMods)
+        if (ptemplate->bUseMagnitudeCombatMods)
             pmod->fMagnitude *= combatmod_Magnitude(pcm, iDelta);
 
-        if(ptemplate->bUseDurationCombatMods)
+        if (ptemplate->bUseDurationCombatMods)
             pmod->fDuration *= combatmod_Duration(pcm, iDelta);
     }
 
@@ -1104,16 +1088,16 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
 
     // For powers which spawn things, if the magnitude is <0 then base
     // the magnitude on the character's combat level
-    if(pmod->fMagnitude<0.0f && ptemplate->pchEntityDef!=NULL)
+    if (pmod->fMagnitude < 0.0f && ptemplate->pchEntityDef != NULL)
     {
-        pmod->fMagnitude = iEffCombatLevel+1;
+        pmod->fMagnitude = iEffCombatLevel + 1;
     }
 
     // These are increased by fDelay because this calculation is done before
     // the actual "hit". It's done immediately after the InterruptTime passes.
     pmod->fDuration += pmod->ptemplate->fDelay + fDelay;
-    pmod->fTimer = pmod->ptemplate->fDelay + ((ptemplate->offAttrib == kSpecialAttrib_SetMode && !ppow->ppowBase->iTimeToConfirm) ? 0: fDelay);
-    pmod->fCheckTimer = fTimeBeforeHit>pmod->fTimer ? pmod->fTimer : fTimeBeforeHit;
+    pmod->fTimer = pmod->ptemplate->fDelay + ((ptemplate->offAttrib == kSpecialAttrib_SetMode && !ppow->ppowBase->iTimeToConfirm) ? 0 : fDelay);
+    pmod->fCheckTimer = fTimeBeforeHit > pmod->fTimer ? pmod->fTimer : fTimeBeforeHit;
     pmod->bSourceChecked = false;
     pmod->bDelayEvalChecked = !pmod->ptemplate->bDelayEval;
 }
@@ -1122,35 +1106,33 @@ void mod_Fill(AttribMod *pmod, Character *pTarget, Character *pSrc,
  * mod_IsSuppressed
  *
  */
-static bool mod_IsSuppressed(AttribMod *pmod, Character *pchar, U32 ulNow)
+static bool mod_IsSuppressed(AttribMod* pmod, Character* pchar, U32 ulNow)
 {
     bool bSuppressed = false;
 
     if (pmod->bSuppressedByStacking)
         return true; // early out so you don't need to bother running the rest of the function.
 
-    if(!pmod->bIgnoreSuppress)
+    if (!pmod->bIgnoreSuppress)
     {
         int i;
         int n = eaSize(&pmod->ptemplate->ppSuppress);
 
-        for(i=0; i<n; i++)
+        for (i = 0; i < n; i++)
         {
             int iEvent = pmod->ptemplate->ppSuppress[i]->idxEvent;
             U32 ul = pmod->ptemplate->ppSuppress[i]->ulSeconds + pchar->aulEventTimes[iEvent];
 
-            if(POWEREVENT_INVOKE(iEvent)
-                && pmod->ptemplate->ppowBase == pchar->ppowLastActivated)
+            if (POWEREVENT_INVOKE(iEvent) && pmod->ptemplate->ppowBase == pchar->ppowLastActivated)
             {
                 continue;
             }
-            if(POWEREVENT_APPLY(iEvent)
-                && pmod->uiInvokeID == pchar->uiLastApplied)
+            if (POWEREVENT_APPLY(iEvent) && pmod->uiInvokeID == pchar->uiLastApplied)
             {
                 continue;
             }
 
-            if(ulNow < ul)
+            if (ulNow < ul)
             {
                 bSuppressed = true;
                 break;
@@ -1166,28 +1148,25 @@ static bool mod_IsSuppressed(AttribMod *pmod, Character *pchar, U32 ulNow)
     return bSuppressed;
 }
 
-
 /**********************************************************************func*
  * character_DropRandomToggles
  *
  */
-static void character_DropRandomToggles(Character *pchar, int iNumToDrop)
+static void character_DropRandomToggles(Character* pchar, int iNumToDrop)
 {
-    PowerListItem *ppowListItem;
+    PowerListItem* ppowListItem;
     PowerListIter iter;
-    Power **pppowsFirst;
-    Power **pppowsMiddle;
-    Power **pppowsLast;
+    Power** pppowsFirst;
+    Power** pppowsMiddle;
+    Power** pppowsLast;
 
     eaCreate(&pppowsFirst);
     eaCreate(&pppowsMiddle);
     eaCreate(&pppowsLast);
 
-    for(ppowListItem = powlist_GetFirst(&pchar->listTogglePowers, &iter);
-        ppowListItem != NULL;
-        ppowListItem = powlist_GetNext(&iter))
+    for (ppowListItem = powlist_GetFirst(&pchar->listTogglePowers, &iter); ppowListItem != NULL; ppowListItem = powlist_GetNext(&iter))
     {
-        switch(ppowListItem->ppow->ppowBase->eToggleDroppable)
+        switch (ppowListItem->ppow->ppowBase->eToggleDroppable)
         {
             case kToggleDroppable_Always:
                 power_ChangeActiveStatus(ppowListItem->ppow, false);
@@ -1213,9 +1192,9 @@ static void character_DropRandomToggles(Character *pchar, int iNumToDrop)
         }
     }
 
-    while(eaSize(&pppowsFirst) && iNumToDrop>0)
+    while (eaSize(&pppowsFirst) && iNumToDrop > 0)
     {
-        int i = rule30Rand()%eaSize(&pppowsFirst);
+        int i = rule30Rand() % eaSize(&pppowsFirst);
 
         power_ChangeActiveStatus(pppowsFirst[i], false);
         sendInfoBox(pchar->entParent, INFO_DAMAGE, "ToggleKnockedOff", pppowsFirst[i]->ppowBase->pchDisplayName);
@@ -1225,9 +1204,9 @@ static void character_DropRandomToggles(Character *pchar, int iNumToDrop)
     }
     eaDestroy(&pppowsFirst);
 
-    while(eaSize(&pppowsMiddle) && iNumToDrop>0)
+    while (eaSize(&pppowsMiddle) && iNumToDrop > 0)
     {
-        int i = rule30Rand()%eaSize(&pppowsMiddle);
+        int i = rule30Rand() % eaSize(&pppowsMiddle);
 
         power_ChangeActiveStatus(pppowsMiddle[i], false);
         sendInfoBox(pchar->entParent, INFO_DAMAGE, "ToggleKnockedOff", pppowsMiddle[i]->ppowBase->pchDisplayName);
@@ -1237,9 +1216,9 @@ static void character_DropRandomToggles(Character *pchar, int iNumToDrop)
     }
     eaDestroy(&pppowsMiddle);
 
-    while(eaSize(&pppowsLast) && iNumToDrop>0)
+    while (eaSize(&pppowsLast) && iNumToDrop > 0)
     {
-        int i = rule30Rand()%eaSize(&pppowsLast);
+        int i = rule30Rand() % eaSize(&pppowsLast);
 
         power_ChangeActiveStatus(pppowsLast[i], false);
         sendInfoBox(pchar->entParent, INFO_DAMAGE, "ToggleKnockedOff", pppowsLast[i]->ppowBase->pchDisplayName);
@@ -1248,33 +1227,31 @@ static void character_DropRandomToggles(Character *pchar, int iNumToDrop)
         iNumToDrop--;
     }
     eaDestroy(&pppowsLast);
-
 }
 
 /**********************************************************************func*
  * HandleSpecialAttrib
  *
  */
-void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDisallowDefeat)
+void HandleSpecialAttrib(AttribMod* pmod, Character* pchar, float f, bool* pbDisallowDefeat)
 {
     int priority = 5;
 
-    switch(pmod->ptemplate->offAttrib)
+    switch (pmod->ptemplate->offAttrib)
     {
         case kSpecialAttrib_Null:
             // Do nothing.
             break;
 
         case kSpecialAttrib_Translucency:
-            if(pchar->entParent->xlucency < 0
-                || f < pchar->entParent->xlucency)
+            if (pchar->entParent->xlucency < 0 || f < pchar->entParent->xlucency)
             {
                 pchar->entParent->xlucency = f;
             }
             break;
 
         case kSpecialAttrib_EntCreate:
-            if(pmod->ptemplate->pchEntityDef != NULL)
+            if (pmod->ptemplate->pchEntityDef != NULL)
             {
                 // Spawn a pet
                 character_CreatePet(pchar, pmod);
@@ -1289,7 +1266,7 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
             eaPushConst(&pchar->ppLastDamageFX, pmod->fx);
             pchar->attrCur.fHitPoints = -99999;
             pchar->erLastDamage = 0;
-            if(pbDisallowDefeat)
+            if (pbDisallowDefeat)
             {
                 *pbDisallowDefeat = false;
             }
@@ -1306,7 +1283,7 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
         case kSpecialAttrib_SetCostume:
             if (pmod->ptemplate->pchParams != NULL)
                 priority = atoi(pmod->ptemplate->pchParams);
-            character_SetCostume(pchar, pmod->ptemplate->pchCostumeName, priority); 
+            character_SetCostume(pchar, pmod->ptemplate->pchCostumeName, priority);
             break;
 
         case kSpecialAttrib_Glide:
@@ -1324,77 +1301,76 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
             // Do nothing.
             break;
 
-        case kSpecialAttrib_Reward:
+        case kSpecialAttrib_Reward: {
+            Entity* pentSrc = erGetEnt(pmod->erSource);
+            Entity* pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
+            int iVillainGroup = VG_NONE;
+            int iLevel = (f < 0.0) ? (pchar->iLevel + 1) : (int)f;
+
+            if (pentSrcOwner && pentSrcOwner->villainDef)
             {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
-                Entity *pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
-                int iVillainGroup = VG_NONE;
-                int iLevel = (f < 0.0) ? (pchar->iLevel + 1) : (int)f;
-
-                if(pentSrcOwner && pentSrcOwner->villainDef)
-                {
-                    iVillainGroup = pentSrcOwner->villainDef->group;
-                }
-
-                rewardFindDefAndApplyToEnt(pchar->entParent, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), iVillainGroup, iLevel, true, REWARDSOURCE_ATTRIBMOD, NULL);
+                iVillainGroup = pentSrcOwner->villainDef->group;
             }
-            break;
 
-        case kSpecialAttrib_RewardSource:
+            rewardFindDefAndApplyToEnt(pchar->entParent, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), iVillainGroup, iLevel, true,
+                                       REWARDSOURCE_ATTRIBMOD, NULL);
+        }
+        break;
+
+        case kSpecialAttrib_RewardSource: {
+            Entity* pentSrc = erGetEnt(pmod->erSource);
+            Entity* pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
+            int iVillainGroup = VG_NONE;
+            int iLevel = 0;
+
+            if (pentSrcOwner)
             {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
-                Entity *pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
-                int iVillainGroup = VG_NONE;
-                int iLevel = 0;
-
-                if (pentSrcOwner)
-                {
-                    iLevel = (f < 0.0) ? pentSrcOwner->pchar->iLevel + 1 : (int) f;
-                    rewardFindDefAndApplyToEnt(pentSrcOwner, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), VG_NONE, iLevel, false, REWARDSOURCE_ATTRIBMOD, NULL);
-                }
+                iLevel = (f < 0.0) ? pentSrcOwner->pchar->iLevel + 1 : (int)f;
+                rewardFindDefAndApplyToEnt(pentSrcOwner, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), VG_NONE, iLevel, false,
+                                           REWARDSOURCE_ATTRIBMOD, NULL);
             }
-            break;
-        case kSpecialAttrib_RewardSourceTeam:
-            {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
-                Entity *pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
-                Entity *pTeamMember = NULL;
-                int iVillainGroup = VG_NONE;
-                int iLevel = 0;
-                int i, teamSize;
+        }
+        break;
+        case kSpecialAttrib_RewardSourceTeam: {
+            Entity* pentSrc = erGetEnt(pmod->erSource);
+            Entity* pentSrcOwner = pentSrc ? (erGetEnt(pentSrc->erOwner) ? erGetEnt(pentSrc->erOwner) : pentSrc) : NULL;
+            Entity* pTeamMember = NULL;
+            int iVillainGroup = VG_NONE;
+            int iLevel = 0;
+            int i, teamSize;
 
-                if (pentSrcOwner)
+            if (pentSrcOwner)
+            {
+                iLevel = (f < 0.0) ? pentSrcOwner->pchar->iLevel + 1 : (int)f;
+                rewardFindDefAndApplyToEnt(pentSrcOwner, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), VG_NONE, iLevel, false,
+                                           REWARDSOURCE_ATTRIBMOD, NULL);
+                if (pentSrcOwner->teamup && pentSrcOwner->teamup->members.count > 1)
                 {
-                    iLevel = (f < 0.0) ? pentSrcOwner->pchar->iLevel + 1 : (int) f;
-                    rewardFindDefAndApplyToEnt(pentSrcOwner, (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), VG_NONE, iLevel, false, REWARDSOURCE_ATTRIBMOD, NULL);
-                    if (pentSrcOwner->teamup && pentSrcOwner->teamup->members.count > 1)
+                    teamSize = pentSrcOwner->teamup->members.count;
+                    for (i = 0; i < teamSize; i++)
                     {
-                        teamSize = pentSrcOwner->teamup->members.count;
-                        for (i = 0; i < teamSize; i++)
+                        if (pentSrcOwner->teamup->members.ids[i] != pentSrcOwner->db_id)
                         {
-                            if (pentSrcOwner->teamup->members.ids[i] != pentSrcOwner->db_id)
-                            {
-                                rewardFindDefAndApplyToDbID(pentSrcOwner->teamup->members.ids[i], (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward), VG_NONE, 
-                                                            iLevel, 0, REWARDSOURCE_ATTRIBMOD);
-                            }
+                            rewardFindDefAndApplyToDbID(pentSrcOwner->teamup->members.ids[i], (const char**)eaFromPointerUnsafe(pmod->ptemplate->pchReward),
+                                                        VG_NONE, iLevel, 0, REWARDSOURCE_ATTRIBMOD);
                         }
                     }
                 }
             }
-            break;
-        case kSpecialAttrib_ClearFog:
-            {
-                mapperClearFogForCurrentMap(pchar->entParent);
-            }
-            break;
+        }
+        break;
+        case kSpecialAttrib_ClearFog: {
+            mapperClearFogForCurrentMap(pchar->entParent);
+        }
+        break;
         case kSpecialAttrib_XPDebt:
-            if(pmod->ptemplate->offAspect==offsetof(CharacterAttribSet, pattrAbsolute))
+            if (pmod->ptemplate->offAspect == offsetof(CharacterAttribSet, pattrAbsolute))
             {
                 pchar->iExperienceDebt += (int)f;
             }
-            else if(pmod->ptemplate->offAspect==offsetof(CharacterAttribSet, pattrMod))
+            else if (pmod->ptemplate->offAspect == offsetof(CharacterAttribSet, pattrMod))
             {
-                pchar->iExperienceDebt = (int)((float)pchar->iExperienceDebt*f);
+                pchar->iExperienceDebt = (int)((float)pchar->iExperienceDebt * f);
             }
             character_CapExperienceDebt(pchar);
             break;
@@ -1403,234 +1379,206 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
             character_DropRandomToggles(pchar, (int)f);
             break;
 
-        case kSpecialAttrib_GrantPower:
-            {
-                const BasePower* ppowBase = NULL;
-                if(pmod->ptemplate->pchReward)
-                    ppowBase = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward);
-                else
-                    ErrorFilenamef(SAFE_MEMBER3(pmod,ptemplate,ppowBase,pchSourceFile),"Attrib is missing reward field");
-
-                if(ppowBase)
-                {
-                    int i;
-                    int numAdd = 1;
-
-                    if (pmod->ptemplate->pchParams != NULL)
-                        numAdd = atoi(pmod->ptemplate->pchParams);
-
-                    for(i = 0; i < numAdd; i++)
-                    {
-                        Power *ppow = character_AddRewardPower(pchar, ppowBase);
-                        if(ppow)
-                        {
-                            character_AccrueBoosts(pchar, ppow, 0.0f);
-                        }
-                    }
-                }
-
-                if( pmod->ptemplate->ppowBase )
-                {
-                    int i;
-                    for( i = eaSize(&pmod->ptemplate->ppowBase->ppchAIGroups)-1; i >=0; i-- )
-                    {
-                        Entity *pentSrc = erGetEnt(pmod->erSource);
-                        if(pentSrc)
-                        {
-                            if( stricmp( pmod->ptemplate->ppowBase->ppchAIGroups[i], "kMastermindUpgrade1" ) == 0)
-                                character_PetsUpgraded(pentSrc->pchar, PETFLAG_UPGRADE1);
-                            if( stricmp( pmod->ptemplate->ppowBase->ppchAIGroups[i], "kMastermindUpgrade2" ) == 0)
-                                character_PetsUpgraded(pentSrc->pchar, PETFLAG_UPGRADE2 );
-                        }
-                    }
-                }
-            }
-            break;
-
-        case kSpecialAttrib_GrantBoostedPower:
-            {
-                const BasePower *ppowBase;
+        case kSpecialAttrib_GrantPower: {
+            const BasePower* ppowBase = NULL;
+            if (pmod->ptemplate->pchReward)
                 ppowBase = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward);
-                if(ppowBase)
-                {
-                    int i;
-                    int numAdd = 1;
+            else
+                ErrorFilenamef(SAFE_MEMBER3(pmod, ptemplate, ppowBase, pchSourceFile), "Attrib is missing reward field");
 
-                    if (pmod->ptemplate->pchParams != NULL)
-                        numAdd = atoi(pmod->ptemplate->pchParams);
-
-                    for(i = 0; i < numAdd; i++)
-                    {
-                        Power *ppow = character_AddRewardPower(pchar, ppowBase);
-                        if(ppow)
-                        {
-                            const BasePower *ppowBase = pmod->ptemplate->ppowBase;
-                            Power *ppowSrc = character_OwnsPower(pchar, ppowBase);
-
-                            if(ppowSrc)
-                            {
-                                character_SlotPowerFromSource(ppow, ppowSrc, 0);
-                            }
-
-                            character_AccrueBoosts(pchar, ppow, 0.0f);
-                        }
-                    }
-                }
-            }
-            break;
-
-        case kSpecialAttrib_RevokePower:
+            if (ppowBase)
             {
-                const BasePower *ppowBase;
-                ppowBase = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward);
-                if(ppowBase)
+                int i;
+                int numAdd = 1;
+
+                if (pmod->ptemplate->pchParams != NULL)
+                    numAdd = atoi(pmod->ptemplate->pchParams);
+
+                for (i = 0; i < numAdd; i++)
                 {
-                    int i;
-                    int numRemove = 1;
-
-                    if (pmod->ptemplate->pchParams != NULL)
+                    Power* ppow = character_AddRewardPower(pchar, ppowBase);
+                    if (ppow)
                     {
-                        if(stricmp(pmod->ptemplate->pchParams, "all") == 0)
-                            numRemove = character_OwnsPowerNum(pchar, ppowBase);
-                        else
-                            numRemove = atoi(pmod->ptemplate->pchParams);
+                        character_AccrueBoosts(pchar, ppow, 0.0f);
                     }
-
-                    for(i = 0; i < numRemove; i++)
-                        character_RemoveBasePower(pchar, ppowBase);
                 }
             }
-            break;
+
+            if (pmod->ptemplate->ppowBase)
+            {
+                int i;
+                for (i = eaSize(&pmod->ptemplate->ppowBase->ppchAIGroups) - 1; i >= 0; i--)
+                {
+                    Entity* pentSrc = erGetEnt(pmod->erSource);
+                    if (pentSrc)
+                    {
+                        if (stricmp(pmod->ptemplate->ppowBase->ppchAIGroups[i], "kMastermindUpgrade1") == 0)
+                            character_PetsUpgraded(pentSrc->pchar, PETFLAG_UPGRADE1);
+                        if (stricmp(pmod->ptemplate->ppowBase->ppchAIGroups[i], "kMastermindUpgrade2") == 0)
+                            character_PetsUpgraded(pentSrc->pchar, PETFLAG_UPGRADE2);
+                    }
+                }
+            }
+        }
+        break;
+
+        case kSpecialAttrib_GrantBoostedPower: {
+            const BasePower* ppowBase;
+            ppowBase = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward);
+            if (ppowBase)
+            {
+                int i;
+                int numAdd = 1;
+
+                if (pmod->ptemplate->pchParams != NULL)
+                    numAdd = atoi(pmod->ptemplate->pchParams);
+
+                for (i = 0; i < numAdd; i++)
+                {
+                    Power* ppow = character_AddRewardPower(pchar, ppowBase);
+                    if (ppow)
+                    {
+                        const BasePower* ppowBase = pmod->ptemplate->ppowBase;
+                        Power* ppowSrc = character_OwnsPower(pchar, ppowBase);
+
+                        if (ppowSrc)
+                        {
+                            character_SlotPowerFromSource(ppow, ppowSrc, 0);
+                        }
+
+                        character_AccrueBoosts(pchar, ppow, 0.0f);
+                    }
+                }
+            }
+        }
+        break;
+
+        case kSpecialAttrib_RevokePower: {
+            const BasePower* ppowBase;
+            ppowBase = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward);
+            if (ppowBase)
+            {
+                int i;
+                int numRemove = 1;
+
+                if (pmod->ptemplate->pchParams != NULL)
+                {
+                    if (stricmp(pmod->ptemplate->pchParams, "all") == 0)
+                        numRemove = character_OwnsPowerNum(pchar, ppowBase);
+                    else
+                        numRemove = atoi(pmod->ptemplate->pchParams);
+                }
+
+                for (i = 0; i < numRemove; i++)
+                    character_RemoveBasePower(pchar, ppowBase);
+            }
+        }
+        break;
 
         case kSpecialAttrib_UnsetMode:
             character_UnsetPowerMode(pchar, pmod->ptemplate->fMagnitude);
             break;
 
-        case kSpecialAttrib_GlobalChanceMod:
+        case kSpecialAttrib_GlobalChanceMod: {
+            eaPushUnique(&pchar->ppmodChanceMods, pmod);
+        }
+        break;
+        case kSpecialAttrib_ViewAttrib: {
+            Entity* pentSrc = erGetEnt(pmod->erSource);
+            if (pentSrc && ENTTYPE(pentSrc) == ENTTYPE_PLAYER)
             {
-                eaPushUnique(&pchar->ppmodChanceMods, pmod);
-            }
-            break;
-        case kSpecialAttrib_ViewAttrib:
-            {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
-                if( pentSrc && ENTTYPE(pentSrc) == ENTTYPE_PLAYER )
+                Entity* eTarget = pchar->entParent;
+                if (ENTTYPE(eTarget) == ENTTYPE_CRITTER && eTarget->pchar->iLevel <= pmod->ptemplate->fScale)
                 {
-                    Entity *eTarget = pchar->entParent;
-                    if( ENTTYPE(eTarget) == ENTTYPE_CRITTER &&  eTarget->pchar->iLevel <= pmod->ptemplate->fScale )
+                    pentSrc->attributesTarget = erGetRef(eTarget);
+                    if (pmod->ptemplate->bAllowCombatMods)
+                        pentSrc->newAttribTarget = 1;
+                }
+            }
+        }
+        break;
+        case kSpecialAttrib_CombatPhase: {
+            if (!combatPhaseNames)
+            {
+                eaCreateConst(&combatPhaseNames);
+                eaInsertConst(&combatPhaseNames, "NoPrime", 0);
+                eaInsertConst(&combatPhaseNames, "Friendly", 1);
+            }
+            if (pmod->ptemplate && pmod->ptemplate->pchParams)
+            {
+                if (pmod->fMagnitude > pchar->fMagnitudeOfBestCombatPhase)
+                {
+                    pchar->fMagnitudeOfBestCombatPhase = pmod->fMagnitude;
+                    pchar->bitfieldCombatPhases = 1; // reset to default, all prior CombatPhases have no effect
+                }
+
+                // If the mod is a "Prime" phase, don't bother changing the bitfield.
+                // These mods are allowed to reset the phase bitfield due to higher mag (above).
+                if (pmod->fMagnitude == pchar->fMagnitudeOfBestCombatPhase && stricmp(pmod->ptemplate->pchParams, "Prime"))
+                {
+                    int phaseNameIndex = 0;
+                    while (phaseNameIndex < eaSize(&combatPhaseNames))
                     {
-                        pentSrc->attributesTarget = erGetRef(eTarget);
-                        if( pmod->ptemplate->bAllowCombatMods )
-                            pentSrc->newAttribTarget = 1;
+                        if (!stricmp(pmod->ptemplate->pchParams, combatPhaseNames[phaseNameIndex]))
+                        {
+                            break;
+                        }
+                        phaseNameIndex++;
                     }
-                }
-            }
-            break;
-        case kSpecialAttrib_CombatPhase:
-            {
-                if (!combatPhaseNames)
-                {
-                    eaCreateConst(&combatPhaseNames);
-                    eaInsertConst(&combatPhaseNames, "NoPrime", 0);
-                    eaInsertConst(&combatPhaseNames, "Friendly", 1);
-                }
-                if (pmod->ptemplate && pmod->ptemplate->pchParams)
-                {
-                    if (pmod->fMagnitude > pchar->fMagnitudeOfBestCombatPhase)
+                    if (phaseNameIndex == eaSize(&combatPhaseNames))
                     {
-                        pchar->fMagnitudeOfBestCombatPhase = pmod->fMagnitude;
-                        pchar->bitfieldCombatPhases = 1; // reset to default, all prior CombatPhases have no effect
+                        eaInsertConst(&combatPhaseNames, pmod->ptemplate->pchParams, phaseNameIndex);
                     }
 
-                    // If the mod is a "Prime" phase, don't bother changing the bitfield.
-                    // These mods are allowed to reset the phase bitfield due to higher mag (above).
-                    if (pmod->fMagnitude == pchar->fMagnitudeOfBestCombatPhase
-                        && stricmp(pmod->ptemplate->pchParams, "Prime"))
+                    assert(phaseNameIndex >= 0 && phaseNameIndex < 32);
+
+                    if (phaseNameIndex == 0)
                     {
-                        int phaseNameIndex = 0;
-                        while (phaseNameIndex < eaSize(&combatPhaseNames))
+                        // Remove from prime phase.
+                        pchar->bitfieldCombatPhases &= 0xfffffffe;
+                    }
+                    else
+                    {
+                        // Add to this phase.
+                        pchar->bitfieldCombatPhases |= 1 << phaseNameIndex;
+                    }
+                }
+            }
+        }
+        break;
+        case kSpecialAttrib_CombatModShift: {
+            pchar->iCombatModShift += pmod->fMagnitude;
+            if (!pmod->ptemplate->pchParams || stricmp(pmod->ptemplate->pchParams, "DoNotDisplayShift"))
+            {
+                pchar->iCombatModShiftToSendToClient += pmod->fMagnitude;
+            }
+        }
+        break;
+        case kSpecialAttrib_RechargePower: {
+            Entity* entity = erGetEnt(pmod->erSource);
+            const BasePower* basePower;
+            const BasePowerSet* baseSet;
+            const PowerCategory* category;
+
+            if (entity)
+            {
+                if (!strchr(pmod->ptemplate->pchReward, '.'))
+                {
+                    if (category = powerdict_GetCategoryByName(&g_PowerDictionary, pmod->ptemplate->pchReward))
+                    {
+                        int setIndex, powerIndex;
+                        int numPowSets = eaSize(&category->ppPowerSets);
+
+                        for (setIndex = 0; setIndex < numPowSets; setIndex++)
                         {
-                            if (!stricmp(pmod->ptemplate->pchParams, combatPhaseNames[phaseNameIndex]))
+                            int numPowers;
+
+                            baseSet = category->ppPowerSets[setIndex];
+                            numPowers = eaSize(&baseSet->ppPowers);
+
+                            for (powerIndex = 0; powerIndex < numPowers; powerIndex++)
                             {
-                                break;
-                            }
-                            phaseNameIndex++;
-                        }
-                        if (phaseNameIndex == eaSize(&combatPhaseNames))
-                        {
-                            eaInsertConst(&combatPhaseNames, pmod->ptemplate->pchParams, phaseNameIndex);
-                        }
-
-                        assert(phaseNameIndex >= 0 && phaseNameIndex < 32);
-
-                        if (phaseNameIndex == 0)
-                        {
-                            // Remove from prime phase.
-                            pchar->bitfieldCombatPhases &= 0xfffffffe;
-                        }
-                        else
-                        {
-                            // Add to this phase.
-                            pchar->bitfieldCombatPhases |= 1 << phaseNameIndex;
-                        }
-                    }
-                }
-            }
-            break;
-        case kSpecialAttrib_CombatModShift:
-            {
-                pchar->iCombatModShift += pmod->fMagnitude;
-                if (!pmod->ptemplate->pchParams || stricmp(pmod->ptemplate->pchParams, "DoNotDisplayShift"))
-                {
-                    pchar->iCombatModShiftToSendToClient += pmod->fMagnitude;
-                }
-            }
-            break;
-        case kSpecialAttrib_RechargePower:
-            {
-                Entity *entity = erGetEnt(pmod->erSource);
-                const BasePower *basePower;
-                const BasePowerSet *baseSet;
-                const PowerCategory *category;
-
-                if (entity)
-                {
-                    if (!strchr(pmod->ptemplate->pchReward, '.'))
-                    {
-                        if (category = powerdict_GetCategoryByName(&g_PowerDictionary, pmod->ptemplate->pchReward))
-                        {
-                            int setIndex, powerIndex;
-                            int numPowSets = eaSize(&category->ppPowerSets);
-
-                            for (setIndex = 0; setIndex < numPowSets; setIndex++)
-                            {
-                                int numPowers;
-                                      
-                                baseSet = category->ppPowerSets[setIndex];
-                                numPowers = eaSize(&baseSet->ppPowers);
-                                
-                                for (powerIndex = 0; powerIndex < numPowers; powerIndex++)
-                                {
-                                    Power *power = character_OwnsPower(entity->pchar, baseSet->ppPowers[powerIndex]);
-
-                                    if (power)
-                                    {
-                                        power_ChangeRechargeTimer(power, 0);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    else if (strchr(pmod->ptemplate->pchReward, '.') == strrchr(pmod->ptemplate->pchReward, '.'))
-                    {
-                        if (baseSet = powerdict_GetBasePowerSetByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward))
-                        {
-                            int powerIndex;
-                            int count = eaSize(&baseSet->ppPowers);
-
-                            for (powerIndex = 0; powerIndex < count; powerIndex++)
-                            {
-                                Power *power = character_OwnsPower(entity->pchar, baseSet->ppPowers[powerIndex]);
+                                Power* power = character_OwnsPower(entity->pchar, baseSet->ppPowers[powerIndex]);
 
                                 if (power)
                                 {
@@ -1639,11 +1587,17 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
                             }
                         }
                     }
-                    else
+                }
+                else if (strchr(pmod->ptemplate->pchReward, '.') == strrchr(pmod->ptemplate->pchReward, '.'))
+                {
+                    if (baseSet = powerdict_GetBasePowerSetByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward))
                     {
-                        if (basePower = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward))
+                        int powerIndex;
+                        int count = eaSize(&baseSet->ppPowers);
+
+                        for (powerIndex = 0; powerIndex < count; powerIndex++)
                         {
-                            Power *power = character_OwnsPower(entity->pchar, basePower);
+                            Power* power = character_OwnsPower(entity->pchar, baseSet->ppPowers[powerIndex]);
 
                             if (power)
                             {
@@ -1652,207 +1606,208 @@ void HandleSpecialAttrib(AttribMod *pmod, Character *pchar, float f, bool *pbDis
                         }
                     }
                 }
-            }
-            break;
-        case kSpecialAttrib_VisionPhase:
-            {
-                if (pmod->ptemplate && pmod->ptemplate->pchParams)
+                else
                 {
-                    if (pchar->entParent->seq && pchar->entParent->seq->type
-                        && pchar->entParent->seq->type->collisionType == SEQ_ENTCOLL_LIBRARYPIECE)
+                    if (basePower = powerdict_GetBasePowerByFullName(&g_PowerDictionary, pmod->ptemplate->pchReward))
                     {
-                        Errorf("Warning:  Ents that use Geo collision cannot have VisionPhase attrib mods.");
-                    }
-                    else
-                    {
-                        if (pmod->fMagnitude > pchar->entParent->fMagnitudeOfBestVisionPhase)
-                        {
-                            pchar->entParent->fMagnitudeOfBestVisionPhase = pmod->fMagnitude;
-                            pchar->entParent->bitfieldVisionPhases = 1; // reset to default, all prior VisionPhases have no effect
-                        }
+                        Power* power = character_OwnsPower(entity->pchar, basePower);
 
-                        if (pmod->fMagnitude == pchar->entParent->fMagnitudeOfBestVisionPhase)
+                        if (power)
                         {
-                            int phaseNameIndex = 0;
-                            while (phaseNameIndex < eaSize(&g_visionPhaseNames.visionPhases))
-                            {
-                                if (!stricmp(pmod->ptemplate->pchParams, g_visionPhaseNames.visionPhases[phaseNameIndex]))
-                                {
-                                    break;
-                                }
-                                phaseNameIndex++;
-                            }
-
-                            if (phaseNameIndex == eaSize(&g_visionPhaseNames.visionPhases))
-                            {
-                                ErrorFilenamef(pmod->ptemplate->ppowBase->pchSourceFile, "Vision Phase '%s' not found in visionPhases.def!", pmod->ptemplate->pchParams);
-                            }
-                            else if (phaseNameIndex >= 0 && phaseNameIndex < 32)
-                            {
-                                if (phaseNameIndex == 0)
-                                {
-                                    // NoPrime
-                                    pchar->entParent->bitfieldVisionPhases &= 0xfffffffe;
-                                }
-                                else
-                                {
-                                    pchar->entParent->bitfieldVisionPhases |= 1 << phaseNameIndex;
-                                }
-                            }
+                            power_ChangeRechargeTimer(power, 0);
                         }
                     }
                 }
             }
-            break;
-        case kSpecialAttrib_ExclusiveVisionPhase:
+        }
+        break;
+        case kSpecialAttrib_VisionPhase: {
+            if (pmod->ptemplate && pmod->ptemplate->pchParams)
             {
-                if (pmod->ptemplate && pmod->ptemplate->pchParams)
+                if (pchar->entParent->seq && pchar->entParent->seq->type && pchar->entParent->seq->type->collisionType == SEQ_ENTCOLL_LIBRARYPIECE)
                 {
-                    if (pchar->entParent->seq && pchar->entParent->seq->type
-                        && pchar->entParent->seq->type->collisionType == SEQ_ENTCOLL_LIBRARYPIECE)
+                    Errorf("Warning:  Ents that use Geo collision cannot have VisionPhase attrib mods.");
+                }
+                else
+                {
+                    if (pmod->fMagnitude > pchar->entParent->fMagnitudeOfBestVisionPhase)
                     {
-                        Errorf("Warning:  Ents that use Geo collision cannot have ExclusiveVisionPhase attrib mods.");
+                        pchar->entParent->fMagnitudeOfBestVisionPhase = pmod->fMagnitude;
+                        pchar->entParent->bitfieldVisionPhases = 1; // reset to default, all prior VisionPhases have no effect
                     }
-                    else
+
+                    if (pmod->fMagnitude == pchar->entParent->fMagnitudeOfBestVisionPhase)
                     {
                         int phaseNameIndex = 0;
-                        while (phaseNameIndex < eaSize(&g_exclusiveVisionPhaseNames.visionPhases))
+                        while (phaseNameIndex < eaSize(&g_visionPhaseNames.visionPhases))
                         {
-                            if (!stricmp(pmod->ptemplate->pchParams, g_exclusiveVisionPhaseNames.visionPhases[phaseNameIndex]))
+                            if (!stricmp(pmod->ptemplate->pchParams, g_visionPhaseNames.visionPhases[phaseNameIndex]))
                             {
                                 break;
                             }
                             phaseNameIndex++;
                         }
 
-                        if (phaseNameIndex == eaSize(&g_exclusiveVisionPhaseNames.visionPhases))
+                        if (phaseNameIndex == eaSize(&g_visionPhaseNames.visionPhases))
                         {
-                            ErrorFilenamef(pmod->ptemplate->ppowBase->pchSourceFile, "Exclusive Vision Phase '%s' not found in visionPhasesExclusive.def!", pmod->ptemplate->pchParams);
+                            ErrorFilenamef(pmod->ptemplate->ppowBase->pchSourceFile, "Vision Phase '%s' not found in visionPhases.def!",
+                                           pmod->ptemplate->pchParams);
                         }
-                        else
+                        else if (phaseNameIndex >= 0 && phaseNameIndex < 32)
                         {
-                            pchar->entParent->exclusiveVisionPhase = phaseNameIndex;
+                            if (phaseNameIndex == 0)
+                            {
+                                // NoPrime
+                                pchar->entParent->bitfieldVisionPhases &= 0xfffffffe;
+                            }
+                            else
+                            {
+                                pchar->entParent->bitfieldVisionPhases |= 1 << phaseNameIndex;
+                            }
                         }
                     }
                 }
             }
-            break;
-        case kSpecialAttrib_DesignerStatus:
+        }
+        break;
+        case kSpecialAttrib_ExclusiveVisionPhase: {
+            if (pmod->ptemplate && pmod->ptemplate->pchParams)
             {
-                eaPush(&pchar->designerStatuses, strdup(pmod->ptemplate->pchDisplayVictimHit));
-            }
-            break;
-        case kSpecialAttrib_SetSZEValue:
-            {
-                int scriptID = chareval_Eval(pchar, pmod->ptemplate->ppchPrimaryStringList, pmod->parentPowerInstance ? pmod->parentPowerInstance->ppowBase->pchSourceFile : "")-1;
-                if (scriptID >= 0)
+                if (pchar->entParent->seq && pchar->entParent->seq->type && pchar->entParent->seq->type->collisionType == SEQ_ENTCOLL_LIBRARYPIECE)
                 {
-                    ScriptEnvironment *preserved = g_currentScript;
-                    g_currentScript = ScriptFromRunId(scriptID);
-                    ScriptedZoneEventEval_StoreAttribInfo(pmod->fMagnitude, pmod->fDuration);
-                    ScriptedZoneEvent_SetScriptValue(pmod->ptemplate->ppchSecondaryStringList);
-                    g_currentScript = preserved;
+                    Errorf("Warning:  Ents that use Geo collision cannot have ExclusiveVisionPhase attrib mods.");
                 }
                 else
                 {
-                    Errorf("No matching script running");
-                }
-            }
-            break;
-        case kSpecialAttrib_LuaExec:
-            {
-                int scriptID = chareval_Eval(pchar, pmod->ptemplate->ppchPrimaryStringList, pmod->ptemplate->ppowBase->pchSourceFile) - 1;
-                if (scriptID >= 0)
-                {
-                    ScriptEnvironment *preserved = g_currentScript;
-                    g_currentScript = ScriptFromRunId(scriptID);
-                    if(g_currentScript && g_currentScript->lua_interpreter)
-                        lua_exec(pmod->ptemplate->ppchSecondaryStringList[0], pmod->fMagnitude, pmod->fDuration);
-                    g_currentScript = preserved;
-                }
-                else
-                {
-                    Errorf("No matching script running");
-                }
-            }
-            break;
-        case kSpecialAttrib_AddBehavior:
-            {
-                Entity *e = pchar->entParent;
-                if (e && (ENTTYPE(e) != ENTTYPE_PLAYER))
-                {
-                    if (eaSize(&pmod->ptemplate->ppchPrimaryStringList) != 1)
+                    int phaseNameIndex = 0;
+                    while (phaseNameIndex < eaSize(&g_exclusiveVisionPhaseNames.visionPhases))
                     {
-                        Errorf("Power %s has the incorrect number of Behaviors to add. It should have 1.", pmod->ptemplate->ppowBase->pchFullName);
+                        if (!stricmp(pmod->ptemplate->pchParams, g_exclusiveVisionPhaseNames.visionPhases[phaseNameIndex]))
+                        {
+                            break;
+                        }
+                        phaseNameIndex++;
+                    }
+
+                    if (phaseNameIndex == eaSize(&g_exclusiveVisionPhaseNames.visionPhases))
+                    {
+                        ErrorFilenamef(pmod->ptemplate->ppowBase->pchSourceFile, "Exclusive Vision Phase '%s' not found in visionPhasesExclusive.def!",
+                                       pmod->ptemplate->pchParams);
                     }
                     else
                     {
-                        aiBehaviorAddString(e, ENTAI(e)->base, pmod->ptemplate->ppchPrimaryStringList[0]);
+                        pchar->entParent->exclusiveVisionPhase = phaseNameIndex;
                     }
                 }
             }
-            break;
-        case kSpecialAttrib_TokenAdd:
+        }
+        break;
+        case kSpecialAttrib_DesignerStatus: {
+            eaPush(&pchar->designerStatuses, strdup(pmod->ptemplate->pchDisplayVictimHit));
+        }
+        break;
+        case kSpecialAttrib_SetSZEValue: {
+            int scriptID = chareval_Eval(pchar, pmod->ptemplate->ppchPrimaryStringList,
+                                         pmod->parentPowerInstance ? pmod->parentPowerInstance->ppowBase->pchSourceFile : "") -
+                           1;
+            if (scriptID >= 0)
             {
-                Entity *e = pchar->entParent;
-                if (e)
+                ScriptEnvironment* preserved = g_currentScript;
+                g_currentScript = ScriptFromRunId(scriptID);
+                ScriptedZoneEventEval_StoreAttribInfo(pmod->fMagnitude, pmod->fDuration);
+                ScriptedZoneEvent_SetScriptValue(pmod->ptemplate->ppchSecondaryStringList);
+                g_currentScript = preserved;
+            }
+            else
+            {
+                Errorf("No matching script running");
+            }
+        }
+        break;
+        case kSpecialAttrib_LuaExec: {
+            int scriptID = chareval_Eval(pchar, pmod->ptemplate->ppchPrimaryStringList, pmod->ptemplate->ppowBase->pchSourceFile) - 1;
+            if (scriptID >= 0)
+            {
+                ScriptEnvironment* preserved = g_currentScript;
+                g_currentScript = ScriptFromRunId(scriptID);
+                if (g_currentScript && g_currentScript->lua_interpreter)
+                    lua_exec(pmod->ptemplate->ppchSecondaryStringList[0], pmod->fMagnitude, pmod->fDuration);
+                g_currentScript = preserved;
+            }
+            else
+            {
+                Errorf("No matching script running");
+            }
+        }
+        break;
+        case kSpecialAttrib_AddBehavior: {
+            Entity* e = pchar->entParent;
+            if (e && (ENTTYPE(e) != ENTTYPE_PLAYER))
+            {
+                if (eaSize(&pmod->ptemplate->ppchPrimaryStringList) != 1)
                 {
-                    bool updateTime = !(pmod->ptemplate->pchParams && stricmp(pmod->ptemplate->pchParams, "NoTime") == 0);
+                    Errorf("Power %s has the incorrect number of Behaviors to add. It should have 1.", pmod->ptemplate->ppowBase->pchFullName);
+                }
+                else
+                {
+                    aiBehaviorAddString(e, ENTAI(e)->base, pmod->ptemplate->ppchPrimaryStringList[0]);
+                }
+            }
+        }
+        break;
+        case kSpecialAttrib_TokenAdd: {
+            Entity* e = pchar->entParent;
+            if (e)
+            {
+                bool updateTime = !(pmod->ptemplate->pchParams && stricmp(pmod->ptemplate->pchParams, "NoTime") == 0);
 
-                    modifyRewardToken(e, pmod->ptemplate->pchReward, (int)pmod->ptemplate->fMagnitude, updateTime, false);
-                }
+                modifyRewardToken(e, pmod->ptemplate->pchReward, (int)pmod->ptemplate->fMagnitude, updateTime, false);
             }
-            break;
-        case kSpecialAttrib_TokenSet:
+        }
+        break;
+        case kSpecialAttrib_TokenSet: {
+            Entity* e = pchar->entParent;
+            if (e)
             {
-                Entity *e = pchar->entParent;
-                if (e)
-                {
-                    bool updateTime = !(pmod->ptemplate->pchParams && stricmp(pmod->ptemplate->pchParams, "NoTime") == 0);
+                bool updateTime = !(pmod->ptemplate->pchParams && stricmp(pmod->ptemplate->pchParams, "NoTime") == 0);
 
-                    modifyRewardToken(e, pmod->ptemplate->pchReward, (int)pmod->ptemplate->fMagnitude, updateTime, true);
-                }
+                modifyRewardToken(e, pmod->ptemplate->pchReward, (int)pmod->ptemplate->fMagnitude, updateTime, true);
             }
-            break;
-        case kSpecialAttrib_TokenClear:
+        }
+        break;
+        case kSpecialAttrib_TokenClear: {
+            Entity* e = pchar->entParent;
+            if (e)
+                removeRewardToken(e, pmod->ptemplate->pchReward);
+        }
+        break;
+        case kSpecialAttrib_ForceMove: {
+            // You must complete your current force move before being allowed to start another.
+            if (!pchar->bForceMove)
             {
-                Entity *e = pchar->entParent;
-                if (e)
-                    removeRewardToken(e, pmod->ptemplate->pchReward);
+                pchar->bForceMove = true;
+                copyVec3(pmod->vecLocation, pchar->vecLocationForceMove);
             }
-            break;
-        case kSpecialAttrib_ForceMove:
-            {
-                // You must complete your current force move before being allowed to start another.
-                if (!pchar->bForceMove)
-                {
-                    pchar->bForceMove = true;
-                    copyVec3(pmod->vecLocation, pchar->vecLocationForceMove);
-                }
-            }
-            break;
+        }
+        break;
     }
 }
 
-AttribMod *modlist_BlameDefenseMod(AttribModList *plist, float fPercentile, int iType)
+AttribMod* modlist_BlameDefenseMod(AttribModList* plist, float fPercentile, int iType)
 {
     int i;
     AttribModListIter iter;
-    AttribMod *pmod;
-    AttribMod **ppDefenses=NULL;
-    float fDefense=0.0f;
+    AttribMod* pmod;
+    AttribMod** ppDefenses = NULL;
+    float fDefense = 0.0f;
 
-    if(plist==NULL)
+    if (plist == NULL)
         return NULL;
 
-    for(pmod = modlist_GetFirstMod(&iter, plist);
-        pmod!=NULL;
-        pmod = modlist_GetNextMod(&iter))
+    for (pmod = modlist_GetFirstMod(&iter, plist); pmod != NULL; pmod = modlist_GetNextMod(&iter))
     {
         int offAttrib = (int)pmod->ptemplate->offAttrib;
-        if(pmod->fMagnitude>0.0f
-            && (offAttrib==offsetof(CharacterAttributes, fDefense) || offAttrib==iType)
-            && IS_MODIFIER(pmod->ptemplate->offAspect))
+        if (pmod->fMagnitude > 0.0f && (offAttrib == offsetof(CharacterAttributes, fDefense) || offAttrib == iType) && IS_MODIFIER(pmod->ptemplate->offAspect))
         {
             eaPush(&ppDefenses, pmod);
             fDefense += pmod->fMagnitude;
@@ -1861,11 +1816,11 @@ AttribMod *modlist_BlameDefenseMod(AttribModList *plist, float fPercentile, int 
 
     fDefense *= fPercentile;
 
-    for(i=eaSize(&ppDefenses)-1; i>=0; i--)
+    for (i = eaSize(&ppDefenses) - 1; i >= 0; i--)
     {
         pmod = ppDefenses[i];
         fDefense -= pmod->fMagnitude;
-        if(fDefense<=0.0f)
+        if (fDefense <= 0.0f)
         {
             eaDestroy(&ppDefenses);
             return pmod;
@@ -1877,17 +1832,14 @@ AttribMod *modlist_BlameDefenseMod(AttribModList *plist, float fPercentile, int 
     return NULL;
 }
 
-
 /**********************************************************************func*
  * NotifyAI
  *
  */
-static void NotifyAI(AttribMod *pmod, Character *pchar, float f, float fRate)
+static void NotifyAI(AttribMod* pmod, Character* pchar, float f, float fRate)
 {
-    if(!pmod->bReportedOnLastTick && 
-        (pmod->ptemplate->ppowBase->eAIReport==kAIReport_Always|| 
-         pmod->ptemplate->ppowBase->eAIReport==kAIReport_HitOnly || 
-         pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fPlacate)))
+    if (!pmod->bReportedOnLastTick && (pmod->ptemplate->ppowBase->eAIReport == kAIReport_Always || pmod->ptemplate->ppowBase->eAIReport == kAIReport_HitOnly ||
+                                       pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fPlacate)))
     {
         AIEventNotifyParams params;
         const BasePower* ppowBase = pmod->ptemplate->ppowBase;
@@ -1899,52 +1851,50 @@ static void NotifyAI(AttribMod *pmod, Character *pchar, float f, float fRate)
         params.powerSucceeded.offAspect = (S32)pmod->ptemplate->offAspect;
         params.powerSucceeded.ppowBase = ppowBase;
         params.powerSucceeded.uiInvokeID = pmod->uiInvokeID;
-        params.powerSucceeded.revealSource = ppowBase->eAIReport==kAIReport_Always || ppowBase->eAIReport==kAIReport_HitOnly;
+        params.powerSucceeded.revealSource = ppowBase->eAIReport == kAIReport_Always || ppowBase->eAIReport == kAIReport_HitOnly;
 
         // TODO: Make this the actual radius of the power (which might have been enhanced)
         params.powerSucceeded.fRadius = ppowBase->fRadius;
 
-        if(pmod->fDuration>0 && pmod->ptemplate->fPeriod==0)
+        if (pmod->fDuration > 0 && pmod->ptemplate->fPeriod == 0)
         {
 #define COMBAT_UPDATE_INTERVAL 0.125f
-            params.powerSucceeded.fAmount = (pmod->fDuration/(fRate+0.00001))*COMBAT_UPDATE_INTERVAL*30;
+            params.powerSucceeded.fAmount = (pmod->fDuration / (fRate + 0.00001)) * COMBAT_UPDATE_INTERVAL * 30;
         }
         else
         {
             params.powerSucceeded.fAmount = f;
         }
 
-        if(params.source)
+        if (params.source)
         {
             aiEventNotify(&params);
         }
     }
 }
 
-#define MAX_TAUNT_DIST_SQR 200*200
+#define MAX_TAUNT_DIST_SQR 200 * 200
 #define TAUNT_LOS_SPEEDUP 4.0f
-static void HandlePlayerTaunt(AttribMod *pmod, Character *pchar, Entity *pentSrc, float fRate)
+static void HandlePlayerTaunt(AttribMod* pmod, Character* pchar, Entity* pentSrc, float fRate)
 {
-    if(!pentSrc || entMode(pentSrc,ENT_DEAD))
+    if (!pentSrc || entMode(pentSrc, ENT_DEAD))
     {
         pmod->fDuration = 0.0; // Kill the mod
     }
     else
     {
-        if(distance3Squared(ENTPOS(pchar->entParent),ENTPOS(pentSrc)) > MAX_TAUNT_DIST_SQR)
+        if (distance3Squared(ENTPOS(pchar->entParent), ENTPOS(pentSrc)) > MAX_TAUNT_DIST_SQR)
         {
             // Clear mods from sources that are too far away
             pmod->fDuration = 0.0f;
         }
-        else if(!character_CharacterIsReachable(pentSrc, pchar->entParent))
+        else if (!character_CharacterIsReachable(pentSrc, pchar->entParent))
         {
             // Extra decrement to the duration if source isn't visible
-            pmod->fDuration -= (TAUNT_LOS_SPEEDUP-1.0f)*fRate;
+            pmod->fDuration -= (TAUNT_LOS_SPEEDUP - 1.0f) * fRate;
         }
 
-        if(pmod->fDuration > 0
-           && (!pchar->pmodTaunt || pmod->fDuration > 2.0*pchar->pmodTaunt->fDuration)
-           && pmod->fMagnitude > 0 )
+        if (pmod->fDuration > 0 && (!pchar->pmodTaunt || pmod->fDuration > 2.0 * pchar->pmodTaunt->fDuration) && pmod->fMagnitude > 0)
         {
             // New taunt
             pchar->pmodTaunt = pmod;
@@ -1953,7 +1903,7 @@ static void HandlePlayerTaunt(AttribMod *pmod, Character *pchar, Entity *pentSrc
 
             // Send taunt message and floater
             sendInfoBox(pchar->entParent, INFO_COMBAT_SPAM, "YouAreTaunted");
-            serveFloatingInfo(pchar->entParent,pchar->entParent,"FloatTaunted");
+            serveFloatingInfo(pchar->entParent, pchar->entParent, "FloatTaunted");
         }
     }
 }
@@ -1962,17 +1912,15 @@ static void HandlePlayerTaunt(AttribMod *pmod, Character *pchar, Entity *pentSrc
  * CancelTauntPlayer
  *
  */
-static void CancelTauntPlayer(Character *pchar, Entity *pentSrc)
+static void CancelTauntPlayer(Character* pchar, Entity* pentSrc)
 {
     AttribModListIter iter;
-    AttribMod *pmod = modlist_GetFirstMod(&iter, &pchar->listMod);
+    AttribMod* pmod = modlist_GetFirstMod(&iter, &pchar->listMod);
     EntityRef erSource = erGetRef(pentSrc);
 
-    while(pmod!=NULL)
+    while (pmod != NULL)
     {
-        if(pmod->erSource == erSource 
-            && IS_MODIFIER(pmod->ptemplate->offAspect) 
-            && pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fTaunt))
+        if (pmod->erSource == erSource && IS_MODIFIER(pmod->ptemplate->offAspect) && pmod->ptemplate->offAttrib == offsetof(CharacterAttributes, fTaunt))
         {
             pmod->fDuration = 0.0; // Kills the taunt mod next time around
         }
@@ -1981,78 +1929,76 @@ static void CancelTauntPlayer(Character *pchar, Entity *pentSrc)
     }
 }
 
-
-static void HandlePlayerPlacate(AttribMod *pmod, Character *pchar, Entity *pentSrc, float fRate)
+static void HandlePlayerPlacate(AttribMod* pmod, Character* pchar, Entity* pentSrc, float fRate)
 {
-    if(eaFind(&pchar->ppmodPlacates, pmod)<0)
+    if (eaFind(&pchar->ppmodPlacates, pmod) < 0)
     {
         pchar->entParent->target_update = 1;
         pchar->entParent->status_effects_update = true;
 
         // Send placate message and floater
-        if( pmod->fMagnitude > 0 )
+        if (pmod->fMagnitude > 0)
         {
-            CancelTauntPlayer(pchar,pentSrc); // Cancels any taunts the source may have had on the target
+            CancelTauntPlayer(pchar, pentSrc); // Cancels any taunts the source may have had on the target
 
             eaPush(&pchar->ppmodPlacates, pmod);
             sendInfoBox(pchar->entParent, INFO_COMBAT_SPAM, "YouArePlacated", pentSrc->name);
-            serveFloatingInfo(pchar->entParent,pchar->entParent,"FloatPlacated");
+            serveFloatingInfo(pchar->entParent, pchar->entParent, "FloatPlacated");
         }
     }
 }
-
 
 /**********************************************************************func*
  * CancelPlacatePlayer
  *
  */
-static void CancelPlacatePlayer(Character *pchar, Entity *pentSrc, unsigned int uiID)
+static void CancelPlacatePlayer(Character* pchar, Entity* pentSrc, unsigned int uiID)
 {
     if (pchar->ppmodPlacates && pentSrc)
     {
         int i;
         EntityRef er = pentSrc->erOwner;
-        if (!er) er = erGetRef(pentSrc);
-        for (i = eaSize(&pchar->ppmodPlacates)-1; i >= 0; i--)
+        if (!er)
+            er = erGetRef(pentSrc);
+        for (i = eaSize(&pchar->ppmodPlacates) - 1; i >= 0; i--)
         {
             if (pchar->ppmodPlacates[i]->erSource == er && pchar->ppmodPlacates[i]->uiInvokeID != uiID)
-                pchar->ppmodPlacates[i]->fDuration = 0.0;    // Kills the placate mod next time around
+                pchar->ppmodPlacates[i]->fDuration = 0.0; // Kills the placate mod next time around
         }
     }
 }
 
-extern int *g_zoneEventScriptStageAwardsKarma;
+extern int* g_zoneEventScriptStageAwardsKarma;
 /**********************************************************************func*
  * TrackHitpointChange
  *
  */
-static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentSrc, float f, U32 ulNow)
+static void TrackHitpointChange(AttribMod* pmod, Character* pchar, Entity* pentSrc, float f, U32 ulNow)
 {
     float fDamage = -f;
-    Entity *pentSrcOwner = 0; 
+    Entity* pentSrcOwner = 0;
     EntityRef erSrcOwner = pmod->erSource;
 
-
-    if( pentSrc )
+    if (pentSrc)
     {
-        if( pentSrc->erOwner  )
+        if (pentSrc->erOwner)
             erSrcOwner = pentSrc->erOwner;
 
-        pentSrcOwner = erGetEnt(pentSrc->erOwner); 
+        pentSrcOwner = erGetEnt(pentSrc->erOwner);
 
         // If we are on a architect map, don't credit owner for pet damage (if its not a actual pet)
-        if( !pentSrcOwner || (g_ArchitectTaskForce && pentSrc->petByScript) )
+        if (!pentSrcOwner || (g_ArchitectTaskForce && pentSrc->petByScript))
             pentSrcOwner = pentSrc;
     }
 
-    if(pmod->ptemplate->offAspect==offsetof(CharacterAttribSet, pattrMod))
+    if (pmod->ptemplate->offAspect == offsetof(CharacterAttribSet, pattrMod))
     {
         // This is just an estimate.
         fDamage *= pchar->attrMax.fHitPoints;
     }
 
     // Do this first, so that damage and healing always trigger their respective events
-    if(fDamage>0)
+    if (fDamage > 0)
     {
         //    if this doesn't count as a hit
         //    don't mark it as the player was damaged
@@ -2068,7 +2014,7 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
         // If you have taken damage after the terrorize timer has expired,
         //  we set the timer to a negative value that indicates how long
         //  we can run around and use powers for
-        if(pchar->fTerrorizePowerTimer == 0.0f)
+        if (pchar->fTerrorizePowerTimer == 0.0f)
         {
             pchar->fTerrorizePowerTimer = -10.0f;
         }
@@ -2080,13 +2026,13 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
 
     // Don't let people get credit for overkilling or
     //   overhealing things
-    if(fDamage > pchar->attrCur.fHitPoints)
+    if (fDamage > pchar->attrCur.fHitPoints)
     {
         fDamage = pchar->attrCur.fHitPoints;
     }
-    else if(fDamage<pchar->attrCur.fHitPoints-pchar->attrMax.fHitPoints)
+    else if (fDamage < pchar->attrCur.fHitPoints - pchar->attrMax.fHitPoints)
     {
-        fDamage = pchar->attrCur.fHitPoints-pchar->attrMax.fHitPoints;
+        fDamage = pchar->attrCur.fHitPoints - pchar->attrMax.fHitPoints;
 
         // TODO: Send the current attrMax.[fHitPoints, fEndurance] to this function.
         // As stated repeatedly elsewhere in the code, attrMax is just
@@ -2109,19 +2055,20 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
         //   what can reasonably be healed. If max is bigger than cur, then
         //   it's the normal case. If max is less than cur, then we won't
         //   give out any credit.
-        if(fDamage>0) fDamage=0;
+        if (fDamage > 0)
+            fDamage = 0;
     }
 
     // Remember what hurt me
     eaPushConst(&pchar->ppLastDamageFX, pmod->fx);
 
-    if(pentSrcOwner!=NULL)
+    if (pentSrcOwner != NULL)
     {
-        if(!pmod->ptemplate->ppowBase->bIsEnvironmentHit)  // don't damage track powers specifically flagged as IsEnvironmentalHit
+        if (!pmod->ptemplate->ppowBase->bIsEnvironmentHit) // don't damage track powers specifically flagged as IsEnvironmentalHit
         {
-            if(character_IsConfused(pentSrcOwner->pchar))
+            if (character_IsConfused(pentSrcOwner->pchar))
             {
-                damageTrackerUpdate(pchar->entParent, pentSrcOwner, fDamage*0.25);
+                damageTrackerUpdate(pchar->entParent, pentSrcOwner, fDamage * 0.25);
             }
             else
             {
@@ -2129,13 +2076,13 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
             }
         }
 
-        if(ENTTYPE(pentSrcOwner)==ENTTYPE_PLAYER)
+        if (ENTTYPE(pentSrcOwner) == ENTTYPE_PLAYER)
         {
-            if(pchar->entParent!=pentSrcOwner)
+            if (pchar->entParent != pentSrcOwner)
             {
                 // Players who cannot be killed are in no risk, so they don't
                 // get the benefit of the badge stats.
-                if(!pchar->bCannotDie && fDamage>=0)
+                if (!pchar->bCannotDie && fDamage >= 0)
                 {
                     stat_AddDamageGiven(pentSrcOwner->pl, (int)fDamage);
                     badge_RecordDamageGiven(pentSrcOwner, (int)fDamage);
@@ -2148,7 +2095,7 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
                         }
                     }
                 }
-                else if(!pchar->bCannotDie && pmod->ptemplate->offAttrib==g_offHealAttrib)
+                else if (!pchar->bCannotDie && pmod->ptemplate->offAttrib == g_offHealAttrib)
                 {
                     // Only give healing credit when healing someone
                     //   your own team.
@@ -2158,7 +2105,7 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
             }
         }
     }
-    else if(!pmod->ptemplate->ppowBase->bIsEnvironmentHit)
+    else if (!pmod->ptemplate->ppowBase->bIsEnvironmentHit)
     {
         //    the entity that damaged them has been freed
         //    instead of not tracking the damage at all
@@ -2168,7 +2115,7 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
         //    Note:    try to track down the actual source of the damage when this isn't a high priority bug
     }
 
-    if(ENTTYPE(pchar->entParent)==ENTTYPE_PLAYER && !pchar->bCannotDie && pchar->entParent!=pentSrcOwner)
+    if (ENTTYPE(pchar->entParent) == ENTTYPE_PLAYER && !pchar->bCannotDie && pchar->entParent != pentSrcOwner)
     {
         // You only get credit for damage if you aren't
         //   doing it to yourself (or through your pet).
@@ -2183,44 +2130,41 @@ static void TrackHitpointChange(AttribMod *pmod, Character *pchar, Entity *pentS
  * PetGuardMastermind
  *
  */
-#define BODYGUARD_RANGE (60.0f*60.0f) // Current range of Supremacy
-#define BODYGUARD_MMSHARE (2.0f)      // Share of damage MM takes; a pet is one share
-static float PetGuardMastermind(Character *pchar, Entity *pentSrc, AttribMod *pmodDamage, float magDamage, float fRate, U32 ulNow)
+#define BODYGUARD_RANGE (60.0f * 60.0f) // Current range of Supremacy
+//#define BODYGUARD_MMSHARE (2.0f)      // Share of damage MM takes; a pet is one share
+static float PetGuardMastermind(Character* pchar, Entity* pentSrc, AttribMod* pmodDamage, float magDamage, float fRate, U32 ulNow)
 {
     float fBaseDamage = magDamage;
     float fMMDamage;
-    Entity ** pppets = NULL;
+    float fMMShare = pchar->pclass->fGuardShare; //the player's bodyguard share based on Archetype
+    Entity** pppets = NULL;
     AttribModListIter iter;
-    AttribMod *pmod = modlist_GetFirstMod(&iter, &pchar->listMod);
+    AttribMod* pmod = modlist_GetFirstMod(&iter, &pchar->listMod);
     int iPets = 0;
 
     // Only works when the MM is affecting pets with Supremacy
-    if(pchar->attrCur.fOnlyAffectsSelf <= 0.0f)
+    if (pchar->attrCur.fOnlyAffectsSelf <= 0.0f)
     {
         int i;
-        const AttribModTemplate *ptemplate = pmod->ptemplate;
+        const AttribModTemplate* ptemplate = pmod->ptemplate;
 
         // Find all my pets
-        while(pmod!=NULL)
+        while (pmod != NULL)
         {
             Vec3 vecMM;
-            copyVec3(ENTPOS(pchar->entParent),vecMM);
+            copyVec3(ENTPOS(pchar->entParent), vecMM);
 
-            if(pmod->ptemplate->offAttrib == kSpecialAttrib_EntCreate)
+            if (pmod->ptemplate->offAttrib == kSpecialAttrib_EntCreate)
             {
-                if(pmod->erCreated!=0)
+                if (pmod->erCreated != 0)
                 {
-                    Entity *pent = erGetEnt(pmod->erCreated);
+                    Entity* pent = erGetEnt(pmod->erCreated);
                     // Cheap check for valid pet (rather than checking explicitly for supremacy)
-                    if(pent 
-                       && distance3Squared(vecMM,ENTPOS(pent)) < BODYGUARD_RANGE
-                       && pent->pchar
-                       && pent->villainDef && pent->villainDef->petCommadability 
-                       && pent->pchar->attrCur.fUntouchable <= 0.0f
-                       && pent->pchar->attrCur.fHitPoints > 0.0f
-                       && ENTAI(pent)->amBodyGuard)
+                    if (pent && distance3Squared(vecMM, ENTPOS(pent)) < BODYGUARD_RANGE && pent->pchar && pent->villainDef &&
+                        pent->villainDef->petCommadability && pent->pchar->attrCur.fUntouchable <= 0.0f && pent->pchar->attrCur.fHitPoints > 0.0f &&
+                        ENTAI(pent)->amBodyGuard)
                     {
-                        eaPush(&pppets,pent);
+                        eaPush(&pppets, pent);
                     }
                 }
             }
@@ -2228,16 +2172,17 @@ static float PetGuardMastermind(Character *pchar, Entity *pentSrc, AttribMod *pm
         }
 
         iPets = eaSize(&pppets);
-        magDamage = magDamage/(float)(iPets+BODYGUARD_MMSHARE);
-        for(i=iPets-1; i>=0; i--)
+        //magDamage = magDamage / (float)(iPets + BODYGUARD_MMSHARE);
+        magDamage = magDamage / (float)(iPets + fMMShare);
+        for (i = iPets - 1; i >= 0; i--)
         {
-            Entity *ppet = pppets[i];
+            Entity* ppet = pppets[i];
             float fCur = ppet->pchar->attrCur.fHitPoints;
             ppet->pchar->attrCur.fHitPoints += magDamage;
 
             ReportAttribMod(ppet->pchar, magDamage, fRate, pmodDamage);
 
-            if(!pmodDamage->bReportedOnLastTick && !pmodDamage->ptemplate->ppowBase->bIsEnvironmentHit)
+            if (!pmodDamage->bReportedOnLastTick && !pmodDamage->ptemplate->ppowBase->bIsEnvironmentHit)
             {
                 character_InterruptPower(ppet->pchar, pentSrc ? pentSrc->pchar : NULL, 0.0, true);
             }
@@ -2248,10 +2193,11 @@ static float PetGuardMastermind(Character *pchar, Entity *pentSrc, AttribMod *pm
         }
     }
 
-    fMMDamage = magDamage * BODYGUARD_MMSHARE;
+    //fMMDamage = magDamage * BODYGUARD_MMSHARE;
+    fMMDamage = magDamage * fMMShare;
 
     // Message to MM to let them know
-    if(iPets>0)
+    if (iPets > 0)
     {
         float fAbsorb = fBaseDamage - fMMDamage;
         sendInfoBox(pchar->entParent, INFO_DAMAGE, "PetBodyguardsDamaged", -fAbsorb);
@@ -2264,27 +2210,25 @@ static float PetGuardMastermind(Character *pchar, Entity *pentSrc, AttribMod *pm
  * mod_Cancelled
  *
  */
-static bool mod_Cancelled(AttribMod *pmod, Character *pchar)
+static bool mod_Cancelled(AttribMod* pmod, Character* pchar)
 {
     int i;
     int n = eaiSize(&pmod->ptemplate->piCancelEvents);
 
-    for(i=0; i<n; i++)
+    for (i = 0; i < n; i++)
     {
         int iEvent = pmod->ptemplate->piCancelEvents[i];
 
-        if(POWEREVENT_INVOKE(iEvent)
-            && pmod->ptemplate->ppowBase == pchar->ppowLastActivated)
+        if (POWEREVENT_INVOKE(iEvent) && pmod->ptemplate->ppowBase == pchar->ppowLastActivated)
         {
             continue;
         }
-        if(POWEREVENT_APPLY(iEvent)
-            && pmod->uiInvokeID == pchar->uiLastApplied)
+        if (POWEREVENT_APPLY(iEvent) && pmod->uiInvokeID == pchar->uiLastApplied)
         {
             continue;
         }
 
-        if(pchar->aulEventCounts[iEvent]>0)
+        if (pchar->aulEventCounts[iEvent] > 0)
         {
             return true;
         }
@@ -2300,28 +2244,27 @@ static bool mod_Cancelled(AttribMod *pmod, Character *pchar)
  * the list of active modifiers.
  *
  */
-bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribset,
-    CharacterAttributes *pattrResBuffs, CharacterAttributes *pattrResDebuffs,
-    CharacterAttributes *pResistance, bool *pbRemoveSleepMods, bool *pbDisallowDefeat, float fRate)
+bool mod_Process(AttribMod* pmod, Character* pchar, CharacterAttribSet* pattribset, CharacterAttributes* pattrResBuffs, CharacterAttributes* pattrResDebuffs,
+                 CharacterAttributes* pResistance, bool* pbRemoveSleepMods, bool* pbDisallowDefeat, float fRate)
 {
-    float *pf;
+    float* pf;
     float fRes = 0.0f;
     float fMag = 0.0f;
     bool bTimedOut;
     U32 ulNow = timerSecondsSince2000();
     bool bContinuingFXOnLast = pmod->bContinuingFXOn;
 
-    if(mod_Cancelled(pmod, pchar))
+    if (mod_Cancelled(pmod, pchar))
     {
         pmod->fDuration = 0.0f;
     }
     else
     {
-        if(!pmod->bSourceChecked)
+        if (!pmod->bSourceChecked)
         {
-            if(pmod->fCheckTimer<=0.0)
+            if (pmod->fCheckTimer <= 0.0)
             {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
+                Entity* pentSrc = erGetEnt(pmod->erSource);
 
                 pmod->bSourceChecked = true;
 
@@ -2331,11 +2274,11 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                 //   should happen in dieNow().  This is to allow onDisable mods to function.
                 // I've got a comment in dieNow() that ties into this change.  If you revert
                 //   this, pull that comment as well.
-                if(pmod->ptemplate->ppowBase->eDeathCastableSetting == kDeathCastableSetting_AliveOnly
-                    && (!pentSrc || (!entAlive(pentSrc) && pentSrc != pchar->entParent)))
+                if (pmod->ptemplate->ppowBase->eDeathCastableSetting == kDeathCastableSetting_AliveOnly &&
+                    (!pentSrc || (!entAlive(pentSrc) && pentSrc != pchar->entParent)))
                 {
-                    mod_CancelFX(pmod,pchar);
-                    mod_Cancel(pmod,pchar);
+                    mod_CancelFX(pmod, pchar);
+                    mod_Cancel(pmod, pchar);
                     return true;
                 }
 
@@ -2348,48 +2291,53 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
             pmod->fCheckTimer -= fRate;
         }
 
-        if(!pmod->bDelayEvalChecked)
+        if (!pmod->bDelayEvalChecked)
         {
-            if(pmod->fTimer<=0.0)
+            if (pmod->fTimer <= 0.0)
             {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
+                Entity* pentSrc = erGetEnt(pmod->erSource);
 
                 pmod->bDelayEvalChecked = true;
-                
+
                 // Evaluate delayed eval components of the attribmod now
-                if(pmod->ptemplate->bDelayEval && pmod->evalInfo)
+                if (pmod->ptemplate->bDelayEval && pmod->evalInfo)
                 {
                     // First re-set up the eval context
-                    if(pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CUSTOMFX)
+                    if (pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CUSTOMFX)
                         combateval_StoreCustomFXToken(pmod->customFXToken);
-                    if(pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_HIT_ROLL)
+                    if (pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_HIT_ROLL)
                         combateval_StoreToHitInfo(pmod->evalInfo->fRand, pmod->evalInfo->fToHit, pmod->evalInfo->bAlwaysHit, pmod->evalInfo->bForceHit);
-                    if(pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_TARGETSHIT)
+                    if (pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_TARGETSHIT)
                         combateval_StoreTargetsHit(pmod->evalInfo->targetsHit);
-                    if(pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CHANCE)
+                    if (pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CHANCE)
                         combateval_StoreChance(pmod->evalInfo->fChanceFinal, pmod->evalInfo->fChanceMods);
 
                     devassert(pmod->parentPowerInstance && "Tell Andy he was wrong, we process mods that don't go through mod_Fill.");
-                    
+
                     // Now run the Application Requires and early out if we don't actually attach now
-                    if(pmod->ptemplate->ppchApplicationRequires && combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchApplicationRequires, pmod->parentPowerInstance->ppowBase->pchSourceFile)==0.0f)
+                    if (pmod->ptemplate->ppchApplicationRequires &&
+                        combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchApplicationRequires,
+                                        pmod->parentPowerInstance->ppowBase->pchSourceFile) == 0.0f)
                     {
-                        mod_CancelFX(pmod,pchar);
-                        mod_Cancel(pmod,pchar);
+                        mod_CancelFX(pmod, pchar);
+                        mod_Cancel(pmod, pchar);
                         return true;
                     }
 
                     // Now run the Expressions - the only thing different from original invocation is targetsHit, but that was unknownable at that point
                     // In the future we may change this to re-run strength, etc. recalculations now as well
-                    if(pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CALC_INFO)
-                        combateval_StoreAttribCalcInfo(pmod->evalInfo->fFinal, pmod->evalInfo->fVal, pmod->ptemplate->fScale, pmod->evalInfo->fEffectiveness, pmod->evalInfo->fStrength);
-                    if(pmod->ptemplate->ppchMagnitude)
+                    if (pmod->ptemplate->evalFlags & ATTRIBMOD_EVAL_CALC_INFO)
+                        combateval_StoreAttribCalcInfo(pmod->evalInfo->fFinal, pmod->evalInfo->fVal, pmod->ptemplate->fScale, pmod->evalInfo->fEffectiveness,
+                                                       pmod->evalInfo->fStrength);
+                    if (pmod->ptemplate->ppchMagnitude)
                     {
-                        pmod->fMagnitude = combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchMagnitude, pmod->parentPowerInstance->ppowBase->pchSourceFile);
+                        pmod->fMagnitude = combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchMagnitude,
+                                                           pmod->parentPowerInstance->ppowBase->pchSourceFile);
                     }
-                    if(pmod->ptemplate->ppchDuration)
+                    if (pmod->ptemplate->ppchDuration)
                     {
-                        pmod->fDuration = combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchDuration, pmod->parentPowerInstance->ppowBase->pchSourceFile);
+                        pmod->fDuration = combateval_Eval(pentSrc, pchar->entParent, pmod->parentPowerInstance, pmod->ptemplate->ppchDuration,
+                                                          pmod->parentPowerInstance->ppowBase->pchSourceFile);
                     }
 
                     // And now clean up the no longer needed evalInfo
@@ -2403,9 +2351,8 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
         // if(pmod->ptemplate->ppowBase->eType == kPowerType_Click && pmod->fTimer<=0.0f)
         //     verbose_printf("mod_Process:   Mag:%6.3f\n", f);
 
-        if((pmod->ptemplate->bUseMagnitudeResistance || pmod->ptemplate->bUseDurationResistance)
-            && pmod->ptemplate->offAttrib<sizeof(CharacterAttributes)
-            && pmod->ptemplate->offAspect!=offsetof(CharacterAttribSet, pattrResistance))
+        if ((pmod->ptemplate->bUseMagnitudeResistance || pmod->ptemplate->bUseDurationResistance) && pmod->ptemplate->offAttrib < sizeof(CharacterAttributes) &&
+            pmod->ptemplate->offAspect != offsetof(CharacterAttribSet, pattrResistance))
         {
             // Resistance mods are resisted later on in CalcResistance.
             fRes = *(ATTRIB_GET_PTR(pResistance, pmod->ptemplate->offAttrib));
@@ -2413,11 +2360,11 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
             // if(pmod->ptemplate->ppowBase->eType == kPowerType_Click && pmod->fTimer<=0.0f)
             //     verbose_printf("mod_Process:   Res:%6.3f\n", fRes);
 
-            if(pmod->ptemplate->bUseMagnitudeResistance)
+            if (pmod->ptemplate->bUseMagnitudeResistance)
             {
-                if(fRes>1.0f)
+                if (fRes > 1.0f)
                     fRes = 1.0f;
-                fMag *= (1.0f-fRes);
+                fMag *= (1.0f - fRes);
             }
 
             // if(pmod->ptemplate->ppowBase->eType == kPowerType_Click && pmod->fTimer<=0.0f)
@@ -2430,21 +2377,20 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
             // I'd get to fix it exactly.
             if (pmod->ptemplate->bUseDurationResistance && pmod->fTimer <= 0.0f)
             {
-                if(fRes<(-0.95f))
+                if (fRes < (-0.95f))
                     fRes = -0.95f;
-                fRate *= (1.0f+fRes);
+                fRate *= (1.0f + fRes);
             }
         }
 
-        if(pmod->bSourceChecked)
+        if (pmod->bSourceChecked)
         {
-            size_t offAttrib  = pmod->ptemplate->offAttrib; // common subexpression
-            Entity *pentSrc = erGetEnt(pmod->erSource);
+            size_t offAttrib = pmod->ptemplate->offAttrib; // common subexpression
+            Entity* pentSrc = erGetEnt(pmod->erSource);
 
-            if(pmod->fTimer<=0.0f)
+            if (pmod->fTimer <= 0.0f)
             {
-                if(pmod->ptemplate->ppowBase->iTimeToConfirm>0
-                    && pchar->entParent->pl && pchar->entParent->pl->uiDelayedInvokeID == pmod->uiInvokeID)
+                if (pmod->ptemplate->ppowBase->iTimeToConfirm > 0 && pchar->entParent->pl && pchar->entParent->pl->uiDelayedInvokeID == pmod->uiInvokeID)
                 {
                     // OK, this attribmod is part of a power which must be
                     //   confirmed. No confirmation has come through. So, this
@@ -2455,7 +2401,7 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                 }
                 else
                 {
-                    if(!mod_IsSuppressed(pmod, pchar, ulNow))
+                    if (!mod_IsSuppressed(pmod, pchar, ulNow))
                     {
                         float fRand;
 
@@ -2468,13 +2414,11 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                             pmod->fTimer = -pmod->ptemplate->fPeriod;
                         }
 
-                        if(pmod->fChance>=1.0f)
+                        if (pmod->fChance >= 1.0f)
                         {
                             fRand = 0.0f;
                         }
-                        else if(pmod->ptemplate->eType==kModType_Duration
-                            && pmod->ptemplate->fPeriod==0.0f
-                            && pmod->fChance<1.0f)
+                        else if (pmod->ptemplate->eType == kModType_Duration && pmod->ptemplate->fPeriod == 0.0f && pmod->fChance < 1.0f)
                         {
                             // If the AttribMod is of type duration and the period is 0, then
                             // the chance check is done when the AttribMod was originally
@@ -2483,28 +2427,28 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                         }
                         else
                         {
-                            fRand = (float)rand()/(float)RAND_MAX;
+                            fRand = (float)rand() / (float)RAND_MAX;
                         }
 
-                        if(fRand < pmod->fChance && 
-                            ( IS_DISABLINGSTATUS(offAttrib)  // If this is a hold, stun, immob or sleep if you are not on ground now, you will be soon
-                            || !pmod->ptemplate->bNearGround || entHeight(pchar->entParent, 2.0f)<1.0f) )
+                        if (fRand < pmod->fChance &&
+                            (IS_DISABLINGSTATUS(offAttrib) // If this is a hold, stun, immob or sleep if you are not on ground now, you will be soon
+                             || !pmod->ptemplate->bNearGround || entHeight(pchar->entParent, 2.0f) < 1.0f))
                         {
-                            size_t offAspect    = pmod->ptemplate->offAspect; // common subexpression
-                            bool bIsHitPoints    = IS_HITPOINTS(offAttrib);
-                            bool bIsKnock        = IS_KNOCK(offAttrib);
-                            bool bModifiesCur    = IS_MODIFIER(offAspect);
+                            size_t offAspect = pmod->ptemplate->offAspect; // common subexpression
+                            bool bIsHitPoints = IS_HITPOINTS(offAttrib);
+                            bool bIsKnock = IS_KNOCK(offAttrib);
+                            bool bModifiesCur = IS_MODIFIER(offAspect);
 
-                            if(offAttrib<sizeof(CharacterAttributes))
+                            if (offAttrib < sizeof(CharacterAttributes))
                             {
 
                                 // Modify an attribute
 
                                 // Resistance now has some special cases, so the elegant
                                 // data-driver approach gets a bit skunkier up now.
-                                if(offAspect == offsetof(CharacterAttribSet, pattrResistance))
+                                if (offAspect == offsetof(CharacterAttribSet, pattrResistance))
                                 {
-                                    if(pmod->ptemplate->bUseDurationResistance || pmod->ptemplate->bUseMagnitudeResistance)
+                                    if (pmod->ptemplate->bUseDurationResistance || pmod->ptemplate->bUseMagnitudeResistance)
                                     {
                                         pf = ATTRIB_GET_PTR(pattrResDebuffs, offAttrib);
                                     }
@@ -2522,26 +2466,16 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                                 //     verbose_printf("mod_Process:   Cur:%6.3f\n", *pf);
 
                                 // Mastermind bodyguard feature
-                                if(fMag < 0.0f
-                                   && bIsHitPoints && offAttrib != offsetof(CharacterAttributes, fAbsorb)
-                                   && bModifiesCur 
-                                   && ENTTYPE(pchar->entParent)==ENTTYPE_PLAYER)
+                                if (fMag < 0.0f && bIsHitPoints && offAttrib != offsetof(CharacterAttributes, fAbsorb) && bModifiesCur &&
+                                    ENTTYPE(pchar->entParent) == ENTTYPE_PLAYER)
                                 {
-                                    static const CharacterClass *pClassMM = NULL;
-                                    if(!pClassMM)
-                                    {
-                                        pClassMM = classes_GetPtrFromName(&g_CharacterClasses,"Class_Mastermind");
-                                    }
-
-                                    if(pchar->pclass == pClassMM)
+                                    if (pchar->pclass->bIsPetClass)
                                     {
                                         fMag = PetGuardMastermind(pchar, pentSrc, pmod, fMag, fRate, ulNow);
                                     }
                                 }
 
-                                if(!bIsHitPoints
-                                    || !bModifiesCur
-                                    || !pchar->entParent->invincible)
+                                if (!bIsHitPoints || !bModifiesCur || !pchar->entParent->invincible)
                                 {
                                     // This still explicitly handles Max Absorb mods,
                                     // even though they are kinda like Cur HP mods...
@@ -2549,7 +2483,7 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                                 }
 
                                 // Check to see if this attribmod wakes them up.
-                                if(bModifiesCur && (bIsHitPoints || (bIsKnock && fMag > 0.0)))
+                                if (bModifiesCur && (bIsHitPoints || (bIsKnock && fMag > 0.0)))
                                 {
                                     *pbRemoveSleepMods = true;
                                 }
@@ -2560,9 +2494,9 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                                     ReportAttribMod(pchar, fMag, fRate, pmod);
                                 }
 
-                                if(!pmod->bReportedOnLastTick)
+                                if (!pmod->bReportedOnLastTick)
                                 {
-                                    if(!pmod->ptemplate->ppowBase->bIsEnvironmentHit && (!pentSrc || pentSrc->pchar!=pchar))
+                                    if (!pmod->ptemplate->ppowBase->bIsEnvironmentHit && (!pentSrc || pentSrc->pchar != pchar))
                                     {
                                         character_InterruptPower(pchar, pentSrc ? pentSrc->pchar : NULL, 0.0, *pbRemoveSleepMods);
                                     }
@@ -2574,7 +2508,7 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                             }
                             else
                             {
-                                if(!pmod->bReportedOnLastTick)
+                                if (!pmod->bReportedOnLastTick)
                                 {
                                     ReportAttribMod(pchar, fMag, fRate, pmod);
                                 }
@@ -2588,9 +2522,8 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
 
                             // TODO: I don't know of any better place to put this right now.
 
-                            if(offAttrib==offsetof(CharacterAttributes, fTeleport)
-                                && (offAspect==offsetof(CharacterAttribSet, pattrMod)
-                                    || offAspect==offsetof(CharacterAttribSet, pattrAbsolute)))
+                            if (offAttrib == offsetof(CharacterAttributes, fTeleport) &&
+                                (offAspect == offsetof(CharacterAttribSet, pattrMod) || offAspect == offsetof(CharacterAttribSet, pattrAbsolute)))
                             {
                                 // check for crossmap teleport
                                 if (pmod->ptemplate->pchParams)
@@ -2606,19 +2539,18 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                                 }
                             }
 
-                            if(fMag>0.0f
-                                && (offAttrib==offsetof(CharacterAttributes, fKnockback)
-                                    || offAttrib==offsetof(CharacterAttributes, fKnockup)
-                                    || offAttrib==offsetof(CharacterAttributes, fRepel))
-                                && (offAspect==offsetof(CharacterAttribSet, pattrMod)
-                                    || offAspect==offsetof(CharacterAttribSet, pattrAbsolute)))
+                            if (fMag > 0.0f &&
+                                (offAttrib == offsetof(CharacterAttributes, fKnockback) || offAttrib == offsetof(CharacterAttributes, fKnockup) ||
+                                 offAttrib == offsetof(CharacterAttributes, fRepel)) &&
+                                (offAspect == offsetof(CharacterAttribSet, pattrMod) || offAspect == offsetof(CharacterAttribSet, pattrAbsolute)))
                             {
-                                if (erGetRef(pchar->entParent) != pmod->erSource) {
+                                if (erGetRef(pchar->entParent) != pmod->erSource)
+                                {
                                     pchar->erKnockedFrom = pmod->erSource;
                                 }
                             }
 
-                            if(bIsHitPoints && bModifiesCur)
+                            if (bIsHitPoints && bModifiesCur)
                             {
                                 TrackHitpointChange(pmod, pchar, pentSrc, fMag, ulNow);
                             }
@@ -2626,14 +2558,14 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
                             pmod->bReportedOnLastTick = true;
 
                             // hold off on near ground fx until they are on the ground
-                            if(!pmod->ptemplate->bNearGround || entHeight(pchar->entParent, 2.0f)<1.0f) 
+                            if (!pmod->ptemplate->bNearGround || entHeight(pchar->entParent, 2.0f) < 1.0f)
                                 pmod->bContinuingFXOn = true;
                             else
-                                pmod->bContinuingFXOn = false;    
+                                pmod->bContinuingFXOn = false;
                         }
                         else
                         {
-                            if(pmod->ptemplate->bCancelOnMiss)
+                            if (pmod->ptemplate->bCancelOnMiss)
                             {
                                 pmod->fDuration = 0.0;
                             }
@@ -2660,47 +2592,43 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
         }
     }
 
-    bTimedOut = pmod->fDuration<=0.0f;
+    bTimedOut = pmod->fDuration <= 0.0f;
 
-    if(bTimedOut)
+    if (bTimedOut)
     {
         mod_CancelFX(pmod, pchar);
         mod_Cancel(pmod, pchar);
     }
     else
     {
-        const char *pchContinuingFX = basepower_GetAttribModFX(pmod->ptemplate->pchContinuingFX, pmod->fx->pchContinuingFX);
-        if(pmod->bContinuingFXOn)
+        const char* pchContinuingFX = basepower_GetAttribModFX(pmod->ptemplate->pchContinuingFX, pmod->fx->pchContinuingFX);
+        if (pmod->bContinuingFXOn)
         {
             // Start up any continuing FX
-            if(pchContinuingFX)
+            if (pchContinuingFX)
             {
-                Entity *pentSrc = erGetEnt(pmod->erSource);
-                if(!pentSrc || !pentSrc->pchar)
+                Entity* pentSrc = erGetEnt(pmod->erSource);
+                if (!pentSrc || !pentSrc->pchar)
                 {
                     pentSrc = pchar->entParent;
                 }
 
-                character_PlayMaintainedFX(pchar, pentSrc->pchar,
-                    pchContinuingFX,
-                    pmod->uiTint,
-                    0.0,
-                    PLAYFX_NOT_ATTACHED, PLAYFX_NO_TIMEOUT,
-                    PLAYFX_CONTINUING|(pmod->fx->bImportant ? PLAYFX_IMPORTANT : 0));
+                character_PlayMaintainedFX(pchar, pentSrc->pchar, pchContinuingFX, pmod->uiTint, 0.0, PLAYFX_NOT_ATTACHED, PLAYFX_NO_TIMEOUT,
+                                           PLAYFX_CONTINUING | (pmod->fx->bImportant ? PLAYFX_IMPORTANT : 0));
             }
             // Set any mode bits for the AttribMod
             character_AddStickyStates(pchar, pmod->ptemplate->piContinuingBits);
         }
-        else if(bContinuingFXOnLast)
+        else if (bContinuingFXOnLast)
         {
             // Kill FX if character made saving throw
-            if(pmod->ptemplate->pchContinuingFX)
+            if (pmod->ptemplate->pchContinuingFX)
                 character_KillMaintainedFX(pchar, pchar, pchContinuingFX);
         }
     }
 
     pmod->fTimer -= fRate;
-    if(pmod->ptemplate->fDuration<ATTRIBMOD_DURATION_FOREVER)
+    if (pmod->ptemplate->fDuration < ATTRIBMOD_DURATION_FOREVER)
     {
         pmod->fDuration -= fRate;
         if (((pmod->ptemplate->fDuration + pmod->ptemplate->fDelay) > 30) && (pmod->fDuration < 10) && (pmod->ptemplate->ppowBase->bShowBuffIcon))
@@ -2712,16 +2640,15 @@ bool mod_Process(AttribMod *pmod, Character *pchar, CharacterAttribSet *pattribs
     return bTimedOut;
 }
 
-
 /**********************************************************************func*
  * mod_CancelFX
  *
  */
-void mod_CancelFX(AttribMod *pmod, Character *pchar)
+void mod_CancelFX(AttribMod* pmod, Character* pchar)
 {
-    if(pmod->ptemplate->pchContinuingFX)
+    if (pmod->ptemplate->pchContinuingFX)
         character_KillMaintainedFX(pchar, pchar, basepower_GetAttribModFX(pmod->ptemplate->pchContinuingFX, pmod->fx->pchContinuingFX));
-    if(pmod->ptemplate->pchConditionalFX)
+    if (pmod->ptemplate->pchConditionalFX)
         character_KillMaintainedFX(pchar, pchar, basepower_GetAttribModFX(pmod->ptemplate->pchConditionalFX, pmod->fx->pchConditionalFX));
 }
 
@@ -2729,17 +2656,17 @@ void mod_CancelFX(AttribMod *pmod, Character *pchar)
  * mod_Cancel
  *
  */
-void mod_Cancel(AttribMod *pmod, Character *pchar)
+void mod_Cancel(AttribMod* pmod, Character* pchar)
 {
-    switch(pmod->ptemplate->offAttrib)
+    switch (pmod->ptemplate->offAttrib)
     {
         case kSpecialAttrib_SetMode:
             character_UnsetPowerMode(pchar, pmod->ptemplate->fMagnitude);
             break;
 
-//         case kSpecialAttrib_UnsetMode:
-//             character_SetPowerMode(pchar, pmod->ptemplate->fMagnitude);
-//             break;
+            //         case kSpecialAttrib_UnsetMode:
+            //             character_SetPowerMode(pchar, pmod->ptemplate->fMagnitude);
+            //             break;
 
         case kSpecialAttrib_SetCostume:
             character_RestoreCostume(pchar);
@@ -2757,7 +2684,7 @@ void mod_Cancel(AttribMod *pmod, Character *pchar)
             break;
 
         case offsetof(CharacterAttributes, fTaunt):
-            if(pchar->pmodTaunt == pmod)
+            if (pchar->pmodTaunt == pmod)
             {
                 pchar->pmodTaunt = NULL;
                 pchar->entParent->target_update = 1;
@@ -2779,50 +2706,46 @@ void mod_Cancel(AttribMod *pmod, Character *pchar)
             break;
 
         case kSpecialAttrib_EntCreate:
-            if(pmod->erCreated!=0)
+            if (pmod->erCreated != 0)
             {
                 // Don't kill pets if they are meant to live on.
-                if(pmod->ptemplate->fDuration!=0.0f || pmod->ptemplate->eType==kModType_Duration)
+                if (pmod->ptemplate->fDuration != 0.0f || pmod->ptemplate->eType == kModType_Duration)
                 {
                     character_DestroyPet(pchar, pmod);
                 }
             }
             break;
 
-        case kSpecialAttrib_Avoid:
-            {
-                AIEventNotifyParams params;
-                const BasePower* ppowBase = pmod->ptemplate->ppowBase;
+        case kSpecialAttrib_Avoid: {
+            AIEventNotifyParams params;
+            const BasePower* ppowBase = pmod->ptemplate->ppowBase;
 
-                params.notifyType = AI_EVENT_NOTIFY_POWER_ENDED;
-                params.source = erGetEnt(pmod->erSource);
-                params.target = pchar->entParent;
-                params.powerEnded.offAttrib = (S32)pmod->ptemplate->offAttrib;
-                params.powerEnded.offAspect = (S32)pmod->ptemplate->offAspect;
-                params.powerEnded.ppowBase = pmod->ptemplate->ppowBase;
-                params.powerEnded.uiInvokeID = pmod->uiInvokeID;
-                if(params.source)
-                {
-                    aiEventNotify(&params);
-                }
-            }
-            break;
-
-        case kSpecialAttrib_GlobalChanceMod:
+            params.notifyType = AI_EVENT_NOTIFY_POWER_ENDED;
+            params.source = erGetEnt(pmod->erSource);
+            params.target = pchar->entParent;
+            params.powerEnded.offAttrib = (S32)pmod->ptemplate->offAttrib;
+            params.powerEnded.offAspect = (S32)pmod->ptemplate->offAspect;
+            params.powerEnded.ppowBase = pmod->ptemplate->ppowBase;
+            params.powerEnded.uiInvokeID = pmod->uiInvokeID;
+            if (params.source)
             {
-                int i = eaFind(&pchar->ppmodChanceMods, pmod);
-                if(i>=0)
-                    eaRemoveFast(&pchar->ppmodChanceMods,i);
-                if(eaSize(&pchar->ppmodChanceMods) == 0)
-                    eaDestroy(&pchar->ppmodChanceMods);
+                aiEventNotify(&params);
             }
-            break;
-        case kSpecialAttrib_DesignerStatus:
-            {
-                pchar->entParent->status_effects_update = true;
-            }
-            break;
+        }
+        break;
 
+        case kSpecialAttrib_GlobalChanceMod: {
+            int i = eaFind(&pchar->ppmodChanceMods, pmod);
+            if (i >= 0)
+                eaRemoveFast(&pchar->ppmodChanceMods, i);
+            if (eaSize(&pchar->ppmodChanceMods) == 0)
+                eaDestroy(&pchar->ppmodChanceMods);
+        }
+        break;
+        case kSpecialAttrib_DesignerStatus: {
+            pchar->entParent->status_effects_update = true;
+        }
+        break;
     }
 }
 

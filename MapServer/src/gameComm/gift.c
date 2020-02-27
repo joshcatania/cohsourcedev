@@ -306,7 +306,7 @@ void gift_recieveSend( Entity *e, Packet * pak )
     // if they are a pet we do different stuff
     if( ENTTYPE(recipient) != ENTTYPE_PLAYER )
     {
-        if (stricmp( e->pchar->pclass->pchName, "Class_Mastermind") != 0 || !recipient->erOwner)  //not mastermind
+        if (!(e->pchar->pclass->bIsPetClass) || !recipient->erOwner)  //not mastermind
         {
             gift_cancel(e,type,icol,irow,ispec);
             return;

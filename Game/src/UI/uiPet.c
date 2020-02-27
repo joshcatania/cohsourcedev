@@ -136,7 +136,7 @@ bool playerIsMasterMind()
     if (!e || !e->pchar || !e->pchar->pclass || !e->pchar->pclass->pchName)
         return false;
 
-    if( stricmp( e->pchar->pclass->pchName, "Class_Mastermind") == 0 )
+    if( e->pchar->pclass->bIsPetClass )
         return true;
     else
         return false;

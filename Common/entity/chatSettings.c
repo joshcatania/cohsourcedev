@@ -165,7 +165,7 @@ static void createDefaultChatSettings(Entity * e, int topChannels, int botChanne
 
     createDefaultChannel( e, channelDefault_Help, 0, 2, 0, "DefaultHelpChat");
     createDefaultChannel( e, channelDefault_Combat, 0, 3, 0, "DefaultCombatChat");
-    if(stricmp( e->pchar->pclass->pchName, "Class_Mastermind")== 0)
+    if (e->pchar->pclass->bIsPetClass)
     {
         createDefaultChannel( e, channelDefault_PetCombat, 0, 4, 0, "DefaultPetCombat");
     }
