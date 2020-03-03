@@ -819,8 +819,7 @@ char * getTranslatedMapName( int map_id )
 }
 
 
-bool g_MapIsPraetorianTutorial;
-bool g_MapIsNeutralTutorial;
+bool g_MapIsTutorial;
 bool g_MapIsMissionMap;
 
 // 
@@ -837,8 +836,7 @@ void setMapInfoFlags(void)
 
     if (g_MapIsMissionMap)
     {
-        g_MapIsPraetorianTutorial = OnPraetorianTutorialMission();
-        g_MapIsNeutralTutorial = false;
+		g_MapIsTutorial = OnPraetorianTutorialMission();
     } else {
         if(db_state.local_server) {
             cname = saUtilCurrentMapFile();
@@ -847,8 +845,7 @@ void setMapInfoFlags(void)
         } else {
             info = staticMapInfoFind(db_state.map_id);
         }
-        g_MapIsPraetorianTutorial = (info && info->introZone == 3);
-        g_MapIsNeutralTutorial = (info && info->introZone == 4);
+		g_MapIsTutorial = (info && info->introZone > 0);
     }
 }
 

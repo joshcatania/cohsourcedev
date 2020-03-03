@@ -6,6 +6,8 @@
 #include <utilitieslib/utils/Color.h>
 #include <utilitieslib/utils/superassert.h>
 #include "bases/baseraid.h"
+#include "utilitieslib/components/StashTable.h"
+#include "bases/basedata.h"
 
 #define ROOM_SUBBLOCK_SIZE 16
 #define BASE_BLOCK_SIZE 32
@@ -254,6 +256,8 @@ typedef struct Base
 
     GroupDef    *plot_def;
     GroupDef    *sound_def;
+    char	music[50];		// Background music currently playing.
+	unsigned int	musicTrack;	// Used to update entities without doing a string comparison on each one.
 
     char **baselogMsgs;
 } Base;

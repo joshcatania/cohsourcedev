@@ -344,7 +344,7 @@ int helpWindow()
     if (e && e->pl && !e->pl->helperStatus && statusPopupDone != e->db_id
         && game_state.base_map_id != 41 // Neutral Tutorial
         && game_state.base_map_id != 40 // Praetorian Tutorial
-        && !(game_state.base_map_id >= 24 && game_state.base_map_id <= 35) // Old Hero Tutorial 
+        && game_state.base_map_id != 24 // Old Hero Tutorial 
         && game_state.base_map_id != 70 // Old Villain Tutorial
         && !game_state.mission_map)
     {

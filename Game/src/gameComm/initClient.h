@@ -19,6 +19,8 @@ int choosePlayerWrapper(int player_slot, int createLocation);
 int chooseVisitingPlayerWrapper(int dbid);
 int checkForCharacterCreate(void);
 int doMapXfer(void);
+void pickHeroTutorial(void);
+void pickVillainTutorial(void);
 void pickPrimalTutorial(void);
 void pickHero(void);
 void pickVillain(void);

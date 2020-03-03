@@ -366,9 +366,10 @@ void worldSendUpdate(NetLink *link,int full_update)
         }
         else
         {
-            if (g_MapIsPraetorianTutorial)
-            {
-                pktSendBitsAuto(pak, 4); // mild hack to get the praetorian tutorial mission map
+ 			if (g_MapIsTutorial)
+			{
+				// Mark mission maps within tutorials as being IntroZone 4
+				pktSendBitsAuto(pak, 4);
             }
             else
             {

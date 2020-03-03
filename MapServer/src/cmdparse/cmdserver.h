@@ -117,6 +117,8 @@ typedef struct ServerState
     float    xpscale;
     float    aescale;
     float    ticketscale;
+    int     aggrocap;
+    int     targetcapmode;
 
     int        groupDefVersion;
 

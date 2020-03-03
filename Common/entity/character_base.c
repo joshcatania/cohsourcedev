@@ -148,7 +148,7 @@ void character_CreatePartOne(Character *pchar, Entity *e, const CharacterOrigin 
 #ifdef SERVER
         // If this map is part of the Praetorian tutorial whether zone or
         // mission, players cannot be killed.
-        if (g_MapIsPraetorianTutorial || g_MapIsNeutralTutorial)
+        if (g_MapIsTutorial)
             pchar->bCannotDie = 1;
 #endif
     }
@@ -2400,7 +2400,7 @@ bool character_RemoveInspiration(Character *pChar, int iCol, int iRow, const cha
 
 #ifdef SERVER
         eaiPush(&p->entParent->inspirationStatusChange, iCol*CHAR_INSP_MAX_ROWS+iRow);
-        if (g_MapIsMissionMap && g_MapIsPraetorianTutorial)
+        if (g_MapIsTutorial)
             SetMissionObjectiveComplete(OBJECTIVE_SUCCESS, CODEOBJ_USED_INSPIRATION);
 
 #endif
@@ -2549,7 +2549,7 @@ const BasePower * basePower_inspirationGetByName(char* set, char* power)
 //  (certain restrictions apply)
 static int CanNotDeleteInspirationInTutorial(void)
 {
-    if (g_MapIsMissionMap && g_MapIsPraetorianTutorial && !ObjectiveIsComplete(CODEOBJ_USED_INSPIRATION))
+    if (g_MapIsMissionMap && g_MapIsTutorial && !ObjectiveIsComplete(CODEOBJ_USED_INSPIRATION))
         return true;
     return false;
 }

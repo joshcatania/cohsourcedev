@@ -14,6 +14,7 @@ GroupFile *groupLoad(const char *fname);
 GroupFile *groupLoadTo(const char *fname,GroupFile *file);
 GroupFile *groupLoadFull(const char *fname);
 GroupFile *groupLoadFromMem(const char *map_data);
+void groupBinCurrent(const char *outname);
 void groupLoadMakeAllBin(int force_level);
 void groupLoadMakeAllMapStats();
 void groupLoadMakeAllMapImages(char * directory);

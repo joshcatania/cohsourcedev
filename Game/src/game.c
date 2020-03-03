@@ -757,7 +757,11 @@ void engine_update()
         PERFINFO_AUTO_START("waitFps",1);
             //If the frame rate is locked, slow down to match it.
             if (game_state.maxInactiveFps && game_state.inactiveDisplay) {
-                waitFps( game_state.maxInactiveFps);
+                int fps = MIN(game_state.maxInactiveFps, game_state.maxfps);
+				waitFps( fps ? fps : game_state.maxInactiveFps);
+			} else if (!isMenu(MENU_GAME) && game_state.maxMenuFps) {
+				int fps = MIN(game_state.maxMenuFps, game_state.maxfps);
+				waitFps( fps ? fps : game_state.maxMenuFps);
             } else {
                 waitFps( game_state.maxfps);
             }

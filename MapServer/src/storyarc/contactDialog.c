@@ -1542,7 +1542,9 @@ void ContactSetupTeleportOnCompleteLinks(ContactInteractionContext* context)
     // Heroes: Atlas Park, Villains: Contact Kalinda
     AddResponse(response, saUtilLocalize(player,"TutorialOptionOne"), ENT_IS_VILLAIN(player)?CONTACTLINK_NEWPLAYERTELEPORT_MI_KALINDA : CONTACTLINK_NEWPLAYERTELEPORT_AP);
     // Heroes: Galaxy City, Villains: Contact Burke
-    AddResponse(response, saUtilLocalize(player,"TutorialOptionTwo"), ENT_IS_VILLAIN(player)?CONTACTLINK_NEWPLAYERTELEPORT_MI_BURKE : CONTACTLINK_NEWPLAYERTELEPORT_GC);
+    if (ENT_IS_VILLAIN(player)) {
+        AddResponse(response, saUtilLocalize(player, "TutorialOptionTwo"), CONTACTLINK_NEWPLAYERTELEPORT_MI_BURKE);
+    }
 }
 
 // the main first contact page.

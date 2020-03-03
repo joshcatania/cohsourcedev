@@ -173,7 +173,7 @@ char* printLocalizedEnt(const char *msg, ...)
     static char            buffer[256];
     
     if(!my_typedef){
-        my_typedef = msCompileMessageType("{Hero, %E}");
+        my_typedef = msCompileMessageType("{Hero, %D}");
     }
         
     VA_START(va, msg);
@@ -205,7 +205,7 @@ char* printLocalizedEntFromEntLocale(const char *msg, ...)
     static char            buffer[128];
     
     if(!my_typedef){
-        my_typedef = msCompileMessageType("{Hero, %E}");
+        my_typedef = msCompileMessageType("{Hero, %D}");
     }
         
     VA_START(va, msg);
@@ -504,7 +504,8 @@ void installCustomMessageStoreHandlers(MessageStore* store)
 {
     msSetFormatHandler(store, 'C', formatHandlerC);
     msSetFormatHandler(store, 'D', formatHandlerD);
-    msSetFormatHandler(store, 'E', formatHandlerE);
+    //NOTE: formatHandlerE requires the param to contain an Entity pointer.  Currently, nothing in MessageStore passes this.
+    //msSetFormatHandler(store, 'E', formatHandlerE);
     msSetFormatHandler(store, 'P', formatHandlerP);
     msSetFormatHandler(store, 'I', formatHandlerI);
     

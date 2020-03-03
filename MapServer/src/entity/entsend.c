@@ -727,8 +727,9 @@ int entSendGetInterpStoreEntityId()
 }
 
 // This array translates from the binary-tree-position index to the actual position-array index.
+// VM - extended array to avoid a crash in entSetGenericInterpPositions.  Maybe.
 
-static const int binpos_to_pos[7] = { 3, 1, 5, 0, 2, 4, 6 };
+static const int binpos_to_pos[9] = { 3, 1, 5, 0, 2, 4, 6, 7, 8 };
 
 // This array says which position-array indexes are the parent positions of the binary-tree-positions.
 // Indexes 0-6 are the middle positions because the math is nicer, so you get this beautifulness:
@@ -2209,6 +2210,14 @@ static void entSetGenericInterpPositions(    Packet* pak,
     Vec3 unpacked_pos[9];
     int used[7];
     int used_count = 0;
+    int max_y = 0;
+    int max_xz = 0;
+
+    // record the actual length of the incoming arrays to prevent reading past the end. (mapserver.exe crash on entity move)
+    if (y_pos_used)
+        max_y = sizeof(y_pos_used);
+    if (xz_pos_used)
+        max_xz = sizeof(xz_pos_used);                                        
 
     if(y_pos_used && xz_pos_used)
     {
@@ -2230,12 +2239,12 @@ static void entSetGenericInterpPositions(    Packet* pak,
                 addVec3(unpacked_pos[binpos_to_pos[binpos_to_parentbinpos[i][1]]], temp_pos, temp_pos);
                 scaleVec3(temp_pos, 0.5, temp_pos);
 
-                if(y_pos_used[i])
+                if(i<max_y && y_pos_used[i])
                 {
                     temp_pos[1] += decodeOffset(ip[i].offsets[vecYidx], send_ent.interp_bits, cur_bits);
                 }
 
-                if(xz_pos_used[i])
+                if(i<max_xz && xz_pos_used[i])
                 {
                     temp_pos[0] += decodeOffset(ip[i].offsets[vecXidx], send_ent.interp_bits, cur_bits);
                     temp_pos[2] += decodeOffset(ip[i].offsets[vecZidx], send_ent.interp_bits, cur_bits);
@@ -4076,7 +4085,7 @@ void entSendUpdate(NetLink *link,Entity *player_ent,int re_predict,int full_upda
             send_ent.sent_buf->namecount_sent = 0;
 
         {
-            if(!player_ent->access_level)
+			if(!(player_ent->access_level || (client->entDebugInfo == ENTDEBUGINFO_RUNNERDEBUG)))
             {
                 pktSendBits(pak, 1, 1);
             }

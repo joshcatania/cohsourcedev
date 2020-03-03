@@ -1581,6 +1581,18 @@ int launcherCommStartProcess(const char *db_hostname, U32 host_ip, MapCon* map_c
     {
         estrConcatf(&cmd, " -ticketscale %f", server_cfg.ticketscale);
     }
+    if (server_cfg.aggrocap > 17)
+    {
+        estrConcatf(&cmd, " -aggrocap %d", server_cfg.aggrocap);
+    }
+    else
+    {
+        estrConcatf(&cmd, " -aggrocap %d", 17);
+    }
+    if (server_cfg.targetcapmode)
+    {
+        estrConcatf(&cmd, " -targetcapmode %d", server_cfg.targetcapmode);
+    }
 
     {
         WeeklyTFCfg *weeklyTF_cfg = WeeklyTFCfg_getCurrentWeek(0);

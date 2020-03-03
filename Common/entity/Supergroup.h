@@ -170,6 +170,8 @@ typedef struct Supergroup
     int                prestigeBonusCount;        // The number of members which the prestige bonus has been given to.
     int                praetBonusIds[MAX_SUPER_GROUP_MEMBERS];        // All ex-Praetorians whose membership grants a bonus
     int                dateCreated;
+    int                passcode;
+	char               music[50];
     U32                flags;
 
     struct SgrpBaseUpkeep
@@ -247,6 +249,7 @@ void sgrp_AdjRecipeNoLock(Supergroup *sg, DetailRecipe const *recipe, int count,
 void sgrp_TrackDbId(Supergroup *sg, int idSgrp);
 void sgrp_UnTrackDbId(int idSgrp);
 Supergroup *sgrpFromDbId(int idSgrp);
+Supergroup *sgrpFromSgId(int idSgrp);
 
 int sgrp_emptyMounts( Supergroup *sg );
 

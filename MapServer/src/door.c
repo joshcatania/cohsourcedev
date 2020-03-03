@@ -3538,6 +3538,9 @@ static bool s_EnterBases(Entity *e, Vec3 pos)
             res = true;
         }
 
+		// Hack: s_AppendBaseAccess looks for idSgrp -1 to send the "enter passcode" command.
+		SendBaseAccess(e, "Enter Passcode...", -1, kBaseAccess_Allowed);
+
         eaiDestroy(&idSgrps);
         eaDestroy(&baseNames);
         eaiDestroy(&baseAccesses);
@@ -3573,9 +3576,13 @@ static char* s_AppendBaseAccess(char *cur, Entity *e, char *baseName, int idSgrp
         
     if( accessState == kBaseAccess_Allowed )
     {
-        sprintf(fullCommand,"%s %d",commandString,idSgrp);                
-        cur += sprintf(    cur,
-                        "<a href='cmd:%s 0'><tr><td align=center valign=center>%s</td></tr></a>",
+		if (idSgrp == -1) {
+			sprintf(fullCommand,"sg_enter_passcode");
+		} else {
+			sprintf(fullCommand,"%s %d 0",commandString,idSgrp);				
+		}
+		cur += sprintf(	cur,
+						"<a href='cmd:%s'><tr><td align=center valign=center>%s</td></tr></a>",
                         fullCommand,
                         baseName);
     }

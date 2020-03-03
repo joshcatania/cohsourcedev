@@ -23,12 +23,47 @@
 #include "ai/entaiScript.h"
 #include "entity/character_target.h"
 
+#include "svr/svr_base.h"
+#include "comm_game.h"
+#include <utilitieslib/network/net_packetutil.h>
+#include <utilitieslib/network/net_packet.h>
 static float randomFloat(float min, float max)
 {
     U32 rand = rule30Rand();
     F32 dif = max - min;
     F32 at = dif * rand / UINT_MAX;
     return min + at;
+}
+
+static void serveDebugFloatMessage(Entity *victim, char *msg)
+{
+	#define LIST_SIZE   ( MAX_ENTITIES_PRIVATE )
+	#define RADIUS_TO_SEARCH ( 100 )
+	int i=0, list[ LIST_SIZE ];
+
+	buildCloseEntList(NULL, victim, RADIUS_TO_SEARCH, list, LIST_SIZE, TRUE); // true means send info to yourself
+
+	while( list[i] != -1 && i < LIST_SIZE )
+	{
+		Entity  *e = entities[ list[i] ];
+
+		if(ENTTYPE_BY_ID(list[i]) == ENTTYPE_PLAYER
+			&& e->client
+			&& e->client->ready >= CLIENTSTATE_REQALLENTS
+			&& e->client->entDebugInfo == ENTDEBUGINFO_RUNNERDEBUG)
+		{
+			START_PACKET(pak1, e, SERVER_SEND_FLOATING_DAMAGE);
+			pktSendBitsPack(pak1, 1, victim->owner);
+			pktSendBitsPack(pak1, 1, victim->owner);
+			pktSendBitsPack(pak1, 1, 0);
+			pktSendString(pak1, msg);
+			pktSendBits(pak1, 1, 0); // sendloc
+			pktSendBits(pak1, 1, 1); // wasAbsorb
+			END_PACKET
+		}
+
+		i++;
+	}
 }
 
 static void aiCritterActivityCombatChoosePower(Entity* e, AIVars* ai){

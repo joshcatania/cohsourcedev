@@ -2079,7 +2079,7 @@ void StoryArc_RemoveAllAutoDismissContacts(Entity *player, StoryInfo *info)
             {
                 contactDef = info->contactInfos[i]->contact->def;
 
-                if (contactDef && CONTACT_IS_AUTODISMISSED(contactDef))
+                if (contactDef && (CONTACT_IS_AUTODISMISSED(contactDef) || (CONTACT_IS_TUTORIAL(contactDef) && !g_MapIsTutorial)))
                 {
                     ContactDismiss(player, ContactGetHandleFromDefinition(contactDef), 1);
                 }

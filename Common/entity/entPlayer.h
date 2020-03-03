@@ -342,6 +342,7 @@ typedef struct EntPlayer
     int popHelpDisable;
     int forcedPopHelpDisable;
     int    newFeaturesVersion;
+    int	passcode;
 
     int ArchitectNav;
     int ArchitectTips;
@@ -657,6 +658,7 @@ typedef struct EntPlayer
     unsigned int webHideBadges;       // Hide badges from others on web page
     unsigned int webHideFriends;      // Hide friends from others on web page
     unsigned int disableInGameAdvertizing;   // PLayers in game advertizing setting
+    unsigned int musicTrack;	// Last music track heard in a supergroup base.
 } EntPlayer;
 
 #endif // __ENTPLAYER_H

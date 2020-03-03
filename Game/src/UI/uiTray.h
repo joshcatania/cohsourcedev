@@ -58,6 +58,7 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
 
 TrayObj *trayslot_find( Entity *e, const char *pch );
 void trayslot_findAndSelect( Entity *e, const char *pch, int toggleonoff );
+void trayslot_findAndSelectLocation( Entity *e, const char *locname, const char *pch );
 void trayslot_findAndSetDefaultPower( Entity *e, const char *pch );
 
 // Figure out the right tray to refer to if the Razer tray is open.

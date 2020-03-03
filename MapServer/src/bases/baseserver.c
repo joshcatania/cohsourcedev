@@ -13,6 +13,7 @@
 #include "bases/baseserver.h"
 #include "bases/bases.h"
 #include "bases/basedata.h"
+#include "bases/baseparse.h"
 #include "entity/entity.h"
 #include "entity/Supergroup.h"
 #include "comm_backend.h"
@@ -40,6 +41,7 @@
 #include "door.h"
 #include "entity/sgrpServer.h"
 #include "gameData/raidstruct.h"
+#include "entity/entGameActions.h"
 
 static int g_PrestigeSpent;
 
@@ -796,6 +798,17 @@ void base_Tick(Entity *e)
         sendBaseMode(e,0);
     }
     
+    // This seems like a good place to send the background music. It runs every tick so it can
+	// change in real time if the base builder uses /sg_music inside the base, but the ticks
+	// are a couple of seconds apart so it won't hog resources.
+	if (e->pl->musicTrack != g_base.musicTrack) {
+		e->pl->musicTrack = g_base.musicTrack;
+		if (strlen(g_base.music) == 0)
+			serveFadeSound(e, SOUND_MUSIC, 5.0f);
+		else
+			servePlaySound(e, g_base.music, SOUND_MUSIC, 1.0f);
+	}
+
     if(e->access_level < BASE_FREE_ACCESS) // only check kick if no access level
     {
         if (RaidIsRunning())
@@ -823,7 +836,7 @@ void base_Tick(Entity *e)
         else if( g_base.supergroup_id && e->supergroup_id != g_base.supergroup_id ) // check visitors
         {
             char *kickReason = NULL;
-            Supergroup *sg = sgrpFromDbId(g_base.supergroup_id);
+            Supergroup *sg = sgrpFromSgId(g_base.supergroup_id);
             BaseAccess access = kBaseAccess_None;
             int i;
             int idSgVisitor = e->supergroup_id;
@@ -831,7 +844,7 @@ void base_Tick(Entity *e)
             if(!sg)
             {
                 dbSyncContainerRequest(CONTAINER_SUPERGROUPS, g_base.supergroup_id, CONTAINER_CMD_TEMPLOAD, 0 );
-                sg = sgrpFromDbId(g_base.supergroup_id);
+                sg = sgrpFromSgId(g_base.supergroup_id);
                 if(!sg)
                 {
                     access = kBaseAccess_PermissionDenied; // boot if can't get supergroup
@@ -839,6 +852,22 @@ void base_Tick(Entity *e)
                 }
             }
 
+			if( sg && e->pl->passcode == sg->passcode)
+				access = kBaseAccess_Allowed;
+
+			if( sg && idSgVisitor != 0 && access == kBaseAccess_None )
+			{
+				for (i = 0; i < MAX_SUPERGROUP_ALLIES; i++)
+				{
+					if (sg->allies[i].db_id == idSgVisitor)
+					{
+						access = sgrp_BaseAccessFromSgrp( sg, kSgrpBaseEntryPermission_Coalition );
+						kickReason = "coalition access not allowed";
+						break;
+					}
+				}
+			}
+            
             if( sg && idSgVisitor != 0 && access == kBaseAccess_None )
             {
                 for (i = 0; i < MAX_SUPERGROUP_ALLIES; i++)

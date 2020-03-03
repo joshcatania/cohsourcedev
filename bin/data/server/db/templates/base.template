@@ -1,0 +1,4 @@
+UserId "int4" indexed
+SupergroupId "int4" indexed
+Data "textblob"
+ZipData "binary(max)"

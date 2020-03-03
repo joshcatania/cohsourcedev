@@ -16,6 +16,7 @@
 #include "container/dbcontainerpack.h"
 #include <utilitieslib/utils/file.h>
 #include "entity/rewardtoken.h"
+#include "entity/Supergroup.h"
 #include "team.h"
 #include "bases/basedata.h"
 #include "entity/SgrpServer.h"
@@ -540,6 +541,12 @@ LineDesc supergroup_line_desc[] =
 
     {{ PACKTYPE_DATE,    0,                                    "DateCreated",                OFFSET(Supergroup,    dateCreated),            },
         "The date that the supergroup was created."},
+
+	{{ PACKTYPE_INT,	SIZE_INT32,							"Passcode",					OFFSET(Supergroup,	passcode),	},
+		"Hashed passcode; allows visitors to enter the base."},
+
+	{{ PACKTYPE_STR_UTF8,	SIZEOF2(Supergroup, music),	"Music",					OFFSET(Supergroup,	music),	},
+		"Background music played inside the Supergroup base."},
 
     // subtables
 

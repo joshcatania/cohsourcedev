@@ -1285,112 +1285,74 @@ int findBestMapByBaseId(EntCon* ent_con, int map_id)
  
 int determineStartMapId(int createLocation)
 {
-    #define PLAYERS_TO_START_NEW_INTROMAP 30
+	int i;
+	int base_map_id;
+	int best_map_id = 0;
+	int max_players = 30;	// Default if SafePlayersLow is not set.
     MapCon *map;
-    static int curr_hero_intro_map = 0;
-    static int curr_vill_intro_map = 0;
-    static int curr_praet_intro_map = 0;
-    static int curr_neut_intro_map = 0;
 
-    int        i,best_id=1,new_map_id=0,curr_max=1000000;
-    int        curr_intro_map;
-    int        base_map_id;
-
-    if (start_zone_override > 0)
-        base_map_id = start_zone_override;
-    else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_TUTORIAL)
-        base_map_id = -3;
-    else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO)
-        base_map_id = 1;
+	if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO)
+		base_map_id = 1;	// Atlas Park
+	else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO_TUTORIAL)
+		base_map_id = 24;	// Outbreak
     else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN)
-        base_map_id = 71;
-    else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_TUTORIAL)
-        base_map_id = -2;
+		base_map_id = 71;	// Mercy Island
+	else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN_TUTORIAL)
+		base_map_id = 70;	// Breakout
+	else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_TUTORIAL)
+		base_map_id = 40;	// Precint 5
     else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_LOYALIST
             || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_RESISTANCE)
-        base_map_id = 36;
-    else // default, shouldn't ever happen
-        base_map_id = 1;
+		base_map_id = 36;	// Nova Praetoria
+	else
+		base_map_id = 41;	// Destroyed Galaxy City
 
-    map = containerPtr(map_list,base_map_id); 
-    if (map && (!map->introZone || start_zone_override > 0))
+	map = containerPtr(map_list, base_map_id); 
+	if (map)
     {
-        return findBestMapByBaseId(NULL, base_map_id);
+		if (map->safePlayersLow)
+			max_players = map->safePlayersLow;
+
+		if (totalPlayersOnMap(map) < max_players)
+			return base_map_id;
     }
 
-    if (base_map_id == -3)
-    { // Neutral Primals
-        curr_intro_map = curr_neut_intro_map;
-    }
-    else if (base_map_id == -2)
-    { // Praetorians
-        curr_intro_map = curr_praet_intro_map;
-    }
-    else if (base_map_id == -1)
-    { // Villains (old)
-        curr_intro_map = curr_vill_intro_map;
-    }
-    else
-    { // Heroes (old)
-        curr_intro_map = curr_hero_intro_map;
-    }
-
-    map = containerPtr(map_list,curr_intro_map);
-    if (map && totalPlayersOnMap(map) < PLAYERS_TO_START_NEW_INTROMAP)
-        return curr_intro_map;
-
-    for(i=0;i<map_list->num_alloced;i++)
+	// Base map ID is full, find another instance.
+	for(i = 0; i < map_list->num_alloced; i++)
     {
         map = (MapCon *) map_list->containers[i];
 
-        if ((base_map_id == 0 && map->introZone != 1) ||
-            (base_map_id == -1 && map->introZone != 2) ||
-            (base_map_id == -2 && map->introZone != 3) ||
-            (base_map_id == -3 && map->introZone != 4))
+		if (base_map_id != map->base_map_id)
             continue;
 
-        if (!map->map_running && !new_map_id)
-            new_map_id = map->id;
-        if (map->map_running && totalPlayersOnMap(map) < curr_max)
+		// The map is not running, but we don't have a better option yet.
+		if (!map->map_running && !best_map_id)
+			best_map_id = map->id;
+
+		// The map is running, see if it's not full.
+		if (map->map_running && totalPlayersOnMap(map) < max_players)
         { 
-            best_id = map->id;
-            curr_max = totalPlayersOnMap(map);
+			best_map_id = map->id;
+			break;
         }
     }
-    if (new_map_id && curr_max >= PLAYERS_TO_START_NEW_INTROMAP)
-        curr_intro_map = new_map_id;
-    else
-        curr_intro_map = best_id;
 
-    if (base_map_id == -3)
-    { // Neutral Primals
-        curr_neut_intro_map = curr_intro_map;
-    }
-    else if (base_map_id == -2)
-    { // Praetorians
-        curr_praet_intro_map = curr_intro_map;
-    }
-    else if (base_map_id == -1)
-    { // Villains (old)
-        curr_vill_intro_map = curr_intro_map;
-    }
-    else
-    { // Heroes (old)
-        curr_hero_intro_map = curr_intro_map;
-    }
-    return curr_intro_map;
+	// Return the first non-full instance, or the base map if we didn't find any.
+	return best_map_id ? best_map_id : base_map_id;
 }
 
 static int determinePlayerType(int createLocation)
 {
     if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_TUTORIAL
         || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO
+		|| createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO_TUTORIAL
         || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_RESISTANCE)
     {
         return kPlayerType_Hero;
     }
     else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN
             || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_TUTORIAL
+			|| createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN_TUTORIAL
             || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_LOYALIST)
     {
         return kPlayerType_Villain;
@@ -1406,7 +1368,9 @@ static int determinePraetorianProgress(int createLocation)
     if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_TUTORIAL)
         return kPraetorianProgress_NeutralInPrimalTutorial;
     else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO
-            || createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN)
+			|| createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO_TUTORIAL
+			|| createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN
+			|| createLocation == DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN_TUTORIAL)
         return kPraetorianProgress_PrimalBorn;
     else if (createLocation == DBGAMECLIENT_CREATE_PLAYER_PRAETORIAN_TUTORIAL)
         return kPraetorianProgress_Tutorial;

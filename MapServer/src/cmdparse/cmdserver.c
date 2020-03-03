@@ -193,6 +193,8 @@
 #include "LWC_common.h"
 #include "gameComm/NewFeatures.h"
 #include "utilitieslib/utils/timing.h"
+#include <utilitieslib/network/crypt.h>
+#include "group/groupfileload.h"
 
 ServerState server_state;
 
@@ -353,6 +355,8 @@ Cmd server_cmds[] =
                         "Clears the AI logs for all entities." },
     { 9, "entdebuginfo",SCMD_ENTDEBUGINFO, {{ CMDINT(tmp_int) }}, 0,
                         "bit flags for debug info display" },
+    { 0, "runnerdebug",SCMD_RUNNERDEBUG, {{ CMDINT(tmp_int) }}, 0,
+						"Enable limited debugging for a possible critter run-away bug" },
     { 9, "setdebugvar", SCMD_SETDEBUGVAR, {{ CMDSTR(tmp_str) }, { CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                         "Set a debug var." },
     { 9, "getdebugvar", SCMD_GETDEBUGVAR, {{ CMDSTR(tmp_str) }}, CMDF_HIDEVARS,
@@ -836,6 +840,8 @@ Cmd server_cmds[] =
                             "jump into your base" },
     { 9, "enterbasebysgid", SCMD_BASE_ENTERBYSGID , {{CMDINT(tmp_int)}}, 0,
                             "jump into your base" },
+    { 0, "enter_base_from_passcode", SCMD_BASE_ENTERBYPASSCODE , {{CMDSTR(tmp_str)}}, 0,
+							"jump into a base using its passcode" },                            
     { 9, "enterbaseexplicit",    SCMD_BASE_EXPLICIT, {{CMDSTR(tmp_str)}}, 0,
                             "jump to the specified base/raid/apt map" },
     { 9, "returntobase",    SCMD_BASE_RETURN, {{CMDSTR(tmp_str)}}, 0,
@@ -1588,6 +1594,8 @@ Cmd server_cmds[] =
                             "Turns on or off combat expression debugging."},
     { 0, "servertime",        SCMD_SERVER_TIME, {0},0,
                             "Print the current server time"},
+    { 0, "citytime",		SCMD_CITY_TIME, {0},0,
+							"Print the current city time"},                            
     { 9, "fill_powerupslot",    SCMD_FILL_POWERUP_SLOT, {{CMDINT(tmp_int)},{CMDINT(tmp_int2)}}, CMDF_HIDEVARS,
                             "Unlocks the skill system" },
     { 2, "base_save",        SCMD_BASE_SAVE, {{ 0 }}, CMDF_HIDEVARS,
@@ -1709,6 +1717,10 @@ Cmd server_cmds[] =
                             "Grants points to current SG, <points> <isRaid>"},
     { 1, "sg_show_raid_points",    SCMD_SG_SHOW_RAID_POINTS, {0}, 0,
                             "show current raid points"},
+	{ 0, "sg_passcode",	SCMD_SG_PASSCODE, {{ CMDSTR(tmp_str) }}, 0,
+							"Sets the Supergroup Base access passcode."},
+    { 0, "sg_music",	SCMD_SG_MUSIC, {{ CMDSTR(tmp_str) }}, 0,
+							"Sets the Supergroup Base background music."},                            
 
     { 9, "imebug",            SCMD_TEST_IMEBUG,{0},0,
                             "test ime bug"},
@@ -2125,6 +2137,7 @@ Cmd server_cmds[] =
     { 9, "set_zmq_connect_state", SCMD_SET_ZMQ_CONNECT_STATE, {{CMDINT(tmp_int)}}, 0, 
          "set_zmq_connect_state <0 or 1> - 0: disconnects ZMQ socket, stopping logserver from sending log messages to CoH Metrics system, 1: connects ZMQ socket." },
     { 9, "get_zmq_status", SCMD_GET_ZMQ_STATUS, {{0}}, 0, "get status of CoH Metrics system's ZeroMQ socket" },
+    { 9, "bin_map", SCMD_BIN_MAP, {{0}}, 0, "Write a single bin file for the current map" },    
     { 0 },
 };
 
@@ -2152,6 +2165,8 @@ void cmdOldServerStateInit()
     server_state.xpscale = 1.0;
     server_state.aescale = 1.0;
     server_state.ticketscale = 1.0;
+    server_state.aggrocap = 17;
+    server_state.targetcapmode = 1;
     server_visible_state.time = 0;
     server_visible_state.timescale = DAY_TIMESCALE;
 
@@ -2617,6 +2632,11 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
 
         xcase SCMD_ENTDEBUGINFO:
             printEntDebugInfo(client,tmp_int,output);
+        xcase SCMD_RUNNERDEBUG:
+			if (tmp_int)
+				client->entDebugInfo = ENTDEBUGINFO_RUNNERDEBUG;
+			else
+				client->entDebugInfo = 0;            
         xcase SCMD_SETDEBUGVAR:
             clientLinkSetDebugVar(client, tmp_str, (void*)(intptr_t)tmp_int);
         xcase SCMD_GETDEBUGVAR:
@@ -4854,6 +4874,52 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
                     conPrintf(client, "invalid supergroup id %d", tmp_int);
                 }
             }
+        xcase SCMD_BASE_ENTERBYPASSCODE:
+			{
+				U32 md5hash[4];
+				U32 i;
+				int split = 0;
+				int passcode;
+				int sgid;
+				Supergroup * sg;
+				char msg[100];
+				
+				if (!e) break;
+
+				for (i = 0; i < strlen(tmp_str); i++) {
+					if(tmp_str[i] == '-') split = i;
+					tmp_str[i] = toupper(tmp_str[i]);
+				}
+
+				if (split == 0) {
+					chatSendToPlayer(e->db_id, "You have entered an invalid base access passcode.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				tmp_str[split] = '\0';
+				sgid = atoi(&tmp_str[split+1]);
+
+				sg = sgrpFromSgId(sgid);
+				if (!sg) {
+					sprintf(msg, "Unable to load the supergroup container %i.", sgid);
+					chatSendToPlayer(e->db_id, msg, INFO_USER_ERROR, 0);
+				} else {
+					cryptMD5Init();
+					cryptMD5Update((U8*)tmp_str, strlen(tmp_str));
+					cryptMD5Final(md5hash);
+					passcode = md5hash[0] ^ md5hash[1] ^ md5hash[2] ^ md5hash[3];
+
+					if (passcode == sg->passcode) {
+						sprintf(msg, "Passcode accepted for %s.", sg->name);
+						chatSendToPlayer(e->db_id, msg, INFO_SVR_COM, 0);
+						e->pl->passcode = passcode;
+						SGBaseEnterFromSgid(client->entity, "PlayerSpawn", sgid, tmp_str);
+					} else {
+						sprintf(msg, "You have entered an incorrect passcode for %s.", sg->name);
+						chatSendToPlayer(e->db_id, msg, INFO_USER_ERROR, 0);
+					}
+				}
+			}            
         xcase SCMD_BASE_EXPLICIT:
         {
             char errmsg[200] = "";
@@ -7650,6 +7716,8 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
                 }
             xcase SCMD_SERVER_TIME:
                 chatSendToPlayer(client->entity->db_id, clientPrintf(client, "ServerTime", timerMakeOffsetDateStringNoYearNoSecFromSecondsSince2000(dbSecondsSince2000())), INFO_SVR_COM, 0 );
+            xcase SCMD_CITY_TIME:
+				chatSendToPlayer(client->entity->db_id, clientPrintf(client, "NPCCityTime", (int)server_visible_state.time, (int)(fmod(server_visible_state.time,1) * 60)), INFO_SVR_COM, 0 );                
             xcase SCMD_FILL_POWERUP_SLOT:
             {
                 Character *p;
@@ -8455,6 +8523,104 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             {
                 conPrintf(client, "Delete this command, it doesn't do anything anymore");
             }
+		xcase SCMD_SG_PASSCODE:
+			{
+				U32 md5hash[4];
+				U32 i;
+				bool isalpha = true;
+
+				if( !e )
+					break;
+
+				if( !e->supergroup_id ) {
+					chatSendToPlayer(e->db_id, "You are not in a Supergroup.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if( !sgroup_hasPermission(e, SG_PERM_CAN_SET_BASEENTRY_PERMISSION)) {
+					chatSendToPlayer(e->db_id, "Only members who can set the base entry permission can change the base access passcode.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if(strlen(tmp_str) == 0) {
+					chatSendToPlayer(e->db_id, "The supergroup base access passcode cannot be empty.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if(strlen(tmp_str) > 20) {
+					chatSendToPlayer(e->db_id, "The supergroup base access passcode cannot exceed 20 characters.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				for (i = 0; i < strlen(tmp_str); i++) {
+					if(!isalnum(tmp_str[i])) {
+						// Can't break two levels at once, so set a flag and check it afterwards.
+						isalpha = false;
+						break;
+					}
+					// Ignore case, since the passcode is meant to be shared and might be shared verbally.
+					tmp_str[i] = toupper(tmp_str[i]);
+				}
+				
+				if (!isalpha) {
+					chatSendToPlayer(e->db_id, "The supergroup base access passcode must contain only letters and numbers.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				cryptMD5Init();
+				cryptMD5Update((U8*)tmp_str, strlen(tmp_str));
+				cryptMD5Final(md5hash);
+
+				if(teamLock(e, CONTAINER_SUPERGROUPS))
+				{
+					char msg[100];
+					e->supergroup->passcode = md5hash[0] ^ md5hash[1] ^ md5hash[2] ^ md5hash[3];
+					teamUpdateUnlock(e, CONTAINER_SUPERGROUPS);
+					sprintf(msg, "Your supergroup base access passcode is now %s-%d", tmp_str, e->supergroup_id);
+					chatSendToPlayer(e->db_id, msg, INFO_SVR_COM, 0);
+				}
+				else
+				{
+					chatSendToPlayer(e->db_id, "Unable to set the supergroup base access passcode.", INFO_USER_ERROR, 0);
+				}
+
+			}break;
+
+		xcase SCMD_SG_MUSIC:
+			{
+				if( !e )
+					break;
+
+				if( !e->supergroup_id ) {
+					chatSendToPlayer(e->db_id, "You are not in a Supergroup.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if( !sgroup_hasPermission(e, SG_PERM_BASE_EDIT)) {
+					chatSendToPlayer(e->db_id, "Only members who can edit the base can change the base background music.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if(strlen(tmp_str) > 49) {
+					chatSendToPlayer(e->db_id, "Unable to set the supergroup background music: the file name is too long.", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if(teamLock(e, CONTAINER_SUPERGROUPS))
+				{
+					char msg[100];
+					strncpyt(e->supergroup->music,tmp_str,50);
+					teamUpdateUnlock(e, CONTAINER_SUPERGROUPS);
+					sprintf(msg, "Your supergroup background music is now %s.", strlen(e->supergroup->music)?e->supergroup->music:"disabled");
+					chatSendToPlayer(e->db_id, msg, INFO_SVR_COM, 0);
+				}
+				else
+				{
+					chatSendToPlayer(e->db_id, "Unable to set the supergroup background music.", INFO_USER_ERROR, 0);
+				}
+
+			}break;
+
             xcase SCMD_SG_ITEM_OF_POWER_GAME_SET_STATE:
             {
                 ItemOfPowerGameSetState(client->entity, tmp_str);
@@ -10536,6 +10702,8 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
                     conPrintf(client, "Slash command failed. Communication link to logserver is not connected.");
                 }                
             }
+        xcase SCMD_BIN_MAP:
+			groupBinCurrent(world_name);            
         xdefault:
             {
             }

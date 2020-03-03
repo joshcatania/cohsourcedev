@@ -150,6 +150,8 @@ enum{
                                                     ENTDEBUGINFO_MISC_LINES,
 };
 
+#define ENTDEBUGINFO_RUNNERDEBUG (ENTDEBUGINFO_CRITTER | ENTDEBUGINFO_DISABLE_BASIC | ENTDEBUGINFO_FEELING_INFO | ENTDEBUGINFO_AI_STUFF | ENTDEBUGINFO_TEAM_INFO)
+
 // Bitflags enum for debugMenuFlags.
 
 enum{

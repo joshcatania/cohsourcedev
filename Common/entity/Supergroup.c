@@ -18,6 +18,7 @@
 
 #if SERVER || STATSERVER
 #include "dbcomm/dbcomm.h"
+#include "comm_backend.h"
 #include "storyarc/storyinfo.h"
 #include "container/containerSupergroup.h"
 #endif
@@ -602,6 +603,16 @@ Supergroup *sgrpFromDbId(int idSgrp)
     return sg;
 }
 
+#if SERVER
+// Same as above but load it if it's not in the cache.
+Supergroup *sgrpFromSgId(int idSgrp)
+{
+	Supergroup *sg = sgrpFromDbId(idSgrp);
+	if (sg) return sg;
+	dbSyncContainerRequest(CONTAINER_SUPERGROUPS, idSgrp, CONTAINER_CMD_TEMPLOAD, false);
+	return sgrpFromDbId(idSgrp);
+}
+#endif
 
 int sgrp_emptyMounts( Supergroup *sg )
 {

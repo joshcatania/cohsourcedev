@@ -1990,7 +1990,14 @@ void baseSystemsTick(float fRate)
 
                     // update current upkeep
                     g_base.nUpkeepsLate = nUpkeepsLate;
+                    
                 }
+                // Check if the background music music has changed.
+				if (stricmp(g_base.music, sg->music) != 0)
+				{
+					strcpy(g_base.music, sg->music);
+					g_base.musicTrack++;
+				}
             }
         }
 

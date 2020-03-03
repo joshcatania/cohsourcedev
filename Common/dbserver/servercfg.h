@@ -76,6 +76,8 @@ typedef struct ServerCfg
     F32        xpscale;
     F32        aescale;
     F32        ticketscale;
+    int        aggrocap;
+    int        targetcapmode;
     int        auction_last_login_delay;
     char    client_commands[2000];
     U32        missionserver_max_queueSize;

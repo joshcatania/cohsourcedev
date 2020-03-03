@@ -31,7 +31,6 @@
 #include "entity/entworldcoll.h"
 
 #define MAX_DIST_LOOK_FOR_ENCOUNTER        15.0
-#define AI_CRITTER_AGGRO_CAP            17    // number of critters that will aggro you at any one time
 
 
 StaticDefineInt aiParseActivity[] = {
@@ -981,7 +980,7 @@ static void aiCritterFindTarget(Entity* e,
                 if(status->entity != attackTarget)    // if you're already targeting this guy it's ok
                                                     // even if he's capping out
                 {
-                    if(aiTarget->attackerList.count >= AI_CRITTER_AGGRO_CAP)
+                    if(aiTarget->attackerList.count >= server_state.aggrocap)
                     {
                         AIAttackerInfo* attackerInfo;
                         Entity* leastAggro = NULL;

@@ -1531,7 +1531,7 @@ void AccessibleContacts_ShowCurrent(Entity *player)
 
     info = staticMapInfoFind(db_state.base_map_id);
 
-    if ((info && info->introZone) || g_MapIsPraetorianTutorial)
+    if ((info && info->introZone) || g_MapIsTutorial)
     {
         sendInfoBox(player, INFO_SVR_COM, textStd("ContactFinderErrorNoTutorial"));
         return;
@@ -1590,7 +1590,7 @@ void AccessibleContacts_TeleportToCurrent(ClientLink *client, Entity *player)
 
     info = staticMapInfoFind(db_state.base_map_id);
 
-    if ((info && info->introZone) || g_MapIsPraetorianTutorial)
+    if ((info && info->introZone) || g_MapIsTutorial)
     {
         sendInfoBox(player, INFO_SVR_COM, textStd("ContactFinderErrorNoTutorial"));
         return;
@@ -1623,7 +1623,7 @@ void AccessibleContacts_SelectCurrent(ClientLink *client, Entity *player)
 
     info = staticMapInfoFind(db_state.base_map_id);
 
-    if ((info && info->introZone) || g_MapIsPraetorianTutorial)
+    if ((info && info->introZone) || g_MapIsTutorial)
     {
         sendInfoBox(player, INFO_SVR_COM, textStd("ContactFinderErrorNoTutorial"));
         return;

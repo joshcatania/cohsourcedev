@@ -112,8 +112,8 @@ void sendVictoryMessages(Entity* didMostDamager, Entity* attackerThatDealtFinalB
     if((!didMostDamager && !attackerThatDealtFinalBlow) || !victim)
         return;
 
-    // explicit hack to remove defeat spam from the Neutral Tutorial.
-    if (db_state.base_map_id == 41 && ENTTYPE(attackerThatDealtFinalBlow) != ENTTYPE_PLAYER)
+	// explicit hack to remove defeat spam from the Breakout and Galaxy City Tutorials.
+	if ((db_state.base_map_id == 41 || db_state.base_map_id == 70) && ENTTYPE(attackerThatDealtFinalBlow) != ENTTYPE_PLAYER)
         return;
 
     buildCloseEntList(victim, victor, (F32)200.f, tmpEntList, MAX_ENTLIST_LEN, TRUE);

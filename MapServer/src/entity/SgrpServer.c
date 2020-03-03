@@ -1520,6 +1520,34 @@ void sgroup_AcceptRelay(Entity* e, int sg_id, int invited_by)
 
 //
 //
+void sgroup_AltRelay(Entity* e, int sg_id, int sg_type, int inviter_id, int inviter_auth_id)
+{
+	// Freaking dirty cheaters
+	if (e->auth_id != inviter_auth_id)
+	{
+		chatSendToPlayer(inviter_id, localizedPrintf(e, "%s is not on your account, cheater!", e->name, e->auth_id, inviter_auth_id), INFO_USER_ERROR, 0 );
+		return;
+	}
+
+	if (e->supergroup_id)
+	{
+		chatSendToPlayer(inviter_id, localizedPrintf(e, "CouldNotActionPlayerReason", "InviteString", e->name, "PlayerIsAlreadyInSuperGroup"), INFO_USER_ERROR, 0);
+		return;
+	}
+
+	// Shouldn't be possible since this ent had to have been offline, but just in case...
+	if (e->pl->inviter_dbid)
+	{
+		chatSendToPlayer(inviter_id, localizedPrintf(e, "CouldNotActionPlayerReason", "InviteString", e->name, "PlayerIsConsideringAnotherOffer"), INFO_USER_ERROR, 0);
+		return;
+	}
+
+	// Hand off to the real function that does this
+	sgroup_AcceptRelay(e, sg_id, inviter_id);
+}
+
+//
+//
 void sgroup_KickMember( Entity *leader, char *name_param )
 {
     char tmp[512],name[512];

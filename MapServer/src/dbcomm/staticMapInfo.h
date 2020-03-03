@@ -216,8 +216,7 @@ char * getTranslatedMapName( int map_id );
 int MapSpecAreaCanReachArea( U8 src, U8 dst );
 
 void setMapInfoFlags(void);
-extern bool g_MapIsPraetorianTutorial;
-extern bool g_MapIsNeutralTutorial;
+extern bool g_MapIsTutorial;
 extern bool g_MapIsMissionMap;
 
 void MonorailsLoad(void);

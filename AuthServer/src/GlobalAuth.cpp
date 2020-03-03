@@ -83,6 +83,12 @@ static void OnChangeLoggingLevel( void )
     ShowLoggingLevel();
 }
 
+static void ShowDBInitError(void)
+{
+    MessageBoxA(mainWnd, "An error occurred connecting to the Database.\nSee log window and log file for details.",
+        "Fatal Error", MB_ICONERROR | MB_OK);
+}
+
 static void ShowConfigFileLoadError( void )
 {
     char cwd[_MAX_PATH];
@@ -396,7 +402,11 @@ exception_init();
             forbiddenIPList.Load( "etc\\BlockIPs.txt" );
         }
 
-        g_linDB->Init( config.numDBConn );
+        if (!g_linDB->Init(config.numDBConn)) {
+            ShowDBInitError();
+            exit(0);
+        }
+
         g_ServerList.Load();
 
         CDBConn conn(g_linDB);

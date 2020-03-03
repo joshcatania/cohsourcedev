@@ -192,6 +192,7 @@
 #include "account/AccountCatalog.h"
 #include "UI/Hybrid/uiBody.h"
 #include "bases/basedata.h"
+#include "entity/origins.h"
 
 GameState game_state;
 _CrtMemState g_memstate;
@@ -469,6 +470,7 @@ enum
     CMD_SCRIPTDEBUG_SET,
     CMD_SCRIPTDEBUG_VARTOP,
     CMD_POWEXEC_NAME,
+    CMD_POWEXEC_LOCATION,
     CMD_POWEXEC_SLOT,
     CMD_POWEXEC_TOGGLE_ON,
     CMD_POWEXEC_TOGGLE_OFF,
@@ -763,6 +765,8 @@ enum
     CMD_SHOW_OPTIONS,
     CMD_FORCE_CUT_SCENE_LETTERBOX,
     CMD_SET_SERVERGROUP,
+    CMD_MACRO_IMAGE,
+	CMD_SG_ENTER_PASSCODE,
 };
 
 #define MAX_SCROLL_OUT_DIST 80.0
@@ -929,6 +933,8 @@ Cmd game_cmds[] =
                         "Limits max frames per second." },
     { 0, "maxInactiveFps", 0, {{ CMDINT(game_state.maxInactiveFps)}},0,
                         "Limits max frames per second while the game is not in the foreground." },
+    { 0, "maxMenuFps", 0, {{ CMDINT(game_state.maxMenuFps)}},0,
+						"Limits max frames per second while the game is in a fullscreen menu." },
     { 0, "showfps", 0, {{ PARSETYPE_FLOAT, &game_state.showfps }},0,
                         "Show current framerate (1 = on, 0 = off)." },
     { 9, "showActiveVolume", 0, {{ CMDINT(game_state.showActiveVolume) }},0,
@@ -2115,6 +2121,8 @@ Cmd game_cmds[] =
     // Power and inspiration execution
     { 0, "powexec_name",    CMD_POWEXEC_NAME, {{ CMDSENTENCE(tmp_str)}}, CMDF_HIDEVARS,
                         "Executes a power with the given name." },
+    { 0, "powexec_location",	CMD_POWEXEC_LOCATION, {{ CMDSTR(tmp_str)},{CMDSENTENCE(tmp_str2)}}, CMDF_HIDEVARS,
+						"Executes a power at a specified location with the given name." },
     { 0, "powexec_slot",    CMD_POWEXEC_SLOT, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                         "Executes the given power slot from the current tray." },
     { 0, "powexec_toggleon", CMD_POWEXEC_TOGGLE_ON, {{ CMDSENTENCE(tmp_str)}}, CMDF_HIDEVARS,
@@ -2152,6 +2160,9 @@ Cmd game_cmds[] =
     { 0, "macro",        CMD_MACRO, {{ CMDSTR(tmp_str)},{ CMDSENTENCE(tmp_str2)}}, CMDF_HIDEVARS,
                         "Add a macro to first empty slot.\n"
                         "macro <name> <command"},
+	{ 0, "macro_image",		CMD_MACRO_IMAGE, {{ CMDSTR(tmp_str)},{ CMDSTR(tmp_str2)},{ CMDSENTENCE(tmp_str3)}}, CMDF_HIDEVARS,
+						"Add a macro to first empty slot, using any texture as the power icon.\n"
+						"macro_image <image> <name> <command>"},
     { 0, "macroslot",    CMD_MACRO_SLOT, { { CMDINT(tmp_int) },{ CMDSTR(tmp_str)},{ CMDSENTENCE(tmp_str2)} }, CMDF_HIDEVARS,
                         "Add a macro to provided slot.\n"
                         "macro <slot> <name> <command>"},
@@ -2242,6 +2253,8 @@ Cmd game_cmds[] =
                         "Do not cap number of relit vertices per frame" },
     { 0, "useNewColorPicker",0, {{CMDINT(game_state.useNewColorPicker)}}, 0,
                         "Use new color picker in editor." },
+	{ 0, "sg_enter_passcode", CMD_SG_ENTER_PASSCODE, {{0}}, 0,
+						"Enter a supergroup base access passcode." },
 
 #ifdef E3_SCREENSHOT
     { 0, "e3screenshot", 0, {{ CMDINT(game_state.e3screenshot) }}, 0,
@@ -2882,6 +2895,30 @@ static bool createEncryptedKeyAccessLevel(const char* userName, int level)
     return true;
 }
 #endif
+
+static void sgPasscodeDlgHandler(void * data)
+{
+	char *passcode;
+	char buf[1000];
+	U32 i;
+
+	if (isMapSelectOpen()) {
+		mapSelectClose();
+		passcode = dialogGetTextEntry();
+		// Stupid way to ensure only one word is sent, to avoid
+		// the "Unknown command" error message.
+		for (i = 0; i < strlen(passcode); i++) {
+			if(passcode[i] == ' ') {
+				passcode[i] = '\0';
+				break;
+			}
+		}
+		if (strlen(passcode) > 0) {
+			sprintf(buf, "enter_base_from_passcode %s", passcode);
+			cmdParse(buf);
+		}
+	}
+}
 
 int cmdAccessLevel()
 {
@@ -4382,8 +4419,14 @@ int cmdGameParse(char *str, int x, int y)
             }
         xcase CMD_NOP:
             {}
+        xcase CMD_SG_ENTER_PASSCODE:
+			if (isMapSelectOpen()) {
+				dialogNameEdit(textStd("Enter Supergroup Base Access Passcode:"), NULL, NULL, sgPasscodeDlgHandler, NULL, 30, 0);
+			}
         xcase CMD_MACRO:
             macro_create( tmp_str, tmp_str2, NULL, -1 );
+        xcase CMD_MACRO_IMAGE:
+			macro_create( tmp_str2, tmp_str3, tmp_str, -1 );
         xcase CMD_MACRO_SLOT:
             macro_create( tmp_str, tmp_str2, NULL, tmp_int );
         xcase CMD_MANAGE_ENHANCEMENTS:
@@ -4396,6 +4439,8 @@ int cmdGameParse(char *str, int x, int y)
             gfxScreenDump("screenshots", 0, "tga");
         xcase CMD_POWEXEC_NAME:
             trayslot_findAndSelect(playerPtr(), tmp_str, 0);
+        xcase CMD_POWEXEC_LOCATION:
+			trayslot_findAndSelectLocation(playerPtr(), tmp_str, tmp_str2);
         xcase CMD_POWEXEC_SLOT:
             //if(tmp_int>0 && tmp_int<=TRAY_SLOTS && playerPtr()!=NULL)
             {
@@ -5726,7 +5771,11 @@ int cmdGameParse(char *str, int x, int y)
             }
         xcase CMD_ACCOUNT_DEBUG_BUY_PRODUCT:
             {
-                AccountStoreBuyProduct( auth_info.uid, skuIdFromString(tmp_str) /* sku */, tmp_int /* quantity */ ); 
+#ifndef FINAL
+				AccountStoreBuyProduct( auth_info.uid, skuIdFromString(tmp_str) /* sku */, tmp_int /* quantity */ ); 
+#else
+				conPrintf("Debug commands not available in release client");
+#endif
             }
         xcase CMD_CATALOG_DEBUG_PUBLISH_PRODUCT:
             {
@@ -6018,6 +6067,8 @@ void gameStateInit()
     game_state.farz = 20000.f;
     game_state.scene[0] = 0;
     game_state.maxfps = 0;
+    game_state.maxMenuFps = 120;
+	game_state.maxInactiveFps = 60;
     game_state.port = 0;
     game_state.showhelp = 2;
     game_state.draw_scale = 1;
@@ -6028,7 +6079,7 @@ void gameStateInit()
     game_state.meshIndex = -1;
 
     if (strnicmp(getExecutablePatchVersion(NULL),"dev",3)==0)
-        game_state.showfps = 1;
+    game_state.showfps = 1;
     game_state.camdist = 10;
     game_state.minimized = 0;
 

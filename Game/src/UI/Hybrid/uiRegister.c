@@ -210,6 +210,24 @@ static void chooseVillain(void *data)
     chooseEnterGame(0);
 }
 
+static void chooseHeroTutorial(void *data)
+{
+	pickHeroTutorial();
+	chooseEnterGame(0);
+}
+
+static void chooseVillainTutorial(void *data)
+{
+	pickVillainTutorial();
+	chooseEnterGame(0);
+}
+
+static void chooseNeutralTutorial(void *data)
+{
+	pickPrimalTutorial();
+	chooseEnterGame(0);
+}
+
 static void chooseLoyalist(void *data)
 {
     // Praetoria not available before stage 4
@@ -264,9 +282,7 @@ static void choosePrimalTutorial(void *data)
     {
         return;
     }
-
-    pickPrimalTutorial();
-    chooseEnterGame(0);
+	dialogStd3(DIALOG_THREE_RESPONSE,  textStd("TutorialSelect"), "TutorialHero", "TutorialVillain", "TutorialNeutral", chooseHeroTutorial, chooseVillainTutorial, chooseNeutralTutorial, 0);
 }
 
 static void chooseHV(void *data)
@@ -423,7 +439,6 @@ static void handleGameEntry(Entity *e, char *text)
     else
     {
         int count = 0;
-        int tutorialFinished = AccountHasStoreProduct(inventoryClient_GetAcctInventorySet(), SKU("inttutor"));
         if( getPraetorianChoice() )
         {
             // Praetoria not available before stage 4
@@ -433,17 +448,10 @@ static void handleGameEntry(Entity *e, char *text)
             }
 
             //praetoria
-            if( tutorialFinished || ( isDevelopmentMode() && game_state.can_skip_praetorian_tutorial ) )
-            {
                 dialogStd( DIALOG_YES_NO, "EnterTutorial", NULL, NULL, choosePraetorianTutorial, choosePraetorianAlignment, DLGFLAG_LIMIT_MOUSE_TO_DIALOG );
             }
             else
             {
-                choosePraetorianTutorial(NULL);
-            }
-        }
-        else
-        {
             //primal
             if (class_MatchesSpecialRestriction(e->pchar->pclass, "Kheldian"))
             {
@@ -453,13 +461,9 @@ static void handleGameEntry(Entity *e, char *text)
             {
                 chooseVillain(NULL);
             }
-            else if( tutorialFinished || ( isDevelopmentMode() && game_state.can_skip_praetorian_tutorial ) )
-            {
-                dialogStd( DIALOG_YES_NO, "EnterTutorial", NULL, NULL, choosePrimalTutorial, chooseHV, DLGFLAG_LIMIT_MOUSE_TO_DIALOG );
-            }
             else
             {
-                choosePrimalTutorial(NULL);
+				dialogStd( DIALOG_YES_NO, "EnterTutorial", NULL, NULL, choosePrimalTutorial, chooseHV, DLGFLAG_LIMIT_MOUSE_TO_DIALOG );
             }
         }
     }

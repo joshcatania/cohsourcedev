@@ -2612,7 +2612,22 @@ bool character_ApplyPower(Character *pSrc, Power *ppow, EntityRef erTarget, cons
 
     PERFINFO_AUTO_START("ForEachTarget", 1);
     pref=charlist_GetFirst(&listTargets, &iter);
-    while(pref!=NULL && (ppow->ppowBase->iMaxTargetsHit == 0 || iNumHit < ppow->ppowBase->iMaxTargetsHit))
+    //Target Cap Mode: 1-Default; 2-Scaled to a percentage of max aggro cap 3-TargetCap = AggroCap
+    int NewMaxTargets = ppow->ppowBase->iMaxTargetsHit;
+
+    if (server_state.targetcapmode == 2)
+    {
+        NewMaxTargets = trunc((ppow->ppowBase->iMaxTargetsHit / 17) * server_state.aggrocap);
+    }
+    else if (server_state.targetcapmode == 3)
+    {
+        NewMaxTargets = server_state.aggrocap;
+    }
+    else
+    {
+        NewMaxTargets = ppow->ppowBase->iMaxTargetsHit;
+    }
+    while (pref != NULL && (NewMaxTargets == 0 || iNumHit < NewMaxTargets))
     {
         Character *pTarget = pref->pchar;
         bool bAlwaysHit;

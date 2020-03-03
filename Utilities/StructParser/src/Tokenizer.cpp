@@ -106,7 +106,7 @@ void Tokenizer::Reset()
     }
     m_bLookForControlCodeInComments = false;
     m_bInsideCommentControlCode = false;
-    m_ppExtraReservedWords = false;
+    m_ppExtraReservedWords = 0;
     m_bCSourceStyleStrings = false;
     m_bDontParseInts = false;
 }

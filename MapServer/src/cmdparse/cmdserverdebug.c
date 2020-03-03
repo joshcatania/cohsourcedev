@@ -9,7 +9,7 @@
 #include "gameComm/npc.h"
 #include "gameComm/NpcServer.h"
 #include <utilitieslib/utils/cmdoldparse.h>
-#include "cmdserverdebug.h"
+#include "cmdparse/cmdserverdebug.h"
 #include "generator/encounterprivate.h"
 #include "dbcomm/dbdoor.h"
 #include <utilitieslib/components/earray.h>

@@ -44,8 +44,8 @@ const char* DBEnv::GameIdToRegistryKey(int gameId)
     }
 }
 
-
-void DBEnv::Init(int connCount)
+// Return TRUE on successful connection.  Otherwise return FALSE.
+bool DBEnv::Init(int connCount)
 {
     m_connCount = connCount;
     m_pSqlPool = new SQLPool[m_connCount];
@@ -59,24 +59,28 @@ void DBEnv::Init(int connCount)
         if(retcode == SQL_SUCCESS || retcode == SQL_SUCCESS_WITH_INFO) {
             if(Login()) {
                 AllocSQLPool();
+                return TRUE;
             } else {
                 logger.AddLog(LOG_ERROR, "db login failed");
                 SQLFreeHandle(SQL_HANDLE_ENV, m_henv);
                 m_henv = SQL_NULL_HENV;
                 //TBROWN - delete our pool
                 delete[] m_pSqlPool;
+                return FALSE;
             }
-            return;
         }
     }
     logger.AddLog(LOG_ERROR, "db env allocation failed");
+    return FALSE;
 }
 
 bool DBEnv::Login(bool reset)
 {
     SQLHDBC hDbc;
+    bool loadFromConfig = true;
 
     if (!LoadConnStrFromConfig()) {
+        loadFromConfig = false;
         if (!LoadConnStrFromReg()) {
             DialogBoxParam(g_instance, MAKEINTRESOURCE(IDD_LOGIN), NULL, (DLGPROC)LoginDlgProc, (LPARAM)this);
         }
@@ -98,6 +102,14 @@ bool DBEnv::Login(bool reset)
                 break;
             if (!reset && (!config.connectionString || !config.connectionString[0])) {
                 DialogBoxParam(g_instance, MAKEINTRESOURCE(IDD_LOGIN), NULL, (DLGPROC)LoginDlgProc, (LPARAM)this);
+            }
+            else if (config.connectionString) {
+                if (loadFromConfig) {
+                    logger.AddLog(LOG_ERROR, "Connection string in etc\\config.txt is invalid!");
+                } else {
+                    logger.AddLog(LOG_ERROR, "Connection string in registry is invalid!");
+                }
+                return false;
             }
         }
         SQLDisconnect(hDbc);
@@ -349,13 +361,13 @@ CDBConn::~CDBConn()
     m_pEnv->m_lock.Leave();
 }
 
-BOOL CALLBACK LoginDlgProc(HWND hDlg, DWORD dwMessage, DWORD wParam, DWORD lParam)
+BOOL CALLBACK LoginDlgProc(HWND hDlg, DWORD dwMessage, DWORD wParam, LPARAM lParam)
 {
     static DBEnv *pEnv;
 
     switch (dwMessage) {
     case WM_INITDIALOG:
-        pEnv = (DBEnv *)(INT_PTR)lParam;
+        pEnv = (DBEnv *)(LONG_PTR)lParam;
         const char *pDefault;
         const char *pTitle;
         pDefault = "AuthDB";
@@ -366,8 +378,8 @@ BOOL CALLBACK LoginDlgProc(HWND hDlg, DWORD dwMessage, DWORD wParam, DWORD lPara
     case WM_COMMAND:
         switch (wParam) {
         case IDOK:
-            {
-                char buffer[64];
+        {
+                char buffer[64] = {0};
                 char *pTempConnStr;
                 pTempConnStr = (char *)pEnv->m_connStr;
 

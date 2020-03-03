@@ -267,6 +267,20 @@ int chooseVisitingPlayerWrapper(int dbid)
 
 static int gCreateLocation = 1;
 
+void pickHeroTutorial(void)
+{
+	playerPtr()->pl->praetorianProgress = kPraetorianProgress_PrimalBorn;
+	playerPtr()->pl->playerType = kPlayerType_Hero;
+	gCreateLocation = DBGAMECLIENT_CREATE_PLAYER_PRIMAL_HERO_TUTORIAL;
+}
+
+void pickVillainTutorial(void)
+{
+	playerPtr()->pl->praetorianProgress = kPraetorianProgress_PrimalBorn;
+	playerPtr()->pl->playerType = kPlayerType_Villain;
+	gCreateLocation = DBGAMECLIENT_CREATE_PLAYER_PRIMAL_VILLAIN_TUTORIAL;
+}
+
 void pickPrimalTutorial(void)
 {
     playerPtr()->pl->praetorianProgress = kPraetorianProgress_NeutralInPrimalTutorial;

@@ -1992,6 +1992,22 @@ static FileScanAction makeMapStat(char* dir, struct _finddata32_t* data)
     return FSA_EXPLORE_DIRECTORY;
 }
 
+void groupBinCurrent(const char *outname)
+{
+	char *memsave=0;
+	GroupFileLoad mem_group_file = {0};
+
+	printf("binning map %s\n", outname);
+
+	estrCreate(&memsave);
+	groupSaveToMem(&memsave);
+
+	groupLoadRawMem(memsave, &mem_group_file);
+	groupWriteGroupAndRootnameToBin(&mem_group_file, outname, 0);
+
+	ParserDestroyStruct(parse_group_list, &mem_group_file);
+	estrDestroy(&memsave);
+}
 
 static FileScanAction makeMapBin(char* dir, struct _finddata32_t* data)
 {

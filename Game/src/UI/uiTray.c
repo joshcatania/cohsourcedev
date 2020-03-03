@@ -48,7 +48,6 @@
 #include "UI/uiWindows_init.h"
 #include "entity/character_target.h"
 #include "entity/character_eval.h"
-#include <utilitieslib/utils/timing.h>
 #include "UI/uiTeam.h"
 #include <utilitieslib/utils/utils.h>
 #include "graphics/textureatlas.h"
@@ -63,6 +62,7 @@
 #include "UI/uiTrade.h"
 #include "uiGift.h"
 #include <utilitieslib/language/MessageStoreUtil.h>
+#include "entity/character_eval.h"
 #include "UI/uiOptions.h"
 #include "fxutil.h"
 #include "graphics/ttFontUtil.h"
@@ -486,7 +486,7 @@ void macro_create(char *shortName, char *command, char *icon, int slot)
     Entity * e = playerPtr();
     assert(e && e->pchar && e->pl);
 
-    buildMacroTrayObj(&to, command, shortName, icon, 0);
+	buildMacroTrayObj(&to, command, shortName, icon, icon != NULL);
 
     if (slot >= 0)
         trayobj_copy(getTrayObj(e->pl->tray, kTrayCategory_PlayerControlled, slot / TRAY_WD, slot % TRAY_WD, e->pchar->iCurBuild, true), &to, TRUE);
@@ -667,9 +667,299 @@ void trayslot_findAndSelect( Entity *e, const char *pch, int toggleonoff  )
             if (toggleonoff < 0 && !powerInfo_PowerIsActive(e->powerInfo, ppowRef))
                 return;
 
-            trayobj_select(e, pto);
-        }
-    }
+			trayobj_select(e, pto, NULL);
+		}
+	}
+}
+
+// Backsteps and returns length squared
+static float rayCastBackstepHelper( const Vec3 src, Vec3 dest, float backsteplen )
+{
+	float fDistSqr;
+	Vec3 dir;
+
+	// Backstep slightly from hit location
+	subVec3(dest, src, dir);				// Direction vector
+	fDistSqr = lengthVec3Squared(dir);		// Get length
+	normalVec3(dir);						// Normalize direction
+	scaleVec3(dir, backsteplen, dir);		// Scale to backstep length
+	subVec3(dest, dir, dest);				// Move back from hit along direction
+
+	return fDistSqr;
+}
+
+static void rayCastForLocTarget( const Vec3 csrc, Vec3 loc, int hitNotSelect )
+{
+	Vec3 src, dest;
+	bool bHit;
+
+	// Cast a ray along the direction vector to make it stop at any geometry hit
+	copyVec3(csrc, src);
+	copyVec3(loc, dest);
+
+	src[1] += .02;									// Fudge Y axis slightly so we're
+													// not coplanar with the ground
+	groupFindOnLine(src, dest, 0, &bHit, hitNotSelect);		// Will adjust dest if hit
+	if (bHit)
+	{
+		float footDistSqr = rayCastBackstepHelper(src, dest, 0.1);
+
+		// Try again with the head to skip over low ledges
+		src[1] = csrc[1] + PLAYER_HEIGHT;
+		loc[1] += PLAYER_HEIGHT;					// Use loc directly to not change dest
+		groupFindOnLine(src, loc, 0, &bHit, hitNotSelect);
+		if (!bHit || (rayCastBackstepHelper(src, loc, 0.1) > footDistSqr) ) {
+			// We did better on this one, so cast a ray downward up to the
+			// amount we fudged and return that
+			copyVec3(loc, src);
+			loc[1] -= PLAYER_HEIGHT;
+			groupFindOnLine(src, loc, 0, &bHit, hitNotSelect);
+			return;
+		}
+
+	}
+
+	// else loc is good to use as-is
+}
+
+// Cast a ray straight down
+static void floorPosition( Vec3 loc )
+{
+	Vec3 dest;
+	bool bHit;
+
+	copyVec3(loc, dest);
+	dest[1] -= 20000;
+	groupFindOnLine(loc, dest, 0, &bHit, 0);
+
+	if (bHit)		// only change loc if we actually hit something
+		copyVec3(dest, loc);
+}
+
+// Helper for followTerrain; overwrites dest
+static float tryFollowAngle( const Vec3 csrc, const Vec3 dir, float angle, float dist, Vec3 dest )
+{
+	Vec3 src;
+	Vec3 temp;						// Target of first ray, source of vertical drop
+	bool bHit;
+
+	// Use approximate eye position as source
+	copyVec3(csrc, src);
+	src[1] += PLAYER_HEIGHT * 5.0f / 6.0f;
+
+	scaleVec3(dir, dist, temp);		// Scale out player facing
+	addVec3(src, temp, temp);		// Translate into place
+	temp[1] += tan(angle) * dist;	// Trignometry ftw
+
+	// Cast the ray
+	groupFindOnLine(src, temp, 0, &bHit, 0);
+	if (bHit)									// go back slightly so we don't
+		rayCastBackstepHelper(src, temp, 1.0);	// end up in a corner
+
+	// Now cast a ray straight down
+	copyVec3(temp, dest);
+	dest[1] -= 20000;
+	groupFindOnLine(temp, dest, 0, &bHit, 0);
+
+	// Return the distance from original source
+	subVec3(dest, csrc, temp);
+	return lengthVec3(temp);
+}
+
+// Attempt to follow terrain to desired distance
+static bool followTerrain( const Vec3 csrc, const Vec3 dir, float dist, Vec3 loc )
+{
+	Vec3 dest;
+	float best = 0;
+	float angle;
+
+	// Try various angles. Kind of slow, but this is clientside
+	// and we can afford it.
+	for (angle = 0; angle >= -PI/4.0f; angle += PI/96.0f * (angle < 0 ? -1 : 1), angle *= -1)
+	{
+		int tries = 0;
+		float trydist = dist;
+		float absdist;
+
+		while (tries <= 3 && trydist >= 1) {
+			float lasttrydist = trydist;
+			absdist = tryFollowAngle(csrc, dir, angle, trydist, dest);
+			printf("tryFollowAngle(angle = %f, dist = %f); absdist = %f\n", DEG(angle), trydist, absdist);
+
+			if (absdist <= dist)		// Probably hit something
+				break;
+
+			// absdist > dist, so let's try to reduce it
+			trydist *= dist / absdist;					// triangles are proportial, yay
+			trydist -= MIN(trydist * 0.05, 0.25);		// fudge slightly to not go over
+			trydist = MIN(trydist, lasttrydist - 1);	// decrease by at least 1 to not stick on the cusp
+			tries++;
+		}
+
+		if (absdist <= dist && absdist > best) {
+			copyVec3(dest, loc);
+			best = absdist;
+
+			if (dist - absdist < 1.0f)
+			{
+				printf("EXACT(ish) absdist = %f; requested dist = %f\n", best, dist);
+				return true;				// close enough
+			}
+		}
+	}
+
+	printf("best absdist = %f; requested dist = %f\n", best, dist);
+
+	return (best > 0);
+}
+
+void trayslot_findAndSelectLocation( Entity *e, const char *locname, const char *pch )
+{
+	Mat4 lmat;
+	Vec3 loc, origcam;
+	TrayObj *pto;
+	Power *power;
+	bool bIsTeleport;
+	char *lc = 0;
+
+	// Be extra paranoid since this is only called from a slash command
+	// and we can spare the cycles.
+
+	if (!e || !pch || pch[0] == '\0' || !locname || locname[0] == '\0')
+		return;
+
+	pto = trayslot_find(e, pch);
+	if (!pto)
+		return;
+
+	if (pto->type != kTrayItemType_Power)
+		return;				// Shouldn't be possible but why risk it
+
+	power = e->pchar->ppPowerSets[pto->iset]->ppPowers[pto->ipow];
+	bIsTeleport = (power->ppowBase->eTargetType == kTargetType_Teleport
+		|| power->ppowBase->eTargetTypeSecondary == kTargetType_Teleport);
+
+	if (!stricmp(locname, "me") || !stricmp(locname, "self"))
+	{
+		copyVec3(ENTPOS(e), loc);
+		if(power->ppowBase->bTargetNearGround)
+			floorPosition(loc);
+	}
+	else if (!stricmp(locname, "target"))
+	{
+		if (!current_target)
+			return;			// TODO: Error message?
+		copyVec3(ENTPOS(current_target), loc);
+		if(power->ppowBase->bTargetNearGround)
+			floorPosition(loc);
+// Uncomment this if target mode turns out to be exploitable
+//		if (bIsTeleport)
+//			rayCastForLocTarget(ENTPOS(e), loc);		// Teleport must have LOS
+	} else {
+		// Fun fun, we're using directional mode
+		Vec3 dir = { 0, 0, 0 };
+		float dist = 0;
+		bool bFollowTerrain = false;
+		char *ds;
+
+		lc = strdup(locname);
+
+		ds = strchr(lc, ':');
+		if (!ds || ds == lc)
+			goto out;
+
+		*(ds++) = '\0';		// Split the string, ds is the distance string
+		if (!*ds)			// Make sure they didn't end the string with a colon
+			goto out;
+
+		if (!stricmp(lc, "up"))
+			dir[1] = 1;
+		else if (!stricmp(lc, "down"))
+			dir[1] = -1;
+		else if (!stricmp(lc, "camera")) {
+			Vec3 camdir = { 0, 0, -1 };
+			mulVecMat3(camdir, cam_info.cammat, dir);
+		} else {
+			// "SMRT" directions
+			// First figure out unit vector for direction
+			Vec3 facingmod = { 0, 0, 0 };
+			if (!stricmp(lc, "forward"))
+				facingmod[2] = 1;
+			else if (!stricmp(lc, "back"))
+				facingmod[2] = -1;
+			else if (!stricmp(lc, "left"))
+				facingmod[0] = -1;
+			else if (!stricmp(lc, "right"))
+				facingmod[0] = 1;
+			else {
+				float angle = atof(lc);
+				facingmod[0] = sin(RAD(angle));
+				facingmod[2] = cos(RAD(angle));
+			}
+			mulVecMat3(facingmod, ENTMAT(e), dir);		// Apply player's transform matrix
+
+			// If player is near the ground, or this is a power that must be used on the ground,
+			// engage terrain following mode
+			if(power->ppowBase->bTargetNearGround || entHeight(e, 2.0f) <= 1.0f)
+				bFollowTerrain = true;
+		}
+
+		if (!stricmp(ds, "max"))
+			dist = power->fRangeLast;
+		else
+			dist = atof(ds);
+
+		if (bFollowTerrain)
+		{
+			if (!followTerrain(ENTPOS(e), dir, dist, loc))
+				goto out;							// TODO: Error message?
+		}
+		else
+		{
+			// Straight line
+			scaleVec3(dir, dist, dir);				// Scale modified unit vector
+			addVec3(ENTPOS(e), dir, loc);			// Add to player position
+
+			// Make sure we don't hit geometry
+			rayCastForLocTarget(ENTPOS(e), loc, bIsTeleport ? 1 : 0);
+		}
+	}
+
+	copyMat4(unitmat, lmat);						// Calc*Target wants a matrix
+	copyVec3(loc, lmat[3]);
+
+	if(bIsTeleport)
+	{
+		F32 probe[6];
+
+		// Create a probe vector from location back to the player for teleport check to
+		// be able to backstep if necessary
+		subVec3(ENTPOS(e), loc, probe);
+		copyVec3(ENTPOS(e), &probe[3]);
+		CalcTeleportTarget(lmat, loc, probe);
+
+		// --- Slight hack ---
+		// Temporarily change the camera position to one that we know will pass
+		// ExtraTeleportChecks on the server. We've already done raycasting so this
+		// shouldn't allow teleporting into geometry.
+		copyVec3(cam_info.cammat[3], origcam);
+		copyVec3(loc, cam_info.cammat[3]);
+	} else
+	{
+		CalcLocationTarget(lmat, loc);
+	}
+
+	trayobj_select(e, pto, loc);
+
+	if (bIsTeleport)
+	{	// Restore original camera position
+		copyVec3(origcam, cam_info.cammat[3]);
+	}
+
+out:
+	if (lc)
+		free(lc);
+	return;
 }
 
 //
@@ -712,7 +1002,7 @@ static bool AliveEnough(Entity *e, Power *pow)
 
 //
 //
-static void trayobj_select(Entity *e, TrayObj *ts)
+static void trayobj_select(Entity *e, TrayObj *ts, Vec3 loc)
 {
     if (!verify(ts))
         return;
@@ -789,6 +1079,10 @@ static void trayobj_select(Entity *e, TrayObj *ts)
                         trayobj_ActivatePower(ts, e, e );
                         return;
                     }
+                    					else if (loc)
+					{
+						trayobj_ActivatePowerAtLocation(ts, e, e, loc);
+					}
                     else
                     {
                         if(s_ptsActivated && s_ptsActivated->ipow==ts->ipow && s_ptsActivated->iset==ts->iset)
@@ -826,7 +1120,11 @@ static void trayobj_select(Entity *e, TrayObj *ts)
                             || power->ppowBase->eTargetType == kTargetType_Teleport
                             || current_target)
                         {
-                            if(s_ptsActivated && s_ptsActivated->ipow==ts->ipow && s_ptsActivated->iset==ts->iset)
+							if (loc)
+							{
+								trayobj_ActivatePowerAtLocation(ts, e, current_target ? current_target : e, loc);
+							}
+							else if(s_ptsActivated && s_ptsActivated->ipow==ts->ipow && s_ptsActivated->iset==ts->iset)
                             {
                                 cursor.target_world = kWorldTarget_None;
                                 s_ptsActivated = NULL;
@@ -864,6 +1162,10 @@ static void trayobj_select(Entity *e, TrayObj *ts)
                                     cursor.target_world = kWorldTarget_None;
                                     s_ptsActivated = NULL;
                                 }
+                                else if (loc)
+								{
+									trayobj_ActivatePowerAtLocation(ts, e, current_target, loc);
+								}
                                 else
                                 {
                                     cursor.target_world = kWorldTarget_Normal;
@@ -899,7 +1201,11 @@ static void trayobj_select(Entity *e, TrayObj *ts)
                             || power->ppowBase->eTargetType == kTargetType_Teleport
                             || current_target)
                         {
-                            if(s_ptsActivated && s_ptsActivated->ipow==ts->ipow && s_ptsActivated->iset==ts->iset)
+                            							if(loc)
+							{
+								trayobj_ActivatePowerAtLocation(ts, e, current_target ? current_target : e, loc);
+							}
+							else if(s_ptsActivated && s_ptsActivated->ipow==ts->ipow && s_ptsActivated->iset==ts->iset)
                             {
                                 cursor.target_world = kWorldTarget_None;
                                 s_ptsActivated = NULL;
@@ -947,6 +1253,10 @@ static void trayobj_select(Entity *e, TrayObj *ts)
                     {
                         trayobj_ActivatePower(ts, e, NULL);
                     }
+                    else if (loc)
+					{
+						trayobj_ActivatePowerAtLocation(ts, e, e, loc);
+					}
                     else
                     {
                         cursor.target_world = kWorldTarget_Normal;
@@ -994,7 +1304,7 @@ void trayslot_select(Entity *e, TrayCategory trayCategory, int trayNumber, int s
 
     ts = trayslot_Get(e, trayCategory, trayNumber, slotNumber);
     if (ts)
-        trayobj_select(e, ts);
+		trayobj_select(e, ts, NULL);
 }
 
 
@@ -1071,11 +1381,18 @@ void trayslot_RemainingTime(Entity *e, TrayObj * to, char * remainingTime)
 
         prt = powerInfo_PowerGetRechargeTimer(e->powerInfo, ppowRef);
 
-        if( prt )
+        if (prt)
         {
-            if(prt->rechargeCountdown >= 10.f)
+            if (prt->rechargeCountdown >= 10.f)
             {
-                sprintf(remainingTime, "%.0f:%.0f", prt->rechargeCountdown / 60.f, fmod(prt->rechargeCountdown, 60.f));
+                if (prt->rechargeCountdown > 60.f)
+                {
+                    sprintf(remainingTime, "%.0f:%02.0f", floor(prt->rechargeCountdown / 60.f), floor(fmod(prt->rechargeCountdown, 60.f)));
+                }
+                else
+                {
+                    sprintf(remainingTime, "%.0f", floor(prt->rechargeCountdown));
+                }
             }
             else
             {
@@ -1893,7 +2210,18 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
     }
 
     if (sc < 1.0f || (!usable && !inventory) || disabled)
-        clr = 0xffffff66;
+    {
+        // if we're using cooldown timer display, fade the icon further to make the numbers easier to see, and reduce the icon scaling so its not hidden.
+        if (isCooldownActive && optionGet(kUO_ShowTimer))
+        {
+            clr = 0xffffff33;
+            sc = 1.0f;
+        }
+        else
+        {
+            clr = 0xffffff66;
+        }
+    }
 
     BuildCBox( &box, xp - ic->width*ts->scale*sc/2, yp - ic->width*ts->scale*sc/2, ic->width*sc*scale, ic->width*sc*scale );
     if( mouseCollision(&box) && !inventory && usable )
@@ -1913,7 +2241,7 @@ void trayslot_drawIcon( TrayObj * ts, float xp, float yp, float zp, float scale,
         // Display the remaining time on screen
         font( &game_9 );
         font_color( CLR_WHITE, CLR_WHITE );
-        cprntEx(xp, yp, zp, scale * 1.5, scale * 1.5, (CENTER_X), remainingTime);
+        cprntEx(xp, yp, zp, scale, scale, (CENTER_X | CENTER_Y), remainingTime);
     }
 
     if( ts->autoPower )

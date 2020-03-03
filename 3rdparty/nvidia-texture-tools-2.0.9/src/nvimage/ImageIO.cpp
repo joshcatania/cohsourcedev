@@ -136,7 +136,7 @@ FloatImage * nv::ImageIO::loadFloat(const char * fileName)
     StdInputStream stream(fileName);
     
     if (stream.isError()) {
-        return false;
+        return 0;
     }
     
     return loadFloat(fileName, stream);

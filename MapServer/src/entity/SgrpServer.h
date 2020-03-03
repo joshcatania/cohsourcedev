@@ -24,6 +24,7 @@ int sgroup_JoinDebug(Entity *e, char *name);
 int sgroup_ReceiveUpdate( Entity * e, Packet * pak);
 void sgroup_AcceptOffer( Entity *leader, int new_dbid, char * new_name );
 void sgroup_AcceptRelay(Entity* e, int sg_id, int invited_by);
+void sgroup_AltRelay(Entity* e, int sg_id, int sg_type, int inviter_id, int inviter_auth_id);
 void sgroup_KickMember( Entity *leader, char *name );
 void sgroup_KickRelay(Entity* e, int kicked_by);
 void sgroup_MemberQuit( Entity *quitter );

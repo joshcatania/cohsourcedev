@@ -130,6 +130,7 @@ typedef struct GameState
     F32        fps;
     int        maxfps;
     int        maxInactiveFps;
+    int		maxMenuFps;
     F32        showfps;
     int        showActiveVolume;
     int        graphfps;

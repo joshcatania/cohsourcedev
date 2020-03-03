@@ -330,11 +330,15 @@ Cmd chat_cmds[] =
         "Invite player to join supergroup." },
     { 9, "sginvite_long", CMD_SUPERGROUP_INVITE_LONG, {{ CMDSTR( player_name_cmd )},{ CMDSTR( tmp_str_cmd )}, { PARSETYPE_S32, &tmp_dbid },{ PARSETYPE_S32, &tmp_int }}, 0,
         "Invite player to join supergroup" },
+    { 0, "altinvite", CMD_SUPERGROUP_INVITE_ALT, {{ CMDSENTENCE( player_name_cmd )}}, CMDF_HIDEVARS | CMDF_RETURNONERROR,
+		"Joins a different character on your account to your supergroup." },
 
     { 0, "sg_accept", CMD_SUPERGROUP_INVITE_ACCEPT, {{ CMDSTR( player_name_cmd )},{ PARSETYPE_S32, &tmp_int },{ PARSETYPE_S32, &tmp_dbid },{ CMDSTR( tmp_str_cmd )}}, CMDF_HIDEPRINT,
         "Recieves a supergroup accept" },
     { 9, "sg_accept_relay", CMD_SUPERGROUP_ACCEPT_RELAY, {{ PARSETYPE_S32, &tmp_int },{ PARSETYPE_S32, &tmp_int2 },{ PARSETYPE_S32, &tmp_int3 }}, 0,
         "Asks a player to add themselves to supergroup (player_id, sg_id, inviter_id)" },
+	{ 9, "sg_alt_relay", CMD_SUPERGROUP_ALT_RELAY, {{ PARSETYPE_S32, &tmp_int },{ PARSETYPE_S32, &tmp_int2 },{ PARSETYPE_S32, &tmp_int3 },{ PARSETYPE_S32, &tmp_int4 },{ PARSETYPE_S32, &tmp_int5 }}, 0,
+		"Joins a player to a supergroup if they are on the same account as the inviter (player_id, sg_id, sg_type, inviter_id, inviter_authid)" },
     { 0, "sg_decline", CMD_SUPERGROUP_INVITE_DECLINE, {{ CMDSTR( player_name_cmd )},{ PARSETYPE_S32, &tmp_int },{ CMDSTR( tmp_str_cmd )}}, CMDF_HIDEPRINT,
         "Recieves a supergroup decline" },
 
@@ -2401,6 +2405,68 @@ void chatCommand( Cmd * cmd, ClientLink *client, char* str )
 
             }break;
 
+		case CMD_SUPERGROUP_INVITE_ALT:
+			{
+				char buf[256];
+				int online;
+				Entity * player;
+
+				int id = dbPlayerIdFromName(player_name);
+																					  
+				if( !e )														 
+					break;
+					 
+				if( player_name[0] == 0 )
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"incorrectFormat",
+						"sginviteString", "playerNameString", "emptyString", "sginviteSynonyms"), INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if( !e->supergroup_id )
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"CouldNotActionPlayerReason", "InviteString", player_name, "NotInSuperGroup"), INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if (id < 0)							  
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"playerNotFound", player_name), INFO_USER_ERROR, 0);
+					break;
+				}
+
+				if( e->db_id == id ) // trying to invite himself
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"CannotInviteYourselfSG"), INFO_USER_ERROR, 0);												
+					break;
+				}
+
+				if( !sgroup_hasPermission( e, SG_PERM_INVITE) ) // not high enough rank to invite
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"CouldNotActionPlayerReason", "InviteString", player_name, "NotHighEnoughRank"), INFO_USER_ERROR, 0);												
+					break;
+				}
+
+				if( e->supergroup->members.count >= MAX_SUPER_GROUP_MEMBERS ) // no room in supergroup
+				{
+					chatSendToPlayer(e->db_id, localizedPrintf(e,"CouldNotActionPlayerReason", "InviteString", player_name, "SuperGroupIsFull"), INFO_USER_ERROR, 0);
+					break;
+				}
+
+				player = entFromDbId( id );
+				online = player_online(player_name);
+																				  
+				if (player || online)
+				{
+					chatSendToPlayer(e->db_id, "You cannot use this command to invite a character that is online!", INFO_USER_ERROR, 0);
+					break;
+				}
+
+				sprintf( buf, "%s %i %i %i %i %i", "sg_alt_relay", id, e->supergroup_id, e->supergroup->playerType, e->db_id, e->auth_id);
+				serverParseClient( buf, NULL );
+												  
+			}break;
+
         case CMD_SUPERGROUP_COSTUME:
             {
                 int result = 0;
@@ -2459,6 +2525,17 @@ void chatCommand( Cmd * cmd, ClientLink *client, char* str )
                 relayCommandEnd(&e, &online);
             }
             break;
+
+		case CMD_SUPERGROUP_ALT_RELAY:
+			if(stack_tmp_int<=0)
+				return;
+
+			if (relayCommandStart(NULL, stack_tmp_int, stack_tmp_str, &e, &online))
+			{
+				sgroup_AltRelay(e, stack_tmp_int2, stack_tmp_int3, stack_tmp_int4, stack_tmp_int5);
+				relayCommandEnd(&e, &online);
+			}
+			break;
 
         case CMD_SUPERGROUP_DEBUG_JOIN:
             sgroup_JoinDebug(e, tmp_str);
