@@ -235,6 +235,7 @@ TokenizerParseInfo ParseCharacterClass[] = {{"{", TOK_START, 0},
                                             {"DefiantHitPointsAttrib", TOK_AUTOINT(CharacterClass, offDefiantHitPointsAttrib, 0), ParsePowerDefines},
                                             {"DefiantScale", TOK_F32(CharacterClass, fDefiantScale, 1.0f)},
                                             {"IsPetClass", TOK_BOOL(CharacterClass, bIsPetClass, 0), BoolEnum},
+                                            {"GuardShare", TOK_F32(CharacterClass, fGuardShare, 2.0f)},
                                             // These are for shared memory stuff. Ignore them.
                                             {"_FinalAttrMax_", TOK_POINTER(CharacterClass, pattrMax, iNumBytesTables)},
                                             {"_FinalAttrMaxMax_", TOK_POINTER(CharacterClass, pattrMaxMax, iNumBytesTables)},
