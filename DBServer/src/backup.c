@@ -341,7 +341,7 @@ static int backupLoadContainer( int id, int type, U32 date )
             base_id = containerIdFindByElement( dbListPtr(CONTAINER_BASE), "SupergroupId", buf );
             con = containerLoad(dbListPtr(CONTAINER_BASE),base_id);
 
-            if( con && findFieldTplt(dbListPtr(CONTAINER_SUPERGROUPS)->tplt,&container->line_list,"Ownsbase",buf) && atoi(buf) > 0 )
+            if( con )
             {
                 containerUnload(dbListPtr(CONTAINER_BASE),base_id);
                 backupLoadContainer(base_id, CONTAINER_BASE, date );
