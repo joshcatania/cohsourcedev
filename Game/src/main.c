@@ -276,6 +276,13 @@ int main(int argc, char **argv)
 
     PERFINFO_AUTO_STOP_START("middle3", 1);
 
+    if (game_state.create_bins)
+    {
+        game_state.fullscreen = 0;
+        game_state.screen_x = 800;
+        game_state.screen_y = 600;
+    }
+
     game_initWindow(maximize);
 
     PERFINFO_AUTO_STOP_START("middle4", 1);
@@ -297,6 +304,7 @@ int main(int argc, char **argv)
         cmdAccessOverride(10);
         cmdParse("cmdms");
         mapperLoadCityInfo();
+        sndInit();
         return 0;
     }
 
