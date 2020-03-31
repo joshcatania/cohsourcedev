@@ -1974,7 +1974,8 @@ int recipeInventoryWindow()
                             || strstri(pWorkshopType, "ticket") != NULL 
                             || strstri(pWorkshopType, "incarnate") != NULL
                             || strstri(pWorkshopType, "HAM") != NULL
-                            || strstri(pWorkshopType, "VAM") != NULL))
+                            || strstri(pWorkshopType, "VAM") != NULL
+                            || strstri(pWorkshopType, "split") != NULL))
     {
         gSplitPane = true;
         if (window_getMode( WDW_RECIPEINVENTORY ) == WINDOW_SHRINKING)
