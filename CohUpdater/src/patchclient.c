@@ -307,7 +307,7 @@ int handleFullManifest(Packet *pak,char *checksum_name,char *project_name,ImageC
 		msgAlertUpdater("ErrPatchCovToCoh");
 		exit(0);
 	}
-	checksumOpenPigs(src,src_dir);
+	checksumOpenPigs(src,src_dir,0);
 	for(i=0;i<dst.file_count;i++)
 	{
 		dst_file = dst.files[i];

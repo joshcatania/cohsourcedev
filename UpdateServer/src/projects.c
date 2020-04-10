@@ -48,7 +48,7 @@ void patchToVersion(PatchProject *project,ImageCheck *image,int force_recalc)
 		if (force_recalc || !fileExists(patch_name))
 		{
 			sprintf(buf,"  %d/%d:",++patch_curr,patch_count);
-			checksumOpenPigs(curr,curr->fname);
+			checksumOpenPigs(curr,curr->fname,0);
 			patchCreate(curr,image,patch_name,buf,project->no_diff);
 		}
 	}
@@ -448,7 +448,7 @@ void projectLoad(char *name,int run_server,int patch_to_latest)
 			FatalErrorf("can't find version %s to patch to in project %s. (aborting)\n",project->current,project->name);
 		if (!checksumVerify(image->fname,image,0,0,0))
 			FatalErrorf("image %s failed verification check\n",image->fname);
-		checksumOpenPigs(image,image->fname);
+		checksumOpenPigs(image,image->fname,0);
 		{
 			char	*full_manifest;
 			ZipData	*zip = &project->full_manifest;
