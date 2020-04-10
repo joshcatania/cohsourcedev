@@ -34,7 +34,7 @@
 #include "projectclient.h"
 #include "embedbrowser.h"
 #include "sysutil.h"
-#include "gimmeDLLWrapper.h"
+//#include "gimmeDLLWrapper.h"
 #include "projectfile.h"
 #include "xlate.h"
 #include "EString.h"
@@ -1042,7 +1042,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	EXCEPTION_HANDLER_BEGIN
 	g_force_production_mode = 1;
 	disableLogging(0);
-	gimmeDLLDisable(1);
+	//gimmeDLLDisable(1);
 	langWebname = xlateLoad(hInstance);
 	fileWatchSetDisabled(1);
 
