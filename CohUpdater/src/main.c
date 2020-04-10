@@ -55,7 +55,11 @@
 #define LOGID "CohUpdater"
 #define TOSTR(X) REALLY_TOSTR(X)
 
+#ifdef _DEBUG
 extern int g_force_production_mode;
+#else
+int g_force_production_mode = 1;
+#endif // _DEBUG
 
 static	char passthrough_args[1024];
 
