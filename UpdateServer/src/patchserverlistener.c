@@ -36,8 +36,8 @@ void updateListenerStatus(char *serverVersion, char *clientVersion, int users, _
 {
 	EnterCriticalSection(&listenerStatus_cs);
 
-	estrCopy2(&g_listenerStatus.serverVersion, serverVersion);
-	estrCopy2(&g_listenerStatus.clientVersion, clientVersion);
+    g_listenerStatus.serverVersion = estrCloneCharString(serverVersion);
+    g_listenerStatus.clientVersion = estrCloneCharString(clientVersion);
 	g_listenerStatus.num_users = users;
 	g_listenerStatus.total_sent = totalSent;
 	g_listenerStatus.bytes_per_sec = bytesPerSec;
