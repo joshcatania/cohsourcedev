@@ -1363,7 +1363,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 		if (rrReadInt(reader, "VerifyOnNextUpdate", &forceverify) && forceverify)
 		{
-			teelog_printf( LOGID, __FUNCTION__ ": VerifyOnNextUpdate reg, setting g_full_checksum");
+			filelog_printf( LOGID, __FUNCTION__ ": VerifyOnNextUpdate reg, setting g_full_checksum");
 			g_full_checksum = 1;
 		}
 		
