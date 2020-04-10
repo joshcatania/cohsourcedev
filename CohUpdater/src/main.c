@@ -1045,10 +1045,10 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	EXCEPTION_HANDLER_BEGIN
 	g_force_production_mode = 1;
-	disableLogging(0);
+	//disableLogging(0);
 	//gimmeDLLDisable(1);
 	langWebname = xlateLoad(hInstance);
-	fileWatchSetDisabled(1);
+	//fileWatchSetDisabled(1);
 
 	// determine OS
 	hNtDLL = GetModuleHandle("ntdll.dll");
@@ -1281,7 +1281,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
         else if (stricmp(argv[i],"-enablelogging")==0)
         {
-            disableLogging(0);
+            //disableLogging(0);
         }
 		else
 		{
@@ -1449,7 +1449,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				Sleep(1);
 				if (g_user_quit > 1)
 				{
-					OutputDebugStr("Quitting\n");
+					printf("Quitting\n");
 					break;
 				}
 			}
