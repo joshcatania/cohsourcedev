@@ -279,7 +279,7 @@ void projectLoadConfig(char *name,int full_checksum,int delete_if_bad)
 		msgAlertFatal( "ErrInvalidProjectFile", fname );
 	fileisgood = TokenizerParseList(tok, parse_all_projects, &project_list, TokenizerErrorCallback);
 	TokenizerDestroy(tok);
-	project_list.project_count = EArrayGetSize(&project_list.projects);
+	project_list.project_count = eaSize(&project_list.projects);
 
 	printf("Loading checksums...\n");
 
@@ -293,7 +293,7 @@ void projectLoadConfig(char *name,int full_checksum,int delete_if_bad)
 		forwardSlashes(project->rootpath);
 		//makefullpath(project->name,project->pathname);
 		projectLoadChecksums(project,0,delete_if_bad,full_checksum);
-		if (!isClientImage(project) && !EArrayGetSize(&project->allow_ips))
+		if (!isClientImage(project) && !eaSize(&project->allow_ips))
 			FatalErrorf("Project %s, AllowIp is required for non-client patches",project->name);
 	}
 }

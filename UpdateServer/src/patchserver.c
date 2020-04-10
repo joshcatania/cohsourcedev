@@ -97,8 +97,8 @@ static void sendRegKeys(NetLink *link,PatchProject *project)
 	int		i;
 	Packet		*pak = pktCreateEx(link,PATCHSERVER_REGKEYS);
 
-	pktSendBitsPack(pak,1,EArrayGetSize(&project->regkeys));
-	for(i=0;i<EArrayGetSize(&project->regkeys);i++)
+	pktSendBitsPack(pak,1,eaSize(&project->regkeys));
+	for(i=0;i<eaSize(&project->regkeys);i++)
 	{
 		pktSendString(pak,project->regkeys[i]->name);
 		pktSendString(pak,project->regkeys[i]->value);
