@@ -1,6 +1,3 @@
-#include <windows.h>
-#include <psapi.h>
-
 #include <string.h>
 #include <assert.h>
 #include <sys/stat.h>
@@ -17,6 +14,8 @@
 #include "crypt.h"
 #include "patchui.h"
 #include "StashTable.h"
+#include "wininclude.h"
+#include <psapi.h>
 
 static int corrupt_file_made;
 extern int g_COV;

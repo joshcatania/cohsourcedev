@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include "filechecksum.h"
 #include "file.h"
 #include "StashTable.h"
-#include "filechecksum.h"
 #include "utils.h"
 #include "comm_patcher.h"
 

@@ -9,7 +9,8 @@
  ***************************************************************************/
 #include <stdio.h>
 #include <sys/stat.h>
-#include <file.h>
+#include "stdtypes.h"
+#include "file.h"
 #include <windows.h>
 #include "tar.h"
 
