@@ -28,6 +28,7 @@
 #include "filemgr.h"
 //#include "gimmeDLLWrapper.h"
 #include "MemoryMonitor.h"
+#include "SuperAssert.h"
 
 int glob_perf_test;
 int g_recv_size,g_send_size;
