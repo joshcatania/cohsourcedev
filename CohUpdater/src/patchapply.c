@@ -203,7 +203,7 @@ int createPig(PigCache *cache,ImageCheck *mod_image,ImageCheck *dst_image,char *
 			timestamp = mod_file->timestamp;
 		if (!mod_file->pig_name || stricmp(mod_file->pig_name,pig_name)!=0)
 			continue;
-		mod_file->visited = 1;
+		//mod_file->visited = 1;
 		if (mod_file->del)
 			continue;
 		entry = dynArrayAdd(&entries,sizeof(entries[0]),&entry_count,&entry_max,1);
@@ -362,7 +362,7 @@ int createPatchedFiles(ImageCheck *client_image,ImageCheck *mod_image,ImageCheck
 	for(i=0;i<mod_image->file_count;i++)
 	{
 		mod_file = mod_image->files[i];
-		if (mod_file->visited || mod_file->pig_name || !mod_file->in_patch)
+		if (/*mod_file->visited ||*/ mod_file->pig_name || !mod_file->in_patch)
 			continue;
 		stashFindPointer(client_image->filenames,mod_file->name, &src_file);
 		if (!src_file || src_file->full_status != CHECKSUM_MATCHES_PATCH)
@@ -404,7 +404,7 @@ int createPatchedFiles(ImageCheck *client_image,ImageCheck *mod_image,ImageCheck
 			free(data);
 			xferStatsUpdate(safeFileSize(fname));
 		}
-		mod_file->visited = 1;
+		//mod_file->visited = 1;
 		closeOpenPigs(&cache);
 	}
 	ret = 1;
