@@ -4,7 +4,7 @@
 #include "timing.h"
 #include "patchutils.h"
 #if PATCHCLIENT
-#include "../CohUpdater/patchui.h"
+#include "patchui.h"
 #endif
 #include "utils.h"
 
