@@ -71,7 +71,7 @@ int makeUserDir(char *dir);
 void setFatalAlertCallback(FatalAlertCallback callback);
 void msgAlertFatal(char const *fmt, ...);
 int makeLockFile(char *dst_dir);
-void cleanupLockFile();
+void cleanupLockFile(void);
 void cacheQuickFileInfo(const char* dir);
 int quickFileInfo(char *fname,U32 *size,U32 *modified);
 

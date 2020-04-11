@@ -15,6 +15,6 @@ char *patchCreateCustom(ImageCheck *dst,char *src_str,char *patch_name);
 // so this is an ugly, hackish way to force the update server to a new version
 //
 // this function performs nothing useful and doesn't (shouldn't) actually ever get called
-void FunctionWithNoPurposeOtherThanToForceALink();
+void FunctionWithNoPurposeOtherThanToForceALink(void);
 
 #endif

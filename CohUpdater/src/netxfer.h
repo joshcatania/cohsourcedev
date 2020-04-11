@@ -5,7 +5,7 @@
 #include "netio.h"
 
 int waitForCmd(Packet **pak_p);
-int lostServerLink();
+int lostServerLink(void);
 int netGetFiles(NewPigEntry **entries,int count);
 int netGetPatchFile(char *client_patch_name);
 

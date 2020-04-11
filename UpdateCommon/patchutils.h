@@ -17,7 +17,6 @@ typedef struct
 } DataXferInfo;
 
 
-void updateUiStats(DataXferInfo *info);
 void printTextStats(DataXferInfo *info);
 F32 xferStatsElapsed(void);
 void xferStatsFinish(void);

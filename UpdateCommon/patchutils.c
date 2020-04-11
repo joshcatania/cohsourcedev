@@ -100,7 +100,7 @@ void xferStatsUpdate(S64 curr)
 	updateXferStats(&xfer_info);
 }
 
-void xferStatsFinish()
+void xferStatsFinish(void)
 {
 	char	oldmode[256];
 
@@ -117,7 +117,7 @@ void xferStatsFinish()
 	fflush(stdout);
 }
 
-F32 xferStatsElapsed()
+F32 xferStatsElapsed(void)
 {
 	return timerElapsed(xfer_info.timer);
 }

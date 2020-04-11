@@ -21,7 +21,7 @@ typedef struct
 static FileId	**file_ids;
 static int		file_id_count,file_id_max;
 
-void filemgrInit()
+void filemgrInit(void)
 {
 	files_by_name		= stashTableCreateWithStringKeys(1000,StashDeepCopyKeys);
 	files_by_checksum	= stashTableCreateWithStringKeys(1000,StashDeepCopyKeys);

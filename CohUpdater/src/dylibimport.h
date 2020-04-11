@@ -2,8 +2,8 @@
 #define DYLIB_IMPORT_H
 
 // Functions not forwarded to the library
-BOOL InitImports();
-char* getUIDLLName();
+BOOL InitImports(void);
+char* getUIDLLName(BOOL bForceWinName);
 
 #define UPDATER_UI_VERSION 1
 

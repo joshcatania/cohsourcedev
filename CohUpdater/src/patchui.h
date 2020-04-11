@@ -3,14 +3,12 @@
 
 #include "stdtypes.h"
 
+
+void updateUiStats(void *info);
 char *pickInstallDir(char *project_name,char *dir_name);
 void startInstallDialog(void *hInstance,char *url);
-void xferStatsInit(char *mode,U32 base,U32 total);
-void xferStatsUpdate(U32 curr);
-F32 xferStatsElapsed();
 void patchShowWebPage(char *url);
-void patchUiChangeCancelToPlay();
-void xferStatsFinish(void);
+void patchUiChangeCancelToPlay(void);
 void patchUiSetProjectInfo(char *project,char *version);
 int winMsgOkCancel(char *str);
 

@@ -114,7 +114,7 @@ DWORD WINAPI patchserverListenThreadMain(void *data)
 	return 0;
 }
 
-void patchServerListenThreadBegin() 
+void patchServerListenThreadBegin(void) 
 {
 	int ret;
 	if (g_listenThreadRunning) {

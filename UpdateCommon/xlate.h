@@ -7,7 +7,7 @@ extern MessageStore	*g_msg_store;
 int xlatePrint(char *buffer, int bufferLength, const char *msg);
 int xlatePrintf(char* outputBuffer, int bufferLength, const char* messageID, ...);
 char *xlateLoad(void *hInstance);
-int xlateGetLoadedLocale();
+int xlateGetLoadedLocale(void);
 char *xlateQuick(char *msg);
 char *xlateQuickUTF8(char *msg);
 

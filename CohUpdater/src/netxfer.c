@@ -18,7 +18,7 @@ extern int	glob_perf_test;
 extern char reg_key_dir[];
 
 
-int lostServerLink()
+int lostServerLink(void)
 {
 	if ( comm_link.disconnected )
 		printf( "Lost connection to server...\n" );

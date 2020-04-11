@@ -24,7 +24,7 @@ char* getUIDLLName(BOOL bForceWinName)
 	}
 }
 
-BOOL InitImports()
+BOOL InitImports(void)
 {
 	BOOL bResult = FALSE;
 

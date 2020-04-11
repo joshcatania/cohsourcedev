@@ -1001,7 +1001,7 @@ void checkThrottledLink( NetLink * link )
 	}
 }
 
-void servePatches()
+void servePatches(void)
 {
 	int		i, j;
 

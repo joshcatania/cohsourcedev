@@ -15,7 +15,7 @@ MessageStore	*g_msg_store = NULL;
 #include "resource.h"
 
 static LCID current_locale_id = LOCALE_ENGLISH;
-int xlateGetLoadedLocale()
+int xlateGetLoadedLocale(void)
 {
 	return current_locale_id;
 }

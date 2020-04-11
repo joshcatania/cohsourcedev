@@ -420,7 +420,7 @@ void patchCreateWait()
 // ugly, hackish way to force the update server to a new version
 //
 // this function performs nothing useful
-void FunctionWithNoPurposeOtherThanToForceALink()
+void FunctionWithNoPurposeOtherThanToForceALink(void)
 {
 	int junk = 0;
 	// to force a link, i just up the num_iterations.  
