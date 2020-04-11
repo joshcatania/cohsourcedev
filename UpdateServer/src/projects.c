@@ -134,8 +134,7 @@ static void loadPatchClient()
 
 	strcpy(fullname,getExecutableName());
 	checksumFile(fullname,&server_checksum,0);
-	s = strrchr(fullname,'/');
-	*s = 0;
+    _getcwd(fullname, MAX_PATH);
 
 	strncpy(tarFilename,fullname,MAX_PATH);
 	strcat(fullname,"/CohUpdater.exe");
