@@ -1,3 +1,4 @@
+#include "stdtypes.h"
 #include <windows.h>
 #include <psapi.h>
 

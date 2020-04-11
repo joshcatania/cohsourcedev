@@ -1,3 +1,4 @@
+#include "stdtypes.h"
 #include <stdlib.h>
 #include <string.h>
 #include "file.h"

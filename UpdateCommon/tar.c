@@ -7,6 +7,7 @@
  *
  *
  ***************************************************************************/
+#include "stdtypes.h"
 #include <stdio.h>
 #include <sys/stat.h>
 #include <file.h>
