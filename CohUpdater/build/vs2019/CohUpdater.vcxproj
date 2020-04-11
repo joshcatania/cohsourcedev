@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>16.0</VCProjectVersion>
+    <ProjectGuid>{9E1EA2F5-E299-4BDF-B924-85417C19B5C0}</ProjectGuid>
+    <RootNamespace>CohUpdater</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\UpdaterCommon;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\UpdaterCommon;$(IncludePath)</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\UpdaterCommon;$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>$(ProjectDir)..\..\UpdaterCommon;$(IncludePath)</IncludePath>
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;PATCHCLIENT;FINAL;NDEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\UpdateCommon;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\utils;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\components;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\network;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\version;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\language;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include\zlib</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;PATCHCLIENT;FULLDEBUG;_CRTDBG_MAP_ALLOC;_DEBUG;WIN32;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\UpdateCommon;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\utils;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\components;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\network;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\version;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\language;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include\zlib</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;PATCHCLIENT;FULLDEBUG;_CRTDBG_MAP_ALLOC;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\UpdateCommon;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\utils;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\components;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\network;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\version;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\language;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include\zlib</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>EnableAllWarnings</WarningLevel>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;_CRT_NONSTDC_NO_DEPRECATE;_WINSOCK_DEPRECATED_NO_WARNINGS;PATCHCLIENT;FINAL;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\UpdateCommon;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\utils;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\components;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\network;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\version;$(ProjectDir)..\..\..\libs\UtilitiesLib\include\utilitieslib\language;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include\zlib</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetPath) $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+    <PreBuildEvent>
+      <Command>copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.dll $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\
+copy /Y $(ProjectDir)..\..\lib\CohUpdater_UI_Win.pdb $(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</Command>
+    </PreBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\UpdateCommon\comm_patcher.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\filechecksum.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\patchfileutils.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\patchutils.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\projectfile.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\tar.c" />
+    <ClCompile Include="..\..\..\UpdateCommon\xlate.c" />
+    <ClCompile Include="..\..\src\dylibimport.c" />
+    <ClCompile Include="..\..\src\embedbrowser.c" />
+    <ClCompile Include="..\..\src\main.c" />
+    <ClCompile Include="..\..\src\netxfer.c" />
+    <ClCompile Include="..\..\src\patchapply.c" />
+    <ClCompile Include="..\..\src\patchclient.c" />
+    <ClCompile Include="..\..\src\patchui.c" />
+    <ClCompile Include="..\..\src\projectclient.c" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\UpdateCommon\comm_patcher.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\filechecksum.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\patchfileutils.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\patchheader.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\patchutils.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\projectfile.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\tar.h" />
+    <ClInclude Include="..\..\..\UpdateCommon\xlate.h" />
+    <ClInclude Include="..\..\src\dylibimport.h" />
+    <ClInclude Include="..\..\src\embedbrowser.h" />
+    <ClInclude Include="..\..\src\netxfer.h" />
+    <ClInclude Include="..\..\src\osdependent.h" />
+    <ClInclude Include="..\..\src\patchapply.h" />
+    <ClInclude Include="..\..\src\patchclient.h" />
+    <ClInclude Include="..\..\src\patchui.h" />
+    <ClInclude Include="..\..\src\projectclient.h" />
+    <ClInclude Include="..\..\src\resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="..\..\src\icon1.ico" />
+    <Image Include="..\..\src\progress.bmp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\src\1337.ms" />
+    <None Include="..\..\src\chinese.ms" />
+    <None Include="..\..\src\chinese_hongkong.ms" />
+    <None Include="..\..\src\chinese_simplified.ms" />
+    <None Include="..\..\src\chinese_traditional.ms" />
+    <None Include="..\..\src\english.ms" />
+    <None Include="..\..\src\french.ms" />
+    <None Include="..\..\src\german.ms" />
+    <None Include="..\..\src\japanese.ms" />
+    <None Include="..\..\src\korean.ms" />
+    <None Include="..\..\src\langfiles.rc2" />
+    <None Include="..\..\src\language.types" />
+    <None Include="..\..\src\spanish.ms" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\src\CohUpdater.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\3rdparty\cryptopp-8.3\build\vs2019\cryptopp.vcxproj">
+      <Project>{aca8c226-ef10-49f2-8b3d-d9939ee4a4fe}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\3rdparty\zlib-1.2.11\build\vs2019\zlib.vcxproj">
+      <Project>{8426a8d3-2549-4523-b584-fcd81e89b7bc}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\libs\UtilitiesLib\build\vs2019\UtilitiesLib.vcxproj">
+      <Project>{02b25697-0348-423c-8df3-e1bdf89bb43d}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

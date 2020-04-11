@@ -1,0 +1,21 @@
+"ChooseInstallDir", {ProjectName, %s}
+"ChooseInstallFolderText" : "{ProjectName, %s} {DirName, %s}"
+"Project", {ProjectName, %s}
+"Version", {VersionName, %s}
+"ErrFileChecksum", {Filename, %s}
+"ErrNewFileChecksum", {Filename, %s}
+"ErrCantCreateDir", {Dirname, %s}
+"ErrFromServer", {Errmsg, %s}
+"ErrUnknownMessage", {Msgnum, %d}
+"ErrCouldntCreateFile", {Filename, %s}
+"ErrRenameFailed", {Origname, %s}, {Newname, %s}
+"ErrPatchFileHeader", {Filename, %s}
+"ErrOpenFile", {Filename, %s}
+"ErrDeleteFile", {Filename, %s}
+"ErrWrite", {NumBytes, %d}, {Filename, %s}
+"ErrRenameDelete", {Filename, %s}
+"ErrImagePatchFail", {Imagename, %s}
+"ErrChecksumLoad", {Filename, %s}
+"ErrInvalidProjectFile", {Filename, %s}
+"UpdaterTitleName", {GameName, %s}
+
