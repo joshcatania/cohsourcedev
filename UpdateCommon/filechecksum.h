@@ -31,7 +31,8 @@ typedef struct
 	U32			mod : 1;
 	U32			in_patch : 1;
 	U32			sort_by_filename : 1;
-	U32			is_compressed : 1;
+    U32			is_compressed : 1;
+    U32			visited : 1;
 
 	U32			data_size;
 	U32			data_pack_size;

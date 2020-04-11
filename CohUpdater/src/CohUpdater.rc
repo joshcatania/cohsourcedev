@@ -7,7 +7,7 @@
 //
 // Generated from the TEXTINCLUDE 2 resource.
 //
-#include "afxres.h"
+#include "winres.h"
 
 /////////////////////////////////////////////////////////////////////////////
 #undef APSTUDIO_READONLY_SYMBOLS
@@ -110,8 +110,8 @@ END
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
 IDI_UPDATER             ICON                    "icon1.ico"
-IDI_COVUPDATER          ICON                    "../../Game/Icon_Cov.ico"
-IDI_KOREANUPDATER       ICON                    "../../Game/Icon_Korean.ico"
+IDI_COVUPDATER          ICON                    "../../../Game/src/Icon_Cov.ico"
+IDI_KOREANUPDATER       ICON                    "../../../Game/src/Icon_Korean.ico"
 
 /////////////////////////////////////////////////////////////////////////////
 //

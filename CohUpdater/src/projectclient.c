@@ -139,7 +139,7 @@ int isPatchVersionAllowed(PatchProject *project, char *name)
 	int n, num, num_matched = 0;
 
 	// check SyncAllow
-	num = EArrayGetSize(&project->sync_allows);
+	num = eaSize(&project->sync_allows);
 	for (n = 0; n < num; n++)
 	{
 		if (simpleMatchExact(project->sync_allows[n]->str, name))
@@ -152,7 +152,7 @@ int isPatchVersionAllowed(PatchProject *project, char *name)
 
 
 	// check SyncBlock
-	num = EArrayGetSize(&project->sync_blocks);
+	num = eaSize(&project->sync_blocks);
 	for (n = 0; n < num; n++)
 	{
 		if (simpleMatchExact(project->sync_blocks[n]->str, name))
@@ -178,7 +178,7 @@ void projectSync(char * config_filename)
 	printf("Connecting to server...\n\n");
 	connectToServer();
 
-	num_projects = EArrayGetSize(&project_list.projects);
+	num_projects = eaSize(&project_list.projects);
 	for(i=0;i<num_projects;i++)
 	{
 		project = project_list.projects[i];

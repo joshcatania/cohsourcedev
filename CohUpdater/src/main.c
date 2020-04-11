@@ -34,7 +34,7 @@
 #include "projectclient.h"
 #include "embedbrowser.h"
 #include "sysutil.h"
-#include "gimmeDLLWrapper.h"
+//#include "gimmeDLLWrapper.h"
 #include "projectfile.h"
 #include "xlate.h"
 #include "EString.h"
@@ -55,7 +55,11 @@
 #define LOGID "CohUpdater"
 #define TOSTR(X) REALLY_TOSTR(X)
 
+#ifdef _DEBUG
 extern int g_force_production_mode;
+#else
+int g_force_production_mode = 1;
+#endif // _DEBUG
 
 static	char passthrough_args[1024];
 
@@ -1017,7 +1021,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 {
 	int		i,a=0,b=1,get_major_patch=0;
 	extern CRITICAL_SECTION PigCritSec;
-	char	ps_name[1024] = {0};
+	char	ps_name[1024] = "127.0.0.1\0";
 	int		ps_port	= valid_updateserver_ports[0];
 	char *patch_names[100];
 	int		argc,patch_count=0,no_launch=0,first_patch_idx=0,no_pause=0;
@@ -1041,10 +1045,10 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	EXCEPTION_HANDLER_BEGIN
 	g_force_production_mode = 1;
-	disableLogging(0);
-	gimmeDLLDisable(1);
+	//disableLogging(0);
+	//gimmeDLLDisable(1);
 	langWebname = xlateLoad(hInstance);
-	fileWatchSetDisabled(1);
+	//fileWatchSetDisabled(1);
 
 	// determine OS
 	hNtDLL = GetModuleHandle("ntdll.dll");
@@ -1073,7 +1077,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// BETA UPDATER
 	//
 	// If this is a beta updater, add -cov and -ps updater.cityofvillans.com to command line
-	{
+	/*{
 		char temp[512];
 		// some extremely light encryption.  basically negating the bits in the string
 		// the executable name ("CoVBETAUpdater.")
@@ -1132,13 +1136,13 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 			g_cmdline = strdup(lpCmdLine);
 			filelog_printf( LOGID, __FUNCTION__ ": g_cmdline=%s", lpCmdLine);
 		}
-	}
+	}*/
 
 	InitializeCriticalSection(&PigCritSec);
 	sharedMemorySetMode(SMM_DISABLED);
 	cryptInit();
 
-	if ( !cov_beta_updater )
+	/*if ( !cov_beta_updater )
 	{
 		filelog_printf( LOGID, __FUNCTION__ ": !cov_beta_updater");
 		{
@@ -1159,7 +1163,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 		sprintf(ps_name, "cohupdate%s.coh.com", locale_string);
 		filelog_printf( LOGID, __FUNCTION__ ": ps_name=%s", ps_name);
-	}
+	}*/
 
 	// for EU updater, show language selection button
 	if (stricmp(locale_string, "EU")==0)
@@ -1275,10 +1279,10 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 			g_COV = 1;
 		}
-        else if (stricmp(argv[i],"-enablelogging")==0)
+        /*else if (stricmp(argv[i],"-enablelogging")==0)
         {
             disableLogging(0);
-        }
+        }*/
 		else
 		{
 			char	*s = argv[i];
@@ -1363,7 +1367,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 		}
 		if (rrReadInt(reader, "VerifyOnNextUpdate", &forceverify) && forceverify)
 		{
-			teelog_printf( LOGID, __FUNCTION__ ": VerifyOnNextUpdate reg, setting g_full_checksum");
+			filelog_printf( LOGID, __FUNCTION__ ": VerifyOnNextUpdate reg, setting g_full_checksum");
 			g_full_checksum = 1;
 		}
 		
@@ -1445,7 +1449,7 @@ int WINAPI WinMain ( HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 				Sleep(1);
 				if (g_user_quit > 1)
 				{
-					OutputDebugStr("Quitting\n");
+					printf("Quitting\n");
 					break;
 				}
 			}

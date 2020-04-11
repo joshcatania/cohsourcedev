@@ -17,7 +17,7 @@
 
 #define PATCHFILE_VERSION 1
 
-extern int num_threads;
+int num_threads = 1; // TODO: getNumVirtualCpus()
 
 static U32 zipAndWrite(FILE *file,void *data,U32 len)
 {
@@ -412,7 +412,8 @@ void patchCreateWait()
 
 	if(count) {	
 		// Wait for all handles to complete
-		verify(WaitForMultipleObjects( count, waitList, TRUE, INFINITE ) == WAIT_OBJECT_0);
+		//verify(WaitForMultipleObjects( count, waitList, TRUE, INFINITE ) == WAIT_OBJECT_0);
+        WaitForMultipleObjects(count, waitList, TRUE, INFINITE);
 	}
 }
 

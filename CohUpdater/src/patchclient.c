@@ -54,7 +54,7 @@ void connectToServer()
 		sprintf(buf,"StatsConnecting #%d",++count);
 		
 		if ( g_bUseUI )
-			xferStatsInit(buf,0,0);
+			xferStatsInit(buf,NULL,0,0);
 
 		timerStart(timer);
 		ipString = makeIpStr(ipFromString(patchserver_name));
@@ -307,7 +307,7 @@ int handleFullManifest(Packet *pak,char *checksum_name,char *project_name,ImageC
 		msgAlertUpdater("ErrPatchCovToCoh");
 		exit(0);
 	}
-	checksumOpenPigs(src,src_dir);
+	checksumOpenPigs(src,src_dir,1);
 	for(i=0;i<dst.file_count;i++)
 	{
 		dst_file = dst.files[i];
@@ -317,7 +317,7 @@ int handleFullManifest(Packet *pak,char *checksum_name,char *project_name,ImageC
 		if (!src_file || !checksumMatch(&dst_file->full,&src_file->full))
 			byte_count += dst_file->data_pack_size ? dst_file->data_pack_size : dst_file->full.size;
 	}
-	xferStatsInit("StatsFixingFiles",0,byte_count);
+	xferStatsInit("StatsFixingFiles",NULL,0,byte_count);
 	src_copy = checksumDuplicate(src,0);
 	for(i=0;i<dst.file_count;i++)
 	{
@@ -450,13 +450,13 @@ int clientPatch(char *project_name,char *src_dir,char *dst_dir,char *build_name,
 			if (isFreshInstall && isClientOnly && checksumLoad(checksum_name, &client_image))
 			{
 				printf( ", fresh install, requesting patch\n" );
-				xferStatsInit("StatsRequestingPatch",0,0);
+				xferStatsInit("StatsRequestingPatch",NULL,0,0);
 				sendManifest(project_name,client_image.manifest_string,build_name);
 			}
 			else
 			{
 				printf( ", requesting file list\n" );
-				xferStatsInit("StatsRequestingFileList",0,0);
+				xferStatsInit("StatsRequestingFileList",NULL,0,0);
 				sendManifest(project_name,0,build_name);
 			}
 		}
@@ -464,7 +464,7 @@ int clientPatch(char *project_name,char *src_dir,char *dst_dir,char *build_name,
 		{
 			printf( "Checksum Verify succeeded, requesting patch\n" );
 			filelog_printf( LOGID, __FUNCTION__ ": Checksum Verify succeeded, requesting patch");
-			xferStatsInit("StatsRequestingPatch",0,0);
+			xferStatsInit("StatsRequestingPatch",NULL,0,0);
 			sendManifest(project_name,client_image.manifest_string,build_name);
 		}
 
@@ -523,7 +523,7 @@ get_next_cmd:
 							filelog_printf( LOGID, __FUNCTION__ ": Lost connection to server");
 							safeDeleteFile(curr_patch_name);
 
-							xferStatsInit("StatsRequestingFileList",0,0);
+							xferStatsInit("StatsRequestingFileList",NULL,0,0);
 							sendManifest(project_name,0,build_name);
 							goto get_next_cmd;
 						}
@@ -550,7 +550,7 @@ get_next_cmd:
 				}
 			xcase PATCHSERVER_FULL_MANIFEST_COMING:
 				filelog_printf( LOGID, __FUNCTION__ ": PATCHSERVER_FULL_MANIFEST_COMING");
-				xferStatsInit("StatsDownloadingFileManifest",0,0);
+				xferStatsInit("StatsDownloadingFileManifest",NULL,0,0);
 				goto get_next_cmd;
 			xcase PATCHSERVER_FULL_MANIFEST:
 				filelog_printf( LOGID, __FUNCTION__ ": PATCHSERVER_FULL_MANIFEST");
@@ -614,7 +614,7 @@ get_next_cmd:
 						safeDeleteFile(major_patch_name);
 				}
 
-				xferStatsInit("StatsOK",0,0);
+				xferStatsInit("StatsOK",NULL,0,0);
 				setRegVersion(client_image.build_name);
 				patchUiSetProjectInfo(project_name,client_image.build_name);
 				return 1;

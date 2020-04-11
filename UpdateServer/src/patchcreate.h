@@ -7,8 +7,6 @@
 #include "patchfileutils.h"
 
 void patchCreate(ImageCheck *src,ImageCheck *dst,char *patch_name,char *msg,int no_diff);
-void makeAllFileManifest(ImageCheck *image,ZipData *zip);
-char *patchCreateCustom(ImageCheck *dst,char *src_str,char *patch_name);
 
 // NCSoft is always complaining that the version on the update server doesn't match the updater
 // even though there is no actual reason that it needs to other than to make them happy,

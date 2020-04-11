@@ -26,8 +26,9 @@
 #include "projects.h"
 #include "patchserver.h"
 #include "filemgr.h"
-#include "gimmeDLLWrapper.h"
+//#include "gimmeDLLWrapper.h"
 #include "MemoryMonitor.h"
+#include "SuperAssert.h"
 
 int glob_perf_test;
 int g_recv_size,g_send_size;
@@ -48,7 +49,7 @@ int main(int argc,char **argv)
 	printf("Initializing...\n");
 	fileDisableAutoDataDir();
 	memMonitorInit();
-	gimmeDLLDisable(1);
+	//gimmeDLLDisable(1);
 	InitializeCriticalSection(&PigCritSec);
 	sharedMemorySetMode(SMM_DISABLED);
 	cryptInit();

@@ -63,9 +63,9 @@ int projectCheckAccess(PatchProject *project,U32 ip)
 
 	for(i=0;i<4;i++)
 		ip_bytes[i] = (ip >> (8*i)) & 255;
-	if (!EArrayGetSize(&project->allow_ips))
+	if (!eaSize(&project->allow_ips))
 		return 1;
-	for(i=0;i<EArrayGetSize(&project->allow_ips);i++)
+	for(i=0;i<eaSize(&project->allow_ips);i++)
 	{
 		allow = project->allow_ips[i];
 		for(j=0;j<4;j++)
@@ -86,7 +86,7 @@ static void setupIpList(PatchProject *project)
 	char	*s,*s2,ip_str[1000];
 	AllowIp	*allow;
 
-	for(i=0;i<EArrayGetSize(&project->allow_ips);i++)
+	for(i=0;i<eaSize(&project->allow_ips);i++)
 	{
 		allow = project->allow_ips[i];
 		s = strcpy(ip_str,allow->ip_str);
