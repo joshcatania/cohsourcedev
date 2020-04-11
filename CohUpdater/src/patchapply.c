@@ -18,6 +18,7 @@
 #include "crypt.h"
 #include "patchui.h"
 #include "StashTable.h"
+#include "patchutils.h"
 
 static int corrupt_file_made;
 extern int g_COV;
@@ -467,10 +468,10 @@ int applyPatch(char *project_name,char *patch_name,char *checksum_name,char *src
 		goto fail;
 	}
 	checksumVerify(src_dir,&client_image,&dst_image,CHECKSUM_NEVER,0);
-	xferStatsInit("StatsApplying",0,client_image.bytecount);
+	xferStatsInit("StatsApplying",NULL,0,client_image.bytecount);
 	checksumOpenPigs(&client_image,src_dir,1);
 	processPatchCommands(&client_image,&mod_image,cmd_mem);
-	xferStatsInit("StatsApplying",0,diff_dirs ? client_image.bytecount : patchApplyByteCount(&mod_image,&dst_image));
+	xferStatsInit("StatsApplying",NULL,0,diff_dirs ? client_image.bytecount : patchApplyByteCount(&mod_image,&dst_image));
 	if (!createPatchedFiles(&client_image,&mod_image,&dst_image,patch_file,src_dir,dst_dir))
 	{
 		printf( "Failed to create patched files\n" );

@@ -12,6 +12,7 @@
 #include "RegistryReader.h"
 #include "filechecksum.h"
 #include "net_masterlist.h"
+#include "patchutils.h"
 
 extern NetLink comm_link;
 extern int	glob_perf_test;
@@ -82,7 +83,7 @@ static int checksumPatchFile(char *fname)
 		goto fail;
 	if (fread(&check,1,sizeof(check),file) != sizeof(check))
 		goto fail;
-	xferStatsInit("StatsVerifyingPatch",0,check.size);
+	xferStatsInit("StatsVerifyingPatch",NULL,0,check.size);
 	chunk_mem = malloc(CHUNK_SIZE);
 	for(i=0;i<check.size;i+=CHUNK_SIZE)
 	{
@@ -163,7 +164,7 @@ int netGetPatchFile(char *client_patch_name)
 	dst_size = check.size + sizeof(check);
 	curr_size = MIN(safeFileSize(client_patch_name),dst_size-1) & ~(XFER_BLOCK_SIZE-1);
 perf_test:
-	xferStatsInit("StatsDownloading",curr_size,dst_size);
+	xferStatsInit("StatsDownloading",NULL,curr_size,dst_size);
 	{
 		U32 max_in_transit = (1 << 18);
 		U32 initial_blocks = MIN(dst_size - curr_size,max_in_transit) / XFER_BLOCK_SIZE;
@@ -420,7 +421,7 @@ void* netGetUpdaterFile(const char* szFileName, U32 nSize, int bStatUpdate)
 		if ( pResult )
 		{
 			if ( bStatUpdate )
-				xferStatsInit((char*)szFileName,0,nSize);
+				xferStatsInit((char*)szFileName,NULL,0,nSize);
 
 			for( i=0; i < nSize; i += MAX_FILE_XFER*SERVER_QUEUE )
 			{

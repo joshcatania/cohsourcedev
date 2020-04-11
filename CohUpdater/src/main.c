@@ -45,6 +45,7 @@
 #include "net_version.h"
 #include "Stackdump.h"
 #include "netxfer.h"
+#include "patchutils.h"
 
 // Tar unpack functionality
 #include "tar.h"
@@ -304,7 +305,7 @@ void patchClientGetLatestExe()
 	{
 		if ( g_bUseUI )
 		{
-			xferStatsInit("StatsCheckingUpdater",0,0);
+			xferStatsInit("StatsCheckingUpdater",NULL,0,0);
 		}		
 
 		// update cider
