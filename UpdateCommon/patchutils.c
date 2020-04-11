@@ -21,9 +21,9 @@ static void calcTextStats(DataXferInfo *info)
 	U32		timeleft = (U32)(bytesleft / (bytespersec+1));
 	char	buf[200],buf2[200];
 
-	sprintf(info->bytespersec_str,"%s%s",printUnit(buf,bytespersec),"PerSec");
+	sprintf(info->bytespersec_str,"%s%s",printUnit(buf,bytespersec),xlateQuick("PerSec"));
 	sprintf(info->bytesleft_str,"%s/%s",printUnit(buf,info->curr_bytes),printUnit(buf2,info->total_bytes));
-	sprintf(info->timeleft_str,"%s %s",printTimeUnit(buf,timeleft),"TimeRemaining");
+	sprintf(info->timeleft_str,"%s %s",printTimeUnit(buf,timeleft),xlateQuick("TimeRemaining"));
 }
 
 void printTextStats(DataXferInfo *info)
