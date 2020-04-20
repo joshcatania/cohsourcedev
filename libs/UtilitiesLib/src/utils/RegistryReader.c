@@ -264,7 +264,6 @@ int rrReadInt(RegReaderImp* reader, const char* valueName, unsigned int* value){
     if (!value)
         return 0;
     if(!reader->keyOpened) {
-        *value = 0;
         return 0;
     }
     
@@ -300,7 +299,6 @@ int rrReadInt64(RegReaderImp* reader, const char* valueName, S64* value){
     if (!value)
         return 0;
     if(!reader->keyOpened) {
-        *value = 0;
         return 0;
     }
 
