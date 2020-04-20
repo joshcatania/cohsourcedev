@@ -131,6 +131,7 @@ static void launchBeaconClient(NetLink* link){
             " -beaconclient %s"
             " -noencrypt"
             " -beaconproductionmode"
+            " -beaconallownovodex"
             ,
             myHostname(),
             server_cfg.master_beacon_server);
@@ -173,6 +174,7 @@ static void launchRequestBeaconServer(NetLink* link){
             " -beaconrequestserver %s"
             " -noencrypt"
             " -beaconproductionmode"
+            " -beaconallownovodex"
             ,
             myHostname(),
             server_cfg.master_beacon_server);
@@ -196,6 +198,8 @@ static void launchMasterBeaconServer(NetLink* link){
             " -beaconrequestcachedir %s"
             " -noencrypt"
             " -beaconproductionmode"
+            " -beaconallownovodex"
+            " -beaconnosymstore"
             ,
             myHostname(),
             server_cfg.beacon_request_cache_dir);
