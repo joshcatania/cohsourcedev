@@ -1760,17 +1760,17 @@ void playerCreatedStoryArc_CalcReward( Entity *e, int iVictimLevel, const char *
             fTally += pRank->chances[i];
             if( fRand < fTally )
             {
-                iAmount = round(pRank->values[i] * fLevelMod  * fScale);
+                if (server_state.ticketscale != 1.0f)
+                {
+                    fScale *= server_state.ticketscale;
+                }
+                iAmount = round(pRank->values[i] * fLevelMod * fScale);
                 break;
             }
         }
 
         if( iAmount )
         {
-            if (server_state.ticketscale != 1.0f) {
-                iAmount = iAmount * server_state.ticketscale;
-            }
-
             playerCreatedStoryArc_RewardTickets( e, iAmount, 0 );
             addStringToStuffBuff(&s_sbRewardLog, "Architect: Tickets roll succeeded: %4.3f.  Amount: %i, LevelMod: %3.2f, Scale: %3.2f, Total: %i\n", fRand, pRank->values[i], fLevelMod, fScale, iAmount );
         }

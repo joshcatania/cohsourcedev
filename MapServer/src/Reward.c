@@ -3749,11 +3749,11 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
     // Award the entity with prestige points.
     if(reward->prestige && e->pl->supergroup_mode && !bArchitectTest && (!bArchitect || bArchitectAllRewards))
     {
-        iPrestige = reward->prestige*fPrestigeMod*(bArchitect?1.f:server_state.xpscale);
+        iPrestige = reward->prestige*fPrestigeMod*(bArchitect?server_state.aescale:server_state.xpscale);
 
         if( source == REWARDSOURCE_DEBUG )
             pDebug->prestige += iPrestige;
-        else
+        else if (iPrestige != 0)
         {
             sgrprewards_PrestigeAdj(e, iPrestige);
             badge_RecordPrestige(e, iPrestige);
@@ -3764,7 +3764,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
         {
             pchPrestigeReport = "PrestigeYouLost";
         }
-        else
+        else if (iPrestige > 0)
         {
             pchPrestigeReport = "PrestigeYouReceived";
         }
