@@ -1965,14 +1965,7 @@ void missionserver_map_publishArc(Entity *e, int arcid, const char *arcstr)
     arc.locale_id = getCurrentLocale(); // override with the map's locale
     arc.european = locIsEuropean(arc.locale_id);
 
-    if( e->pl && e->pl->chat_handle && *e->pl->chat_handle)
-    {
-        estrConcatf(&estrname, "@%s",  e->pl->chat_handle );
-    }
-    else
-    {
-        estrConcatCharString(&estrname, e->name);
-    }
+    estrConcatCharString(&estrname, e->name);
     arc.pchAuthor = StructAllocString(estrname);
 
     ParserWriteTextEscaped(&estr, ParsePlayerStoryArc, &arc, 0, 0);
