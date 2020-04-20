@@ -65,6 +65,7 @@ static void setDefaultBeaconizerConfig()
     server_cfg.do_not_launch_master_beacon_server = 0;
     
     server_cfg.request_beacon_server_count = -1;
+    server_cfg.beacon_client_count = 2;
     
     getExecutableDir(server_cfg.beacon_request_cache_dir);
     
@@ -151,6 +152,12 @@ void serverCfgLoad()
     server_cfg.name_lock_timeout = DEFAULT_NAME_LOCK_TIMEOUT;
 
     server_cfg.advertisedIp = 0;
+
+    {
+        SYSTEM_INFO si;
+        GetSystemInfo(&si);
+        server_cfg.beacon_client_count = si.dwNumberOfProcessors + 1;
+    }
 
     if (!realFilename || !(file = fopen(realFilename, "rt")))
     {
@@ -347,6 +354,11 @@ void serverCfgLoad()
             !stricmp(s, "RequestBeaconServerCount"))
         {
             server_cfg.request_beacon_server_count = atoi(s2);
+        }
+        else if (!stricmp(s, "BeaconClientCount"))
+        {
+            int beacon_clients = MIN(atoi(s2), server_cfg.beacon_client_count);
+            server_cfg.beacon_client_count = beacon_clients;
         }
         else if (stricmp(s, "DoNotPreloadCrashReportDLL")==0)
             server_cfg.do_not_preload_crashreportdll = atoi(s2);

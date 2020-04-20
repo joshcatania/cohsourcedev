@@ -29,9 +29,6 @@
 #include "overloadProtection.h"
 #include "launcher_common.h"
 
-#define PRODUCTION_BEACON_CLIENTS 3
-
-
 
 typedef struct
 {
@@ -381,7 +378,7 @@ void launcherLaunchBeaconizers()
             if(!(role->primaryRole & ROLE_MONITOR)){
                 // Launch enough beacon clients to get to #CPUs+1.
                 
-                for(j = launcher->beaconizer.count.clients ; j < PRODUCTION_BEACON_CLIENTS; j++){
+                for(j = launcher->beaconizer.count.clients ; j < server_cfg.beacon_client_count; j++){
                     launchBeaconClient(link);
                 }
 

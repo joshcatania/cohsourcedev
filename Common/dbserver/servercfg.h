@@ -62,6 +62,7 @@ typedef struct ServerCfg
     char    master_beacon_server[256];
     char    beacon_request_cache_dir[256];
     int        request_beacon_server_count;
+    int        beacon_client_count;
     int        do_not_launch_master_beacon_server;
     int        do_not_launch_beacon_clients;
     int        do_not_launch_mapserver_tsrs;
