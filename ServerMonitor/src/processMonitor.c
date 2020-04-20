@@ -22,8 +22,9 @@ static char *statusToName[] = {
 };
 
 ProcessMonitorEntry processmonitors[] = {
-    {"DbServer.exe", "DbServer.exe -startall", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS0},
-    {"Launcher.exe", "Launcher.exe -noversioncheck", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS1},
+    {"AuthServer.exe", "AuthServer.exe", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS0},
+    {"DbServer.exe", "DbServer.exe -startall", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS1},
+    {"Launcher.exe", "Launcher.exe -noversioncheck", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS2},
 //    {"LogServer.exe", "LogServer.exe", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS2},
 //    {"ChatServer.exe", "ChatServer.exe", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS3},
 //    {"Mapserver.exe", "Mapserver.exe -chatservernames localhost", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS4},
@@ -39,7 +40,7 @@ static VarMap mapping[] = {
     {IDC_TXT_SECONDS##number, VMF_READ,  "Proc" #number "Seconds", TOK_INT_X,    (size_t)&processmonitors[number].seconds, },
     SETUP_MAPPING(0)
     SETUP_MAPPING(1)
-//    SETUP_MAPPING(2)
+    SETUP_MAPPING(2)
 //    SETUP_MAPPING(3)
 };
 
