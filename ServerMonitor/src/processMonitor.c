@@ -22,8 +22,8 @@ static char *statusToName[] = {
 };
 
 ProcessMonitorEntry processmonitors[] = {
-    {"DbServer.exe", "DbServer.exe -startall", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS0},
-    {"Launcher.exe", "Launcher.exe -monitor", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS1},
+    {"DbServer.exe", "DbServer.exe -startall", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS0},
+    {"Launcher.exe", "Launcher.exe -noversioncheck", 1, 1, 0, 15, -1, 0, IDC_TXT_STATUS1},
 //    {"LogServer.exe", "LogServer.exe", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS2},
 //    {"ChatServer.exe", "ChatServer.exe", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS3},
 //    {"Mapserver.exe", "Mapserver.exe -chatservernames localhost", 1, 0, 0, 15, -1, 0, IDC_TXT_STATUS4},
@@ -310,8 +310,10 @@ LRESULT CALLBACK DlgProcessMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM 
                     if (strStartsWith(processmonitors[i].exename, "DbServer")) {
                         strcpy(processmonitors[i].cmdline, "DbServer.exe -startall");
                     } else if (strStartsWith(processmonitors[i].exename, "Launcher")) {
-                        strcpy(processmonitors[i].cmdline, "Launcher.exe -monitor");
-                    } else {
+                        strcpy(processmonitors[i].cmdline, "Launcher.exe -noversioncheck");
+                    }
+                    else
+                    {
                         strcpy(processmonitors[i].cmdline, processmonitors[i].exename);
                     }
                 }
