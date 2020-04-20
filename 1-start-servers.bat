@@ -1,5 +1,3 @@
 @echo off
 cd bin
-start /min AuthServer.exe
-timeout 2
-start ServerMonitor.exe
+start ServerMonitor.exe -connect
