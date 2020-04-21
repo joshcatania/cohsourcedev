@@ -110,7 +110,11 @@ void serverCfgLoad()
     server_cfg.logins_per_minute    = 100;
 
     server_cfg.xpscale                = 1.0f;
+    server_cfg.influencescale         = 1.0f;
+    server_cfg.prestigescale          = 1.0f;
     server_cfg.aescale                = 1.0f;
+    server_cfg.aeinfluencescale       = 1.0f;
+    server_cfg.aeprestigescale        = 1.0f;
     server_cfg.ticketscale            = 1.0f;
     server_cfg.aggrocap               = 17;
     server_cfg.targetcapmode          = 1;
@@ -375,8 +379,16 @@ void serverCfgLoad()
             server_cfg.disableContainerBackups = atoi(s2);
         else if (stricmp(s, "XPScale")==0)
             server_cfg.xpscale = atof(s2);
+        else if (stricmp(s, "InfluenceScale")==0)
+            server_cfg.influencescale = atof(s2);
+        else if (stricmp(s, "PrestigeScale")==0)
+            server_cfg.prestigescale = atof(s2);
         else if (stricmp(s, "AEScale")==0)
             server_cfg.aescale = atof(s2);
+        else if (stricmp(s, "AEInfluenceScale")==0)
+            server_cfg.aeinfluencescale = atof(s2);
+        else if (stricmp(s, "AEPrestigeScale")==0)
+            server_cfg.aeprestigescale = atof(s2);
         else if (stricmp(s, "TicketScale")==0)
             server_cfg.ticketscale = atof(s2);
         else if (stricmp(s, "AggroCap") == 0)

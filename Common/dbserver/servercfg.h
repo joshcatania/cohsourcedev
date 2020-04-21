@@ -75,7 +75,11 @@ typedef struct ServerCfg
     F32        timeZoneDelta;
     int        disableContainerBackups;
     F32        xpscale;
+    F32        influencescale;
+    F32        prestigescale;
     F32        aescale;
+    F32        aeinfluencescale;
+    F32        aeprestigescale;
     F32        ticketscale;
     int        aggrocap;
     int        targetcapmode;

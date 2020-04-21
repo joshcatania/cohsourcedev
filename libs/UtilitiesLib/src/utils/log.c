@@ -897,6 +897,7 @@ static int logToFileName(const char *fname_ptr, const char *msg, size_t bytes, i
 
     makeAbsLogNameNoExt(SAFESTR(fname_orig), fname_ptr, isTextFile);
     isTimestamped = isLogTimestamped(fname_orig);
+    compress = 0; // TODO: DIRTY HACK! writing compressed logs is broken right now, force uncompressed
     log_file = openAndRotateLogFile(fname_orig, msg, bytes, compress, isTimestamped, isTextFile);
     return writeToLogFile(log_file, msg, bytes);
 }
@@ -1113,7 +1114,8 @@ static void writeSortLog(bool flush)
     static int        old_seconds=-1;
     static int        max,count;
     int                i,j,sec_count,curr_seconds;    
-    bool zipLogfile = isProductionMode();
+    bool zipLogfile = 0; // isProductionMode(); TODO: DIRTY HACK! writing compressed logs is broken right now, force uncompressed
+
 
     count = 0;
     curr_seconds = timerSecondsSince2000() % LOG_SECONDS;

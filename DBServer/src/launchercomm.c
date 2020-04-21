@@ -1570,15 +1570,31 @@ int launcherCommStartProcess(const char *db_hostname, U32 host_ip, MapCon* map_c
         }
         estrConcatCharString(&cmd, server_cfg.blocked_map_keys[0]);
     }
-    if (server_cfg.xpscale > 1.0f || server_cfg.xpscale < 1.0f)
+    if (server_cfg.xpscale != 1.0f)
     {
         estrConcatf(&cmd, " -xpscale %f", server_cfg.xpscale);
     }
-    if (server_cfg.aescale > 1.0f || server_cfg.aescale < 1.0f)
+    if (server_cfg.influencescale != 1.0f)
+    {
+        estrConcatf(&cmd, " -influencescale %f", server_cfg.influencescale);
+    }
+    if (server_cfg.prestigescale != 1.0f)
+    {
+        estrConcatf(&cmd, " -prestigescale %f", server_cfg.xpscale);
+    }
+    if (server_cfg.aescale != 1.0f)
     {
         estrConcatf(&cmd, " -aescale %f", server_cfg.aescale);
     }
-    if (server_cfg.ticketscale > 1.0f || server_cfg.ticketscale < 1.0f)
+    if (server_cfg.aeinfluencescale != 1.0f)
+    {
+        estrConcatf(&cmd, " -aeinfluencescale %f", server_cfg.aeinfluencescale);
+    }
+    if (server_cfg.aeprestigescale != 1.0f)
+    {
+        estrConcatf(&cmd, " -aeprestigescale %f", server_cfg.aeprestigescale);
+    }
+    if (server_cfg.ticketscale != 1.0f)
     {
         estrConcatf(&cmd, " -ticketscale %f", server_cfg.ticketscale);
     }

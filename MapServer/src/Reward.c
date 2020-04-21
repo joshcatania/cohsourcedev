@@ -3725,7 +3725,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
     if(reward->influence && !bArchitectTest && (!bArchitect || bArchitectAllRewards))
     {
         e->general_update = 1;
-        iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitectScale?server_state.aescale:server_state.xpscale));
+        iInfluence = ceil(reward->influence*fInfluenceMod*(bArchitectScale?server_state.aeinfluencescale:server_state.influencescale));
 
         if(iInfluence)
         {
@@ -3759,7 +3759,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
     // Award the entity with prestige points.
     if(reward->prestige && e->pl->supergroup_mode && !bArchitectTest && (!bArchitect || bArchitectAllRewards))
     {
-        iPrestige = reward->prestige*fPrestigeMod*(bArchitectScale?server_state.aescale:server_state.xpscale);
+        iPrestige = reward->prestige*fPrestigeMod*(bArchitectScale?server_state.aeprestigescale:server_state.prestigescale);
 
         if( source == REWARDSOURCE_DEBUG )
             pDebug->prestige += iPrestige;
