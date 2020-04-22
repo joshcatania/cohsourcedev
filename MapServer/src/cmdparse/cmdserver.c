@@ -1029,6 +1029,16 @@ Cmd server_cmds[] =
                             "Send message <system name> <subject> <body> <influence> <attachment> <delay>" },
     { 9, "xpscale",            0, {{ PARSETYPE_FLOAT, &server_state.xpscale}}, 0,
                             "Scales the amount of XP awarded."},
+    { 9, "influencescale",            0, {{ PARSETYPE_FLOAT, &server_state.influencescale}}, 0,
+                            "Scales the amount of influence awarded."},
+    { 9, "prestigescale",            0, {{ PARSETYPE_FLOAT, &server_state.prestigescale}}, 0,
+                            "Scales the amount of prestige awarded."},
+    { 9, "aescale",            0, {{ PARSETYPE_FLOAT, &server_state.aescale}}, 0,
+                            "Scales the amount of AE XP awarded."},
+    { 9, "aeinfluencescale",            0, {{ PARSETYPE_FLOAT, &server_state.aeinfluencescale}}, 0,
+                            "Scales the amount of AE influence awarded."},
+    { 9, "aeprestigescale",            0, {{ PARSETYPE_FLOAT, &server_state.aeprestigescale}}, 0,
+                            "Scales the amount of AE prestige awarded."},
     { 9, "showobjectives",    SCMD_SHOW_OBJECTIVES, {{ 0 }}, 0,
                             "Shows a list of objectives for the mission and their current status"},
     { 9, "gotoobjective",    SCMD_GOTO_OBJECTIVE, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
@@ -2158,7 +2168,11 @@ void cmdOldServerStateInit()
     server_state.logSeqStates = 0;
     server_state.logServerTicks = 0;
     server_state.xpscale = 1.0;
+    server_state.influencescale = 1.0;
+    server_state.prestigescale = 1.0;
     server_state.aescale = 1.0;
+    server_state.aeinfluencescale = 1.0;
+    server_state.aeprestigescale = 1.0;
     server_state.ticketscale = 1.0;
     server_state.aggrocap = 17;
     server_state.targetcapmode = 1;

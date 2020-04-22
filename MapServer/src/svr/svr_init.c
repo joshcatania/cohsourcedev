@@ -919,8 +919,16 @@ void parseArgs2(int argc,char **argv)
             ;
         else if (strcmp(argv[i],"-xpscale")==0)
             server_state.xpscale = atof(argv[++i]);
+        else if (strcmp(argv[i],"-influencescale")==0)
+            server_state.influencescale = atof(argv[++i]);
+        else if (strcmp(argv[i],"-prestigescale")==0)
+            server_state.prestigescale = atof(argv[++i]);
         else if (strcmp(argv[i],"-aescale")==0)
             server_state.aescale = atof(argv[++i]);
+        else if (strcmp(argv[i],"-aeinfluencescale")==0)
+            server_state.aeinfluencescale = atof(argv[++i]);
+        else if (strcmp(argv[i],"-aeprestigescale")==0)
+            server_state.aeprestigescale = atof(argv[++i]);
         else if (strcmp(argv[i],"-ticketscale")==0)
             server_state.ticketscale = atof(argv[++i]);
         else if (strcmp(argv[i], "-aggrocap") == 0)

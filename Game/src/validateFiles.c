@@ -237,7 +237,7 @@ bool game_validateChecksums(bool bForceFullVerify, bool *pCancelled)
     char        *data = NULL;
     const char    *checksumFileName = "client.chksum";
     U32            len;
-    int            i, crashedLastTime, timer;
+    int            i, crashedLastTime = 0, timer;
     CheckFiles    *checkFiles = NULL;
     bool        bSuccess = true, bCancelled, bFullVerify = false, bDoingFullVerify = false;
     __time32_t    modTime = 0;

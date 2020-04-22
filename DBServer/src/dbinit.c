@@ -1820,7 +1820,8 @@ int main(int argc,char **argv)
 
     if(is_log_server)
     {
-        //adding ctrl handler here so that when the dbserver instance that is running as a logserver
+        setWindowIconColoredLetter(compatibleGetConsoleWindow(), 'L', 0x00ff00);
+        // adding ctrl handler here so that when the dbserver instance that is running as a logserver
         //quits, it can properly close the zmqsocket in logserver.c
         initCtrlHandler();
         logMain();

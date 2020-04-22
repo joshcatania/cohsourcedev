@@ -1228,7 +1228,7 @@ static void setupOldDriverWarning()
         // Only show the dialog if the game version changes or the driver date changes
         const char *currentVersion = getExecutablePatchVersion(NULL);
         char registryVersion[100];
-        int registryLastDate;
+        int registryLastDate = 0;
         RegReader    rr;
 
         rr = createRegReader();

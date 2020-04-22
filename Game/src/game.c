@@ -1572,7 +1572,7 @@ static void checkForCrash()
     if (!isDevelopmentMode() || forceCrashCheck)
     {
         char progressUserString[100];
-        PROGRESSDIALOGTYPE type;
+        PROGRESSDIALOGTYPE type = PROGRESSDIALOGTYPE_NONE;
         RegReader    rr;
 
         rr = createRegReader();
