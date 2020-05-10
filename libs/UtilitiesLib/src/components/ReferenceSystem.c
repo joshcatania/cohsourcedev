@@ -891,7 +891,7 @@ static int sNumReferentInfos = 0;
 
 void *AllocateLinkedBlocks(int iNumBlocks, int iBlockSize)
 {
-    char *pBuffer = calloc(iNumBlocks * iBlockSize, 1);
+    char *pBuffer = calloc(iNumBlocks, iBlockSize);
     int i;
 
     for (i=0; i < iNumBlocks; i++)
