@@ -377,7 +377,7 @@ int convertAttribMods(Character *p, DBPowers *pdb)
         if( pmod->ptemplate->offAttrib == kSpecialAttrib_EntCreate && pmod->erCreated)
         {
             VillainDef* holder = NULL;
-            if (strstri(pmod->ptemplate->pchEntityDef, "DDDoppelganger"))
+            if (strstri(pmod->ptemplate->pchEntityDef, "Doppels_DDDoppelganger"))
             {
                 if (pmod->ptemplate->pchParams)
                 {
