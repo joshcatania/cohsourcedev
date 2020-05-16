@@ -1217,6 +1217,8 @@ Entity * villainCreateDoppelganger(const char * dopplename, const char *override
         default:
             pchRankDef = "CustomCritter_Boss";
         }
+        if (s_getDoppelFlags(dopplename) & VDF_COMMAND) // check for commandable flag. If this is commandable, totally overwrite the above.
+        pchRankDef = "CustomCritter_Dopplepet";
     }
     else
         pchRankDef = villainclass;
