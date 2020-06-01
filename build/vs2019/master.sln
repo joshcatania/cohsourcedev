@@ -83,7 +83,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "vorbis", "..\..\3rdparty\vo
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ServerMonitor", "..\..\ServerMonitor\build\vs2019\ServerMonitor.vcxproj", "{D33415F7-5554-47A5-BF1B-39E152EA145D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freetype", "..\..\3rdparty\freetype-2.1.9\build\vs2019\freetype.vcxproj", "{AAE9BA47-F88C-473E-B48B-309ED1218D43}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "freetype", "..\..\3rdparty\freetype-2.10.2\build\vs2019\freetype.vcxproj", "{AAE9BA47-F88C-473E-B48B-309ED1218D43}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ChatAdmin", "..\..\ChatAdmin\build\vs2019\ChatAdmin.vcxproj", "{BE6EA612-903A-4BA7-ADA6-35C188AAC1BF}"
 EndProject

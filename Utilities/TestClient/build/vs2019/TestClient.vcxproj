@@ -98,7 +98,7 @@
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRTDBG_MAP_ALLOC;TEST_CLIENT;CLIENT;_CRT_SECURE_NO_DEPRECATE;FULLDEBUG;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.1.9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.10.2\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -124,7 +124,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\..\bin</Command>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_CRTDBG_MAP_ALLOC;TEST_CLIENT;CLIENT;_CRT_SECURE_NO_DEPRECATE;FULLDEBUG;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.1.9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.10.2\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -152,7 +152,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\..\bin</Command>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;FINAL;TEST_CLIENT;CLIENT;_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.1.9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.10.2\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
@@ -182,7 +182,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\..\bin</Command>
       <PreprocessorDefinitions>_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;FINAL;TEST_CLIENT;CLIENT;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.1.9\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\..\Common;$(ProjectDir)..\..\..\..\Game\src;$(ProjectDir)..\..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\freetype-2.10.2\include</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
