@@ -97,7 +97,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "GetTex", "..\..\Utilities\G
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "..\..\3rdparty\libpng-1.6.37\build\vs2019\libpng.vcxproj", "{81465938-5053-4E02-A33F-FB6E67DCE19D}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtiff", "..\..\3rdparty\libtiff-4.0.9\build\vs2019\libtiff.vcxproj", "{50E2371A-95CA-4CE6-818D-700DDDA2DA6E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libtiff", "..\..\3rdparty\libtiff-4.1.0\build\vs2019\libtiff.vcxproj", "{50E2371A-95CA-4CE6-818D-700DDDA2DA6E}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "nvcore", "..\..\3rdparty\nvidia-texture-tools-2.0.9\build\vs2019\nvcore.vcxproj", "{A939BF26-CC5E-40D4-8327-6170AB2B3D2F}"
 EndProject
