@@ -95,11 +95,11 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;FULLDEBUG;_CRTDBG_MAP_ALLOC;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LUA_COMPAT_MODULE;LUA_COMPAT_APIINTCASTS;FULLDEBUG;_CRTDBG_MAP_ALLOC;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -126,11 +126,11 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\*.dll $(ProjectDir)..\..\
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;FULLDEBUG;_CRTDBG_MAP_ALLOC;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LUA_COMPAT_MODULE;LUA_COMPAT_APIINTCASTS;FULLDEBUG;_CRTDBG_MAP_ALLOC;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4133</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -160,11 +160,11 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\*.dll $(ProjectDir)..\..\
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;FINAL;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LUA_COMPAT_MODULE;LUA_COMPAT_APIINTCASTS;FINAL;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -195,11 +195,11 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;FINAL;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;LUA_COMPAT_MODULE;LUA_COMPAT_APIINTCASTS;FINAL;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4133</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -1191,7 +1191,7 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
     <ProjectReference Include="..\..\..\3rdparty\cryptopp-8.3\build\vs2019\cryptopp.vcxproj">
       <Project>{aca8c226-ef10-49f2-8b3d-d9939ee4a4fe}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\3rdparty\lua-5.1.5\build\vs2019\lua.vcxproj">
+    <ProjectReference Include="..\..\..\3rdparty\lua-5.3.5\build\vs2019\lua.vcxproj">
       <Project>{494ee6bf-16c7-4457-8759-af93033293a7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\3rdparty\zlib-1.2.11\build\vs2019\zlib.vcxproj">

@@ -1393,7 +1393,7 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
     <ProjectReference Include="..\..\..\3rdparty\libcubemapgen-1.4\build\vs2019\CubeMapGenLib.vcxproj">
       <Project>{bee2c47b-7a0a-4762-9259-d58a7c6b11a9}</Project>
     </ProjectReference>
-    <ProjectReference Include="..\..\..\3rdparty\lua-5.1.5\build\vs2019\lua.vcxproj">
+    <ProjectReference Include="..\..\..\3rdparty\lua-5.3.5\build\vs2019\lua.vcxproj">
       <Project>{494ee6bf-16c7-4457-8759-af93033293a7}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\3rdparty\nvparse\build\vs2019\nvparse.vcxproj">

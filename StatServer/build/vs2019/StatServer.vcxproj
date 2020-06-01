@@ -99,7 +99,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -119,7 +119,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -141,7 +141,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -165,7 +165,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Game\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.3.5\include</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

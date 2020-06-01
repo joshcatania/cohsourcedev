@@ -63,7 +63,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CmdRelay", "..\..\CmdRelay\
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MapServer", "..\..\MapServer\build\vs2019\MapServer.vcxproj", "{2ADE3B23-011A-4745-B8BF-1C39693920EA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "..\..\3rdparty\lua-5.1.5\build\vs2019\lua.vcxproj", "{494EE6BF-16C7-4457-8759-AF93033293A7}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lua", "..\..\3rdparty\lua-5.3.5\build\vs2019\lua.vcxproj", "{494EE6BF-16C7-4457-8759-AF93033293A7}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ArenaServer", "..\..\ArenaServer\build\vs2019\ArenaServer.vcxproj", "{6FBFE732-15AB-4AEE-A6E8-EC5FEA0A345B}"
 EndProject
