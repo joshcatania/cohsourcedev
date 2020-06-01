@@ -7,7 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "3rdparty", "3rdparty", "{1E
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "zlib", "..\..\3rdparty\zlib-1.2.11\build\vs2019\zlib.vcxproj", "{8426A8D3-2549-4523-B584-FCD81E89B7BC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbz2", "..\..\3rdparty\bzip2-1.0.6\build\vs2019\libbz2.vcxproj", "{77666041-2089-4F61-B56C-C025ACABB5AE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libbz2", "..\..\3rdparty\bzip2-1.0.8\build\vs2019\libbz2.vcxproj", "{77666041-2089-4F61-B56C-C025ACABB5AE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "jpeg", "..\..\3rdparty\jpeg-9c\build\vs2019\jpeg.vcxproj", "{22889577-B5CA-4986-B202-8C9AF0C9AD39}"
 EndProject
