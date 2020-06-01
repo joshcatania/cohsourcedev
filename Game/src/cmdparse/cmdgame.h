@@ -751,7 +751,6 @@ typedef struct GameState
     // TODO: remove once transform toolbar is fully approved
     int transformToolbar;
 
-    int supportHardwareLights;
     int enableHardwareLights;
     int emulateHardwareLights;
     int priorityBoost;    // Boost process priority

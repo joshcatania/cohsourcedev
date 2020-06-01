@@ -3170,9 +3170,6 @@
     <ClCompile Include="..\..\src\win\win_init.c">
       <Filter>Source Files\win</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\win\hwlight.c">
-      <Filter>Source Files\win</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\win\input.c">
       <Filter>Source Files\win</Filter>
     </ClCompile>
@@ -3700,6 +3697,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\UI\uiPopHelp.c">
       <Filter>Source Files\UI</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\win\hwlight.cpp">
+      <Filter>Source Files\win</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

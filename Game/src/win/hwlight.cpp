@@ -1,3 +1,8 @@
+#ifdef __cplusplus
+extern "C"
+{
+#endif // __cplusplus
+
 #include <utilitieslib/stdtypes.h>
 #include "win/hwlight.h"
 
@@ -6,10 +11,6 @@
 #include "cmdparse/cmdgame.h"
 
 #include "windows.h"
-
-#define _IMPORTING 1
-#include "LFX2.h"
-#undef _IMPORTING
 
 #include "entity/character_base.h"
 #include "clientcomm/clientcomm.h"
@@ -22,6 +23,12 @@
 #include "graphics/textureatlas.h"
 #include "UI/uiStatus.h"
 #include "win/win_init.h"
+
+#ifdef __cplusplus
+}
+#endif // __cplusplus
+
+#include "LogitechLEDLib.h"
 
 static bool s_hwlightInitialized = false;
 static bool s_colorSet = false;
@@ -40,33 +47,20 @@ static enum {
     EVENT_LEVELUP = 2,
 } s_currentEvent;
 
-LFX2INITIALIZE cbLFX_Initialize;
-LFX2RESET cbLFX_Reset;
-LFX2LIGHT cbLFX_Light;
-LFX2UPDATE cbLFX_Update;
-LFX2RELEASE cbLFX_Release;
+void setHWColor(U32 targetColor) {
+    LogiLedSetLighting((targetColor & 0x00FF0000) >> 16, (targetColor & 0x0000FF00) >> 8, (targetColor & 0x000000FF));
+}
 
 static bool doInitialization() {
-    HINSTANCE lfxLib = LoadLibraryA(LFX_DLL_NAME);
-
-    if (!lfxLib)
+    writeConsole(OUTPUT_VERBOSE, "Initializing hardware lights");
+    bool LedInitialized = LogiLedInitWithName("City of Heroes");
+    if (!LedInitialized) {
+        writeConsole(OUTPUT_WARNING, "Failed to initialize hardware lights");
         return false;
-
-    cbLFX_Initialize = (LFX2INITIALIZE)GetProcAddress(lfxLib, LFX_DLL_INITIALIZE);
-    cbLFX_Reset = (LFX2RESET)GetProcAddress(lfxLib, LFX_DLL_RESET);
-    cbLFX_Light = (LFX2LIGHT)GetProcAddress(lfxLib, LFX_DLL_LIGHT);
-    cbLFX_Update = (LFX2UPDATE)GetProcAddress(lfxLib, LFX_DLL_UPDATE);
-    cbLFX_Release = (LFX2RELEASE)GetProcAddress(lfxLib, LFX_DLL_RELEASE);
-
-    if (!cbLFX_Initialize || !cbLFX_Reset || !cbLFX_Light || !cbLFX_Update || !cbLFX_Release)
-        return false;
-
-    if (cbLFX_Initialize() != LFX_SUCCESS)
-        return false;
-    
-    if (cbLFX_Reset() != LFX_SUCCESS)
-        return false;
-
+    }
+    writeConsole(OUTPUT_INFO, "Initialized hardware lights");
+    LogiLedSetTargetDevice(LOGI_DEVICETYPE_ALL);
+    setHWColor(0);
     return true;
 }
 
@@ -180,17 +174,6 @@ static bool getLightColor(U32 *targetColor) {
     return getAlignmentColor(targetColor);
 }
 
-unsigned int applyHardwareLimitations(U32 targetColor, U32 currentColor, F32 secondsSinceLastColorChange) {
-    // AlienFX hardware only supports 4 bits per channel
-    targetColor = targetColor & 0xfff0f0f0;
-
-    // AlienFX light updates take 50-70 ms. Be pessimistic to avoid overloading the command queue.
-    if (secondsSinceLastColorChange < 0.07f)
-        targetColor = currentColor;
-
-    return targetColor;
-}
-
 static void displayEmulatedLights(U32 targetColor) {
     unsigned int rgba = (targetColor << 8) | (targetColor >> 24);
     int screenWidth, screenHeight;
@@ -201,8 +184,7 @@ static void displayEmulatedLights(U32 targetColor) {
 
 void updatePhysicalLightsIfEnabled(U32 targetColor) {
     if (game_state.enableHardwareLights && s_hwlightPresence == PRESENT) {
-        cbLFX_Light(LFX_ALL, targetColor);
-        cbLFX_Update();
+        setHWColor(targetColor);
     }
 }
 
@@ -215,8 +197,6 @@ static void updateLights() {
 
     if (!getLightColor(&targetColor))
         return;
-
-    targetColor = applyHardwareLimitations(targetColor, s_currentColor, s_secondsSinceLastColorChange);
 
     if (game_state.emulateHardwareLights)
         displayEmulatedLights(targetColor);
@@ -231,7 +211,7 @@ static void updateLights() {
 
 void hwlightInitialize() {
     // Do not unconditionally check whether the hardware is available as this consumes too much memory
-    if (!game_state.supportHardwareLights || s_hwlightInitialized || (s_hwlightPresence == ABSENT))
+    if (s_hwlightInitialized || (s_hwlightPresence == ABSENT))
         return;
 
     s_hwlightInitialized = doInitialization();
@@ -239,9 +219,6 @@ void hwlightInitialize() {
 }
 
 void hwlightTick() {
-    if (!game_state.supportHardwareLights)
-        return;
-
     if (s_hwlightPresence == ABSENT && !game_state.emulateHardwareLights) {
         game_state.enableHardwareLights = false;
         return;
@@ -270,8 +247,11 @@ void hwlightSignalMissionComplete() {
 }
 
 void hwlightShutdown() {
-    if (s_hwlightInitialized)
-        cbLFX_Release();
+
+    if (s_hwlightInitialized) {
+        LogiLedShutdown();
+        writeConsole(OUTPUT_VERBOSE, "Shut down hardware lights");
+    }
 
     s_hwlightInitialized = false;
     s_colorSet = false;
@@ -279,5 +259,5 @@ void hwlightShutdown() {
 }
 
 bool hwlightIsPresent() {
-    return game_state.supportHardwareLights && (s_hwlightPresence == PRESENT);
+    return s_hwlightPresence == PRESENT;
 }

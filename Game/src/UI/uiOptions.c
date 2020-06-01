@@ -900,8 +900,8 @@ static GameOptions s_optListGraphics[] =
     { 0, kOptionType_Bool,   "OptionSoundQuality",  "OptionSoundQualityHelp",  &s_gfx.forceSoftwareAudio,    kOptionType_Bool,        &s_gfx.forceSoftwareAudio,  NULL,                     "CompatibilityString", "PerformanceString" },
     { 0, kOptionType_Bool,     "Option3DSound",       "Option3DSoundHelp",       &s_gfx.enable3DSound,        kOptionType_Bool,         &s_gfx.enable3DSound,         NULL,                       "OptionEnabled", "OptionDisabled", ShouldDisplay3DSoundOption },
 
-    { 0, kOptionType_Title,  "OptionsAlienFX",       0,                         NULL,                        kOptionType_Nop,         NULL,                       NULL,                     NULL, NULL },
-    { 0, kOptionType_Bool,     "OptionHardwareLights", "OptionHardwareLightsHelp",       &s_gfx.enableHWLights,        kOptionType_Bool,         &s_gfx.enableHWLights,         NULL,                       "OptionEnabled", "OptionDisabled", ShouldDisplayHardwareLightOption },
+    { 0, kOptionType_Title,  "OptionsPeripherals",       0,                         NULL,                        kOptionType_Nop,         NULL,                       NULL,                     NULL, NULL },
+    { 0, kOptionType_Bool,     "OptionHardwareLights", "OptionHardwareLightsHelp",       &s_gfx.enableHWLights,        kOptionType_Bool,         &s_gfx.enableHWLights,         NULL,                       "OptionEnabled", "OptionDisabled" },
 
     // Non-displayed options, used to save state for undo
     { 0,kOptionType_String, "Thiswillneverdisplay", 0, NULL, kOptionType_Bool,      &s_gfx.fullScreen,  NULL,         NULL, NULL, neverDisplay },
@@ -2118,11 +2118,6 @@ static OptionDisplayType ShouldDisplay3DSoundOption(GameOptions *go)
         g_audio_state.surroundFailed = 1;
 
     return g_audio_state.surroundFailed ? OPT_DISABLE : OPT_DISPLAY;
-}
-
-static OptionDisplayType ShouldDisplayHardwareLightOption(GameOptions *go)
-{
-    return hwlightIsPresent() ? OPT_DISPLAY : OPT_DISABLE;
 }
 
 static char *DisplayAmbientOption(void *pv)

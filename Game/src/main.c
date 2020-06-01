@@ -265,7 +265,6 @@ int main(int argc, char **argv)
 
     if (game_state.enableHardwareLights) {
         hwlightInitialize();
-        writeConsole(OUTPUT_INFO, "Initialized hardware lights");
     }
 
     seqLoadStateBits();

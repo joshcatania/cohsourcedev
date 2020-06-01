@@ -2710,12 +2710,10 @@ Cmd game_cmds[] =
     { 0, "lfg_event_response",            CMD_TURNSTILE_EVENT_RESPONSE, {{ CMDSTR(tmp_str) }}, 0,
                         "Accept / reject offer to join event" },
     
-    { 0, "supportHardwareLights", 0, {{ CMDINT(game_state.supportHardwareLights) }}, 0,
-                        "Enable support for LightFX/AlienFX case lights on startup" },
     { 9, "enableHardwareLights", 0, {{ CMDINT(game_state.enableHardwareLights) }}, 0,
-                        "Enable LightFX/AlienFX case lights" },
+                        "Enable Logitech LED SDK capability" },
     { 9, "emulateHardwareLights", 0, {{ CMDINT(game_state.emulateHardwareLights) }}, 0,
-                        "Emulate LightFX/AlienFX case lights via an on-screen color swatch" },
+                        "Emulate Logitech LED SDK calls via an on-screen color swatch" },
 
     { 0, "priorityBoost", 0, {{ CMDINT(game_state.priorityBoost) }}, 0,
                         "Set the game process priority to Above Normal rather than Normal when running in the foreground." },
