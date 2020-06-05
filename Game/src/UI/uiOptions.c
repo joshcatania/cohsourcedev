@@ -3665,9 +3665,6 @@ int optionsWindow()
         {
             g_audio_state.uisurround = s_gfx.enable3DSound;
         }
-
-        if (!hwlightIsPresent())
-            s_gfx.enableHWLights = 0;
         
         game_state.enableHardwareLights = s_gfx.enableHWLights;
 
