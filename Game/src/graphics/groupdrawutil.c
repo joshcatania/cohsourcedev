@@ -649,7 +649,7 @@ void groupWeldAll(void)
     do_weld_limiting = 0;
     groupTreeTraverse(groupWeldAllCallback, 0);
     do_weld_limiting = 1;
-    writeConsole(OUTPUT_INFO, "Welded %d interior models", welds_this_frame);
+    conPrintf("Welded %d interior models", welds_this_frame);
     PERFINFO_AUTO_STOP();
 }
 

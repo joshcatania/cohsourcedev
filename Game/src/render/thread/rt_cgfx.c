@@ -23,6 +23,7 @@
 #include "rt_filter.h"
 #include <utilitieslib/utils/utils.h>
 #include "graphics/failtext.h"
+#include "UI/uiConsole.h"
 
 //---------------------------------------------------------------------------
 //
@@ -217,7 +218,7 @@ tCgFxError rt_cgfxInit( void )
     //
     //    "First we create a Cg context, register the standard states (if you fail to do this, your Cg
     //    context will lack the standard states needed for processing standard 3D API state
-    //    assignments—alternatively you could load your own implementations of the standard
+    //    assignmentsï¿½alternatively you could load your own implementations of the standard
     //    CgFX states), and request that the Cg runtime manage texture binds (saving your
     //    application the trouble when applying techniques)."
     //
@@ -232,13 +233,13 @@ tCgFxError rt_cgfxInit( void )
     //        It is up to the user to enable and disable textures using 
     //        cgGLEnableTextureParameter and cgGLDisableTextureParameter
     //        respectively. This behavior is the default in order to avoid
-    //        conflicts with texture state on geometry that’s rendered with the
+    //        conflicts with texture state on geometry thatï¿½s rendered with the
     //        fixed function pipeline or without cgGL.
     //
     //        "If automatic texture management is desired, cgGLSetManageTextureParameters
     //        may be called with flag set to CG_TRUE before cgGLBindProgram is called. 
     //        Whenever cgGLBindProgram is called, the cgGL runtime will make all the 
-    //        appropriate texture parameter calls on the application’s behalf."
+    //        appropriate texture parameter calls on the applicationï¿½s behalf."
     //
     //cgGLSetManageTextureParameters(sCgContext, CG_TRUE);
 
@@ -789,7 +790,7 @@ tCgFxError cgfx_InitEffectHandle( tCgEffectSpec* pEffectSpec, const char** args 
         }
         else
         {
-            printf( "Compiled CgFX Shader '%s'\n", pEffectSpec->szEffectNm);
+            conPrintf("Compiled CgFX Shader '%s'", pEffectSpec->szEffectNm);
         }
     }
     

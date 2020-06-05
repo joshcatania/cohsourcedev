@@ -14,6 +14,7 @@
 #include "game.h"
 #include <utilitieslib/language/AppLocale.h>
 #include "auth/authUserData.h"
+#include "UI/uiConsole.h"
 
 AuthInfo    auth_info;
 static        char    auth_error_msg[1000];
@@ -248,7 +249,6 @@ void acGetSendServerList(AuthPacket *pak)
     assert(server_list_expected);
     server_list_expected = kAuthServerListType_None;
 
-    printf("\nresponse type=%s(%d)\n", (response_type==kAuthServerListType_Normal?"normal":"extended"), response_type);
     auth_info.server_count    = authGetU08(pak);
     auth_info.last_login_server_id    = authGetU08(pak);
     SAFE_FREE(auth_info.servers);
@@ -288,7 +288,7 @@ void acGetSendServerList(AuthPacket *pak)
             // Original method - generate a lookup key or something.
             sprintf(auth_info.servers[i].name, "%sWorldServer_%d", regGetAppName(), auth_info.servers[i].id);
 
-        printf("Auth sent dbserver #%d, %s %s:%d\n",auth_info.servers[i].id, auth_info.servers[i].name,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port);
+        conPrintf("Auth sent dbserver #%d, %s %s:%d",auth_info.servers[i].id, auth_info.servers[i].name,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port);
         //printf("Auth sent dbserver #%d %s:%d (%d/%d)\n",auth_info.servers[i].id,makeIpStr(auth_info.servers[i].ip),auth_info.servers[i].port,si->curr_user_count,si->max_user_count);
     }
 }
@@ -505,7 +505,7 @@ int authLogin(char *name,char *password)
         Strncpyt(auth_info.servers[0].name,game_state.cs_address);
         return 1;
     }
-    writeConsole(OUTPUT_INFO, "Connecting to AuthServer %s:%d (TCP)", game_state.auth_address, AUTH_SERVER_PORT);
+    conPrintf("Connecting to AuthServer %s:%d (TCP)", game_state.auth_address, AUTH_SERVER_PORT);
     ret = authConnect(game_state.auth_address, AUTH_SERVER_PORT);
     if (!ret)
     {
@@ -516,13 +516,13 @@ int authLogin(char *name,char *password)
     }
 
     authSetKey(1234, 1);        // turn on encryption for first packet, key is ignored for blowfish
-    writeConsole(OUTPUT_INFO, "Waiting for AuthServer protocol version");
+    conPrintf("Waiting for AuthServer protocol version");
     if (!authWaitFor(AC_PROTOCOL_VER)) {
         writeConsole(OUTPUT_ERROR, "Failed to receive protocol version");
         return 0;
     }
 
-    writeConsole(OUTPUT_INFO, "Validating credentials");
+    conPrintf("Validating credentials");
     acSendLogin(name,password,0,IsUsingCider()?AuthFlags_MAC:AuthFlags_PC); 
     if (!authWaitFor(AC_LOGIN_OK)) {
         writeConsole(OUTPUT_WARNING, "Authentication failed");
@@ -531,7 +531,7 @@ int authLogin(char *name,char *password)
 
     setAssertAuthName(auth_info.name);
 
-    writeConsole(OUTPUT_INFO, "Requesting server list");
+    conPrintf("Requesting server list");
     acSendServerList();
     if (!authWaitFor(AC_SEND_SERVER_LIST)) {
         writeConsole(OUTPUT_ERROR, "Failed to receive server list");
@@ -540,7 +540,7 @@ int authLogin(char *name,char *password)
 
     if(auth_info.auth2_enabled == Auth2EnabledState_QueueServer) 
     {
-        writeConsole(OUTPUT_INFO, "Receiving queue information");
+        conPrintf("Receiving queue information");
         // what is this queue for?
         if(!authWaitFor(AC_QUEUESIZE)){
             writeConsole(OUTPUT_ERROR, "Failed to receive queue information");

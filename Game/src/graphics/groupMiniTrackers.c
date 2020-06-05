@@ -575,7 +575,7 @@ void groupDrawBuildMiniTrackers(void)
 
     gfxNodeBuildMiniTrackerRecurse(gfx_tree_root);
 
-    writeConsole(OUTPUT_INFO, "Applied %d different, %d same texture swaps", dbg_different_count, dbg_same_count);
+    conPrintf("Applied %d different, %d same texture swaps", dbg_different_count, dbg_same_count);
 }
 
 void groupDrawPushMiniTrackers(void)

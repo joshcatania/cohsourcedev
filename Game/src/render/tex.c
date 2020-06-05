@@ -1966,7 +1966,7 @@ static void texDoThreadedQueuedTextureLoading( void )
     
     assert(!queuedTexLoads && !i);
 
-    writeConsole(OUTPUT_INFO, "Loaded %i textures (%.3f Mbytes %.3f TexWord MPixels)", count, totaldata / 1000000.0f, (texWordGetTotalPixels() - pixelsStart) / 1000000.0f);
+    conPrintf("Loaded %i textures (%.3f Mbytes %.3f TexWord MPixels)", count, totaldata / 1000000.0f, (texWordGetTotalPixels() - pixelsStart) / 1000000.0f);
 };
 
 long texLoadsPending(int include_misc)
@@ -2257,7 +2257,7 @@ static int texCheckForSceneSwaps(BasicTexture *texbind) {
                 if (!quickload)
                     Errorf("*** TexSwap Warning: error finding texture '%s' to swap with '%s'\n", swaplist[j]->dst, swaplist[j]->src);
             } else {
-                verbose_printf("Swapping texture '%s' for '%s'\n", swaplist[j]->src, swaplist[j]->dst);
+                writeConsole(OUTPUT_VERBOSE, "Swapping texture '%s' for '%s'", swaplist[j]->src, swaplist[j]->dst);
             }
             if (texbind->load_state[0]==TEX_NOT_LOADED) {
                 // This is no longer true, since textures are loaded more dynamically

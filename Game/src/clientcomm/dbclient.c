@@ -1058,7 +1058,7 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
 
     PERFINFO_AUTO_START("dbConnect", 1);
 
-        writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (UDP) Cookie: %x", server, port, cookie);
+        conPrintf("Connecting to DBServer %s:%d (UDP) Cookie: %x", server, port, cookie);
         Strncpyt(db_info.address, makeIpStr(ipFromString(server)));
         if (db_comm_link.socket)
             netSendDisconnect(&db_comm_link,1);

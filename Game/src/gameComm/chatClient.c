@@ -774,7 +774,7 @@ void chatClientLogin(char * refresh, char * handle, char * shard)
     Strncpyt(game_state.chatShard, shard);
 
     // flush all client data
-    verbose_printf("Chatserver login: %s, %s\n", handle, shard);
+    writeConsole(OUTPUT_VERBOSE, "Chatserver login: %s, %s", handle, shard);
 
     // clean out channel window
     resetChannelWindow();

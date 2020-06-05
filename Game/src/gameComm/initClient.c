@@ -137,7 +137,7 @@ void checkDoneResumingMapServerEntity()
     force_fade = 1;
     gLoggingIn = false;
     showBgAdd(-2); // Matches up with the one in commReqScene()
-    writeConsole(OUTPUT_INFO, "Established successful MapServer connection");
+    conPrintf("Established successful MapServer connection");
 }
 
 //

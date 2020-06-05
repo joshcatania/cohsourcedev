@@ -12,6 +12,7 @@
 #include <utilitieslib/utils/tiff.h>
 #include "graphics/failtext.h"
 #include <utilitieslib/utils/file.h>
+#include <utilitieslib/utils/utils.h>
 #include "newfeature.h"
 
 #define RT_PRIVATE
@@ -612,10 +613,10 @@ static bool initFbos()
         break;
     }
     if(ret != GL_FRAMEBUFFER_COMPLETE_EXT) {
-        printf("Could not find a valid rendertarget combination for the ssao buffers\n");
+        writeConsole(OUTPUT_WARNING, "Could not find a valid rendertarget combination for the ssao buffers");
         return false;
     }
-    printf("Found a valid rendertarget combination for the ssao buffers (color: %#04x / depth: %#04x)\n", internalFormat, depthInternalFormat);
+    writeConsole(OUTPUT_VERBOSE, "Found a valid rendertarget combination for the ssao buffers (color: %#04x / depth: %#04x)", internalFormat, depthInternalFormat);
 
     // Allocate reduced size render targets
     if (ssao.depthDownsample > 1) {
@@ -657,10 +658,10 @@ static bool initFbos()
             if(ret == GL_FRAMEBUFFER_COMPLETE_EXT) break;
         }
         if(ret != GL_FRAMEBUFFER_COMPLETE_EXT) {
-            printf("Could not find a valid rendertarget combination for the reduced buffers\n");
+            writeConsole(OUTPUT_WARNING, "Could not find a valid rendertarget combination for the reduced buffers");
             return false;
         }
-        printf("Found a valid rendertarget combination for the reduced buffers (color: %#04x / depth: %#04x)\n", internalFormat, depthInternalFormat);
+        writeConsole(OUTPUT_VERBOSE, "Found a valid rendertarget combination for the reduced buffers (color: %#04x / depth: %#04x)", internalFormat, depthInternalFormat);
     }
 
     return true;

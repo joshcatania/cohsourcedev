@@ -1996,7 +1996,7 @@ int commConnect(char *addr,int port,int cookie)
 {
     int result;
     
-    writeConsole(OUTPUT_INFO, "Connecting to MapServer %s:%d (UDP) Cookie: %x", addr, port, cookie);
+    conPrintf("Connecting to MapServer %s:%d (UDP) Cookie: %x", addr, port, cookie);
 
     PERFINFO_AUTO_START("commStart", 1);
         result = commStart(addr,port,cookie);

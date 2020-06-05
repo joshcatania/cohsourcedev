@@ -23,8 +23,8 @@
 
 int show_console=0;
 
-#define MAX_LINES 400
 #define MAX_HIST_LINES 32
+#define MAX_LINES 2048
 #define LINE_SIZE 256
 
 typedef struct
@@ -118,14 +118,7 @@ void conPrintf(char const *fmt, ...)
             if (s[1] == 0)
                 s = 0;
         }
-        if (!conVisible())
-        {
-            if (!s2[0])
-                s2 = ".";
-            InfoBoxDbg( INFO_DEBUG_INFO, s2 );
-        }
-        else
-            conPrint(s2);
+        conPrint(s2);
         if (!s)
             break;
         s2 = s + 1;
@@ -216,20 +209,20 @@ void conRender()
 
     windowSize(&w,&h);
 
-    //game_state.console_scale = 0.2; // for developers
+    game_state.console_scale = 0.35; // for developers
     if (game_state.console_scale > 0 && game_state.console_scale < 1)
         h *= game_state.console_scale;
 
     curr_con->h_chars = w / 8;
     curr_con->v_chars = (h / 10) * 2 / 3;
 
-    if (inpLevel(INP_PRIOR)) 
-        curr_con->scroll_up++;
-    if (inpLevel(INP_NEXT))
-        curr_con->scroll_up--;
-    if (inpLevel(INP_HOME))
+    if (inpLevel(INP_CONTROL) && inpEdge(INP_H))
         curr_con->scroll_up = MAX_LINES;
-    if (inpLevel(INP_END))
+    if (inpLevel(INP_NEXT) || (inpLevel(INP_CONTROL) && inpEdge(INP_J)))
+        curr_con->scroll_up--;
+    if (inpLevel(INP_PRIOR) || (inpLevel(INP_CONTROL) && inpEdge(INP_K)))
+        curr_con->scroll_up++;
+    if (inpLevel(INP_CONTROL) && inpEdge(INP_L))
         curr_con->scroll_up = 0;
     {
         int x,y;
@@ -252,7 +245,7 @@ void conRender()
 
     fontSet(0);
     fontScale((curr_con->h_chars) * 22,(curr_con->v_chars) * 10);
-    fontColor(0x3f3f3f);
+    fontColor(0x000000);
     fontAlpha(100);
     fontText(0,0,"\001");
     fontAlpha(255);
@@ -271,7 +264,7 @@ void conRender()
         line = subLine(drawto_line,vis_lines);
     for(i=0;line != drawto_line;line = addLine(line,1),i++)
     {
-        fontColor(0xffff80);
+        fontColor(0xffffff);
         fontText(8,32 + 10*i,curr_con->lines[line]);
     }
 
@@ -310,7 +303,7 @@ void conRender()
     // input buffer
     show_cursor = ((++curr_con->cursor_anim) >> 3) & 1;
     sprintf(buf,">%s",curr_con->input_buf);
-    fontColor(0x0ff00);
+    fontColor(0x00ff00);
     fontText(8,(curr_con->v_chars - 2) * 10,buf);
 
     if(show_cursor){
@@ -417,7 +410,7 @@ void conGetInput()
             }
             if (input->key == INP_RETURN || input->key == INP_NUMPADENTER)
             {
-                //conPrint(curr_con->input_buf);
+                conPrint(curr_con->input_buf);
                 if(strlen(curr_con->input_buf)){
                     conRunCommand();
                     curr_con->tab_comp_buf[0] = 0;
@@ -625,15 +618,15 @@ void conGetInput()
 void conProcess()
 {
     // The tilde key toggles the console.
-    if(cmdAccessLevel() > 0 || demoIsPlaying()){
+    //if(cmdAccessLevel() > 0 || demoIsPlaying()){
         // The Vista Infared driver remaps the TILDE key to the KANJI key for some unknown reason.
         if (inpEdge(INP_TILDE) || inpEdge(INP_KANJI))
         {
             conEnterMode(!conVisible());
         }
-    }else{
+    /*}else{
         conEnterMode(0);
-    }
+    }*/
     conResizeCheck();
     if (!show_console)
         return;

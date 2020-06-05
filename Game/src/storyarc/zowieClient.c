@@ -139,7 +139,7 @@ void clientZowie_Load()
     // Singal that we have valid def pointers
     defsAreValid = 1;
 
-    writeConsole(OUTPUT_INFO, "Loaded %d zowies", eaSize(&g_Zowies));
+    conPrintf("Loaded %d zowies", eaSize(&g_Zowies));
 }
 
 static void clientZowie_SetUpIndices(TaskStatus *task)

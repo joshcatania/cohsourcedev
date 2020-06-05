@@ -670,7 +670,7 @@ void vistrayDetailTrays(void)
 {
     int    i, j, start_depth=1;
 
-    writeConsole(OUTPUT_DEBUG, "Detailing trays");
+    writeConsole(OUTPUT_DEBUG, "Applying detail to trays");
     for (i = 0; i < group_info.ref_count; i++)
     {
         DefTracker *ref = group_info.refs[i];
@@ -687,7 +687,7 @@ void vistrayDetailTrays(void)
             vistrayAddDetailsToTrays(ref, start_depth);
         }
     }
-    writeConsole(OUTPUT_INFO, "Detailed trays");
+    conPrintf("Applied detail to trays");
 }
 
 void vistrayFreeTrayDetails(DefTracker *tray_tracker)
