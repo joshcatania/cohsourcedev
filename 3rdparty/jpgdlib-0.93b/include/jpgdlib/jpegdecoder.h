@@ -1,7 +1,7 @@
 //------------------------------------------------------------------------------
 // jpegdecoder.h
 // Small JPEG Decoder Library v0.93b
-// Last updated: Dec. 28, 2001 
+// Last updated: Dec. 28, 2001
 // Copyright (C) 1994-2000 Rich Geldreich
 // richgel@voicenet.com
 //
@@ -25,7 +25,7 @@
 #include "main.h"
 //------------------------------------------------------------------------------
 // Define SUPPORT_X86ASM to include the inline x86 assembler code.
-#ifndef _XBOX
+#if !defined(_XBOX) && !defined(JPGD_DISABLE_ASM)
 #define SUPPORT_X86ASM
 #endif
 //------------------------------------------------------------------------------
@@ -505,7 +505,7 @@ private:
     uint bit_buf;
     uint bit_buf_64[2];
   };
-  
+
   uint  saved_mm1[2];
 
   bool  use_mmx_getbits;

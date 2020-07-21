@@ -31,7 +31,7 @@ add_subdirectory (3rdparty/cryptopp-8.3/build/cmake)
 add_subdirectory (3rdparty/freetype-2.1.9/build/cmake)
 add_subdirectory (3rdparty/glew-2.1.0/build/cmake)
 add_subdirectory (3rdparty/jpeg-9c/build/cmake)
-# * 3rdparty\jpgdlib-0.93b
+add_subdirectory (3rdparty/jpgdlib-0.93b/build/cmake)
 # * 3rdparty\libcubemapgen-1.4
 # * 3rdparty\lua-5.1.5
 # * 3rdparty\nvparse

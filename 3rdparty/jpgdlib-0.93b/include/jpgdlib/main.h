@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 // main.h
-// Last updated: Nov. 16, 2000 
+// Last updated: Nov. 16, 2000
 // Copyright (C) 1994-2000 Rich Geldreich
 // richgel@voicenet.com
 //
@@ -30,6 +30,7 @@
 #include <setjmp.h>
 #include <assert.h>
 
+#if !defined(JPGD_USE_STDINT_H)
 typedef   signed char  schar;       /*  8 bits     */
 typedef unsigned char  uchar;       /*  8 bits     */
 typedef   signed short int16;       /* 16 bits     */
@@ -38,6 +39,15 @@ typedef unsigned short ushort;      /* 16 bits     */
 typedef unsigned int   uint;        /* 16/32+ bits */
 typedef unsigned long  ulong;       /* 32 bits     */
 typedef   signed int   int32;       /* 32+ bits    */
+#else
+#include <stdint.h>
+typedef int_fast8_t    schar;       /*  8 bits     */
+typedef uint_fast8_t   uchar;       /*  8 bits     */
+typedef int_fast16_t   int16;       /* 16 bits     */
+typedef uint_fast16_t  uint16;      /* 16 bits     */
+typedef uint_fast32_t  ulong;       /* 32 bits     */
+typedef int_fast32_t   int32;       /* 32+ bits    */
+#endif
 
 #ifndef max
 #define max(a,b) (((a)>(b)) ? (a) : (b))
