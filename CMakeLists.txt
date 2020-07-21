@@ -10,6 +10,14 @@
 # 4) make
 #
 # Any build system supported by cmake should work, such as ninja.
+#
+# On my Linux Mint 20 system, I needed these additional dependencies:
+#
+# * apt-get install libxmu-dev (for freetype)
+# * apt-get reinstall libglu1-mesa-dev (for glew)
+#
+# All of the other dependencies were already there, but I'm not sure which
+# ones need to be added to a "bare" system.
 
 cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
@@ -19,7 +27,6 @@ project(cox_portable)
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
 #
-# * 3rdparty/glew-2.1.0
 # * 3rdparty\jpeg-9c
 # * 3rdparty\jpgdlib-0.93b
 # * 3rdparty\libcubemapgen-1.4
@@ -33,6 +40,7 @@ project(cox_portable)
 
 add_subdirectory(3rdparty/cryptopp-8.3/build/cmake)
 add_subdirectory(3rdparty/freetype-2.1.9/build/cmake)
+add_subdirectory(3rdparty/glew-2.1.0/build/cmake)
 
 # Original Win64 Debug settings:
 #
