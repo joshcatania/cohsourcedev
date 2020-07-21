@@ -22,12 +22,15 @@
 cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
 
-project(cox_portable)
+project (cox_portable)
 
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
-#
-# * 3rdparty\jpeg-9c
+
+add_subdirectory (3rdparty/cryptopp-8.3/build/cmake)
+add_subdirectory (3rdparty/freetype-2.1.9/build/cmake)
+add_subdirectory (3rdparty/glew-2.1.0/build/cmake)
+add_subdirectory (3rdparty/jpeg-9c/build/cmake)
 # * 3rdparty\jpgdlib-0.93b
 # * 3rdparty\libcubemapgen-1.4
 # * 3rdparty\lua-5.1.5
@@ -37,10 +40,6 @@ project(cox_portable)
 # * 3rdparty\zlib-1.2.11
 # * libs\UtilitiesLib
 # * Utilities\StructParser
-
-add_subdirectory(3rdparty/cryptopp-8.3/build/cmake)
-add_subdirectory(3rdparty/freetype-2.1.9/build/cmake)
-add_subdirectory(3rdparty/glew-2.1.0/build/cmake)
 
 # Original Win64 Debug settings:
 #
