@@ -34,6 +34,9 @@ ipch/
 *.vsp
 *.vspx
 
+# Sublime Text
+CoX-Source.sublime-workspace
+
 # Ignore generated source files
 AutoGen/
 logs/
