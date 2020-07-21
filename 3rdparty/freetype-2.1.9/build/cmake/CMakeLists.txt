@@ -9,8 +9,6 @@ project (cox_portable)
 add_compile_options ("-march=native")
 add_compile_options ("-msha")
 
-add_compile_options ("-I${CMAKE_CURRENT_SOURCE_DIR}/../../include")
-
 # Source files
 set (
     freetype_src
@@ -44,6 +42,10 @@ set (
     )
 
 add_library (freetype STATIC ${freetype_src})
+
+target_include_directories (freetype PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/../../include
+    )
 
 # Copy the lib into 3rdparty/freetype-2.1.9/build/cmake.
 install (TARGETS freetype
