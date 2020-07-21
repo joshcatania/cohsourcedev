@@ -19,7 +19,6 @@ project(cox_portable)
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
 #
-# * 3rdparty/cryptopp-8.3
 # * 3rdparty/freetype-2.1.9
 # * 3rdparty/glew-2.1.0
 # * 3rdparty\jpeg-9c
