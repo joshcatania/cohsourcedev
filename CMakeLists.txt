@@ -19,7 +19,6 @@ project(cox_portable)
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
 #
-# * 3rdparty/freetype-2.1.9
 # * 3rdparty/glew-2.1.0
 # * 3rdparty\jpeg-9c
 # * 3rdparty\jpgdlib-0.93b
@@ -33,6 +32,7 @@ project(cox_portable)
 # * Utilities\StructParser
 
 add_subdirectory(3rdparty/cryptopp-8.3/build/cmake)
+add_subdirectory(3rdparty/freetype-2.1.9/build/cmake)
 
 # Original Win64 Debug settings:
 #
