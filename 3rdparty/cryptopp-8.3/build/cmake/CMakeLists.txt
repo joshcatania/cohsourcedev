@@ -1,6 +1,4 @@
 # Build cryptopp for CoX.
-#
-# TODO: Is there a portable assembler that accepts MASM syntax?
 
 cmake_minimum_required (VERSION 3.7)
 cmake_policy (SET CMP0054 NEW)
@@ -10,12 +8,9 @@ project (cox_portable)
 # TODO: Figure out what minimum x64 CPU we actually need.
 add_compile_options ("-march=native")
 add_compile_options ("-msha")
-add_compile_options ("-I../../include/cryptlib")
 
 # cryptopp configuration
-#set (CRYPTOPP_DISABLE_ASM 1)
 set (CRYPTOPP_WANT_SECURE_LIB 1)
-#set (CRYPTOPP_DISABLE_SHANI 1)  # TODO: What -march do we need for SHA2?
 
 # Source files
 set (
@@ -63,16 +58,7 @@ set (
     ../../src/dessp.cpp
     ../../src/dh.cpp
     ../../src/dh2.cpp
-    #../../src/dll.cpp
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    #   </PrecompiledHeader>
-    # </ClCompile>
+    # ../../src/dll.cpp  # Seems to be Windows-specific.
     ../../src/donna_32.cpp
     ../../src/donna_64.cpp
     ../../src/donna_sse.cpp
@@ -80,20 +66,10 @@ set (
     ../../src/eax.cpp
     ../../src/ec2n.cpp
     ../../src/eccrypto.cpp
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    # </ClCompile>
     ../../src/ecp.cpp
     ../../src/elgamal.cpp
     ../../src/emsa2.cpp
     ../../src/eprecomp.cpp
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
-    #   <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
-    # </ClCompile>
     ../../src/esign.cpp
     ../../src/files.cpp
     ../../src/filters.cpp
@@ -118,15 +94,6 @@ set (
     ../../src/idea.cpp
     ../../src/integer.cpp
     ../../src/iterhash.cpp
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    #   </PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    #   </PrecompiledHeader>
-    # </ClCompile>
     ../../src/kalyna.cpp
     ../../src/kalynatab.cpp
     ../../src/keccak.cpp
@@ -150,11 +117,6 @@ set (
     ../../src/padlkrng.cpp
     ../../src/panama.cpp
     ../../src/pch.cpp
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
-    #   <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
-    # </ClCompile>
     ../../src/pkcspad.cpp
     ../../src/poly1305.cpp
     ../../src/polynomi.cpp
@@ -228,3 +190,9 @@ set (
     )
 
 add_library (cryptopp STATIC ${cryptopp_src})
+
+# Copy the lib into 3rdparty/cryptopp-8.3/build/cmake.
+install (TARGETS cryptopp
+    ARCHIVE
+    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    )
