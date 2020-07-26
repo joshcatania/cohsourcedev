@@ -1,0 +1,5 @@
+# cmake build directories
+build*/
+
+# built library
+libjpeg.a

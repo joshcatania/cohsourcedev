@@ -4,6 +4,10 @@
 #include "nvparse_errors.h"
 #include "nvparse_externs.h"
 
+#if !defined(_WIN32)
+#include <string.h>
+#endif
+
 std::string vs10_transstring;
 
 #if 0
@@ -59,7 +63,7 @@ int VS10Reg::ValidateIndex()
         if ( index < 0 || index > 15 ) return 0;
         else return 1;
         break;
-    case TYPE_ADDRESS_REG:        
+    case TYPE_ADDRESS_REG:
         if ( index != 0 ) return 0;
         else return 1;
         break;
@@ -100,7 +104,7 @@ void VS10Reg::Translate()
 
     if ( sign == -1 )
         vs10_transstring.append( "-" );
-    
+
     switch ( type )
     {
     case TYPE_TEMPORARY_REG:
@@ -111,7 +115,7 @@ void VS10Reg::Translate()
         sprintf( str, "v[%d]", index );
         vs10_transstring.append( str );
         break;
-    case TYPE_ADDRESS_REG:        
+    case TYPE_ADDRESS_REG:
         sprintf( str, "A%d", index );
         vs10_transstring.append( str );
         break;
@@ -343,34 +347,34 @@ void VS10Inst::ValidateRegIndices()
     switch( instid )
     {
         // Vector operations.
-        case VS10_MOV: 
+        case VS10_MOV:
         case VS10_LIT:
             break;
 
         // Unary operations.
-        case VS10_FRC: 
+        case VS10_FRC:
             break;
 
         // Scalar operations.
-        case VS10_EXP: 
+        case VS10_EXP:
         case VS10_EXPP:
-        case VS10_LOG: 
+        case VS10_LOG:
         case VS10_LOGP:
-        case VS10_RCP: 
+        case VS10_RCP:
         case VS10_RSQ:
             break;
-        
+
         // Binary operations.
         case VS10_ADD:
         case VS10_DP3:
-        case VS10_DP4: 
-        case VS10_DST: 
-        case VS10_SGE: 
-        case VS10_SLT: 
+        case VS10_DP4:
+        case VS10_DST:
+        case VS10_SGE:
+        case VS10_SLT:
         case VS10_SUB:
-        case VS10_MAX: 
-        case VS10_MIN: 
-        case VS10_MUL: 
+        case VS10_MAX:
+        case VS10_MIN:
+        case VS10_MUL:
             result = src[1].ValidateIndex();
             if ( !result )
             {
@@ -469,7 +473,7 @@ void VS10Inst::ValidateSrcMasks()
     switch( instid )
     {
         // Vector operations.
-        case VS10_MOV: 
+        case VS10_MOV:
         case VS10_LIT:
             strncpy( mask, src[0].mask, 4 );
             mask[4] = 0;
@@ -482,7 +486,7 @@ void VS10Inst::ValidateSrcMasks()
             break;
 
         // Unary operations.
-        case VS10_FRC: 
+        case VS10_FRC:
             strncpy( mask, src[0].mask, 4 );
             mask[4] = 0;
             len = (int)strlen( mask );
@@ -494,11 +498,11 @@ void VS10Inst::ValidateSrcMasks()
             break;
 
         // Scalar operations.
-        case VS10_EXP: 
+        case VS10_EXP:
         case VS10_EXPP:
-        case VS10_LOG: 
+        case VS10_LOG:
         case VS10_LOGP:
-        case VS10_RCP: 
+        case VS10_RCP:
         case VS10_RSQ:
             strncpy( mask, src[0].mask, 4 );
             mask[4] = 0;
@@ -509,23 +513,23 @@ void VS10Inst::ValidateSrcMasks()
                 errors.set( temp );
             }
             break;
-        
+
         // Binary operations.
         case VS10_ADD:
         case VS10_DP3:
-        case VS10_DP4: 
-        case VS10_DST: 
-        case VS10_SGE: 
-        case VS10_SLT: 
+        case VS10_DP4:
+        case VS10_DST:
+        case VS10_SGE:
+        case VS10_SLT:
         case VS10_SUB:
         case VS10_M3X2:
         case VS10_M3X3:
         case VS10_M3X4:
         case VS10_M4X3:
         case VS10_M4X4:
-        case VS10_MAX: 
-        case VS10_MIN: 
-        case VS10_MUL: 
+        case VS10_MAX:
+        case VS10_MIN:
+        case VS10_MUL:
             strncpy( mask, src[0].mask, 4 );
             mask[4] = 0;
             len = (int)strlen( mask );
@@ -640,43 +644,43 @@ void VS10Inst::ValidateSrcReadable()
         default:
             errors.set( "VS10Inst::ValidateSrcReadable() Internal Error: unknown register type\n" );
     }
-    
+
     switch( instid )
     {
         // Vector operations.
-        case VS10_MOV: 
+        case VS10_MOV:
         case VS10_LIT:
             break;
 
         // Unary operations.
-        case VS10_FRC: 
+        case VS10_FRC:
             break;
 
         // Scalar operations.
-        case VS10_EXP: 
+        case VS10_EXP:
         case VS10_EXPP:
-        case VS10_LOG: 
+        case VS10_LOG:
         case VS10_LOGP:
-        case VS10_RCP: 
+        case VS10_RCP:
         case VS10_RSQ:
             break;
-        
+
         // Binary operations.
         case VS10_ADD:
         case VS10_DP3:
-        case VS10_DP4: 
-        case VS10_DST: 
-        case VS10_SGE: 
-        case VS10_SLT: 
+        case VS10_DP4:
+        case VS10_DST:
+        case VS10_SGE:
+        case VS10_SLT:
         case VS10_SUB:
         case VS10_M3X2:
         case VS10_M3X3:
         case VS10_M3X4:
         case VS10_M4X3:
         case VS10_M4X4:
-        case VS10_MAX: 
-        case VS10_MIN: 
-        case VS10_MUL: 
+        case VS10_MAX:
+        case VS10_MIN:
+        case VS10_MUL:
             switch( src[1].type )
             {
                 case TYPE_TEMPORARY_REG:
@@ -760,39 +764,39 @@ void VS10Inst::ValidateReadPorts()
     switch( instid )
     {
         // Vector operations.
-        case VS10_MOV: 
+        case VS10_MOV:
         case VS10_LIT:
             break;
 
         // Unary operations.
-        case VS10_FRC: 
+        case VS10_FRC:
             break;
 
         // Scalar operations.
-        case VS10_EXP: 
+        case VS10_EXP:
         case VS10_EXPP:
-        case VS10_LOG: 
+        case VS10_LOG:
         case VS10_LOGP:
-        case VS10_RCP: 
+        case VS10_RCP:
         case VS10_RSQ:
             break;
-        
+
         // Binary operations.
         case VS10_ADD:
         case VS10_DP3:
-        case VS10_DP4: 
-        case VS10_DST: 
-        case VS10_SGE: 
-        case VS10_SLT: 
+        case VS10_DP4:
+        case VS10_DST:
+        case VS10_SGE:
+        case VS10_SLT:
         case VS10_SUB:
         case VS10_M3X2:
         case VS10_M3X3:
         case VS10_M3X4:
         case VS10_M4X3:
         case VS10_M4X4:
-        case VS10_MAX: 
-        case VS10_MIN: 
-        case VS10_MUL: 
+        case VS10_MAX:
+        case VS10_MIN:
+        case VS10_MUL:
             acount = 0;
             ccount = 0;
             for ( i = 0; i < 2; i++ )
@@ -957,7 +961,7 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_DP4: 
+    case VS10_DP4:
         vs10_transstring.append( "DP4    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -966,7 +970,7 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_DST: 
+    case VS10_DST:
         vs10_transstring.append( "DST    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -975,7 +979,7 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_EXP: 
+    case VS10_EXP:
         vs10_transstring.append( "EXP    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -995,14 +999,14 @@ int VS10Inst::Translate()
         errors.set( temp );
         ninstr = 0;
         break;
-    case VS10_LIT: 
+    case VS10_LIT:
         vs10_transstring.append( "LIT    " );
         dst.Translate();
         vs10_transstring.append( ", " );
         src[0].Translate();
         ninstr = 1;
         break;
-    case VS10_LOG: 
+    case VS10_LOG:
         vs10_transstring.append( "LOG    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1326,7 +1330,7 @@ int VS10Inst::Translate()
             return ninstr;
         }
         break;
-    case VS10_MAD: 
+    case VS10_MAD:
         vs10_transstring.append( "MAD    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1337,7 +1341,7 @@ int VS10Inst::Translate()
         src[2].Translate();
         ninstr = 1;
         break;
-    case VS10_MAX: 
+    case VS10_MAX:
         vs10_transstring.append( "MAX    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1346,7 +1350,7 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_MIN: 
+    case VS10_MIN:
         vs10_transstring.append( "MIN    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1365,7 +1369,7 @@ int VS10Inst::Translate()
         src[0].Translate();
         ninstr = 1;
         break;
-    case VS10_MUL: 
+    case VS10_MUL:
         vs10_transstring.append( "MUL    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1374,24 +1378,24 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_NOP: 
+    case VS10_NOP:
         return 0;
         break;
-    case VS10_RCP: 
+    case VS10_RCP:
         vs10_transstring.append( "RCP    " );
         dst.Translate();
         vs10_transstring.append( ", " );
         src[0].Translate();
         ninstr = 1;
         break;
-    case VS10_RSQ: 
+    case VS10_RSQ:
         vs10_transstring.append( "RSQ    " );
         dst.Translate();
         vs10_transstring.append( ", " );
         src[0].Translate();
         ninstr = 1;
         break;
-    case VS10_SGE: 
+    case VS10_SGE:
         vs10_transstring.append( "SGE    " );
         dst.Translate();
         vs10_transstring.append( ", " );
@@ -1400,7 +1404,7 @@ int VS10Inst::Translate()
         src[1].Translate();
         ninstr = 1;
         break;
-    case VS10_SLT: 
+    case VS10_SLT:
         vs10_transstring.append( "SLT    " );
         dst.Translate();
         vs10_transstring.append( ", " );

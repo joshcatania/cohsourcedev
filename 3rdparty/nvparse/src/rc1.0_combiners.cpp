@@ -1,3 +1,7 @@
+#if !defined(_WIN32)
+#include <string.h>
+#endif
+
 #define GLEW_STATIC
 #include <GL/glew.h>
 
@@ -57,7 +61,7 @@ bool rc10_init_more()
         // We will run even if it doesn't exist.
         rc2init = true;
     }
-    
+
     errors.reset();
     line_number = 1;
 

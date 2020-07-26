@@ -3,6 +3,8 @@
 #include <stdio.h>
 #ifdef _WIN32
 #include <windows.h>
+#else
+#include <string.h>
 #endif
 #define GLEW_STATIC
 #include <GL/glew.h>
@@ -130,6 +132,6 @@ bool ts10_init_more()
         ts10_init(instring+7);
         ts10_parse();
     }
-    
+
 
   */

@@ -2,6 +2,7 @@
 # include <windows.h>
 #else
 #include <stdarg.h>
+#include <string.h>
 #define strnicmp strncasecmp
 #endif
 
@@ -72,7 +73,7 @@ void nvparse(const char * input_string, int argc /* = 0 */,...)
         errors.set("NULL string passed to nvparse");
         return;
     }
-    
+
     char * instring = strdup(input_string);
 
     // vertex constant program
