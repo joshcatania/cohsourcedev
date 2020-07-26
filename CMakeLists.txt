@@ -35,7 +35,7 @@ add_subdirectory (3rdparty/jpgdlib-0.93b/build/cmake)
 #add_subdirectory (3rdparty/libcubemapgen-1.4/build/cmake)  # Windows-specific.
 add_subdirectory (3rdparty/lua-5.1.5/build/cmake)
 add_subdirectory (3rdparty/nvparse/build/cmake)
-#add_subdirectory (3rdparty/ogg-1.1.1/build/cmake)
+add_subdirectory (3rdparty/ogg-1.1.1/build/cmake)
 #add_subdirectory (3rdparty/vorbis-1.1.0/build/cmake)
 #add_subdirectory (3rdparty/zlib-1.2.11/build/cmake)
 #add_subdirectory (libs/UtilitiesLib/build/cmake)
