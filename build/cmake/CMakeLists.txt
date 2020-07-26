@@ -27,19 +27,26 @@ project (cox_portable)
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
 
-add_subdirectory (3rdparty/cryptopp-8.3/build/cmake)
-add_subdirectory (3rdparty/freetype-2.1.9/build/cmake)
-add_subdirectory (3rdparty/glew-2.1.0/build/cmake)
-add_subdirectory (3rdparty/jpeg-9c/build/cmake)
-add_subdirectory (3rdparty/jpgdlib-0.93b/build/cmake)
-#add_subdirectory (3rdparty/libcubemapgen-1.4/build/cmake)  # Windows-specific.
-add_subdirectory (3rdparty/lua-5.1.5/build/cmake)
-add_subdirectory (3rdparty/nvparse/build/cmake)
-add_subdirectory (3rdparty/ogg-1.1.1/build/cmake)
-add_subdirectory (3rdparty/vorbis-1.1.0/build/cmake)
-add_subdirectory (3rdparty/zlib-1.2.11/build/cmake)
-#add_subdirectory (libs/UtilitiesLib/build/cmake)
-#add_subdirectory (Utilities/StructParser/build/cmake)
+set (THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+
+add_subdirectory (${THIRD_PARTY_DIR}/cryptopp-8.3/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/freetype-2.1.9/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/glew-2.1.0/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/jpeg-9c/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/jpgdlib-0.93b/build/cmake)
+#add_subdirectory (${THIRD_PARTY_DIR}/libcubemapgen-1.4/build/cmake)  # Windows-specific.
+add_subdirectory (${THIRD_PARTY_DIR}/lua-5.1.5/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/nvparse/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/ogg-1.1.1/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/vorbis-1.1.0/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/zlib-1.2.11/build/cmake)
+
+# CoX libs
+
+set (COX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+
+#add_subdirectory (${COX_SOURCE_DIR}/libs/UtilitiesLib/build/cmake)
+#add_subdirectory (${COX_SOURCE_DIR}/Utilities/StructParser/build/cmake)
 
 # Original Win64 Debug settings:
 #
