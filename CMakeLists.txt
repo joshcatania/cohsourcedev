@@ -37,7 +37,7 @@ add_subdirectory (3rdparty/lua-5.1.5/build/cmake)
 add_subdirectory (3rdparty/nvparse/build/cmake)
 add_subdirectory (3rdparty/ogg-1.1.1/build/cmake)
 add_subdirectory (3rdparty/vorbis-1.1.0/build/cmake)
-#add_subdirectory (3rdparty/zlib-1.2.11/build/cmake)
+add_subdirectory (3rdparty/zlib-1.2.11/build/cmake)
 #add_subdirectory (libs/UtilitiesLib/build/cmake)
 #add_subdirectory (Utilities/StructParser/build/cmake)
 

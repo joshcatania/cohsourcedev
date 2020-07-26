@@ -36,7 +36,7 @@ set (
     ../../src/zutil.c
     )
 
-add_library (libz STATIC ${libz_src})
+add_library (z STATIC ${libz_src})
 
 target_compile_options (libz PUBLIC "-DADLER32_SIMD_SSSE3")
 target_compile_options (libz PUBLIC "-DINFLATE_CHUNK_SIMD_SSE2")

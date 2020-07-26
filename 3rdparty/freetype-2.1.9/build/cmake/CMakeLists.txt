@@ -11,7 +11,7 @@ add_compile_options ("-msha")
 
 # Source files
 set (
-    freetype_src
+    libfreetype_src
 
     ../../src/autofit/autofit.c
     ../../src/autohint/autohint.c
@@ -41,11 +41,9 @@ set (
     ../../src/winfonts/winfnt.c
     )
 
-add_library (freetype STATIC ${freetype_src})
+add_library (freetype STATIC ${libfreetype_src})
 
-target_include_directories (freetype PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../include
-    )
+target_include_directories (freetype PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
 # Copy the lib into 3rdparty/freetype-2.1.9/build/cmake.
 install (TARGETS freetype

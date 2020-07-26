@@ -19,13 +19,13 @@ set (
     ../../src/jpegdecoder.cpp
     )
 
-add_library (libjpgd STATIC ${libjpgd_src})
-target_compile_options (libjpgd PUBLIC "-DJPGD_DISABLE_ASM=1")
-target_compile_options (libjpgd PUBLIC "-DJPGD_USE_STDINT_H=1")
-target_compile_options (libjpgd PUBLIC "-D_M_X64=1")  # WARNING: Assumes 64-bit build, 32-bit build is toast.
+add_library (jpgd STATIC ${libjpgd_src})
+target_compile_options (jpgd PUBLIC "-DJPGD_DISABLE_ASM=1")
+target_compile_options (jpgd PUBLIC "-DJPGD_USE_STDINT_H=1")
+target_compile_options (jpgd PUBLIC "-D_M_X64=1")  # WARNING: Assumes 64-bit build, 32-bit build is toast.
 
 # Copy the lib into 3rdparty/jpgdlib-0.93b/build/cmake.
-install (TARGETS libjpgd
+install (TARGETS jpgd
     ARCHIVE
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
     )

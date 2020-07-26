@@ -9,20 +9,17 @@ project (cox_portable)
 add_compile_options ("-march=native")
 add_compile_options ("-msha")
 
-set (GLEW_STATIC 1)
-
 # Source files
 set (
-    glew_src
+    libglew_src
 
     ../../src/glew.c
     )
 
-add_library (glew STATIC ${glew_src})
+add_library (glew STATIC ${libglew_src})
 
-target_include_directories (glew PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/../../include
-    )
+target_compile_options (glew PUBLIC "-DGLEW_STATIC=1")
+target_include_directories (glew PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
 # Copy the lib into 3rdparty/glew-2.1.0/build/cmake.
 install (TARGETS glew

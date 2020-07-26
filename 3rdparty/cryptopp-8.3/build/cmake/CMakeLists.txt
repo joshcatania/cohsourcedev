@@ -9,12 +9,9 @@ project (cox_portable)
 add_compile_options ("-march=native")
 add_compile_options ("-msha")
 
-# cryptopp configuration
-set (CRYPTOPP_WANT_SECURE_LIB 1)
-
 # Source files
 set (
-    cryptopp_src
+    libcryptopp_src
 
     ../../src/3way.cpp
     ../../src/adler32.cpp
@@ -189,7 +186,9 @@ set (
 
     )
 
-add_library (cryptopp STATIC ${cryptopp_src})
+add_library (cryptopp STATIC ${libcryptopp_src})
+
+target_compile_options (cryptopp PUBLIC "-DCRYPTOPP_WANT_SECURE_LIB=1")
 
 # Copy the lib into 3rdparty/cryptopp-8.3/build/cmake.
 install (TARGETS cryptopp

@@ -17,12 +17,12 @@ set (
     ../../src/framing.c
     )
 
-add_library (libogg STATIC ${libogg_src})
+add_library (ogg STATIC ${libogg_src})
 
-target_compile_options (libogg PUBLIC "-DOV_STATICLIB")
+target_compile_options (ogg PUBLIC "-DOV_STATICLIB")
 
 # Copy the lib into 3rdparty/ogg-1.1.1/build/cmake.
-install (TARGETS libogg
+install (TARGETS ogg
     ARCHIVE
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
     )

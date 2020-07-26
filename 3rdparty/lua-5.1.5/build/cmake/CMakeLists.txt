@@ -47,10 +47,10 @@ set (
     ../../src/print.c
     )
 
-add_library (liblua STATIC ${liblua_src})
+add_library (lua STATIC ${liblua_src})
 
 # Copy the lib into 3rdparty/lua-5.1.5/build/cmake.
-install (TARGETS liblua
+install (TARGETS lua
     ARCHIVE
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
     )

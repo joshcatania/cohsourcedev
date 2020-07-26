@@ -74,10 +74,10 @@ set (
     ../../src/wrtarga.c
     )
 
-add_library (libjpeg STATIC ${libjpeg_src})
+add_library (jpeg STATIC ${libjpeg_src})
 
 # Copy the lib into 3rdparty/jpeg-9c/build/cmake.
-install (TARGETS libjpeg
+install (TARGETS jpeg
     ARCHIVE
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
     )

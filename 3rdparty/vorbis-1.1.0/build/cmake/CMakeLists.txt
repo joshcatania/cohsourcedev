@@ -36,12 +36,12 @@ set (
     ../../src/window.c
     )
 
-add_library (libvorbis STATIC ${libvorbis_src})
+add_library (vorbis STATIC ${libvorbis_src})
 
-target_include_directories(libvorbis PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../ogg-1.1.1/include)
+target_include_directories (vorbis PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../ogg-1.1.1/include)
 
 # Copy the lib into 3rdparty/vorbis-1.1.0/build/cmake.
-install (TARGETS libvorbis
+install (TARGETS vorbis
     ARCHIVE
     DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
     )
