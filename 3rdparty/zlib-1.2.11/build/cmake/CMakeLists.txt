@@ -38,14 +38,14 @@ set (
 
 add_library (z STATIC ${libz_src})
 
-target_compile_options (libz PUBLIC "-DADLER32_SIMD_SSSE3")
-target_compile_options (libz PUBLIC "-DINFLATE_CHUNK_SIMD_SSE2")
-target_compile_options (libz PUBLIC "-DCRC32_SIMD_SSE42_PCLMUL")
-target_compile_options (libz PUBLIC "-DDEFLATE_FILL_WINDOW_SSE2")
-target_include_directories (libz PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../src")  # For inffast_chunk.c
+target_compile_options (z PUBLIC "-DADLER32_SIMD_SSSE3")
+target_compile_options (z PUBLIC "-DINFLATE_CHUNK_SIMD_SSE2")
+target_compile_options (z PUBLIC "-DCRC32_SIMD_SSE42_PCLMUL")
+target_compile_options (z PUBLIC "-DDEFLATE_FILL_WINDOW_SSE2")
+target_include_directories (z PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../../src")  # For inffast_chunk.c
 
-# Copy the lib into 3rdparty/zlib-1.2.11/build/cmake.
-install (TARGETS libz
+# Copy the lib into the right spot.
+install (TARGETS z
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

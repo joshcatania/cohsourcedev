@@ -49,8 +49,8 @@ set (
 
 add_library (lua STATIC ${liblua_src})
 
-# Copy the lib into 3rdparty/lua-5.1.5/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS lua
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

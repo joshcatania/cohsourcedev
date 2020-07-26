@@ -21,8 +21,8 @@ add_library (glew STATIC ${libglew_src})
 target_compile_options (glew PUBLIC "-DGLEW_STATIC=1")
 target_include_directories (glew PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
-# Copy the lib into 3rdparty/glew-2.1.0/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS glew
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

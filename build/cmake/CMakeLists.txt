@@ -27,23 +27,23 @@ project (cox_portable)
 # The game client requires these libraries, which we'll statically link to
 # prevent incompatibilities with the game servers.
 
-set (THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
+set (THIRD_PARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../3rdparty)
 
-add_subdirectory (${THIRD_PARTY_DIR}/cryptopp-8.3/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/freetype-2.1.9/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/glew-2.1.0/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/jpeg-9c/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/jpgdlib-0.93b/build/cmake)
-#add_subdirectory (${THIRD_PARTY_DIR}/libcubemapgen-1.4/build/cmake)  # Windows-specific.
-add_subdirectory (${THIRD_PARTY_DIR}/lua-5.1.5/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/nvparse/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/ogg-1.1.1/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/vorbis-1.1.0/build/cmake)
-add_subdirectory (${THIRD_PARTY_DIR}/zlib-1.2.11/build/cmake)
+add_subdirectory (${THIRD_PARTY_DIR}/cryptopp-8.3/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/cryptopp)
+add_subdirectory (${THIRD_PARTY_DIR}/freetype-2.1.9/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/freetype)
+add_subdirectory (${THIRD_PARTY_DIR}/glew-2.1.0/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/glew)
+add_subdirectory (${THIRD_PARTY_DIR}/jpeg-9c/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/jpeg)
+add_subdirectory (${THIRD_PARTY_DIR}/jpgdlib-0.93b/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/jpgd)
+#add_subdirectory (${THIRD_PARTY_DIR}/libcubemapgen-1.4/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/cubemapgen)  # Windows-specific.
+add_subdirectory (${THIRD_PARTY_DIR}/lua-5.1.5/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/lua)
+add_subdirectory (${THIRD_PARTY_DIR}/nvparse/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/nvparse)
+add_subdirectory (${THIRD_PARTY_DIR}/ogg-1.1.1/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/ogg)
+add_subdirectory (${THIRD_PARTY_DIR}/vorbis-1.1.0/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/vorbis)
+add_subdirectory (${THIRD_PARTY_DIR}/zlib-1.2.11/build/cmake ${CMAKE_CURRENT_BINARY_DIR}/z)
 
 # CoX libs
 
-set (COX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/..)
+set (COX_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../..)
 
 #add_subdirectory (${COX_SOURCE_DIR}/libs/UtilitiesLib/build/cmake)
 #add_subdirectory (${COX_SOURCE_DIR}/Utilities/StructParser/build/cmake)

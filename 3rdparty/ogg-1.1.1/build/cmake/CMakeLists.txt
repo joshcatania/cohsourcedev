@@ -21,8 +21,8 @@ add_library (ogg STATIC ${libogg_src})
 
 target_compile_options (ogg PUBLIC "-DOV_STATICLIB")
 
-# Copy the lib into 3rdparty/ogg-1.1.1/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS ogg
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

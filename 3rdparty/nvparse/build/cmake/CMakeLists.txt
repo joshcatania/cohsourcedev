@@ -43,8 +43,8 @@ add_library (nvparse STATIC ${libnvparse_src})
 target_compile_options (nvparse PUBLIC "-Wno-write-strings")
 target_include_directories (nvparse PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../glew-2.1.0/include)
 
-# Copy the lib into 3rdparty/nvparse/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS nvparse
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

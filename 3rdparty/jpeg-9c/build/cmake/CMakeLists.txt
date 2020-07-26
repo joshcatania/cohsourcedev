@@ -76,8 +76,8 @@ set (
 
 add_library (jpeg STATIC ${libjpeg_src})
 
-# Copy the lib into 3rdparty/jpeg-9c/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS jpeg
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

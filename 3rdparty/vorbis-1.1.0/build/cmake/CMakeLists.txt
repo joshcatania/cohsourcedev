@@ -40,8 +40,8 @@ add_library (vorbis STATIC ${libvorbis_src})
 
 target_include_directories (vorbis PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../ogg-1.1.1/include)
 
-# Copy the lib into 3rdparty/vorbis-1.1.0/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS vorbis
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

@@ -190,8 +190,8 @@ add_library (cryptopp STATIC ${libcryptopp_src})
 
 target_compile_options (cryptopp PUBLIC "-DCRYPTOPP_WANT_SECURE_LIB=1")
 
-# Copy the lib into 3rdparty/cryptopp-8.3/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS cryptopp
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )

@@ -45,8 +45,8 @@ add_library (freetype STATIC ${libfreetype_src})
 
 target_include_directories (freetype PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
 
-# Copy the lib into 3rdparty/freetype-2.1.9/build/cmake.
+# Copy the lib into the right spot.
 install (TARGETS freetype
     ARCHIVE
-    DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+    DESTINATION ${CMAKE_BINARY_DIR}
     )
