@@ -25,7 +25,9 @@
 #include <ogg/os_types.h>
 
 #include "misc.h"
+#if !defined(__linux__)
 #include <intrin.h>
+#endif
 
 #ifndef _V_IFDEFJAIL_H_
 #  define _V_IFDEFJAIL_H_
@@ -48,7 +50,7 @@
 
 #if defined(_WIN32) && !defined(__SYMBIAN32__)
 #  include <malloc.h>
-#  define rint(x)   (floor((x)+0.5f)) 
+#  define rint(x)   (floor((x)+0.5f))
 #  define NO_FLOAT_MATH_LIB
 #  define FAST_HYPOT(a, b) sqrt((a)*(a) + (b)*(b))
 #endif
