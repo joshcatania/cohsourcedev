@@ -4931,6 +4931,9 @@ void sendEntityInfo( Entity *requester, int svr_id, int tab )
         else
             pktSendBits(pak,1,0);
 
+        // send Veteran Level
+        pktSendBitsAuto(pak, badge_StatGet(e, "overleveled"));
+
         // send alignment info
         pktSendBitsAuto(pak, (tempToken = getRewardToken(e, "roguepoints_hero")) ? tempToken->val : 0);
         pktSendBitsAuto(pak, (tempToken = getRewardToken(e, "roguepoints_vigilante")) ? tempToken->val : 0);

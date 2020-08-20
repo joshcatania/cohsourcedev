@@ -174,19 +174,25 @@ int character_CalcExperienceLevel(Character *p)
 
     iLevel = character_GetLevel(p);
 
-    if(p->entParent && ENTTYPE(p->entParent)==ENTTYPE_PLAYER)
+    if (p->entParent && ENTTYPE(p->entParent) == ENTTYPE_PLAYER)
     {
         int iExp = character_GetExperiencePoints(p);
 
-        while(iLevel < eaiSize(&g_ExperienceTables.aTables.piRequired)
-            && (iDiff = g_ExperienceTables.aTables.piRequired[iLevel] - iExp)<=0)
-        {
-            iLevel++;
+        if (iExp > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]){
+            // Ensure the Overleveling code won't return levels > 50.
+            iLevel = MAX_PLAYER_LEVEL - 1;
         }
+        else{
+            while (iLevel < eaiSize(&g_ExperienceTables.aTables.piRequired)
+                && (iDiff = g_ExperienceTables.aTables.piRequired[iLevel] - iExp) <= 0)
+            {
+                iLevel++;
+            }
 
-        if(iDiff>=0 && iLevel>0)
-        {
-            iLevel--;
+            if (iDiff >= 0 && iLevel > 0)
+            {
+                iLevel--;
+            }
         }
     }
 
@@ -245,9 +251,9 @@ int character_ExperienceNeeded(Character *p)
         iLevel++;
     }
 
-    if(iDiff<0)
+    if(iDiff<1)
     {
-        iDiff = 0;
+        iDiff = OVERLEVEL_EXP + iDiff;
     }
 
     return iDiff;
@@ -268,7 +274,7 @@ int character_AdditionalExperienceNeededForLevel(Character *p, int iLevel)
     } 
     else
     {
-        return 0;
+        return OVERLEVEL_EXP;
     }
 }
 
@@ -499,19 +505,25 @@ void character_SetLevel(Character* p, int iLevel)
  */
 int character_CalcExperienceLevelByExp(int iExperience)
 {
-    int iLevel=0;
-    int iDiff=0;
+    int iLevel = 0;
+    int iDiff = 0;
 
-    if(iExperience < 0)
+    if (iExperience < 0)
         return 0;
 
-    while(iLevel<eaiSize(&g_ExperienceTables.aTables.piRequired)
-        && (iDiff=g_ExperienceTables.aTables.piRequired[iLevel]-iExperience)<=0)
+    if (iExperience > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1])
     {
-        iLevel++;
+        // Ensure the Overleveling code won't return levels > 50.
+        iLevel = MAX_PLAYER_LEVEL - 1;
+    }else{
+        while (iLevel < eaiSize(&g_ExperienceTables.aTables.piRequired)
+            && (iDiff = g_ExperienceTables.aTables.piRequired[iLevel] - iExperience) <= 0)
+        {
+            iLevel++;
+        }
     }
 
-    if(iDiff>0 && iLevel>0)
+    if (iDiff > 0 && iLevel > 0)
     {
         iLevel--;
     }
@@ -620,9 +632,6 @@ int character_GiveExperienceNoDebt(Character *p, int iReceived)
 {
     int iCurXP = character_GetExperiencePoints(p);
     int iMaxLevel = MAX_PLAYER_LEVEL;
-
-    // Don't let them get too much XP
-    MINMAX1(iReceived, 0, g_ExperienceTables.aTables.piRequired[iMaxLevel-1] - iCurXP);
 
     // If the character somehow has more XP than the max for their level
     // the minmax can end up negative. This check ensures  we never, ever\

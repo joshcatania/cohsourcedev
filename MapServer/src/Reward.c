@@ -3567,7 +3567,16 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 
     bExemplar = character_IsRewardedAsExemplar(e->pchar);
     iPreviousExpLevel = character_CalcExperienceLevel(e->pchar);
-    bLevelCapped = iPreviousExpLevel >= MAX_PLAYER_SECURITY_LEVEL-1;
+
+    if (e->pl->noXP)
+    {
+        bLevelCapped = iPreviousExpLevel >= MAX_PLAYER_SECURITY_LEVEL - 1;
+    }
+    else
+    {
+        // There is no level cap since characters can Overlevel.
+        bLevelCapped = false;
+    }
 
     // Returns 1.0s when not in SG mode.
     rewardGetSupergroupMods(e, &fPrestigeMod, &fInfluenceMod);
@@ -3719,6 +3728,14 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
 
         }
         bRewardHadLoot = true;
+
+        // Overleveled!
+        if (character_GetExperiencePoints(e->pchar) > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1] + OVERLEVEL_EXP)
+        {
+            levelupApply(e, MAX_PLAYER_LEVEL - 1);
+            character_SetExperiencePoints(e->pchar, g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]);
+            badge_StatAddNoFixup(e, "overleveled", 1);
+        }
     }
 
     // Award the entity with influence points.

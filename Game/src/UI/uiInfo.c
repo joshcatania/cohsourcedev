@@ -361,6 +361,13 @@ void info_clear()
     ZeroStruct( &info );
 }
 
+void info_setShortInfo(const char* shortInfo)
+{
+    int len = strlen(shortInfo) + 1;
+    SAFE_FREE(info.shortInfo);
+    info.shortInfo = malloc(sizeof(*info.shortInfo) * len);
+    strcpy_s(info.shortInfo, len, shortInfo);
+}
 //
 //
 static void info_setFields( AtlasTex * icon, const char * name, const char * shortInfo, const char * classSet, int headshot )

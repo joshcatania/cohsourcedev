@@ -1962,7 +1962,19 @@ void receiveEntityInfo( Packet *pak )
     {
         if(pktGetBits(pak,1)) // player, get badge bitfield
         {
+            int overleveled;
             info_addBadges( pak );
+
+             overleveled = pktGetBitsAuto(pak);
+                #ifndef TEST_CLIENT
+                            if (overleveled)
+                            {
+                                LOG(LOG_ERROR, LOG_LEVEL_DEBUG, LOG_CONSOLE_ALWAYS, "Overleveled: %d", overleveled);
+                                char shortInfo[128];
+                                sprintf(shortInfo, "Veteran Level: %s", getCommaSeparatedInt(overleveled));
+                                info_setShortInfo(shortInfo);
+                            }
+                #endif
 
             heroAlignmentPoints_other = pktGetBitsAuto(pak);
             vigilanteAlignmentPoints_other = pktGetBitsAuto(pak);

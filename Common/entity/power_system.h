@@ -109,6 +109,7 @@ extern int g_aiMaxLevels[2][2];
 #define MAX_PLAYER_SECURITY_LEVEL 50 
 #define MAX_PLAYER_WISDOM_LEVEL 50 
 
+#define OVERLEVEL_EXP 5608000
 
 // Define the minimum security level required to use a system
 extern int g_aiRequiredSecurityLevel[];
