@@ -2179,6 +2179,10 @@ void cmdOldServerStateInit()
     server_state.client_logout_time = 30;
     server_state.aggrocap = 17;
     server_state.targetcapmode = 1;
+    server_state.VeteranLevelBaseXP = 5608000;
+    server_state.VeteranLevelsEnabled = 0;
+    server_state.VeteranLevelCap = -1;
+    server_state.VeteranLevelGrowthRate = 1;
     server_visible_state.time = 0;
     server_visible_state.timescale = DAY_TIMESCALE;
 

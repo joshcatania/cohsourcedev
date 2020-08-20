@@ -937,6 +937,15 @@ void parseArgs2(int argc,char **argv)
             server_state.aggrocap = atof(argv[++i]);
         else if (strcmp(argv[i], "-targetcapmode") == 0)
             server_state.targetcapmode = atof(argv[++i]);
+        else if (strcmp(argv[i], "-VeteranLevelsEnabled") == 0)
+            server_state.VeteranLevelsEnabled = atof(argv[++i]);
+        else if (strcmp(argv[i], "-VeteranLevelGrowthRate") == 0)
+            server_state.VeteranLevelGrowthRate = atof(argv[++i]);
+        else if (strcmp(argv[i], "-VeteranLevelCap") == 0)
+            server_state.VeteranLevelCap = atof(argv[++i]);
+        else if (strcmp(argv[i], "-VeteranLevelBaseXP") == 0)
+            server_state.VeteranLevelBaseXP = atof(argv[++i]);
+
         else if (strcmp(argv[i], "-gridcachebits")==0)
         {
             if(i + 1 < argc)

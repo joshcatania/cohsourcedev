@@ -1614,6 +1614,22 @@ int launcherCommStartProcess(const char* db_hostname, U32 host_ip, MapCon* map_c
     {
         estrConcatf(&cmd, " -targetcapmode %d", server_cfg.targetcapmode);
     }
+    if (server_cfg.VeteranLevelsEnabled = 1)
+    {
+        estrConcatf(&cmd, " -VeteranLevelsEnabed %d", server_cfg.VeteranLevelsEnabled);
+    }
+    if (server_cfg.VeteranLevelBaseXP != 5608000)
+    {
+        estrConcatf(&cmd, " -VeteranLevelBaseXP %d", server_cfg.VeteranLevelBaseXP);
+    }
+    if (server_cfg.VeteranLevelGrowthRate != 1)
+    {
+        estrConcatf(&cmd, " -VeteranLevelGrowthRate %f", server_cfg.VeteranLevelGrowthRate);
+    }
+    if (server_cfg.VeteranLevelCap)
+    {
+        estrConcatf(&cmd, " -VeteranLevelCap %d", server_cfg.VeteranLevelCap);
+    }
 
     {
         WeeklyTFCfg *weeklyTF_cfg = WeeklyTFCfg_getCurrentWeek(0);

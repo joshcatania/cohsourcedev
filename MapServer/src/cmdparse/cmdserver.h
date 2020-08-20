@@ -122,6 +122,10 @@ typedef struct ServerState
     float    aeinfluencescale;
     float    aeprestigescale;
     float    ticketscale;
+    float VeteranLevelGrowthRate;
+    int VeteranLevelsEnabled;
+    int VeteranLevelBaseXP;
+    int VeteranLevelCap;
     int     aggrocap;
     int     targetcapmode;
 

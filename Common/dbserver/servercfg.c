@@ -121,6 +121,10 @@ void serverCfgLoad()
     server_cfg.targetcapmode          = 1;
     server_cfg.client_commands[0]    = 0;
     server_cfg.map_server_params[0]    = 0;
+    server_cfg.VeteranLevelsEnabled    = 0;
+    server_cfg.VeteranLevelBaseXP      = 5608000;
+    server_cfg.VeteranLevelGrowthRate  = 1;
+    server_cfg.VeteranLevelCap         = -1;
 
     server_cfg.eventhistory_cache_days = 30;
     server_cfg.MARTY_enabled = 0;
@@ -404,6 +408,14 @@ void serverCfgLoad()
             server_cfg.authname_limiter = atoi(s2);
         else if (stricmp(s, "AuthnameLimiterAccessLevel")==0)
             server_cfg.authname_limiter_access_level = atoi(s2);
+        else if (stricmp(s, "VeteranLevelsEnabled") == 0)
+            server_cfg.VeteranLevelsEnabled = atoi(s2);
+        else if (stricmp(s, "VeteranLevelBaseXP") == 0)
+            server_cfg.VeteranLevelBaseXP = atoi(s2);
+        else if (stricmp(s, "VeteranLevelGrowthRate") == 0)
+            server_cfg.VeteranLevelGrowthRate = atoi(s2);
+        else if (stricmp(s, "VeteranLevelCap") == 0)
+            server_cfg.VeteranLevelCap = atoi(s2);
         else if (stricmp(s, "BlockedMapKey")==0)
         {
             int i;

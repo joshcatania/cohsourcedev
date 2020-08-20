@@ -84,6 +84,10 @@ typedef struct ServerCfg
     int        client_logout_time;
     int        aggrocap;
     int        targetcapmode;
+    int        VeteranLevelsEnabled;
+    int        VeteranLevelBaseXP;
+    F32        VeteranLevelGrowthRate;
+    int        VeteranLevelCap;
     int        auction_last_login_delay;
     char    client_commands[2000];
     U32        missionserver_max_queueSize;
