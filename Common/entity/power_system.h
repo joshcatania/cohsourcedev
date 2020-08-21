@@ -110,6 +110,7 @@ extern int g_aiMaxLevels[2][2];
 #define MAX_PLAYER_WISDOM_LEVEL 50 
 
 #define OVERLEVEL_EXP 5608000
+//VETLVL - Define OVERLEVEL_EXP as Server_State.VeteranLevelBaseXP (Must be read by mapserver & game!
 
 // Define the minimum security level required to use a system
 extern int g_aiRequiredSecurityLevel[];

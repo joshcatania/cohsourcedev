@@ -3568,9 +3568,13 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
     bExemplar = character_IsRewardedAsExemplar(e->pchar);
     iPreviousExpLevel = character_CalcExperienceLevel(e->pchar);
 
-    if (e->pl->noXP)
+    if (e->pl->noXP && server_state.VeteranLevelsEnabled == 0)
     {
-        bLevelCapped = iPreviousExpLevel >= MAX_PLAYER_SECURITY_LEVEL - 1;
+        //VETLVL - if (server_state.VeteranLevelCap > OVERLEVELED)
+            bLevelCapped = iPreviousExpLevel >= MAX_PLAYER_SECURITY_LEVEL - 1;
+        //VETLVL - else
+        //VETLVL -     bLevelCapped = false;
+
     }
     else
     {
@@ -3730,7 +3734,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
         bRewardHadLoot = true;
 
         // Overleveled!
-        if (character_GetExperiencePoints(e->pchar) > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1] + OVERLEVEL_EXP)
+        if (character_GetExperiencePoints(e->pchar) > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1] + OVERLEVEL_EXP && server_state.VeteranLevelsEnabled == 1) //VETLVL - Need to check CAP too
         {
             levelupApply(e, MAX_PLAYER_LEVEL - 1);
             character_SetExperiencePoints(e->pchar, g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]);

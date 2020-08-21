@@ -103,10 +103,6 @@ char* statuscm_rage(void* unused)
 		return textStd("BattleEuphoriaTip", (int)(e->pchar->attrCur.fMeter * 100), (int)(e->pchar->attrMax.fMeter * 100));
 	else if (strncmp(e->pchar->pclass->pchName, "Class_Sentinel", 14) == 0)
 		return textStd("OpportunityTip", (int)(e->pchar->attrCur.fMeter * 100), (int)(e->pchar->attrMax.fMeter * 100));
-    else if (strncmp(e->pchar->pclass->pchName, "Class_PatronMaster", 13) == 0)
-        return textStd("PatronTip", (int)(e->pchar->attrCur.fMeter * 100), (int)(e->pchar->attrMax.fMeter * 100));
-    else if (strncmp(e->pchar->pclass->pchName, "Class_Shield_Expert", 13) == 0)
-        return textStd("ShieldAssaultTip", (int)(e->pchar->attrCur.fMeter * 100), (int)(e->pchar->attrMax.fMeter * 100));
 	else
 		return "";
 }
@@ -118,7 +114,7 @@ char* statuscm_xp(void* unused)
 	float next_level_xp = g_ExperienceTables.aTables.piRequired[experience_level + 1] - g_ExperienceTables.aTables.piRequired[experience_level];
 	float xp_towards_level = e->pchar->iExperiencePoints - g_ExperienceTables.aTables.piRequired[experience_level];
 
-    if (experience_level == MAX_PLAYER_LEVEL - 1)
+    if (experience_level == MAX_PLAYER_LEVEL - 1) //VETLVL - Need to add logic to check Server_State.VeteranLevelsEnabled
     {
         next_level_xp = OVERLEVEL_EXP;
     }
@@ -812,7 +808,7 @@ void drawExperience(float x, float y, float z, float wd, float scale, int color,
     experience_level = character_CalcExperienceLevel(e->pchar);
     xp_towards_level = e->pchar->iExperiencePoints - g_ExperienceTables.aTables.piRequired[experience_level];
 
-    if (experience_level == MAX_PLAYER_LEVEL - 1)
+    if (experience_level == MAX_PLAYER_LEVEL - 1) //VETLVL - Check server_state.VeteranLevelsEnabled && server_state.VeteranLevelCap > OVERLEVELED
     {
         next_level_xp = OVERLEVEL_EXP;
         if (e->pl->noXP)
@@ -1310,8 +1306,6 @@ int rageVisible(void* foo)
 	else if (strncmp(e->pchar->pclass->pchName, "Class_Primalist", 15) == 0) return CM_VISIBLE;
 	else if (strncmp(e->pchar->pclass->pchName, "Class_Rescued_Devoured", 22) == 0) return CM_VISIBLE;
 	else if (strncmp(e->pchar->pclass->pchName, "Class_Sentinel", 14) == 0) return CM_VISIBLE;
-    else if (strncmp(e->pchar->pclass->pchName, "Class_PatronMaster", 14) == 0) return CM_VISIBLE;
-    else if (strncmp(e->pchar->pclass->pchName, "Class_Shield_Expert", 14) == 0) return CM_VISIBLE;
 	return CM_HIDE;
 }
 
@@ -1357,10 +1351,6 @@ int statusWindow()
 		showRage = 5;
 	else if (strncmp(e->pchar->pclass->pchName, "Class_Sentinel", 14) == 0)
 		showRage = 6;
-    else if (strncmp(e->pchar->pclass->pchName, "Class_Shield_Expert", 11) == 0)
-        showRage = 7;
-    else if (strncmp(e->pchar->pclass->pchName, "Class_PatronMaster", 11) == 0)
-        showRage = 8;
 	else
 		showRage = 0;
 
@@ -1500,10 +1490,6 @@ int statusWindow()
 				setToolTip(&RageTip, &box, textStd("BattleEuphoriaTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
 			else if (showRage == 6)
 				setToolTip(&RageTip, &box, textStd("OpportunityTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-            else if (showRage == 7)
-                setToolTip(&RageTip, &box, textStd("PatronTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-            else if (showRage == 8)
-                setToolTip(&RageTip, &box, textStd("ShieldAssaultTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
 		}
 
 		drawFrame(PIX2, R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 22, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, 0, CLR_BLACK);

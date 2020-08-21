@@ -28,6 +28,7 @@
 #include "player/pophelp.h"
 #include "storyarc/storyarcinterface.h"
 #include "dbcomm/logcomm.h"
+#include "cmdparse/cmdserver.h"
 #endif
 
 // A spot for all the schedules.
@@ -174,11 +175,14 @@ int character_CalcExperienceLevel(Character *p)
 
     iLevel = character_GetLevel(p);
 
-    if (p->entParent && ENTTYPE(p->entParent) == ENTTYPE_PLAYER)
+    if (p->entParent && ENTTYPE(p->entParent)==ENTTYPE_PLAYER)
     {
         int iExp = character_GetExperiencePoints(p);
 
         if (iExp > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]){
+            //VETLVL - Need logic here to check Server_State.VeteranLevelsEnabled (This is a shared file that mapserver and game read)
+            //VETLVL - Also need to check Server_State.VeteranLevelCap to see if OVERLEVELED has reached that cap, if so drop down
+
             // Ensure the Overleveling code won't return levels > 50.
             iLevel = MAX_PLAYER_LEVEL - 1;
         }
@@ -272,10 +276,14 @@ int character_AdditionalExperienceNeededForLevel(Character *p, int iLevel)
 
         return g_ExperienceTables.aTables.piRequired[iLevel] - g_ExperienceTables.aTables.piRequired[iLevel-1];
     } 
-    else
+    else //VETLVL - elseif Server_State.VeteranLevelsEnabled = 1 && Server_State.VeteranLevelCap > OVERLEVELED
     {
         return OVERLEVEL_EXP;
     }
+    //VETLVL - else
+    //VETLVL - {
+    //VETLVL -     return 0
+    //VETLVL - }
 }
 
 /**********************************************************************func*
@@ -632,6 +640,12 @@ int character_GiveExperienceNoDebt(Character *p, int iReceived)
 {
     int iCurXP = character_GetExperiencePoints(p);
     int iMaxLevel = MAX_PLAYER_LEVEL;
+
+    // Don't let them get too much XP IF Server_State_VeteranLevelsEnabled = 0
+    if (server_state.VeteranLevelsEnabled == 0 )//|| OVERLEVELED >= server_state.VeteranLevelCap )
+       (iReceived, 0, g_ExperienceTables.aTables.piRequired[iMaxLevel - 1] - iCurXP);
+
+
 
     // If the character somehow has more XP than the max for their level
     // the minmax can end up negative. This check ensures  we never, ever\
