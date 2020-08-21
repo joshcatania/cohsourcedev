@@ -116,7 +116,7 @@ char* statuscm_xp(void* unused)
 
     if (experience_level == MAX_PLAYER_LEVEL - 1) //VETLVL - Need to add logic to check Server_State.VeteranLevelsEnabled
     {
-        next_level_xp = OVERLEVEL_EXP;
+        next_level_xp = OVERLEVEL_EXP; //VETLVL - Need to make this OVERLEVEL_EXP * server_state.VeteranGrowthRate
     }
 
 	return textStd("XpOnlyTip", (int)xp_towards_level, (int)next_level_xp);
@@ -810,10 +810,10 @@ void drawExperience(float x, float y, float z, float wd, float scale, int color,
 
     if (experience_level == MAX_PLAYER_LEVEL - 1) //VETLVL - Check server_state.VeteranLevelsEnabled && server_state.VeteranLevelCap > OVERLEVELED
     {
-        next_level_xp = OVERLEVEL_EXP;
+        next_level_xp = OVERLEVEL_EXP; //VETLVL - need to change this to be (OVERLEVEL_EXP * server_state.VeterantGrowthRate) + OVERLEVEL_EXP
         if (e->pl->noXP)
         {
-            xp_towards_level = OVERLEVEL_EXP;
+            xp_towards_level = OVERLEVEL_EXP; //VETLVL - need to change this to be (OVERLEVEL_EXP * server_state.VeterantGrowthRate) + OVERLEVEL_EXP
         }
     }
     else

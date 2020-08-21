@@ -3737,7 +3737,7 @@ bool rewardApply(RewardAccumulator* reward, Entity* e, bool bGivePowers, bool bH
         if (character_GetExperiencePoints(e->pchar) > g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1] + OVERLEVEL_EXP && server_state.VeteranLevelsEnabled == 1) //VETLVL - Need to check CAP too
         {
             levelupApply(e, MAX_PLAYER_LEVEL - 1);
-            character_SetExperiencePoints(e->pchar, g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]);
+            character_SetExperiencePoints(e->pchar, g_ExperienceTables.aTables.piRequired[MAX_PLAYER_LEVEL - 1]); 
             badge_StatAddNoFixup(e, "overleveled", 1);
         }
     }
