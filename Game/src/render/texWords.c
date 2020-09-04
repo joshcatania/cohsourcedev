@@ -1969,10 +1969,10 @@ static void filterKernelColorizeNoSpreadNoAlpha(U8* dest, U8* src, S32 *intKerne
                     if (kernelNotZero[ki]) {
                         F32 kw = kernel[ki];
                         // Orig: dest[(bufferSizeX*y + x)] += s.a*kw;
-                        DWORD dwadd;
                         DWORD alpha = s.a;
-                        // TODO: Don't comment this out! Replace it.
-                        /*_asm {
+                        DWORD dwadd = (DWORD)(alpha * kw);
+                        /* // old code:
+                        _asm {
                             // fadd = falpha*kw;
                             fild    dword ptr[alpha]
                             fmul    dword ptr[kw]
