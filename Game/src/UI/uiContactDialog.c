@@ -689,7 +689,7 @@ float uiTreeFlashbackDrawCallback(uiTreeNode *pNode, float x, float y, float z, 
         }
 
         // draw frame
-        drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
+        drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
             box_color);
 
         if (pNode->state & UITREENODE_EXPANDED)
@@ -1199,7 +1199,7 @@ int contactWindow(void)
         s_block = smfBlock_Create();
     }
 
-    drawFrame(PIX3, R10, x, y, z, w, h, scale, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, w, h, scale, color, bcolor);
 
     if(window_getMode( WDW_CONTACT_DIALOG ) == WINDOW_DISPLAYING)
     {
@@ -1282,7 +1282,7 @@ int contactWindow(void)
                         cdMaster->comboPowerLimits = malloc(sizeof(ComboBox));
                         ZeroStruct(cdMaster->comboPowerLimits);
                         comboboxTitle_init( cdMaster->comboPowerLimits,        
-                            100, CD_CHALLENGE_TOP_OFFSET+ R10 + 5*CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
+                            100, CD_CHALLENGE_TOP_OFFSET+ UI_R10 + 5*CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
 
                         if (cdMaster->SL8Plus)
                         {
@@ -1304,9 +1304,9 @@ int contactWindow(void)
                         ZeroStruct(cdMaster->comboTimeLimits);
                         ZeroStruct(cdMaster->comboLimitedLives);
                         comboboxTitle_init( cdMaster->comboTimeLimits,        
-                            100, CD_CHALLENGE_TOP_OFFSET+ R10 + CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
+                            100, CD_CHALLENGE_TOP_OFFSET+ UI_R10 + CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
                         comboboxTitle_init( cdMaster->comboLimitedLives,    
-                            100, CD_CHALLENGE_TOP_OFFSET+ R10 + 3*CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
+                            100, CD_CHALLENGE_TOP_OFFSET+ UI_R10 + 3*CD_CHALLENGE_LINE_OFFSET,            20, 400, 20, 400, WDW_CONTACT_DIALOG );
 
                         for( i = 0; i < ARRAY_SIZE(timeLimitTypes); i++ )
                         {
@@ -1356,7 +1356,7 @@ int contactWindow(void)
         set_scissor(false);
         sb.pulseArrow = true;
         if (iHeight > 0)
-            doScrollBar(&sb, h-(PIX3*2+R10+4)*scale-iButtonHeight, iHeight+CD_FRAME_OFFSET*scale, w, (PIX3+R10)*scale, z, 0, 0);
+            doScrollBar(&sb, h-(PIX3*2+UI_R10+4)*scale-iButtonHeight, iHeight+CD_FRAME_OFFSET*scale, w, (PIX3+UI_R10)*scale, z, 0, 0);
 
         cdMaster->parsed = true;
     }

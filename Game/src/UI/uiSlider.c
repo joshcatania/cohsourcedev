@@ -78,24 +78,24 @@ float doSliderAll( float lx, float ly, float lz, float wd, float xsc, float ysc,
             fcolors.topLeft = fcolors.topCenter = fcolors.midLeft = fcolors.midCenter = fcolors.botLeft = fcolors.botCenter = CLR_BLACK;
             fcolors.topRight = fcolors.midRight = fcolors.botRight = CLR_YELLOW;
             fcolors.border = color;
-            drawFrameStyleColor( PIX2, R4, x, ly - 6, lz, wd*xsc, 2*R4+2*PIX2*ysc, xsc, fcolors, kFrameStyle_GradientH, FRAMEPARTS_ALL );
+            drawFrameStyleColor( PIX2, UI_R4, x, ly - 6, lz, wd*xsc, 2*UI_R4+2*PIX2*ysc, xsc, fcolors, kFrameStyle_GradientH, FRAMEPARTS_ALL );
         }
         else
-            drawFrame( PIX2, R4, x, ly - 6, lz, wd*xsc, 2*R4+2*PIX2*ysc, xsc, color, CLR_BLACK );
+            drawFrame( PIX2, UI_R4, x, ly - 6, lz, wd*xsc, 2*UI_R4+2*PIX2*ysc, xsc, color, CLR_BLACK );
 
         if( minval > -1 )
         {
-             uiBoxDefine( &box,x, ly-6, wd*xsc*((minval+1)/2), 2*R4+2*PIX2*ysc );
+             uiBoxDefine( &box,x, ly-6, wd*xsc*((minval+1)/2), 2*UI_R4+2*PIX2*ysc );
             clipperPushRestrict(&box);
-            drawFrame( PIX2, R4, x, ly - 6, lz, wd*xsc, 2*R4+2*PIX2*ysc, xsc, CLR_GREY, CLR_GREY );
+            drawFrame( PIX2, UI_R4, x, ly - 6, lz, wd*xsc, 2*UI_R4+2*PIX2*ysc, xsc, CLR_GREY, CLR_GREY );
             clipperPop();
         }
 
         if( maxval < 1 )
         {
-              uiBoxDefine( &box, x+wd*xsc*((maxval+1)/2), ly-6, wd*xsc*(1.f-((maxval+1)/2)), 2*R4+2*PIX2*ysc );
+              uiBoxDefine( &box, x+wd*xsc*((maxval+1)/2), ly-6, wd*xsc*(1.f-((maxval+1)/2)), 2*UI_R4+2*PIX2*ysc );
             clipperPushRestrict(&box);
-            drawFrame( PIX2, R4, x, ly - 6, lz, wd*xsc, 2*R4+2*PIX2*ysc, xsc, CLR_GREY, CLR_GREY );
+            drawFrame( PIX2, UI_R4, x, ly - 6, lz, wd*xsc, 2*UI_R4+2*PIX2*ysc, xsc, CLR_GREY, CLR_GREY );
             clipperPop();
         }
     }

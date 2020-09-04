@@ -340,13 +340,13 @@ void Profile_DrawCritterGroupComboBox(SMFBlock *groupEditBlock, int locked, floa
         }
         oldResult = result = getVillainGroups( &critter_groups, matchVillainGroup);
         combobox_init( &cb[0], villainGroupComboBox.lx, villainGroupComboBox.ly, 60, 
-            (villainGroupComboBox.hx - villainGroupComboBox.lx) + 2*R10 + 2*PIX3, 
+            (villainGroupComboBox.hx - villainGroupComboBox.lx) + 2*UI_R10 + 2*PIX3, 
             (villainGroupComboBox.hy - villainGroupComboBox.ly), VGCB_EXPAND_HEIGHT, critter_groups, 0 );
         cb[0].currChoice = result;
         cb[0].sb->architect = 1;
     }
     oldResult = result;
-    result = combobox_displayRegister( &cb[0], R6, CLR_MM_TEXT_BACK_MOUSEOVER, CLR_MM_TEXT_BACK_LIT, CLR_BLACK, textStd("PCCExistingVillainGroupsPrompt"), locked, screenScaleX, screenScaleY, 0, 0 );
+    result = combobox_displayRegister( &cb[0], UI_R6, CLR_MM_TEXT_BACK_MOUSEOVER, CLR_MM_TEXT_BACK_LIT, CLR_BLACK, textStd("PCCExistingVillainGroupsPrompt"), locked, screenScaleX, screenScaleY, 0, 0 );
     if ((result != oldResult) && (result != 0))
     {
         smf_SetRawText(groupEditBlock, cb[0].strings[result], 0);
@@ -397,7 +397,7 @@ static void handleTextBoxes(float screenScaleX, float screenScaleY)
         {
             colorBack = CLR_MM_TEXT_DARK;
         }
-        drawFlatFrame( PIX3, R6, box[i].lx-(5*screenScaleX), box[i].ly-(2*screenScaleY), 20, (box[i].hx - box[i].lx), 
+        drawFlatFrame( PIX3, UI_R6, box[i].lx-(5*screenScaleX), box[i].ly-(2*screenScaleY), 20, (box[i].hx - box[i].lx), 
             box[i].hy - box[i].ly, screenScale, color, colorBack );
     }
 

@@ -1474,8 +1474,8 @@ int statusWindow()
 				setToolTip(&RageTip, &box, textStd("OpportunityTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
 		}
 
-		drawFrame(PIX2, R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 22, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, 0, CLR_BLACK);
-		drawFrame(PIX2, R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 30, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, color, 0);
+		drawFrame(PIX2, UI_R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 22, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, 0, CLR_BLACK);
+		drawFrame(PIX2, UI_R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 30, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, color, 0);
 		BuildCBox(&box, x + 37 * scale, y + (health_yoff + 2) * scale + ((bar_ht * 3 + 4) * scale) / 3, wd - (HEALTH_XOFF + 6) * scale, bar_ht);
 		drawBox(&box, z + 21, 0xffffff44, 0);
 	}

@@ -424,7 +424,7 @@ F32 displayAllAttribs(F32 x, F32 y, F32 wd, F32 z, F32 sc, Character * pchar)
         if( mouseClickHit(&box,MS_RIGHT) )
             contextMenu_display(s_CombatNumberCM);
         
-        drawFlatFrameBox(PIX2, R10, &box, z, frameColor, frameColor);
+        drawFlatFrameBox(PIX2, UI_R10, &box, z, frameColor, frameColor);
         display_sprite( pExpander, x + 10*sc, curY + 10*sc - pExpander->height*sc/2, z, sc, sc, 0xffffffff );
         cprntEx( x + 10*sc + pExpander->width*sc, curY+10*sc, z, sc, sc, CENTER_Y, pCat->pchDisplayName );
         curY += 24*sc;
@@ -542,7 +542,7 @@ int combatNumbersWindow(void)
 
     initCombatNumbersCM();
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
     BuildCBox(&s_CombatNumberParent.box, x, y, wd, ht );
     uiBoxDefine(&box, x+PIX3*sc, y+PIX3*sc, wd-2*PIX3*sc, ht-2*PIX3*sc);
 
@@ -564,7 +564,7 @@ int combatNumbersWindow(void)
     height += displayAllAttribs(x+10*sc,y+10*sc-sb.offset,wd-20*sc,z,sc,(g_pAttribTarget&&g_pAttribTarget->pchar)?g_pAttribTarget->pchar:e->pchar );
     clipperPop();
 
-    doScrollBar( &sb, ht - 2*(R10+PIX3)*sc, height, wd - PIX3/2*sc, R10*sc, z, 0, 0 );
+    doScrollBar( &sb, ht - 2*(UI_R10+PIX3)*sc, height, wd - PIX3/2*sc, UI_R10*sc, z, 0, 0 );
 
     return 0;
 }

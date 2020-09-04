@@ -88,7 +88,7 @@ int deathWindow(void)
     if( playerPtr() && playerPtr()->pchar->attrCur.fHitPoints || server_visible_state.disablegurneys )
         window_setMode( WDW_DEATH, WINDOW_SHRINKING );
 
-     drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, back_color );
+     drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color );
     set_scissor(1);
     scissor_dims( x+PIX3*sc, y+PIX3*sc, wd - PIX3*2*sc, ht-PIX3*2*sc );
 

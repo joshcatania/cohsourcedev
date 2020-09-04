@@ -39,8 +39,8 @@ void combobox_init( ComboBox *cb, float x, float y, float z, float wd, float ht,
     cb->wdw = wdw;
     cb->type = COMBOBOX;
 
-    if( ht < 2*(PIX3+R10) )
-        ht = 2*(PIX2+R10);
+    if( ht < 2*(PIX3+UI_R10) )
+        ht = 2*(PIX2+UI_R10);
     cb->ht = ht;
     cb->expandHt = expandHt;
     cb->strings = strings;
@@ -60,8 +60,8 @@ void comboboxTitle_init( ComboBox *cb, float x, float y, float z, float wd, floa
     cb->wdw = wdw;
     cb->type = COMBOBOX_TITLE;
 
-    if( ht < 2*(PIX3+R10) )
-        ht = 2*(PIX2+R10);
+    if( ht < 2*(PIX3+UI_R10) )
+        ht = 2*(PIX2+UI_R10);
     cb->ht = ht;
     cb->expandHt = expandHt;
     cb->newlySelectedItem = 1;
@@ -82,8 +82,8 @@ void combocheckbox_init( ComboBox *cb, float x, float y, float z, float wd, floa
     cb->title = malloc( sizeof(char)*(strlen(title)+1) );
     strcpy( cb->title, title );
 
-    if( ht < 2*(PIX3+R10) )
-        ht = 2*(PIX2+R10);
+    if( ht < 2*(PIX3+UI_R10) )
+        ht = 2*(PIX2+UI_R10);
     cb->ht = ht;
     cb->expandHt = expandHt;
     cb->reverse = reverse;
@@ -325,7 +325,7 @@ const char *combobox_display( ComboBox *cb )
          uibox.height = tht*sc;
         clipperPushRestrict(&uibox);
 
-           if(str_wd(&game_12, sc, sc, cb->strings[cb->currChoice]) > ((twd - arrow->width + R10 + 2*PIX3)*sc))
+           if(str_wd(&game_12, sc, sc, cb->strings[cb->currChoice]) > ((twd - arrow->width + UI_R10 + 2*PIX3)*sc))
             font(&game_9);
         else
             font( &game_12 );
@@ -373,8 +373,8 @@ const char *combobox_display( ComboBox *cb )
             else
                 elem_width = str_wd(&game_12, 1.f, 1.f, cb->elements[i]->txt );
 
-            if( cb->dropWd < elem_width + R10*4 )
-                cb->dropWd = elem_width + R10*4;
+            if( cb->dropWd < elem_width + UI_R10*4 )
+                cb->dropWd = elem_width + UI_R10*4;
             if( !( cb->elements[i]->flags & CCE_UNSELECTABLE ) )
                 count++;
             else if( i == cb->currChoice )
@@ -502,7 +502,7 @@ const char *combobox_display( ComboBox *cb )
         {
             arrow_color = frame_color;
         }
-        drawFrame( PIX2, R10, tx, ty, tz+1, twd*sc, tht*sc, sc, frame_color, back_color );
+        drawFrame( PIX2, UI_R10, tx, ty, tz+1, twd*sc, tht*sc, sc, frame_color, back_color );
         display_sprite( arrow, tx + (twd - (arrow->width+PIX3*2))*sc, ty + (tht - arrow->height)*sc/2, tz+2, sc, sc, arrow_color );
     }
 
@@ -619,7 +619,7 @@ const char *combobox_display( ComboBox *cb )
                     else
                         elem_width = str_wd(&game_12, sc, sc, cb->elements[i]->txt);
 
-                    if(elem_width > ((cb->dropWd-mark->width-R10)*sc))
+                    if(elem_width > ((cb->dropWd-mark->width-UI_R10)*sc))
                         font(&game_9);
                     else
                         font( &game_12 );
@@ -630,9 +630,9 @@ const char *combobox_display( ComboBox *cb )
             if( mouseCollision(&box) )
             {
                 if( cb->reverse )
-                    drawFlatFrame( PIX2, R4, tx+PIX3*sc, ty - FONT_HEIGHT*((i-unselectable_count)+1)*sc - cb->sb->offset, tz+1, (cb->dropWd  - PIX3*2)*sc, FONT_HEIGHT*sc, sc, 0xffffff22, 0xffffff22 );
+                    drawFlatFrame( PIX2, UI_R4, tx+PIX3*sc, ty - FONT_HEIGHT*((i-unselectable_count)+1)*sc - cb->sb->offset, tz+1, (cb->dropWd  - PIX3*2)*sc, FONT_HEIGHT*sc, sc, 0xffffff22, 0xffffff22 );
                 else
-                    drawFlatFrame( PIX2, R4, tx+PIX3*sc, ty + (tht + FONT_HEIGHT*(i-unselectable_count))*sc - cb->sb->offset, tz+1, (cb->dropWd - PIX3*2)*sc, FONT_HEIGHT*sc, sc, 0xffffff22, 0xffffff22 );
+                    drawFlatFrame( PIX2, UI_R4, tx+PIX3*sc, ty + (tht + FONT_HEIGHT*(i-unselectable_count))*sc - cb->sb->offset, tz+1, (cb->dropWd - PIX3*2)*sc, FONT_HEIGHT*sc, sc, 0xffffff22, 0xffffff22 );
 
                 if( mouseUp( MS_LEFT ) && !cb->sb->grabbed )
                 {
@@ -671,16 +671,16 @@ const char *combobox_display( ComboBox *cb )
     // draw the frame uncompassing the elements
     if( cb->reverse )
     {
-        drawFrame( PIX2, R10, tx, ty - MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT)*sc, tz, twd*sc, (tht + MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT))*sc, sc, frame_color, back_color );
+        drawFrame( PIX2, UI_R10, tx, ty - MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT)*sc, tz, twd*sc, (tht + MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT))*sc, sc, frame_color, back_color );
         if( cb->scale == 1.f )
                 doScrollBar( cb->sb, cb->scale*cb->expandHt*sc, eaSize(&cb->strings)*FONT_HEIGHT*sc, tx+twd*sc, ty -  - MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT)*sc, tz+2, 0, &uibox );
     }
     else
     {
-            drawFrame( PIX2, R10, tx, ty, tz, cb->dropWd*sc, (tht + MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT))*sc, sc, 
+            drawFrame( PIX2, UI_R10, tx, ty, tz, cb->dropWd*sc, (tht + MIN(cb->scale*cb->expandHt,(0.5+count)*FONT_HEIGHT))*sc, sc, 
                       frame_color&(0xffffff00 | (int)(0xff*cb->scale)), back_color&(0xffffff00 | (int)(0xff*cb->scale)));
            if( cb->scale == 1.f )
-              doScrollBar( cb->sb, (cb->scale*cb->expandHt-R10-PIX3)*sc, (MAX(eaSize(&cb->strings),eaSize(&cb->elements))*FONT_HEIGHT+PIX3)*sc, tx+cb->dropWd*sc, ty+tht*sc, tz+20, 0, &uibox);
+              doScrollBar( cb->sb, (cb->scale*cb->expandHt-UI_R10-PIX3)*sc, (MAX(eaSize(&cb->strings),eaSize(&cb->elements))*FONT_HEIGHT+PIX3)*sc, tx+cb->dropWd*sc, ty+tht*sc, tz+20, 0, &uibox);
     }
     collisions_off_for_rest_of_frame |= turn_off_collisions_after_scrollbar;
 

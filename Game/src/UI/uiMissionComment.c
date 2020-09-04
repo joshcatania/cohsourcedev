@@ -154,14 +154,14 @@ static F32 drawCommentLine(MissionComment *pComment, F32 x, F32 y, F32 z, F32 sc
     else
         smf_SetRawText(pComment->pBlock, textStd("MMComplaint", pComment->pchComment ), 0);
 
-    retval = smf_Display(pComment->pBlock, x+R10*sc, y+PIX3*sc, z+1, wd - 20*sc, 0, 0, 0, &s_taMissionComplaint, 0 );
+    retval = smf_Display(pComment->pBlock, x+UI_R10*sc, y+PIX3*sc, z+1, wd - 20*sc, 0, 0, 0, &s_taMissionComplaint, 0 );
 
     if( deleteme && drawMMButton( "DeleteString", "delete_button_inside", "delete_button_outside", x + wd - 55*sc, y+retval+20*sc, z+1, 100*sc, sc*.8f, MMBUTTON_SMALL|MMBUTTON_ERROR, 0 ) )
         *deleteme = 1;
 
-    drawFlatFrame( PIX3, R10, x, y, z, wd, retval+2*PIX3*sc + 30*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
+    drawFlatFrame( PIX3, UI_R10, x, y, z, wd, retval+2*PIX3*sc + 30*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
 
-    return retval + (PIX3+R10+30)*sc;
+    return retval + (PIX3+UI_R10+30)*sc;
 }
 
 int missionCommentWindow()
@@ -185,7 +185,7 @@ int missionCommentWindow()
 
     font( &title_14 ); 
     font_color( CLR_MM_TEXT, CLR_MM_TEXT );
-    prnt( x + R10*sc, y + 25*sc, z, sc, sc, "MMCommentsAndComplaints");
+    prnt( x + UI_R10*sc, y + 25*sc, z, sc, sc, "MMCommentsAndComplaints");
      helpButton(&pHelp, x + wd - 30*sc, y +20*sc, z, sc, "MMCommentsAndComplaintsTip", 0);
      tht = 40*sc;
 
@@ -198,7 +198,7 @@ int missionCommentWindow()
         MissionComment *pComment = s_CommentList.ppComments[i];
         if( pComment->iArcId == s_iArcId )
         {
-            tht += drawCommentLine( pComment, x + R10*sc, y + tht - sb.offset, z, sc, wd-2*R10*sc, &deleteme );
+            tht += drawCommentLine( pComment, x + UI_R10*sc, y + tht - sb.offset, z, sc, wd-2*UI_R10*sc, &deleteme );
             
             if( deleteme )
             {
@@ -218,13 +218,13 @@ int missionCommentWindow()
         {
             MissionComment *pComment = s_CommentListAdmin.ppComments[i];
             if( pComment->iArcId == s_iArcId )
-                tht += drawCommentLine(pComment, x + R10*sc, y + tht - sb.offset, z, sc, wd-2*R10*sc, NULL );
+                tht += drawCommentLine(pComment, x + UI_R10*sc, y + tht - sb.offset, z, sc, wd-2*UI_R10*sc, NULL );
         }
     }
 
     clipperPop();
 
-    doScrollBar(&sb, ht-R10*sc*2, tht, x +wd, R10*sc, z, 0, &box );
+    doScrollBar(&sb, ht-UI_R10*sc*2, tht, x +wd, UI_R10*sc, z, 0, &box );
     return 0;
 }
 

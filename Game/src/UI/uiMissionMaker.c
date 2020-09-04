@@ -1655,7 +1655,7 @@ static void missionMakerControls( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, i
     char * estr;
     static SMFBlock smfBlock={0};
      AtlasTex *white = atlasLoadTexture("white");
-    F32 per_space = (wd-2*R10*sc)/6.f-4*sc;
+    F32 per_space = (wd-2*UI_R10*sc)/6.f-4*sc;
 
 
     if(!texInit)
@@ -1759,7 +1759,7 @@ static int drawTrackIcon( CBox *box, F32 x, F32 y, F32 z, F32 sc, AtlasTex *icon
 
 void missionMakerNav( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht )
 {
-    F32 per_space = (wd-2*R10*sc)/6.f-4*sc, sin_val;
+    F32 per_space = (wd-2*UI_R10*sc)/6.f-4*sc, sin_val;
     static AtlasTex *track_arrow, *track_mid, *track_end, *storyarc, *storyarc_roll, *storyarc_glow, *mission;
     static AtlasTex    *mission_roll, *mission_glow, *add_mission, *add_mission_roll, *add_mission_glow;
     static int texinit;
@@ -1767,7 +1767,7 @@ void missionMakerNav( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht )
     static F32 timer;
     CBox cbox;
 
-     drawHorizontalLine(x+2*R10*sc,y+ht, wd-4*R10*sc, z, sc, 0xffffff44);
+     drawHorizontalLine(x+2*UI_R10*sc,y+ht, wd-4*UI_R10*sc, z, sc, 0xffffff44);
 
     if( !texinit )
     {
@@ -1806,7 +1806,7 @@ void missionMakerNav( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht )
     }
     else
     {
-        display_sprite_blend(track_mid, x + per_space/2 - 20*sc + track_end->width*sc, y + 13*sc, z, (wd - (per_space/2 - 20*sc + track_end->width*sc+2*R10*sc))/track_mid->width, 
+        display_sprite_blend(track_mid, x + per_space/2 - 20*sc + track_end->width*sc, y + 13*sc, z, (wd - (per_space/2 - 20*sc + track_end->width*sc+2*UI_R10*sc))/track_mid->width, 
                  sc, color_left, color_right, color_right, color_left );
     }
 
@@ -1814,9 +1814,9 @@ void missionMakerNav( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht )
     {
         CBox nav;
         int nc = 0xffffff22, text_clr = CLR_MM_TITLE_OPEN;
-        F32 tx = x+i*(per_space+4*sc)+R10*sc+2*sc;
+        F32 tx = x+i*(per_space+4*sc)+UI_R10*sc+2*sc;
 
-         BuildCBox(&nav, tx, y+R10*sc, per_space, ht-2*R10*sc );
+         BuildCBox(&nav, tx, y+UI_R10*sc, per_space, ht-2*UI_R10*sc );
         if( mouseCollision(&nav) )
             text_clr = CLR_MM_TITLE_LIT;
         if( i == 0 )
@@ -1918,8 +1918,8 @@ void missionMakerNav( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht )
                 font_color(text_clr,text_clr);
                   cprnt( tx + per_space/2, y + ht, z+1, sc, sc, textStd("MMMissionMinMax", i, min, max) );
 
-                  BuildCBox(&sub1, tx, y + R10*sc, per_space/2, ht-2*R10*sc );
-                BuildCBox(&sub2, tx+per_space/2, y + R10*sc, per_space/2, ht-2*R10*sc );
+                  BuildCBox(&sub1, tx, y + UI_R10*sc, per_space/2, ht-2*UI_R10*sc );
+                BuildCBox(&sub2, tx+per_space/2, y + UI_R10*sc, per_space/2, ht-2*UI_R10*sc );
                 
                 //helpButton( &mmTipMission1[i-1], tx + per_space/4 + 22*sc, y + ht - 22*sc, z+1, sc, "MMTipMission1", &cbox );
                 //helpButton( &mmTipMission2[i-1], tx + per_space/2 + per_space/4 + 22*sc, y + ht - 22*sc, z+1, sc, "MMTipMission2", &cbox );
@@ -2150,9 +2150,9 @@ int missionMakerWindow()
         iNextIdx = missionMaker.current_mission+1;
     }
 
-      drawHorizontalLine( x + 3*R10*sc, y + ht - 40*sc, wd-6*R10*sc, z, sc, 0xffffff44 );
+      drawHorizontalLine( x + 3*UI_R10*sc, y + ht - 40*sc, wd-6*UI_R10*sc, z, sc, 0xffffff44 );
 
-       if( drawMMArrowButton( textStd( pchPrev, iPrevIdx ), x + R10*sc, y + ht - 44*sc, z, sc, 200*sc, 0 ) )
+       if( drawMMArrowButton( textStd( pchPrev, iPrevIdx ), x + UI_R10*sc, y + ht - 44*sc, z, sc, 200*sc, 0 ) )
     {
         if(missionMaker.current_mission < 0)
         {
@@ -2215,8 +2215,8 @@ int missionMakerWindow()
     }
 
        missionMaker.wd = missionMaker.page_wd = wd/2;
-     drawHorizontalLine( x + R10*sc, y + title_ht + control_ht + 29*sc, wd-2*R10*sc, z, sc, 0xffffff44 );
-      drawHorizontalLine( x + R10*sc, y + ht - 76*sc, wd-2*R10*sc, z, sc, 0xffffff44 );
+     drawHorizontalLine( x + UI_R10*sc, y + title_ht + control_ht + 29*sc, wd-2*UI_R10*sc, z, sc, 0xffffff44 );
+      drawHorizontalLine( x + UI_R10*sc, y + ht - 76*sc, wd-2*UI_R10*sc, z, sc, 0xffffff44 );
     MMScrollSet_Draw(&missionMaker, x, y + title_ht + control_ht + 30*sc, z, ht - title_ht - control_ht - 80*sc, sc, color);
 
       autosave_timer += TIMESTEP;

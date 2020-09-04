@@ -212,7 +212,7 @@ static void createWdwFromDefs()
         wdw->min_ht = 30; 
 
         wdw->loc.start_shrunk = DEFAULT_OPEN;
-        wdw->radius = R10 + PIX3;
+        wdw->radius = UI_R10 + PIX3;
 
         wdw->loc.color = 0xffffffff;
         wdw->loc.back_color = 0x00000088;
@@ -398,14 +398,14 @@ int customWindow()
     if( !pCW->opened )
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     uiBoxDefine(&box, x+PIX3*sc, y+PIX3*sc, wd - PIX3*sc*2, ht - PIX3*sc*2);
     clipperPush(&box);
 
      cx = x + wd/2;
      cy = y - pCW->sb.offset + 30*sc/2;
-     twd = wd-3*R10*sc;
+     twd = wd-3*UI_R10*sc;
 
       for( i = 0; i < eaSize(&pCW->ppItem); i++ )
     {
@@ -423,7 +423,7 @@ int customWindow()
             cprntEx( cx, cy, z, sc, sc, CENTER_X|CENTER_Y, pCB->pchName );
         }
 
-          BuildCBox(&cbox, x + R10*sc, cy - 12*sc, wd - 3*R10*sc, 24*sc );
+          BuildCBox(&cbox, x + UI_R10*sc, cy - 12*sc, wd - 3*UI_R10*sc, 24*sc );
         if( mouseClickHit(&cbox, MS_RIGHT ) )
             contextMenu_displayEx(s_CustomButtonContext, pCB);
         if( mouseLeftDrag(&cbox) )
@@ -467,7 +467,7 @@ int customWindow()
     }
 
     clipperPop(&box);
-      doScrollBar( &pCW->sb, ht - 2*R10*sc, tht, x + wd, R10, z, 0, &box ); 
+      doScrollBar( &pCW->sb, ht - 2*UI_R10*sc, tht, x + wd, UI_R10, z, 0, &box ); 
     
     return 0;
 }

@@ -400,7 +400,7 @@ int oldFriendWindow(float x, float y, float z, float wd, float ht, float scale, 
     //        return 0;
 
     // Draw the base friends list frame.
-    //    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    //    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     // Where in the window can we draw?
     windowDrawArea.x = x;
@@ -438,7 +438,7 @@ int oldFriendWindow(float x, float y, float z, float wd, float ht, float scale, 
         {
             if(fullDrawHeight > currentHeight)
             {
-                doScrollBar( &sb, currentHeight, fullDrawHeight, wd, PIX3+R10*scale, z+2, 0, &windowDrawArea  );
+                doScrollBar( &sb, currentHeight, fullDrawHeight, wd, PIX3+UI_R10*scale, z+2, 0, &windowDrawArea  );
                 friendListView->scrollOffset = sb.offset;
             }
             else
@@ -1219,7 +1219,7 @@ int newFriendWindow(float x, float y, float z, float wd, float ht, float scale, 
             {
                 if(fullDrawHeight > currentHeight)
                 {
-                       doScrollBar( &sb, currentHeight-25*scale, fullDrawHeight, wd, (PIX3+R10+30)*scale, z+2, 0, &windowDrawArea );
+                       doScrollBar( &sb, currentHeight-25*scale, fullDrawHeight, wd, (PIX3+UI_R10+30)*scale, z+2, 0, &windowDrawArea );
                     globalFriendListView->scrollOffset = sb.offset;
                 }
                 else
@@ -1736,7 +1736,7 @@ int levelingpactWindow(float x, float y, float z, float wd, float ht, float scal
     //        return 0;
 
     // Draw the base friends list frame.
-    //    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    //    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     // Where in the window can we draw?
     windowDrawArea.x = x;
@@ -1774,7 +1774,7 @@ int levelingpactWindow(float x, float y, float z, float wd, float ht, float scal
         {
             if(fullDrawHeight > currentHeight)
             {
-                doScrollBar( &sb, currentHeight, fullDrawHeight, wd, PIX3+R10*scale, z+2, 0, &windowDrawArea  );
+                doScrollBar( &sb, currentHeight, fullDrawHeight, wd, PIX3+UI_R10*scale, z+2, 0, &windowDrawArea  );
                 levelingpactListView->scrollOffset = sb.offset;
             }
             else
@@ -1977,7 +1977,7 @@ int globalIgnoreWindow(float x, float y, float z, float wd, float ht, float scal
             {
                 if(fullDrawHeight > currentHeight)
                 {
-                    doScrollBar( &sb, currentHeight-25*scale, fullDrawHeight, wd, (PIX3+R10+30)*scale, z+2, 0, &windowDrawArea );
+                    doScrollBar( &sb, currentHeight-25*scale, fullDrawHeight, wd, (PIX3+UI_R10+30)*scale, z+2, 0, &windowDrawArea );
                     globalIgnoreListView->scrollOffset = sb.offset;
                 }
                 else
@@ -2302,7 +2302,7 @@ int friendWindow()
     }
 
     // Draw the base friends list frame.
-     drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+     drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     
      if(UsingChatServer() || (e && e->levelingpact_id))

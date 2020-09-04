@@ -947,7 +947,7 @@ float uiTreeRecipeDrawCallback(uiTreeNode *pNode, float x, float y, float z, flo
         }
 
         // draw frame
-        drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
+        drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
                         box_color);
 
 
@@ -1368,7 +1368,7 @@ float uiMeritTextDrawCallback(uiTreeNode *pNode, float x, float y, float z, floa
         }
 
         // draw frame
-        drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
+        drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
             box_color);
 
         // check for click
@@ -1542,7 +1542,7 @@ float uiMeritRecipeDraw(treeRecipeDisplayState *pState, float x, float y, float 
     }
 
     // draw frame
-    drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, box_color);
+    drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, box_color);
 
     // draw enhancement if needed
     if (pState->pEnhancement)
@@ -1634,7 +1634,7 @@ float uiIncarnateRecipeDraw(treeRecipeDisplayState *pState, float x, float y, fl
     }
 
     // draw frame
-    drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+35*scale, scale, forground_color, box_color);
+    drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+35*scale, scale, forground_color, box_color);
 
     // draw enhancement if needed
     if (pState->pEnhancement)
@@ -2090,7 +2090,7 @@ int recipeInventoryWindow()
             }
         }
 
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
         drawVerticalLine(x+wd/2, y, ht-(2*sc), z, sc, color);
 
         set_scissor( 1 ); 
@@ -2473,8 +2473,8 @@ int recipeInventoryWindow()
         }
         
         oldy = y;
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
-        curTab = drawTabControl(workshopCategories, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
+        curTab = drawTabControl(workshopCategories, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
         set_scissor( 1 ); 
 
         scissor_dims( x + PIX3*sc, y + (PIX3+TAB_HEIGHT)*sc, wd - PIX3*2*sc, ht - (PIX3*3 + TAB_HEIGHT + CBOXHEIGHT)*sc );
@@ -2554,7 +2554,7 @@ int recipeInventoryWindow()
 
         set_scissor( 0 ); 
 
-        doScrollBar( &sb, ht - (PIX3*3 + TAB_HEIGHT + CBOXHEIGHT)*sc, docHeight + SPACE_BETWEEN_NODES*sc, wd, (PIX3+R10)*sc, z, 0, 0 );
+        doScrollBar( &sb, ht - (PIX3*3 + TAB_HEIGHT + CBOXHEIGHT)*sc, docHeight + SPACE_BETWEEN_NODES*sc, wd, (PIX3+UI_R10)*sc, z, 0, 0 );
     }
 
     return 0;

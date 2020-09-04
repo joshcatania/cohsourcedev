@@ -522,7 +522,7 @@ int channelSearchWindow(void)
         requestDefault();
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );// window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );// window 
     if( eaSize( &gChannelLines ) == 0 )
     {
         font_color( CLR_WHITE, CLR_WHITE );
@@ -601,7 +601,7 @@ int channelSearchWindow(void)
     uiEditEditSimple(editTxt, x + wd - 255*sc, y + hbottom - BUTTON_OFFSET*sc/2 - 44*sc, z+2, 135*sc, 25*sc, &game_12, INFO_HELP_TEXT, FALSE);
 
     BuildCBox( &box, x + wd - 305*sc,  y + hbottom - BUTTON_OFFSET*sc/2 - 47*sc, 190*sc, 25*sc );
-    drawFrame( PIX3, R10, x + wd  - 305*sc,  y + hbottom - BUTTON_OFFSET*sc/2 - 47*sc, z+1, 195*sc, 25*sc, sc, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
+    drawFrame( PIX3, UI_R10, x + wd  - 305*sc,  y + hbottom - BUTTON_OFFSET*sc/2 - 47*sc, z+1, 195*sc, 25*sc, sc, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
 
     if( mouseClickHit( &box, MS_LEFT) )
         uiEditTakeFocus(editTxt);

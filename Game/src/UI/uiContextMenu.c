@@ -804,7 +804,7 @@ static int displayContextElement( ContextMenu *cm, int i, float y )
     {
         //key element highlighted if it has an open submenu
         if( element->cm && element->cm->visible )
-            drawFlatFrame( PIX3, R6, box.lx, box.ly, context_z, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+            drawFlatFrame( PIX3, UI_R6, box.lx, box.ly, context_z, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
 
         if( mouseCollision(&box) )
         {
@@ -823,9 +823,9 @@ static int displayContextElement( ContextMenu *cm, int i, float y )
             if(element->type != CM_TITLE && element->type != CM_TEXT)
             {
                 if( isDown( MS_LEFT ) || isDown( MS_RIGHT ) )
-                    drawFlatFrame( PIX3, R6, box.lx, box.ly, context_z+1, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+                    drawFlatFrame( PIX3, UI_R6, box.lx, box.ly, context_z+1, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
                 else
-                    drawFlatFrame( PIX3, R6, box.lx, box.ly, context_z+1, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+                    drawFlatFrame( PIX3, UI_R6, box.lx, box.ly, context_z+1, box.hx-box.lx, box.hy-box.ly, 1.f, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
             }
 
             // or execute code and close if clicked
@@ -951,7 +951,7 @@ static int displayContextMenu( ContextMenu *cm )
         color = (winDefs[0].loc.color & 0xffffff00)|0x66;
         bcolor = winDefs[0].loc.back_color;
     }
-    drawFrame( PIX2, R10, cm->box.lx, cm->box.ly, context_z, (cm->box.hx-cm->box.lx), (cm->box.hy-cm->box.ly), 1.f, color, bcolor ); // big box around elements
+    drawFrame( PIX2, UI_R10, cm->box.lx, cm->box.ly, context_z, (cm->box.hx-cm->box.lx), (cm->box.hy-cm->box.ly), 1.f, color, bcolor ); // big box around elements
 
     iSize = eaSize(&cm->elements); 
     for( i = 0; i < iSize; i++ )

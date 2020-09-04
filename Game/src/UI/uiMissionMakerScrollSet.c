@@ -4250,7 +4250,7 @@ F32 drawDoppelFlags( MMElement *pElement, F32 x, F32 y, F32 z, F32 wd, F32 sc)
         j++;
     }
 
-    drawFlatFrame( PIX2, R10, startX-sc*PIX3, startY-sc*PIX2, z, wd+sc*PIX2, ht+sc*PIX2, sc, CLR_MM_BACK_ALTERNATE, CLR_MM_BACK_ALTERNATE );
+    drawFlatFrame( PIX2, UI_R10, startX-sc*PIX3, startY-sc*PIX2, z, wd+sc*PIX2, ht+sc*PIX2, sc, CLR_MM_BACK_ALTERNATE, CLR_MM_BACK_ALTERNATE );
     return ht+20*sc;
 }
 
@@ -4275,7 +4275,7 @@ F32 doElementList( MMScrollSet *pSet, MMScrollSet_Mission * pMission, MMElementL
             pSet->fBlinkTimer = 0;
             pSet->fTargetY = 0;
         }
-        drawFlatFrame( PIX3, R10, (x - wd/2), y - 20*sc, z-2, wd, SS_LIST_HT*sc + 20, sc, blink_color, blink_color );
+        drawFlatFrame( PIX3, UI_R10, (x - wd/2), y - 20*sc, z-2, wd, SS_LIST_HT*sc + 20, sc, blink_color, blink_color );
     } 
 
     scale = MINMAX( ht/SS_LIST_HT*sc, 0, sc);
@@ -4941,7 +4941,7 @@ F32 MMScrollSet_DrawElementList( MMScrollSet *pSet, MMScrollSet_Mission *pMissio
             pSet->fTargetY = 0;
             //pSet->converge = 0;
         }
-        drawFlatFrame( PIX3, R10, (x - wd/2), ystart - 20*sc, z, wd, tht, sc, blink_color, blink_color );
+        drawFlatFrame( PIX3, UI_R10, (x - wd/2), ystart - 20*sc, z, wd, tht, sc, blink_color, blink_color );
     } 
 
     return tht;
@@ -4971,7 +4971,7 @@ F32 MMScrollSet_DrawRegionButton( MMScrollSet *pSet, MMScrollSet_Mission *pMissi
         font(&title_9);
         font_outl(0); 
         font_color( CLR_MM_TEXT_BACK, CLR_MM_TEXT_BACK );
-        prnt( x - (wd-80*sc)/2 + 2*R10*sc, y+4*sc, z+10, sc, sc, "MMOptional" );
+        prnt( x - (wd-80*sc)/2 + 2*UI_R10*sc, y+4*sc, z+10, sc, sc, "MMOptional" );
         font_outl(1);
     }
 
@@ -5008,7 +5008,7 @@ F32 MMScrollSet_DrawRegionButton( MMScrollSet *pSet, MMScrollSet_Mission *pMissi
     clipperPop();
 
     if( scale > 0 && pRegion )
-        drawFlatFrame( PIX3, R10, x - (pButton->wd)/2, y, z-1, pButton->wd, pButton->ht, 1.f, 0x5bbabf33, 0x5bbabf33 );
+        drawFlatFrame( PIX3, UI_R10, x - (pButton->wd)/2, y, z-1, pButton->wd, pButton->ht, 1.f, 0x5bbabf33, 0x5bbabf33 );
 
     return SS_LIST_HT*sc + pButton->ht;
 }
@@ -5095,7 +5095,7 @@ static float MMScrollSet_drawRegion( MMScrollSet * pSet, MMScrollSet_Mission *pM
     }
     else
     {
-        if( scale > 0 && drawMMBar( pRegion->pchActualDisplay?pRegion->pchActualDisplay:pRegion->pchDisplayName, x+wd/2, y, z+5, wd-8*R10*scale, scale, pRegion->isOpen, 1 ) ) 
+        if( scale > 0 && drawMMBar( pRegion->pchActualDisplay?pRegion->pchActualDisplay:pRegion->pchDisplayName, x+wd/2, y, z+5, wd-8*UI_R10*scale, scale, pRegion->isOpen, 1 ) ) 
             regionOpen( pRegion );
     }
 
@@ -5122,7 +5122,7 @@ static float MMScrollSet_drawRegion( MMScrollSet * pSet, MMScrollSet_Mission *pM
         pRegion->inner_ht = subht;
 
     if( tht > 0 )  
-         drawFlatFrame( PIX3, R10, x + R10*sc, startY, z, wd-2*R10*sc, MIN(pRegion->inner_ht, tht)+20*sc, 1, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
+         drawFlatFrame( PIX3, UI_R10, x + UI_R10*sc, startY, z, wd-2*UI_R10*sc, MIN(pRegion->inner_ht, tht)+20*sc, 1, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
 
     
      if( !isDown(MS_LEFT) && cursor.dragging )
@@ -5203,7 +5203,7 @@ F32 MMScrollSet_DrawErrors( MMScrollSet *pSet, F32 x, F32 y, F32 z, F32 wd, F32 
     s_taMissionInfo.piColor = (int *)CLR_WHITE;
     clipperPop();
     pSet->errorSb.architect = 2;
-    doScrollBar( &pSet->errorSb, box_ht - 60*sc, text_ht-20*sc, x+pSet->wd-35*sc, y + 3*R10*sc, z, 0, &box );
+    doScrollBar( &pSet->errorSb, box_ht - 60*sc, text_ht-20*sc, x+pSet->wd-35*sc, y + 3*UI_R10*sc, z, 0, &box );
 
     return box_ht;
 }
@@ -5267,10 +5267,10 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
                 F32 suby = y;
                 y += MMScrollSet_DrawRegionButton( pSet, pMission, 0, pMission->ppDetailButton[i], x+pSet->wd/2, y + 20*sc - pSet->leftSb.offset, z+1, pSet->wd, 10000, sc );
                 if( pMission->ppDetailButton[i]->isOpen )
-                    drawFlatFrame( PIX3, R10, x+10*sc, suby + 20*sc - pSet->leftSb.offset, z, pSet->wd-20*sc, y-suby-30*sc, sc, 0x315d5cff, 0x315d5cff );
+                    drawFlatFrame( PIX3, UI_R10, x+10*sc, suby + 20*sc - pSet->leftSb.offset, z, pSet->wd-20*sc, y-suby-30*sc, sc, 0x315d5cff, 0x315d5cff );
             }
             if( eaSize( &pMission->ppDetailButton ) )
-                drawFlatFrame( PIX3, R10, x+5*sc, starty - pSet->leftSb.offset + 2*sc, z, pSet->wd-10*sc, y-starty, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
+                drawFlatFrame( PIX3, UI_R10, x+5*sc, starty - pSet->leftSb.offset + 2*sc, z, pSet->wd-10*sc, y-starty, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
             y += 10*sc;
             y = MMScrollSet_DrawCurrentRegions(pSet, pMission, &pMission->ppDetailRegion, x, y-pSet->leftSb.offset, z, pSet->wd, 10000, sc ) + pSet->leftSb.offset;
         }
@@ -5292,7 +5292,7 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
                 pSet->converge = pSet->fTargetY = 0;
         }
     }
-    doScrollBar( &pSet->leftSb, ht-50*sc, y-start_y, x+pSet->wd+(PIX3-1)*sc, start_y + R10*sc, z, 0, &box );
+    doScrollBar( &pSet->leftSb, ht-50*sc, y-start_y, x+pSet->wd+(PIX3-1)*sc, start_y + UI_R10*sc, z, 0, &box );
 
 
     if( pSet->bShowErrors && strlen(s_pchErrorLog) ) 
@@ -5317,7 +5317,7 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
     if( pSet->current_mission < 0 )
     {
         eaiPush(&s_IndexPath, 0 );
-        drawMMBar( "MMStoryArcSummary",  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*R10*sc, sc, 1, 0 );
+        drawMMBar( "MMStoryArcSummary",  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*UI_R10*sc, sc, 1, 0 );
         y += MMScrollSet_DrawPage(pSet, &pSet->ppStoryRegion, x+pSet->wd, start_y - pSet->rightSb.offset, z+5, sc);
         eaiPop(&s_IndexPath);
         draw_right_frame = 1;
@@ -5327,7 +5327,7 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
     {
         eaiPush(&s_IndexPath, pSet->current_mission+1 );
         eaiPush(&s_IndexPath, pSet->current_page);
-        drawMMBar( textStd("MMMissionSettingSummary", pSet->current_mission+1) ,  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*R10*sc, sc, 1, 0 );
+        drawMMBar( textStd("MMMissionSettingSummary", pSet->current_mission+1) ,  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*UI_R10*sc, sc, 1, 0 );
         if(pMission )
             y += MMScrollSet_DrawPage(pSet, &pMission->ppMissionRegion,  x+pSet->wd, start_y - pSet->rightSb.offset, z+5, sc);
         eaiPop(&s_IndexPath);
@@ -5339,7 +5339,7 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
         eaiPush(&s_IndexPath, pSet->current_mission+1 );
         eaiPush(&s_IndexPath, pSet->current_page);
 
-        drawMMBar( textStd("MMMissionDetailSummary", pSet->current_mission+1) ,  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*R10*sc, sc, 1, 0 );
+        drawMMBar( textStd("MMMissionDetailSummary", pSet->current_mission+1) ,  x + pSet->wd + pSet->wd/2, start_y - pSet->rightSb.offset, z+5, pSet->wd - 4*UI_R10*sc, sc, 1, 0 );
         if(pMission )
             y += MMScrollSet_DrawPage(pSet, &pMission->ppDetailRegion,  x+pSet->wd, start_y - pSet->rightSb.offset, z+5, sc);
         eaiPop(&s_IndexPath);
@@ -5348,10 +5348,10 @@ F32 MMScrollSet_Draw( MMScrollSet * pSet, F32 x, F32 y, F32 z, F32 ht, F32 sc, i
     }
 
     if( draw_right_frame )
-        drawFlatFrame(PIX3, R10, x+pSet->wd+R10*sc, start_y - pSet->rightSb.offset, z, pSet->wd - 2*R10*sc, y-start_y + 30*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
+        drawFlatFrame(PIX3, UI_R10, x+pSet->wd+UI_R10*sc, start_y - pSet->rightSb.offset, z, pSet->wd - 2*UI_R10*sc, y-start_y + 30*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
 
     clipperPop();
-    doScrollBar( &pSet->rightSb, ht-50*sc, y-start_y + 40*sc, x+pSet->wd*2, start_y + R10*sc, z, 0, &box );
+    doScrollBar( &pSet->rightSb, ht-50*sc, y-start_y + 40*sc, x+pSet->wd*2, start_y + UI_R10*sc, z, 0, &box );
 
 
     return MAX( y-start_y, ht );

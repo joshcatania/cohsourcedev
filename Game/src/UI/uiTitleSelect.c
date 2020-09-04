@@ -109,10 +109,10 @@ int selectableTextFlat(bool *pbSelected, float x, float y, float z, float wd, fl
             *pbSelected = true;
         }
 
-        drawFlatFrame(PIX3, R4, x, y, z, wd, ht, sc, colorFG, colorBG);
+        drawFlatFrame(PIX3, UI_R4, x, y, z, wd, ht, sc, colorFG, colorBG);
     }
 
-    drawFlatFrame(PIX3, R4, x, y, z, wd, ht, sc, colorFG, colorBG);
+    drawFlatFrame(PIX3, UI_R4, x, y, z, wd, ht, sc, colorFG, colorBG);
     if(bCenter)
     {
         cprnt(x+wd/2, y+(ht-sc*4), z, sc, sc, pch);
@@ -154,7 +154,7 @@ int titleselectWindow(void)
         s_block = smfBlock_Create();
     }
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     if(window_getMode( WDW_TITLE_SELECT) == WINDOW_DISPLAYING && s_pBase && s_pCommon && s_pVeteran && s_pOrigin)
     {

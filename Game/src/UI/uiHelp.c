@@ -354,7 +354,7 @@ int helpWindow()
     if( !window_getDims( WDW_HELP, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor ) || !(pDict) )
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
      drawVerticalLine( x + (PIX3+250)*scale, y + (PIX3)*scale, ht - (2*PIX3)*scale, z, scale, CLR_WHITE );
 
     if( window_getMode( WDW_HELP ) != WINDOW_DISPLAYING )

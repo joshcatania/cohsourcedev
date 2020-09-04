@@ -860,11 +860,11 @@ int conceptinvWindow()
     // ----------------------------------------
     // post-init and state update
 
-    edge_off = (R10+PIX3)*sc;
+    edge_off = (UI_R10+PIX3)*sc;
 
 
     // window frame    
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     // if not ready yet, return
       if(window_getMode(WDW_CONCEPTINV) != WINDOW_DISPLAYING)
@@ -996,7 +996,7 @@ int conceptinvWindow()
                 dWdMax = MAX(dWdMax, box.right - box.left);
             }
 
-            wd_frame = dWdMax + R10*sc*2;
+            wd_frame = dWdMax + UI_R10*sc*2;
 
             if( mouseOver.box.ly - ht_frame > y + TAB_HEIGHT*sc )
             {
@@ -1016,7 +1016,7 @@ int conceptinvWindow()
             // print the attribmods
             // NOTE: keep in sync with prnt stmt above
             {
-                F32 x_inf = x_frame + R10*sc;
+                F32 x_inf = x_frame + UI_R10*sc;
                 F32 y_inf = y_frame + PIX3*sc;
                 F32 z_inf = z_frame + 1;
 
@@ -1063,7 +1063,7 @@ int conceptinvWindow()
                 int clr_inf = CLR_BLACK;
                 int bclr_inf = CLR_BLACK;
 
-                drawFlatFrame(PIX3, R10, x_frame, y_frame, z_frame, 
+                drawFlatFrame(PIX3, UI_R10, x_frame, y_frame, z_frame, 
                     wd_frame, ht_frame, sc, clr_inf, bclr_inf );
             }
         }
@@ -1071,7 +1071,7 @@ int conceptinvWindow()
         //scrollbar
         {
             F32 doc_bottom = y_items + (slotsUsedTotal+NUM_COLS-1)/NUM_COLS*scaledIconWd;
-            doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, doc_bottom - y, wd, (PIX3+R10+TAB_HT)*sc, z+5, 0, 0 );
+            doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, doc_bottom - y, wd, (PIX3+UI_R10+TAB_HT)*sc, z+5, 0, 0 );
         }
         
         // grow the current icon

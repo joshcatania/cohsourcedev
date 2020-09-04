@@ -324,7 +324,7 @@ static UIBox lvResultsDisplayItem(UIListView* list, PointFloatXYZ rowOrigin, voi
         clipBox.origin.y = pen.y;
         clipBox.height = 20*sc;
 
-        total_width = pen.x + columnIterator.currentWidth - rowOrigin.x + 2*R10*sc;
+        total_width = pen.x + columnIterator.currentWidth - rowOrigin.x + 2*UI_R10*sc;
 
         clipBox.width = (columnIterator.currentWidth+5)*sc;
 
@@ -413,8 +413,8 @@ int arenaResultWindow()
     if( !window_getDims( WDW_ARENA_RESULT, &x, &y, &z, &wd, &ht, &sc, &color, &back_color) )
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, back_color );
-    drawFrame( PIX3, R10, x, y, z + 10, wd, ht, sc, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color );
+    drawFrame( PIX3, UI_R10, x, y, z + 10, wd, ht, sc, color, 0 );
 
     // header information
     font(&game_14);
@@ -426,20 +426,20 @@ int arenaResultWindow()
 
         if( desc[0] )
         {
-            total_text = str_wd(&game_12, sc, sc, desc) + (R10+PIX3)*sc;
-            cprntEx( x + R10*sc, y + header_ht*sc/2, z, sc, sc, CENTER_Y, desc );
+            total_text = str_wd(&game_12, sc, sc, desc) + (UI_R10+PIX3)*sc;
+            cprntEx( x + UI_R10*sc, y + header_ht*sc/2, z, sc, sc, CENTER_Y, desc );
         }
         else
         {
-            total_text = str_wd(&game_12, sc, sc, arenaGetEventName(teamStyle, teamType)) + (R10+PIX3)*sc;
-            cprntEx( x + R10*sc, y + header_ht*sc/2, z, sc, sc, CENTER_Y, arenaGetEventName(teamStyle, teamType) );
+            total_text = str_wd(&game_12, sc, sc, arenaGetEventName(teamStyle, teamType)) + (UI_R10+PIX3)*sc;
+            cprntEx( x + UI_R10*sc, y + header_ht*sc/2, z, sc, sc, CENTER_Y, arenaGetEventName(teamStyle, teamType) );
         }
 
         font(&game_12);
-        textWd = str_wd(&game_12, sc, sc, arenaGetWeightName(weightClass)) + (R10+PIX3)*sc;
+        textWd = str_wd(&game_12, sc, sc, arenaGetWeightName(weightClass)) + (UI_R10+PIX3)*sc;
         total_text += textWd;
         cprntEx( x + wd - textWd, y + header_ht*sc/3, z, sc, sc, CENTER_Y, arenaGetWeightName(weightClass) );
-        textWd = str_wd(&game_12, sc, sc, arenaGetVictoryTypeName(victoryType)) + (R10+PIX3)*sc; 
+        textWd = str_wd(&game_12, sc, sc, arenaGetVictoryTypeName(victoryType)) + (UI_R10+PIX3)*sc; 
         cprntEx( x + wd - textWd, y + header_ht*2*sc/3, z, sc, sc, CENTER_Y, arenaGetVictoryTypeName(victoryType) );
     }
 
@@ -514,7 +514,7 @@ int arenaResultWindow()
 
             if(fullDrawHeight > currentHeight)
             {
-                doScrollBar(&sb, currentHeight - R10 * sc, fullDrawHeight, wd, (PIX3+R10+header_ht)*sc, z+11, 0, &listViewDrawArea);
+                doScrollBar(&sb, currentHeight - UI_R10 * sc, fullDrawHeight, wd, (PIX3+UI_R10+header_ht)*sc, z+11, 0, &listViewDrawArea);
                 lvResult->scrollOffset = sb.offset;
             }
             else

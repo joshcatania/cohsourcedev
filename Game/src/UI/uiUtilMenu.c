@@ -101,7 +101,7 @@ void drawMenuFrame( int radius, float x, float y, float z, float wd, float ht, i
 {
     float w;
     int size = 4;
-    int offset = (radius == R25);
+    int offset = (radius == UI_R25);
     AtlasTex *ul, *ll, *lr, *ur;
     float shrink = 1.0;
 
@@ -132,7 +132,7 @@ void drawMenuFrame( int radius, float x, float y, float z, float wd, float ht, i
         xpipe    = atlasLoadTexture( "frame_blue_4px_horiz_tintable.tga" );
     }
 
-    if( radius == R12 )
+    if( radius == UI_R12 )
     {
         if (game_state.skin == UISKIN_HEROES)
         {

@@ -1037,11 +1037,11 @@ int picturebrowser_display( PictureBrowser *pb )
             {
                 centerColor = PB_MM_COLOR;    //eventually switch to a selected color.
             }
-            drawFlatThreeToneFrame(PIX3, R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, leftColor, centerColor,rightColor);
+            drawFlatThreeToneFrame(PIX3, UI_R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, leftColor, centerColor,rightColor);
         }
 
         if((mouseCollision(&cbox) || s_isPlaying(pb))&& eaiSize(&pb->costumeChanges) <=1 && pb->mmdata && pb->mmdata->motionAvailable)
-            drawFlatFrame(PIX3, R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, PB_MM_COLOR, PB_MM_COLOR);
+            drawFlatFrame(PIX3, UI_R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, PB_MM_COLOR, PB_MM_COLOR);
         if(mouseCollision(&cbox) && pb->mmdata && pb->mmdata->motionAvailable)
         {
             if(!turnHover)
@@ -1050,7 +1050,7 @@ int picturebrowser_display( PictureBrowser *pb )
             if(isDown( MS_LEFT ) && !turning && !isClicking)
             {
                 isClicking = 1;
-                drawFlatFrame(PIX3, R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, PB_MM_COLOR, PB_MM_COLOR);
+                drawFlatFrame(PIX3, UI_R10, pb->x, pb->y,  pb->z, pb->wd, pb->ht, pb->sc, PB_MM_COLOR, PB_MM_COLOR);
                 picturebrowser_setPlay(pb, !pb->type);
             }
             else if (!isDown( MS_LEFT ))

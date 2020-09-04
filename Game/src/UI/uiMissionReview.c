@@ -353,7 +353,7 @@ F32 missionReviewDrawKeywords(F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, int w
                 prnt( x + 20*sc, startY, z+1, sc, sc, "MMKeywordSelect" );
         }
 
-        drawFlatFrame( PIX3, R10, x + 10*sc, y-40*sc, z, wd-20*sc, max_ht+50*sc, sc, backcolor, backcolor );
+        drawFlatFrame( PIX3, UI_R10, x + 10*sc, y-40*sc, z, wd-20*sc, max_ht+50*sc, sc, backcolor, backcolor );
         y += max_ht;
     }
     return y-startY;
@@ -383,7 +383,7 @@ int missionReviewWindow(void)
     
     missionReviewLoadKeywordList();
 
-    //drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    //drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
     drawWaterMarkFrame( x, y, z, sc, wd, ht, 1 );
 
      startY = y;
@@ -393,7 +393,7 @@ int missionReviewWindow(void)
     // Mission Title
     // By Author
     // Desc
-       y += smf_Display(s_pMissionReview, x+2*R10*sc, y-sb.offset+2*R10*sc, z, wd-4*R10*sc, 0, 0, 0, &s_taMissionReview, 0);
+       y += smf_Display(s_pMissionReview, x+2*UI_R10*sc, y-sb.offset+2*UI_R10*sc, z, wd-4*UI_R10*sc, 0, 0, 0, &s_taMissionReview, 0);
     y += 20*sc;
 
        if( !(gMissionReview.flags&ARCHITECT_TEST) )  
@@ -412,12 +412,12 @@ int missionReviewWindow(void)
 
             y += 20*sc;
 
-               txt_ht = smf_Display(dialogEdit,  x + 2.5*R10*sc, y + PIX3*sc -sb.offset, z+2, wd - 5*R10*sc, 0, 0, 0, &s_taMissionReview, 0);
-            drawTextEntryFrame( x + 2*R10*sc, y-sb.offset, z, wd - 4*(R10)*sc, txt_ht+6*sc, sc, smfBlock_HasFocus(dialogEdit) );
+               txt_ht = smf_Display(dialogEdit,  x + 2.5*UI_R10*sc, y + PIX3*sc -sb.offset, z+2, wd - 5*UI_R10*sc, 0, 0, 0, &s_taMissionReview, 0);
+            drawTextEntryFrame( x + 2*UI_R10*sc, y-sb.offset, z, wd - 4*(UI_R10)*sc, txt_ht+6*sc, sc, smfBlock_HasFocus(dialogEdit) );
             
             y += txt_ht + 20*sc;
 
-                if( drawMMButton( "MissionReviewSubmitComment", 0, 0, x + wd/2, y-sb.offset + 15*sc, z, wd - 5*R10*sc, sc, MMBUTTON_SMALL|(stricmp(dialogEdit->rawString,  textStd("MissionReviewComment") ) == 0), 0 ) )
+                if( drawMMButton( "MissionReviewSubmitComment", 0, 0, x + wd/2, y-sb.offset + 15*sc, z, wd - 5*UI_R10*sc, sc, MMBUTTON_SMALL|(stricmp(dialogEdit->rawString,  textStd("MissionReviewComment") ) == 0), 0 ) )
             {
                 if( *gMissionReview.pchAuthor == '@' )
                 {
@@ -484,7 +484,7 @@ int missionReviewWindow(void)
  
             font(&title_12);
             font_color(CLR_MM_BUTTON_ERROR_TEXT, CLR_MM_BUTTON_ERROR_TEXT);
-            prnt(x+ R10*sc*2, y-sb.offset, z, sc, sc, "MMReportType");
+            prnt(x+ UI_R10*sc*2, y-sb.offset, z, sc, sc, "MMReportType");
             y+=sc*15;
 
              for( i = 0; i < ARRAY_SIZE(reportNames); i++ )
@@ -508,11 +508,11 @@ int missionReviewWindow(void)
                 smf_SetCharacterInsertSounds(reportEdit, "type2", "mouseover");
             }
             
-             txt_ht = smf_Display(reportEdit,  x + 2.5*R10*sc, y+PIX3*sc-sb.offset, z+2, wd - 5*R10*sc, 0, 0, 0, &s_taMissionReview, 0);
-            drawTextEntryFrame( x + 2*R10*sc, y-sb.offset, z, wd - 4*(R10)*sc, txt_ht + 6*sc, sc,  smfBlock_HasFocus(reportEdit)  );
+             txt_ht = smf_Display(reportEdit,  x + 2.5*UI_R10*sc, y+PIX3*sc-sb.offset, z+2, wd - 5*UI_R10*sc, 0, 0, 0, &s_taMissionReview, 0);
+            drawTextEntryFrame( x + 2*UI_R10*sc, y-sb.offset, z, wd - 4*(UI_R10)*sc, txt_ht + 6*sc, sc,  smfBlock_HasFocus(reportEdit)  );
             y += txt_ht + 20*sc;
 
-               if( drawMMButton("MMSendReport", 0, 0, x + wd/2, y + 10*sc-sb.offset, z, wd - 5*R10*sc, sc, MMBUTTON_ERROR|MMBUTTON_SMALL, 0 ) )
+               if( drawMMButton("MMSendReport", 0, 0, x + wd/2, y + 10*sc-sb.offset, z, wd - 5*UI_R10*sc, sc, MMBUTTON_ERROR|MMBUTTON_SMALL, 0 ) )
             {
                 report_open = 0;
                 gMissionReview.reported = 1;
@@ -586,7 +586,7 @@ int missionReviewWindow(void)
 
            y += 120*sc;
 
-          drawFlatFrame( PIX3, R10, x+10*sc, y - 10*sc, z, wd-20*sc, 190*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
+          drawFlatFrame( PIX3, UI_R10, x+10*sc, y - 10*sc, z, wd-20*sc, 190*sc, sc, CLR_MM_FRAME_BACK, CLR_MM_FRAME_BACK );
          drawMMBar( "MMTestModeCommands", x+wd/2, y-10*sc, z+5, wd-80*sc, sc, 1, 0 );
           
           helpButton( &pHelp, x + wd - 30*sc, y-10*sc, z, sc, "MMTestCommandHelp", 0  )
@@ -615,7 +615,7 @@ int missionReviewWindow(void)
     }
 
     clipperPop();
-     doScrollBar( &sb, ht-30*sc, y-startY, wd, R10*sc, z, 0, &box );
+     doScrollBar( &sb, ht-30*sc, y-startY, wd, UI_R10*sc, z, 0, &box );
 
     return 0;
 }

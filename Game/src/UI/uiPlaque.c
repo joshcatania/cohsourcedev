@@ -65,8 +65,8 @@ int plaqueShowDialog(void)
         return 0;
 
     // Draw the plaque window
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
-    smfview_SetSize(plaqueViewer, wd-(PIX3*2-5)*sc, ht-(PIX3+R10+32)*sc);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
+    smfview_SetSize(plaqueViewer, wd-(PIX3*2-5)*sc, ht-(PIX3+UI_R10+32)*sc);
     smfview_Draw(plaqueViewer);
 
     // Draw OK, if hit close the window and destroy our current plaque display

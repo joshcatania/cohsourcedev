@@ -623,7 +623,7 @@ static F32 updateTitleComboBox( F32 x, F32 y, F32 z )
                 {
                     tmp_wd = MAX( tmp_wd, str_wd( &game_9, 1.f, 1.f, g_TitleDictionary.ppOrigins[i]->ppchChooseList[j] ) );
                 }
-                combobox_init( &cb, x, y, z, tmp_wd + (2*R10 + 2*PIX2 + 20.f), 32.f, ((j+1)*22.f), g_TitleDictionary.ppOrigins[i]->ppchChooseList, 0 );
+                combobox_init( &cb, x, y, z, tmp_wd + (2*UI_R10 + 2*PIX2 + 20.f), 32.f, ((j+1)*22.f), g_TitleDictionary.ppOrigins[i]->ppchChooseList, 0 );
             }
         }
     }
@@ -642,7 +642,7 @@ static F32 updateTitleComboBox( F32 x, F32 y, F32 z )
     }
 
     //result is the selected title
-    result = combobox_displayHybridRegister( &cb, R10, 0, CLR_H_TAB_BACK&0xffffff00, CLR_WHITE );
+    result = combobox_displayHybridRegister( &cb, UI_R10, 0, CLR_H_TAB_BACK&0xffffff00, CLR_WHITE );
 
     //set the appropriate title if the selected title has changed
     if( lastTitle != result )

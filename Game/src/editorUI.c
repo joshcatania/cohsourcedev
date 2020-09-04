@@ -841,7 +841,7 @@ int editorUIDrawTabControl(EditorUIWidget * w,int x,int y,int z,int top,int bott
     for (i=0;i<cnt;i++) {
         CBox box;
         int wd=(EDITORUI_BUFFER+25+str_wd(getEditorFont(),1,1,"%s",widget->myText[i]))*sc;
-        drawFrameTabStyle(PIX2,R4,x+sc*(EDITORUI_BUFFER),y+sc*(EDITORUI_BUFFER+2),z,wd,ht,1,CLR_FRAME,kFrameStyle_3D);
+        drawFrameTabStyle(PIX2,UI_R4,x+sc*(EDITORUI_BUFFER),y+sc*(EDITORUI_BUFFER+2),z,wd,ht,1,CLR_FRAME,kFrameStyle_3D);
         if (i == *widget->myValue) {
             widget->openleft = x+sc*(EDITORUI_BUFFER);
             widget->openright = x+sc*(EDITORUI_BUFFER) + wd;
@@ -990,7 +990,7 @@ static int drawUIRadioButton(float x, float y, float wd, float z, float sc, int 
     }
 
     setEditorFontActive(textcolor);
-    cprntEx(x+(R4+RADIO_CHECK_WIDTH)*sc, y+(RADIO_CHECK_WIDTH+2)*sc/2, z, sc, sc, CENTER_Y, text );
+    cprntEx(x+(UI_R4+RADIO_CHECK_WIDTH)*sc, y+(RADIO_CHECK_WIDTH+2)*sc/2, z, sc, sc, CENTER_Y, text );
 
     buttonhit = mouseClickHit(&box, MS_LEFT);
     if (buttonhit)
@@ -1217,7 +1217,7 @@ int doTextEntry(UIEdit **editptr,char *old_value,char *new_value,int capacity,in
         numLines=eaSize(&(*editptr)->lines);
         ht=ht*numLines/1.3+.5;
     }
-    drawFrame(PIX2,R4,x,y,z+(numLines>1?2:0),wd,ht+2,1,*selected?CLR_SELECTED_FRAME:CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:(*selected?CLR_SELECTED_WIDGET_BACK:CLR_WIDGET_BACK));
+    drawFrame(PIX2,UI_R4,x,y,z+(numLines>1?2:0),wd,ht+2,1,*selected?CLR_SELECTED_FRAME:CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:(*selected?CLR_SELECTED_WIDGET_BACK:CLR_WIDGET_BACK));
 
     if (strcmp(old_value,new_value))
         uiEditSetUTF8Text(edit,new_value);
@@ -1378,7 +1378,7 @@ int editorUIDrawScrollableList(EditorUIWidget * w,int xInput,int yInput,int z,in
     // Show all of the strings, and put them in a "window"
     x += PIX3*scale;
     y += 10*scale;
-    drawFrame(PIX2,R4,xInput+scale*5,yInput+scale*(EDITORUI_BUFFER),z-1,widget->width*scale,(widget->height+20)*scale,1,CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:CLR_WIDGET_BACK);
+    drawFrame(PIX2,UI_R4,xInput+scale*5,yInput+scale*(EDITORUI_BUFFER),z-1,widget->width*scale,(widget->height+20)*scale,1,CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:CLR_WIDGET_BACK);
     set_scissor(1);
     scissor_dims(xInput+7*scale, yInput, (widget->width-PIX2)*scale, (widget->height+20)*scale);
     for (i = startIndex*numPerColumn; i < (startIndex+numRowsToShow)*numPerColumn; i++)
@@ -1777,7 +1777,7 @@ int editorUIDrawTreeControl(EditorUIWidget * w,int xInput,int yInput,int z,int t
     UIBox uibox={0};
     TreeElementAddress address={0};
     width=scale*editorUIWindows[w->window].width-scale*EDITORUI_BUFFER;
-    drawFrame(PIX2,R4,xInput+scale*EDITORUI_BUFFER,yInput+scale*EDITORUI_BUFFER,z-1,width*scale,(widget->myWidget.elementsTall*20-EDITORUI_BUFFER)*scale,1,CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:CLR_WIDGET_BACK);
+    drawFrame(PIX2,UI_R4,xInput+scale*EDITORUI_BUFFER,yInput+scale*EDITORUI_BUFFER,z-1,width*scale,(widget->myWidget.elementsTall*20-EDITORUI_BUFFER)*scale,1,CLR_FRAME,locked?CLR_WIDGET_BACK_LOCKED:CLR_WIDGET_BACK);
     setEditorFontActive(locked?CLR_TEXTLOCKED:CLR_TEXT);
     x = xInput+scale*(EDITORUI_BUFFER+8);
     y = yInput+scale*(EDITORUI_BUFFER+13);
@@ -2208,7 +2208,7 @@ int editorUIDrawComboBox(EditorUIWidget * w,int x,int y,int z,int top,int bottom
             {
                 int max;
                 widget->myCombo->sb->offset=15*(widget->myTempSelection+1);
-                max=-((widget->myCombo->scale*widget->myCombo->expandHt-R10-PIX3)*scale-(MAX(eaSize(&widget->myCombo->strings),eaSize(&widget->myCombo->elements))*FONT_HEIGHT+PIX3)*scale);
+                max=-((widget->myCombo->scale*widget->myCombo->expandHt-UI_R10-PIX3)*scale-(MAX(eaSize(&widget->myCombo->strings),eaSize(&widget->myCombo->elements))*FONT_HEIGHT+PIX3)*scale);
                 if (max<0)
                     max=0;
                 if (widget->myCombo->sb->offset>max)
@@ -2524,7 +2524,7 @@ int editorUIAddList(int ID,int * value,char * text,EditorUICallback callback,...
 int editorUIDrawConsole(EditorUIWidget * w,int x,int y,int z,int top,int bottom,double scale,int hasFocus,int locked) {
     EditorUIConsole * widget=(void *)w;
     int i,start,end;
-    drawFrame(PIX2,R4,x+8*scale,y+8*scale, z, (editorUIWindows[w->window].width-6)*scale, w->elementsTall*20*scale+2*scale, 1, CLR_FRAME, widget->myBGColor);
+    drawFrame(PIX2,UI_R4,x+8*scale,y+8*scale, z, (editorUIWindows[w->window].width-6)*scale, w->elementsTall*20*scale+2*scale, 1, CLR_FRAME, widget->myBGColor);
     start=0;
     if (widget->myLinesTall<eaSize(&widget->lines))
         start=eaSize(&widget->lines)-widget->myLinesTall;
@@ -2659,7 +2659,7 @@ int editorUIDrawIconRow(EditorUIWidget * w,int x,int y,int z,int top,int bottom,
 
     x+=scale*EDITORUI_BUFFER;
     y+=scale*EDITORUI_BUFFER;
-    drawFrame(PIX2,R4, x, y, z, (editorUIWindows[w->window].width-EDITORUI_BUFFER)*scale, (widget->myHeight+10)*scale, 1, CLR_FRAME, 0x000000ff);
+    drawFrame(PIX2,UI_R4, x, y, z, (editorUIWindows[w->window].width-EDITORUI_BUFFER)*scale, (widget->myHeight+10)*scale, 1, CLR_FRAME, 0x000000ff);
     if (editorUIWindows[w->window].width-30<totalWidth)
     {
         CBox box;
@@ -2846,7 +2846,7 @@ int editorUIDrawBreakdownBar(EditorUIWidget * w,int x,int y,int z,int top,int bo
     while (widget->pulse_counter >= 2*PI)
         widget->pulse_counter -= 2*PI;
 
-    drawFrame(PIX2, R4, x+scale*EDITORUI_BUFFER, y+scale*(3.5+EDITORUI_BUFFER), z, width, 8*scale, 1, CLR_FRAME, CLR_BLACK);
+    drawFrame(PIX2, UI_R4, x+scale*EDITORUI_BUFFER, y+scale*(3.5+EDITORUI_BUFFER), z, width, 8*scale, 1, CLR_FRAME, CLR_BLACK);
     for (i = 0; i < widget->numDivisions; i++)
     {
         float value = 0;
@@ -2859,7 +2859,7 @@ int editorUIDrawBreakdownBar(EditorUIWidget * w,int x,int y,int z,int top,int bo
             int color = breakdown_colors[i%ARRAY_SIZE(breakdown_colors)];
             if (selected)
                 brightenColor(&color, 25.f*sinf(widget->pulse_counter));
-            drawFrame(PIX2, R4, x+scale*(1+EDITORUI_BUFFER)+start*(width-2), y+scale*(3.5+EDITORUI_BUFFER), z+1, value*(width-2), 8*scale, 1, 0, color);
+            drawFrame(PIX2, UI_R4, x+scale*(1+EDITORUI_BUFFER)+start*(width-2), y+scale*(3.5+EDITORUI_BUFFER), z+1, value*(width-2), 8*scale, 1, 0, color);
         }
         start += value;
     }
@@ -3265,11 +3265,11 @@ int drawStuff(EditorUIWidget ** widgets,int x,int y,int z,int top,int bottom,flo
                     if (widgets[i]->type==EDITORUI_TABCONTROL)
                     {
                         EditorUITabControl *tabcontrol = (EditorUITabControl*)widgets[i];
-                        drawFrameOpenTopStyle(PIX2, R4, x+4*sc, y+height, z+1, (editorUIWindows[widgets[i]->window].width+2)*sc, h, tabcontrol->openleft, tabcontrol->openright, 1, CLR_FRAME, 0x00000000, kFrameStyle_3D);
+                        drawFrameOpenTopStyle(PIX2, UI_R4, x+4*sc, y+height, z+1, (editorUIWindows[widgets[i]->window].width+2)*sc, h, tabcontrol->openleft, tabcontrol->openright, 1, CLR_FRAME, 0x00000000, kFrameStyle_3D);
                     }
                     else
                     {
-                        drawFrame(PIX2, R4, x+4*sc, y+height, z, (editorUIWindows[widgets[i]->window].width+2)*sc, h, 1, CLR_FRAME, 0x00000000);
+                        drawFrame(PIX2, UI_R4, x+4*sc, y+height, z, (editorUIWindows[widgets[i]->window].width+2)*sc, h, 1, CLR_FRAME, 0x00000000);
                     }
                 }
                 height+=h;
@@ -3396,11 +3396,11 @@ int editorUIDrawWindow()
         doScrollBar(&editorUIWindows[window].scrollBar,maxheight-40*sc,ht,x+wd-sc*5,y+20*sc,z, &box, 0);
         fudge=((double)editorUIWindows[window].scrollBar.offset/(double)(ht))*(ht-40);
         ht=maxheight;
-        drawFrame(PIX3, R10, x, y, z-2, wd, ht, 1, CLR_WDWFRAME, CLR_WDW);
+        drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, 1, CLR_WDWFRAME, CLR_WDW);
         window_setDims(editorUIGetWindow(window), x, y, (editorUIWindows[window].width+2*EDITORUI_BUFFER)*sc, ht);
         y-=fudge;//*(maxheight-40*sc)/maxheight;
     } else {
-        drawFrame(PIX3, R10, x, y, z-2, wd, ht, 1, CLR_WDWFRAME, CLR_WDW);
+        drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, 1, CLR_WDWFRAME, CLR_WDW);
         window_setDims(editorUIGetWindow(window), x, y, (editorUIWindows[window].width+EDITORUI_BUFFER)*sc, ht);
     }
     //tidy up the window a little, this could really be handled upon creation

@@ -128,7 +128,7 @@ int inventoryWindow()
      if(!window_getDims(WDW_INVENTORY, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor))
         return 0;
 
-     drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+     drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
       set_scissor( TRUE );
      scissor_dims( x + PIX3*sc, y + PIX3*sc, wd - PIX3*2*sc, ht - PIX3*2*sc );

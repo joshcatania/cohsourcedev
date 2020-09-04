@@ -684,10 +684,10 @@ static float interactList( float x, float y, float z, float sc, float wd, Intera
         if( clickable && mouseCollision(&box) )
         {
             if( isDown( MS_LEFT ) )
-                drawFrame( PIX3, R10, x + TO_XOFF*sc/2, y + TO_YOFF*sc + height, z, wd - TO_XOFF*sc, TO_ACTION_HT*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+                drawFrame( PIX3, UI_R10, x + TO_XOFF*sc/2, y + TO_YOFF*sc + height, z, wd - TO_XOFF*sc, TO_ACTION_HT*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
             {
-                drawFrame( PIX3, R10, x + TO_XOFF*sc/2, y + TO_YOFF*sc + height, z, wd - TO_XOFF*sc, TO_ACTION_HT*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+                drawFrame( PIX3, UI_R10, x + TO_XOFF*sc/2, y + TO_YOFF*sc + height, z, wd - TO_XOFF*sc, TO_ACTION_HT*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
             }
         }
 
@@ -711,7 +711,7 @@ int targetOptionsWindow( void )
      if( !window_getDims( WDW_TARGET_OPTIONS, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor ) )
           return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     font( &game_12 );
     font_color( CLR_WHITE, CLR_WHITE );
@@ -920,7 +920,7 @@ int targetWindow(void)
     BuildCBox( &targetParentTip.box, x, y, wd, ht );
     ty = y;
 
-    drawFrame( PIX3, R22, x, ty, z-2, wd, ht, scale, color, back_color );
+    drawFrame( PIX3, UI_R22, x, ty, z-2, wd, ht, scale, color, back_color );
     set_scissor(true);
     scissor_dims( x+PIX3*scale, y+PIX3*scale, wd-PIX3*2*scale, ht-PIX3*2*scale);
 
@@ -990,8 +990,8 @@ int targetWindow(void)
         else
             strcpy( name, msname );
 
-          if( str_wd_notranslate( &game_12, titleSc, titleSc, name) > (wd - R27*2*scale) && winDefs[WDW_TARGET].loc.mode == WINDOW_DISPLAYING )
-            titleSc = str_sc( &game_12, (wd - R27*2*scale), name  );
+          if( str_wd_notranslate( &game_12, titleSc, titleSc, name) > (wd - UI_R27*2*scale) && winDefs[WDW_TARGET].loc.mode == WINDOW_DISPLAYING )
+            titleSc = str_sc( &game_12, (wd - UI_R27*2*scale), name  );
 
         {
             int rgba[4] = {  txtColor, txtColor, arrow_color, arrow_color };

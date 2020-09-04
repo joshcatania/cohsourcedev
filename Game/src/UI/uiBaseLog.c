@@ -41,7 +41,7 @@ int baselogWindow(void)
         return 0;
 
     //draw frame
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc,color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc,color, bcolor );
 
     if(window_getMode(WDW_BASE_LOG) != WINDOW_DISPLAYING )
          return 0;
@@ -61,13 +61,13 @@ int baselogWindow(void)
         float ty = y+titleht+(i+1)*lineht - sb.offset;
         if( ty < 0 || ty > y+ht+titleht )
             continue;
-        prnt( x + R10*sc, ty, z, sc, sc, g_base.baselogMsgs[i] );
+        prnt( x + UI_R10*sc, ty, z, sc, sc, g_base.baselogMsgs[i] );
     }
 
     set_scissor(false);
 
     //scrollbar
-      doScrollBar( &sb, ht - titleht - 2*R10*sc, (count+1)*lineht, wd, titleht+R10*sc, z, &box, 0 );
+      doScrollBar( &sb, ht - titleht - 2*UI_R10*sc, (count+1)*lineht, wd, titleht+UI_R10*sc, z, &box, 0 );
 
     return 0;
 }

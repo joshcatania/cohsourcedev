@@ -936,7 +936,7 @@ int inspirationWindow()
         if( s_insp_flash > PI )
             s_insp_flash = 0.f;
     }
-     drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+     drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
 
     if( !first )

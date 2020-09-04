@@ -71,7 +71,7 @@ int arenaJoinWindow(void)
         return 0;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, back_color );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color );
     set_scissor(1);
     scissor_dims( x+PIX3*sc, y+PIX3*sc, wd - PIX3*2*sc, ht-PIX3*2*sc );
 

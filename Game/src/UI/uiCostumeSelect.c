@@ -204,7 +204,7 @@ int costumeSelectWindow(void)
         // Talk to Andy as to how we get the width of the string, so we can replace the 400 with
         // the correct value.
         comboboxTitle_init(&comboEmoteNames, 400.0f, ((PIC_HT + 2*BORDER_WD - PIX3)*VERTICAL_DISPLAY_SLOTS), 5, 175.0f, 
-                            PIX3 + R10, 24 +(14* (eaSize(&ccEmoteNames) + 1)), WDW_COSTUME_SELECT);
+                            PIX3 + UI_R10, 24 +(14* (eaSize(&ccEmoteNames) + 1)), WDW_COSTUME_SELECT);
         comboEmoteNames.reverse = true;
         for (i = 0; i < eaSize(&ccEmoteNames); i++)
         {
@@ -277,7 +277,7 @@ int costumeSelectWindow(void)
         }
     }
 
-    drawFrame( PIX3, R10, x, y, z-2, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z-2, wd, ht, sc, color, bcolor );
 
     set_scissor(1);
     scissor_dims( x+PIX3*sc, y+PIX3*sc, wd-2*PIX3*sc, ht-2*PIX3*sc );
@@ -369,7 +369,7 @@ int costumeSelectWindow(void)
         }
 
          display_sprite( costume, tx + PIX3*sc, ty + PIX3*sc, z, sc, sc, CLR_WHITE );
-           drawFrame( PIX3, R6, tx, ty, z+1, twd, tht, sc, frame_color, frame_back );
+           drawFrame( PIX3, UI_R6, tx, ty, z+1, twd, tht, sc, frame_color, frame_back );
     }
 
     for( ; i < HORIZONTAL_DISPLAY_SLOTS*VERTICAL_DISPLAY_SLOTS; i++ )
@@ -386,7 +386,7 @@ int costumeSelectWindow(void)
             ty = viewht + y + (BORDER_WD - PIX3)*sc + (tht + BORDER_WD)*row;
         }
 
-          drawFrame( PIX3, R6, tx, ty, z+1, twd, tht, sc, color, CLR_BLACK );
+          drawFrame( PIX3, UI_R6, tx, ty, z+1, twd, tht, sc, color, CLR_BLACK );
 
           font( &game_18 );
          font_color( 0xffffff88, 0xffffff88 );

@@ -280,7 +280,7 @@ int drawTextButton( char *txt, float x, float y, float z, float scale, int color
         tmp = textStd( txt );
 
         // frame
-        drawFrame( PIX2, R6, x, y, z+2, wd, mid->height*yscale + 2*scale*PIX2, 1.f, cl, 0x00000000 );
+        drawFrame( PIX2, UI_R6, x, y, z+2, wd, mid->height*yscale + 2*scale*PIX2, 1.f, cl, 0x00000000 );
 
         // left
         display_sprite( left, x, y + scale*PIX2, z, scale, yscale, bar_color );
@@ -343,7 +343,7 @@ void drawButton( float x, float y, float z, float wd, float scale, int color, in
     if( wd < left->width + right->width + 2*PIX2 )
         wd = left->width + right->width + 2*PIX2;
 
-    drawFrame( PIX2, R6, x - wd/2, y, z+2, wd, mid->height*yscale + 2*scale*PIX2, 1.f, color, 0x00000000 );
+    drawFrame( PIX2, UI_R6, x - wd/2, y, z+2, wd, mid->height*yscale + 2*scale*PIX2, 1.f, color, 0x00000000 );
 
     // left
     display_sprite( left, x - scale*(wd/2), y + scale*PIX2, z, scale, yscale, bar_color );
@@ -2206,8 +2206,8 @@ void drawMultiBar( MultiBar * bar, float have, float need, float x, float y, flo
         }
 
         // draw the frame
-        drawFrame( PIX2, R4, x - wd/2, y+1, z, wd, R6*2, sc, color, back_color );
-        drawFrame( PIX2, R4, x - R6*2/2, y+1, z, R6*2, R6*2, sc, back_color|0xff, back_color|0xff );
+        drawFrame( PIX2, UI_R4, x - wd/2, y+1, z, wd, UI_R6*2, sc, color, back_color );
+        drawFrame( PIX2, UI_R4, x - UI_R6*2/2, y+1, z, UI_R6*2, UI_R6*2, sc, back_color|0xff, back_color|0xff );
     }
     else
     {
@@ -2232,8 +2232,8 @@ void drawMultiBar( MultiBar * bar, float have, float need, float x, float y, flo
         handleGlowState( &bar->have_mode, &bar->have_percent, percentage, &bar->have_glow_scale, 60 );
          drawBar( x-wd/2-1*sc, y+8*sc, z, wd, sc, bar->have_percent, bar->have_glow_scale, 0x00ff00ff, 0);
 
-          drawFrame( PIX2, R4, x - wd/2, y+1, z-1, wd, 20*sc, sc, 0, back_color );
-         drawFrame( PIX2, R4, x - wd/2, y+1, z, wd, 20*sc, sc, color, 0 );
+          drawFrame( PIX2, UI_R4, x - wd/2, y+1, z-1, wd, 20*sc, sc, 0, back_color );
+         drawFrame( PIX2, UI_R4, x - wd/2, y+1, z, wd, 20*sc, sc, color, 0 );
     }
 }
 
@@ -2394,7 +2394,7 @@ void drawBar( float x, float y, float z, float width, float scale, float percent
 
 void drawBendyTrayFrame( float x, float y, float z, float wd, float ht, float sc, int color, int back_color, int bend_type )
 {
-    FrameSet *pFrameSet = getFrameSet( kFrameStyle_Standard, PIX3, R22, kTabDir_None );
+    FrameSet *pFrameSet = getFrameSet( kFrameStyle_Standard, PIX3, UI_R22, kTabDir_None );
     float w, width, size = PIX3;
     float xsc = sc, ysc = sc;
     AtlasTex * back = white_tex_atlas;
@@ -2405,7 +2405,7 @@ void drawBendyTrayFrame( float x, float y, float z, float wd, float ht, float sc
 
     if( wd <= 50.1*sc || ht <= 50.1*sc )
     {
-        drawFrame(PIX3, R22, x, y, z, MAX(50*sc, wd), MAX(50*sc, ht), sc, color, back_color );
+        drawFrame(PIX3, UI_R22, x, y, z, MAX(50*sc, wd), MAX(50*sc, ht), sc, color, back_color );
         return;
     }
 
@@ -2685,7 +2685,7 @@ void drawWaterMarkFrameCorner( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, F32 
     size = 3.f*sc;
 
     // use standard outline
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, back_color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, back_color, 0 );
 
     // gradient
     //display_sprite( gradient, x + w, y + size, z, (wd - 2*w)/gradient->width, (ht-2*size)/gradient->height, CLR_WHITE);contentWidth
@@ -2741,7 +2741,7 @@ void drawWaterMarkFrame_ex( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, int lef
     size = 3.f*sc;
 
     // use standard outline
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, back_color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, back_color, 0 );
 
     // gradient
     //display_sprite( gradient, x + w, y + size, z, (wd - 2*w)/gradient->width, (ht-2*size)/gradient->height, CLR_WHITE);
@@ -3223,8 +3223,8 @@ void drawMMProgressBar( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 percent )
 
 int drawMMFrameTabs( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, F32 tab_ht, int style, char ***ppTabNames, int selected )
 {
-    FrameSet *pTab = getFrameSet(kFrameStyle_3D, PIX2, R27, 0);
-    FrameSet *pSet = getFrameSet(kFrameStyle_3D, PIX2, R16, 0);
+    FrameSet *pTab = getFrameSet(kFrameStyle_3D, PIX2, UI_R27, 0);
+    FrameSet *pSet = getFrameSet(kFrameStyle_3D, PIX2, UI_R16, 0);
 
     static AtlasTex * tab_behind, *tab_end, *tab_mid, *tab_frame_corner, *tab_frame_end, *tab_frame_mid, *end, *mid; 
     static int init;
@@ -3330,7 +3330,7 @@ int drawMMFrameTabs( F32 x, F32 y, F32 z, F32 sc, F32 wd, F32 ht, F32 tab_ht, in
       display_sprite( pSet->ypipe, x, y+PIX2*sc, z+1, sc, (pSet->ur->height*sc-PIX2*sc)/pSet->ypipe->height, color );
     display_sprite( pSet->bur, x + wd - pSet->ur->width*sc, y, z, sc, sc, back_color );
     display_sprite( pSet->ur, x + wd - pSet->ur->width*sc, y, z, sc, sc, color );
-     drawSectionFrame( PIX2, R16, x, y + pSet->ur->height*sc, z, wd, ht - pSet->ur->height*sc, sc, color, back_color, kFramePart_MidL|kFramePart_MidC|kFramePart_MidR|kFramePart_BotL|kFramePart_BotC|kFramePart_BotR);
+     drawSectionFrame( PIX2, UI_R16, x, y + pSet->ur->height*sc, z, wd, ht - pSet->ur->height*sc, sc, color, back_color, kFramePart_MidL|kFramePart_MidC|kFramePart_MidR|kFramePart_BotL|kFramePart_BotC|kFramePart_BotR);
 
 
     eafDestroy(&fWd);
@@ -3356,7 +3356,7 @@ int drawMMCheckBox( F32 x, F32 y, F32 z, F32 sc, const char *pchText, int *val, 
     }
 
     font( &game_12 );
-    wd = ring->width*sc + R10*sc + str_wd(&game_12, sc, sc, "%s", pchText );
+    wd = ring->width*sc + UI_R10*sc + str_wd(&game_12, sc, sc, "%s", pchText );
 
     BuildCBox(&box, x, y, wd, ring->height*sc);
     if(rwd)

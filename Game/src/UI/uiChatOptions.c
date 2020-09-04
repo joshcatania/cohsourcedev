@@ -656,8 +656,8 @@ void handleNameEditBox(CBox * box, float scale)
       t += TIMESTEP*.08;           // timer for the pulsing backgorund
 
     // actual selection frame is slightly wider than edit collision box
-    selBox.lx -= R10*scale;
-     selBox.hx += R10*scale;
+    selBox.lx -= UI_R10*scale;
+     selBox.hx += UI_R10*scale;
 
      if( mouseCollision( &selBox ))
     {
@@ -675,7 +675,7 @@ void handleNameEditBox(CBox * box, float scale)
 
      colorBack = CLR_SELECTION_BACKGROUND; //(15 + 15*sin(t));
 
-    drawFlatFrame( PIX3, R10, box->lx-R10*scale, box->ly-3*scale, (gTabData.nameEdit->z-1), box->hx - box->lx + 2*R10*scale, box->hy - box->ly + 6*scale, scale, color, colorBack );
+    drawFlatFrame( PIX3, UI_R10, box->lx-UI_R10*scale, box->ly-3*scale, (gTabData.nameEdit->z-1), box->hx - box->lx + 2*UI_R10*scale, box->hy - box->ly + 6*scale, scale, color, colorBack );
 
      uiEditProcess(gTabData.nameEdit);
 
@@ -725,7 +725,7 @@ void handleNameEditBox(CBox * box, float scale)
     }
 }
 
-#define ENTRY_SPACE (R10*2)
+#define ENTRY_SPACE (UI_R10*2)
 
 bool isChannelHighlighted(bool selected)
 {
@@ -898,7 +898,7 @@ void drawChannel(float x, float* yp, float z, float scale, float wd, AvailableCh
 
 
      font(&game_12);
-    cprntEx(x + R6*scale, y+15*scale, z+1, scale, scale, (NO_MSPRINT), name);
+    cprntEx(x + UI_R6*scale, y+15*scale, z+1, scale, scale, (NO_MSPRINT), name);
     BuildCBox( &box, x, y, wd, ht);
   
     if(ac->highlighted && mouseDoubleClickHit(&box, MS_LEFT))
@@ -915,12 +915,12 @@ void drawChannel(float x, float* yp, float z, float scale, float wd, AvailableCh
 
     if( mouseCollision(&box) )
     {
-        drawFlatFrame( PIX2, R6, x, y, z+21, wd, (ENTRY_SPACE)*scale, scale, CLR_SELECTION_FOREGROUND, 0 );
+        drawFlatFrame( PIX2, UI_R6, x, y, z+21, wd, (ENTRY_SPACE)*scale, scale, CLR_SELECTION_FOREGROUND, 0 );
     }
 
      if(ac->highlighted)
     {
-           drawFlatFrame( PIX2, R6, x, y, z+20, wd, (ENTRY_SPACE)*scale, scale, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+           drawFlatFrame( PIX2, UI_R6, x, y, z+20, wd, (ENTRY_SPACE)*scale, scale, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
      
       *yp += ENTRY_SPACE*scale;
@@ -938,7 +938,7 @@ void drawChannelList(float x, float y, float z, float scale, float wd, float ht,
     float docHt = 0;
     CBox box;
 
-     drawFrame( PIX3, R10, x, y, z+1, wd, ht, scale, color, bcolor );
+     drawFrame( PIX3, UI_R10, x, y, z+1, wd, ht, scale, color, bcolor );
     
     startY = y;
      y += PIX3*scale;
@@ -947,7 +947,7 @@ void drawChannelList(float x, float y, float z, float scale, float wd, float ht,
     BuildCBox(&box, x, y, wd, ht );
       set_scissor(TRUE);
 
-     y += R10*scale;
+     y += UI_R10*scale;
      y -= sb->offset;
 
     for(i=0;i<eaSize(&gTabData.available);i++)
@@ -956,14 +956,14 @@ void drawChannelList(float x, float y, float z, float scale, float wd, float ht,
         if(selected == ac->selected)
         {
             // draw it!
-             drawChannel(x+(R10*scale), &y, z, scale, wd-(R10*2*scale), ac);
+             drawChannel(x+(UI_R10*scale), &y, z, scale, wd-(UI_R10*2*scale), ac);
             docHt += ENTRY_SPACE;
         }
     }
 
     set_scissor(FALSE);
 
-    doScrollBar(sb, ht-((12+R10*2)*scale), (docHt*scale), x + wd, startY+(6+R10*scale), z+2, &box, 0 );
+    doScrollBar(sb, ht-((12+UI_R10*2)*scale), (docHt*scale), x + wd, startY+(6+UI_R10*scale), z+2, &box, 0 );
 }
 
 
@@ -1077,7 +1077,7 @@ int chatTabWindow()
     assert(gTabData.filter);
 
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
       font( &game_12 );
       font_color( CLR_WHITE, CLR_WHITE );

@@ -423,7 +423,7 @@ static DTSResult displayTaskStatus(TaskStatus* task, UIBox* bounds, float z, int
         {
             foreColor = CLR_MOUSEOVER_FOREGROUND;
             backColor = CLR_MOUSEOVER_BACKGROUND;
-            drawFlatFrame(PIX2, R10, bounds->x+5*scale, bounds->y, z, bounds->width-20*scale, ht, scale, foreColor, backColor);
+            drawFlatFrame(PIX2, UI_R10, bounds->x+5*scale, bounds->y, z, bounds->width-20*scale, ht, scale, foreColor, backColor);
         }
 
         if(!blockDueToAlliance && mouseClickHit(&box, MS_LEFT))
@@ -450,7 +450,7 @@ static DTSResult displayTaskStatus(TaskStatus* task, UIBox* bounds, float z, int
         if (CTS_SHOW_STORY)
             ClickToSourceDisplay(bounds->x+15*scale, bounds->y+ht+5*scale, z+1, 0, 0xffffffff, task->filename, NULL, CTS_TEXT_REGULAR);
 
-        drawFlatFrame(PIX2, R10, bounds->x+5*scale, bounds->y, z, bounds->width-20*scale, ht, scale, foreColor, backColor);
+        drawFlatFrame(PIX2, UI_R10, bounds->x+5*scale, bounds->y, z, bounds->width-20*scale, ht, scale, foreColor, backColor);
         bounds->height = ht;
 
         return result;
@@ -905,7 +905,7 @@ int missionWindow()
      if(!window_getDims(WDW_MISSION, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor))
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     missionToolTipCleanup();
     teamTaskTab();

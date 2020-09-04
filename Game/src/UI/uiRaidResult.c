@@ -128,7 +128,7 @@ int uiRaidResultDisplay()
         ht=maxht;
         window_setDims(WDW_RAIDRESULT, x, y, wd, ht);
     }
-    drawFrame(PIX3, R10, x, y, z-1000, wd, ht, sc, color, 0x0000009f );
+    drawFrame(PIX3, UI_R10, x, y, z-1000, wd, ht, sc, color, 0x0000009f );
  
     if (totht>maxht)
     {

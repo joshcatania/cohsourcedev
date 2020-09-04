@@ -1427,7 +1427,7 @@ void salvageWindowFlash(void)
 
 void UISalvage_DisplayItems(WindowName wdw, F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 sc, ScrollBar *sb, SalvageInventoryItem **items, uiGrowBig *growbig, bool stored_salvage, CBox *resBoxItms, CBox *resBoxBtm, SalvageDragCb salvage_drag_cb)
 {
-    F32 edge_off = (R10+PIX3)*sc;
+    F32 edge_off = (UI_R10+PIX3)*sc;
     int i;
     int size = eaSize(&items);
     U32 scaledIconWd = COL_WD * sc;
@@ -1584,7 +1584,7 @@ int salvageWindow()
 
     curTab = uiTabControlGetSelectedIdx( s_state.tc );
     tabState = s_state.tabStates[curTab];
-    edge_off = (R10+PIX3)*sc;
+    edge_off = (UI_R10+PIX3)*sc;
 
     // --------------------
     // window frame
@@ -1596,8 +1596,8 @@ int salvageWindow()
         if( s_salvage_flash > PI )
             s_salvage_flash = 0.f;
     }
-    drawFrame(PIX3, R10, x, y, z, wd, ht-(BOTTOM_HT-2)*sc, sc, color, bcolor);
-    drawFrame(PIX2, R10, x, y+(ht-(BOTTOM_HT*sc)), z, wd, (BOTTOM_HT)*sc, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht-(BOTTOM_HT-2)*sc, sc, color, bcolor);
+    drawFrame(PIX2, UI_R10, x, y+(ht-(BOTTOM_HT*sc)), z, wd, (BOTTOM_HT)*sc, sc, color, bcolor);
     
     // if not ready yet, return
       if(window_getMode(WDW_SALVAGE) != WINDOW_DISPLAYING)

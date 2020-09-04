@@ -1190,7 +1190,7 @@ static void emailDrawReadMessagePane(UIBox drawAreaIn, int clr, float z, float s
                 }
                 ty += 32*sc;
 
-                drawFrame( PIX3, R10, drawArea.x + drawArea.width - attachmentWidth - 3*PIX3*sc, drawArea.y - PIX3*sc, z, attachmentWidth + 6*PIX3*sc, ty - pen.y, sc, clr, 0x00000088 );
+                drawFrame( PIX3, UI_R10, drawArea.x + drawArea.width - attachmentWidth - 3*PIX3*sc, drawArea.y - PIX3*sc, z, attachmentWidth + 6*PIX3*sc, ty - pen.y, sc, clr, 0x00000088 );
                    clipBox.width -= attachmentWidth*sc;
                 drawArea.width -= attachmentWidth*sc;
             }
@@ -1562,7 +1562,7 @@ int emailWindow()
 
 
     // Draw the email window frame.
-    drawJoinedFrame2Panel(    PIX3, R10, x, y, z, scale, w, EMAIL_HEADER_PANE_HEIGHT*scale, drawArea.height - EMAIL_HEADER_PANE_HEIGHT*scale,
+    drawJoinedFrame2Panel(    PIX3, UI_R10, x, y, z, scale, w, EMAIL_HEADER_PANE_HEIGHT*scale, drawArea.height - EMAIL_HEADER_PANE_HEIGHT*scale,
                               color, bcolor, &headerDrawArea, &messageDrawArea);
 
      if(window_getMode(WDW_EMAIL) != WINDOW_DISPLAYING)
@@ -1576,7 +1576,7 @@ int emailWindow()
         {
             if(fullDrawHeight > currentHeight)
             {
-                doScrollBar(&emailListViewScrollbar, currentHeight, fullDrawHeight, headerDrawArea.width, headerDrawArea.y - y + (PIX3+R10)*scale, z+2, 0, &headerDrawArea );
+                doScrollBar(&emailListViewScrollbar, currentHeight, fullDrawHeight, headerDrawArea.width, headerDrawArea.y - y + (PIX3+UI_R10)*scale, z+2, 0, &headerDrawArea );
                 list->scrollOffset = emailListViewScrollbar.offset;
             }
             else
@@ -2187,7 +2187,7 @@ int emailComposeWindow()
 
     font(&game_12);
     uiBoxDefine(&windowDrawArea, x, y, w, h );
-     drawFrame(PIX3, R10, x, y, z, w, h, scale, color, bcolor);
+     drawFrame(PIX3, UI_R10, x, y, z, w, h, scale, color, bcolor);
      uiBoxAlter(&drawArea, UIBAT_SHRINK, UIBAD_ALL, PIX3*2*scale);
     drawArea = windowDrawArea;
      uiBoxAlter(&drawArea, UIBAT_SHRINK, UIBAD_BOTTOM, EMAIL_BUTTON_PANE_HEIGHT*scale);

@@ -685,7 +685,7 @@ static void drawScrollElement( ScrollSelector *ss, float curY, int i, int *retVa
 
        if( ss->cur_idx == i )
     {
-           drawHybridFade( ss->x*xposSc, curY*yposSc, ss->z, (ss->wd-R10), elem_ht*ss->scale, 60, 0xffaa4499&alphaMask );
+           drawHybridFade( ss->x*xposSc, curY*yposSc, ss->z, (ss->wd-UI_R10), elem_ht*ss->scale, 60, 0xffaa4499&alphaMask );
     }
 
     if (se->storeProduct)
@@ -694,7 +694,7 @@ static void drawScrollElement( ScrollSelector *ss, float curY, int i, int *retVa
         drawHybridStoreLockIcon((ss->x - 100.f)*xposSc, curY*yposSc, z+10.f, ss->scale*0.7f, CLR_WHITE);
     }
 
-      BuildScaledCBox( &cbox, (ss->x - ss->wd/2 + R10)*xposSc, (curY-elem_ht*ss->scale/2)*yposSc, (ss->wd-2*R10)*xposSc, (elem_ht*ss->scale-1)*yposSc );
+      BuildScaledCBox( &cbox, (ss->x - ss->wd/2 + UI_R10)*xposSc, (curY-elem_ht*ss->scale/2)*yposSc, (ss->wd-2*UI_R10)*xposSc, (elem_ht*ss->scale-1)*yposSc );
      //drawBox(&cbox, 5000, CLR_YELLOW, 0);
     if(mouseCollision(&cbox))
     {
@@ -744,7 +744,7 @@ static void drawScrollElement( ScrollSelector *ss, float curY, int i, int *retVa
         else
             drawBox( &cbox, z, 0, 0x00ff0088&alphaMask );
 
-        BuildScaledCBox( &cbox, ss->x*xposSc,( (curY-elem_ht*ss->scale/2)*yposSc ), (ss->wd-2*R10)*xposSc/2, (elem_ht*ss->scale-1)*yposSc );
+        BuildScaledCBox( &cbox, ss->x*xposSc,( (curY-elem_ht*ss->scale/2)*yposSc ), (ss->wd-2*UI_R10)*xposSc/2, (elem_ht*ss->scale-1)*yposSc );
 
         if( se->key )
             drawBox( &cbox, z, 0, 0xff00ffff&alphaMask );
@@ -763,7 +763,7 @@ static void drawScrollElement( ScrollSelector *ss, float curY, int i, int *retVa
      if( se->back_color )
     {
         AtlasTex * white = atlasLoadTexture("white");
-        display_sprite_positional_blend(white, (ss->x - ss->wd/2 + R10)*xposSc, (curY-elem_ht/2)*yposSc, z, (ss->wd-2*R10)/white->width, (elem_ht*ss->scale-1)/white->height, se->back_color&alphaMask, 0, 0, se->back_color&alphaMask, H_ALIGN_LEFT, V_ALIGN_TOP );
+        display_sprite_positional_blend(white, (ss->x - ss->wd/2 + UI_R10)*xposSc, (curY-elem_ht/2)*yposSc, z, (ss->wd-2*UI_R10)/white->width, (elem_ht*ss->scale-1)/white->height, se->back_color&alphaMask, 0, 0, se->back_color&alphaMask, H_ALIGN_LEFT, V_ALIGN_TOP );
     }
 
       if( se->invalid )
@@ -791,12 +791,12 @@ static void drawScrollElementMM( ScrollSelector *ss, float curY, int i, int *ret
         font_color( CLR_WHITE, 0x00ff44ff );
 
         if( ss->offset )
-            drawFlatFrame( PIX2, R6, (ss->x - ss->wd/2 + R10/2), (curY-elem_ht/2), ss->z, (ss->wd-R10), elem_ht, 1.f, 0x222222ff, 0x222222ff );
+            drawFlatFrame( PIX2, UI_R6, (ss->x - ss->wd/2 + UI_R10/2), (curY-elem_ht/2), ss->z, (ss->wd-UI_R10), elem_ht, 1.f, 0x222222ff, 0x222222ff );
     }
     else
         font_color( CLR_WHITE, CLR_WHITE );
 
-    BuildCBox( &cbox, (ss->x - ss->wd/2 + R10), (curY-elem_ht/2), (ss->wd-2*R10), (elem_ht-1) );
+    BuildCBox( &cbox, (ss->x - ss->wd/2 + UI_R10), (curY-elem_ht/2), (ss->wd-2*UI_R10), (elem_ht-1) );
     if(mouseCollision(&cbox))
     {
         CBox selectionCBox;
@@ -815,14 +815,14 @@ static void drawScrollElementMM( ScrollSelector *ss, float curY, int i, int *ret
     if( se->back_color )
     {
         AtlasTex * white = atlasLoadTexture("white");
-        display_sprite_blend(white, (ss->x - ss->wd/2 + R10), (curY-elem_ht/2), z, (ss->wd-2*R10)/white->width, (elem_ht-1)/white->height, se->back_color, 0, 0, se->back_color );
+        display_sprite_blend(white, (ss->x - ss->wd/2 + UI_R10), (curY-elem_ht/2), z, (ss->wd-2*UI_R10)/white->width, (elem_ht-1)/white->height, se->back_color, 0, 0, se->back_color );
     }
 
     if (se->storeProduct)
     {
         AtlasTex * lock = atlasLoadTexture("League_Icon_Lock_Closed.tga");
 
-        drawFlatFrame( PIX2, R6, (ss->x - ss->wd/2 + R10 - 5), (curY-elem_ht/2+1.5f), z, (ss->wd-1*R10), (elem_ht-3), 1.f, 0xff555544, 0xff555544 );
+        drawFlatFrame( PIX2, UI_R6, (ss->x - ss->wd/2 + UI_R10 - 5), (curY-elem_ht/2+1.5f), z, (ss->wd-1*UI_R10), (elem_ht-3), 1.f, 0xff555544, 0xff555544 );
         display_sprite(lock, (ss->x + ss->wd/2) - (1.75*lock->width - 9.0f), (curY+1.5f) -((float)lock->height*0.8)/2, z+10, (float)lock->width*0.8/(float)lock->width, (float)lock->height*0.8/(float)lock->height, 0xffffffff );
     }
 
@@ -1026,7 +1026,7 @@ static int drawScrollSelectorMM( ScrollSelector *ss )
         int clr = 0xffffff44;
         float arrow_sc = 1.f;
         float curY = ss->topY + elem_ht/2;
-        BuildCBox( &cbox, (ss->x - ss->wd/2 + R10), curY, (ss->wd-2*R10), (elem_ht-1) );
+        BuildCBox( &cbox, (ss->x - ss->wd/2 + UI_R10), curY, (ss->wd-2*UI_R10), (elem_ht-1) );
         if( mouseCollision(&cbox) && ss->offset < diff  )
         {
             offset += TIMESTEP*(ss->scroll_up*(SCROLL_MAX-SCROLL_MIN)+SCROLL_MIN);
@@ -1043,7 +1043,7 @@ static int drawScrollSelectorMM( ScrollSelector *ss )
             ss->scroll_up = 0;
         }
 
-        drawFlatFrame( PIX2, R6, (ss->x - ss->wd/2 + R10), curY, ss->z, (ss->wd-2*R10), (elem_ht-2), 1.f, clr, clr );
+        drawFlatFrame( PIX2, UI_R6, (ss->x - ss->wd/2 + UI_R10), curY, ss->z, (ss->wd-2*UI_R10), (elem_ht-2), 1.f, clr, clr );
         display_sprite( up, (ss->x) - (up->width*arrow_sc/2), (curY+(elem_ht-(up->height*arrow_sc))/2), ss->z, arrow_sc, arrow_sc, CLR_WHITE );
         shrink_dir |= UIBAD_TOP;
     }
@@ -1056,7 +1056,7 @@ static int drawScrollSelectorMM( ScrollSelector *ss )
         int clr = 0xffffff44;
         float arrow_sc = 1.f;
         float curY = ss->topY + ss->ht - 3*elem_ht/2;
-        BuildCBox( &cbox, (ss->x - ss->wd/2 + R10), curY, (ss->wd-2*R10), (elem_ht-1) );
+        BuildCBox( &cbox, (ss->x - ss->wd/2 + UI_R10), curY, (ss->wd-2*UI_R10), (elem_ht-1) );
         if( mouseCollision(&cbox) && ss->offset > -diff )
         {
             offset -= TIMESTEP*(ss->scroll_down*(SCROLL_MAX-SCROLL_MIN)+SCROLL_MIN);
@@ -1074,7 +1074,7 @@ static int drawScrollSelectorMM( ScrollSelector *ss )
             ss->scroll_down = 0;
         }
 
-        drawFlatFrame( PIX2, R6, (ss->x - ss->wd/2 + R10), (curY+2), ss->z, (ss->wd-2*R10), (elem_ht), 1.f, clr, clr );
+        drawFlatFrame( PIX2, UI_R6, (ss->x - ss->wd/2 + UI_R10), (curY+2), ss->z, (ss->wd-2*UI_R10), (elem_ht), 1.f, clr, clr );
         display_sprite( down, (ss->x) - (up->width*arrow_sc/2), (curY+2 + ((elem_ht-(up->height*arrow_sc))/2)), ss->z, arrow_sc, arrow_sc, CLR_WHITE );
         shrink_dir |= UIBAD_BOTTOM;
     }
@@ -1082,7 +1082,7 @@ static int drawScrollSelectorMM( ScrollSelector *ss )
     // make room for the arrows
     if(shrink_dir != UIBAD_NONE)
     {
-        uiBoxAlter( &box, UIBAT_SHRINK, shrink_dir, (elem_ht+R6) );
+        uiBoxAlter( &box, UIBAT_SHRINK, shrink_dir, (elem_ht+UI_R6) );
     }
 
     clipperPush(&box);
@@ -2592,7 +2592,7 @@ int updateScrollSelector(ScrollSelector * ss, F32 min, F32 max )
     if( ss->architect )
     {
         color = CLR_MM_TITLE_LIT;
-        drawBustedOutFrame( kFrameStyle_3D, PIX3, R10, (ss->x-ss->wd/2), ss->y, ss->z, 1.f, ss->wd, 
+        drawBustedOutFrame( kFrameStyle_3D, PIX3, UI_R10, (ss->x-ss->wd/2), ss->y, ss->z, 1.f, ss->wd, 
             14, top_ht*ss->sc, bot_ht*ss->sc, color,CLR_BLACK, 0 );
     }
     else

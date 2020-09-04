@@ -521,7 +521,7 @@ static void store_drawPower( const BasePower * ppow, float x, float y, float z, 
 
     if( mouseCollision(&box) )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         if(mouseRightClick())
         {
             bSelect = true;
@@ -553,7 +553,7 @@ static void store_drawPower( const BasePower * ppow, float x, float y, float z, 
     if( gSelectedItem.selected && gSelectedItem.inventory == inventory && gSelectedItem.type == type &&
         gSelectedItem.i == i && gSelectedItem.j == j )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE, y-PIX3, z-2, wd, ht+2*PIX3, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE, y-PIX3, z-2, wd, ht+2*PIX3, 1.f, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
 }
 
@@ -604,7 +604,7 @@ static void store_drawEnhancement( const BasePower * ppow, float x, float y, flo
 
     if( mouseCollision(&box) )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         if(mouseRightClick())
         {
             bSelect = true;
@@ -640,7 +640,7 @@ static void store_drawEnhancement( const BasePower * ppow, float x, float y, flo
     if( gSelectedItem.selected && gSelectedItem.inventory == inventory &&
          gSelectedItem.type == kPowerType_Boost && gSelectedItem.i == i )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
 }
 
@@ -693,7 +693,7 @@ static void store_drawRecipe( const DetailRecipe *pRec, float x, float y, float 
 
     if( mouseCollision(&box) )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         if(mouseRightClick())
         {
             bSelect = true;
@@ -724,7 +724,7 @@ static void store_drawRecipe( const DetailRecipe *pRec, float x, float y, float 
 
     if( gSelectedItem.selected && gSelectedItem.pRec && gSelectedItem.pRec->id ==  pRec->id)
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
 }
 
@@ -786,7 +786,7 @@ void store_drawSalvage( const SalvageItem *pSal, float x, float y, float z, floa
 
     if( mouseCollision(&box) )
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         if(mouseRightClick())
         {
             bSelect = true;
@@ -818,7 +818,7 @@ void store_drawSalvage( const SalvageItem *pSal, float x, float y, float z, floa
 
     if( gSelectedItem.selected && gSelectedItem.pSal && gSelectedItem.pSal->salId ==  pSal->salId)
     {
-        drawFlatFrame( PIX2, R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+        drawFlatFrame( PIX2, UI_R10, x-ITEM_SPACE*sc, y-PIX3*sc, z-2, wd, ht+2*PIX3*sc, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
 }
 
@@ -1251,11 +1251,11 @@ int storeWindow()
         return 0;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, back_color );
-    drawFrame( PIX3, R10, x, y, z+1, wd/2 - STORE_DIVIDE*scale, ht - STORE_FOOTER*scale, scale, color, 0 );
-    drawFrame( PIX3, R10, x + wd/2 + STORE_DIVIDE*scale, y, z+1, wd/2 - STORE_DIVIDE*scale, ht - STORE_FOOTER*scale, scale, color, 0 );
-    drawFrame( PIX3, R10, x, y + STORE_HEADER*scale, z+1, wd/2 - STORE_DIVIDE*scale, ht - (STORE_FOOTER+STORE_HEADER)*scale, scale, color, 0 );
-    drawFrame( PIX3, R10, x + wd/2 + STORE_DIVIDE*scale, y + STORE_HEADER*scale, z+1, wd/2 - STORE_DIVIDE*scale, ht - (STORE_FOOTER+STORE_HEADER)*scale, scale, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, back_color );
+    drawFrame( PIX3, UI_R10, x, y, z+1, wd/2 - STORE_DIVIDE*scale, ht - STORE_FOOTER*scale, scale, color, 0 );
+    drawFrame( PIX3, UI_R10, x + wd/2 + STORE_DIVIDE*scale, y, z+1, wd/2 - STORE_DIVIDE*scale, ht - STORE_FOOTER*scale, scale, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y + STORE_HEADER*scale, z+1, wd/2 - STORE_DIVIDE*scale, ht - (STORE_FOOTER+STORE_HEADER)*scale, scale, color, 0 );
+    drawFrame( PIX3, UI_R10, x + wd/2 + STORE_DIVIDE*scale, y + STORE_HEADER*scale, z+1, wd/2 - STORE_DIVIDE*scale, ht - (STORE_FOOTER+STORE_HEADER)*scale, scale, color, 0 );
 
     font( &game_12 );
     font_color( CLR_WHITE, CLR_WHITE );
@@ -1293,7 +1293,7 @@ int storeWindow()
     PERFINFO_AUTO_STOP();
 
     if (window_getMode(WDW_STORE) == WINDOW_DISPLAYING)
-        doScrollBar( &inv_sb, ht - (STORE_HEADER+STORE_FOOTER+2*PIX3+2*R10)*scale, inv_ht, x+wd/2 - STORE_DIVIDE*scale, y + (STORE_HEADER+R10)*scale, z, &box, 0 );
+        doScrollBar( &inv_sb, ht - (STORE_HEADER+STORE_FOOTER+2*PIX3+2*UI_R10)*scale, inv_ht, x+wd/2 - STORE_DIVIDE*scale, y + (STORE_HEADER+UI_R10)*scale, z, &box, 0 );
 
     PERFINFO_AUTO_START("storeinv", 1);
     // store inventory
@@ -1305,7 +1305,7 @@ int storeWindow()
     PERFINFO_AUTO_STOP();
 
     if (window_getMode(WDW_STORE) == WINDOW_DISPLAYING)
-        doScrollBar( &store_sb, ht - (STORE_HEADER+STORE_FOOTER+2*PIX3+2*R10)*scale, store_ht, x+wd, y + (STORE_HEADER+R10)*scale, z, &box, 0);
+        doScrollBar( &store_sb, ht - (STORE_HEADER+STORE_FOOTER+2*PIX3+2*UI_R10)*scale, store_ht, x+wd, y + (STORE_HEADER+UI_R10)*scale, z, &box, 0);
 
     // influence
     font( &game_12 );
@@ -1332,9 +1332,9 @@ int storeWindow()
             currency = textStdEx(NO_PREPEND, "P_Influence");
             break;
     }
-    drawFrame( PIX3, R10, x + R10*scale, y + STORE_HEADER*scale/2, z, wd/2 - (2*R10+STORE_DIVIDE)*scale, 2*(R10+PIX3)*scale, scale, color, 0 );
-    cprntEx( x + R10*2*scale, y + (STORE_HEADER/2 + R10 + PIX3)*scale, z, scale, scale, CENTER_Y | NO_MSPRINT, currency );
-    cprntEx( x + R10*2*scale + str_wd( font_grp, scale, scale, currency ), y + (STORE_HEADER/2 + R10 + PIX3)*scale, z, scale, scale, CENTER_Y, textStd("InfluenceWithCommas", e->pchar->iInfluencePoints) );
+    drawFrame( PIX3, UI_R10, x + UI_R10*scale, y + STORE_HEADER*scale/2, z, wd/2 - (2*UI_R10+STORE_DIVIDE)*scale, 2*(UI_R10+PIX3)*scale, scale, color, 0 );
+    cprntEx( x + UI_R10*2*scale, y + (STORE_HEADER/2 + UI_R10 + PIX3)*scale, z, scale, scale, CENTER_Y | NO_MSPRINT, currency );
+    cprntEx( x + UI_R10*2*scale + str_wd( font_grp, scale, scale, currency ), y + (STORE_HEADER/2 + UI_R10 + PIX3)*scale, z, scale, scale, CENTER_Y, textStd("InfluenceWithCommas", e->pchar->iInfluencePoints) );
 
     if( gSelectedItem.inventory==INV_STORE )
         buttonText = textStd( "Buy" );

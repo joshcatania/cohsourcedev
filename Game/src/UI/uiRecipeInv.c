@@ -502,7 +502,7 @@ static void s_RecipeItem_Display(RecipeInventoryItem *itm, U32 ixInvCurRecipe, F
         }
 
 
-        drawFlatFrame( PIX2, R10, tx, ty, z, wd, ht, sc, color, bgcolor );
+        drawFlatFrame( PIX2, UI_R10, tx, ty, z, wd, ht, sc, color, bgcolor );
 
         // --------------------
         // draw the icon
@@ -534,7 +534,7 @@ static void s_RecipeItem_Display(RecipeInventoryItem *itm, U32 ixInvCurRecipe, F
                 htDesc = dimsFnt.bottom - dimsFnt.top + PIX3*sc;
             }
 
-            drawFlatFrame(wdBorder, R10, x_graph, y_graph, z + 1, wd_graph, ht_graph, sc, colorfg, colorbg );
+            drawFlatFrame(wdBorder, UI_R10, x_graph, y_graph, z + 1, wd_graph, ht_graph, sc, colorfg, colorbg );
 
             // draw the zero line in the graph
             {
@@ -798,11 +798,11 @@ int recipeinvWindow()
     // ----------------------------------------
     // post-init and state update
 
-    edge_off = (R10+PIX3)*sc;
+    edge_off = (UI_R10+PIX3)*sc;
 
 
     // window frame    
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     // if not ready yet, return
       if(window_getMode(WDW_RECIPEINV) != WINDOW_DISPLAYING)
@@ -858,7 +858,7 @@ int recipeinvWindow()
         //scrollbar
         {
             F32 doc_bottom = y_items + size*scaledItemWd;
-            doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, doc_bottom - y, wd, (PIX3+R10+TAB_HT)*sc, z+5, 0, 0 );
+            doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, doc_bottom - y, wd, (PIX3+UI_R10+TAB_HT)*sc, z+5, 0, 0 );
         }
         
         // grow the current icon

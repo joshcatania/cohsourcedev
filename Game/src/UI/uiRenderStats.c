@@ -44,7 +44,7 @@ void rdrStatsWindow_StatFrame(SimpleStats *stats, float x, float y, float z, flo
     // simple stats for artists
     double heat;
 
-    drawFrame(PIX3, R10, x, y, z-2, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, sc, color, bcolor);
 
     x+=10*sc;
     y+=10*sc;
@@ -105,7 +105,7 @@ void rdrStatsWindow_DebugFrame(float x, float y, float z, float wd, float ht, fl
     int color2;
     int buttonwidth = sc * 100, buttonheight = sc * 18;
 
-    drawFrame(PIX3, R10, x, y, z-2, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, sc, color, bcolor);
 
     color = 0x7f7f7fff;
     color2 = 0xffffffff;
@@ -164,7 +164,7 @@ void rdrStatsWindow_DebugFrame(float x, float y, float z, float wd, float ht, fl
 
 void rdrStatsWindow_StatusFrame(float x, float y, float z, float wd, float ht, float sc, int color, int bcolor)
 {
-    drawFrame(PIX3, R10, x, y, z-2, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, sc, color, bcolor);
 
     x+=10*sc;
     y+=10*sc;

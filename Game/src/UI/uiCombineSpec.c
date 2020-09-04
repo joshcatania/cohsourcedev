@@ -1316,7 +1316,7 @@ static void s_drawMenuEnhancementInventory( Entity * e, float centerX, float cen
     drawLargeCapsule( centerX*screenScaleX, y*screenScaleY, z, wd*screenScale, screenScale );    
 
     tabColor = s_getTabColor();
-    drawTabControl(s_enhancementTabsOfTen, centerX*screenScaleX-wd/2*screenScale+55.f*screenScale, y*screenScaleY-84.f/2*screenScale, z, wd - 2*R10*screenScale, TAB_HEIGHT, screenScale, tabColor, tabColor, TabDirection_Horizontal);
+    drawTabControl(s_enhancementTabsOfTen, centerX*screenScaleX-wd/2*screenScale+55.f*screenScale, y*screenScaleY-84.f/2*screenScale, z, wd - 2*UI_R10*screenScale, TAB_HEIGHT, screenScale, tabColor, tabColor, TabDirection_Horizontal);
 
     pSelectedTab = (char *)uiTabControlGetSelectedData(s_enhancementTabsOfTen);
     tabIndex = atoi(pSelectedTab) - 1;
@@ -1553,7 +1553,7 @@ int drawPowerAndSpecializations( Character *pchar, Power * pow, int x, int y, in
 
     if( combine && combo.pow == pow->ppowBase )
     {
-        drawFrame( PIX2, R27, (x-200)*screenScaleX, y*screenScaleY, 101, (DEFAULT_SCRN_WD - 2*(x-200))*screenScaleX, 352*screenScaleY, 1.f, 0xffffff60, SELECT_FROM_UISKIN( 0x0000ff0f, 0xff00000f, 0x1111550f ) );
+        drawFrame( PIX2, UI_R27, (x-200)*screenScaleX, y*screenScaleY, 101, (DEFAULT_SCRN_WD - 2*(x-200))*screenScaleX, 352*screenScaleY, 1.f, 0xffffff60, SELECT_FROM_UISKIN( 0x0000ff0f, 0xff00000f, 0x1111550f ) );
         return spec;
     }
 
@@ -1864,7 +1864,7 @@ static void combo_drawArrowLoop( int top, float arrow_x, float arrow_y, float sc
         }
 
         if (iconWidths > 0.0f)
-            drawMenuFrame( R12, ((DEFAULT_SCRN_WD-250)*screenScaleX - wd)/2 , loopy-60*sc*screenScale, 101, 
+            drawMenuFrame( UI_R12, ((DEFAULT_SCRN_WD-250)*screenScaleX - wd)/2 , loopy-60*sc*screenScale, 101, 
                             iconWidths + 20*sc*screenScale, iconHeight+ 75*sc*screenScale, 0xffffffff, 0x000000ff, 0 );
 
         // grow the current icon
@@ -1946,7 +1946,7 @@ static void combo_drawEquation(float screenScaleX, float screenScaleY)
     s_drawMenuComboEnhancement( 2, SLOT_CX, EQ_CENTER_Y, 200, 1.f, (0xffffff00 | (int)combo.alpha), screenScaleX, screenScaleY );
 
      display_sprite( result, SLOT_CX*screenScaleX - result->width*screenScale/2, EQ_CENTER_Y*screenScaleY - result->height*screenScale/2, 140, screenScale, screenScale, 0x22ff2288 );
-       drawMenuFrame( R10, -50*screenScaleX, EQ_CENTER_Y*screenScaleY - result->height*screenScale/2 - PIX4*screenScaleX, 101*screenScaleY, DEFAULT_SCRN_WD*screenScaleX + 100*screenScaleX, (result->height + 2*PIX4)*screenScaleY, SELECT_FROM_UISKIN( 0x4488ff44, 0xffffff44, 0x33228844 ), SELECT_FROM_UISKIN( 0x4488ff22, 0xff000022, 0x11115522 ), 0 );
+       drawMenuFrame( UI_R10, -50*screenScaleX, EQ_CENTER_Y*screenScaleY - result->height*screenScale/2 - PIX4*screenScaleX, 101*screenScaleY, DEFAULT_SCRN_WD*screenScaleX + 100*screenScaleX, (result->height + 2*PIX4)*screenScaleY, SELECT_FROM_UISKIN( 0x4488ff44, 0xffffff44, 0x33228844 ), SELECT_FROM_UISKIN( 0x4488ff22, 0xff000022, 0x11115522 ), 0 );
 
     font( &game_18 );
     font_color( CLR_WHITE, CLR_WHITE );
@@ -2231,11 +2231,11 @@ static void s_drawMenuForPowers( Entity * e, float screenScaleX, float screenSca
     float screenScale = MIN(screenScaleX, screenScaleY);
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
     BuildCBox(&box[0], FRAME_SPACE*screenScaleX, FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
     BuildCBox(&box[1], (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
     BuildCBox(&box[2], (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
     
     primY = secY = poolY = 85;
@@ -2300,7 +2300,7 @@ static void s_drawMenuForPowers( Entity * e, float screenScaleX, float screenSca
                     }
 
                     // draw the small inner frame
-                    drawFrame( PIX2, R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                    drawFrame( PIX2, UI_R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                     primY += POWER_SPEC_HT;
                 }
@@ -2337,7 +2337,7 @@ static void s_drawMenuForPowers( Entity * e, float screenScaleX, float screenSca
                     }
 
                     // draw the small inner frame
-                    drawFrame( PIX2, R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                    drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                     secY += POWER_SPEC_HT;
                 }
@@ -2374,7 +2374,7 @@ static void s_drawMenuForPowers( Entity * e, float screenScaleX, float screenSca
                     }
 
                     // draw the small inner frame
-                    drawFrame( PIX2, R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                    drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                     poolY += POWER_SPEC_HT;
                 }
@@ -2386,7 +2386,7 @@ static void s_drawMenuForPowers( Entity * e, float screenScaleX, float screenSca
 
      doScrollBarEx( &sb[0], (FRAME_HEIGHT-2*PIX4-1), (primY + sb[0].offset - POWER_SPEC_HT), (FRAME_SPACE+FRAME_WIDTH), FRAME_TOP, 50, &box[0], 0, screenScaleX, screenScaleY );
     doScrollBarEx( &sb[1], (FRAME_HEIGHT-2*PIX4-1), (secY  + sb[1].offset - POWER_SPEC_HT), (DEFAULT_SCRN_WD/2 + FRAME_WIDTH/2), FRAME_TOP, 50, &box[1], 0, screenScaleX, screenScaleY );
-    doScrollBarEx( &sb[2], (FRAME_HEIGHT-2*PIX4-1), (poolY + sb[2].offset - POWER_SPEC_HT), (DEFAULT_SCRN_WD - FRAME_SPACE), (FRAME_TOP + R12), 50, &box[2], 0, screenScaleX, screenScaleY );
+    doScrollBarEx( &sb[2], (FRAME_HEIGHT-2*PIX4-1), (poolY + sb[2].offset - POWER_SPEC_HT), (DEFAULT_SCRN_WD - FRAME_SPACE), (FRAME_TOP + UI_R12), 50, &box[2], 0, screenScaleX, screenScaleY );
 
     if( sb[0].grabbed || sb[1].grabbed || sb[2].grabbed )
     {

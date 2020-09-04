@@ -63,7 +63,7 @@ int missionSummaryWindow(void)
         return 0;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     task = TaskStatusGet(s_dbid, s_context, s_handle);
 
@@ -73,7 +73,7 @@ int missionSummaryWindow(void)
         initStuffBuff(&s_sb, 1024);
 
         // Sets the location within the window of the text region
-        smfview_SetLocation(s_pview, PIX3*sc, PIX3+R10*sc, 0);
+        smfview_SetLocation(s_pview, PIX3*sc, PIX3+UI_R10*sc, 0);
     }
 
     if (!task)
@@ -114,7 +114,7 @@ int missionSummaryWindow(void)
 
         // Sets the size of the region within the window of the text region
         // In this case, it resizes with the window
-        smfview_SetSize(s_pview, wd-(PIX3*2-5)*sc, ht-(PIX3+R10)*sc);
+        smfview_SetSize(s_pview, wd-(PIX3*2-5)*sc, ht-(PIX3+UI_R10)*sc);
         smfview_Draw(s_pview);
     }
 

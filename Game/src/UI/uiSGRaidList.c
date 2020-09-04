@@ -131,7 +131,7 @@ int drawRadioButton(float x, float y, float wd, float z, float sc, int flags, ch
     if (gradient)
         fontcolor = pogcolor;
     font_color(fontcolor, fontcolor);
-    cprntEx(x+(R10+RADIO_CHECK_WIDTH)*sc, y+(RADIO_CHECK_WIDTH+2)*sc/2, z, sc, sc, CENTER_Y, text );
+    cprntEx(x+(UI_R10+RADIO_CHECK_WIDTH)*sc, y+(RADIO_CHECK_WIDTH+2)*sc/2, z, sc, sc, CENTER_Y, text );
 
     if (mouseClickHit(&box, MS_LEFT))
     {
@@ -172,9 +172,9 @@ int drawSGRaidHeader(char* str)
 
     font_color(CLR_WHITE, CLR_WHITE);
     wd = str_wd_notranslate(font_get(), s_sc, s_sc, str);
-    cprntEx( wx+x+R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, str );
-    start = x+wd+2*R10*s_sc;
-    width = SGRAID_TOTAL_WD*s_sc-start-R10*s_sc;
+    cprntEx( wx+x+UI_R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, str );
+    start = x+wd+2*UI_R10*s_sc;
+    width = SGRAID_TOTAL_WD*s_sc-start-UI_R10*s_sc;
     //drawHorizontalLine(wx+start, wy+y+11*sc, , z, sc, color);
     display_sprite( mid, wx+start, wy+y+11*s_sc, z, 3*width/mid->width/4.0, 1.f, color );
     display_sprite( right, wx+start+3*width/4, wy+y+11*s_sc, z, width/right->width/4.0, 1.f, color );
@@ -210,7 +210,7 @@ int drawSGRaidLine(U32 sgid, U32 raidid, U32 raidsize, int villain_sg, U32 start
     {
         foreColor = CLR_MOUSEOVER_FOREGROUND;
         backColor = CLR_MOUSEOVER_BACKGROUND;
-        drawFlatFrameBox(PIX2, R10, &box, z, foreColor, backColor);
+        drawFlatFrameBox(PIX2, UI_R10, &box, z, foreColor, backColor);
     }
 
     // selection highlight
@@ -218,7 +218,7 @@ int drawSGRaidLine(U32 sgid, U32 raidid, U32 raidsize, int villain_sg, U32 start
     {
         foreColor = CLR_SELECTION_FOREGROUND;
         backColor = CLR_SELECTION_BACKGROUND;
-        drawFlatFrameBox(PIX2, R10, &box, z, foreColor, backColor);
+        drawFlatFrameBox(PIX2, UI_R10, &box, z, foreColor, backColor);
     }
 
     font( &game_12 );
@@ -233,13 +233,13 @@ int drawSGRaidLine(U32 sgid, U32 raidid, U32 raidsize, int villain_sg, U32 start
     if (dot)
     {
         float scale = s_sc * 15.0 / dot->width;
-        display_sprite(dot, wx+lx+R10*s_sc, wy+y+3*s_sc, z, scale, scale, CLR_WHITE);
+        display_sprite(dot, wx+lx+UI_R10*s_sc, wy+y+3*s_sc, z, scale, scale, CLR_WHITE);
     }
     lx += SGRAID_FACTION_WD*s_sc;
 
     // Date
     timerFriendlyDateFromSS2(datestr, ARRAY_SIZE(datestr), localTimeFromServer(start_time));
-    cprntEx( wx+lx+R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, datestr );
+    cprntEx( wx+lx+UI_R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, datestr );
     lx += SGRAID_DATE_WD*s_sc;
 
     // Time
@@ -250,15 +250,15 @@ int drawSGRaidLine(U32 sgid, U32 raidid, U32 raidsize, int villain_sg, U32 start
         strcat(datestr, " - ");
         timerFriendlyHourFromSS2(datestr + len, ARRAY_SIZE(datestr) - len, localTimeFromServer(start_time + window_length*3600), 0, 1);
     }
-    cprntEx( wx+lx+R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, datestr );
-    lx += str_wd(font_grp, s_sc, s_sc, datestr )+ R10*s_sc;
+    cprntEx( wx+lx+UI_R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, NO_MSPRINT, datestr );
+    lx += str_wd(font_grp, s_sc, s_sc, datestr )+ UI_R10*s_sc;
 
     // Status
-    cprntEx( wx+lx+R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, 0, status );
+    cprntEx( wx+lx+UI_R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, 0, status );
     lx += SGRAID_STATUS_WD*s_sc;
     if (raid_button)
     {
-        if (D_MOUSEHIT == drawStdButton( wx+lx+R10*s_sc, wy+y+10*s_sc, z, SGRAID_PARTBUTTON_WD*s_sc, 20*s_sc, color, 
+        if (D_MOUSEHIT == drawStdButton( wx+lx+UI_R10*s_sc, wy+y+10*s_sc, z, SGRAID_PARTBUTTON_WD*s_sc, 20*s_sc, color, 
             player_participating? "RaidButtonDrop": "RaidButtonJoin", 1.f, 0 ))
         {
             if (player_participating)
@@ -289,7 +289,7 @@ void drawNoRaidLine(char* text)
     lx += (SGRAID_LINE_INDENT+SGRAID_FACTION_WD)*s_sc;
 
     // Date
-    cprntEx(wx+lx+R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, 0, text);
+    cprntEx(wx+lx+UI_R10*s_sc, wy+y+17*s_sc, z, s_sc, s_sc, 0, text);
     y += dy;
 }
 
@@ -343,8 +343,8 @@ int drawSGRaidList(int offset)
     Entity* player = playerPtr();
 
        window_getDims( WDW_SGRAID_LIST, &wx, &wy, &z, &wd, &wht, &s_sc, &color, &bcolor );
-    x = R10*s_sc;
-    ystart = y = R10*s_sc-offset;
+    x = UI_R10*s_sc;
+    ystart = y = UI_R10*s_sc-offset;
 
     if (player && player->supergroup)
     {
@@ -429,7 +429,7 @@ int sgRaidListWindow(void)
         init = true;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
 
     // Draw the list of supergroups
     set_scissor(true);
@@ -437,7 +437,7 @@ int sgRaidListWindow(void)
     listht = drawSGRaidList( sgroupSb.offset );
     set_scissor(false);
  
-     doScrollBar( &sgroupSb, ht-(SGRAID_BUTTON_HT+2*PIX3)*sc, listht+R10*sc, wd, PIX3*sc, z, 0, 0 );
+     doScrollBar( &sgroupSb, ht-(SGRAID_BUTTON_HT+2*PIX3)*sc, listht+UI_R10*sc, wd, PIX3*sc, z, 0, 0 );
 
     // draw buttons
        if( D_MOUSEHIT == drawStdButton( x + 75*sc + 2*PIX3, y + ht - BUTTON_OFFSET*sc/2 - 2*PIX3, z, 100*sc, 20*sc, color, "RaidRefreshButton", 1.f, 0 ) )
@@ -691,7 +691,7 @@ int sgRaidTimeWindow(void)
         sgraid_initSettings();
         init = true;
     }  
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
 
     // set up our raid hours array based on client tz,
     // sort so that midnight comes first, without regard to the day (modulo 24)
@@ -784,7 +784,7 @@ int sgRaidStartTimeWindow(void)
     {
         return 0;
     }
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
 
     // title
     font_color(CLR_WHITE, CLR_WHITE);
@@ -876,7 +876,7 @@ int sgRaidSizeWindow(void)
         init = true;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
 
     // title
     font_color(CLR_WHITE, CLR_WHITE);

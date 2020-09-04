@@ -242,7 +242,7 @@ int storedSalvageWindow()
 
     if(s_storedsal_state.has_anchor_pos && distance3Squared(ENTPOS(playerPtr()), s_storedsal_state.anchor_pos) > SQR(20))
     {
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
         window_setMode(WDW_STOREDSALVAGE, WINDOW_SHRINKING);
         return 0;
     }
@@ -286,9 +286,9 @@ int storedSalvageWindow()
             s_storedsalvage_flash = 0.f;
     }
 
-    drawFrame(PIX2, R10, x, y, z, wd, TOP_HT*sc, sc, color, bcolor);
-    drawFrame(PIX3, R10, x, y+(TOP_HT-PIX2)*sc, z, wd, ht-(BOTTOM_HT+TOP_HT-PIX4)*sc, sc, color, bcolor);
-    drawFrame(PIX2, R10, x, y+ht-BOTTOM_HT*sc, z, wd, BOTTOM_HT*sc, sc, color, bcolor);
+    drawFrame(PIX2, UI_R10, x, y, z, wd, TOP_HT*sc, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y+(TOP_HT-PIX2)*sc, z, wd, ht-(BOTTOM_HT+TOP_HT-PIX4)*sc, sc, color, bcolor);
+    drawFrame(PIX2, UI_R10, x, y+ht-BOTTOM_HT*sc, z, wd, BOTTOM_HT*sc, sc, color, bcolor);
 
     // if not ready yet, return
       if(window_getMode(WDW_STOREDSALVAGE) != WINDOW_DISPLAYING)

@@ -318,7 +318,7 @@ int popHelpWindow()
     if( !window_getDims( WDW_POP_HELP, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor ) )
         return 0;
 
-    //drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    //drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     if( window_getMode( WDW_POP_HELP ) != WINDOW_DISPLAYING )
         return 0;
@@ -488,7 +488,7 @@ int popHelpTextWindow()
             snprintf(translated_text, sizeof(translated_text), "Error - popHelp %d not found", current_pop_help );
         }
     }
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
 
     if( window_getMode( WDW_POP_HELP_TEXT ) != WINDOW_DISPLAYING )
         return 0;

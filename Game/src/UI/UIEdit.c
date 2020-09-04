@@ -2200,7 +2200,7 @@ void uiEditEditSimple(UIEdit *edit, float x, float y, float z, float w, float h,
             if( mouseClickHit( &box, MS_LEFT) )
                 uiEditTakeFocus(edit);
         }
-        drawMenuFrame( R12,edit->boundsText.x-10,edit->boundsText.y-6,z,edit->boundsText.width,edit->boundsText.height, CLR_WHITE, color, 0 );
+        drawMenuFrame( UI_R12,edit->boundsText.x-10,edit->boundsText.y-6,z,edit->boundsText.width,edit->boundsText.height, CLR_WHITE, color, 0 );
     }   
 
     GetTextColorForType(type, rgba);

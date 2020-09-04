@@ -517,7 +517,7 @@ static int supercostume_DrawPartPicker( int y, CostumePart * cpart, int idx, int
     if( stricmp( cpart->pchGeom, "none" ) == 0 && isNullOrNone(cpart->pchFxName) ) // be sure not to clear costume data because of empty parts
         return 0;
 
-       drawFrame( PIX3, R10, PICKER_X*screenScaleX, y*screenScaleY, PICKER_Z, PICKER_WD*screenScaleX, PICKER_HT*screenScaleY, 1.f, SELECT_FROM_UISKIN( 0x24406f88, 0xffffff88, 0x34346f88 ), SELECT_FROM_UISKIN( 0x004dab88, 0x88000088, 0x22228888 ) );
+       drawFrame( PIX3, UI_R10, PICKER_X*screenScaleX, y*screenScaleY, PICKER_Z, PICKER_WD*screenScaleX, PICKER_HT*screenScaleY, 1.f, SELECT_FROM_UISKIN( 0x24406f88, 0xffffff88, 0x34346f88 ), SELECT_FROM_UISKIN( 0x004dab88, 0x88000088, 0x22228888 ) );
 
      font( &game_12 );
     if( game_state.skin != UISKIN_HEROES )
@@ -722,7 +722,7 @@ void supercostumeTailorMenu(float scaleOverride, int sgMode, float screenScaleX,
         return;
     }
     uiBoxDefine(&colorPickerBox, 48, 187 + sgModeYOffset, 662, (495 - sgModeYOffset) * scaleOverride);
-    drawMenuFrame( R12, colorPickerBox.x*screenScaleX, colorPickerBox.y*screenScaleY, z, colorPickerBox.width*screenScaleX, colorPickerBox.height*screenScaleY, CLR_WHITE, 0x00000088, FALSE );
+    drawMenuFrame( UI_R12, colorPickerBox.x*screenScaleX, colorPickerBox.y*screenScaleY, z, colorPickerBox.width*screenScaleX, colorPickerBox.height*screenScaleY, CLR_WHITE, 0x00000088, FALSE );
 
     // Draw column headers.
     font(&game_14);

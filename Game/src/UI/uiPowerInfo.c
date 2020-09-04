@@ -2403,7 +2403,7 @@ void displayPowerInfo(F32 x, F32 y, F32 z, F32 wd, F32 ht, const BasePower *pPow
 void menuDisplayPowerInfo( F32 x, F32 y, F32 z, F32 wd, F32 ht, const BasePower *pBasePow, const Power * pPow, int ShowEnhance )        
 {
      clipperPush(NULL);
-    drawMenuFrame( R12, x, y, z, wd, ht, CLR_WHITE, 0x00000088, 0 );
+    drawMenuFrame( UI_R12, x, y, z, wd, ht, CLR_WHITE, 0x00000088, 0 );
     if( pBasePow )
         displayPowerInfo( x+10, y+10, z+10, wd-20, ht-15, pBasePow, pPow, 0, ShowEnhance, 0 );
     else

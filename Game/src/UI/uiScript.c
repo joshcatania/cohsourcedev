@@ -597,7 +597,7 @@ int scriptUIWindow()
     myWindow->forceNoFlip = 1;
     myWindow->below = 0;
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, back_color);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color);
     arrow = atlasLoadTexture(showLarge ? "Jelly_arrow_down.tga" : "Jelly_arrow_up.tga");
 
     n = eaSize(&widgetList);
@@ -670,7 +670,7 @@ int scriptUIWindow()
     font_color(0xffffffff, 0xffffffff);
     if (showLarge)
     {
-        drawFrame(PIX3, R6, x + 10 * sc, y + 10 * sc, z + 1, wd - 20 * sc, 25, sc, color, back_color);
+        drawFrame(PIX3, UI_R6, x + 10 * sc, y + 10 * sc, z + 1, wd - 20 * sc, 25, sc, color, back_color);
         cprntEx(x + 20 * sc, y + 22 * sc, z + 1, sc, sc, CENTER_Y, stageTitle);
 
         if (gCurrentWindefIndex == WDW_SCRIPT_UI)

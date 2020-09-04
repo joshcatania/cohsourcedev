@@ -761,7 +761,7 @@ int lfgWindow()
         }
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, back_color );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, back_color );
 
     // Where in the window can we draw?
     windowDrawArea.x = x;
@@ -804,7 +804,7 @@ int lfgWindow()
        uiEditEditSimple(editTxt, x+65*scale,y+43*scale, z+2, 145*scale, 20*scale, &game_12, INFO_HELP_TEXT, FALSE);
 
        BuildCBox( &box, x+10*scale, y+40*scale, 200*scale, 23*scale );
-       drawFrame( PIX3, R10, x+10*scale, y+40*scale, z+1, 200*scale, 23*scale, scale, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
+       drawFrame( PIX3, UI_R10, x+10*scale, y+40*scale, z+1, 200*scale, 23*scale, scale, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
 
     if( mouseClickHit( &box, MS_LEFT) )
         uiEditTakeFocus(editTxt);
@@ -886,7 +886,7 @@ int lfgWindow()
         {
             if(fullDrawHeight > currentHeight)
             {
-                  doScrollBar( &sb, currentHeight, fullDrawHeight, wd, R10+62*scale, z+2, 0, &listViewDrawArea );
+                  doScrollBar( &sb, currentHeight, fullDrawHeight, wd, UI_R10+62*scale, z+2, 0, &listViewDrawArea );
                 lfgListView->scrollOffset = sb.offset;
             }
             else

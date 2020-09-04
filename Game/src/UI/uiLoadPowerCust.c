@@ -209,9 +209,9 @@ static void drawPowerCustomizationFileList(float x, float y, float z, float wd, 
     float endY, startY;
     CBox box;
     float screenScale = MIN(screenScaleX, screenScaleY);
-    drawMenuFrame(R12, x*screenScaleX, y*screenScaleY, z, wd*screenScaleX, ht*screenScaleY, color, bcolor, FALSE);
+    drawMenuFrame(UI_R12, x*screenScaleX, y*screenScaleY, z, wd*screenScaleX, ht*screenScaleY, color, bcolor, FALSE);
     
-    BuildCBox(&box, x*screenScaleX, (y+R10)*screenScaleY, wd*screenScaleX, (ht-(R10*2))*screenScaleY);
+    BuildCBox(&box, x*screenScaleX, (y+UI_R10)*screenScaleY, wd*screenScaleX, (ht-(UI_R10*2))*screenScaleY);
     clipperPushCBox(&box);
     startY = endY = y+10-sb.offset;
     //    load file list
@@ -242,7 +242,7 @@ static void drawPowerCustomizationFileList(float x, float y, float z, float wd, 
         endY += 20;
     }
     clipperPop();
-    doScrollBarEx(&sb, (ht-(4*(R12+PIX3))), (endY-startY), (x+PIX3), (y+(2*(R12+PIX3))), 5030, &box, 0, screenScaleX, screenScaleY );
+    doScrollBarEx(&sb, (ht-(4*(UI_R12+PIX3))), (endY-startY), (x+PIX3), (y+(2*(UI_R12+PIX3))), 5030, &box, 0, screenScaleX, screenScaleY );
 }
 
 #define GSET_MAX_WD 300
@@ -271,7 +271,7 @@ static void drawPowerCustomizationApplicableList(float x, float y, float z, floa
     Entity *e = playerPtr();
     float screenScale = MIN(screenScaleX, screenScaleY);
     prevSelectedPowerSet =currentlySelectedPowerSet;
-    drawMenuFrame(R12, x*screenScaleX, y*screenScaleY, z, wd*screenScaleX, ht*screenScaleY, color, bcolor, FALSE);
+    drawMenuFrame(UI_R12, x*screenScaleX, y*screenScaleY, z, wd*screenScaleX, ht*screenScaleY, color, bcolor, FALSE);
 
     //    if the custom list is not NULL
     if (EAINRANGE(currentlySelectedPowerSet, s_powerCustList))
@@ -350,8 +350,8 @@ static void drawPowerCustomizationApplicableList(float x, float y, float z, floa
         //    else                                    flags = flags | PCF_HIDE_NON_APPLICABLE;
         //}
 
-        BuildCBox(&box, x*screenScaleX, (y+PIX3+R10)*screenScaleY, wd*screenScaleX, (ht-(2*(PIX3+R10)))*screenScaleY);
-        startY = endY = y+PIX3+R10-sb.offset;
+        BuildCBox(&box, x*screenScaleX, (y+PIX3+UI_R10)*screenScaleY, wd*screenScaleX, (ht-(2*(PIX3+UI_R10)))*screenScaleY);
+        startY = endY = y+PIX3+UI_R10-sb.offset;
         clipperPushCBox(&box);
         for (setIndex = 0; setIndex < setCount; setIndex++)
         {
@@ -425,7 +425,7 @@ static void drawPowerCustomizationApplicableList(float x, float y, float z, floa
             }
         }
         clipperPop();
-        doScrollBarEx(&sb, (ht-(4*(R12+PIX3))), (endY-startY), (x+wd), (y+(2*(R12+PIX3))), 5030, &box, 0, screenScaleX, screenScaleY );
+        doScrollBarEx(&sb, (ht-(4*(UI_R12+PIX3))), (endY-startY), (x+wd), (y+(2*(UI_R12+PIX3))), 5030, &box, 0, screenScaleX, screenScaleY );
     }
 }
 

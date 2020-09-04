@@ -323,19 +323,19 @@ static void drawIncarnateSlot(IncarnateSlot slot, float x, float y, float z, flo
         {
             if (enablePercent >= 1.0f)
             {
-                drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, 0x99999999, 0x55555555);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z, filledWidth, barHeight, sc, 0x00000000, color - 0x66);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000099);
+                drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, 0x99999999, 0x55555555);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z, filledWidth, barHeight, sc, 0x00000000, color - 0x66);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000099);
             }
             else
             {
-                drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, 0x66666666, 0x55555555);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z+1, barWidth, barHeight, sc, 0x66666666, 0x00000099);
+                drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, 0x66666666, 0x55555555);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z+1, barWidth, barHeight, sc, 0x66666666, 0x00000099);
             }
         }
         else
         {
-            drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, color, color - 0x80);
+            drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, color, color - 0x80);
         }
     }
     else
@@ -344,19 +344,19 @@ static void drawIncarnateSlot(IncarnateSlot slot, float x, float y, float z, flo
         {
             if (enablePercent >= 1.0f)
             {
-                drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, 0x99999999, 0x00000099);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000099);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z, filledWidth, barHeight, sc, 0x00000000, color - 0x66);
+                drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, 0x99999999, 0x00000099);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000099);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z, filledWidth, barHeight, sc, 0x00000000, color - 0x66);
             }
             else
             {
-                drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, 0x66666666, 0x00000066);
-                drawFrame(PIX3, R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000066);
+                drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, 0x66666666, 0x00000066);
+                drawFrame(PIX3, UI_R10, x + 80*sc, y + 5*sc, z, barWidth, barHeight, sc, 0x66666666, 0x00000066);
             }
         }
         else
         {
-            drawFrame(PIX3, R10, x, y, z, slotWidth, slotHeight, sc, color, color - 0xcc);
+            drawFrame(PIX3, UI_R10, x, y, z, slotWidth, slotHeight, sc, color, color - 0xcc);
         }
     }
 
@@ -493,11 +493,11 @@ static void drawIncarnateAbility(const Power *ppow, int abilityIndex, float x, f
     }
     if (isSlotted)
     {
-        drawFlatFrameBox(PIX2, R10, &box, z + 1, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND);
+        drawFlatFrameBox(PIX2, UI_R10, &box, z + 1, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND);
     }
     else if (mouseCollision(&box))
     {
-        drawFlatFrameBox(PIX2, R10, &box, z + 1, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND);
+        drawFlatFrameBox(PIX2, UI_R10, &box, z + 1, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND);
     }
 
     // draw ability icon
@@ -573,7 +573,7 @@ static void drawIncarnateInventory(float x, float y, float z, float wd, float ht
         clipperPop();
     }
     BuildCBox(&backBox, x, y, wd, ht - 10*sc);
-    drawFrameBox(PIX2, R10, &backBox, z, 0, CLR_CONSTRUCT_EX(255, 255, 255, 0.1));
+    drawFrameBox(PIX2, UI_R10, &backBox, z, 0, CLR_CONSTRUCT_EX(255, 255, 255, 0.1));
 
     // draw inventory scrollbar
     doScrollBar(&inventoryScrollbar, ht - 40*sc, abilityTotalHeight, x + wd, y + 20*sc, z, &abilityBox, 0);
@@ -633,15 +633,15 @@ static void drawTreeText(float x, float y, float z, float wd, float ht, float sc
         smf_Display(node->smfBlock, x+20*sc, y+3*sc, z+1, wd-PIX3*sc, 20, 0, 0, &s_textAttr_TreeText, 0);
         if (parent->selectedIndex == i)
         {
-            drawFlatFrameBox(PIX2, R10, &cbox, z, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND);
+            drawFlatFrameBox(PIX2, UI_R10, &cbox, z, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND);
         }
         else if (mouseCollision(&cbox))
         {
-            drawFlatFrameBox(PIX2, R10, &cbox, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND);
+            drawFlatFrameBox(PIX2, UI_R10, &cbox, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND);
         }
         else
         {
-            drawFlatFrameBox(PIX2, R10, &cbox, z, CLR_NORMAL_FOREGROUND, CLR_NORMAL_BACKGROUND);
+            drawFlatFrameBox(PIX2, UI_R10, &cbox, z, CLR_NORMAL_FOREGROUND, CLR_NORMAL_BACKGROUND);
         }
         if (mouseClickHit(&cbox, MS_LEFT))
         {
@@ -750,7 +750,7 @@ static int drawIncarnateGraphIcon(float x, float y, float z, float wd, float sc,
     fcolor &= alpha;
     bcolor &= alpha;
 
-    drawFrameBox(PIX2, R10, &cbox, z, fcolor, bcolor);
+    drawFrameBox(PIX2, UI_R10, &cbox, z, fcolor, bcolor);
     return retVal;
 }
 static void drawIncarnateGraphIcons(float x, float y, float z, float wd, float sc, int fcolor, int bcolor, RecipeTreeNode *node, int rarity, float *iconPos, int baseRarity)
@@ -835,7 +835,7 @@ static void drawAnimatedGraphLine(int size, float x1, float y1, float x2, float 
     //    since we know its a graph, we can always go from the bottom up when we animate
     //    we also assume that the first point is the start, and the next point is the end
     AtlasTex *blip = atlasLoadTexture("costume_button_link_glow.tga");
-    float cornerWidth = drawConnectingLineStyle(size, R6, x1, y1, x2, y2, z, 0, sc, color, kFrameStyle_3D);
+    float cornerWidth = drawConnectingLineStyle(size, UI_R6, x1, y1, x2, y2, z, 0, sc, color, kFrameStyle_3D);
     float wd = x2-x1;
     float ht = y2-y1;
 
@@ -1270,10 +1270,10 @@ int incarnateWindow()
     s_textAttr_HeaderText.piScale =(int *)(int)(SMF_FONT_SCALE*sc);
     s_textAttr_TreeText.piScale =(int *)(int)(SMF_FONT_SCALE*sc);
     //    background
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, back_color);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color);
 
     //    draw tabs
-    currentTab = (int)drawTabControl(incarnateTabs, x+R10*sc, y, z, wd-(R10*sc), ht, sc, color, activeColorTop, TabDirection_Horizontal);
+    currentTab = (int)drawTabControl(incarnateTabs, x+UI_R10*sc, y, z, wd-(UI_R10*sc), ht, sc, color, activeColorTop, TabDirection_Horizontal);
     drawIncarnateTab(x, y+(20*sc), z, wd, ht-(20*sc), sc, color, back_color, currentTab);
 
     return 0;

@@ -140,7 +140,7 @@ F32 scrollSet_DrawRegionButton( ScrollSet *pSet, ScrollSetRegion *pRegion, SSReg
     }
 
        if( pButton->ht*sc > 0 )
-          drawFrame( PIX2, R6, x - (pButton->wd+20)*sc/2, y, z-1, (pButton->wd+20)*sc, (pButton->ht + 20*LEFT_COLUMN_SQUISH)*sc, 1.f, CLR_WHITE, 0x00ff0088 );
+          drawFrame( PIX2, UI_R6, x - (pButton->wd+20)*sc/2, y, z-1, (pButton->wd+20)*sc, (pButton->ht + 20*LEFT_COLUMN_SQUISH)*sc, 1.f, CLR_WHITE, 0x00ff0088 );
 
     if( D_MOUSEHIT == drawMenuBarSquished( x, y, z+2, sc, sc*pButton->wd, pButton->pchName, pButton->isOpen, TRUE, FALSE, FALSE, FALSE, 0, LEFT_COLUMN_SQUISH, CLR_WHITE, &game_12,0 ) )
         buttonOpen( pRegion, pButton );
@@ -260,7 +260,7 @@ static float scrollSet_drawRegion( ScrollSet * pSet, ScrollSetRegion * pRegion, 
         pRegion->inner_ht = subht;
 
       if( pRegion->inner_ht > 0 )
-           drawFrame( PIX2, R6, center - (wd-30)/2, startY - 10, z-5, wd-30, pRegion->inner_ht+20, 1, 0xfffffff88, 0x00000088 );
+           drawFrame( PIX2, UI_R6, center - (wd-30)/2, startY - 10, z-5, wd-30, pRegion->inner_ht+20, 1, 0xfffffff88, 0x00000088 );
 
     return pRegion->inner_ht;
 }

@@ -858,7 +858,7 @@ int drawChatBubble(EBubbleType type, EBubbleLocation location, char *pch, int x,
     }
     else
     {
-        drawFrame(PIX2, R4, fXBubble, fYBubble, z, fWidthBubble, fHeightBubble,
+        drawFrame(PIX2, UI_R4, fXBubble, fYBubble, z, fWidthBubble, fHeightBubble,
             1.f, colorBorder, colorBG);
     }
 

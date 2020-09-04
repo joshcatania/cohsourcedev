@@ -338,14 +338,14 @@ static void arena_initSettings()
 {
     int i;
 
-    comboboxTitle_init( &comboTeamType,            R10,        R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboTeamStyle,        R10 + 480,    R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboTeamCount,        R10 + 320,    R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboVictoryType,        R10,        R10+32, 20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboTournamentType,    R10 + 320,    R10+32, 20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboWeight,            R10 + 160,    R10+2,  20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboMap,                R10 + 320,    R10+2,  20, 155, 20, 400, WDW_ARENA_CREATE );
-    comboboxTitle_init( &comboInspiration,        448,        R10+2,  20, 200, 20, 400, WDW_ARENA_OPTIONS );
+    comboboxTitle_init( &comboTeamType,            UI_R10,        UI_R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboTeamStyle,        UI_R10 + 480,    UI_R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboTeamCount,        UI_R10 + 320,    UI_R10+62, 20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboVictoryType,        UI_R10,        UI_R10+32, 20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboTournamentType,    UI_R10 + 320,    UI_R10+32, 20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboWeight,            UI_R10 + 160,    UI_R10+2,  20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboMap,                UI_R10 + 320,    UI_R10+2,  20, 155, 20, 400, WDW_ARENA_CREATE );
+    comboboxTitle_init( &comboInspiration,        448,        UI_R10+2,  20, 200, 20, 400, WDW_ARENA_OPTIONS );
 
     // add the elements to the main combo boxes
     for( i = 0; i < ARRAY_SIZE(eventTeamStyles); i++ )
@@ -379,10 +379,10 @@ static void arena_initSettings()
         eaCreate(&gArenaDetail.participants);
 
     //tooltips
-    addWindowToolTip( R10, R10,       150, 20, "arenaEventTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
-    addWindowToolTip( R10, R10+30, 150, 20, "arenaDurationTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
-    addWindowToolTip( R10, R10+60, 150, 20, "arenaLevelTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
-    addWindowToolTip( R10*2 + 150, R10+30, 150, 20, "arenaTeamTip", &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
+    addWindowToolTip( UI_R10, UI_R10,       150, 20, "arenaEventTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
+    addWindowToolTip( UI_R10, UI_R10+30, 150, 20, "arenaDurationTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
+    addWindowToolTip( UI_R10, UI_R10+60, 150, 20, "arenaLevelTip",    &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
+    addWindowToolTip( UI_R10*2 + 150, UI_R10+30, 150, 20, "arenaTeamTip", &arenaSettingsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
 
     arena_initTextEntryFields();
 }
@@ -805,17 +805,17 @@ static void drawArenaSettings(void)
     smf_Display(labelVictoryValue, x + wd / 2 - 145 * sc, y + 45 * sc, z, 90, 0, 0, 0, &gTextAttr_Chat, 0);
     if (creator && eventVictoryValueLabels[comboVictoryType.currChoice].editable && !gArenaDetail.verify_sanctioned)
     {
-        BuildCBox(&box, x + wd / 2 - 50 * sc - R10, y + 42 * sc, 25 + 2 * R10, 24);
+        BuildCBox(&box, x + wd / 2 - 50 * sc - UI_R10, y + 42 * sc, 25 + 2 * UI_R10, 24);
         if (mouseClickHit(&box, MS_LEFT) && !smfBlock_HasFocus(textVictoryValue))
         {
             smf_SelectAllText(textVictoryValue);
         }
         if (creator && !gArenaDetail.leader_ready)
         {
-            drawFrame(PIX3, R10, x + wd / 2 - 40 * sc - R10, y + 42 * sc, z, 25 + 2 * R10, 24, sc, color, 0x000000ff);
+            drawFrame(PIX3, UI_R10, x + wd / 2 - 40 * sc - UI_R10, y + 42 * sc, z, 25 + 2 * UI_R10, 24, sc, color, 0x000000ff);
             if (smfBlock_HasFocus(textVictoryValue))
             {
-                drawFrame(PIX3, R10, x + wd / 2 - 40 * sc - R10, y + 42 * sc, z, 25 + 2 * R10, 24, sc, 0, 0x00ff003f);
+                drawFrame(PIX3, UI_R10, x + wd / 2 - 40 * sc - UI_R10, y + 42 * sc, z, 25 + 2 * UI_R10, 24, sc, 0, 0x00ff003f);
             }
         }
     }
@@ -829,17 +829,17 @@ static void drawArenaSettings(void)
     smf_Display(labelPlayerCount, x + wd / 2 - 145 * sc, y + 75 * sc, z, 90, 0, 0, 0, &gTextAttr_Chat, 0);
     if (creator)
     {
-        BuildCBox(&box, x + wd / 2 - 50 * sc - R10, y + 72 * sc, 25 + 2 * R10, 24);
+        BuildCBox(&box, x + wd / 2 - 50 * sc - UI_R10, y + 72 * sc, 25 + 2 * UI_R10, 24);
         if (mouseClickHit(&box, MS_LEFT) && !smfBlock_HasFocus(textPlayerCount))
         {
             smf_SelectAllText(textPlayerCount);
         }
         if (creator && !gArenaDetail.leader_ready)
         {
-            drawFrame(PIX3, R10, x + wd / 2 - 40 * sc - R10, y + 72 * sc, z, 25 + 2 * R10, 24, sc, color, 0x000000ff);
+            drawFrame(PIX3, UI_R10, x + wd / 2 - 40 * sc - UI_R10, y + 72 * sc, z, 25 + 2 * UI_R10, 24, sc, color, 0x000000ff);
             if (smfBlock_HasFocus(textPlayerCount))
             {
-                drawFrame(PIX3, R10, x + wd / 2 - 40 * sc - R10, y + 72 * sc, z, 25 + 2 * R10, 24, sc, 0, 0x00ff003f);
+                drawFrame(PIX3, UI_R10, x + wd / 2 - 40 * sc - UI_R10, y + 72 * sc, z, 25 + 2 * UI_R10, 24, sc, 0, 0x00ff003f);
             }
         }
     }
@@ -896,7 +896,7 @@ static void drawActivePlayer( float wx, float wy, float x, float y, float z, flo
     font_color(CLR_WHITE, CLR_WHITE);
 
     //Name
-       cprntEx( wx+x+R10*sc, wy+y+17*sc, z, sc, sc, NO_MSPRINT, ap->name );
+       cprntEx( wx+x+UI_R10*sc, wy+y+17*sc, z, sc, sc, NO_MSPRINT, ap->name );
     x += NAME_COL_WD*sc;
  
     //Team
@@ -966,7 +966,7 @@ static void drawInactivePlayer( float wx, float wy, float x, float y, float z, f
     //playerChoice
      font(&game_12);
     font_color(CLR_WHITE,CLR_WHITE);
-    prnt( wx+x+R10*sc, wy+y+17*sc, z, sc, sc, "Empty" );
+    prnt( wx+x+UI_R10*sc, wy+y+17*sc, z, sc, sc, "Empty" );
     x += NAME_COL_WD*sc;
 
     if( comboTeamStyle.elements[comboTeamStyle.currChoice]->id == ARENA_STAR ||
@@ -1029,7 +1029,7 @@ static void drawInactivePlayer( float wx, float wy, float x, float y, float z, f
 
 static void drawPlayerList( float offset )
 {
-    float tipx = R10, x, y, z, wd, ht, sc;
+    float tipx = UI_R10, x, y, z, wd, ht, sc;
     int color, bcolor, i, j, count=0;
     Entity * e = playerPtr();
     CBox box;
@@ -1057,16 +1057,16 @@ static void drawPlayerList( float offset )
              if( !gArenaDetail.numsides || uiArenaParticipant[j]->team.currChoice == i )
             {
                    if( gArenaDetail.participants[j] && gArenaDetail.participants[j]->dbid )
-                    drawActivePlayer( x, y, R10*sc, (ARENA_SETTING_HT+R10+PLAYER_HT*count)*sc - offset, z, sc, color, gArenaDetail.participants[j], uiArenaParticipant[j] );
+                    drawActivePlayer( x, y, UI_R10*sc, (ARENA_SETTING_HT+UI_R10+PLAYER_HT*count)*sc - offset, z, sc, color, gArenaDetail.participants[j], uiArenaParticipant[j] );
                 else
-                    drawInactivePlayer( x, y, R10*sc, (ARENA_SETTING_HT+R10+PLAYER_HT*count)*sc - offset, z, sc, gArenaDetail.participants[j], uiArenaParticipant[j], j );
+                    drawInactivePlayer( x, y, UI_R10*sc, (ARENA_SETTING_HT+UI_R10+PLAYER_HT*count)*sc - offset, z, sc, gArenaDetail.participants[j], uiArenaParticipant[j], j );
                 count++;
             }
         }
 
         if( i > 0)
         {
-               BuildCBox( &box, x, y - offset + (ARENA_SETTING_HT+R10+PLAYER_HT*prev_count)*sc, wd, PLAYER_HT*(count-prev_count)*sc  );
+               BuildCBox( &box, x, y - offset + (ARENA_SETTING_HT+UI_R10+PLAYER_HT*prev_count)*sc, wd, PLAYER_HT*(count-prev_count)*sc  );
             drawBox( &box, z, 0, getTeamColor(i) );
         }
     }
@@ -1194,7 +1194,7 @@ static int drawArenaChat( float x, float y, float z, float wd, float ht, float s
             smf_SetFlags(pBlock, SMFEditMode_ReadOnly, SMFLineBreakMode_MultiLineBreakOnWhitespaceWithInverseTabbing, 0, 0, 
                 SMFScrollMode_ExternalOnly, SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, "arenaChat", 0, 0);
             smf_SetRawText(pBlock, pchText, false);
-            arenaChatQ.ppLines[i]->ht = smf_ParseAndFormat(pBlock, pchText, 0, 0, 0, wd-(R10+PIX3)*2, -1, false, 1, 1, &gTextAttr_Chat, 0 ); 
+            arenaChatQ.ppLines[i]->ht = smf_ParseAndFormat(pBlock, pchText, 0, 0, 0, wd-(UI_R10+PIX3)*2, -1, false, 1, 1, &gTextAttr_Chat, 0 ); 
 
             //Move the scroll bar to the bottom if some new text was added.
             if( !sb.grabbed )
@@ -1216,7 +1216,7 @@ static int drawArenaChat( float x, float y, float z, float wd, float ht, float s
         SMFBlock *pBlock = arenaChatQ.ppLines[i]->pBlock;
         char *pchText = arenaChatQ.ppLines[i]->pchText;
         smf_SetScissorsBox(pBlock, x, y+PIX3*sc, wd, chatHeight - PIX3*sc);
-        curr_ht += smf_Display(pBlock, x + (R10+PIX3)*sc, y + curr_ht + iFontHeight - sb.offset, z+1, wd-(R10+PIX3)*2, -1, 
+        curr_ht += smf_Display(pBlock, x + (UI_R10+PIX3)*sc, y + curr_ht + iFontHeight - sb.offset, z+1, wd-(UI_R10+PIX3)*2, -1, 
                                         0, 0, &gTextAttr_Chat, 0); 
     }
 
@@ -1227,11 +1227,11 @@ static int drawArenaChat( float x, float y, float z, float wd, float ht, float s
         UIBox chatEditBounds;
         CBox box;
 
-           uiBoxDefine(&chatEditBounds, x+str_wd(font_grp, sc, sc, "EventChat")+(R10+PIX3*2)*sc, y+ht-(CHAT_ENTRY_HT-PIX3)*sc, wd - (R10+PIX3*2)*sc-str_wd(font_grp, sc, sc, "EventChat"), (CHAT_ENTRY_HT-2*PIX3)*sc);
+           uiBoxDefine(&chatEditBounds, x+str_wd(font_grp, sc, sc, "EventChat")+(UI_R10+PIX3*2)*sc, y+ht-(CHAT_ENTRY_HT-PIX3)*sc, wd - (UI_R10+PIX3*2)*sc-str_wd(font_grp, sc, sc, "EventChat"), (CHAT_ENTRY_HT-2*PIX3)*sc);
         BuildCBox( &box, x+PIX3*2*sc, y+ht-(CHAT_ENTRY_HT-PIX3)*sc, wd - PIX3*2*sc, (CHAT_ENTRY_HT-2*PIX3)*sc);
  
         if(arenaChat->inEditMode)
-               drawFrame( PIX3, R10, x, y + ht - (CHAT_ENTRY_HT)*sc , z + 1, wd, CHAT_ENTRY_HT*sc, sc, 0, 0x00ff003f );
+               drawFrame( PIX3, UI_R10, x, y + ht - (CHAT_ENTRY_HT)*sc , z + 1, wd, CHAT_ENTRY_HT*sc, sc, 0, 0x00ff003f );
 
         if( mouseCollision(&box) )
         {
@@ -1258,7 +1258,7 @@ static int drawArenaChat( float x, float y, float z, float wd, float ht, float s
         uiEditSetFontScale(arenaChat, sc);
         arenaChat->z = z+1;
         uiEditProcess(arenaChat);
-        prnt( x + (PIX3+R10)*sc, y+ht-(2*PIX3+1)*sc, z+2, sc, sc, "EventChat" );
+        prnt( x + (PIX3+UI_R10)*sc, y+ht-(2*PIX3+1)*sc, z+2, sc, sc, "EventChat" );
     }
 
     return retval;
@@ -1288,8 +1288,8 @@ static void drawArenaButtons( float x, float y, float z, float sc, float wd, flo
 
     if( gArenaDetail.creatorid == dbid )
     {
-        creator_update |= drawSmallCheckbox( WDW_ARENA_CREATE, (ARENA_CHAT_WD+R10)*sc + 100*sc, (y-winht) + ht - 90*sc, "SanctionedString", &gArenaDetail.verify_sanctioned,    NULL, creator && !gArenaDetail.leader_ready, "arenaSanctionTip", &arenaSettingsParent );
-           creator_update |= drawSmallCheckbox( WDW_ARENA_CREATE, (ARENA_CHAT_WD+R10)*sc,            (y-winht) + ht - 90*sc, "InviteOnly",        &gArenaDetail.inviteonly,            NULL, creator && !gArenaDetail.leader_ready, NULL, NULL );
+        creator_update |= drawSmallCheckbox( WDW_ARENA_CREATE, (ARENA_CHAT_WD+UI_R10)*sc + 100*sc, (y-winht) + ht - 90*sc, "SanctionedString", &gArenaDetail.verify_sanctioned,    NULL, creator && !gArenaDetail.leader_ready, "arenaSanctionTip", &arenaSettingsParent );
+           creator_update |= drawSmallCheckbox( WDW_ARENA_CREATE, (ARENA_CHAT_WD+UI_R10)*sc,            (y-winht) + ht - 90*sc, "InviteOnly",        &gArenaDetail.inviteonly,            NULL, creator && !gArenaDetail.leader_ready, NULL, NULL );
     }
 
     addToolTipEx( x+wd/2 - 65*sc, y+ht - 42*sc, 130*sc, 30*sc, "arenaQuitTip",        &arenaButtonsParent, MENU_GAME, WDW_ARENA_CREATE, 0 );
@@ -1443,7 +1443,7 @@ static int arenaProblemsString( float x, float y, float z, float wd, float ht, f
        if( gArenaDetail.sanctioned ) // server gave us all clear
     {
         font_color( CLR_GREEN, CLR_GREEN );
-        prnt( x + R10, y+ht-ARENA_CHAT_HT, z, 1.f, 1.f, "EventIsSanctioned" );
+        prnt( x + UI_R10, y+ht-ARENA_CHAT_HT, z, 1.f, 1.f, "EventIsSanctioned" );
     }
     else if( gArenaDetail.cannot_start || !victoryValueIsLegit) // somethings wrong
     {
@@ -1498,8 +1498,8 @@ static int arenaProblemsString( float x, float y, float z, float wd, float ht, f
         smfview_SetAttribs(s_pview, &gTextAttr_Arena);
          smfview_SetLocation(s_pview, 0, 0, 0);
         text_ht = smfview_GetHeight(s_pview);
-          smfview_SetBaseLocation(s_pview, x+(PIX3+R10)*sc,y+ht-(ARENA_CHAT_HT)*sc-text_ht, z, wd-2*(R10+PIX3), 0);
-         smfview_SetSize(s_pview, wd-2*R10, text_ht);
+          smfview_SetBaseLocation(s_pview, x+(PIX3+UI_R10)*sc,y+ht-(ARENA_CHAT_HT)*sc-text_ht, z, wd-2*(UI_R10+PIX3), 0);
+         smfview_SetSize(s_pview, wd-2*UI_R10, text_ht);
         smfview_Draw(s_pview);
     }
     else
@@ -1521,10 +1521,10 @@ int arenaOptionsWindow(void)
 
     creator = (gArenaDetail.creatorid == playerPtr()->db_id);
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
-    drawFrame( PIX3, R10, x, y+ht-ARENA_CHAT_HT*sc, z, wd, ARENA_CHAT_HT*sc, sc, color, 0 );                // chat level
-    drawFrame( PIX3, R10, x, y+ht-ARENA_CHAT_HT*sc, z, ARENA_CHAT_WD*sc, ARENA_CHAT_HT*sc, sc, color, 0    );    // chat box
-    drawFrame( PIX3, R10, x, y+ht-CHAT_ENTRY_HT*sc, z, ARENA_CHAT_WD*sc, CHAT_ENTRY_HT*sc, sc, color, 0    );    // chat entry
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+    drawFrame( PIX3, UI_R10, x, y+ht-ARENA_CHAT_HT*sc, z, wd, ARENA_CHAT_HT*sc, sc, color, 0 );                // chat level
+    drawFrame( PIX3, UI_R10, x, y+ht-ARENA_CHAT_HT*sc, z, ARENA_CHAT_WD*sc, ARENA_CHAT_HT*sc, sc, color, 0    );    // chat box
+    drawFrame( PIX3, UI_R10, x, y+ht-CHAT_ENTRY_HT*sc, z, ARENA_CHAT_WD*sc, CHAT_ENTRY_HT*sc, sc, color, 0    );    // chat entry
 
     if( gArenaDetail.eventid == 0 )
     {
@@ -1637,11 +1637,11 @@ int arenaCreateWindow(void)
 
     creator = (gArenaDetail.creatorid == playerPtr()->db_id);
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
-      drawFrame( PIX3, R10, x, y+ARENA_SETTING_HT*sc, z, wd, ht-ARENA_SETTING_HT*sc, sc, color, 0 );            // settings
-       drawFrame( PIX3, R10, x, y+ht-ARENA_CHAT_HT*sc, z, wd, ARENA_CHAT_HT*sc, sc, color, 0 );                // chat level
-     drawFrame( PIX3, R10, x, y+ht-ARENA_CHAT_HT*sc, z, ARENA_CHAT_WD*sc, ARENA_CHAT_HT*sc, sc, color, 0    );    // chat box
-     drawFrame( PIX3, R10, x, y+ht-CHAT_ENTRY_HT*sc, z, ARENA_CHAT_WD*sc, CHAT_ENTRY_HT*sc, sc, color, 0    );    // chat entry
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );                                                // window 
+      drawFrame( PIX3, UI_R10, x, y+ARENA_SETTING_HT*sc, z, wd, ht-ARENA_SETTING_HT*sc, sc, color, 0 );            // settings
+       drawFrame( PIX3, UI_R10, x, y+ht-ARENA_CHAT_HT*sc, z, wd, ARENA_CHAT_HT*sc, sc, color, 0 );                // chat level
+     drawFrame( PIX3, UI_R10, x, y+ht-ARENA_CHAT_HT*sc, z, ARENA_CHAT_WD*sc, ARENA_CHAT_HT*sc, sc, color, 0    );    // chat box
+     drawFrame( PIX3, UI_R10, x, y+ht-CHAT_ENTRY_HT*sc, z, ARENA_CHAT_WD*sc, CHAT_ENTRY_HT*sc, sc, color, 0    );    // chat entry
 
     if( gArenaDetail.eventid == 0 )
         return 0;

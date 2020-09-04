@@ -12,15 +12,15 @@
 #define PIX2    2
 #define PIX3    3
 #define PIX4    4
-#define R4        4
-#define R6        6
-#define R7        7
-#define R10        10
-#define R12        12
-#define R16        16
-#define R22        22
-#define R25        25
-#define R27        27
+#define UI_R4        4
+#define UI_R6        6
+#define UI_R7        7
+#define UI_R10        10
+#define UI_R12        12
+#define UI_R16        16
+#define UI_R22        22
+#define UI_R25        25
+#define UI_R27        27
 
 #define DEFAULT_RGBA    ( 0xffffffff )
 #define LIT_RGBA        ( 0xffff00ff )

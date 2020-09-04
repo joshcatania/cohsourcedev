@@ -102,7 +102,7 @@ int rewardChoiceDisplay( float x, float y, float z, float sc, float wd, int i )
     if(!choice->visible || !choice->txt[0])
         return 0;
     
-    ht = smf_ParseAndDisplay( choice->sm, choice->txt, x+(2*R10)*sc, y+PIX3*sc, z+5, wd - 4*R10*sc, 0, 0, 1, &gTextAttr_White12, NULL, 0, true);
+    ht = smf_ParseAndDisplay( choice->sm, choice->txt, x+(2*UI_R10)*sc, y+PIX3*sc, z+5, wd - 4*UI_R10*sc, 0, 0, 1, &gTextAttr_White12, NULL, 0, true);
     ht = ht+2*PIX4*sc;
 
     if(!choice->disabled)
@@ -110,7 +110,7 @@ int rewardChoiceDisplay( float x, float y, float z, float sc, float wd, int i )
         BuildCBox(&box, x, y, wd, ht+2*PIX3 );
 
         if( mouseCollision(&box) )
-            drawFlatFrame( PIX3, R10, x+R10*sc, y, z, wd-R10*2*sc, ht, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+            drawFlatFrame( PIX3, UI_R10, x+UI_R10*sc, y, z, wd-UI_R10*2*sc, ht, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         if( mouseDownHit(&box, MS_LEFT) )
             s_CurrentRewardChoice = i;
         if( i == s_CurrentRewardChoice )
@@ -130,7 +130,7 @@ int rewardChoiceDisplay( float x, float y, float z, float sc, float wd, int i )
         backColor = CLR_DISABLED_BACKGROUND;
     }
 
-    drawFlatFrame( PIX3, R10, x+R10*sc, y, z, wd-R10*2*sc, ht, sc, foreColor, backColor );
+    drawFlatFrame( PIX3, UI_R10, x+UI_R10*sc, y, z, wd-UI_R10*2*sc, ht, sc, foreColor, backColor );
 
     return ht+(CHOICE_SPACE)*sc;
 }
@@ -155,7 +155,7 @@ int rewardChoiceWindow(void)
         return 0;
     }
 
-     drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+     drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     gTextAttr_White12.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
 
@@ -164,7 +164,7 @@ int rewardChoiceWindow(void)
         sm = smfBlock_Create();
     }
 
-    desc_ht = smf_ParseAndDisplay(sm, textStd(s_RewardDesc), x+R10+PIX3, y+(R10+PIX3)*sc, z, wd-2*(R10+PIX3)*sc, 0, !init, 0, &gTextAttr_White12, NULL, 0, true); 
+    desc_ht = smf_ParseAndDisplay(sm, textStd(s_RewardDesc), x+UI_R10+PIX3, y+(UI_R10+PIX3)*sc, z, wd-2*(UI_R10+PIX3)*sc, 0, !init, 0, &gTextAttr_White12, NULL, 0, true); 
 
     if(!init)
     {
@@ -172,7 +172,7 @@ int rewardChoiceWindow(void)
         init = true;
     }
 
-    starty = y+desc_ht+(R10+PIX3+CHOICE_SPACE*2)*sc;
+    starty = y+desc_ht+(UI_R10+PIX3+CHOICE_SPACE*2)*sc;
 
     set_scissor(true);
      scissor_dims(x+PIX3*sc,starty,wd-2*PIX3*sc,ht-BUTTON_HT*sc-(starty-y));

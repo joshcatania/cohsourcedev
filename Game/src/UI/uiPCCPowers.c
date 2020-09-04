@@ -777,7 +777,7 @@ static int drawMatchingPowerSets(int startY, int category, int class_index, floa
                 actualSpacing += spacing;
             }
         }
-        drawFrame( PIX2, R6, (PCCSET_X+20)*screenScaleX, (startY- PCCSET_SPACING)*screenScaleY, 5, (PCCSET_WIDTH - 40)*screenScaleX,
+        drawFrame( PIX2, UI_R6, (PCCSET_X+20)*screenScaleX, (startY- PCCSET_SPACING)*screenScaleY, 5, (PCCSET_WIDTH - 40)*screenScaleX,
             ((returnHeight - startY)+PCCSET_SPACING)*screenScaleY, 1.f, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
     }
     return returnHeight+(PCCSET_SPACING);

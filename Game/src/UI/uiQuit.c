@@ -162,7 +162,7 @@ int quitWindow()
      if( !window_getDims( WDW_QUIT, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor ) )
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, 0x00000088 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, 0x00000088 );
 
        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 20*scale + PIX3*scale, z, 190*scale, 30*scale, CLR_ORANGE, "QuitToLogin", 1.3f*scale, 0 ) )
     {

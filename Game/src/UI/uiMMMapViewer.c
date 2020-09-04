@@ -152,13 +152,13 @@ int mmmapviewer_drawNavButton(float x, float y, float z, float wd, float ht, Atl
     if(mouseCollision( &cbox ) && buttonColor)
     {
         *buttonColor = 0xffffffaa;
-        //drawFlatFrame(PIX3, R10, x, y, z+1, wd, ht, 1, 0x88888888, 0x88888888);
+        //drawFlatFrame(PIX3, UI_R10, x, y, z+1, wd, ht, 1, 0x88888888, 0x88888888);
     }
     if(mouseDownHit(&cbox, MS_LEFT))
     {
         if(buttonColor)
             *buttonColor = 0xffffffff;
-        //drawFlatFrame(PIX3, R10, x, y, z+1, wd, ht, 1, 0xffffff88, 0xffffff88);
+        //drawFlatFrame(PIX3, UI_R10, x, y, z+1, wd, ht, 1, 0xffffff88, 0xffffff88);
         return 1;
     }
     return 0;
@@ -263,7 +263,7 @@ int mmmapviewer_display( MMMapViewer *mv )
     AtlasTex *arrowRight = atlasLoadTexture( "chat_separator_arrow_right.tga" );
     F32 buttonWidth = arrowLeft->width*2+2*PIX2*2;
     static HelpButton *pHelp;
-    F32 wdStretch = (mv->wd-R27*2)/((F32)MINIMAP_BASE_DIMENSION);
+    F32 wdStretch = (mv->wd-UI_R27*2)/((F32)MINIMAP_BASE_DIMENSION);
     F32 htStretch = mv->ht/((F32)MINIMAP_BASE_DIMENSION);
     F32 useStretch = MIN(wdStretch, htStretch);
     int nFloors;
@@ -348,11 +348,11 @@ int mmmapviewer_display( MMMapViewer *mv )
         F32 mapWidth = MINIMAP_BASE_DIMENSION*useStretch;
         F32 mapHeight = MINIMAP_BASE_DIMENSION*useStretch;
 
-        tx = mv->x + (mv->wd-R27*2-mapWidth)*.5*sc-PIX3*2;//+R27*sc;
+        tx = mv->x + (mv->wd-UI_R27*2-mapWidth)*.5*sc-PIX3*2;//+UI_R27*sc;
         ty = mv->y + (mv->ht-mapHeight)*.5*sc;
         uibox.x = tx;
         uibox.y =ty;
-        uibox.width = sc*(mv->wd-R27*2)-PIX3*2;
+        uibox.width = sc*(mv->wd-UI_R27*2)-PIX3*2;
         uibox.height = mv->ht;
         clipperPushRestrict(&uibox);
         
@@ -361,7 +361,7 @@ int mmmapviewer_display( MMMapViewer *mv )
 
         clipperPop();
     }
-     drawFlatThreeToneFrame(PIX3, R27, mv->x, mv->y, mv->z, mv->wd, mv->ht, sc, leftColor, centerColor, rightColor);
+     drawFlatThreeToneFrame(PIX3, UI_R27, mv->x, mv->y, mv->z, mv->wd, mv->ht, sc, leftColor, centerColor, rightColor);
 
     return mv->y + mv->ht*useStretch;
 }

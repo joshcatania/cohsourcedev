@@ -979,7 +979,7 @@ int compass_DrawHeaderText( float x, float y, float z, float ht, float wd, float
         smf_SetRawText(&smfBlock, estr, false);
         estrDestroy(&estr);
 
-           return 15*scale + smf_Display(&smfBlock, x+(info_button_wd+exit_button_wd)+R10*scale, y+25*scale, z, wd-exit_button_wd*2-info_button_wd*2-2*R10*scale, 0, 0, 0, &s_taCompassTask, 0);
+           return 15*scale + smf_Display(&smfBlock, x+(info_button_wd+exit_button_wd)+UI_R10*scale, y+25*scale, z, wd-exit_button_wd*2-info_button_wd*2-2*UI_R10*scale, 0, 0, 0, &s_taCompassTask, 0);
     }
 }
 
@@ -1888,7 +1888,7 @@ int compassWindow()
     // draw the internal compass
        drawCompass( x, y, z+5, wd, 27*scale, scale );
 
-     drawFrame( PIX3, R22, x, y, z-1, wd, ht, scale, color, bcolor );
+     drawFrame( PIX3, UI_R22, x, y, z-1, wd, ht, scale, color, bcolor );
 
     set_scissor( 1 );
     scissor_dims( x + PIX3*scale, y+PIX3*scale, wd-2*PIX3*scale, ht-2*PIX3*scale );

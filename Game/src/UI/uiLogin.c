@@ -2376,7 +2376,7 @@ static void selectCharacter()
 
     if( !slot->seconds_till_offline && !bEmpty )
     {
-        drawMenuFrame( R12, 600, 110, 50, 260, 520,CLR_WHITE, 0x00000088, 0 );
+        drawMenuFrame( UI_R12, 600, 110, 50, 260, 520,CLR_WHITE, 0x00000088, 0 );
         smf_ParseAndDisplay( NULL, textStd("OfflineCharMsg"), 612, 122, 50, 228, 488, 1, 1, &gTextAttr, NULL, 0, true);  
     }
 
@@ -2988,13 +2988,13 @@ static bool drawServerSlot( int idx, float y )
             if( isDown( MS_LEFT ) )
             {
                 // height is explicitly fixed size, doesn't scale, this keeps the list looking clean at all scales
-                drawFlatFrame( PIX3, R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x2797d8ff, 0x2797d8ff );
+                drawFlatFrame( PIX3, UI_R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x2797d8ff, 0x2797d8ff );
                 txtclr = CLR_GREEN;
             }
             else
             {
                 // height is explicitly fixed size, doesn't scale, this keeps the list looking clean at all scales
-                drawFlatFrame( PIX3, R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x5e7d9bff, 0x5e7d9bff );
+                drawFlatFrame( PIX3, UI_R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x5e7d9bff, 0x5e7d9bff );
             }
 
             if( canClick && (mouseClickHit( &box, MS_LEFT) || (game_state.editnpc && idx==0) ) )
@@ -3007,7 +3007,7 @@ static bool drawServerSlot( int idx, float y )
         else
         {
             // height is explicitly fixed size, doesn't scale, this keeps the list looking clean at all scales
-            drawFlatFrame( PIX3, R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x7d95acff, 0x7d95acff );
+            drawFlatFrame( PIX3, UI_R10, xPosition(screenScaleX, screenScaleY, SERVER_X + 20), y, 15, (SERVER_WD - 40) * UIScale, SERVER_LIST_ELEMENT_Y - 1, 1.f, 0x7d95acff, 0x7d95acff );
         }
     }
     else
@@ -3992,11 +3992,11 @@ static void loginFrame()
     display_sprite(typefield, xPosition(screenScaleX, screenScaleY, LOGIN_X),
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 52), 10, UIScale, UIScale, CLR_WHITE);
     smf_SetScissorsBox(s_editAccount, 
-        xPosition(screenScaleX, screenScaleY, LOGIN_X + R12),
+        xPosition(screenScaleX, screenScaleY, LOGIN_X + UI_R12),
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 60),
         LOGIN_WD * UIScale, LOGIN_HT * UIScale);
     smf_Display(s_editAccount,
-        xPosition(screenScaleX, screenScaleY, LOGIN_X + R12), 
+        xPosition(screenScaleX, screenScaleY, LOGIN_X + UI_R12), 
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 60), 20,
         LOGIN_WD * UIScale, LOGIN_HT * UIScale, 0, 0, &gTextAttr_LightHybridBlueHybrid12, 0);
 
@@ -4048,11 +4048,11 @@ static void loginFrame()
     display_sprite(typefield, xPosition(screenScaleX, screenScaleY, LOGIN_X), 
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 165), 10, UIScale, UIScale, CLR_WHITE);
     smf_SetScissorsBox(s_editPassword, 
-        xPosition(screenScaleX, screenScaleY, LOGIN_X + R12), 
+        xPosition(screenScaleX, screenScaleY, LOGIN_X + UI_R12), 
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 173),
         LOGIN_WD * UIScale, LOGIN_HT * UIScale);
     smf_Display(s_editPassword, 
-        xPosition(screenScaleX, screenScaleY, LOGIN_X + R12), 
+        xPosition(screenScaleX, screenScaleY, LOGIN_X + UI_R12), 
         yPosition(screenScaleX, screenScaleY, LOGIN_Y + 173), 20,
         LOGIN_WD * UIScale, LOGIN_HT * UIScale, 0, 0, &gTextAttr_LightHybridBlueHybrid12, 0);
 

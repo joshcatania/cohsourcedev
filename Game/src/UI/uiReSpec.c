@@ -633,7 +633,7 @@ void respec_power(void)
     {
         ht = powerSetSelector(153 - sb.offset, respec.category, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, &sb.offset, MENU_RESPEC);
         BuildCBox(&box, 85*screenScaleX,80*screenScaleY,355*screenScaleX,500*screenScaleY);
-        doScrollBarEx( &sb, (475-PIX4*2-R10*2), ht, 88, 110, 30, &box, 0, screenScaleX, screenScaleY );
+        doScrollBarEx( &sb, (475-PIX4*2-UI_R10*2), ht, 88, 110, 30, &box, 0, screenScaleX, screenScaleY );
     }
 
     powerSelector( respec.category, 158, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, 0);
@@ -693,7 +693,7 @@ static void respec_powerCounter(bool powerSelected, float screenScaleX, float sc
         cprnt( DEFAULT_SCRN_WD*screenScaleX/2, 740*screenScaleY , 155, screenScale, screenScale, "PowerRemaining", remaining);
     }
 
-    drawFlatFrame( PIX3, R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, (715-10)*screenScaleY, 40, 200*screenScaleX, 45*screenScaleY, 1.f, color, CLR_BLACK ); // middle
+    drawFlatFrame( PIX3, UI_R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, (715-10)*screenScaleY, 40, 200*screenScaleX, 45*screenScaleY, 1.f, color, CLR_BLACK ); // middle
 }
 
 // finalize all of the powers for slot picking
@@ -1078,9 +1078,9 @@ void respec_powerLevel(void)
     }
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 520*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
 
     // help background
     displayPowerHelpBackground(screenScaleX, screenScaleY);
@@ -1263,7 +1263,7 @@ static void respec_specCounter(float screenScaleX, float screenScaleY)
         color = CLR_RED;
     }
 
-    drawFlatFrame( PIX3, R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, 705*screenScaleY, 150, 200*screenScaleX, (30+15)*screenScaleY, 1.f, color, CLR_BLACK ); // middle
+    drawFlatFrame( PIX3, UI_R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, 705*screenScaleY, 150, 200*screenScaleX, (30+15)*screenScaleY, 1.f, color, CLR_BLACK ); // middle
     cprntEx( DEFAULT_SCRN_WD*screenScaleX/2, 740*screenScaleY , 155, screenScale, screenScale, (CENTER_X), "TotalSlotsRemaining", respec.free_boost_slots + gNumEnhancesLeft );
 
     if(gNumEnhancesLeft)
@@ -1439,11 +1439,11 @@ void respec_assignment(void)
     prnt( 1000, 30, 50, 1.f, 1.f, textStd("EquivilentLevel", respec.pchar->iLevel) );
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
     BuildCBox( &box[0], FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
     BuildCBox( &box[1], (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, POOL_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, POOL_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
     BuildCBox( &box[2], (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, POOL_HEIGHT*screenScaleY );
 
     if( D_MOUSEHIT == drawStdButton( (FRAME_SPACE+FRAME_WIDTH/2)*screenScaleX, (SL_FRAME_TOP-20)*screenScaleY, 45, 120*screenScaleX, 20*screenScaleY, SELECT_FROM_UISKIN( CLR_BTN_HERO, CLR_BTN_VILLAIN, CLR_BTN_ROGUE ), (s_ShowCombatNumbersHere==1)?"HidePowerNumbers":"ShowCombatNumbersHere", 1.f, 0 ))
@@ -1499,7 +1499,7 @@ void respec_assignment(void)
                 }
 
                 // draw the small inner frame
-                drawFrame( PIX2, R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                drawFrame( PIX2, UI_R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                 primY += POWER_SPEC_HT;
                 clipperPop();
@@ -1527,7 +1527,7 @@ void respec_assignment(void)
                 }
 
                 // draw the small inner frame
-                drawFrame( PIX2, R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                 secY += POWER_SPEC_HT;
                 clipperPop();
@@ -1555,7 +1555,7 @@ void respec_assignment(void)
                 }
 
                 // draw the small inner frame
-                drawFrame( PIX2, R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
                 poolY += POWER_SPEC_HT;
                 clipperPop();
@@ -2034,7 +2034,7 @@ static void s_respec_drawpile(float screenScaleX, float screenScaleY)
         BuildCBox( &box, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY);
         if( mouseCollision( &box ) )
         {
-            drawMenuFrame( R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_GREEN, 0x33333388, 0 );
+            drawMenuFrame( UI_R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_GREEN, 0x33333388, 0 );
 
             if( !isDown(MS_LEFT) )
             {
@@ -2070,10 +2070,10 @@ static void s_respec_drawpile(float screenScaleX, float screenScaleY)
             }
         }
         else
-            drawMenuFrame( R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_GREEN, CLR_BLACK, 0 );
+            drawMenuFrame( UI_R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_GREEN, CLR_BLACK, 0 );
     }
     else
-          drawMenuFrame( R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_WHITE, CLR_BLACK, 0 );
+          drawMenuFrame( UI_R12, RESPEC_PILE_X*screenScaleX, RESPEC_PILE_Y*screenScaleY, 10, RESPEC_PILE_WIDTH*screenScaleX, RESPEC_PILE_HEIGHT*screenScaleY, CLR_WHITE, CLR_BLACK, 0 );
 
 }
 
@@ -2160,7 +2160,7 @@ static void s_drawReSpecInventory( int x, int y, int z, float screenScaleX, floa
     cprnt( ((RESPEC_INV_WIDTH*screenScale / (2*screenScaleX)) + x)*screenScaleX, y*screenScaleY, 20, screenScale, screenScale, "SpecializationsInventory" );
 
     tabColor = s_getTabColor();
-    drawTabControl(s_enhancementTabsOfTen, (x+R16)*screenScaleX, (y+2)*screenScaleY, z, RESPEC_INV_WIDTH - 2*R10*screenScale, TAB_HEIGHT*screenScaleY, screenScale, tabColor, tabColor, TabDirection_Horizontal);
+    drawTabControl(s_enhancementTabsOfTen, (x+UI_R16)*screenScaleX, (y+2)*screenScaleY, z, RESPEC_INV_WIDTH - 2*UI_R10*screenScale, TAB_HEIGHT*screenScaleY, screenScale, tabColor, tabColor, TabDirection_Horizontal);
     y += 16 * screenScale;
 
     pSelectedTab = (char *)uiTabControlGetSelectedData(s_enhancementTabsOfTen);
@@ -2301,10 +2301,10 @@ static void respec_placement(void)
     }
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
-    drawMenuFrame( R12, ((RESPEC_PILE_X + (RESPEC_PILE_WIDTH / 2)) - (RESPEC_INV_WIDTH*screenScale / (2*screenScaleX)))*screenScaleX, RESPEC_INV_Y*screenScaleY, 10, RESPEC_INV_WIDTH*screenScale, (SPEC_WD + 36)*screenScale, CLR_WHITE, CLR_BLACK, 0 ); // inventory
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, 392*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, ((RESPEC_PILE_X + (RESPEC_PILE_WIDTH / 2)) - (RESPEC_INV_WIDTH*screenScale / (2*screenScaleX)))*screenScaleX, RESPEC_INV_Y*screenScaleY, 10, RESPEC_INV_WIDTH*screenScale, (SPEC_WD + 36)*screenScale, CLR_WHITE, CLR_BLACK, 0 ); // inventory
 
     BuildCBox(&box[0], FRAME_SPACE*screenScaleX, (71*screenScaleY)+PIX3, FRAME_WIDTH*screenScaleX, (390*screenScaleY)-(2*PIX3) );
     BuildCBox(&box[1], (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, (71*screenScaleY)+PIX3, FRAME_WIDTH*screenScaleX, (390*screenScaleY)-(2*PIX3) );
@@ -2352,7 +2352,7 @@ static void respec_placement(void)
             }
 
             // draw the small inner frame
-            drawFrame( PIX2, R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+            drawFrame( PIX2, UI_R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
             primY += POWER_SPEC_HT;
             clipperPop();
@@ -2377,7 +2377,7 @@ static void respec_placement(void)
             }
 
             // draw the small inner frame
-            drawFrame( PIX2, R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+            drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
             secY += POWER_SPEC_HT;
             clipperPop();
@@ -2402,7 +2402,7 @@ static void respec_placement(void)
             }
 
             // draw the small inner frame
-            drawFrame( PIX2, R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+            drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
             poolY += POWER_SPEC_HT;
             clipperPop();

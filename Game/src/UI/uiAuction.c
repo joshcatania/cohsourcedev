@@ -1194,7 +1194,7 @@ F32 drawAuctionNavTree( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 sc )
 
     for( i = 0; i < eaSize(&g_pRoot->ppNodes); i++ )
     {
-        doc_ht += drawNavTreeNode( g_pRoot->ppNodes[i], x, y + doc_ht + R10*sc - sb.offset, z, sc );
+        doc_ht += drawNavTreeNode( g_pRoot->ppNodes[i], x, y + doc_ht + UI_R10*sc - sb.offset, z, sc );
     }
 
     clipperPop();
@@ -1316,7 +1316,7 @@ static void drawItemInfo( AuctionItem * pItem, F32 x, F32 y, F32 z, F32 wd, F32 
     UIBox box;
     static ScrollBar sb = {0};
 
-      drawFlatFrame(PIX3, R10, x, y, z, wd, ht, sc, 0x00000044, 0x00000044 );
+      drawFlatFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, 0x00000044, 0x00000044 );
 
     x += 10*sc;
     y += 5*sc;
@@ -1443,7 +1443,7 @@ static void drawItemHistory( AuctionItem * pItem, F32 x, F32 y, F32 z, F32 wd, F
 
     font(&game_9);
      font_color( CLR_AH_TEXT, CLR_AH_TEXT );
-    drawFlatFrame( PIX3, R10, x, y, z, wd, ht, sc, 0x00000044, 0x00000044 );
+    drawFlatFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, 0x00000044, 0x00000044 );
 
     for( i = 0; i < eaSize(&searchMenuHistory); i++ )
     {
@@ -1524,7 +1524,7 @@ static F32 drawAuctionItem( AuctionItem * pItem, int i, F32 x, F32 y, F32 z, F32
             link_ht = 15*sc;
 
         ht += title_ht + link_ht;
-         drawFlatFrame( PIX3, R10, x, y+2*sc, z-1, wd, ht-2*sc, sc, clr, clr );
+         drawFlatFrame( PIX3, UI_R10, x, y+2*sc, z-1, wd, ht-2*sc, sc, clr, clr );
          uiBoxDefine(&uibox, x+5*sc, y, wd-10*sc, ht);
         clipperPushRestrict(&uibox);
 
@@ -1744,7 +1744,7 @@ static F32 drawAuctionItem( AuctionItem * pItem, int i, F32 x, F32 y, F32 z, F32
             auction_updateHistory(pItem->pchIdentifier);
         }
 
-        drawFlatFrame( PIX3, R10, x, y+2*sc, z, wd, ht-2*sc, sc, clr, clr );
+        drawFlatFrame( PIX3, UI_R10, x, y+2*sc, z, wd, ht-2*sc, sc, clr, clr );
         uiBoxDefine(&uibox, x+5*sc, y, wd-10*sc, ht);
         clipperPushRestrict(&uibox);
 
@@ -2002,7 +2002,7 @@ static F32 aucton_sortButton( F32 x, F32 y, F32 z, F32 sc, int eSort, char * pch
 
     translatedText = textStd(pchText);
 
-    wd = str_wd( font_grp, sc, sc, translatedText ) + 2*R10*sc + 10*sc;
+    wd = str_wd( font_grp, sc, sc, translatedText ) + 2*UI_R10*sc + 10*sc;
 
     if(s_sort_idx == eSort && !active)
         s_sort_idx = 1;
@@ -2056,7 +2056,7 @@ static F32 aucton_sortButton( F32 x, F32 y, F32 z, F32 sc, int eSort, char * pch
     prnt( x-wd+8*sc, y, z+5, sc, sc, "%s", translatedText );
 
     if(arrow)
-        display_sprite(arrow, x - (R10+8)*sc, ty, z+5, 12*sc/arrow->width, 10*sc/arrow->height, CLR_WHITE );
+        display_sprite(arrow, x - (UI_R10+8)*sc, ty, z+5, 12*sc/arrow->width, 10*sc/arrow->height, CLR_WHITE );
 
     clipperPop();
     font_ital(0);
@@ -2462,7 +2462,7 @@ static F32 drawAuctionInventoryItem( AuctionItem * pItem, int status, int i, F32
        if( mouseCollision(&box) )
         clr = CLR_AH_BACKGROUND_LIT&0xffffffcc;
 
-       drawFlatFrame( PIX3, R10, x, y+2*sc, z, wd, ht-2*sc, sc, clr, clr );
+       drawFlatFrame( PIX3, UI_R10, x, y+2*sc, z, wd, ht-2*sc, sc, clr, clr );
      displayAuctionItemIcon( pItem, x, y, z, .6f*sc );
  
     uiBoxDefine(&uibox, x, y, wd, ht);
@@ -3365,7 +3365,7 @@ enum
 };
 
 #define MIDDLE_BAR_SPEED    (1.f)
-#define MIDDLE_BAR_MIN        (R10+PIX3)*2
+#define MIDDLE_BAR_MIN        (UI_R10+PIX3)*2
 
 static int auction_middleBarState( float x, float y, float z, float * middleBarHt, float top, float max_ht, float cx, float wd, float scale, int color, int id, float min, float max )
 {
@@ -3391,7 +3391,7 @@ static int auction_middleBarState( float x, float y, float z, float * middleBarH
 
     y -= mid->height/2;
 
-      BuildCBox( &box, cx + R10*scale, y - mid->width*scale, wd - R10*2*scale, mid->width*2*scale );
+      BuildCBox( &box, cx + UI_R10*scale, y - mid->width*scale, wd - UI_R10*2*scale, mid->width*2*scale );
 
     if( !win || win == id )
     {
@@ -3537,7 +3537,7 @@ int auctionWindow()
 
      // Search Pane
      search_ht = drawAuctionSearch( x, y, z+1, wd, sc, color );
-       drawFlatFrame(PIX3, R10, x + PIX3, y + PIX3, z, wd -2*PIX3, search_ht-4*PIX3, sc, 0xffffff33, 0xffffff33 );
+       drawFlatFrame(PIX3, UI_R10, x + PIX3, y + PIX3, z, wd -2*PIX3, search_ht-4*PIX3, sc, 0xffffff33, 0xffffff33 );
 
     // Middle divider bar
        inventory_ht = (ht - search_ht)*auction_divider;

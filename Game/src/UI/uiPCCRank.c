@@ -287,7 +287,7 @@ static void drawPCCRankFrame(float leftX, float leftY, float width, float height
         display_sprite( ypipe, leftX + width - size, leftY + w, z+1, 1.0f, (height - 2*w)/ypipe->height, color );
         display_sprite( back,  leftX + width - w, leftY + w, z, (w - size)/back->width, (height - 2*w)/back->height, back_color );    
     }
-    drawFlatFrame(PIX3, R10, leftX, leftY, 5, width, height, 1.0, 0x00000000, 0x00000088);
+    drawFlatFrame(PIX3, UI_R10, leftX, leftY, 5, width, height, 1.0, 0x00000000, 0x00000088);
 
 }
 static char *getDifficultySelectionDescriptionText( int difficulty)

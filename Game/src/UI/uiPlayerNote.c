@@ -553,7 +553,7 @@ int playerNoteWindow()
         uiTabControlAdd(tc, "PrivateHistory", (int*)1 );
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     font(&game_12);
     font_color(CLR_WHITE, CLR_WHITE);

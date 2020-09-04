@@ -465,21 +465,21 @@ static float badge_display( float x, float y, float z, float sc, float wd,
         last_wd = icon->width;
 
     // display the title
-    tx += last_wd*sc + R10*sc;
+    tx += last_wd*sc + UI_R10*sc;
 
     font( &game_14 );
     font_color(0x00deffff, 0x00deffff);
 
     // Title
     titleWd = str_wd(font_grp, sc, sc, pchTitle);
-    if( pchTitle && titleWd < wd-(last_wd+4*PIX3+R10*2)*sc ) // don't need to wrap it
+    if( pchTitle && titleWd < wd-(last_wd+4*PIX3+UI_R10*2)*sc ) // don't need to wrap it
     {
         prnt( tx, ty + ht, z+1, sc, sc, pchTitle );
     }
     else 
     {
         s_taTitle.piScale = (int *)((int)(sc*SMF_FONT_SCALE));
-        ht += smf_ParseAndDisplay(badgeDisplay->titleBlock, textStd(pchTitle), tx, ty, z+1, wd-(last_wd/sc+4*PIX3+R10)*sc, 100*sc, 
+        ht += smf_ParseAndDisplay(badgeDisplay->titleBlock, textStd(pchTitle), tx, ty, z+1, wd-(last_wd/sc+4*PIX3+UI_R10)*sc, 100*sc, 
                                     s_bReparse, 0, &s_taTitle, NULL, 0, true);
         titleWd = wd-last_wd;
     }
@@ -491,7 +491,7 @@ static float badge_display( float x, float y, float z, float sc, float wd,
     {
         // The completion value is now calibrated in millionths rather than
         // percentage points.
-        displayProgressBar(tx, ty + ht + PIX3+PIX3/2, z+1, wd-(last_wd+4*PIX3+R10*2)*sc, sc, BADGE_COMPLETION(badgeField)/1000000.f );
+        displayProgressBar(tx, ty + ht + PIX3+PIX3/2, z+1, wd-(last_wd+4*PIX3+UI_R10*2)*sc, sc, BADGE_COMPLETION(badgeField)/1000000.f );
         ht += PIX3*3;
     }
 
@@ -500,7 +500,7 @@ static float badge_display( float x, float y, float z, float sc, float wd,
     // display the description
     s_taDefaults.piScale = (int *)((int)(sc*SMF_FONT_SCALE));
     ht += smf_ParseAndDisplay(badgeDisplay->textBlock, gSupergroupBadges?g_pchSgBadgeText[badge->iIdx]:g_pchBadgeText[badge->iIdx], 
-                                tx, ty + ht, z+1, wd-(last_wd+4*PIX3+R10)*sc, 100*sc, s_bReparse, 0, 
+                                tx, ty + ht, z+1, wd-(last_wd+4*PIX3+UI_R10)*sc, 100*sc, s_bReparse, 0, 
                                 &s_taDefaults, NULL, 0, true);
 
     if (CTS_SHOW_BADGES)
@@ -510,7 +510,7 @@ static float badge_display( float x, float y, float z, float sc, float wd,
     if(pchButton)
     {
         int bOnArchitect = playerPtr() && playerPtr()->onArchitect && game_state.mission_map;
-        buttonRet = drawStdButton(tx + 5*(wd-(last_wd+4*PIX3+R10)*sc)/6, ty + ht + PIX3*2*sc + 8*sc, z+1, (wd-(last_wd+4*PIX3+R10)*sc)/3, 16*sc, fcolor, pchButton, sc, bOnArchitect);
+        buttonRet = drawStdButton(tx + 5*(wd-(last_wd+4*PIX3+UI_R10)*sc)/6, ty + ht + PIX3*2*sc + 8*sc, z+1, (wd-(last_wd+4*PIX3+UI_R10)*sc)/3, 16*sc, fcolor, pchButton, sc, bOnArchitect);
         if(buttonRet == D_MOUSEHIT)
         {
             char tmp[32];
@@ -602,7 +602,7 @@ static float badge_display( float x, float y, float z, float sc, float wd,
             fcolor = CLR_SELECTION_FOREGROUND;
             fbcolor = CLR_SELECTION_BACKGROUND;
         }
-        drawFlatFrame(PIX2, R10, x, y, z, wd, ht, sc, fcolor, fbcolor);
+        drawFlatFrame(PIX2, UI_R10, x, y, z, wd, ht, sc, fcolor, fbcolor);
     }
     else if( g_DebugBadgeDisplayMode != 0 )
     {
@@ -612,8 +612,8 @@ static float badge_display( float x, float y, float z, float sc, float wd,
     PERFINFO_AUTO_STOP_START("bottom", 1);
 
     // frame and icon
-    tx -= last_wd*sc + R10*sc;
-    drawFlatFrame(PIX2, R10, x, y, z, wd, ht, sc, fcolor, fbcolor);
+    tx -= last_wd*sc + UI_R10*sc;
+    drawFlatFrame(PIX2, UI_R10, x, y, z, wd, ht, sc, fcolor, fbcolor);
     display_sprite( icon, ceil(tx + (last_wd - icon->width)*sc/2), ceil(y + (ht - icon->height*sc)/2), z, sc, sc, color );
     if( overlay )
         display_sprite( overlay, ceil(tx + (last_wd- overlay->width)*sc/2), ceil(y + (ht - overlay->height*sc)/2), z+1, sc, sc, CLR_WHITE );
@@ -702,7 +702,7 @@ int badgesWindow(void)
         gSupergroupBadges = false;
 
     iSize     = gSupergroupBadges?eaSize(&g_SgroupBadges.ppBadges):eaSize(&g_BadgeDefs.ppBadges);
-    edge_off = (R10+PIX3)*sc;
+    edge_off = (UI_R10+PIX3)*sc;
     view_y     = y + edge_off + TAB_HT;
 
     // alloc text wrapping structures
@@ -819,7 +819,7 @@ int badgesWindow(void)
     }
 
     // window frame
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
       if(window_getMode(WDW_BADGES) != WINDOW_DISPLAYING)
         return 0;
@@ -831,7 +831,7 @@ int badgesWindow(void)
     font_color(CLR_WHITE, CLR_WHITE);
     prnt(x + (15.0f * sc), y + (18.0f * sc), z + 10.0f, sc, sc, "BadgeCategoryHeader");
  
-    drawFrame(PIX2, R10, x + (80.0f * sc), y + 2.0f*sc, z + 1, cat_wd, 20.0f * sc, sc, color, bcolor);
+    drawFrame(PIX2, UI_R10, x + (80.0f * sc), y + 2.0f*sc, z + 1, cat_wd, 20.0f * sc, sc, color, bcolor);
     prnt(x + 92.0f * sc, y + 18.0f * sc, z + 10.0f, sc, sc, "%s \\ %s", 
             textStd(badge_CollectionGetName(gSelectedCollection)), textStd(badge_CategoryGetName(e, gSelectedCollection, gSelectedTab)));
 
@@ -956,7 +956,7 @@ int badgesWindow(void)
     set_scissor(0);
 
     //scrollbar
-     doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, view_y - y, wd, (PIX3+R10+TAB_HT)*sc, z+5, &box, 0 );
+     doScrollBar( &sb, ht - edge_off*2 - (TAB_HT+20)*sc, view_y - y, wd, (PIX3+UI_R10+TAB_HT)*sc, z+5, &box, 0 );
 
     if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht - 12, z, 120*sc, 16*sc, color, "ClearBadgeTitle", sc, gSelectedBadge ))
         badge_Select( -1 );
@@ -1060,7 +1060,7 @@ int badgeMonitorWindow(void)
             //
             CBox box;
             BuildCBox(&box, x, y, width, height);
-            drawFrame(PIX2, R4, x, y, z, width, height, scale, color, bcolor);
+            drawFrame(PIX2, UI_R4, x, y, z, width, height, scale, color, bcolor);
             clipperPushCBox(&box);
 
             y += 2 * scale;

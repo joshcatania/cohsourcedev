@@ -88,7 +88,7 @@ int amountSliderWindow(void)
         int countLimit = sAmountSlider.dontLimitTo99 ? 6 : 3;
 
         // this is a total hack copied from the options menu
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, clr|0xff, bkclr|0xff);
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, clr|0xff, bkclr|0xff);
 
         font(&game_12);
         font_color( CLR_WHITE, CLR_WHITE );
@@ -150,7 +150,7 @@ int amountSliderWindow(void)
             box.left -= 16 * sc;
         }
 
-        drawFrameBox(PIX3, R10, &box, z, clr, bkclr);
+        drawFrameBox(PIX3, UI_R10, &box, z, clr, bkclr);
         uiBoxFromCBox(&bounds, &box);
         uiBoxAlter(&bounds, UIBAT_SHRINK, UIBAD_LEFT, 8*sc);
         uiBoxAlter(&bounds, UIBAT_SHRINK, UIBAD_TOP, 3*sc);

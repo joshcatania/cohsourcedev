@@ -184,7 +184,7 @@ float uiTreeGenericTextDrawCallback(uiTreeNode *pNode, float x, float y, float z
         }
 
         // draw frame
-        drawFlatFrame(PIX2, R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
+        drawFlatFrame(PIX2, UI_R10, x, y, z-0.5, width, textHeight+5*scale, scale, forground_color, 
             box_color);
 
         // check for click

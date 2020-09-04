@@ -1,6 +1,6 @@
 #include "UI/uiCustomVillainGroupWindow.h"
 #include "gameComm/wdwbase.h"    //    for window defines
-#include "UI/uiUtil.h"        //    for constants like PIX3 and R10
+#include "UI/uiUtil.h"        //    for constants like PIX3 and UI_R10
 #include "UI/uiWindows.h"    //    for window functions
 #include "UI/uiUtilGame.h"    //    for drawFrame
 #include "UI/uiUtilMenu.h"    //    for textWithDot
@@ -611,7 +611,7 @@ static int drawVillainGroupListItems(CustomVillainGroupList *villainList, float 
             estrCreate(&nameString);
             estrConcatf(&nameString, "<color %s>%s</color>", villainList->items[i]->dontAutoSpawn ? "Gray": "Architect",villainList->items[i]->name);
             smf_SetRawText(&villainList->smfBlock, nameString, 0);
-            newH = MAX(smf_Display(&villainList->smfBlock,x+PIX3+R10,endY, z, width, 18*sc, 0, 0, &textAttr_CVGList, NULL), (18*sc));
+            newH = MAX(smf_Display(&villainList->smfBlock,x+PIX3+UI_R10,endY, z, width, 18*sc, 0, 0, &textAttr_CVGList, NULL), (18*sc));
             estrDestroy(&nameString);
             if (villainList->items[i]->added)
             {
@@ -632,7 +632,7 @@ static int drawVillainGroupListItems(CustomVillainGroupList *villainList, float 
             }
             if (s_currentlySelectedPtr == villainList->items[i])
             {
-                //                drawFlatFrame(PIX2, R10, x+PIX3, endY+1, z, width-2*PIX3, newH+2, 1.0f, 0x77777777, 0x48796C77);
+                //                drawFlatFrame(PIX2, UI_R10, x+PIX3, endY+1, z, width-2*PIX3, newH+2, 1.0f, 0x77777777, 0x48796C77);
                 drawBox(&box, z+1, 0, 0x48796C77 );
                 if (selectionOnLeft)
                 {
@@ -1583,7 +1583,7 @@ static void drawRightGroupWindow(float x, float y, float z, float width, float h
         }
     }
     widgetHeight = height- ((60 + CVGLIST_RANKS * 30)*sc);
-    drawFlatFrame(PIX2, R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
+    drawFlatFrame(PIX2, UI_R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
     drawMMBar("CVGCreationString", x+(width/2), y, z+10, width-(10*sc), sc, 1, 0);
     BuildCBox(&rightHelpGroupBox, x+width-(600*sc), y-(70*sc), 700*sc, 200*sc);
     helpButton(&rightGroupHelpButton, x+ width - (30*sc), y, z+20, sc, "CVGCreationToolTip", &rightHelpGroupBox );
@@ -1596,7 +1596,7 @@ static void drawRightGroupWindow(float x, float y, float z, float width, float h
             nextY += (30*sc) +(widgetHeight *visibleRelativeHeight[i - 1]);
 
         visibleRelativeHeight[i] = (( (1- timer) * visibleRelativeHeight[i] ) + ( ( (visibleFrames[i] == WINDOW_SHRINKING) || (!visibleCount) ) ? 0 : (timer/visibleCount)));
-        drawFrame(PIX3, R10, x+(15*sc), y + nextY, z, width-(30*sc), (widgetHeight*visibleRelativeHeight[i]), sc,CLR_MM_TEXT_BACK, 0x000000FF);
+        drawFrame(PIX3, UI_R10, x+(15*sc), y + nextY, z, width-(30*sc), (widgetHeight*visibleRelativeHeight[i]), sc,CLR_MM_TEXT_BACK, 0x000000FF);
         if (drawMMBar(frameText[i], x+(width/2), y+nextY, z+10, width-(40*sc), sc, 1, 1))
         {
             visibleFrames[i] = ( visibleFrames[i] == WINDOW_SHRINKING ) ? WINDOW_GROWING : WINDOW_SHRINKING;
@@ -1775,7 +1775,7 @@ static void drawSelectionInfo(float x, float y, float z, float width, float heig
     int selectionValid = 0;
     int textHeight = 0;
     float previewImageWidth = 0;
-    drawFlatFrame(PIX2, R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
+    drawFlatFrame(PIX2, UI_R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
     BuildCBox(&previewHelpBox, x+width-(600*sc), y-(20*sc), 700*sc, 200*sc);
     helpButton(&previewHelpButton, x+ width - (30*sc), y, z+20, sc, "CVGPreviewToolTip", &previewHelpBox );
     if (drawMMBar("CVGPreviewString", x+(width/2), y, z+10, width-(10*sc), sc, 1, 1))
@@ -2014,7 +2014,7 @@ static int drawSortOption(float startX, float y, float z, float sc, int i, Custo
     }
     if (currentSortingOption != i)
     {
-        drawFlatFrameBox(PIX2, R4, &cbox, z,clr1, clr2);
+        drawFlatFrameBox(PIX2, UI_R4, &cbox, z,clr1, clr2);
     }
     if (currentSortingOption == i)
     {
@@ -2028,7 +2028,7 @@ static int drawSortOption(float startX, float y, float z, float sc, int i, Custo
             arrow = atlasLoadTexture( "chat_separator_arrow_up.tga" );
         }
         display_sprite(arrow, x-(arrow->width/2), y+5*sc, z, sc, sc, CLR_WHITE);
-        drawFlatFrame(PIX2, R4, x-((arrow->width/2)+(2*sc)),cbox.ly, z-1, cbox.hx+(4*sc)+(arrow->width/2)-cbox.lx, cbox.hy-cbox.ly, sc,CLR_MM_TEXT_DARK& 0xFFFFFF55, CLR_MM_TEXT & 0xFFFFFF55);
+        drawFlatFrame(PIX2, UI_R4, x-((arrow->width/2)+(2*sc)),cbox.ly, z-1, cbox.hx+(4*sc)+(arrow->width/2)-cbox.lx, cbox.hy-cbox.ly, sc,CLR_MM_TEXT_DARK& 0xFFFFFF55, CLR_MM_TEXT & 0xFFFFFF55);
     }
     font(&game_12);
     prnt(x+(8*sc), y+(16*sc), z, sc, sc, textStd(sortOptions[i]));
@@ -2127,7 +2127,7 @@ static void drawLeftGroupWindow(float x, float y, float z, float width, float he
     }
 
     //    drawFrame (for list selection)
-    drawFlatFrame(PIX2, R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
+    drawFlatFrame(PIX2, UI_R10, x,y,z,width, height,sc,CLR_FRAME_GREY,CLR_MM_FRAME_BACK );
     drawMMBar( "CVGAvailableEnemiesString",  x + width/2, y, z+5, width-(10*sc), sc, 1, 0 );
     BuildCBox(&leftGroupHelpBox, x+width-(600*sc), y-(20*sc), 700*sc, 200*sc);
     helpButton(&leftGroupHelpButton, x+ width - (30*sc), y, z+20, sc, "CVGAvailableEnemyToolTip", &leftGroupHelpBox );
@@ -2154,7 +2154,7 @@ static void drawLeftGroupWindow(float x, float y, float z, float width, float he
     selectVillainGroup(showStandardCritters? pVillainElementList : pCVGOriginalElementList, x+(width/2),y+(65*sc),z+10, sc, width-20, 0);
 
     //    draw frame (list view?)
-    drawFrame(PIX3, R10, x+20, y + (110*sc), z, width-40, height-(205*sc), sc, CLR_MM_TEXT_BACK, 0x000000FF);
+    drawFrame(PIX3, UI_R10, x+20, y + (110*sc), z, width-40, height-(205*sc), sc, CLR_MM_TEXT_BACK, 0x000000FF);
     drawTabControl(showStandardCritters? tc : tcCustom, x+30, y + (110*sc),z, width-40, height, sc, CLR_FRAME_GREY, CLR_MM_TEXT_BACK, TabDirection_Horizontal);
 
     if (showStandardCritters)
@@ -2573,8 +2573,8 @@ int customVillainGroupWindow()
         font(&game_12);
         font_ital(1);
         font_color(CLR_MM_TITLE_OPEN, CLR_MM_TITLE_OPEN);
-        cprntEx( x + R10 + PIX3, y + (PADDING*sc) + PIX3, z, sc*1.5, sc*1.5, CENTER_Y, "CVGCreatorTitleText" );
-        display_sprite( white, x+ R10 + PIX3, y+(25*sc), z, (wd- (2*(R10+PIX3)))/(white->width),2.0f/(white->height), 0xbbbbbb44 );
+        cprntEx( x + UI_R10 + PIX3, y + (PADDING*sc) + PIX3, z, sc*1.5, sc*1.5, CENTER_Y, "CVGCreatorTitleText" );
+        display_sprite( white, x+ UI_R10 + PIX3, y+(25*sc), z, (wd- (2*(UI_R10+PIX3)))/(white->width),2.0f/(white->height), 0xbbbbbb44 );
         font_color(CLR_MM_TEXT, CLR_MM_TEXT);
         cprntEx( x + wd/2, y + ht - (55*sc),z, sc, sc, CENTER_X, "CVGVillainGroupLevelCoverageString");
         coverageTextWidth = str_wd(&game_12, sc, sc, textStd("CVGVillainGroupLevelCoverageString"));
@@ -2591,7 +2591,7 @@ int customVillainGroupWindow()
             prnt( x + wd/2 + coverageTextWidth/2 + (400*sc), coverageHeight - 5*sc, z+30, sc, sc, "CVGLevelsCovered");
         }
         font_ital(0);
-        drawSaveControls( x + R10 + PIX3, y+35*sc, z, wd, 30*sc, sc);
+        drawSaveControls( x + UI_R10 + PIX3, y+35*sc, z, wd, 30*sc, sc);
         drawLevelRanges(x+(wd/2)-(240*sc),y+ ht - (50*sc),z,(480*sc), sc, 0);
         y += (80*sc);
         ht -= (150*sc);

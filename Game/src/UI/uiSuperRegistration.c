@@ -690,7 +690,7 @@ static int drawEmblemPicker(int* emblemIndexInOut)
     uiBoxDefine(&baseFrame, 0, 0, DEFAULT_SCRN_WD, DEFAULT_SCRN_HT);
     uiBoxAlter(&baseFrame, UIBAT_SHRINK, UIBAD_LEFT | UIBAD_RIGHT, 55); 
     uiBoxAlter(&baseFrame, UIBAT_SHRINK, UIBAD_TOP | UIBAD_BOTTOM, EMBLEM_BUTTON_AREA); 
-      drawMenuFrame(R12, baseFrame.x, baseFrame.y, z, baseFrame.width, baseFrame.height, CLR_WHITE, SELECT_FROM_UISKIN(0x04295aff, 0x5a0004ff, 0x000044ff), 0);
+      drawMenuFrame(UI_R12, baseFrame.x, baseFrame.y, z, baseFrame.width, baseFrame.height, CLR_WHITE, SELECT_FROM_UISKIN(0x04295aff, 0x5a0004ff, 0x000044ff), 0);
 
     // Draw the emblems.
     uiBoxDefine(&emblemDrawingArea, 0, 0, 
@@ -821,7 +821,7 @@ static int colorPaletteDraw(int* colorInOut)
     frameBox = box;
     uiBoxAlter(&frameBox, UIBAT_GROW, UIBAD_ALL, 20);
     uiBoxAlter(&frameBox, UIBAT_GROW, UIBAD_BOTTOM, 40);
-    drawMenuFrame(R12, frameBox.x, frameBox.y, z, frameBox.width, frameBox.height, CLR_WHITE, CLR_BLACK, 0);
+    drawMenuFrame(UI_R12, frameBox.x, frameBox.y, z, frameBox.width, frameBox.height, CLR_WHITE, CLR_BLACK, 0);
     for(i = 0; i < eaSize( (F32***) &palette->color ); i++)
     {
         int clr = getColorFromVec3(*(palette->color[i]));
@@ -885,12 +885,12 @@ static int permissionEditorDraw()
          if(sgroupPermissions[i].used)
         {
             usedPermissions++;
-            permissionNameWidth = MAX(permissionNameWidth, 2*R10+str_wd(&game_12, 1, 1, sgroupPermissions[i].name));
+            permissionNameWidth = MAX(permissionNameWidth, 2*UI_R10+str_wd(&game_12, 1, 1, sgroupPermissions[i].name));
         }
     }
 
     uiBoxDefine(&box, 0, 0, 
-        COLUMN_WIDTH * NUM_SG_RANKS_VISIBLE + permissionNameWidth + 2 *(PIX3+R10),
+        COLUMN_WIDTH * NUM_SG_RANKS_VISIBLE + permissionNameWidth + 2 *(PIX3+UI_R10),
          ROW_HEIGHT * (usedPermissions + kSgrpBaseEntryPermission_Count + 4));
 
     // Center the drawing region on screen.
@@ -898,16 +898,16 @@ static int permissionEditorDraw()
     box.y = (DEFAULT_SCRN_HT - box.height)/2 - 40; // account for the bottom grow below
 
     // set text drawing offset
-     xTxt = box.x + R10 + PIX3 + permissionNameWidth / 2;
+     xTxt = box.x + UI_R10 + PIX3 + permissionNameWidth / 2;
 
     frameBox = box;
      uiBoxAlter(&frameBox, UIBAT_GROW, UIBAD_BOTTOM, 20);
-       drawMenuFrame(R12, frameBox.x, frameBox.y, z, frameBox.width, frameBox.height, CLR_WHITE, CLR_BLACK, 0);
+       drawMenuFrame(UI_R12, frameBox.x, frameBox.y, z, frameBox.width, frameBox.height, CLR_WHITE, CLR_BLACK, 0);
 
-     uiBoxAlter(&box, UIBAT_SHRINK, UIBAD_LEFT|UIBAD_RIGHT, R10 );
+     uiBoxAlter(&box, UIBAT_SHRINK, UIBAD_LEFT|UIBAD_RIGHT, UI_R10 );
 
     setHeadingFontFromSkin(0);
-       cprntEx(box.x + R10*2, box.y+2*R10, z+1, 1, 1, CENTER_Y, "SupergroupPermissionsStr");
+       cprntEx(box.x + UI_R10*2, box.y+2*UI_R10, z+1, 1, 1, CENTER_Y, "SupergroupPermissionsStr");
 
     font( &title_9 );
 
@@ -918,7 +918,7 @@ static int permissionEditorDraw()
     {
         strncpyt(titleBuf, ranks[rank].name, 20);
 
-          while(titleScale > MIN_TITLE_SCALE && str_wd( &title_9, titleScale, titleScale, titleBuf) > COLUMN_WIDTH-2*R10 )
+          while(titleScale > MIN_TITLE_SCALE && str_wd( &title_9, titleScale, titleScale, titleBuf) > COLUMN_WIDTH-2*UI_R10 )
         {
             titleScale -= 0.025f;
         }
@@ -929,7 +929,7 @@ static int permissionEditorDraw()
         int displayColumn = NUM_SG_RANKS_VISIBLE - rank - 1;
         strncpyt(titleBuf, ranks[rank].name, 20);
 
-          while(str_wd( &title_9, titleScale, titleScale, titleBuf) > COLUMN_WIDTH-2*R10 )
+          while(str_wd( &title_9, titleScale, titleScale, titleBuf) > COLUMN_WIDTH-2*UI_R10 )
         {
             strncpyt(titleBuf+strlen(titleBuf)-4, "...", 4);
         }
@@ -947,9 +947,9 @@ static int permissionEditorDraw()
         {
             yLast = box.y + PIX3 + (curPermission+3) * ROW_HEIGHT;
 
-               BuildCBox(&cbox, box.x + R10, yLast- ROW_HEIGHT/2, box.width-2*R10, (ROW_HEIGHT-1));
+               BuildCBox(&cbox, box.x + UI_R10, yLast- ROW_HEIGHT/2, box.width-2*UI_R10, (ROW_HEIGHT-1));
              if ( mouseCollision( &cbox ))
-                    drawStdButtonMeat( box.x+R10-PIX3, yLast-ROW_HEIGHT/2, z, box.width-R10-PIX3, (ROW_HEIGHT-1), 0xffffff22 );
+                    drawStdButtonMeat( box.x+UI_R10-PIX3, yLast-ROW_HEIGHT/2, z, box.width-UI_R10-PIX3, (ROW_HEIGHT-1), 0xffffff22 );
 
             cprntEx( box.x + permissionNameWidth - str_wd(&game_12, 1.f, 1.f,sgroupPermissions[i].name), yLast+1, z+1, 1, 1, CENTER_Y, sgroupPermissions[i].name);
 
@@ -985,7 +985,7 @@ static int permissionEditorDraw()
         }
     }
 
-       drawFrame( PIX2, R4, box.x+R10/2, box.y+2*R10, z, box.width-R10, (curPermission+2)*ROW_HEIGHT, 1.f, 0xffffff22, SELECT_FROM_UISKIN(0x0000ff22, 0xff000022, 0x11115522 ) );
+       drawFrame( PIX2, UI_R4, box.x+UI_R10/2, box.y+2*UI_R10, z, box.width-UI_R10, (curPermission+2)*ROW_HEIGHT, 1.f, 0xffffff22, SELECT_FROM_UISKIN(0x0000ff22, 0xff000022, 0x11115522 ) );
 
     // ----------
      // base entry permissions
@@ -994,8 +994,8 @@ static int permissionEditorDraw()
     uiBoxAlter(&box, UIBAT_SHRINK, UIBAD_RIGHT, 200 );
 
     setHeadingFontFromSkin(0);
-     cprntEx(box.x + R10*2, yLast, z+1, 1, 1, CENTER_Y, "SgBaseEntryPermissionTitle");
-    drawFrame( PIX2, R4, box.x+R10/2, yLast, z, box.width-R10, (kSgrpBaseEntryPermission_Count)*ROW_HEIGHT, 1.f, 0xffffff22, SELECT_FROM_UISKIN(0x0000ff22, 0xff000022, 0x11115522 ) );
+     cprntEx(box.x + UI_R10*2, yLast, z+1, 1, 1, CENTER_Y, "SgBaseEntryPermissionTitle");
+    drawFrame( PIX2, UI_R4, box.x+UI_R10/2, yLast, z, box.width-UI_R10, (kSgrpBaseEntryPermission_Count)*ROW_HEIGHT, 1.f, 0xffffff22, SELECT_FROM_UISKIN(0x0000ff22, 0xff000022, 0x11115522 ) );
 
     font(&game_12);
      font_color( CLR_WHITE, CLR_WHITE );
@@ -1029,9 +1029,9 @@ static int permissionEditorDraw()
                         fieldTextBuffer.entryPermission |= (1<<i);
                 }    
 
-                BuildCBox(&cbox, box.x + R10, yLast- ROW_HEIGHT/2, box.width-2*R10, (ROW_HEIGHT-1));
+                BuildCBox(&cbox, box.x + UI_R10, yLast- ROW_HEIGHT/2, box.width-2*UI_R10, (ROW_HEIGHT-1));
                 if ( mouseCollision( &cbox ))
-                    drawStdButtonMeat( box.x+R10-PIX3, yLast-ROW_HEIGHT/2, z, box.width-R10-PIX3, (ROW_HEIGHT-1), 0xffffff22 );
+                    drawStdButtonMeat( box.x+UI_R10-PIX3, yLast-ROW_HEIGHT/2, z, box.width-UI_R10-PIX3, (ROW_HEIGHT-1), 0xffffff22 );
 
             }
             else

@@ -35,7 +35,7 @@ static void browserInit(void)
         s_pview = smfview_Create(WDW_BROWSER);
 
         // Sets the location within the window of the text region
-        smfview_SetLocation(s_pview, PIX3, PIX3+R10, 0);
+        smfview_SetLocation(s_pview, PIX3, PIX3+UI_R10, 0);
         smfview_SetText(s_pview, "");
 
         initStuffBuff(&s_sb, 1024);
@@ -91,7 +91,7 @@ int browserWindow(void)
         return 0;
 
     // Matt H told me to make it opaque
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor|0xff);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor|0xff);
 
     browserInit();
 
@@ -117,7 +117,7 @@ int browserWindow(void)
 
     // Sets the size of the region within the window of the text region
     // In this case, it resizes with the window
-     smfview_SetSize(s_pview, wd-(PIX3*2+5)*sc, ht-(PIX3+R10)*2*sc);
+     smfview_SetSize(s_pview, wd-(PIX3*2+5)*sc, ht-(PIX3+UI_R10)*2*sc);
     smfview_Draw(s_pview);
 
     

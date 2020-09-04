@@ -109,7 +109,7 @@ int textarea_Edit(UIEdit *pedit, float x, float y, float z, float wd, float ht, 
     }
     uiEditDefaultMouseHandler(pedit);
 
-    drawFlatFrame(PIX3, R4, x, y, z, wd, ht, sc, colorfg, colorbg);
+    drawFlatFrame(PIX3, UI_R4, x, y, z, wd, ht, sc, colorfg, colorbg);
 
        uiBoxDefine(&uibox, x+sc*PIX3, y+sc*PIX3, wd+sc*(-PIX3*2), ht+sc*(-PIX3*2));
      uiEditSetBounds(pedit, uibox);
@@ -227,7 +227,7 @@ int petitionWindow(void)
         s_ptaFocus = s_peditSummary;
     }
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     if(window_getMode(WDW_PETITION) == WINDOW_DISPLAYING)
     {

@@ -284,7 +284,7 @@ static UIBox lvEventsDisplayItem(UIListView* list, PointFloatXYZ rowOrigin, void
          if( columnIterator.columnIndex >= eaSize(&columnIterator.header->columns )-1 )
             clipBox.width = 1000*sc;
         else
-             clipBox.width = (columnIterator.currentWidth+R10+PIX3*2)*sc;
+             clipBox.width = (columnIterator.currentWidth+UI_R10+PIX3*2)*sc;
         
          clipperPushRestrict( &clipBox );
         if( stricmp( column->name, ARENA_MINE ) == 0 )
@@ -454,7 +454,7 @@ int arenaListWindow(void)
 
      if( !init )
     {
-        comboboxTitle_init( &comboFilter, winDefs[WDW_ARENA_LIST].loc.wd - 175 - R10/2, 6, 20, 175, 20, 400, WDW_ARENA_LIST);
+        comboboxTitle_init( &comboFilter, winDefs[WDW_ARENA_LIST].loc.wd - 175 - UI_R10/2, 6, 20, 175, 20, 400, WDW_ARENA_LIST);
         comboboxTitle_add( &comboFilter, 0, NULL, "ShowBestFit",    "ShowBestFit",    ARENA_FILTER_BEST_FIT,    filterColors[ARENA_FILTER_BEST_FIT],0,0    );
         comboboxTitle_add( &comboFilter, 0, NULL, "ShowEligable",    "ShowEligable", ARENA_FILTER_ELIGABLE,    filterColors[ARENA_FILTER_ELIGABLE],0,0    );
         comboboxTitle_add( &comboFilter, 0, NULL, "ShowOngoing",    "ShowOngoing",    ARENA_FILTER_ONGOING,    filterColors[ARENA_FILTER_ONGOING],0,0    );
@@ -466,10 +466,10 @@ int arenaListWindow(void)
         init = true;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
-       drawFrame( PIX3, R10, x, y+ht-BUTTON_OFFSET*2*sc, z, wd, BUTTON_OFFSET*2*sc, sc, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
+       drawFrame( PIX3, UI_R10, x, y+ht-BUTTON_OFFSET*2*sc, z, wd, BUTTON_OFFSET*2*sc, sc, color, 0 );
  
-    lvCurrent = drawTabControl(tc, x+R10*sc, y, z+10, wd-(2*R10*sc), 0, sc, color, color, TabDirection_Horizontal);
+    lvCurrent = drawTabControl(tc, x+UI_R10*sc, y, z+10, wd-(2*UI_R10*sc), 0, sc, color, color, TabDirection_Horizontal);
 
     //display the list of events
      if(lvCurrent)
@@ -517,7 +517,7 @@ int arenaListWindow(void)
 
         if(fullDrawHeight > currentHeight) 
         {
-               doScrollBar(&sb, listViewDrawArea.height - 15*sc, fullDrawHeight, wd, (30+PIX3+R10)*sc, z+2, 0, &listViewDrawArea);
+               doScrollBar(&sb, listViewDrawArea.height - 15*sc, fullDrawHeight, wd, (30+PIX3+UI_R10)*sc, z+2, 0, &listViewDrawArea);
             lvCurrent->scrollOffset = sb.offset;
         }
         else
@@ -572,8 +572,8 @@ int arenaListWindow(void)
 
         round = atlasLoadTexture("MissionPicker_icon_round.tga");
         scale = ((float)30/round->width)*sc;
-         cprntEx( x+wd+15*sc - (30+R10)*sc, y+ht+15*sc - (30+R10)*sc, z+1, 1.f, 1.f, CENTER_X|CENTER_Y, "?" );
-        if( D_MOUSEHIT == drawGenericButton( round, x+wd - (30+R10)*sc, y+ht - (30+R10)*sc, z, scale, color, color, true ) )
+         cprntEx( x+wd+15*sc - (30+UI_R10)*sc, y+ht+15*sc - (30+UI_R10)*sc, z+1, 1.f, 1.f, CENTER_X|CENTER_Y, "?" );
+        if( D_MOUSEHIT == drawGenericButton( round, x+wd - (30+UI_R10)*sc, y+ht - (30+UI_R10)*sc, z, scale, color, color, true ) )
         {
             helpSet(9);
         }

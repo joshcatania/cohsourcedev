@@ -341,15 +341,15 @@ static int baseRoomDrawStats(float x, float y, float z, float wd, float ht, floa
         last_room = room;
     }
 
-    ty += smf_ParseAndDisplay( smf_room, baseRoomGetDescriptionString(room, g_refCurRoom.p, 0, 1, wd-30*sc), x + R10*sc, y, z, 
-        wd - R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 5*sc;
+    ty += smf_ParseAndDisplay( smf_room, baseRoomGetDescriptionString(room, g_refCurRoom.p, 0, 1, wd-30*sc), x + UI_R10*sc, y, z, 
+        wd - UI_R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 5*sc;
     if (baseedit_Mode() == kBaseEdit_AddPersonal)
     {
         ty += 5*sc;
     }
     else
     {
-           if( D_MOUSEHIT == drawStdButton( x + wd/2, ty+5, z, MIN(180*sc,wd-2*R10*sc), 20*sc, color, "ApplyRoomStyleToBase", 1.f, !g_refCurRoom.p ))
+           if( D_MOUSEHIT == drawStdButton( x + wd/2, ty+5, z, MIN(180*sc,wd-2*UI_R10*sc), 20*sc, color, "ApplyRoomStyleToBase", 1.f, !g_refCurRoom.p ))
             baseClientSendApplyStyleToBase(g_refCurRoom.p);
 
         ty += 35*sc;
@@ -402,16 +402,16 @@ static int baseRoomDrawInfo(float x, float y, float z, float wd, float ht, float
         last_room = room;
     }
 
-    ty += smf_ParseAndDisplay( smf_room, baseRoomGetDescriptionString(room, g_refCurRoom.p, 1, 0, wd - 30*sc), x + R10*sc, ty, z, 
-        wd - R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, "uiBaseRoom.c::baseRoomDrawInfo", true) + 5*sc;
+    ty += smf_ParseAndDisplay( smf_room, baseRoomGetDescriptionString(room, g_refCurRoom.p, 1, 0, wd - 30*sc), x + UI_R10*sc, ty, z, 
+        wd - UI_R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, "uiBaseRoom.c::baseRoomDrawInfo", true) + 5*sc;
 
      font( &game_18 );
     font_color( CLR_WHITE, CLR_WHITE );
     upkeep = baseGetTotalPrestigeUpkeep();
-    text_sc = MIN( sc, str_sc( &game_18, (wd-R10*2*sc)/2, "PlotSize", g_base.plot->iLength, g_base.plot->iWidth ));
-    text_sc = MIN( text_sc, str_sc( &game_18, (wd-R10*2*sc)/2, "BaseUpkeep", upkeep ));
+    text_sc = MIN( sc, str_sc( &game_18, (wd-UI_R10*2*sc)/2, "PlotSize", g_base.plot->iLength, g_base.plot->iWidth ));
+    text_sc = MIN( text_sc, str_sc( &game_18, (wd-UI_R10*2*sc)/2, "BaseUpkeep", upkeep ));
 
-     prnt( x + R10*sc, ty, z, text_sc, text_sc, "PlotSize", g_base.plot->iLength, g_base.plot->iWidth );
+     prnt( x + UI_R10*sc, ty, z, text_sc, text_sc, "PlotSize", g_base.plot->iLength, g_base.plot->iWidth );
     prnt( x + wd/2, ty, z, text_sc, text_sc, "BaseUpkeep", upkeep );
 
     ty += 30*sc;
@@ -439,7 +439,7 @@ static int baseRoomDrawColor(float x, float y, float z, float wd, float ht, floa
            pickerSetfromColor( &cp[i], g_refCurRoom.p->lights[i] );
  
         y += 2*sc;
-         if( drawColorPicker(&cp[i], x+R10*sc, y, z, wd-R10*2*sc, 60*sc, baseedit_Mode() == kBaseEdit_AddPersonal) )
+         if( drawColorPicker(&cp[i], x+UI_R10*sc, y, z, wd-UI_R10*2*sc, 60*sc, baseedit_Mode() == kBaseEdit_AddPersonal) )
         {
             extern void baseClientSendLight(BaseRoom *pRoom,int which,Color color);
              g_refCurRoom.p->lights[i]->r = (cp[i].rgb_color&0xff000000)>>24;
@@ -455,7 +455,7 @@ static int baseRoomDrawColor(float x, float y, float z, float wd, float ht, floa
     }
     else
     {
-           if( D_MOUSEHIT == drawStdButton( x + wd/2, y+12*sc, z, MIN(200*sc,wd-2*R10*sc), 20*sc, color, "ApplyLightingToBase", 1.f, !g_refCurRoom.p ))
+           if( D_MOUSEHIT == drawStdButton( x + wd/2, y+12*sc, z, MIN(200*sc,wd-2*UI_R10*sc), 20*sc, color, "ApplyLightingToBase", 1.f, !g_refCurRoom.p ))
             baseClientSendApplyLightingToBase(g_refCurRoom.p);
           y+= 35*sc;
     }
@@ -474,8 +474,8 @@ static int baseRoomDrawDoor(float x, float y, float z, float wd, float ht, float
         smf_door = smfBlock_Create();
     }
 
-    ty += smf_ParseAndDisplay( smf_door, textStd("DoorLongDesc"), x + R10*sc, ty, z, 
-        wd - R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 5*sc;
+    ty += smf_ParseAndDisplay( smf_door, textStd("DoorLongDesc"), x + UI_R10*sc, ty, z, 
+        wd - UI_R10*sc*2, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 5*sc;
 
     return ty-y;
 }
@@ -531,7 +531,7 @@ int baseRoomWindow(void)
 
     if( !g_refCurRoom.p || !g_refCurRoom.p->info )
     {
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
         return 0;
     }
 
@@ -563,10 +563,10 @@ int baseRoomWindow(void)
 
        gTextTitleAttr.piScale = (int*)((int)(SMF_FONT_SCALE*sc*1.2));
     smfview_SetText(title_view, textStd(door?"DoorString":room->pchDisplayName) );
-    smfview_SetSize(title_view, wd-2*(R10+PIX3)*sc, 1000);
+    smfview_SetSize(title_view, wd-2*(UI_R10+PIX3)*sc, 1000);
      smfview_SetAttribs(title_view, &gTextTitleAttr);
     smfview_SetLocation(title_view, 0, 0, 0);
-    smfview_SetBaseLocation(title_view, x+(PIX3+R10)*sc, ty, z, wd-2*(R10+PIX3)*sc, 0);
+    smfview_SetBaseLocation(title_view, x+(PIX3+UI_R10)*sc, ty, z, wd-2*(UI_R10+PIX3)*sc, 0);
     text_ht = MAX(15, smfview_GetHeight(title_view)) + 10*sc;
     smfview_setAlignment( title_view, SMAlignment_Center );
     smfview_Draw(title_view);
@@ -584,10 +584,10 @@ int baseRoomWindow(void)
 
     gTextAttr_White12.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
     smfview_SetText(desc_view, textStd(door?"DoorShortDesc":(room->pchDisplayShortHelp?room->pchDisplayShortHelp:"")));
-    smfview_SetSize(desc_view, wd-2*(R10+PIX3), 1000);
+    smfview_SetSize(desc_view, wd-2*(UI_R10+PIX3), 1000);
     smfview_SetAttribs(desc_view, &gTextAttr_White12);
     smfview_SetLocation(desc_view, 0, 0, 0);
-    smfview_SetBaseLocation(desc_view, x+(PIX3+R10)*sc, ty + text_ht, z, wd-2*(R10+PIX3)*sc, 0);
+    smfview_SetBaseLocation(desc_view, x+(PIX3+UI_R10)*sc, ty + text_ht, z, wd-2*(UI_R10+PIX3)*sc, 0);
     smfview_Draw(desc_view);
     text_ht += MAX(15, smfview_GetHeight(desc_view))+15*sc;
     ty += text_ht;
@@ -606,7 +606,7 @@ int baseRoomWindow(void)
 
     if( !door )
     {
-        func = drawTabControl(roomTabs, x+R10*sc, ty - 3*PIX3*sc, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+        func = drawTabControl(roomTabs, x+UI_R10*sc, ty - 3*PIX3*sc, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
         ty += (PIX3+TAB_HEIGHT)*sc;
     }
     else
@@ -615,7 +615,7 @@ int baseRoomWindow(void)
            ty += (PIX3+1)*sc;
     }
 
-     ty -= R10*sc;
+     ty -= UI_R10*sc;
        view_ht = ht - ((ty-y)+(PIX3+1)*sc);
     
      uiBoxDefine( &box, x+PIX3*sc, ty, wd - 2*PIX3*sc, view_ht);
@@ -641,13 +641,13 @@ int baseRoomWindow(void)
         {
             err_msg = 2;
             delete_ht = 64;
-            drawStdButton(x + wd/2, y+ht-52*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "DeleteDoor", 1.f, 1 );
+            drawStdButton(x + wd/2, y+ht-52*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "DeleteDoor", 1.f, 1 );
         }
         else
         {
             err_msg=-1;
             delete_ht = 32;
-            if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-22*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "DeleteDoor", 1.f, 0 ))
+            if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-22*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "DeleteDoor", 1.f, 0 ))
                 baseedit_DeleteCurDoorway();
         }
 
@@ -658,25 +658,25 @@ int baseRoomWindow(void)
         {
             err_msg = 0;
             delete_ht = 81;
-             drawStdButton(x + wd/2, y+ht-69*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 1);
+             drawStdButton(x + wd/2, y+ht-69*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 1);
 
-             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-45*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
+             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-45*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
                 baseedit_StartRoomMove( g_refCurRoom.p );
         }
         else if(!roomDeleteLegal(g_refCurRoom.p->id))
         {
             err_msg = 1;
             delete_ht = 89;
-            drawStdButton(x + wd/2, y+ht-77*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 1);
+            drawStdButton(x + wd/2, y+ht-77*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 1);
 
-             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-53*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
+             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-53*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
                 baseedit_StartRoomMove( g_refCurRoom.p );
         }
         else
         {
             err_msg=-1;
             delete_ht = 57;
-             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-47*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 0))
+             if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-47*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "DeleteRoom", 1.f, 0))
             {
                 int i;
                 BaseRoom *pRoom = g_refCurRoom.p;
@@ -708,7 +708,7 @@ int baseRoomWindow(void)
                 }
             }
 
-            if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-22*sc, z, MIN(wd-R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
+            if(D_MOUSEHIT==drawStdButton(x + wd/2, y+ht-22*sc, z, MIN(wd-UI_R10*2*sc,150*sc), 20*sc, color, "MoveRoom", 1.f, 0))
                 baseedit_StartRoomMove( g_refCurRoom.p );
         }
     }
@@ -716,14 +716,14 @@ int baseRoomWindow(void)
       if(err_msg>=0)
     {
          gTextDeleteAttr.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
-           smf_ParseAndDisplay( smf_del, textStd(del_error_msg[err_msg]), x + R10*sc, y+ht-(err_msg?40:28)*sc, z, wd - R10*sc*2, 0, 
+           smf_ParseAndDisplay( smf_del, textStd(del_error_msg[err_msg]), x + UI_R10*sc, y+ht-(err_msg?40:28)*sc, z, wd - UI_R10*sc*2, 0, 
             last_error_msg != err_msg, last_error_msg != err_msg, &gTextDeleteAttr, NULL, 0, true);
     }
 
      clipperPop();
 
        window_setDims( WDW_BASE_ROOM, -1, -1, -1, text_ht+func_ht+(delete_ht)*sc );
-      drawJoinedFrame2Panel( PIX3, R10, x, y, z, sc, wd, text_ht, func_ht+(delete_ht)*sc, color, bcolor, NULL, NULL );        
+      drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, sc, wd, text_ht, func_ht+(delete_ht)*sc, color, bcolor, NULL, NULL );        
     
     return 0;
 }

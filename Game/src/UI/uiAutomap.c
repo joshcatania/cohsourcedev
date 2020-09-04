@@ -3151,7 +3151,7 @@ static void init_map_options()
     int i, count;
     opt_wd = 250;
 
-    combocheckbox_init( &comboIcons, 2*R10-opt_wd, 25, 10, opt_wd, opt_wd, 20, 20+14*ARRAY_SIZE(iconChoices)+1, "Options...",    WDW_MAP, 1 , 0);
+    combocheckbox_init( &comboIcons, 2*UI_R10-opt_wd, 25, 10, opt_wd, opt_wd, 20, 20+14*ARRAY_SIZE(iconChoices)+1, "Options...",    WDW_MAP, 1 , 0);
 
     //************
     // set up the UI
@@ -3168,7 +3168,7 @@ static void init_map_options()
         static char **mapNames = 0;
         missionMapHeader_GetMapNames(&mapNames);
         eaInsert(&mapNames,"None", 0);
-        combobox_init( &comboHeaders, 2*R10-100, 25, 10, opt_wd, 20, 20+14*ARRAY_SIZE(iconChoices)+1, mapNames,    WDW_MAP);
+        combobox_init( &comboHeaders, 2*UI_R10-100, 25, 10, opt_wd, 20, 20+14*ARRAY_SIZE(iconChoices)+1, mapNames,    WDW_MAP);
     }
 }
 
@@ -3375,7 +3375,7 @@ int mapWindow()
         resetSeps();
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, CLR_BLACK );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, CLR_BLACK );
     miniMap( map_type );
 
     if( window_getMode(WDW_MAP) == WINDOW_DISPLAYING ) 

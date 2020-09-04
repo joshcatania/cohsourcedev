@@ -165,8 +165,8 @@ int basepropsItem(float x, float y, float z, float wd, float ht, float sc, int c
     aspin[0] = atlasLoadTexture( "costume_button_spin_activate_L_grey.tga" );
     aspin[1] = atlasLoadTexture( "costume_button_spin_activate_R_grey.tga" );
 
-    xp[0] = x+R10*sc;
-    xp[1] = x + wd - (R10+spin[0]->width)*sc;
+    xp[0] = x+UI_R10*sc;
+    xp[1] = x + wd - (UI_R10+spin[0]->width)*sc;
     wy += 15*sc;
 
     if( !g_refCurDetail.p || !g_refCurDetail.p->info || !g_refCurDetail.p->info->pchGroupName )
@@ -181,7 +181,7 @@ int basepropsItem(float x, float y, float z, float wd, float ht, float sc, int c
     font_color(CLR_WHITE,CLR_WHITE);
 
     text_y = y + ht - 16*sc;
-    button_wd = MIN( 80, wd-(spin[0]->width+R10)*sc*2);
+    button_wd = MIN( 80, wd-(spin[0]->width+UI_R10)*sc*2);
     
      if (g_refCurDetail.p->id)
     {    
@@ -286,7 +286,7 @@ int basepropsItem(float x, float y, float z, float wd, float ht, float sc, int c
     wy -= 15*sc;
     // Now draw the picture
     item_pic = groupThumbnailGet(detailGetThumbnailName(detail), true, detail->eSurface==kSurface_Ceiling, 0); 
-    spr_sc = MIN( (wd-2*R10*sc)/item_pic->width, ((ht-wy)-4*R10*sc)/item_pic->height );
+    spr_sc = MIN( (wd-2*UI_R10*sc)/item_pic->width, ((ht-wy)-4*UI_R10*sc)/item_pic->height );
     display_sprite(item_pic, x + (wd-item_pic->width*spr_sc)/2, y + wy + TAB_HEIGHT, z, spr_sc, spr_sc, CLR_WHITE );
 
 
@@ -588,7 +588,7 @@ int basepropsInfo(float x, float y, float z, float wd, float ht, float sc, int c
 
     detail = g_refCurDetail.p;
     text_ht = smf_ParseAndDisplay( smf_info, getBaseDetailDescriptionString(g_refCurDetail.p->info, g_refCurDetail.p,wd-30*sc), 
-                                    x + R10*sc, y, z, wd - R10*3*sc, 0, detail != last_detail, detail != last_detail, 
+                                    x + UI_R10*sc, y, z, wd - UI_R10*3*sc, 0, detail != last_detail, detail != last_detail, 
                                     &gTextAttr_White12, DetailCallback, 0, true);
     last_detail = detail;
 
@@ -612,7 +612,7 @@ int basepropsAux(float x, float y, float z, float wd, float ht, float sc, int co
 
     detail = g_refCurDetail.p;
     text_ht = smf_ParseAndDisplay( smf_info, getBaseDetailAuxString(g_refCurDetail.p->info, g_refCurDetail.p,wd-30*sc), 
-                                    x + R10*sc, y, z, wd - R10*3*sc, 0, detail != last_detail, detail != last_detail, 
+                                    x + UI_R10*sc, y, z, wd - UI_R10*3*sc, 0, detail != last_detail, detail != last_detail, 
                                     &gTextAttr_White12, DetailCallback, 0, true);
     last_detail = detail;
 
@@ -804,9 +804,9 @@ typedef enum kSegmentState
 
 void basepropsBlock(float x, float y, float z, float wd, float ht, float sc, float color, float bcolor )
 {
-    float one_ft = (ht - (BUTTON_SPACE+R10*2)*sc)/48;
-    float ty = y + R10*sc, twd = MIN( g_base.roomBlockSize*one_ft, .5f*(wd - 2*R10*sc));
-    float tx = x + (wd - twd - R10*sc - TEXT_SPACE*sc)/2 + TEXT_SPACE*sc;
+    float one_ft = (ht - (BUTTON_SPACE+UI_R10*2)*sc)/48;
+    float ty = y + UI_R10*sc, twd = MIN( g_base.roomBlockSize*one_ft, .5f*(wd - 2*UI_R10*sc));
+    float tx = x + (wd - twd - UI_R10*sc - TEXT_SPACE*sc)/2 + TEXT_SPACE*sc;
 
     CBox box[SEGMENT_COUNT];
     int state[SEGMENT_COUNT] = {0}, i, wall, door = false, actualHeights[2], setHeights[2];
@@ -828,7 +828,7 @@ void basepropsBlock(float x, float y, float z, float wd, float ht, float sc, flo
     }
 
     one_ft = MIN( one_ft, twd/g_base.roomBlockSize );
-    ty += (ht-(BUTTON_SPACE+R10*2)*sc-48*one_ft)/2;
+    ty += (ht-(BUTTON_SPACE+UI_R10*2)*sc-48*one_ft)/2;
 
     BuildCBox( &box[HIGH_CEIL],    tx, ty,              twd, one_ft*7 );
     BuildCBox( &box[LOW_CEIL],    tx , ty+one_ft*8,  twd, one_ft*7 );
@@ -1017,12 +1017,12 @@ void basepropsBlock(float x, float y, float z, float wd, float ht, float sc, flo
     cprntEx( tx - TEXT_SPACE*sc, ty + one_ft*44, z, sc, sc, CENTER_Y, "FloorString" );
 
     {
-        float button_wd = MIN( 120*sc, (wd - 3*R10*sc)/2);
-        if( !door && D_MOUSEHIT == drawStdButton( x + R10*sc + button_wd/2, y + ht - (PIX3+BUTTON_SPACE)*sc/2, z, button_wd, 24*sc, color, "ApplyToRoom", sc, 0 ))
+        float button_wd = MIN( 120*sc, (wd - 3*UI_R10*sc)/2);
+        if( !door && D_MOUSEHIT == drawStdButton( x + UI_R10*sc + button_wd/2, y + ht - (PIX3+BUTTON_SPACE)*sc/2, z, button_wd, 24*sc, color, "ApplyToRoom", sc, 0 ))
         {
             baseedit_SetRoomHeights(g_refCurRoom.p, actualHeights);
         }
-        if( !door && D_MOUSEHIT == drawStdButton( x + wd - (R10*sc + button_wd/2), y + ht - (PIX3+BUTTON_SPACE)*sc/2, z, button_wd, 24*sc, color, "ApplyToBase", sc, 0 ))
+        if( !door && D_MOUSEHIT == drawStdButton( x + wd - (UI_R10*sc + button_wd/2), y + ht - (PIX3+BUTTON_SPACE)*sc/2, z, button_wd, 24*sc, color, "ApplyToBase", sc, 0 ))
         {
             baseedit_SetBaseHeights(actualHeights);
         }
@@ -1046,8 +1046,8 @@ static float basepropsRoom(const RoomTemplate *room, float x, float y, float z, 
         smf_block = smfBlock_Create();
     }
 
-    return smf_ParseAndDisplay( smf_block, baseRoomGetDescriptionString(room, NULL,1,1,wd-30*sc), x + R10*sc, y, z, 
-        wd - R10*sc*3, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 10*sc;
+    return smf_ParseAndDisplay( smf_block, baseRoomGetDescriptionString(room, NULL,1,1,wd-30*sc), x + UI_R10*sc, y, z, 
+        wd - UI_R10*sc*3, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 10*sc;
 }
 
 static float basepropsPlot(const BasePlot * plot, float x, float y, float z, float wd, float ht, float sc, float color, float bcolor )
@@ -1064,8 +1064,8 @@ static float basepropsPlot(const BasePlot * plot, float x, float y, float z, flo
         smf_block = smfBlock_Create();
     }
 
-    return smf_ParseAndDisplay( smf_block, basePlotGetDescriptionString(plot,wd-30*sc), x + R10*sc, y, z, 
-        wd - R10*sc*3, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 10*sc;
+    return smf_ParseAndDisplay( smf_block, basePlotGetDescriptionString(plot,wd-30*sc), x + UI_R10*sc, y, z, 
+        wd - UI_R10*sc*3, 0, bReparse, bReparse, &gTextAttr_White12, NULL, 0, true) + 10*sc;
 }
 #define DEFAULTHEIGHT 300
 SMFBlock *smf_title;
@@ -1161,11 +1161,11 @@ int basepropsWindow()
         (baseInventoryIsStyle() && g_iDecorIdx != (int)last_item ) ||
         (!room && !item && !baseInventoryIsStyle() && last_item ) )
     {
-        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - R10*sc*2, 1000, false, true, false, &gTextTitleAttr, 0 );
-        smf_ParseAndFormat(smf_desc, desc, 0, 0, 0, wd - R10*sc*2, 1000, false, true, true, &gTextAttr_White12, 0 );
+        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, true, false, &gTextTitleAttr, 0 );
+        smf_ParseAndFormat(smf_desc, desc, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, true, true, &gTextAttr_White12, 0 );
 
         smf_SetFlags(smf_title, 0, 0, 0, 0, 0, 0, 0, 0, SMAlignment_Center, 0, 0, 0);
-        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - R10*sc*2, 1000, false, false, true, &gTextTitleAttr, 0 );
+        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, false, true, &gTextTitleAttr, 0 );
         if( baseInventoryIsStyle() )
             last_item = (void*)g_iDecorIdx;
         else if( room )    
@@ -1181,14 +1181,14 @@ int basepropsWindow()
     gTextAttr_White12.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
 
     // Name
-    ty = y + smf_ParseAndDisplay( smf_title, title, x + R10*sc, y + R10*sc, z, wd - R10*sc*2, 0, false, false, 
+    ty = y + smf_ParseAndDisplay( smf_title, title, x + UI_R10*sc, y + UI_R10*sc, z, wd - UI_R10*sc*2, 0, false, false, 
                                     &gTextTitleAttr, NULL, 0, true) + 15*sc;
 
     // Short Desc
-    ty += smf_ParseAndDisplay( smf_desc, desc, x + R10*sc, ty, z, wd - R10*sc*2, 0, false, false, 
+    ty += smf_ParseAndDisplay( smf_desc, desc, x + UI_R10*sc, ty, z, wd - UI_R10*sc*2, 0, false, false, 
                                     &gTextAttr_White12, NULL, 0, true) + 5*sc;
 
-    drawJoinedFrame2Panel( PIX3, R10, x, y, z, sc, wd, (ty-y), ht - (ty-y), color, bcolor, NULL, NULL );
+    drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, sc, wd, (ty-y), ht - (ty-y), color, bcolor, NULL, NULL );
 
      if( baseInventoryIsStyle() ) // Picking out styles, we are gonna hide the floor mover
     {
@@ -1225,7 +1225,7 @@ int basepropsWindow()
             pickerSetfromColor( &cp[i], &color[i] );
 
             ty += 2*sc;
-            if( drawColorPicker(&cp[i], x+R10*sc, ty-sb.offset, z, wd-R10*2*sc, 60*sc, baseedit_Mode() == kBaseEdit_AddPersonal) )
+            if( drawColorPicker(&cp[i], x+UI_R10*sc, ty-sb.offset, z, wd-UI_R10*2*sc, 60*sc, baseedit_Mode() == kBaseEdit_AddPersonal) )
             {
                 int c1, c2;
 
@@ -1250,19 +1250,19 @@ int basepropsWindow()
             ty += 65*sc;
         }
 
-         if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*R10*sc), 20*sc, color, "ResetRoomString", 1.f, !g_refCurRoom.p ))
+         if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*UI_R10*sc), 20*sc, color, "ResetRoomString", 1.f, !g_refCurRoom.p ))
         {
             baseedit_SetCurRoomTint(-1, CreateColorRGB( 128, 128, 128 ).integer, CreateColorRGB( 128, 128, 128 ).integer );
         }
         ty += 25*sc;
 
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*R10*sc), 20*sc, color, "ApplyTintToAll", 1.f, !g_refCurRoom.p ))
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*UI_R10*sc), 20*sc, color, "ApplyTintToAll", 1.f, !g_refCurRoom.p ))
         {
             baseedit_SetCurRoomTint(-1,colorFlip(COLOR_CAST(cp[0].rgb_color)).integer, colorFlip(COLOR_CAST(cp[1].rgb_color)).integer );
         }
         ty += 25*sc;
 
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*R10*sc), 20*sc, color, "ApplyRoomTintToBase", 1.f, !g_refCurRoom.p ))
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, ty-sb.offset+12*sc, z, MIN(200*sc,wd-2*UI_R10*sc), 20*sc, color, "ApplyRoomTintToBase", 1.f, !g_refCurRoom.p ))
         {
             baseClientSendApplyRoomTintToBase(g_refCurRoom.p);
         }
@@ -1270,7 +1270,7 @@ int basepropsWindow()
 
          clipperPop();
 
-           doScrollBar( &sb, view_ht-2*R10*sc, ty-y, x + wd, top_ht+R10*sc, z, 0, &box);
+           doScrollBar( &sb, view_ht-2*UI_R10*sc, ty-y, x + wd, top_ht+UI_R10*sc, z, 0, &box);
      }
     else if( room )
     {
@@ -1324,7 +1324,7 @@ int basepropsWindow()
             old_permissions = g_refCurDetail.p->permissions;
         }
 
-        func = drawTabControl(itemTabs, x+R10*sc, ty - PIX3*sc, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+        func = drawTabControl(itemTabs, x+UI_R10*sc, ty - PIX3*sc, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
         ty += (TAB_HEIGHT+PIX3)*sc;
         view_ht = ht - (ty-y)-PIX3*sc;
 
@@ -1430,11 +1430,11 @@ int basepermissionsWindow()
 
     if(detail != lastDetail)
     {
-        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - R10*sc*2, 1000, false, true, false, &gTextTitleAttr, 0 );
-        smf_ParseAndFormat(smf_desc, desc, 0, 0, 0, wd - R10*sc*2, 1000, false, true, true, &gTextAttr_White12, 0 );
+        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, true, false, &gTextTitleAttr, 0 );
+        smf_ParseAndFormat(smf_desc, desc, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, true, true, &gTextAttr_White12, 0 );
 
         smf_SetFlags(smf_title, 0, 0, 0, 0, 0, 0, 0, 0, SMAlignment_Center, 0, 0, 0);
-        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - R10*sc*2, 1000, false, false, true, &gTextTitleAttr, 0 );
+        smf_ParseAndFormat(smf_title, title, 0, 0, 0, wd - UI_R10*sc*2, 1000, false, false, true, &gTextTitleAttr, 0 );
         lastDetail = detail;
 
         srRequestPermissionsSetBit();
@@ -1444,14 +1444,14 @@ int basepermissionsWindow()
     gTextAttr_White12.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
 
     // Name
-    ty = y + smf_ParseAndDisplay( smf_title, title, x + R10*sc, y + R10*sc, z, wd - R10*sc*2, 0, false, false, 
+    ty = y + smf_ParseAndDisplay( smf_title, title, x + UI_R10*sc, y + UI_R10*sc, z, wd - UI_R10*sc*2, 0, false, false, 
                                     &gTextTitleAttr, NULL, 0, true) + 15*sc;
 
     // Short Desc
-    ty += smf_ParseAndDisplay( smf_desc, desc, x + R10*sc, ty, z, wd - R10*sc*2, 0, false, false, 
+    ty += smf_ParseAndDisplay( smf_desc, desc, x + UI_R10*sc, ty, z, wd - UI_R10*sc*2, 0, false, false, 
                                     &gTextAttr_White12, NULL, 0, true) + 5*sc;
 
-    drawJoinedFrame2Panel( PIX3, R10, x, y, z, sc, wd, (ty-y), ht - (ty-y), color, bcolor, NULL, NULL );
+    drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, sc, wd, (ty-y), ht - (ty-y), color, bcolor, NULL, NULL );
 
     old_permissions = detail->permissions;
 

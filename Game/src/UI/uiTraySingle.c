@@ -417,7 +417,7 @@ static int trayWindowSingleEx(int razer)
 
     if( bend_type == -1 ) // square fill
     {
-        drawFrame( PIX3, R22, x, y, z, wd, ht, scale, color, bcolor );
+        drawFrame( PIX3, UI_R22, x, y, z, wd, ht, scale, color, bcolor );
         traySingle_Fill( e, cur_tray, x, y, z, wd, ht, scale, color, -1, razer );
     }
     else

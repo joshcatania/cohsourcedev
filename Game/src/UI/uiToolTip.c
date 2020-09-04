@@ -426,7 +426,7 @@ static void displayToolTip( ToolTip *tip, int mode )
     // draw the sucker!
     if( tip->flags & TT_FIXEDPOS )
     {
-        drawFrame( PIX2, R4, tip->x, tip->y, TIP_Z, wd, ht, 1.f, color, tip->back_color?tip->back_color:0x000000dd );
+        drawFrame( PIX2, UI_R4, tip->x, tip->y, TIP_Z, wd, ht, 1.f, color, tip->back_color?tip->back_color:0x000000dd );
         uiBoxDefine(&uibox,tip->x+PIX2,tip->y+PIX2, wd-2*PIX2,ht-2*PIX2);
         clipperPush(&uibox);
         smf_ParseAndDisplay( tip->smf, tip->txt, tip->x + TIP_SPACER, tip->y, TIP_Z+1, wd-TIP_SPACER*2, 0, 0, 0, 
@@ -434,7 +434,7 @@ static void displayToolTip( ToolTip *tip, int mode )
     }
     else
     {
-        drawFrame( PIX2, R4, x - wd/2 - PIX2, y - ht/2 - PIX2, TIP_Z, wd + 2*PIX2, ht + 3*PIX2, 1.f, color, tip->back_color?tip->back_color:0x000000dd );
+        drawFrame( PIX2, UI_R4, x - wd/2 - PIX2, y - ht/2 - PIX2, TIP_Z, wd + 2*PIX2, ht + 3*PIX2, 1.f, color, tip->back_color?tip->back_color:0x000000dd );
         uiBoxDefine(&uibox,x-wd/2,y-ht/2,wd,ht);
         clipperPush(&uibox);
         smf_ParseAndDisplay( tip->smf, tip->txt, ceil(x - wd/2 + TIP_SPACER), ceil(y - ht/2), TIP_Z+1, wd-TIP_SPACER*2, 0, 0, 0, 

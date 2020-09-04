@@ -283,7 +283,7 @@ static void handleTextBoxes(float screenScaleX, float screenScaleY)
                 colorBack = CLR_MM_TEXT_DARK;
             }
         }
-        drawFlatFrame( PIX3, R6, box[i].lx-(5*screenScaleX), box[i].ly-(2*screenScaleY), 20, box[i].hx - box[i].lx, 
+        drawFlatFrame( PIX3, UI_R6, box[i].lx-(5*screenScaleX), box[i].ly-(2*screenScaleY), 20, box[i].hx - box[i].lx, 
             box[i].hy - box[i].ly, screenScale, color, colorBack );
     }
 

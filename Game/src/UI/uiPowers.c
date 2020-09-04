@@ -124,7 +124,7 @@ void displayPowerHelpBackground(float screenScaleX, float screenScaleY)
 
     ringScale = MIN(screenScaleX, screenScaleY);
 
-    drawMenuFrame( R12, round(FRAME_LEFT * screenScaleX), round(600 * screenScaleY), 10, round(865 * screenScaleX),
+    drawMenuFrame( UI_R12, round(FRAME_LEFT * screenScaleX), round(600 * screenScaleY), 10, round(865 * screenScaleX),
         round(90 * screenScaleY), CLR_WHITE, 0x00000088, 0 );
     display_sprite_menu( ring, screenScaleX * FRAME_LEFT - ringScale * ring->width/2, screenScaleY * PHELP_Y - ringScale * ring->height/2,
         15, ringScale, ringScale, CLR_WHITE );
@@ -493,7 +493,7 @@ int powerSetSelector(int y, int category, Character *pchar, int *pSet, int *pPow
     y += PSET_SPACER;
 
     // draw the small inner frame
-    drawFrame( PIX2, R6, PSET_X * screenScaleX, (oldY - PSET_FRAME_OFFY) * screenScaleY, 40, 
+    drawFrame( PIX2, UI_R6, PSET_X * screenScaleX, (oldY - PSET_FRAME_OFFY) * screenScaleY, 40, 
         (PSET_WD - PSET_FRAME_OFFX) * screenScaleX, ((set_count-1) * PSET_SPACER + 2*PSET_FRAME_OFFY) * screenScaleY, 1.f,
         0xffffffaa, PSET_FRAME_CLR );
 
@@ -544,7 +544,7 @@ int powerSelector( int category, int y, Character * pchar, int *pSet, int *pPow,
     if( pSet[category] >=  0 )
     {
         size = eaSize( &pchar->pclass->pcat[category]->ppPowerSets[pSet[category]]->ppPowers );
-        drawFrame( PIX2, R6, POW_X * screenScaleX, (y - POW_FRAME_OFFY) * screenScaleY, 40,
+        drawFrame( PIX2, UI_R6, POW_X * screenScaleX, (y - POW_FRAME_OFFY) * screenScaleY, 40,
             (PSET_WD - PSET_FRAME_OFFX) * screenScaleX, ((size-1) * POW_SPACER + 2*POW_FRAME_OFFY) * screenScaleY,
             1.f, 0xffffffaa, PSET_FRAME_CLR );
     }

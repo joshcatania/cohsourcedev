@@ -2908,7 +2908,7 @@ enum
 };
 
 #define MIDDLE_BAR_SPEED    (1.f)
-#define MIDDLE_BAR_MIN        (R10+PIX3)*2
+#define MIDDLE_BAR_MIN        (UI_R10+PIX3)*2
 
 static int chat_middleBarState( float x, float y, float z, float * middleBarHt, float top, float max_ht, float cx, float wd, float scale, int color, int id, float excludeStart, float excludeWd )
 {
@@ -2929,7 +2929,7 @@ static int chat_middleBarState( float x, float y, float z, float * middleBarHt, 
 
     y -= mid->height/2;
 
-    BuildCBox( &box, cx + R10*scale, y - mid->width*scale, wd - R10*2*scale, mid->width*2*scale );
+    BuildCBox( &box, cx + UI_R10*scale, y - mid->width*scale, wd - UI_R10*2*scale, mid->width*2*scale );
     BuildCBox( &exclude, excludeStart, y - mid->width*scale, excludeWd, mid->width*2*scale );
 
     if( !win || win == id )
@@ -3641,7 +3641,7 @@ int chatWindow()
     if(drawChat)
     {
           divider_ht = chatWindow->divider*chatHeight;
-        dividerGrabbed = chat_middleBarState( x + wd/2, y + chatHeight - divider_ht, z, &chatWindow->divider, y, chatHeight, x, wd, scale, color, gCurrentWindefIndex, x + R10*scale, uiTabControlGetWidth(chatWindow->botTabControl) );
+        dividerGrabbed = chat_middleBarState( x + wd/2, y + chatHeight - divider_ht, z, &chatWindow->divider, y, chatHeight, x, wd, scale, color, gCurrentWindefIndex, x + UI_R10*scale, uiTabControlGetWidth(chatWindow->botTabControl) );
         if (dividerGrabbed && !gWindowDragging)
         {
             gWindowDragging = true;
@@ -3653,26 +3653,26 @@ int chatWindow()
     if(chatWindow->idx == 0)
     {
         if(chatWindow->minimizedOffset)
-            drawFrame( PIX3, R10, x, y, z, wd, (CHAT_EDIT_HEIGHT+PIX3)*scale, scale, color, bcolor );
+            drawFrame( PIX3, UI_R10, x, y, z, wd, (CHAT_EDIT_HEIGHT+PIX3)*scale, scale, color, bcolor );
         else
         {
             if( chatWindow->divider)
-                drawJoinedFrame3Panel(PIX3, R10, x, y, z, scale, wd, chatHeight-divider_ht, divider_ht, CHAT_EDIT_HEIGHT*scale, color, bcolor);
+                drawJoinedFrame3Panel(PIX3, UI_R10, x, y, z, scale, wd, chatHeight-divider_ht, divider_ht, CHAT_EDIT_HEIGHT*scale, color, bcolor);
             else
-                drawJoinedFrame2Panel(PIX3, R10, x, y, z, scale, wd, chatHeight, CHAT_EDIT_HEIGHT*scale, color, bcolor, 0,0);  
+                drawJoinedFrame2Panel(PIX3, UI_R10, x, y, z, scale, wd, chatHeight, CHAT_EDIT_HEIGHT*scale, color, bcolor, 0,0);  
         }
     }
     else
     {
         if( chatWindow->divider)
-            drawJoinedFrame2Panel(PIX3, R10, x, y, z, scale, wd, chatHeight-divider_ht, divider_ht, color, bcolor, 0,0);
+            drawJoinedFrame2Panel(PIX3, UI_R10, x, y, z, scale, wd, chatHeight-divider_ht, divider_ht, color, bcolor, 0,0);
         else
-            drawFrame( PIX3, R10, x, y, z, wd, chatHeight, scale, color, bcolor );
+            drawFrame( PIX3, UI_R10, x, y, z, wd, chatHeight, scale, color, bcolor );
     }
 
     // this will turn off collision for rest of function
     if( chatWindow->idx == 0 && windowUp(gCurrentWindefIndex) && !chatWindow->minimizedOffset)
-        chatChannelSelector( x + (R10 + PIX3)*scale, y + ht - (CHAT_EDIT_HEIGHT - PIX3)*scale, z+5, scale, color );
+        chatChannelSelector( x + (UI_R10 + PIX3)*scale, y + ht - (CHAT_EDIT_HEIGHT - PIX3)*scale, z+5, scale, color );
 
     // get static info for current chat window
       if(drawChat)
@@ -3704,17 +3704,17 @@ int chatWindow()
             {
                 phantom = true;
                 if( chatWindow->idx == 0 )
-                    drawJoinedFrame3Panel(PIX3, R10, x, y, z+1, scale, wd, chatHeight/2, chatHeight/2, CHAT_EDIT_HEIGHT*scale, (color&0xffffff00)|0x88, 0);
+                    drawJoinedFrame3Panel(PIX3, UI_R10, x, y, z+1, scale, wd, chatHeight/2, chatHeight/2, CHAT_EDIT_HEIGHT*scale, (color&0xffffff00)|0x88, 0);
                 else
-                    drawJoinedFrame2Panel(PIX3, R10, x, y, z+1, scale, wd, chatHeight/2, chatHeight/2, (color&0xffffff00)|0x88, 0, 0,0);              
+                    drawJoinedFrame2Panel(PIX3, UI_R10, x, y, z+1, scale, wd, chatHeight/2, chatHeight/2, (color&0xffffff00)|0x88, 0, 0,0);              
             }
         }
 
         // don't draw tab if window is faded out
          if( phantom )
         {
-             topfilter = drawTabControl(chatWindow->topTabControl, x + R10*scale, y, z + 20, wd-(2*R10*scale),  chatHeight/2, scale, inactiveColor, activeColorTop, TabDirection_Horizontal );  
-            botfilter = drawTabControl(chatWindow->botTabControl, x + R10*scale, y+chatHeight/2-PIX3*scale, z + 20, wd-(2*R10*scale), chatHeight/2, scale, inactiveColor, activeColorBot, TabDirection_Horizontal );
+             topfilter = drawTabControl(chatWindow->topTabControl, x + UI_R10*scale, y, z + 20, wd-(2*UI_R10*scale),  chatHeight/2, scale, inactiveColor, activeColorTop, TabDirection_Horizontal );  
+            botfilter = drawTabControl(chatWindow->botTabControl, x + UI_R10*scale, y+chatHeight/2-PIX3*scale, z + 20, wd-(2*UI_R10*scale), chatHeight/2, scale, inactiveColor, activeColorBot, TabDirection_Horizontal );
             if(botfilter)
             {
                 chatWindow->divider = .5f;
@@ -3723,8 +3723,8 @@ int chatWindow()
         }
         else
         {
-            topfilter = drawTabControl(chatWindow->topTabControl, x + R10*scale, y, z + 20, wd-(2*R10*scale), chatHeight-divider_ht, scale, inactiveColor, activeColorTop, TabDirection_Horizontal );  
-             botfilter = drawTabControl(chatWindow->botTabControl, x + R10*scale, y+chatHeight-divider_ht-PIX3*scale, z + 20, wd-(2*R10*scale), divider_ht, scale, inactiveColor, activeColorBot, TabDirection_Horizontal );  
+            topfilter = drawTabControl(chatWindow->topTabControl, x + UI_R10*scale, y, z + 20, wd-(2*UI_R10*scale), chatHeight-divider_ht, scale, inactiveColor, activeColorTop, TabDirection_Horizontal );  
+             botfilter = drawTabControl(chatWindow->botTabControl, x + UI_R10*scale, y+chatHeight-divider_ht-PIX3*scale, z + 20, wd-(2*UI_R10*scale), divider_ht, scale, inactiveColor, activeColorBot, TabDirection_Horizontal );  
         }
 
          if(!botfilter && chatWindow->divider)
@@ -3769,11 +3769,11 @@ int chatWindow()
 
     if( divider_ht )
     {
-          botVisHeight = divider_ht - 2*(R10+PIX3)*scale;
-           topVisHeight = chatHeight - divider_ht - 2*(R10+2*PIX3)*scale;
+          botVisHeight = divider_ht - 2*(UI_R10+PIX3)*scale;
+           topVisHeight = chatHeight - divider_ht - 2*(UI_R10+2*PIX3)*scale;
     }
     else
-        topVisHeight = chatHeight - (2*R10+2*PIX3)*scale;
+        topVisHeight = chatHeight - (2*UI_R10+2*PIX3)*scale;
 
     // context menu
     BuildCBox( &box, x, y, wd, chatHeight-divider_ht );
@@ -3874,7 +3874,7 @@ int chatWindow()
            BuildCBox( &box, x + currChanWd, y + ht - CHAT_EDIT_HEIGHT*scale, wd-wqc-currChanWd-PIX3*scale, (CHAT_EDIT_HEIGHT-PIX3)*scale );
 
         if (smfBlock_HasFocus(chatEdit))
-               drawFrame( PIX3, R10, x, y + ht - (CHAT_EDIT_HEIGHT + PIX3)*scale, z-1, wd, (CHAT_EDIT_HEIGHT + 4)*scale, scale, 0, 0x00ff003f );
+               drawFrame( PIX3, UI_R10, x, y + ht - (CHAT_EDIT_HEIGHT + PIX3)*scale, z-1, wd, (CHAT_EDIT_HEIGHT + 4)*scale, scale, 0, 0x00ff003f );
 
           if (mouseClickHit(&box, MS_LEFT) && !smfBlock_HasFocus(chatEdit))
         {
@@ -3958,7 +3958,7 @@ int chatWindow()
             ppLines = topfilter->chatQ.ppLines;
             for(i=0; i<eaSize(&ppLines); i++)
             {
-                smf_SetScissorsBox(ppLines[i]->pBlock, x + TEXT_XOFF, y + PIX3, wd-(R10+PIX3)*2, chatHeight - PIX3*2 - 1 - divider_ht);
+                smf_SetScissorsBox(ppLines[i]->pBlock, x + TEXT_XOFF, y + PIX3, wd-(UI_R10+PIX3)*2, chatHeight - PIX3*2 - 1 - divider_ht);
             }
         }
 
@@ -3967,7 +3967,7 @@ int chatWindow()
             ppLines = botfilter->chatQ.ppLines;
             for(i=0; i<eaSize(&ppLines); i++)
             {
-                smf_SetScissorsBox(ppLines[i]->pBlock, x + TEXT_XOFF, y + PIX3 + (chatHeight-divider_ht), wd-(R10+PIX3)*2, divider_ht - PIX3*2 - 1);
+                smf_SetScissorsBox(ppLines[i]->pBlock, x + TEXT_XOFF, y + PIX3 + (chatHeight-divider_ht), wd-(UI_R10+PIX3)*2, divider_ht - PIX3*2 - 1);
             }
         }
 
@@ -3980,7 +3980,7 @@ int chatWindow()
 
             if( topfilter )
             {
-                topfilter->docHt = 2*R10*scale;
+                topfilter->docHt = 2*UI_R10*scale;
                 ppLines = topfilter->chatQ.ppLines;
     
                 for(i=0; i<eaSize(&ppLines); i++)
@@ -3994,7 +3994,7 @@ int chatWindow()
 
             if( botfilter )
             {
-                botfilter->docHt = 2*R10*scale;
+                botfilter->docHt = 2*UI_R10*scale;
                 ppLines = botfilter->chatQ.ppLines;
 
                 for(i=0; i<eaSize(&ppLines); i++)
@@ -4016,7 +4016,7 @@ int chatWindow()
                 }
 
                 BuildCBox(&box, x + TEXT_XOFF, y + PIX3, wd - TEXT_XOFF - PIX3, chatHeight - PIX3*2 - 1 - divider_ht );
-                    doScrollBar( &chatWindow->topsb, topVisHeight, (topfilter->docHt)+(!botfilter?PIX3*scale:0), 0, (R10+PIX3)*scale, z+2, &box, 0 );
+                    doScrollBar( &chatWindow->topsb, topVisHeight, (topfilter->docHt)+(!botfilter?PIX3*scale:0), 0, (UI_R10+PIX3)*scale, z+2, &box, 0 );
                 topfilter->scrollOffset = chatWindow->topsb.offset;
             }
 
@@ -4030,7 +4030,7 @@ int chatWindow()
                 }
 
                 BuildCBox(&box, x + TEXT_XOFF, y + PIX3 + (chatHeight-divider_ht), wd - TEXT_XOFF - PIX3, divider_ht - PIX3*2 - 1 );
-                    doScrollBar( &chatWindow->botsb, botVisHeight, (botfilter->docHt), 0, chatHeight-divider_ht+(R10+PIX3)*scale, z+2, &box, 0 );
+                    doScrollBar( &chatWindow->botsb, botVisHeight, (botfilter->docHt), 0, chatHeight-divider_ht+(UI_R10+PIX3)*scale, z+2, &box, 0 );
                 botfilter->scrollOffset = chatWindow->botsb.offset;
             }
 
@@ -4056,7 +4056,7 @@ int chatWindow()
                                 SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left, 
                                 "uiChat.c::chatWindow::topPane", 0, 0);
                         }
-                        ppLines[i]->ht = smf_ParseAndFormat(ppLines[i]->pBlock, ppLines[i]->pchText, x + TEXT_XOFF, cur_y, z+1, wd-(R10+PIX3)*2, -1, true, bReformat, bReformat, &gTextAttr_Chat, 0 );
+                        ppLines[i]->ht = smf_ParseAndFormat(ppLines[i]->pBlock, ppLines[i]->pchText, x + TEXT_XOFF, cur_y, z+1, wd-(UI_R10+PIX3)*2, -1, true, bReformat, bReformat, &gTextAttr_Chat, 0 );
                         ppLines[i]->bParsed = 1;
                     }
 
@@ -4067,11 +4067,11 @@ int chatWindow()
                     curr_ht += ppLines[i]->ht;
                 }
 
-                if (topfilter->docHt != curr_ht + 2*R10*scale && // If total text height has changed, and
+                if (topfilter->docHt != curr_ht + 2*UI_R10*scale && // If total text height has changed, and
                     chatWindow->topsb.offset + topVisHeight >= topfilter->docHt && // The pre-parse text height was not greater than the scroll + screen height (if it was, we were explicitly scrolled up some distance from the bottom), and
-                    chatWindow->topsb.offset + topVisHeight <= curr_ht + 2*R10*scale) // The post-parse text is not less than the scroll + screen height (if it is, there's no need to do the push-to-bottom, since we already display the bottom).
+                    chatWindow->topsb.offset + topVisHeight <= curr_ht + 2*UI_R10*scale) // The post-parse text is not less than the scroll + screen height (if it is, there's no need to do the push-to-bottom, since we already display the bottom).
                 {
-                    chatWindow->topsb.offset = topfilter->scrollOffset += (curr_ht + 2*R10*scale - topfilter->docHt);
+                    chatWindow->topsb.offset = topfilter->scrollOffset += (curr_ht + 2*UI_R10*scale - topfilter->docHt);
                 }
             }
 
@@ -4095,7 +4095,7 @@ int chatWindow()
                                 SMFOutputMode_StripAllTags, SMFDisplayMode_AllCharacters, SMFContextMenuMode_None, SMAlignment_Left,
                                 "uiChat.c::chatWindow::bottomPane", 0, 0);
                         }
-                        ppLines[i]->ht = smf_ParseAndFormat(ppLines[i]->pBlock, ppLines[i]->pchText, x + TEXT_XOFF, cur_y, z+1, wd-(R10+PIX3)*2, -1, true, bReformat, bReformat, &gTextAttr_Chat, 0 );
+                        ppLines[i]->ht = smf_ParseAndFormat(ppLines[i]->pBlock, ppLines[i]->pchText, x + TEXT_XOFF, cur_y, z+1, wd-(UI_R10+PIX3)*2, -1, true, bReformat, bReformat, &gTextAttr_Chat, 0 );
                         ppLines[i]->bParsed = 1;
                     }
 
@@ -4106,11 +4106,11 @@ int chatWindow()
                     curr_ht += ppLines[i]->ht;
                 }
 
-                if (botfilter->docHt != curr_ht + 2*R10*scale && // If total text height has changed, and
+                if (botfilter->docHt != curr_ht + 2*UI_R10*scale && // If total text height has changed, and
                     chatWindow->botsb.offset + botVisHeight >= botfilter->docHt && // The pre-parse text height was not greater than the scroll + screen height (if it was, we were explicitly scrolled up some distance from the bottom), and
-                    chatWindow->botsb.offset + botVisHeight <= curr_ht + 2*R10*scale) // The post-parse text is not less than the scroll + screen height (if it is, there's no need to do the push-to-bottom, since we already display the bottom).
+                    chatWindow->botsb.offset + botVisHeight <= curr_ht + 2*UI_R10*scale) // The post-parse text is not less than the scroll + screen height (if it is, there's no need to do the push-to-bottom, since we already display the bottom).
                 {
-                    chatWindow->botsb.offset = botfilter->scrollOffset += (curr_ht + 2*R10*scale - botfilter->docHt);
+                    chatWindow->botsb.offset = botfilter->scrollOffset += (curr_ht + 2*UI_R10*scale - botfilter->docHt);
                 }
             }
         }
@@ -4123,7 +4123,7 @@ int chatWindow()
             {
                 F32 cur_y = y + curr_ht - chatWindow->topsb.offset + CHAT_HEADER*scale;
                 if( cur_y + ppLines[i]->ht > upperTop && cur_y < upperBottom ) // 120 is fudge factor
-                    curr_ht += smf_Display(ppLines[i]->pBlock, x + TEXT_XOFF, cur_y, z+1, wd-(R10+PIX3)*2, -1, 
+                    curr_ht += smf_Display(ppLines[i]->pBlock, x + TEXT_XOFF, cur_y, z+1, wd-(UI_R10+PIX3)*2, -1, 
                                             0, 0, &gTextAttr_Chat, 0); 
                 else
                     curr_ht += ppLines[i]->ht;
@@ -4138,7 +4138,7 @@ int chatWindow()
             {
                 F32 cur_y = y + curr_ht + (chatHeight-divider_ht) - chatWindow->botsb.offset + CHAT_HEADER*scale - PIX3;
                 if( cur_y + ppLines[i]->ht > lowerTop && cur_y < lowerBottom )
-                    curr_ht += smf_Display(ppLines[i]->pBlock, x + TEXT_XOFF, cur_y, z+1, wd-(R10+PIX3)*2, -1, 
+                    curr_ht += smf_Display(ppLines[i]->pBlock, x + TEXT_XOFF, cur_y, z+1, wd-(UI_R10+PIX3)*2, -1, 
                                             0, 0, &gTextAttr_Chat, 0); 
                 else
                     curr_ht += ppLines[i]->ht;

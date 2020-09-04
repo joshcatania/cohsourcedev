@@ -379,7 +379,7 @@ int supergroupListWindow(void)
 
     font_set( &game_12, 0, 0, 1, 1, CLR_WHITE, CLR_WHITE );
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );// window 
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );// window 
      if( eaSize( &gSupergroupLines ) == 0 )
     {
         cprntEx(x + wd/2, y+ht/2, z+2, sc, sc, (CENTER_X|CENTER_Y), "NoLfgString" );
@@ -398,7 +398,7 @@ int supergroupListWindow(void)
             {
                 if(fullDrawHeight > windowDrawArea.height)
                 {
-                    doScrollBar( &sgroupSb, windowDrawArea.height, fullDrawHeight, wd,(R10+PIX3)*sc, z+2, 0, &windowDrawArea  );
+                    doScrollBar( &sgroupSb, windowDrawArea.height, fullDrawHeight, wd,(UI_R10+PIX3)*sc, z+2, 0, &windowDrawArea  );
                     sgListView->scrollOffset = sgroupSb.offset;
                 }
                 else
@@ -432,7 +432,7 @@ int supergroupListWindow(void)
        uiEditEditSimple(editTxt, x + 2*wd/3 - 10*sc, y + ht - BUTTON_OFFSET*sc/2 - 2*PIX3 - 7*sc, z+2, 160*sc, 25*sc, &game_12, INFO_HELP_TEXT, FALSE);
 
      BuildCBox( &box, x + 2*wd/3 - 60*sc,  y + ht - BUTTON_OFFSET*sc/2 - 2*PIX3*sc - 12*sc, 200*sc, 25*sc );
-    drawFrame( PIX3, R10, x + 2*wd/3 - 60*sc,  y + ht - BUTTON_OFFSET*sc/2 - 2*PIX3*sc - 12*sc, z+1, 200*sc, 25*sc, sc, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
+    drawFrame( PIX3, UI_R10, x + 2*wd/3 - 60*sc,  y + ht - BUTTON_OFFSET*sc/2 - 2*PIX3*sc - 12*sc, z+1, 200*sc, 25*sc, sc, color, mouseCollision(&box)?0x222222ff:CLR_BLACK );
 
     if( mouseClickHit( &box, MS_LEFT) )
         uiEditTakeFocus(editTxt);

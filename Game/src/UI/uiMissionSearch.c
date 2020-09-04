@@ -2216,7 +2216,7 @@ static F32 missionsearch_sortButton( F32 x, F32 y, F32 z, F32 sc, MissionSearchS
     else
         font_color(0xaaaaaaff ,0xaaaaaaff);
 
-       wd = str_wd( font_grp, sc, sc, pchText ) + 2*R10*sc + 10*sc;
+       wd = str_wd( font_grp, sc, sc, pchText ) + 2*UI_R10*sc + 10*sc;
 
     if(s_sort_idx == eSort && !active)
         s_sort_idx = kMissionSearchSort_ArcID;
@@ -2275,7 +2275,7 @@ static F32 missionsearch_sortButton( F32 x, F32 y, F32 z, F32 sc, MissionSearchS
        prnt( x-wd+8*sc, y, z+5, sc, sc, pchText );
 
      if(arrow)
-         display_sprite(arrow, x - (R10+8)*sc, ty, z+5, 12*sc/arrow->width, 10*sc/arrow->height, CLR_WHITE );
+         display_sprite(arrow, x - (UI_R10+8)*sc, ty, z+5, 12*sc/arrow->width, 10*sc/arrow->height, CLR_WHITE );
 
      clipperPop();
     font_ital(0);
@@ -2412,7 +2412,7 @@ float missionsearch_LineButtons(MissionSearchLine *line, F32 x, F32 y, F32 z, F3
                     font(&game_12);
                     font_outl(0);
                     cprntEx( x-wd+5*sc, y +honor->height*sc*.5 +PIX2*sc+2*sc, z+3, sc, sc, CENTER_Y, textStd(text));
-                    drawFrame( PIX3, R10, x-wd-3*PIX3*sc, y+honor->height*sc*.5-10*sc+sc*PIX3+sc*PIX2, z+2, wd+PIX3*2*sc, 20*sc, sc, CLR_MM_BACK_DARK, CLR_MM_BACK_DARK );
+                    drawFrame( PIX3, UI_R10, x-wd-3*PIX3*sc, y+honor->height*sc*.5-10*sc+sc*PIX3+sc*PIX2, z+2, wd+PIX3*2*sc, 20*sc, sc, CLR_MM_BACK_DARK, CLR_MM_BACK_DARK );
                     font_outl(1);
                 }
             }
@@ -3408,7 +3408,7 @@ static F32 s_drawToggleCheckBox(float x, float y, float z, float sc, MissionSear
     }
     x+=sc*PIX3;
 
-    drawFlatFrame( PIX2, R10, startX-sc*PIX3, startY-sc*PIX2, z, x-startX+sc*PIX2, y-startY + 20*sc, sc, CLR_MM_BACK_ALTERNATE, CLR_MM_BACK_ALTERNATE );
+    drawFlatFrame( PIX2, UI_R10, startX-sc*PIX3, startY-sc*PIX2, z, x-startX+sc*PIX2, y-startY + 20*sc, sc, CLR_MM_BACK_ALTERNATE, CLR_MM_BACK_ALTERNATE );
     return x-startX;
 }
 
@@ -3434,7 +3434,7 @@ static F32 s_drawSingleToggleCheckBox(float x, float y, float z, float sc, Missi
 static int missionsearch_displayRefinements( float *x, float *y, float z, float wd, float *tx, float *ty, float *expandibleHeight, float *descHt, CBox *box, float sc )
 {
     F32 searchInputWd, availableSpace, text_ht = 22*sc, txt_wd = wd/3;
-    F32 refinementTabWidth = wd - 2*(PIX3*sc+ R10*sc);
+    F32 refinementTabWidth = wd - 2*(PIX3*sc+ UI_R10*sc);
     F32 refinementEntryX;
     F32 refinementEntryEdge = *x +refinementTabWidth - MISSIONSEARCH_BUTTONWD;
     F32 spaceForCombos;
@@ -3692,7 +3692,7 @@ static int missionsearch_displayRefinements( float *x, float *y, float z, float 
         }
         *expandibleHeight += 30*sc;
     }
-    drawFlatSectionFrame( PIX3, R10, (*box).lx-1*sc, (*box).ly, z, refinementTabWidth, 60*sc+*descHt-REFINE_B_HT/2+*expandibleHeight, sc, 0x00ffff11, 
+    drawFlatSectionFrame( PIX3, UI_R10, (*box).lx-1*sc, (*box).ly, z, refinementTabWidth, 60*sc+*descHt-REFINE_B_HT/2+*expandibleHeight, sc, 0x00ffff11, 
         FRAMEPARTS_ALL & ~(kFramePart_UpL|kFramePart_UpC|kFramePart_UpR));
     *ty= (TAB_HT+70)*sc+(*expandibleHeight) + PIX3*sc;
     return update;
@@ -3707,7 +3707,7 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
     CBox box;
     int i;
     static int clicking = 0;
-    F32 tx = x + R10*sc;
+    F32 tx = x + UI_R10*sc;
     F32 descX, descY, descWd, descHt;
     F32 ty, start = y;
       F32 tabwd = 200*sc;
@@ -3727,7 +3727,7 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
     
        for(i = 0; i < ARRAY_SIZE(s_categoriesList); i++)
     {
-           if( missionsearc_NavTab(&s_categoriesList[i], tx, y + R10*sc, z, tabwd, 36*sc, sc, s_categoryCurrent==i ) )
+           if( missionsearc_NavTab(&s_categoriesList[i], tx, y + UI_R10*sc, z, tabwd, 36*sc, sc, s_categoryCurrent==i ) )
         {
             update++;
             s_categoryCurrent = i;
@@ -3748,7 +3748,7 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
      y += 50*sc;
 
     ///Display Refinements button
-    BuildCBox( &box, x + PIX3*sc + R10*sc, y, REFINE_B_WD + search_in->width*sc, REFINE_B_HT);
+    BuildCBox( &box, x + PIX3*sc + UI_R10*sc, y, REFINE_B_WD + search_in->width*sc, REFINE_B_HT);
      
      if( s_allowSearch )  
     {
@@ -3762,9 +3762,9 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
         search_clr = 0xaaaaaa88;
 
     font_color(search_clr,search_clr);
-      display_sprite( search_in, x + PIX3*sc + 2*R10*sc, y+5*sc, z, sc, sc, search_clr );
-    display_sprite( search_out, x + PIX3*sc + 2*R10*sc, y+5*sc, z, sc, sc, CLR_MM_BACK_DARK );
-    cprntEx( x+ PIX3*sc + 2*R10*sc + search_in->width*sc, y + REFINE_B_HT/2, z, sc, sc, CENTER_Y, "MissionSearchShowRefineSearch" );
+      display_sprite( search_in, x + PIX3*sc + 2*UI_R10*sc, y+5*sc, z, sc, sc, search_clr );
+    display_sprite( search_out, x + PIX3*sc + 2*UI_R10*sc, y+5*sc, z, sc, sc, CLR_MM_BACK_DARK );
+    cprntEx( x+ PIX3*sc + 2*UI_R10*sc + search_in->width*sc, y + REFINE_B_HT/2, z, sc, sc, CENTER_Y, "MissionSearchShowRefineSearch" );
 
     if(mouseClickHit(&box,MS_LEFT) && !clicking && s_allowSearch)
     {
@@ -3774,7 +3774,7 @@ static int missionsearch_Nav( float x, float y, float z, float wd, float sc )
     else
         clicking = 0;
 
-    descX = x + sc*(PIX3 + 2*R10 + search_in->width)+ REFINE_B_WD;
+    descX = x + sc*(PIX3 + 2*UI_R10 + search_in->width)+ REFINE_B_WD;
     descY = y+5*sc;
     descWd = wd -(descX-x) - PIX3*4;
 
@@ -3985,7 +3985,7 @@ void missionsearch_DrawArcLines(MissionSearchTab *tab, int category, F32 x, F32 
     tab->list_scroll.color = 0x2d98ffff;
     tab->list_scroll.xsc = sc;
     tab->list_scroll.architect = 1;
-    doScrollBar(&tab->list_scroll, view_ht, docht + 20*sc, x + wd + R10*sc, starty, z+1, 0, &uibox);
+    doScrollBar(&tab->list_scroll, view_ht, docht + 20*sc, x + wd + UI_R10*sc, starty, z+1, 0, &uibox);
 
     // Cleanup
     for(i = eaSize(&tab->lines)-1; i >= 0; --i)
@@ -4186,7 +4186,7 @@ static void missionsearch_DrawVGLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
     clipperPop();
 
      sb.architect = 1;
-       doScrollBar(&sb, ht - 90*sc, (ty+sb.offset-starty) + 20*sc, x + wd + R10*sc, 130*sc, z+1, 0, &box);
+       doScrollBar(&sb, ht - 90*sc, (ty+sb.offset-starty) + 20*sc, x + wd + UI_R10*sc, 130*sc, z+1, 0, &box);
 
     if (drawMMButton("NewCVGString", 0, 0, x+wd/2, starty + ht - 65*sc, z, 250*sc, sc, 0, 0 ))
     {
@@ -4289,7 +4289,7 @@ void missionsearch_DrawCharacterLines( F32 x, F32 y, F32 z, F32 wd, F32 ht, F32 
     clipperPop();
 
      sb.architect = 1;
-    doScrollBar(&sb, ht - 90*sc, (ty + sb.offset - starty) + 20*sc, x + wd + R10*sc, 130*sc, z+1, 0, &box);
+    doScrollBar(&sb, ht - 90*sc, (ty + sb.offset - starty) + 20*sc, x + wd + UI_R10*sc, 130*sc, z+1, 0, &box);
 
        if (drawMMButton("MMCreateCustomCritter","Character_Icon", 0, x+wd/2, starty + ht - 65*sc, z, 350*sc, sc, MMBUTTON_ICONALIGNTOTEXT  | MMBUTTON_USEOVERRIDE_COLOR, 0 ))
      {
@@ -4416,7 +4416,7 @@ int missionsearch_Window(void)
 
         nav_ht = missionsearch_Nav( x, y, z, wd, sc );
 
-        missionsearch_DrawTab( x + R10*sc, y + nav_ht, z+1, wd - 2*R10*sc, ht - nav_ht, sc );
+        missionsearch_DrawTab( x + UI_R10*sc, y + nav_ht, z+1, wd - 2*UI_R10*sc, ht - nav_ht, sc );
     }
     else
     {

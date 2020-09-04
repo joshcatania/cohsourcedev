@@ -447,7 +447,7 @@ static float power_drawSet( PowerSet *pset, float x, float y, float z, float wd,
     if( height > 0 )
     {
         scissor_dims( x, winY + PIX3*scale, wd, winHt - PIX3*2*scale );
-        drawFrame( PIX3, R10, x, y + SET_YSPACER*scale/2, z, wd, height + SET_YSPACER*scale/2, scale, 0xffffff88, 0xffffff22 );
+        drawFrame( PIX3, UI_R10, x, y + SET_YSPACER*scale/2, z, wd, height + SET_YSPACER*scale/2, scale, 0xffffff88, 0xffffff22 );
 
         // frame title
         font( &gamebold_9 );
@@ -512,23 +512,23 @@ int powersWindow()
         primY = secY = poolY = y - sb.offset;
     else
     {
-        if( primHt > ht - 2*R10*scale )
-            primY =  y - MIN( sb.offset, primHt-(ht - 2*R10*scale) );
+        if( primHt > ht - 2*UI_R10*scale )
+            primY =  y - MIN( sb.offset, primHt-(ht - 2*UI_R10*scale) );
         else
             primY = y;
 
-        if( secHt > ht - 2*R10*scale )
-            secY =  y - MIN( sb.offset, secHt-(ht - 2*R10*scale) );
+        if( secHt > ht - 2*UI_R10*scale )
+            secY =  y - MIN( sb.offset, secHt-(ht - 2*UI_R10*scale) );
         else
             secY = y;
 
-        if( poolHt > ht - 2*R10*scale )
-            poolY =  y - MIN( sb.offset, poolHt-(ht - 2*R10*scale) );
+        if( poolHt > ht - 2*UI_R10*scale )
+            poolY =  y - MIN( sb.offset, poolHt-(ht - 2*UI_R10*scale) );
         else
             poolY = y;
     }
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, scale, color, bcolor );
      BuildCBox(&s_ttpPowerInventory.box, x, y, wd, ht);
 
     primHt = secHt = poolHt = 0;
@@ -623,7 +623,7 @@ int powersWindow()
     }
 
     max_ht = MAX( primHt, MAX(secHt,poolHt) );
-     doScrollBar( &sb, ht - 2*R10*scale, max_ht-11*scale, wd - PIX3/2*scale, R10*scale, z, &s_ttpPowerInventory.box, 0 );
+     doScrollBar( &sb, ht - 2*UI_R10*scale, max_ht-11*scale, wd - PIX3/2*scale, UI_R10*scale, z, &s_ttpPowerInventory.box, 0 );
 
     return 0;
 }

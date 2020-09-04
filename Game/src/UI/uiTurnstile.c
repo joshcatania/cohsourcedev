@@ -1223,11 +1223,11 @@ int turnstileWindow()
         turnstileGame_generateRequestEventList();
     }
     lastMode = mode;
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
 // This is the only UI file that uses tab controls that is in the test client...
 #ifndef TEST_CLIENT
-    curTab = drawTabControl(eventCategories, x+R10*sc, y, z + 3.0f, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal);
+    curTab = drawTabControl(eventCategories, x+UI_R10*sc, y, z + 3.0f, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal);
     newCategory = (int)curTab;
     if (newCategory != currentCategory)
     {
@@ -1331,7 +1331,7 @@ int turnstileWindow()
 
                 if (fullDrawHeight > (windowDrawArea.height-30))
                 {
-                    doScrollBar(&eventListSb, windowDrawArea.height-30, fullDrawHeight, wd, (R10 + PIX3) * sc, z + 3, 0, &windowDrawArea);
+                    doScrollBar(&eventListSb, windowDrawArea.height-30, fullDrawHeight, wd, (UI_R10 + PIX3) * sc, z + 3, 0, &windowDrawArea);
                     eventListView->scrollOffset = eventListSb.offset;
                 }
                 else
@@ -1551,7 +1551,7 @@ int turnstileDialogWindow()
         }
     }
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     ypos = (int) (y + 10.0f * sc);
     w = (int) (wd - 20.0f * sc);

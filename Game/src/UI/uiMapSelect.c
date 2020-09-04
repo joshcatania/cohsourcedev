@@ -117,7 +117,7 @@ static void mapSelectInit(int monorail, int base, int background, char *backgrou
         s_pview = smfview_Create(WDW_MAP_SELECT);
 
         // Sets the location within the window of the text region
-        smfview_SetLocation(s_pview, PIX3, PIX3+R10, 0);
+        smfview_SetLocation(s_pview, PIX3, PIX3+UI_R10, 0);
         smfview_SetText(s_pview, "");
 
         initStuffBuff(&s_sb, 1024);
@@ -358,7 +358,7 @@ int mapSelectWindow(void)
     }
 
     // Matt H told me to make it opaque
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor|0xff);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor|0xff);
 
     set_scissor(1);
     scissor_dims( x+PIX3*sc, y+PIX3*sc, wd - PIX3*2*sc, ht - PIX3*2*sc );
@@ -398,7 +398,7 @@ int mapSelectWindow(void)
 
     set_scissor(0);
 
-    bottomgap = PIX3*2+R10*2*sc;
+    bottomgap = PIX3*2+UI_R10*2*sc;
 
     if (s_monorail)
         bottomgap += 10+30*sc;

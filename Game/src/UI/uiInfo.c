@@ -1621,7 +1621,7 @@ void info_displayBadges( float x, float y, float z, float sc, float wd, float ht
     }
     set_scissor(0);
 
-    doScrollBar( &sb, ht, ty + 70 - y, PIX3*sc, (HEADER_HT+PIX3*2+R10)*sc, z+5, 0, 0 );
+    doScrollBar( &sb, ht, ty + 70 - y, PIX3*sc, (HEADER_HT+PIX3*2+UI_R10)*sc, z+5, 0, 0 );
 }
 
 static ToolTip uiInfo_alignmentTooltip;
@@ -1905,7 +1905,7 @@ void info_displayAlignment( Entity *e, float x, float y, float z, float sc, floa
 
     set_scissor(0);
 
-    doScrollBar(&sb, ht, ty, PIX3*sc, (HEADER_HT+PIX3*2+R10)*sc, z+5, 0, 0);
+    doScrollBar(&sb, ht, ty, PIX3*sc, (HEADER_HT+PIX3*2+UI_R10)*sc, z+5, 0, 0);
 }
 
 #define SAL_ICON_WD 48
@@ -1972,7 +1972,7 @@ static void info_displaySalvageDrops(float x, float y, float z, float sc, float 
     }
 
     set_scissor(0);
-    doScrollBar( &sb, ht, ty + 70 - y, PIX3*sc, (HEADER_HT+PIX3*2+R10)*sc, z+5, 0, 0 );
+    doScrollBar( &sb, ht, ty + 70 - y, PIX3*sc, (HEADER_HT+PIX3*2+UI_R10)*sc, z+5, 0, 0 );
 }
 
 #define BUTTON_HEIGHT 20
@@ -2014,7 +2014,7 @@ int infoWindow()
         return 0;
     }
 
-    drawJoinedFrame2Panel( PIX3, R10, x, y, z, scale, wd, info.header_ht*scale, ht-info.header_ht*scale, color, bcolor, NULL, NULL );
+    drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, scale, wd, info.header_ht*scale, ht-info.header_ht*scale, color, bcolor, NULL, NULL );
 
     // draw the icon
     if( info.icon )
@@ -2024,7 +2024,7 @@ int infoWindow()
         int centerY = y + (info.header_ht*scale - info.icon->height*iconscale)/2+1*scale;
         //y + (info.header_ht*scale - info.icon->height*iconscale)/2+(1-PIX2)*scale
         if( info.headshot )
-            drawFlatFrame(PIX2, R4,  x + (ICON_WD*scale - info.icon->width*iconscale)/2-PIX2*scale, centerY-PIX2*scale, z, info.icon->width*iconscale+(PIX2*2)*scale, info.icon->height*iconscale+(PIX2*2)*scale, scale, 0x000000ff, 0xffffff0f);
+            drawFlatFrame(PIX2, UI_R4,  x + (ICON_WD*scale - info.icon->width*iconscale)/2-PIX2*scale, centerY-PIX2*scale, z, info.icon->width*iconscale+(PIX2*2)*scale, info.icon->height*iconscale+(PIX2*2)*scale, scale, 0x000000ff, 0xffffff0f);
 
         display_sprite( info.icon, x + (ICON_WD*scale - info.icon->width*iconscale)/2, centerY, z,
             iconscale, iconscale, CLR_WHITE );
@@ -2033,15 +2033,15 @@ int infoWindow()
     else if ( info.spec )
         drawEnhancementOriginLevel(info.spec, info.level+1, info.numCombines, true, x + info.header_ht*scale/2, y + info.header_ht*scale/2, z, scale, scale, CLR_WHITE, false);
     else if ( info.room )
-        drawRoomBoxes( info.room, x + PIX3*2*scale, y+PIX3*2*scale, z, (ICON_WD-PIX3*4)*scale, (info.header_ht-R10-PIX3)*scale );
+        drawRoomBoxes( info.room, x + PIX3*2*scale, y+PIX3*2*scale, z, (ICON_WD-PIX3*4)*scale, (info.header_ht-UI_R10-PIX3)*scale );
     else if ( info.plot )
-        drawPlotBox( info.plot, x + PIX3*2*scale, y+PIX3*2*scale, z, (ICON_WD-PIX3*4)*scale, (info.header_ht-R10-PIX3)*scale );
+        drawPlotBox( info.plot, x + PIX3*2*scale, y+PIX3*2*scale, z, (ICON_WD-PIX3*4)*scale, (info.header_ht-UI_R10-PIX3)*scale );
     else if ( info.pRec )
         uiRecipeDrawIcon( info.pRec, info.pRec->level, x + PIX3*scale, y+PIX3*scale, z, scale*0.9f, WDW_INFO, false, CLR_WHITE );
 
     if( mode == WINDOW_DISPLAYING ) // hide text until window is open
     {
-        float width = wd - (2*PIX3 + R10 + ICON_WD)*scale;
+        float width = wd - (2*PIX3 + UI_R10 + ICON_WD)*scale;
         float textht;
 
         font( &title_12 );
@@ -2057,7 +2057,7 @@ int infoWindow()
         // classSet
         textht += smf_ParseAndDisplay( info.classSetSMF, info.classSet, x + ICON_WD*scale, y + textht, z, width, 0, info.reparse, info.reparse, &s_taClassSet, NULL, 0, true); 
 
-        info.header_ht = MAX( HEADER_HT, (textht + R10*scale)/scale);
+        info.header_ht = MAX( HEADER_HT, (textht + UI_R10*scale)/scale);
         info.reparse = false;
     }
 
@@ -2075,7 +2075,7 @@ int infoWindow()
 
         if( info.numTabs > 1) // more than one tab, display tab bar and use current text
         {
-            char * text = drawTabControl(info.tc, x+(PIX3+R10)*scale, y + info.header_ht*scale-PIX3*scale, z, wd-(PIX3+R10*2)*scale, tabht, scale, color, color, TabDirection_Horizontal);
+            char * text = drawTabControl(info.tc, x+(PIX3+UI_R10)*scale, y + info.header_ht*scale-PIX3*scale, z, wd-(PIX3+UI_R10*2)*scale, tabht, scale, color, color, TabDirection_Horizontal);
 
             ty  += tabht*scale;
             tht -= tabht*scale;
@@ -2110,11 +2110,11 @@ int infoWindow()
             smfview_SetText(info.pview, info.stuffbuff.buff);
 
         if(bBadge)
-            info_displayBadges( x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-R10*scale );
+            info_displayBadges( x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-UI_R10*scale );
         else if(bAlignment)
-            info_displayAlignment( info.ent, x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-R10*scale, color );
+            info_displayAlignment( info.ent, x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-UI_R10*scale, color );
         else if(bSalvageDrops)
-            info_displaySalvageDrops(x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-R10*scale);
+            info_displaySalvageDrops(x+(PIX3+4)*scale, y+ty, z, scale, wd-(PIX3*2+9)*scale, tht-UI_R10*scale);
         else if(bPowerInfo)
             displayPowerInfo(x+(10)*scale, y+ty, z, wd-(20)*scale, tht-1*scale, info.spec, info.pow, WDW_INFO, POWERINFO_ENHANCED, 0);
         else
@@ -2241,7 +2241,7 @@ void info_PowManagement( EPowInfo mode, float screenScaleX, float screenScaleY )
 
     if( wd > 0 && ht > 0 )
     {
-        drawMenuFrame( R12, (tx-4)*screenScaleX, ty*screenScaleY, z, (wd+4)*screenScaleX, ht*screenScaleY, CLR_WHITE, 0x000000ff, 0 );
+        drawMenuFrame( UI_R12, (tx-4)*screenScaleX, ty*screenScaleY, z, (wd+4)*screenScaleX, ht*screenScaleY, CLR_WHITE, 0x000000ff, 0 );
     }
 
     if( !info.name )
@@ -2250,7 +2250,7 @@ void info_PowManagement( EPowInfo mode, float screenScaleX, float screenScaleY )
 
     font( &title_14 );
     font_color( CLR_WHITE, CLR_WHITE );
-    width = wd - (2*PIX3 + R10 + ICON_WD)*sc;
+    width = wd - (2*PIX3 + UI_R10 + ICON_WD)*sc;
 
     DrawTitle(font_grp, (tx*screenScaleX) + (ICON_WD*sc*screenScale), (ty*screenScaleY) + FONT_HEIGHT*2*sc*screenScale, z, width*screenScaleX, info.name, sc );
 
@@ -2279,7 +2279,7 @@ void info_PowManagement( EPowInfo mode, float screenScaleX, float screenScaleY )
     s_taDefaults.piScale = (int *)((int)(sc*SMF_FONT_SCALE)); 
     smfview_SetBaseLocation( info.pview, tx*screenScaleX, ty*screenScaleY, z, wd*screenScaleX, ht*screenScaleY );
     smfview_SetLocation(info.pview, (PIX3+4)*sc*screenScale, (info.header_ht+4)*sc*screenScale, 0);
-    smfview_SetSize(info.pview, wd*screenScaleX-(PIX3*2+9)*sc*screenScale, ht*screenScaleY-(info.header_ht+PIX3+R16)*sc*screenScale);
+    smfview_SetSize(info.pview, wd*screenScaleX-(PIX3*2+9)*sc*screenScale, ht*screenScaleY-(info.header_ht+PIX3+UI_R16)*sc*screenScale);
     smfview_SetText(info.pview, info.stuffbuff.buff);
     smfview_Draw(info.pview);
 }

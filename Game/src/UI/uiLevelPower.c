@@ -430,9 +430,9 @@ void levelPowerMenu()
     // help background
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, 70*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
 
     displayPowerHelpBackground(screenScaleX, screenScaleY);
     displayPowerLevelHelp(screenScaleX, screenScaleY);

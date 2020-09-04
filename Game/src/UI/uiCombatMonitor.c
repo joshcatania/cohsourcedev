@@ -222,7 +222,7 @@ int combatMonitorWindow(void)
         return 0;
 
     BuildCBox( &box, x, y, wd, ht );
-    drawFrame( PIX2, R4, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX2, UI_R4, x, y, z, wd, ht, sc, color, bcolor );
     clipperPushCBox( &box );
 
     y+= 2*sc;

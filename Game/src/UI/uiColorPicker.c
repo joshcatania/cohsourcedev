@@ -165,13 +165,13 @@ int drawColorPicker( ColorPicker * picker, float x, float y, float z, float wd, 
        picker->trans_sc -= TIMESTEP*.1f;
        picker->trans_sc = MAX( picker->trans_sc, 0.f );
 
-     drawFlatFrame( PIX3, R4, x, y, z, wd, ht, 1.f, 0xffffff44, 0xffffff44 );
+     drawFlatFrame( PIX3, UI_R4, x, y, z, wd, ht, 1.f, 0xffffff44, 0xffffff44 );
 
      z += 3;
-       x += R6;
-    y += R6;
-    wd -= 2*R6;
-    ht -= 2*R6;
+       x += UI_R6;
+    y += UI_R6;
+    wd -= 2*UI_R6;
+    ht -= 2*UI_R6;
 
     hue_wd = wd/NUM_HUES;
       sat_ht = ht/(NUM_SATS+LUM_HT+1+2)+1; // 1 is spacer between hue and brightness
@@ -303,7 +303,7 @@ int chatColorPickerWindow(void)
     if(!window_getDims(WDW_COLORPICKER, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor))
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
     if( !s_channel )
     {
         window_setMode(WDW_COLORPICKER, WINDOW_SHRINKING);
@@ -337,7 +337,7 @@ int chatColorPickerWindow(void)
 
     y+= 15*sc;
     // Apply Button
-    if( D_MOUSEHIT == drawStdButton( x + wd/2, y, z, MIN(200*sc,wd-2*R10*sc), 20*sc, color, "AppyColors", 1.f, !s_channel ) )
+    if( D_MOUSEHIT == drawStdButton( x + wd/2, y, z, MIN(200*sc,wd-2*UI_R10*sc), 20*sc, color, "AppyColors", 1.f, !s_channel ) )
     {
         s_channel->color = c1;
         s_channel->color2 = c2;

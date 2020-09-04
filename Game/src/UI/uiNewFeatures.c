@@ -40,7 +40,7 @@ int newFeaturesWindow()
     if ( !window_getDims( WDW_NEW_FEATURES, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor ))
         return 0;
 
-    drawFrame(PIX3, R10, x, y, z-2, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z-2, wd, ht, sc, color, bcolor);
 
     BuildCBox(&box, x, y, wd, ht);
     if (mouseCollision(&box))

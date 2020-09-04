@@ -205,12 +205,12 @@ static void handleTransferPickShard(float screenScaleX, float screenScaleY)
 
     strcpy_s( banner_buf, ARRAY_SIZE_CHECKED( banner_buf ),    textStd( "charTransferPickShardBanner", server_name ) );
 
-    drawMenuFrame( R12, 82*screenScaleX, 159*screenScaleY, 130, 400*screenScaleX, 550*screenScaleY, CLR_WHITE, 0x44444444, 0 );
+    drawMenuFrame( UI_R12, 82*screenScaleX, 159*screenScaleY, 130, 400*screenScaleX, 550*screenScaleY, CLR_WHITE, 0x44444444, 0 );
 
     font_color( CLR_WHITE, CLR_WHITE );
     cprntEx( 282*screenScaleX, 191*screenScaleY, 140, screenScale, screenScale, ( NO_MSPRINT | CENTER_X | CENTER_Y ), banner_buf );
 
-    drawMenuFrame( R12, 82*screenScaleX, 159*screenScaleY, 130, 400*screenScaleX, 64*screenScaleY, CLR_WHITE, 0x44444444, 0 );
+    drawMenuFrame( UI_R12, 82*screenScaleX, 159*screenScaleY, 130, 400*screenScaleX, 64*screenScaleY, CLR_WHITE, 0x44444444, 0 );
 
     if( D_MOUSEHIT == drawStdButton( 165*screenScaleX, 684*screenScaleY, 140, 50*screenScaleX, 20*screenScaleY, button_color, "CancelString", screenScale, 0 ) )
         cleanupTransferShardList( CHARACTER_TRANSFER_IDLE );

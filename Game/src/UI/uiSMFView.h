@@ -40,7 +40,7 @@ void smfview_SetSize(SMFView *pview, int wd, int ht);
     // though, since the new values are checked against the old ones first.
 
 void smfview_SetWindowRadius(SMFView *pview, int radius);
-    // Windows with a radii which isn't R10 should call this at creation time
+    // Windows with a radii which isn't UI_R10 should call this at creation time
     // to set radius to the right size.
 
 void smfview_SetText(SMFView *pview, char *pch);

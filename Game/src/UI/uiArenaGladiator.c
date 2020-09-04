@@ -76,7 +76,7 @@ int arenaGladiatorPickerWindow(void)
         lastFrameWasOpen = 1;
     }
    
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );       
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );       
  
     titleBarX = x+80*sc;      
     titleBarY = y+40*sc; 
@@ -178,8 +178,8 @@ int arenaGladiatorPickerWindow(void)
         F32 scale; 
         round = atlasLoadTexture("MissionPicker_icon_round.tga");
         scale = ((float)30/round->width)*sc;
-        cprntEx( x+wd+15*sc - (30+R10)*sc, y+ht+15*sc - (30+R10)*sc, z+1, scale, scale, CENTER_X|CENTER_Y, "?" );
-        if( D_MOUSEHIT == drawGenericButton( round, x+wd - (30+R10)*sc, y+ht - (30+R10)*sc, z, scale, color, color, true ) )
+        cprntEx( x+wd+15*sc - (30+UI_R10)*sc, y+ht+15*sc - (30+UI_R10)*sc, z+1, scale, scale, CENTER_X|CENTER_Y, "?" );
+        if( D_MOUSEHIT == drawGenericButton( round, x+wd - (30+UI_R10)*sc, y+ht - (30+UI_R10)*sc, z, scale, color, color, true ) )
         {
             helpSet(9);
         }

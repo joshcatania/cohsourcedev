@@ -1073,9 +1073,9 @@ int enhancementWindow()
         if( s_enh_flash > PI )
             s_enh_flash = 0.f;
     }
-     drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, back_color );
+     drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, back_color );
 
-    drawTabControl(s_enhancementTabsOfTen, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal);
+    drawTabControl(s_enhancementTabsOfTen, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal);
     y += 9 * sc;
 
     pSelectedTab = (char *)uiTabControlGetSelectedData(s_enhancementTabsOfTen);

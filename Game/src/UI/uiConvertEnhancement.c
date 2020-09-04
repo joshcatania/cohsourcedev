@@ -159,7 +159,7 @@ int convertEnhancementWindow()
     {
         return 0;
     }
-    drawFrame( PIX3, R10, x, y, z-5, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z-5, wd, ht, sc, color, bcolor );
     BuildCBox( &box, x, y, wd, ht );
 
     if (drawSmallCheckboxEx( WDW_CONVERT_ENHANCEMENT, 30.f*sc, 20.f*sc, z, sc, "InSetString", &inset, 0, 1, 0, 0, 1, 0 ))

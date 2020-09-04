@@ -2744,9 +2744,9 @@ int HandleOptionList(GameOptions *popt, float start_x, float y, float xVals, flo
                 if (starty != y) 
                 {
                     if( popt->eTypeDisplay == kOptionType_TitleUltra)
-                         drawFrame( PIX2, R6, x-37*sc, starty, z, width+35*sc,y+(i*(LINE_HEIGHT)- LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, 0xffff0044 );
+                         drawFrame( PIX2, UI_R6, x-37*sc, starty, z, width+35*sc,y+(i*(LINE_HEIGHT)- LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, 0xffff0044 );
                     else
-                          drawFrame( PIX2, R6, x-37*sc, starty, z, width+35*sc,y+(i*(LINE_HEIGHT)- LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, frameBgColor);
+                          drawFrame( PIX2, UI_R6, x-37*sc, starty, z, width+35*sc,y+(i*(LINE_HEIGHT)- LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, frameBgColor);
                 }
                 starty = y+(i*LINE_HEIGHT + LINE_HEIGHT/4)*sc;
                 y+=LINE_HEIGHT/2*sc; // wild cheat here
@@ -2806,7 +2806,7 @@ int HandleOptionList(GameOptions *popt, float start_x, float y, float xVals, flo
 
                 if(  stricmp( pch, "OptionDisabledUltra" ) == 0 ) // special hack until ultra mode is no longer special
                 {
-                       drawFlatFrame( PIX3, R4, xVals + 75*sc , yVals + i*LINE_HEIGHT*sc - 16*sc, z, 200*sc, 20*sc, sc, 0xffff0066, 0xffff0066 );
+                       drawFlatFrame( PIX3, UI_R4, xVals + 75*sc , yVals + i*LINE_HEIGHT*sc - 16*sc, z, 200*sc, 20*sc, sc, 0xffff0066, 0xffff0066 );
                      if(selectableText(xVals + 83*sc, yVals + i*LINE_HEIGHT*sc, z+1, sc*.9, "ClickForUltra", CLR_WHITE, CLR_WHITE, FALSE, TRUE))
                     {
                         if( popt->id )
@@ -3063,7 +3063,7 @@ int HandleOptionList(GameOptions *popt, float start_x, float y, float xVals, flo
         popt++;
     }
     if (starty != y) {
-        drawFrame( PIX2, R6, x-37*sc, starty, z, width+35*sc, y+(i*LINE_HEIGHT+ LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, frameBgColor);
+        drawFrame( PIX2, UI_R6, x-37*sc, starty, z, width+35*sc, y+(i*LINE_HEIGHT+ LINE_HEIGHT/2)*sc-starty,sc, frameBorderColor, frameBgColor);
     }
 
 
@@ -3491,7 +3491,7 @@ int optionsWindow()
     }
     
     oldy = y;
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     if (window_getMode(WDW_OPTIONS) == WINDOW_SHRINKING && init)
     {
@@ -3513,7 +3513,7 @@ int optionsWindow()
     BuildCBox(&clipbox, x,y,wd,ht);
 
     set_scissor(true);
-    scissor_dims(x, y, wd-(PIX3)*2*sc, ht-(PIX3+R10)*2*sc);
+    scissor_dims(x, y, wd-(PIX3)*2*sc, ht-(PIX3+UI_R10)*2*sc);
 
     // Draw the right thing given the current "tab"
      if (s_CurTab == OPTION_BINDS)
@@ -3532,11 +3532,11 @@ int optionsWindow()
         font_color(CLR_YELLOW, CLR_RED);
         prnt( x+25*sc, y+33*sc-keyBindsSB.offset, z+1, sc, sc, "KeyProfile" );
         prnt( x+25*sc, y+110*sc-keyBindsSB.offset, z+1, sc, sc, "Keymapping" );
-        drawFrame( PIX2, R6, x+13*sc, y+27*sc-keyBindsSB.offset, z, wd-23*sc,  61*sc, sc, frameBorderColor, frameBgColor ); //keyprifile frame
-        drawFrame( PIX2, R6, x+13*sc,  y+104*sc-keyBindsSB.offset, z, wd-23*sc, dht+20*sc, sc, frameBorderColor, frameBgColor ); //keybind frame
+        drawFrame( PIX2, UI_R6, x+13*sc, y+27*sc-keyBindsSB.offset, z, wd-23*sc,  61*sc, sc, frameBorderColor, frameBgColor ); //keyprifile frame
+        drawFrame( PIX2, UI_R6, x+13*sc,  y+104*sc-keyBindsSB.offset, z, wd-23*sc, dht+20*sc, sc, frameBorderColor, frameBgColor ); //keybind frame
         dht += 140*sc;
         set_scissor(false);
-        doScrollBar( &keyBindsSB,ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0);
+        doScrollBar( &keyBindsSB,ht - (PIX3+UI_R10)*2*sc, dht, wd, (PIX3+UI_R10)*sc, z, &clipbox, 0);
     }
     else if(s_CurTab == OPTION_CONTROLS)
     {
@@ -3544,7 +3544,7 @@ int optionsWindow()
         count = HandleOptionList(s_optListControls, x+25*sc, y-controlsSB.offset, x+wd-290*sc, y+dht-controlsSB.offset, wd - 33*sc,z+1,sc,&clipbox, color, bcolor);
         dht = (count*LINE_HEIGHT+70)*sc;
         set_scissor(false);
-        doScrollBar( &controlsSB, ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0 );
+        doScrollBar( &controlsSB, ht - (PIX3+UI_R10)*2*sc, dht, wd, (PIX3+UI_R10)*sc, z, &clipbox, 0 );
         game_state.razerMouseTray = s_razerTray;
     }
     else if(s_CurTab == OPTION_MISC)
@@ -3557,7 +3557,7 @@ int optionsWindow()
 
         set_scissor(false);
 
-         doScrollBar( &optionsSB, ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0 );
+         doScrollBar( &optionsSB, ht - (PIX3+UI_R10)*2*sc, dht, wd, (PIX3+UI_R10)*sc, z, &clipbox, 0 );
     }
     else if(s_CurTab == OPTION_WINDOWS)
     {
@@ -3577,8 +3577,8 @@ int optionsWindow()
         font_color(CLR_YELLOW, CLR_RED);
         prnt( x+25*sc, y+dht+5*sc-optionsSB.offset, z+1, sc, sc, "ChatSettings" );
         prnt( x+25*sc, y+dht+83*sc-optionsSB.offset, z+1, sc, sc, "WindowSettings" );
-        drawFrame( PIX2, R6, x+13*sc, y+dht*sc-optionsSB.offset, z, wd-23*sc,  61*sc, sc, frameBorderColor, frameBgColor ); 
-        drawFrame( PIX2, R6, x+13*sc,  y+dht+77*sc-optionsSB.offset, z, wd-23*sc, 61*sc, sc, frameBorderColor, frameBgColor ); 
+        drawFrame( PIX2, UI_R6, x+13*sc, y+dht*sc-optionsSB.offset, z, wd-23*sc,  61*sc, sc, frameBorderColor, frameBgColor ); 
+        drawFrame( PIX2, UI_R6, x+13*sc,  y+dht+77*sc-optionsSB.offset, z, wd-23*sc, 61*sc, sc, frameBorderColor, frameBgColor ); 
         if( D_MOUSEHIT == drawStdButton(x+.33*wd,y+dht+30*sc-optionsSB.offset,z,100*sc,TAB_HT*sc,window_GetColor(WDW_OPTIONS),"SaveToFile",sc,0) )
             saveChatSettings(0);
         if( D_MOUSEHIT == drawStdButton(x+.66*wd,y+dht+30*sc-optionsSB.offset,z,100*sc,TAB_HT*sc,window_GetColor(WDW_OPTIONS),"LoadFromFile",sc,0) )
@@ -3591,7 +3591,7 @@ int optionsWindow()
 
         set_scissor(false);
 
-         doScrollBar( &optionsSB, ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0 );
+         doScrollBar( &optionsSB, ht - (PIX3+UI_R10)*2*sc, dht, wd, (PIX3+UI_R10)*sc, z, &clipbox, 0 );
 
         if (!nearf(lR,s_fR) || !nearf(lG,s_fG) || !nearf(lB,s_fB) || !nearf(lA,s_fA)){ //only change window colors on change
             gWindowRGBA[0] = MAX(1, (int)(s_fR*255));
@@ -3685,7 +3685,7 @@ int optionsWindow()
             dht += LINE_HEIGHT;
         set_scissor(0);
 
-        doScrollBar( &graphicsSB, ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0 );
+        doScrollBar( &graphicsSB, ht - (PIX3+UI_R10)*2*sc, dht, wd, (PIX3+UI_R10)*sc, z, &clipbox, 0 );
         
         gfxApplySettings(&s_gfx, true, true);
     }

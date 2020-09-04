@@ -992,7 +992,7 @@ void supergroupDrawInfoPane(UIBox bounds, float z, float scale)
     groupNameHeight += sgDrawGroupMotto(infoBounds, z, scale);
 
     clipperPush(NULL);
-    doScrollBar( &sb, ringDrawSize, groupNameHeight, winDefs[WDW_SUPERGROUP].loc.wd*scale, R10*scale, z, 0, &infoBounds );
+    doScrollBar( &sb, ringDrawSize, groupNameHeight, winDefs[WDW_SUPERGROUP].loc.wd*scale, UI_R10*scale, z, 0, &infoBounds );
     clipperPop();
     clipperPop();
 }
@@ -1609,13 +1609,13 @@ int supergroupWindow()
 
     if( optionGet(kUO_HideHeader) )
     {
-        drawFrameWithBounds( PIX3, R10, x, y, z, wd, ht, color, bcolor, &membersPaneBounds );
+        drawFrameWithBounds( PIX3, UI_R10, x, y, z, wd, ht, color, bcolor, &membersPaneBounds );
         uiBoxAlter(&sgWindowDrawArea, UIBAT_SHRINK, UIBAD_TOP, PIX3);
         clipperPushRestrict(&sgWindowDrawArea);
     }
     else
     {
-         drawJoinedFrame2Panel( PIX3, R10, x, y, z, scale, wd, SG_INFO_PANE_HEIGHT*scale, ht - SG_INFO_PANE_HEIGHT*scale, color, bcolor, &infoPaneBounds, &membersPaneBounds);
+         drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, scale, wd, SG_INFO_PANE_HEIGHT*scale, ht - SG_INFO_PANE_HEIGHT*scale, color, bcolor, &infoPaneBounds, &membersPaneBounds);
 
         font(&game_12);
         uiBoxAlter(&sgWindowDrawArea, UIBAT_SHRINK, UIBAD_TOP, PIX3);
@@ -1637,7 +1637,7 @@ int supergroupWindow()
         {
             if(fullDrawHeight > currentHeight)
             {
-                doScrollBar(&sgListViewScrollbar, currentHeight, fullDrawHeight, wd, membersPaneBounds.y - y + PIX3+R10, z+2, 0, &membersPaneBounds );
+                doScrollBar(&sgListViewScrollbar, currentHeight, fullDrawHeight, wd, membersPaneBounds.y - y + PIX3+UI_R10, z+2, 0, &membersPaneBounds );
                 sgListView->scrollOffset = sgListViewScrollbar.offset;
             }
             else

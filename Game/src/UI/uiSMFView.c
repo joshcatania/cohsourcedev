@@ -33,7 +33,7 @@ SMFView *smfview_Create(int wnd)
     SMFView *pview = (SMFView *)calloc(sizeof(SMFView), 1);
 
     pview->sb.wdw = wnd;
-    pview->radius = R10;
+    pview->radius = UI_R10;
     pview->block = smfBlock_Create();
     pview->hasScrollBar = true;
 
@@ -49,7 +49,7 @@ SMFView *smfview_CreateInPlace(SMFView *pview, int wnd)
     memset(pview, 0, sizeof(SMFView));
 
     pview->sb.wdw = wnd;
-    pview->radius = R10;
+    pview->radius = UI_R10;
     pview->block = smfBlock_Create();
 
     return pview;
@@ -296,7 +296,7 @@ void smfview_DrawWithCallback(SMFView *pview, int (*callback)(char *))
         {
             if(pview->sb.wdw == 0)
             {
-                doScrollBar(&pview->sb, pview->ht-2*R10, iHeight+MARGIN, x+wd, y+pview->y+R10+yoffset, z+pview->z, &box, 0);
+                doScrollBar(&pview->sb, pview->ht-2*UI_R10, iHeight+MARGIN, x+wd, y+pview->y+UI_R10+yoffset, z+pview->z, &box, 0);
             }
             else
             {

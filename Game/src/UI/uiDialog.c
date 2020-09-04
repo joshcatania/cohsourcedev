@@ -485,7 +485,7 @@ static void calc_dialog_text_size( int *retwd, int *retht, SMFView *view, float 
 
     ht += 15*wsc; // extra space to deal with quirks of text wrapping
     *retht = ht;
-    *retwd = wd+(PIX3*2+R10)*wsc;
+    *retwd = wd+(PIX3*2+UI_R10)*wsc;
 }
 
 //
@@ -626,7 +626,7 @@ static void displayMoralChoice(void)
             
             //---------------------------------
 
-            dlog->footer = (PIX3*2+R10+BOTTOM_SPACER)*wsc;
+            dlog->footer = (PIX3*2+UI_R10+BOTTOM_SPACER)*wsc;
 
             dlog->ht = ht + dlog->footer;
             //Set maximum height slightly shorter than normal dialog max height,
@@ -654,8 +654,8 @@ static void displayMoralChoice(void)
     lwx = wx;
     rwx = wx+mid_spacing+winwd;
 
-    drawFrame( PIX3, R10, lwx, wy, wz, winwd, winht, wsc, color, back_color );
-    drawFrame( PIX3, R10, rwx, wy, wz, winwd, winht, wsc, color, back_color );
+    drawFrame( PIX3, UI_R10, lwx, wy, wz, winwd, winht, wsc, color, back_color );
+    drawFrame( PIX3, UI_R10, rwx, wy, wz, winwd, winht, wsc, color, back_color );
 
     if( winDefs[WDW_DIALOG].timer < 5 )
     {
@@ -687,7 +687,7 @@ static void displayMoralChoice(void)
 
     //left side
     temp_ht = smfview_GetHeight(s_lview);
-    smfview_SetSize(s_lview, winwd-(PIX3+R10)*2*wsc, MIN(winht-dlog->footer, temp_ht));
+    smfview_SetSize(s_lview, winwd-(PIX3+UI_R10)*2*wsc, MIN(winht-dlog->footer, temp_ht));
 
     if( winht < smfview_GetHeight(s_lview) )
         smfview_SetScrollBar(s_lview, 1);
@@ -695,12 +695,12 @@ static void displayMoralChoice(void)
         smfview_SetScrollBar(s_lview, 0);
 
     smfview_SetLocation(s_lview, 0, 0, 0);
-    smfview_SetBaseLocation(s_lview, lwx+(PIX3+R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(R10+PIX3)*wsc, winht);
+    smfview_SetBaseLocation(s_lview, lwx+(PIX3+UI_R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(UI_R10+PIX3)*wsc, winht);
     smfview_Draw(s_lview);
 
     //right side
     temp_ht = smfview_GetHeight(s_rview);
-    smfview_SetSize(s_rview, winwd-(PIX3+R10)*2*wsc, MIN(winht-dlog->footer, temp_ht));
+    smfview_SetSize(s_rview, winwd-(PIX3+UI_R10)*2*wsc, MIN(winht-dlog->footer, temp_ht));
 
     if( winht < smfview_GetHeight(s_rview) )
         smfview_SetScrollBar(s_rview, 1);
@@ -708,7 +708,7 @@ static void displayMoralChoice(void)
         smfview_SetScrollBar(s_rview, 0);
 
     smfview_SetLocation(s_rview, 0, 0, 0);
-    smfview_SetBaseLocation(s_rview, rwx+(PIX3+R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(R10+PIX3)*wsc, winht);
+    smfview_SetBaseLocation(s_rview, rwx+(PIX3+UI_R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(UI_R10+PIX3)*wsc, winht);
     smfview_Draw(s_rview);
 
     //
@@ -906,12 +906,12 @@ void displayDialogQueue()
 
              ht += 15*wsc; // extra space to deal with quirks of text wrapping
 
-            dlog->wd = wd+(PIX3*2+R10)*wsc;
+            dlog->wd = wd+(PIX3*2+UI_R10)*wsc;
 
             if( dlog->type == DIALOG_SMF )
-                dlog->footer = (PIX3*2+R10+BOTTOM_SPACER)*wsc;
+                dlog->footer = (PIX3*2+UI_R10+BOTTOM_SPACER)*wsc;
             else
-                dlog->footer = (PIX3*2+R10 + BUTTON_HEIGHT+BOTTOM_SPACER)*wsc;
+                dlog->footer = (PIX3*2+UI_R10 + BUTTON_HEIGHT+BOTTOM_SPACER)*wsc;
 
              if( dlog->type == DIALOG_OK_CANCEL_TEXT_ENTRY)
                 dlog->footer += BOTTOM_SPACER*wsc;
@@ -928,7 +928,7 @@ void displayDialogQueue()
                 else
                     button_wd = max(str_wd(&game_12, wsc, wsc, dlog->response1 ), str_wd(&game_12, wsc, wsc, dlog->response2 ));
 
-                dlog->wd = MAX( dlog->wd, button_wd * 2 + R10*3*wsc );
+                dlog->wd = MAX( dlog->wd, button_wd * 2 + UI_R10*3*wsc );
             }
 
             if( dlog->dcbCount )    
@@ -965,7 +965,7 @@ void displayDialogQueue()
       if( dlog->flags & DLGFLAG_ARCHITECT )
         drawWaterMarkFrame( wx, wy, wz, wsc,  winwd, winht, 0 );
     else 
-        drawFrame( PIX3, R10, wx, wy, wz, winwd, winht, wsc, color, back_color );
+        drawFrame( PIX3, UI_R10, wx, wy, wz, winwd, winht, wsc, color, back_color );
 
     displayWindow( WDW_DIALOG );
 
@@ -991,7 +991,7 @@ void displayDialogQueue()
     }
 
       gTextAttr.piScale = (int*)((int)(SMF_FONT_SCALE*wsc));
-      smfview_SetSize(s_pview, winwd-(PIX3+R10)*2*wsc, MIN(winht-dlog->footer, smfview_GetHeight(s_pview))); // SIDE EFFECTS FTL
+      smfview_SetSize(s_pview, winwd-(PIX3+UI_R10)*2*wsc, MIN(winht-dlog->footer, smfview_GetHeight(s_pview))); // SIDE EFFECTS FTL
 
     if( winht-dlog->footer < smfview_GetHeight(s_pview) )
         smfview_SetScrollBar(s_pview, 1);
@@ -999,7 +999,7 @@ void displayDialogQueue()
         smfview_SetScrollBar(s_pview, 0);
 
        smfview_SetLocation(s_pview, 0, 0, 0);
-       smfview_SetBaseLocation(s_pview, wx+(PIX3+R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(R10+PIX3)*wsc, winht);
+       smfview_SetBaseLocation(s_pview, wx+(PIX3+UI_R10)*wsc, wy+(PIX3*2)*wsc, wz, winwd-(UI_R10+PIX3)*wsc, winht);
     smfview_Draw(s_pview);
 
     if( dlog->dcb )
@@ -1016,20 +1016,20 @@ void displayDialogQueue()
                 (dlog->dcb[i].optionID && optionGet(dlog->dcb[i].optionID)) )
             {
                  mark = atlasLoadTexture( "Context_checkbox_filled.tga" );
-                 display_sprite( mark, wx + (R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+3, wsc, wsc, (winDefs[0].loc.color & 0xffffff00)|0xff  );
+                 display_sprite( mark, wx + (UI_R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+3, wsc, wsc, (winDefs[0].loc.color & 0xffffff00)|0xff  );
 
                 mark = atlasLoadTexture( "Context_checkbox_empty.tga" );
-                display_sprite( mark, wx + (R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+2, wsc, wsc, (winDefs[0].loc.color & 0xffffff00)|0xff );
+                display_sprite( mark, wx + (UI_R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+2, wsc, wsc, (winDefs[0].loc.color & 0xffffff00)|0xff );
             }
             else
             {
                 mark = atlasLoadTexture( "Context_checkbox_empty.tga" );
-                display_sprite( mark, wx + (R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+3, wsc, wsc, winDefs[0].loc.color & 0xffffffff );
+                display_sprite( mark, wx + (UI_R10+PIX3)*wsc, dy-(i+1)*CHECKBOX_HT*wsc, wz+3, wsc, wsc, winDefs[0].loc.color & 0xffffffff );
             }
 
             font(&game_9);
             font_color( 0xffffff88, 0xffffff88 );
-               cprntEx(wx + (R10+2*PIX3+mark->width)*wsc, dy-((i)*CHECKBOX_HT+CHECKBOX_HT/2)*wsc, wz+3, wsc, wsc, CENTER_Y, dlog->dcb[i].txt );
+               cprntEx(wx + (UI_R10+2*PIX3+mark->width)*wsc, dy-((i)*CHECKBOX_HT+CHECKBOX_HT/2)*wsc, wz+3, wsc, wsc, CENTER_Y, dlog->dcb[i].txt );
 
               BuildCBox( &box, wx+PIX3*wsc, dy-(i+1)*CHECKBOX_HT*wsc, winwd - 2*PIX3*wsc, CHECKBOX_HT*wsc );
             if( mouseDownHit( &box, MS_LEFT ) )
@@ -1168,13 +1168,13 @@ void displayDialogQueue()
                 }
 
                  if( dlog->flags & DLGFLAG_ARCHITECT )
-                    drawTextEntryFrame( wx + R10*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2+2)*wsc, wz+1, winwd - 2*(R10)*wsc, 22*wsc, wsc, smfBlock_HasFocus(dialogEdit) );
+                    drawTextEntryFrame( wx + UI_R10*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2+2)*wsc, wz+1, winwd - 2*(UI_R10)*wsc, 22*wsc, wsc, smfBlock_HasFocus(dialogEdit) );
                 else
-                    drawFrame( PIX2, R4,  wx + (PIX3+R10)*wsc, ty  - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, wz+1, winwd - 2*(R10+PIX3)*wsc, 20*wsc, wsc, 0, 0xffffff44 );
+                    drawFrame( PIX2, UI_R4,  wx + (PIX3+UI_R10)*wsc, ty  - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, wz+1, winwd - 2*(UI_R10+PIX3)*wsc, 20*wsc, wsc, 0, 0xffffff44 );
 
-                smf_SetScissorsBox(dialogEdit, wx + R10+PIX3*2*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, winwd - 2*(R10+PIX3)*wsc - 6*wsc, 20*wsc);
-                smf_Display(dialogEdit, wx + R10+PIX3*2*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, wz+2,
-                    winwd - 2*(R10+PIX3)*wsc - 6*wsc, 20*wsc, 0, 0, (dlog->flags&DLGFLAG_ARCHITECT)?&s_ArchitectAttr:&gTextAttr_WhiteHybridBold12, 0);
+                smf_SetScissorsBox(dialogEdit, wx + UI_R10+PIX3*2*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, winwd - 2*(UI_R10+PIX3)*wsc - 6*wsc, 20*wsc);
+                smf_Display(dialogEdit, wx + UI_R10+PIX3*2*wsc, ty - (3*(BUTTON_HEIGHT/2)+BOTTOM_SPACER/2)*wsc, wz+2,
+                    winwd - 2*(UI_R10+PIX3)*wsc - 6*wsc, 20*wsc, 0, 0, (dlog->flags&DLGFLAG_ARCHITECT)?&s_ArchitectAttr:&gTextAttr_WhiteHybridBold12, 0);
 
                 // OK button only available if at least one character has been entered
                 if (dialogEdit->outputString)

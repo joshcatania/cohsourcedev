@@ -253,7 +253,7 @@ static DBIResult displayBaseItem( void * item, float x, float y, float ht, float
         smf = findOrAddSMF( displayStr, displayName, sc );
 
         // draw room boxes
-        drawRoomBoxes( room, x, y, z, ITEM_WD*sc, ht-(2*R10)*sc - smf->ht );
+        drawRoomBoxes( room, x, y, z, ITEM_WD*sc, ht-(2*UI_R10)*sc - smf->ht );
     }
     else if (flag == TABTYPE_STYLE )
     {
@@ -293,7 +293,7 @@ static DBIResult displayBaseItem( void * item, float x, float y, float ht, float
         smf = findOrAddSMF( displayStr, displayName, sc );
 
         // draw room boxes
-        drawPlotBox( plot, x+R10*sc, y+R10*sc, z, (ITEM_WD-2*R10)*sc, ht-(2*R10)*sc - smf->ht  );
+        drawPlotBox( plot, x+UI_R10*sc, y+UI_R10*sc, z, (ITEM_WD-2*UI_R10)*sc, ht-(2*UI_R10)*sc - smf->ht  );
     }
     else
     {
@@ -313,7 +313,7 @@ static DBIResult displayBaseItem( void * item, float x, float y, float ht, float
             item_pic = groupThumbnailGet(detailGetThumbnailName(detail), selected_item == item && selected_index == index, detail->eSurface==kSurface_Ceiling, &load);
             if( load )
                 num_loaded_images++; 
-            remaining_ht = ht - smf->ht - item_footer - R10*sc;
+            remaining_ht = ht - smf->ht - item_footer - UI_R10*sc;
             pic_sc = MIN( ITEM_WD*sc/item_pic->width, remaining_ht/item_pic->height); // scale icon to fit in space left
             display_sprite( item_pic, x + (ITEM_WD*sc-item_pic->width*pic_sc)/2, y + (remaining_ht)/2 - item_pic->height*pic_sc/2, z+10, pic_sc, pic_sc, CLR_WHITE );
         }
@@ -328,7 +328,7 @@ static DBIResult displayBaseItem( void * item, float x, float y, float ht, float
         cantAfford = false;
 
     if( cantAfford )
-        drawFlatFrame( PIX3, R10,x+1, y, z+5, (ITEM_WD-2)*sc, ht, sc, 0x00000088, 0x00000088 ); // grey overlay
+        drawFlatFrame( PIX3, UI_R10,x+1, y, z+5, (ITEM_WD-2)*sc, ht, sc, 0x00000088, 0x00000088 ); // grey overlay
 
     z += 10;
 
@@ -381,14 +381,14 @@ static DBIResult displayBaseItem( void * item, float x, float y, float ht, float
             selected_index = 0;
         }
 
-        drawFlatFrame( PIX3, R10, x, y, z, ITEM_WD*sc, ht, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
+        drawFlatFrame( PIX3, UI_R10, x, y, z, ITEM_WD*sc, ht, sc, CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
     }
 
     if( mouseCollision( &box ) ) 
     {
         if( !cantAfford )
         {
-            drawFlatFrame( PIX3, R10,x, y, z, ITEM_WD*sc, ht, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+            drawFlatFrame( PIX3, UI_R10,x, y, z, ITEM_WD*sc, ht, sc, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
             if( mouseDown( MS_LEFT ) )
             {
                 selected_item = item;
@@ -492,7 +492,7 @@ static void baseDrawInstructionButtons( float x, float y, float z, float ht, flo
         if( playerCanModifyBase(e, &g_base) )
         {
             // enter base edit mode button
-            if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/4, z, (BUTTON_AREA_WD-2*R10)*sc, 30*sc, color, "EditBase", sc, 0 ) )
+            if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/4, z, (BUTTON_AREA_WD-2*UI_R10)*sc, 30*sc, color, "EditBase", sc, 0 ) )
             {
                 s_baseInventoryType = kBaseInventory_AddRoom;
                 baseEditToggle( kBaseEdit_Architect );
@@ -500,7 +500,7 @@ static void baseDrawInstructionButtons( float x, float y, float z, float ht, flo
         }
 
         // enter place personal item
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/2, z, (BUTTON_AREA_WD-2*R10)*sc, 30*sc, color, "AddPersonalItem", sc, !playerCanPlacePersonal(playerPtr(), &g_base) || !character_CountInventory(e->pchar,kInventoryType_BaseDetail) ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/2, z, (BUTTON_AREA_WD-2*UI_R10)*sc, 30*sc, color, "AddPersonalItem", sc, !playerCanPlacePersonal(playerPtr(), &g_base) || !character_CountInventory(e->pchar,kInventoryType_BaseDetail) ) )
         {
             s_baseInventoryType = kBaseInventory_Personal;
             baseEditToggle( kBaseEdit_AddPersonal );
@@ -509,7 +509,7 @@ static void baseDrawInstructionButtons( float x, float y, float z, float ht, flo
         // place plots
         if( playerCanModifyBase(e, &g_base) )
         {
-            if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht*3/4, z, (BUTTON_AREA_WD-2*R10)*sc, 30*sc, color, "UpgradePlot", sc, 0 ) )
+            if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht*3/4, z, (BUTTON_AREA_WD-2*UI_R10)*sc, 30*sc, color, "UpgradePlot", sc, 0 ) )
             {
                 s_baseInventoryType = kBaseInventory_Plot;
                 baseEditToggle( kBaseEdit_Plot );
@@ -521,32 +521,32 @@ static void baseDrawInstructionButtons( float x, float y, float z, float ht, flo
         float button_ht = (ht - 8*PIX3*sc)/5;
         
         // create room
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 2*PIX3*sc + button_ht/2, z, (BUTTON_AREA_WD-2*R10)*sc, button_ht, color, "CreateRoom", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 2*PIX3*sc + button_ht/2, z, (BUTTON_AREA_WD-2*UI_R10)*sc, button_ht, color, "CreateRoom", sc, 0 ) )
         {
             s_baseInventoryType = kBaseInventory_AddRoom;
             baseedit_SetCamDistAngle(400.f, RAD(80));
         }
 
         // pick style
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 3*PIX3*sc + 3*button_ht/2, z, (BUTTON_AREA_WD-2*R10)*sc, button_ht, color, "PickStyle", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 3*PIX3*sc + 3*button_ht/2, z, (BUTTON_AREA_WD-2*UI_R10)*sc, button_ht, color, "PickStyle", sc, 0 ) )
         {
             s_baseInventoryType = kBaseInventory_Style;
             baseedit_SetCamDistAngle(20.f, RAD(5));
         }
 
         // place item
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 4*PIX3*sc + 5*button_ht/2, z, (BUTTON_AREA_WD-2*R10)*sc, button_ht, color, "PlaceItem", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 4*PIX3*sc + 5*button_ht/2, z, (BUTTON_AREA_WD-2*UI_R10)*sc, button_ht, color, "PlaceItem", sc, 0 ) )
         {
             s_baseInventoryType = kBaseInventory_Item;
             baseedit_SetCamDistAngle(80.f, RAD(45));
         }
 
         // Current Room
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 5*PIX3*sc + 7*button_ht/2, z, (BUTTON_AREA_WD-2*R10)*sc, button_ht, color, "CurrentRoom", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 5*PIX3*sc + 7*button_ht/2, z, (BUTTON_AREA_WD-2*UI_R10)*sc, button_ht, color, "CurrentRoom", sc, 0 ) )
             s_baseInventoryType = kBaseInventory_CurRoom;
     
         // exit base
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 6*PIX3*sc + 9*button_ht/2, z, (BUTTON_AREA_WD-8*R10)*sc, .75*button_ht, color, "ExitBase", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + 6*PIX3*sc + 9*button_ht/2, z, (BUTTON_AREA_WD-8*UI_R10)*sc, .75*button_ht, color, "ExitBase", sc, 0 ) )
         {
             baseedit_CancelDrags();
             baseedit_CancelSelects();
@@ -556,7 +556,7 @@ static void baseDrawInstructionButtons( float x, float y, float z, float ht, flo
     }
     else
         // enter place personal item
-        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/2, z, (BUTTON_AREA_WD-4*R10)*sc, 30*sc, color, "ExitBase", sc, 0 ) )
+        if( D_MOUSEHIT == drawStdButton( x + wd/2, y + ht/2, z, (BUTTON_AREA_WD-4*UI_R10)*sc, 30*sc, color, "ExitBase", sc, 0 ) )
         {
             baseedit_CancelDrags();
             baseedit_CancelSelects();
@@ -580,7 +580,7 @@ static int displayCurrentRoom( float x, float y, float z, float wd, float ht, fl
 
     for( i = 0; i < item_count; i++ )
     {
-        float tx = x + R10*sc + ITEM_WD*i*sc - sb_off;
+        float tx = x + UI_R10*sc + ITEM_WD*i*sc - sb_off;
 
         if( tx > x+wd || tx + ITEM_WD < x )
             continue;
@@ -631,7 +631,7 @@ static int displayInventory( float x, float y, float z, float wd, float ht, floa
 
     for( i = 0; i < item_count; i++ )
     {
-        switch(displayBaseItem( (void*)g_ppDetailInv[i]->info, x + R10*sc + ITEM_WD*i*sc - sb_off, y + (PIX3)*sc, ht - (PIX3*3)*sc, z, sc, color, TABTYPE_INVENTORY,0,0))
+        switch(displayBaseItem( (void*)g_ppDetailInv[i]->info, x + UI_R10*sc + ITEM_WD*i*sc - sb_off, y + (PIX3)*sc, ht - (PIX3*3)*sc, z, sc, color, TABTYPE_INVENTORY,0,0))
         {
         case DBI_SELL:
             iDel = i;
@@ -656,7 +656,7 @@ static int displayAddRoom( float x, float y, float z, float wd, float ht, float 
     int i, count, item_count = 0;
     int room_count = eaSize(&g_base.rooms);
 
-    RoomCategory * curTab = drawTabControl(baseRoomTabs, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+    RoomCategory * curTab = drawTabControl(baseRoomTabs, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
 
     uiBoxDefine( &box, x+PIX3*sc, y+(PIX3+TAB_HEIGHT)*sc, wd - 2*PIX3*sc, ht-(2*PIX3+TAB_HEIGHT)*sc );
     clipperPush(&box);
@@ -667,7 +667,7 @@ static int displayAddRoom( float x, float y, float z, float wd, float ht, float 
     {
         const RoomTemplate *room = g_RoomTemplateDict.ppRooms[i];
 
-        float tx = x + R10*sc + ITEM_WD*item_count*sc - sb_off;
+        float tx = x + UI_R10*sc + ITEM_WD*item_count*sc - sb_off;
 
         if( room->pRoomCat == curTab && baseRoomMeetsRequires(room,playerPtr()) )
         {
@@ -708,7 +708,7 @@ static int displayItem( float x, float y, float z, float wd, float ht, float sc,
     int i, item_count, display_count;
     int total_item_count = 0;
     int room_count = eaSize(&g_base.rooms);
-    Detail** curTab_details = drawTabControl(baseInventoryTabs, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+    Detail** curTab_details = drawTabControl(baseInventoryTabs, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
     char * tabName = uiTabControlGetTabName(baseInventoryTabs,uiTabControlGetSelectedIdx(baseInventoryTabs));
     static int max_allowed;
     if( !curTab_details )
@@ -726,7 +726,7 @@ static int displayItem( float x, float y, float z, float wd, float ht, float sc,
     display_count = 0;
     for( i = 0; i < item_count; i++ )
     {
-        float tx = x + R10*sc + ITEM_WD*display_count*sc - sb_off;
+        float tx = x + UI_R10*sc + ITEM_WD*display_count*sc - sb_off;
 
         if (!gShowHiddenDetails && (curTab_details[i]->bObsolete || !baseDetailMeetsRequires(curTab_details[i], playerPtr())))
             continue;
@@ -791,7 +791,7 @@ static void baseSetCurDecorToSelectedTab( void * tabdata )
 
 static int displayStyle( float x, float y, float z, float wd, float ht, float sc, int color, float sb_off )
 {
-    char *decor_name = drawTabControl(baseRoomStyleTabs, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+    char *decor_name = drawTabControl(baseRoomStyleTabs, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
     int i, display_count = 0,item_count = 0;
     DecorStyle tempstyle;
     UIBox box;
@@ -868,7 +868,7 @@ static int displayStyle( float x, float y, float z, float wd, float ht, float sc
             }
         }
 
-        switch(displayBaseItem( &tempstyle, x + R10*sc +ITEM_WD*i*sc - sb_off, y + (PIX3+TAB_HEIGHT)*sc,
+        switch(displayBaseItem( &tempstyle, x + UI_R10*sc +ITEM_WD*i*sc - sb_off, y + (PIX3+TAB_HEIGHT)*sc,
                                     ht - (PIX3*3+TAB_HEIGHT)*sc, z, sc, color, TABTYPE_STYLE,0,0))
         {
             case DBI_SELECT:
@@ -909,7 +909,7 @@ static int displayPersonal( float x, float y, float z, float wd, float ht, float
 
         for (j = 0; j < (int)item->amount ; j++)
         {        
-            switch(displayBaseItem( cpp_const_cast(Detail*)(e->pchar->detailInv[i]->item), x + R10*sc + ITEM_WD*count*sc - sb_off, 
+            switch(displayBaseItem( cpp_const_cast(Detail*)(e->pchar->detailInv[i]->item), x + UI_R10*sc + ITEM_WD*count*sc - sb_off, 
                                     y + (PIX3)*sc, ht - (PIX3*3)*sc, z, sc, color, TABTYPE_DICT,0,j))
             {
                 case DBI_SELECT:
@@ -943,7 +943,7 @@ static int displayPlot( float x, float y, float z, float wd, float ht, float sc,
     UIBox box;
     int i, item_count, actual_count = 0;
 
-    char* curTab = drawTabControl(basePlotTabs, x+R10*sc, y, z, wd - 2*R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
+    char* curTab = drawTabControl(basePlotTabs, x+UI_R10*sc, y, z, wd - 2*UI_R10*sc, TAB_HEIGHT, sc, color, color, TabDirection_Horizontal );
 
     uiBoxDefine( &box, x+PIX3*sc, y+(PIX3+TAB_HEIGHT)*sc, wd - 2*PIX3*sc, ht-(2*PIX3+TAB_HEIGHT)*sc );
     clipperPush(&box);
@@ -958,7 +958,7 @@ static int displayPlot( float x, float y, float z, float wd, float ht, float sc,
             !basePlotMeetsRequires(g_BasePlotDict.ppPlots[i],playerPtr()) )
             continue;
 
-        switch(displayBaseItem((void*)plot, x + R10*sc + ITEM_WD*actual_count*sc - sb_off, y + (PIX3+TAB_HEIGHT)*sc, 
+        switch(displayBaseItem((void*)plot, x + UI_R10*sc + ITEM_WD*actual_count*sc - sb_off, y + (PIX3+TAB_HEIGHT)*sc, 
             ht - (PIX3*3+TAB_HEIGHT)*sc, z, sc, color, TABTYPE_PLOT,0,0))
         {
         case DBI_SELECT:
@@ -1049,7 +1049,7 @@ int baseInventoryWindow(void)
         return 0;
 
     // frame around window
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
     BuildCBox( &cbox, x, y, wd, ht );
 
     baseDrawInstructionButtons(x, y, z, ht, sc, color, bcolor );
@@ -1066,7 +1066,7 @@ int baseInventoryWindow(void)
     // frame around button area
     x += BUTTON_AREA_WD*sc;
     wd -= BUTTON_AREA_WD*sc;
-    drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, 0 );
 
     if( ! g_refCurRoom.p || g_base.supergroup_id && !playerPtr()->supergroup )
         return 0;
@@ -1109,7 +1109,7 @@ int baseInventoryWindow(void)
     }
 
     sb.horizontal = true;
-    doScrollBar( &sb, wd - 2*R10*sc, last_item_count*ITEM_WD*sc, (BUTTON_AREA_WD+R10)*sc, ht, z, &cbox, 0 );
+    doScrollBar( &sb, wd - 2*UI_R10*sc, last_item_count*ITEM_WD*sc, (BUTTON_AREA_WD+UI_R10)*sc, ht, z, &cbox, 0 );
 
     // Tabs
     if( !baseInventoryTabs )
@@ -1144,7 +1144,7 @@ int baseInventoryWindow(void)
     {
         font( &game_12 );
         font_color( CLR_WHITE, CLR_WHITE );
-        prnt( x + (2*R10-BUTTON_AREA_WD)*sc, y - PIX3*sc, z, sc, sc, textStd(g_base.supergroup_id ? "SupergroupPrestige" : "InfluenceAmount", playerFunds()));
+        prnt( x + (2*UI_R10-BUTTON_AREA_WD)*sc, y - PIX3*sc, z, sc, sc, textStd(g_base.supergroup_id ? "SupergroupPrestige" : "InfluenceAmount", playerFunds()));
     }
     if( editmode == kBaseEdit_Plot )
         s_baseInventoryType = kBaseInventory_Plot;

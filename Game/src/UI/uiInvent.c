@@ -383,7 +383,7 @@ static void s_graphdraw(Invention *inv, F32 tx, F32 ty, F32 z, F32 wd_graph, F32
         int i;
         int wdBorder = PIX2;
 
-        drawFlatFrame(wdBorder, R10, box_graph.x, box_graph.y, 
+        drawFlatFrame(wdBorder, UI_R10, box_graph.x, box_graph.y, 
             z_graph, box_graph.width, box_graph.height, 
             sc, clr_graph, bclr_graph );
 
@@ -558,7 +558,7 @@ static void s_displayEnhancement(Invention *inv, F32 tx, F32 ty, F32 z, F32 wd, 
         }
 
         // frame
-        drawFrame(PIX2, R4, tx, ty, z + 1, wd, ht, sc, clr, bclr );
+        drawFrame(PIX2, UI_R4, tx, ty, z + 1, wd, ht, sc, clr, bclr );
 
         // draw the icon
         display_sprite( icon, tx, ty, z + 1, sc_enh, sc_enh, CLR_WHITE );
@@ -644,7 +644,7 @@ static void s_displayEnhancement(Invention *inv, F32 tx, F32 ty, F32 z, F32 wd, 
                 }
 
                 // draw the item
-                drawFrame(PIX2, R4, x_pup, y_pup, z + 1, wd_pup, ht_pup, sc, clr, clr );
+                drawFrame(PIX2, UI_R4, x_pup, y_pup, z + 1, wd_pup, ht_pup, sc, clr, clr );
             }
 
             eaDestroy(&ppPowerupSlots);
@@ -708,10 +708,10 @@ int inventWindow()
     // ----------------------------------------
     // post-init and state update
     
-    edge_off = (R10+PIX3)*sc;    
+    edge_off = (UI_R10+PIX3)*sc;    
     
     // window frame    
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
     
     // if not ready yet, return
       if(window_getMode(WDW_INVENT) != WINDOW_DISPLAYING)
@@ -839,7 +839,7 @@ int inventWindow()
                 int iSlotCur = 0;
                 BuildCBox( &box, x_items, y_items, wd_items, ht_items);
                 
-                drawFlatFrame(PIX3, R10, box.left, box.top, 
+                drawFlatFrame(PIX3, UI_R10, box.left, box.top, 
                               z + 1, wd_items, ht_items, 
                               sc, color, bcolor);
                 
@@ -884,7 +884,7 @@ int inventWindow()
                     F32 z_btn = z + 1;
                     UIBox dimsBtnPrev = {0};
                     bool bCanUpdateInvention = character_InventingCanUpdate(pchar);
-                    drawFlatFrame(PIX3, R10, box.x, box.y, 
+                    drawFlatFrame(PIX3, UI_R10, box.x, box.y, 
                                   z + 1, box.width, box.height, 
                                   sc, color, bcolor);
                     

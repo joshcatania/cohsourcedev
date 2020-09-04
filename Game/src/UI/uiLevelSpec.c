@@ -327,11 +327,11 @@ void specMenu()
     drawMenuHeader( (DEFAULT_SCRN_WD - FRAME_WIDTH/2 - FRAME_SPACE)*screenScaleX, (SL_FRAME_TOP-20)*screenScaleY, 20, CLR_WHITE, SELECT_FROM_UISKIN( 0x88b6ffff, 0xaaaaaaff, CLR_WHITE ), "PoolTitle", screenScale  );
 
     // the frames
-    drawMenuFrame( R12, FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
+    drawMenuFrame( UI_R12, FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // left
     BuildCBox( &box[0], FRAME_SPACE*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // middle
     BuildCBox( &box[1], (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2)*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
-    drawMenuFrame( R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, POOL_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
+    drawMenuFrame( UI_R12, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, 10, FRAME_WIDTH*screenScaleX, POOL_HEIGHT*screenScaleY, CLR_WHITE, 0x00000088, 0 ); // right
     BuildCBox( &box[2], (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE)*screenScaleX, SL_FRAME_TOP*screenScaleY, FRAME_WIDTH*screenScaleX, FRAME_HEIGHT*screenScaleY );
 
     font( &game_12 );
@@ -346,7 +346,7 @@ void specMenu()
         color = CLR_RED;
     }
 
-    drawFlatFrame( PIX3, R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, (SL_FRAME_TOP+FRAME_HEIGHT-20)*screenScaleY, 50, 200*screenScaleX, 30*screenScaleY, screenScale, color, CLR_BLACK ); // middle
+    drawFlatFrame( PIX3, UI_R10, (DEFAULT_SCRN_WD/2 - 100)*screenScaleX, (SL_FRAME_TOP+FRAME_HEIGHT-20)*screenScaleY, 50, 200*screenScaleX, 30*screenScaleY, screenScale, color, CLR_BLACK ); // middle
     cprntEx( (DEFAULT_SCRN_WD/2)*screenScaleX, (SL_FRAME_TOP+FRAME_HEIGHT-5)*screenScaleY, 55, screenScale, screenScale, (CENTER_X|CENTER_Y), "EnhancmentsAllocated", gNumEnhancesLeft );
 
     // 2 buttons to pick the frame to show the combat numbers
@@ -399,7 +399,7 @@ void specMenu()
                     }
 
                     // draw the small inner frame
-                    drawFrame( PIX2, R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                    drawFrame( PIX2, UI_R6, (FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (primY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
                 }
                 clipperPop();
             }
@@ -427,7 +427,7 @@ void specMenu()
                     }
 
                     // draw the small inner frame
-                    drawFrame( PIX2, R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                    drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD/2 - FRAME_WIDTH/2 + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (secY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
                 }
                 clipperPop();
             }
@@ -451,7 +451,7 @@ void specMenu()
                 }
 
                 // draw the small inner frame
-                 drawFrame( PIX2, R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+                 drawFrame( PIX2, UI_R6, (DEFAULT_SCRN_WD - FRAME_WIDTH - FRAME_SPACE + POWER_OFFSET)*screenScaleX, (top - 30)*screenScaleY, 5, (POWER_WIDTH - 10)*screenScaleX, (poolY - top - 35)*screenScaleY, screenScale, 0xffffffaa, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
                 clipperPop();
             }
         }
@@ -459,9 +459,9 @@ void specMenu()
 
     //wrappedText( 40, 650, 10, 940, "EnhancementExplanation", INFO_CHAT_TEXT );
 
-    doScrollBarEx( &sb[0], (FRAME_HEIGHT-R12*2), (primY + sb[0].offset - POWER_SPEC_HT), (FRAME_SPACE + FRAME_WIDTH - PIX4/2), (SL_FRAME_TOP + R12), 20, &box[0], 0, screenScaleX, screenScaleY );
-    doScrollBarEx( &sb[1], (FRAME_HEIGHT-R12*2), (secY  + sb[1].offset - POWER_SPEC_HT), ((DEFAULT_SCRN_WD + FRAME_WIDTH)/2 + PIX4/2), (SL_FRAME_TOP + R12), 20, &box[1], 0, screenScaleX, screenScaleY );
-    doScrollBarEx( &sb[2], (POOL_HEIGHT-R12*2), (poolY + sb[2].offset - POWER_SPEC_HT), (DEFAULT_SCRN_WD - FRAME_SPACE + PIX4/2), (SL_FRAME_TOP + R12), 20, &box[2], 0, screenScaleX, screenScaleY );
+    doScrollBarEx( &sb[0], (FRAME_HEIGHT-UI_R12*2), (primY + sb[0].offset - POWER_SPEC_HT), (FRAME_SPACE + FRAME_WIDTH - PIX4/2), (SL_FRAME_TOP + UI_R12), 20, &box[0], 0, screenScaleX, screenScaleY );
+    doScrollBarEx( &sb[1], (FRAME_HEIGHT-UI_R12*2), (secY  + sb[1].offset - POWER_SPEC_HT), ((DEFAULT_SCRN_WD + FRAME_WIDTH)/2 + PIX4/2), (SL_FRAME_TOP + UI_R12), 20, &box[1], 0, screenScaleX, screenScaleY );
+    doScrollBarEx( &sb[2], (POOL_HEIGHT-UI_R12*2), (poolY + sb[2].offset - POWER_SPEC_HT), (DEFAULT_SCRN_WD - FRAME_SPACE + PIX4/2), (SL_FRAME_TOP + UI_R12), 20, &box[2], 0, screenScaleX, screenScaleY );
 
     enhancementAnim_update(kPowerSystem_Powers);
 

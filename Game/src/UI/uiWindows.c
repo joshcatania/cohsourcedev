@@ -1238,7 +1238,7 @@ static void window_checkFrameCollision( int w, int mx, int my )
 
      window_getDims( w, &x, &y, 0, &wd, &ht, &sc, 0, 0 );
 
-    rad = (R10 + PIX3)*sc;
+    rad = (UI_R10 + PIX3)*sc;
     if( wdw->parent )
     {
         if( wdw->parent->below )
@@ -2488,7 +2488,7 @@ int window_drawJelly( Wdw * wdw )
     }
 
     // choose sprites
-    if( wdw->radius > R10+PIX3  )
+    if( wdw->radius > UI_R10+PIX3  )
     {
         left  = Jelly_lg_end_L;
         right = Jelly_lg_end_R;
@@ -2523,13 +2523,13 @@ int window_drawJelly( Wdw * wdw )
             window_getUpperLeftPos(child->id, &childXp, NULL);
 
             // load up sprites
-            if( wdw->radius > R10+PIX3 && child->loc.wd > wdw->loc.wd )
+            if( wdw->radius > UI_R10+PIX3 && child->loc.wd > wdw->loc.wd )
             {
                 leftEdge   = atlasLoadTexture( "Jelly_lg_edge_L.tga" );
                 leftInset  = atlasLoadTexture( "Jelly_lg_inset_R.tga" );
                 rightInset = atlasLoadTexture( "Jelly_lg_inset_L.tga" );
 
-                if( child->radius > R10+PIX3 )
+                if( child->radius > UI_R10+PIX3 )
                 {
                     left  = Jelly_sm_end_L;
                     right = Jelly_sm_end_R;
@@ -2542,7 +2542,7 @@ int window_drawJelly( Wdw * wdw )
             }
             else
             {
-                if( wdw->radius > R10+PIX3 )
+                if( wdw->radius > UI_R10+PIX3 )
                     leftEdge = atlasLoadTexture( "Jelly_lg_edge_top_L.tga" );
                 else
                     leftEdge   = atlasLoadTexture( "Jelly_sm_edge_L.tga" );
@@ -2576,7 +2576,7 @@ int window_drawJelly( Wdw * wdw )
                 {
                     AtlasTex *rightEdge;
 
-                    if( wdw->radius > R10+PIX3 )
+                    if( wdw->radius > UI_R10+PIX3 )
                         rightEdge = atlasLoadTexture( "Jelly_lg_edge_top_R.tga" );
                     else
                         rightEdge = atlasLoadTexture( "Jelly_sm_edge_R.tga" );
@@ -2678,7 +2678,7 @@ int window_drawJelly( Wdw * wdw )
             {
                 AtlasTex * rightEdge;
 
-                if( wdw->radius > R10+PIX3 )
+                if( wdw->radius > UI_R10+PIX3 )
                 {
                      rightEdge   = atlasLoadTexture( "Jelly_lg_edge_top_R.tga" );
                     leftEdge    = atlasLoadTexture( "Jelly_lg_edge_top_L.tga" );
@@ -2702,7 +2702,7 @@ int window_drawJelly( Wdw * wdw )
     else // on bottom
     {
         // sprites get reversed and flipped
-          int offset = 0;//!( wdw->radius > R10+PIX3 );
+          int offset = 0;//!( wdw->radius > UI_R10+PIX3 );
 
         AtlasTex * tmp;
         tmp   = left;
@@ -2728,13 +2728,13 @@ int window_drawJelly( Wdw * wdw )
             window_getUpperLeftPos(child->id, &childXp, NULL);
 
             // load up sprites
-            if( wdw->radius > R10+PIX3 && child->loc.wd > wdw->loc.wd )
+            if( wdw->radius > UI_R10+PIX3 && child->loc.wd > wdw->loc.wd )
             {
                 leftEdge   = atlasLoadTexture( "Jelly_lg_edge_R.tga" );
                 leftInset  = atlasLoadTexture( "Jelly_lg_inset_L.tga" );
                 rightInset = atlasLoadTexture( "Jelly_lg_inset_R.tga" );
 
-                if( child->radius > R10+PIX3 )
+                if( child->radius > UI_R10+PIX3 )
                 {
                     left  = atlasLoadTexture( "Jelly_sm_end_L.tga" );
                     right = atlasLoadTexture( "Jelly_sm_end_R.tga" );
@@ -2747,7 +2747,7 @@ int window_drawJelly( Wdw * wdw )
             }
             else
             {
-                if( wdw->radius > R10+PIX3 )
+                if( wdw->radius > UI_R10+PIX3 )
                     leftEdge = atlasLoadTexture( "Jelly_lg_edge_top_R.tga" );
                 else
                     leftEdge   = atlasLoadTexture( "Jelly_sm_edge_R.tga" );
@@ -2781,7 +2781,7 @@ int window_drawJelly( Wdw * wdw )
                 {
                     AtlasTex *rightEdge;
 
-                      if( wdw->radius > R10+PIX3 )
+                      if( wdw->radius > UI_R10+PIX3 )
                     {
                         rightEdge = atlasLoadTexture( "Jelly_lg_edge_top_L.tga" );
 
@@ -2894,7 +2894,7 @@ int window_drawJelly( Wdw * wdw )
             {
                 AtlasTex * rightEdge;
 
-                 if( wdw->radius > R10+PIX3 )
+                 if( wdw->radius > UI_R10+PIX3 )
                 {
                     rightEdge   = atlasLoadTexture( "Jelly_lg_edge_top_L.tga" );
                     leftEdge    = atlasLoadTexture( "Jelly_lg_edge_top_R.tga" );

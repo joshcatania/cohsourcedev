@@ -427,7 +427,7 @@ static bool s_DisplayStoredSalvage(BaseStorageState *state, StoredSalvage *sal, 
     if(verify(smf))
     {
         F32 dxMax = wd - (ICON_COL*sc+2*PIX3*sc); 
-        ht = storedsalvagesmf_Display( smf, itm->ui.pchDisplayName, itm->ui.pchDisplayShortHelp, itm->ui.pchDisplayHelp, sal->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, itm->rarity, bDisplay )+R10*sc;
+        ht = storedsalvagesmf_Display( smf, itm->ui.pchDisplayName, itm->ui.pchDisplayShortHelp, itm->ui.pchDisplayHelp, sal->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, itm->rarity, bDisplay )+UI_R10*sc;
         *dy += ht;
 
         if (!bDisplay)
@@ -438,14 +438,14 @@ static bool s_DisplayStoredSalvage(BaseStorageState *state, StoredSalvage *sal, 
     // print the amount
     font( &game_12 );
     font_color(0x00deffff, 0x00deffff);
-    cprnt( x+R10, y + (R10+2*PIX3)*sc, z+2, sc, sc, "%d", sal->amount );
+    cprnt( x+UI_R10, y + (UI_R10+2*PIX3)*sc, z+2, sc, sc, "%d", sal->amount );
 
     display_sprite( icon, x + (ICON_COL-icon->width*xsc*overScale)*sc/2, y + ht/2 -icon->height*xsc*overScale*sc/2, z+1, sc*xsc*overScale, sc*xsc*overScale, CLR_WHITE );
      BuildCBox( &box, x, y, wd-(PIX3*4)*sc, ht );
 
      if(!cursor.dragging && mouseCollision(&box) && sgroup_hasStoragePermission(e, permissions, -1))
     {
-        drawFlatFrameBox( PIX3, R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrameBox( PIX3, UI_R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         baseStorage_ErrMessage( textStd("ClickToTakeStack",itm->ui.pchDisplayName), 3.f );
     }
 
@@ -494,7 +494,7 @@ static bool s_DisplayStoredInspiration(BaseStorageState *state, StoredInspiratio
     if(verify(smf))
     {
            F32 dxMax = wd - (ICON_COL*sc + 4*PIX3*sc);
-        F32 height = storedsalvagesmf_Display( smf, ppow->pchDisplayName, ppow->pchDisplayShortHelp, ppow->pchDisplayHelp, insp->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, -1, bDisplay )+(R10*sc);
+        F32 height = storedsalvagesmf_Display( smf, ppow->pchDisplayName, ppow->pchDisplayShortHelp, ppow->pchDisplayHelp, insp->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, -1, bDisplay )+(UI_R10*sc);
          ht = MAX(ROW_HT*sc, height);
           *dy += ht;
 
@@ -506,7 +506,7 @@ static bool s_DisplayStoredInspiration(BaseStorageState *state, StoredInspiratio
     // print the amount
     font( &game_12 );
        font_color(0x00deffff, 0x00deffff);
-       cprnt( x+R10, y + (R10+2*PIX3)*sc, z+2, sc, sc, "%d", insp->amount );
+       cprnt( x+UI_R10, y + (UI_R10+2*PIX3)*sc, z+2, sc, sc, "%d", insp->amount );
  
        display_sprite( icon, x + (ICON_COL-icon->width*xsc*overScale)*sc/2, y + ht/2 -icon->height*xsc*overScale*sc/2, z+1, sc*xsc*overScale, sc*xsc*overScale, CLR_WHITE );
        BuildCBox( &box, x, y, wd-(PIX3*4)*sc, ht );
@@ -514,7 +514,7 @@ static bool s_DisplayStoredInspiration(BaseStorageState *state, StoredInspiratio
      if(!cursor.dragging && mouseCollision(&box) && sgroup_hasStoragePermission(e, permissions, -1))
     {
         baseStorage_ErrMessage( textStd("ClickToTake",ppow->pchDisplayName), 3.f );
-        drawFlatFrameBox( PIX3, R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrameBox( PIX3, UI_R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
     }
 
     if( mouseClickHit( &box, MS_RIGHT ) )
@@ -571,7 +571,7 @@ static bool s_DisplayStoredEnhancement(BaseStorageState *state, StoredEnhancemen
     if(verify(smf))
     {
            F32 dxMax = wd - (ICON_COL*sc+2*PIX3*sc); 
-        ht = MAX(ROW_HT*sc,storedenhancementsmf_Display( smf, ppow->pchDisplayName, ppow->pchDisplayShortHelp, sEnhHelp.buff, itm->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, -1, bDisplay )+R10*sc);
+        ht = MAX(ROW_HT*sc,storedenhancementsmf_Display( smf, ppow->pchDisplayName, ppow->pchDisplayShortHelp, sEnhHelp.buff, itm->nameEntFrom, x+(ICON_COL)*sc, y+(PIX3)*sc, z+1, dxMax, sc, -1, bDisplay )+UI_R10*sc);
           *dy += ht;
 
         if (!bDisplay)
@@ -583,7 +583,7 @@ static bool s_DisplayStoredEnhancement(BaseStorageState *state, StoredEnhancemen
     // print the amount
     font( &game_12 );
     font_color(0x00deffff, 0x00deffff);
-    cprnt( x+R10, y + (R10+2*PIX3)*sc, z+2, sc, sc, "%d", itm->amount );
+    cprnt( x+UI_R10, y + (UI_R10+2*PIX3)*sc, z+2, sc, sc, "%d", itm->amount );
 
     display_sprite( icon, x + (ICON_COL-icon->width*xsc*overScale)*sc/2, y + ht/2 -icon->height*xsc*overScale*sc/2, z+1, sc*xsc*overScale, sc*xsc*overScale, CLR_WHITE );
     BuildCBox( &box, x, y, wd-(PIX3*4)*sc, ht );
@@ -591,7 +591,7 @@ static bool s_DisplayStoredEnhancement(BaseStorageState *state, StoredEnhancemen
      if(!cursor.dragging && mouseCollision(&box) && sgroup_hasStoragePermission(e, permissions, -1))
     {
         baseStorage_ErrMessage( textStd("ClickToTake",ppow->pchDisplayName), 3.f );
-        drawFlatFrameBox( PIX3, R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
+        drawFlatFrameBox( PIX3, UI_R10, &box, z, CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
     }
 
     // set the context menu
@@ -952,20 +952,20 @@ int basestorageWindow()
         && detail->info->eFunction != kDetailFunction_StorageEnhancement))
     {
         // frame around window
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
         window_setMode( WDW_BASE_STORAGE, WINDOW_SHRINKING );
         return 0;
     }
 
     // MinMax is safeguard against overflow in static buffer
      sprintf( count_str, "%i/%i", MINMAX(roomdetail_CurrentCount(detail),0,999), MINMAX(roomdetail_MaxCount(detail),0,999) );
-     count_wd = MAX( button_wd*sc, str_wd(font_grp, sc, sc, count_str) ) + 2*R10*sc;
+     count_wd = MAX( button_wd*sc, str_wd(font_grp, sc, sc, count_str) ) + 2*UI_R10*sc;
 
     // --------------------
     // display the items
     if( window_getMode(WDW_BASE_STORAGE) != WINDOW_DISPLAYING )
     {
-        drawJoinedFrame2Panel( PIX3, R10, x, y, z, sc, wd, 40*sc, ht - 40*sc, color, bcolor, NULL, NULL );
+        drawJoinedFrame2Panel( PIX3, UI_R10, x, y, z, sc, wd, 40*sc, ht - 40*sc, color, bcolor, NULL, NULL );
     }
     else
     {        
@@ -984,11 +984,11 @@ int basestorageWindow()
         gTextAttr_White12.piScale = (int*)((int)(SMF_FONT_SCALE*sc));
     
         // Name
-        ty = y + smf_ParseAndDisplay( &smf_title, textStd(detail->info->pchDisplayName), x + R10*sc, y + R10*sc, z, wd - R10*sc*2 - count_wd, 0, false, false, 
+        ty = y + smf_ParseAndDisplay( &smf_title, textStd(detail->info->pchDisplayName), x + UI_R10*sc, y + UI_R10*sc, z, wd - UI_R10*sc*2 - count_wd, 0, false, false, 
                                         &gTextTitleAttr, NULL, 0, true) + 15*sc;
         
         // Short Desc
-        ty += smf_ParseAndDisplay( &smf_desc, detailGetDescription(detail->info,false), x + R10*sc, ty, z, wd - R10*sc*2, 0, false, false, 
+        ty += smf_ParseAndDisplay( &smf_desc, detailGetDescription(detail->info,false), x + UI_R10*sc, ty, z, wd - UI_R10*sc*2, 0, false, false, 
                                     &gTextAttr_White12, NULL, 0, true) + 5*sc;
         
         dy_title = MAX( 40*sc, ty-y); // force a minimum size
@@ -1002,11 +1002,11 @@ int basestorageWindow()
                 flash_timer = 0.f;
         }
 
-        showLogCenterX = x + wd - button_wd/2*sc - R10*sc;
+        showLogCenterX = x + wd - button_wd/2*sc - UI_R10*sc;
         showLogCenterY = y + dy_title - 15*sc;
         if( D_MOUSEHIT == drawStdButton( showLogCenterX, showLogCenterY, z, button_wd*sc, 20*sc, color, "ShowLog", 1.f, !detail ) )
             openDetailLog(detail->id);
-        showPermCenterX = x + wd - (3 * button_wd)/2*sc - R10*5*sc;
+        showPermCenterX = x + wd - (3 * button_wd)/2*sc - UI_R10*5*sc;
         showPermCenterY = y + dy_title - 15*sc;
         if( D_MOUSEHIT == drawStdButton( showPermCenterX, showPermCenterY, z, button_wd*1.5*sc, 20*sc, color, "ShowPermissionsStr", 1.f, !detail ) )
         {
@@ -1018,7 +1018,7 @@ int basestorageWindow()
             font_color(0xff0000ff,0xff0000ff);
         else
             font_color( CLR_GREY, CLR_GREY );
-           cprntEx( x + wd - button_wd/2*sc - R10*sc, y + PIX3*sc + (dy_title-25*sc)/2, z, sc, sc, CENTER_X|CENTER_Y, count_str );    
+           cprntEx( x + wd - button_wd/2*sc - UI_R10*sc, y + PIX3*sc + (dy_title-25*sc)/2, z, sc, sc, CENTER_X|CENTER_Y, count_str );    
  
         //if( err_msg && err_timer )
         {
@@ -1042,16 +1042,16 @@ int basestorageWindow()
 
             if( err_msg && (!last_err_msg || stricmp(err_msg, last_err_msg)!=0 ))
             {
-                 smf_ParseAndFormat(&smf_err, err_msg, 0, 0, 0, wd - (R10+PIX3)*sc*2, 1000, false, true, false, &gTextErr, 0 );
+                 smf_ParseAndFormat(&smf_err, err_msg, 0, 0, 0, wd - (UI_R10+PIX3)*sc*2, 1000, false, true, false, &gTextErr, 0 );
                 smf_err.pBlock->pos.alignHoriz = SMAlignment_Center;
-                 dy_err = MAX( 26*sc, 5*sc + smf_ParseAndFormat(&smf_err, err_msg, 0, 0, 0, wd - (R10+PIX3)*sc*2, 1000, false, false, true, &gTextErr, 0 ) );
+                 dy_err = MAX( 26*sc, 5*sc + smf_ParseAndFormat(&smf_err, err_msg, 0, 0, 0, wd - (UI_R10+PIX3)*sc*2, 1000, false, false, true, &gTextErr, 0 ) );
 
                 if(last_err_msg)
                     free(last_err_msg);
                 last_err_msg = strdup(err_msg);
             }
 
-               smf_ParseAndDisplay( &smf_err, NULL, x + R10*sc, y+ht-dy_err+PIX3*sc, z+20, wd - (R10+PIX3)*sc*2, 0, false, false, 
+               smf_ParseAndDisplay( &smf_err, NULL, x + UI_R10*sc, y+ht-dy_err+PIX3*sc, z+20, wd - (UI_R10+PIX3)*sc*2, 0, false, false, 
                                     &gTextErr, NULL, 0, true);
 
              if( err_timer > 0 )
@@ -1060,7 +1060,7 @@ int basestorageWindow()
                 err_timer = MIN( 0, err_timer+TIMESTEP/15);
         }
 
-        drawJoinedFrame3Panel( PIX3, R10, x, y, z, sc, wd, dy_title, ht - dy_title - dy_err, dy_err, color, bcolor );
+        drawJoinedFrame3Panel( PIX3, UI_R10, x, y, z, sc, wd, dy_title, ht - dy_title - dy_err, dy_err, color, bcolor );
 
         // --------------------
         // handle the items
@@ -1180,7 +1180,7 @@ int basestorageWindow()
         set_scissor(0);
         
         //scrollbar
-           doScrollBar( &sb, ht - dy_title - (PIX3+R10)*sc*2-dy_err, dy_item, wd, dy_title+(PIX3+R10)*sc, z+5, &box, 0 );
+           doScrollBar( &sb, ht - dy_title - (PIX3+UI_R10)*sc*2-dy_err, dy_item, wd, dy_title+(PIX3+UI_R10)*sc, z+5, &box, 0 );
         
         // grow the current icon
          if(!cursor.dragging)    
@@ -1207,7 +1207,7 @@ int basestorageWindow()
                         }
                         else if(!entity_CanAdjStoredSalvage(e,detail,(SalvageItem*)e->pchar->salvageInv[cursor.drag_obj.invIdx]->salvage,1))
                         {
-                            drawFrame(PIX3, R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title-dy_err, sc, 0, 0x00000088 );
+                            drawFrame(PIX3, UI_R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title-dy_err, sc, 0, 0x00000088 );
                             if( roomdetail_MaxCount(detail) == roomdetail_CurrentCount(detail) )
                                 baseStorage_ErrMessage( textStd("ContainerFull"), -3 );
                             else
@@ -1223,7 +1223,7 @@ int basestorageWindow()
                     {
                         if(!entity_CanAdjStoredInspiration(e, detail, ppow, basepower_ToPath(ppow), 1))
                         {
-                               drawFrame(PIX3, R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title-dy_err+PIX3*sc, sc, 0, 0x00000088 );
+                               drawFrame(PIX3, UI_R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title-dy_err+PIX3*sc, sc, 0, 0x00000088 );
                             if( roomdetail_MaxCount(detail) == roomdetail_CurrentCount(detail) )
                                 baseStorage_ErrMessage( textStd("ContainerFull"), -3 );
                             else
@@ -1241,7 +1241,7 @@ int basestorageWindow()
                     {
                         if(!entity_CanAdjStoredEnhancement(e, detail, ppow, basepower_ToPath(ppow),boost->iLevel,boost->iNumCombines,1))
                         {
-                             drawFrame(PIX3, R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title+PIX3*sc, sc, 0, 0x00000088 );
+                             drawFrame(PIX3, UI_R10, x, y+dy_title-PIX3*sc, z+15, wd, ht-dy_title+PIX3*sc, sc, 0, 0x00000088 );
                             if( roomdetail_MaxCount(detail) == roomdetail_CurrentCount(detail) )
                                 baseStorage_ErrMessage( textStd("ContainerFull"), -3 );
                             else

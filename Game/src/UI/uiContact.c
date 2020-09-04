@@ -1314,7 +1314,7 @@ static void displayContact( int idx, int xorig, float *y, int z, int wdorig, flo
         display_sprite(icon, x, *y+4*sc, z, iconScale, iconScale, CLR_WHITE );
 
         // TODO: Hack for non-rounded pictures
-         drawFlatFrame(PIX2, R4, xorig+(PIX3+6-PIX2)*sc, *y+(4-PIX2)*sc, z, (ICON_WIDTH+PIX2*2)*sc, (ICON_HEIGHT+PIX2*2)*sc, sc, 0x000000ff, 0);
+         drawFlatFrame(PIX2, UI_R4, xorig+(PIX3+6-PIX2)*sc, *y+(4-PIX2)*sc, z, (ICON_WIDTH+PIX2*2)*sc, (ICON_HEIGHT+PIX2*2)*sc, sc, 0x000000ff, 0);
 
         x  += (CONTACT_SPACE*sc + MAX(icon->width*iconScale, icon->height*iconScale));
          wd -= (CONTACT_SPACE*sc + MAX(icon->width*iconScale, icon->height*iconScale));
@@ -1443,7 +1443,7 @@ static void displayContact( int idx, int xorig, float *y, int z, int wdorig, flo
             contextMenu_display(contactContextMenu);
         }
 
-        drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
+        drawFlatFrame(PIX2, UI_R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
     }
 
     if (DestinationIsAContact(&waypointDest)
@@ -1453,7 +1453,7 @@ static void displayContact( int idx, int xorig, float *y, int z, int wdorig, flo
         backColor = CLR_SELECTION_BACKGROUND;
     }
 
-     drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
+     drawFlatFrame(PIX2, UI_R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
 
     *y += ht;
     *y += CONTACT_SPACE*sc; // Space between contacts
@@ -1583,8 +1583,8 @@ int contactsWindow()
 
     oldy = y;
 
-    drawFrame( PIX3, R10, x, y, z-2, wd, ht, scale, color, bcolor );
-    curTab = drawTabControl(contactCategories, x+R10*scale, y, z + 3.0f, wd - 2*R10*scale, TAB_HEIGHT, scale, color, color, TabDirection_Horizontal );
+    drawFrame( PIX3, UI_R10, x, y, z-2, wd, ht, scale, color, bcolor );
+    curTab = drawTabControl(contactCategories, x+UI_R10*scale, y, z + 3.0f, wd - 2*UI_R10*scale, TAB_HEIGHT, scale, color, color, TabDirection_Horizontal );
 
     //////////////////////////////////////////////////////////////////////////
     // draw sort box
@@ -1722,7 +1722,7 @@ int contactsWindow()
     set_scissor( 0 );
 
 
-       doScrollBar( &sb, ht - (PIX3*2+R10*2)*scale - 53*scale, y - oldy + sb.offset - 76*scale, wd, (PIX3+R10)*scale + 53*scale, z, 0, 0 );
+       doScrollBar( &sb, ht - (PIX3*2+UI_R10*2)*scale - 53*scale, y - oldy + sb.offset - 76*scale, wd, (PIX3+UI_R10)*scale + 53*scale, z, 0, 0 );
 
     return 0;
 }

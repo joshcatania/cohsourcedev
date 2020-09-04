@@ -1807,11 +1807,11 @@ static void drawPetPower( PlayerPet * ppet, float x, float y, float z,  float sc
     font_color( CLR_WHITE, CLR_WHITE );
 
     if( !ppet->pppow  )
-        cprntEx( x+R10*sc, y + ht/2, z, sc, sc, CENTER_Y,  "ZoneEventPet" );
+        cprntEx( x+UI_R10*sc, y + ht/2, z, sc, sc, CENTER_Y,  "ZoneEventPet" );
     else
-           cprntEx( x+R10*sc, y + ht/2, z, sc, sc, CENTER_Y,  ppet->pppow->pchDisplayName );
+           cprntEx( x+UI_R10*sc, y + ht/2, z, sc, sc, CENTER_Y,  ppet->pppow->pchDisplayName );
 
-    x += R10*sc;
+    x += UI_R10*sc;
     if(!optionGet(kUO_AdvancedPetControls))
          x -= COM_WD;
 
@@ -1986,7 +1986,7 @@ int petWindow(void)
         allPetPower.stance = kPetStance_Defensive;
     }
 
-      drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, bcolor );
+      drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor );
 
     set_scissor(true);
     scissor_dims( x + PIX3*sc, y + PIX3*sc, wd - PIX3*sc*2, ht-PIX3*sc*2 );
@@ -2033,7 +2033,7 @@ int petWindow(void)
             numPetPowers++;
         }    
 
-        if(drawPetEntry( playerPets[i], x+(R10+PIX3)*sc, ty, z, sc, wd - (4*PIX3+R10)*sc, 22*sc, flipped, i ))
+        if(drawPetEntry( playerPets[i], x+(UI_R10+PIX3)*sc, ty, z, sc, wd - (4*PIX3+UI_R10)*sc, 22*sc, flipped, i ))
          {
             ty += 25*sc;
             count++;

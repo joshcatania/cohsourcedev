@@ -365,11 +365,11 @@ void drawGroupInterior( float x, float y, float z, float wd, float scale, float 
         CBox box = {0};
         int textWd;
         float iconSc = .6f*scale, textSc = 1.f*scale;
-        drawFrame( PIX2, R6, x, y + (PIX3/2)*scale, ++z, wd-PIX3*scale/2, (GROUP_HEIGHT)*scale, scale, barColor | 0xff, 
+        drawFrame( PIX2, UI_R6, x, y + (PIX3/2)*scale, ++z, wd-PIX3*scale/2, (GROUP_HEIGHT)*scale, scale, barColor | 0xff, 
             !offMap && (hp_percent > 0) ? ((barColor & 0xffffff00) | 0x00000044) : 0x00000088 );
 
         if(selected)
-            drawFlatFrame( PIX2, R6, x, y + (PIX3/2)*scale, ++z, wd-PIX3*scale/2, GROUP_HEIGHT*scale, scale, CLR_WHITE, 0 );
+            drawFlatFrame( PIX2, UI_R6, x, y + (PIX3/2)*scale, ++z, wd-PIX3*scale/2, GROUP_HEIGHT*scale, scale, CLR_WHITE, 0 );
 
         // draw their name
         font_color( barColor|0xff, barColor|0xff );
@@ -919,7 +919,7 @@ static void drawSearchOptions( float x, float y, float z, float wd, float ht, fl
     if( !comboLFGSearch )
     {
         comboLFGSearch = calloc(1, sizeof(ComboBox));
-        comboboxTitle_init( comboLFGSearch, R10, R10, 1, 280, 30, 270, currentWindow );
+        comboboxTitle_init( comboLFGSearch, UI_R10, UI_R10, 1, 280, 30, 270, currentWindow );
 
         for( i = 0; i < ARRAY_SIZE(searchOptions); i++ )
         {
@@ -966,13 +966,13 @@ static void drawSearchOptions( float x, float y, float z, float wd, float ht, fl
 
     y += 60*sc;
 
-     prnt( x+R10*2, y, z, sc, sc, "CommentString" );
-     BuildCBox( &box, x+R10, y, wd, 35*sc );
+     prnt( x+UI_R10*2, y, z, sc, sc, "CommentString" );
+     BuildCBox( &box, x+UI_R10, y, wd, 35*sc );
 
        if( mouseCollision(&box) )
-        drawFlatFrame( PIX3, R10, x+R10, y, z, wd, 35*sc, sc, 0xffffff22, 0xffffff44 );
+        drawFlatFrame( PIX3, UI_R10, x+UI_R10, y, z, wd, 35*sc, sc, 0xffffff22, 0xffffff44 );
     else
-        drawFlatFrame( PIX3, R10, x+R10, y, z, wd, 35*sc, sc, 0xffffff22, 0xffffff22 );
+        drawFlatFrame( PIX3, UI_R10, x+UI_R10, y, z, wd, 35*sc, sc, 0xffffff22, 0xffffff22 );
 
     if( mouseClickHit( &box, MS_LEFT) )
     {
@@ -986,13 +986,13 @@ static void drawSearchOptions( float x, float y, float z, float wd, float ht, fl
 
     if (currentWindowFocus == currentWindow)
     {
-           uiEditEditSimple(gCommentText,x+R10*2, y+PIX3*sc, z+2, wd-R10*2, (35-PIX3*2)*sc, &game_12, INFO_HELP_TEXT, FALSE);
+           uiEditEditSimple(gCommentText,x+UI_R10*2, y+PIX3*sc, z+2, wd-UI_R10*2, (35-PIX3*2)*sc, &game_12, INFO_HELP_TEXT, FALSE);
     }
     else
     {
         int returnFocus = uiEditHasFocus(gCommentText);
         uiEditReturnFocus(gCommentText);
-        uiEditEditSimple(gCommentText,x+R10*2, y+PIX3*sc, z+2, wd-R10*2, (35-PIX3*2)*sc, &game_12, INFO_HELP_TEXT, FALSE);
+        uiEditEditSimple(gCommentText,x+UI_R10*2, y+PIX3*sc, z+2, wd-UI_R10*2, (35-PIX3*2)*sc, &game_12, INFO_HELP_TEXT, FALSE);
         if (returnFocus)
             uiEditTakeFocus(gCommentText);
     }
@@ -1619,7 +1619,7 @@ static void drawGroupMembers(Entity *e, float x_orig, float y, float z, float wd
                             //    trayobj_stopDragging();        //    dont always drop the drag since other things below may use it
                         }
                     }
-                    drawFlatFrameBox(PIX2, R6, &teamBox, z, 0, teamBColor);
+                    drawFlatFrameBox(PIX2, UI_R6, &teamBox, z, 0, teamBColor);
                 }
             }
             yp = startTeamY + shownCount*(GROUP_HEIGHT+GROUP_SPACE)*scale;
@@ -1647,7 +1647,7 @@ static void drawGroupMembers(Entity *e, float x_orig, float y, float z, float wd
                                 //    trayobj_stopDragging();        //    dont always drop the drag since other things below may use it
                             }
                         }
-                        drawFlatFrameBox(PIX2, R6, &teamBox, z, 0, teamBColor);
+                        drawFlatFrameBox(PIX2, UI_R6, &teamBox, z, 0, teamBColor);
                     }
                 }
                 y_off = (memberInfo.team*0.5f);
@@ -1812,7 +1812,7 @@ static float drawCommandButtons(float x, float y, float z, float wd, float ht, f
                 float ty = y + (GROUP_HEIGHT+10)*scale/2;
                 // draw search selector
                 if( window_getMode(currentWindow)==WINDOW_DISPLAYING)
-                    drawSearchOptions( x, y, z, wd - R10*2*scale, ht, scale, currentWindow );
+                    drawSearchOptions( x, y, z, wd - UI_R10*2*scale, ht, scale, currentWindow );
 
                 BuildCBox( &buttonTip[TEAM_TIP_FIND].bounds, x + (DEFAULT_WD - DEFAULT_WD/4 - 50)*scale, ty - 12*scale, 100*scale, twd*scale );
                 setToolTipEx( &buttonTip[TEAM_TIP_FIND], &buttonTip[TEAM_TIP_FIND].bounds, textStd("FindMemberTip"), &GroupTipParent, MENU_GAME, currentWindow, 0, TT_NOTRANSLATE );
@@ -1951,7 +1951,7 @@ static int wdwMouseDrag[2] = {0, 0};
 static void s_rescaleWindow(float x, float y, float wd, float ht, float sc, int currentWindow)
 {
     CBox box, inside;
-    int rad = (R10 + PIX3)*sc;
+    int rad = (UI_R10 + PIX3)*sc;
     int VOID_COL_WD = 7;
     int wdwIndex = 0;
     // lower right
@@ -2068,12 +2068,12 @@ int groupWindow()
             {
                 drawButtonSet(e, x, y+5*sc, z, wd, sc, color, 0, 1, currentWindow, oldStyleTeamUI);
                 yoff += 30*sc;
-                drawHorizontalLine(x+PIX3*sc, y+(yoff ? yoff : (R10*sc)) - PIX3*sc, wd-(2*PIX3*sc), z, 2.f, color);
+                drawHorizontalLine(x+PIX3*sc, y+(yoff ? yoff : (UI_R10*sc)) - PIX3*sc, wd-(2*PIX3*sc), z, 2.f, color);
             }
 
             wdAdjust = TAB_WD*sc;
-            currentTeam = (int)drawTabControl(tabTeam, x+PIX3*sc, y+(yoff ? yoff : R10*sc), z, wd, ht-(yoff ? yoff : (2*R10*sc)), sc, color, (CLR_GREEN&0xFFFFFF00)|(color&0xff), TabDirection_Vertical); 
-            minTabHt = uiTabControlGetMinDrawHeight(tabTeam) + (yoff ? 0 : (2*R10*sc));
+            currentTeam = (int)drawTabControl(tabTeam, x+PIX3*sc, y+(yoff ? yoff : UI_R10*sc), z, wd, ht-(yoff ? yoff : (2*UI_R10*sc)), sc, color, (CLR_GREEN&0xFFFFFF00)|(color&0xff), TabDirection_Vertical); 
+            minTabHt = uiTabControlGetMinDrawHeight(tabTeam) + (yoff ? 0 : (2*UI_R10*sc));
         }
     }
     else
@@ -2087,10 +2087,10 @@ int groupWindow()
             sc *= 1.3f;
         }
     }
-    drawFrame( PIX3, R10, x, y, z-5, wd, ht, sc, color, bcolor );
-    drawHt = drawCurrentWindow(x+wdAdjust, y+(yoff ? yoff : (R10*sc)), z, wd-wdAdjust, ht-(yoff ? yoff : (R10*sc)), sc, color, bcolor, flipped, currentWindow, currentTeam, oldStyleTeamUI);
+    drawFrame( PIX3, UI_R10, x, y, z-5, wd, ht, sc, color, bcolor );
+    drawHt = drawCurrentWindow(x+wdAdjust, y+(yoff ? yoff : (UI_R10*sc)), z, wd-wdAdjust, ht-(yoff ? yoff : (UI_R10*sc)), sc, color, bcolor, flipped, currentWindow, currentTeam, oldStyleTeamUI);
     drawHt = MAX(minTabHt, drawHt);
-    drawHt += drawHt ? ((yoff ? yoff : R10*sc)+ PIX3*sc) : 0.0f;
+    drawHt += drawHt ? ((yoff ? yoff : UI_R10*sc)+ PIX3*sc) : 0.0f;
     drawHt += drawCommandButtons(x, y+drawHt, z, wd, ht-drawHt, sc, color, bcolor, currentWindow, oldStyleTeamUI);
     if( window_getMode( currentWindow) == WINDOW_DISPLAYING )
     {

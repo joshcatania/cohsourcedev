@@ -103,13 +103,13 @@ void displayLoadingTip( F32 z )
     {
         cprntEx( x, y, z, sc, sc, CENTER_X|CENTER_Y, s_LoadingTip );
         text_wd = str_wd(&game_12, sc, sc, s_LoadingTip );
-        drawFrame( PIX3, R10, (x-text_wd/2-R10), y, z, (text_wd+2*R10), text_ht+(R10*2), 1.0f, CLR_WHITE, CLR_BLACK );
+        drawFrame( PIX3, UI_R10, (x-text_wd/2-UI_R10), y, z, (text_wd+2*UI_R10), text_ht+(UI_R10*2), 1.0f, CLR_WHITE, CLR_BLACK );
     }
     else
     {
-        text_ht = smf_ParseAndDisplay( s_LoadingBlock, s_LoadingTip, (x-(width-2*R10)/2), (y+R10), z+10, (width-2*R10), 0, 1, 1, 
+        text_ht = smf_ParseAndDisplay( s_LoadingBlock, s_LoadingTip, (x-(width-2*UI_R10)/2), (y+UI_R10), z+10, (width-2*UI_R10), 0, 1, 1, 
                                         &gTextAttr, NULL, 0, true);
-        drawFrame( PIX3, R10, (x-width/2), y, z, width, text_ht+(R10*2), 1.0f, CLR_WHITE, CLR_BLACK );
+        drawFrame( PIX3, UI_R10, (x-width/2), y, z, width, text_ht+(UI_R10*2), 1.0f, CLR_WHITE, CLR_BLACK );
     }
 
      last_tip = s_LoadingTipIdx;

@@ -1535,7 +1535,7 @@ void uiIMEIndicatorRender(F32 z_ind, F32 sc, int color, int bcolor)
             char *tmp = WideToUTF8StrTempConvert(il->indicator, NULL ); // could cache this...
 
             // draw frame
-            drawFlatFrame( PIX3, R10, x_ind, y_ind, z_ind, 
+            drawFlatFrame( PIX3, UI_R10, x_ind, y_ind, z_ind, 
                 wd_ind, ht_ind, sc, color, bcolor );
 
             // draw the text

@@ -247,9 +247,9 @@ static void trade_drawInfluenceInventory( float x, float y, float z, float sc, f
     BuildCBox( &box, x + (115-1.5*numwd+1)*sc, y+ht/2 - 9*sc, (6*numwd+2)*sc, 18*sc );
 
     if( !mouseCollision(&box) )
-         drawFrame( PIX2, R6, box.left, box.top, z+1, box.right-box.left, box.bottom-box.top, sc, color, CLR_BLACK );
+         drawFrame( PIX2, UI_R6, box.left, box.top, z+1, box.right-box.left, box.bottom-box.top, sc, color, CLR_BLACK );
     else
-        drawFrame( PIX2, R6, box.left, box.top, z+1, box.right-box.left, box.bottom-box.top, sc, color, 0x99999999);
+        drawFrame( PIX2, UI_R6, box.left, box.top, z+1, box.right-box.left, box.bottom-box.top, sc, color, 0x99999999);
 
     if( mouseClickHit( &box, MS_LEFT) )
     {
@@ -783,10 +783,10 @@ static void trade_inspirationElement( const void * insp, float x, float y, float
         if( mouseCollision(&box) )
         {
             if( isDown(MS_LEFT) )
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                                 CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                                 CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         }
 
@@ -868,10 +868,10 @@ static void trade_enhancementElements( void * spec, float x, float y, float z, f
         if( mouseCollision(&box) )
         {
             if( isDown(MS_LEFT) )
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                                 CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                                 CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         }
 
@@ -940,10 +940,10 @@ static void trade_salvageElement(void * salvage, float x, float y, float z, floa
         if( mouseCollision(&box) )
         {
             if( isDown(MS_LEFT) )
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         }
 
@@ -1008,10 +1008,10 @@ static void trade_recipeElement(void * recipe, float x, float y, float z, float 
         if( mouseCollision(&box) )
         {
             if( isDown(MS_LEFT) )
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         }
 
@@ -1071,10 +1071,10 @@ static void trade_tempPowElement( void * tpow, float x, float y, float z, float 
         if( mouseCollision(&box) )
         {
             if( isDown(MS_LEFT) )
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_SELECTION_FOREGROUND, CLR_SELECTION_BACKGROUND );
             else
-                drawFlatFrame( PIX2, R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
+                drawFlatFrame( PIX2, UI_R10, x-TELEMENT_SPACE*sc, y-TELEMENT_SPACE*sc, z-2, wd+2*TELEMENT_SPACE*sc, ht+2*TELEMENT_SPACE*sc, sc,
                 CLR_MOUSEOVER_FOREGROUND, CLR_MOUSEOVER_BACKGROUND );
         }
 
@@ -1188,7 +1188,7 @@ static void trade_drawOffer( int partner, float x, float y, float z, float sc, f
     if( !partner && mouseCollision( &box ) )
         clr = 0xffffff11;
 
-    drawFlatFrame( PIX3, R10, x- (6)*sc, y - 20*sc, z -5, wd+(12)*sc, ht + 30*sc, sc, 0, clr );
+    drawFlatFrame( PIX3, UI_R10, x- (6)*sc, y - 20*sc, z -5, wd+(12)*sc, ht + 30*sc, sc, 0, clr );
 
     if( !partner && cursor.dragging && mouseCollision(&box) && !isDown(MS_LEFT) )
     {
@@ -1302,7 +1302,7 @@ static void trade_acceptButton( float x, float y, float z, float sc, float wd, f
     {
         AtlasTex * arrow = atlasLoadTexture( "trade_readyarrow_L.tga" );
 
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, CLR_GREEN );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, CLR_GREEN );
         display_sprite( arrow, x + wd - (arrow->width+5)*sc, y + (ht - arrow->height*sc)/2, z+1, sc, sc, CLR_WHITE );
         cprntEx( x + 120*sc, y + ht/2, z+1, sc, sc, CENTER_Y, "TradeOffered" );
 
@@ -1329,20 +1329,20 @@ static void trade_partnerStatus( Entity *e, float x, float y, float z, float sc,
 
     if( !e )
     {
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, CLR_RED );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, CLR_RED );
         cprntEx( x + wd/2, y + ht/2, z+1, sc, sc, (CENTER_X|CENTER_Y), "NoPartner" );
     }
     else if( trade.bAccepted )
     {
         AtlasTex * arrow = atlasLoadTexture( "trade_readyarrow_R.tga" );
 
-        drawFrame( PIX3, R10, x, y, z, wd, ht, sc, color, CLR_GREEN );
+        drawFrame( PIX3, UI_R10, x, y, z, wd, ht, sc, color, CLR_GREEN );
         display_sprite( arrow, x + 5*sc, y + (ht - arrow->height*sc)/2, z+1, sc, sc, CLR_WHITE );
         cprntEx( x + wd/2, y + ht/2, z+1, sc, sc, (CENTER_X|CENTER_Y), "AcceptedTrade" );
     }
     else
     {
-        drawFrame( PIX3, R10, x, y, z+1, wd, ht, sc, color, CLR_RED );
+        drawFrame( PIX3, UI_R10, x, y, z+1, wd, ht, sc, color, CLR_RED );
         cprntEx( x + wd/2, y + ht/2, z+1, sc, sc, (CENTER_X|CENTER_Y), "ConsideringOffer" );
     }
 }
@@ -1394,8 +1394,8 @@ int tradeWindow()
     }
 
     // first draw background
-    drawFrame(PIX3,R10, x, y +oht-PIX3*sc, z, wd, ht-oht+PIX3*sc, sc, color, bcolor );
-    drawFrame( PIX3, R10, x, y, z, wd, oht, sc, color, bcolor );
+    drawFrame(PIX3,UI_R10, x, y +oht-PIX3*sc, z, wd, ht-oht+PIX3*sc, sc, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z, wd, oht, sc, color, bcolor );
 
     
     // inventory items

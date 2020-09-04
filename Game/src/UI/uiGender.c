@@ -232,7 +232,7 @@ static void genderSelect(float screenScaleX, float screenScaleY)
 
     // Draw a large paddle and bounding frame
     drawMenuBar( x + wd/2, y, 20, scale, wd/scale, "Type", 0, 1, 0, 0, 1, SELECT_FROM_UISKIN( CLR_FRAME_BLUE, CLR_FRAME_RED, CLR_WHITE ) );
-    drawFrame( PIX2, R6, x, y, 10, wd, 100*screenScaleY, 1.f, 0xffffff88, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+    drawFrame( PIX2, UI_R6, x, y, 10, wd, 100*screenScaleY, 1.f, 0xffffff88, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
       x += 40*screenScaleX;
     y += 60*screenScaleY;
@@ -1127,7 +1127,7 @@ static void genderBuild(float screenScaleX, float screenScaleY)
 
     // Draw a large paddle and bounding frame
     drawMenuBar( x + wd/2, y, 20, scale, wd/scale, "Build", 0, 1, 0, 0, 1, CLR_WHITE );
-      drawFrame( PIX2, R6, x, y, 10, wd, 300*screenScaleY, 1.f, 0xffffff88, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
+      drawFrame( PIX2, UI_R6, x, y, 10, wd, 300*screenScaleY, 1.f, 0xffffff88, SELECT_FROM_UISKIN( 0x0000ff44, 0xff000044, 0x00000066 ) );
 
      y += 60*screenScaleY;
        genderScale( x + wd/2, y, screenScaleX, screenScaleY);    // scale slider (specialer)
@@ -1452,7 +1452,7 @@ void genderMenu()
 
       drawSpinButtons(screenScaleX, screenScaleY);
 
-//       drawMenuFrame( R12, 632, 64, 10, 360, 620, CLR_WHITE, 0x00000088, FALSE );
+//       drawMenuFrame( UI_R12, 632, 64, 10, 360, 620, CLR_WHITE, 0x00000088, FALSE );
     moveAvatar( gCurrentGender );
 /*
     if( D_MOUSEHIT == drawStdButton( 512, 742, 20, 80, 30, 0x4466ffff, "HelpString", 1.5f, 0 ) )

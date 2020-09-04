@@ -825,8 +825,8 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
      if( !gCurrentChannel || 0 == eaSize(&gChatChannels))
     {
          s_taText.piScale = (int *)((int)(sc*SMF_FONT_SCALE));
-        smf_ParseAndDisplay(NULL, textStd("DoNotBelongToAnyChannels"), windowDrawArea.x + R10*sc, windowDrawArea.y + ht/8, z+1, 
-            windowDrawArea.width - 2*R10*sc, 120*sc, 1, 0, &s_taText, NULL, 0, true);
+        smf_ParseAndDisplay(NULL, textStd("DoNotBelongToAnyChannels"), windowDrawArea.x + UI_R10*sc, windowDrawArea.y + ht/8, z+1, 
+            windowDrawArea.width - 2*UI_R10*sc, 120*sc, 1, 0, &s_taText, NULL, 0, true);
         return 0;
     }
 
@@ -842,7 +842,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
         {
              if(fullDrawHeight > currentHeight)
             {
-                 doScrollBar( &sb, currentHeight-15*sc, fullDrawHeight-15*sc, x+wd, y+(PIX3+R10+22)*sc, z+5, 0, &lvDrawArea );
+                 doScrollBar( &sb, currentHeight-15*sc, fullDrawHeight-15*sc, x+wd, y+(PIX3+UI_R10+22)*sc, z+5, 0, &lvDrawArea );
                 userLV->scrollOffset = sb.offset;
             }
             else

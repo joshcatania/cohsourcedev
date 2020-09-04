@@ -94,7 +94,7 @@ static void editTextArea(UIEdit *pedit, float x, float y, float z, float wd, flo
     }
     uiEditDefaultMouseHandler(pedit);
 
-    drawFlatFrame(PIX3, R4, x, y, z, wd, ht, sc, colorfg, colorbg);
+    drawFlatFrame(PIX3, UI_R4, x, y, z, wd, ht, sc, colorfg, colorbg);
 
     uiBoxDefine(&uibox, x+sc*PIX3, y+sc*(PIX3), wd+sc*(-PIX3*2), ht+sc*(-PIX3*2));
     uiEditSetBounds(pedit, uibox);
@@ -126,7 +126,7 @@ int commentWindow(void)
         initTextArea(NULL);
     }
 
-    drawFrame(PIX3, R10, x, y, z, wd, ht, sc, color, bcolor);
+    drawFrame(PIX3, UI_R10, x, y, z, wd, ht, sc, color, bcolor);
 
     x+=sc*PIX3*2;
     y+=sc*18;

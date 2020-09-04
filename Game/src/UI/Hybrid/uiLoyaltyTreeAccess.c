@@ -31,7 +31,7 @@ int loyaltyTreeAccessWindow()
         window_openClose(WDW_LOYALTY_TREE);
     }
 
-    drawFrame( PIX3, R22, x, y, z-2.f, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R22, x, y, z-2.f, wd, ht, scale, color, bcolor );
 
     return 0;
 }

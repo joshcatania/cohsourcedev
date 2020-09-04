@@ -486,7 +486,7 @@ void displayClue( StoryClue* clue, int cacheIndex, int xorig, float * y, int z, 
     
     ht = max(ht+(35+CLUE_SPACE)*sc, max((ICON_HEIGHT+PIX3*2+4+4)*sc, (CLUE_HT-5)*sc));
     clipperPop();
-    drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
+    drawFlatFrame(PIX2, UI_R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
 
     *y += ht;
     *y += CLUE_SPACE*sc;
@@ -540,7 +540,7 @@ void clueTab()
 
     set_scissor( 0 );
 
-       doScrollBar( &sb, ht - (PIX3*2 + R10*2)*scale,(y-oldy) + sb.offset, wd, (PIX3+R10)*scale, z, 0, 0 );
+       doScrollBar( &sb, ht - (PIX3*2 + UI_R10*2)*scale,(y-oldy) + sb.offset, wd, (PIX3+UI_R10)*scale, z, 0, 0 );
 }
 
 
@@ -648,7 +648,7 @@ void displaySouvenirClue( SouvenirData *pData, int idx, int xorig, float * y, in
         }
     }
 
-    drawFlatFrame(PIX2, R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
+    drawFlatFrame(PIX2, UI_R10, xorig, *y-PIX3*sc, z-1, wdorig, ht, sc, foreColor, backColor);
 
     if( deletable && drawCloseButton( xorig + wdorig - 12*sc,  *y + 10*sc, z, sc, backColor)  )  
         dialogStdCB(DIALOG_ACCEPT_CANCEL, "MMSouvenirReallyDelete", 0, 0, souvenirClueDelete, 0, 0, clue );
@@ -707,7 +707,7 @@ void souvenirClueTab( int souvenirDataIdx )
 
     set_scissor( 0 );
 
-    doScrollBar( &pData->souvenirScollbar, ht - (PIX3*2+R10*2)*scale, y + pData->souvenirScollbar.offset - oldy - TAB_HEIGHT*scale, wd, (PIX3+R10)*scale, z, 0, 0 );
+    doScrollBar( &pData->souvenirScollbar, ht - (PIX3*2+UI_R10*2)*scale, y + pData->souvenirScollbar.offset - oldy - TAB_HEIGHT*scale, wd, (PIX3+UI_R10)*scale, z, 0, 0 );
 }
 
 
@@ -722,7 +722,7 @@ int clueWindow()
     if( !window_getDims( WDW_CLUE, &x, &y, &z, &wd, &ht, &scale, &color, &bcolor  ) )
         return 0;
 
-    drawFrame( PIX3, R10, x, y, z-2, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z-2, wd, ht, scale, color, bcolor );
     displayTabs();
 
     if(!init)

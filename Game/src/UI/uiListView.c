@@ -972,13 +972,13 @@ void uiLVDisplay(UIListView* list, PointFloatXYZ origin)
         {            
              int foregrounColor = CLR_SELECTION_FOREGROUND;
              int backgrounColor = CLR_SELECTION_BACKGROUND;
-             drawFlatFrame(PIX2, R10, pen.x+PIX3*list->scale, pen.y, origin.z, list->header->width-2*PIX3*list->scale, (R10+PIX2)*2*list->scale, list->scale, foregrounColor, backgrounColor);
+             drawFlatFrame(PIX2, UI_R10, pen.x+PIX3*list->scale, pen.y, origin.z, list->header->width-2*PIX3*list->scale, (UI_R10+PIX2)*2*list->scale, list->scale, foregrounColor, backgrounColor);
         }
         if(item == list->mouseOverItem)
         {
             int foregrounColor = CLR_MOUSEOVER_FOREGROUND;
             int backgrounColor = CLR_MOUSEOVER_BACKGROUND;
-            drawFlatFrame(PIX2, R10, pen.x+PIX3*list->scale, pen.y, origin.z, list->header->width-2*PIX3*list->scale, (R10+PIX2)*2*list->scale, list->scale, foregrounColor, backgrounColor);
+            drawFlatFrame(PIX2, UI_R10, pen.x+PIX3*list->scale, pen.y, origin.z, list->header->width-2*PIX3*list->scale, (UI_R10+PIX2)*2*list->scale, list->scale, foregrounColor, backgrounColor);
         }
 
         // Assuming items are all uniform in height.

@@ -142,7 +142,7 @@ int contactFinderWindow()
 
     bcolor |= 0x5f;
 
-    drawFrame( PIX3, R10, x, y, z-2, wd, ht, scale, color, bcolor );
+    drawFrame( PIX3, UI_R10, x, y, z-2, wd, ht, scale, color, bcolor );
 
     if (window_getMode(WDW_CONTACT_FINDER) != WINDOW_DISPLAYING)
     {
@@ -198,7 +198,7 @@ int contactFinderWindow()
     }
     smf_Display(contactFinderSMF_name, x + 160*scale, y + 74*scale - contactFinderSMF_nameHeight/2, z, wd - 170*scale, 0, 0, 0, &gTextAttr_White12, 0);
 
-    drawFrame( PIX3, R10, x, y, z-2, wd, 150*scale, scale, color, 0 );
+    drawFrame( PIX3, UI_R10, x, y, z-2, wd, 150*scale, scale, color, 0 );
 
     smf_SetScissorsBox(contactFinderSMF_description, x + 10, y + 150*scale, wd - 20, ht - 208*scale);
     totalSMFHeight = smf_Display(contactFinderSMF_description, x + 10, y + 160*scale - contactFinderScrollBar.offset, z, wd - 20, 0, 0, 0, &gTextAttr_White12, 0);

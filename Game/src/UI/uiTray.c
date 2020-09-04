@@ -3402,7 +3402,7 @@ int trayWindow()
             goal_ht = calc_alttray_height(trays_drawn + 1, scale, wdw->below);
             tray_y = y + (goal_ht <= ht ? ht - goal_ht : 0);
 
-            drawFrame( PIX3, R22, x, tray_y, z, wd, DEFAULT_TRAY_HT*scale, scale, color, bcolor );
+            drawFrame( PIX3, UI_R22, x, tray_y, z, wd, DEFAULT_TRAY_HT*scale, scale, color, bcolor );
             
             if (trays_drawn == 1 && !tray_is_showing(trays_drawn) && tray_is_showing(trays_drawn + 1))
             {
