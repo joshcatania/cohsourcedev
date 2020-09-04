@@ -1569,7 +1569,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
                         F32 bottomAlphaFact = (1.0 - topAlpha)*bottomAlpha;
                         F32 finalAlpha = topAlpha + bottomAlphaFact;
                         F32 finalAlphaSaturateFact = 1.0/finalAlpha;
-#if 0
+#if 1
                         // ftol calls happen here!
                         d->r = (topAlpha * t.r + bottomAlphaFact * b.r)*finalAlphaSaturateFact;
                         d->g = (topAlpha * t.g + bottomAlphaFact * b.g)*finalAlphaSaturateFact;
@@ -1621,7 +1621,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
 #endif
                     }
                 xcase TWBLEND_MULTIPLY:
-#if 0
+#if 1
                     d->r = t.r*b.r >> 8;
                     d->g = t.g*b.g >> 8;
                     d->b = t.b*b.b >> 8;
@@ -1673,7 +1673,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
             }
             // TODO: is the loss of precision here (1.0*1.0 = 254/255) acceptable?
             if (topWeightByte!=255) {
-#if 0
+#if 1
                 d->r = (d->r * topWeightByte + b.r * invTopWeightByte) >> 8;
                 d->g = (d->g * topWeightByte + b.g * invTopWeightByte) >> 8;
                 d->b = (d->b * topWeightByte + b.b * invTopWeightByte) >> 8;
@@ -1708,9 +1708,9 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
         texWordsPixelsRendered(bufferSizeX*4, yield);
     }
     // Empty Machine State (reset FPU for FP ops instead of MMX)
-    __asm {
+    /*__asm {
         emms
-    }
+    }*/
 }
 #pragma warning(pop)
 
@@ -1971,13 +1971,14 @@ static void filterKernelColorizeNoSpreadNoAlpha(U8* dest, U8* src, S32 *intKerne
                         // Orig: dest[(bufferSizeX*y + x)] += s.a*kw;
                         DWORD dwadd;
                         DWORD alpha = s.a;
-                        _asm {
+                        // TODO: Don't comment this out! Replace it.
+                        /*_asm {
                             // fadd = falpha*kw;
                             fild    dword ptr[alpha]
                             fmul    dword ptr[kw]
                             // add = fadd;
                             fistp    dword ptr[dwadd] // Round to nearest
-                        }
+                        }*/
                         dwadd += dest[(bufferSizeX*y + x)];
                         if (dwadd > 255) {
                             dest[(bufferSizeX*y + x)] = 255;
