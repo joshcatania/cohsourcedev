@@ -1103,7 +1103,10 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
     <ClCompile Include="..\..\src\render\bump.c" />
     <ClCompile Include="..\..\src\render\cubemap.c" />
     <ClCompile Include="..\..\src\render\cubemap_filter.cpp" />
-    <ClCompile Include="..\..\src\render\dxtlibwrapper.cpp" />
+    <ClCompile Include="..\..\src\render\dxtlibwrapper.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </ClCompile>
     <ClCompile Include="..\..\src\render\model.c" />
     <ClCompile Include="..\..\src\render\model_cache.c" />
     <ClCompile Include="..\..\src\render\pbuffer.c" />

@@ -1805,7 +1805,9 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
     hdlInitHandles( MAX_HANDLES ); //fx and seqs use handles so this needs to be called before you do anything with either
     initBackgroundLoader();
     initBackgroundTexWordRenderer();
+    #ifndef _WIN64
     initNVDXTCriticalSection();
+    #endif // _WIN64
 
     toggle_3d_game_modes(SHOW_NONE);
 

@@ -214,7 +214,7 @@ GroupDef *baseHackery(GroupDef *def,Mat4 mat,Vec3 mid,int *alpha,DefTracker *lig
                 {
                     U32 i;
                     U32 hash;
-                    DefTracker *curr,*tracker = *tracker_p;
+                    DefTracker *curr = 0,*tracker = *tracker_p;
 
                     hash = 0;//hashCalc((void*)&tracker, sizeof(tracker), 0xa74d94e3);
 

@@ -982,13 +982,15 @@ void renderTexWordLayerImageGL(TexWordLayer *layer, int x, int y, int sizeX, int
 
 U8* uncompressRawTexInfo(TexReadInfo *rawInfo) // Uncompresses to GL_RGBA8
 {
-    int w, h, depth, total_width, rowBytes, src_format, SpecifiedMipMaps;
-    U8 *buffer, *rawBuffer;
+    int w = 0, h = 0, depth = 0, total_width, rowBytes = 0, src_format, SpecifiedMipMaps;
+    U8 *buffer = 0, *rawBuffer;
     if (rawInfo->format == TEXFMT_RAW_DDS) {
         lsprintf("nvDXTdecompress()...");
         SpecifiedMipMaps = 1;
         // total_width is the sum total of the widths of all mip levels
+        #ifndef _WIN64
         buffer = nvDXTdecompressC(&w, &h, &depth, &total_width, &rowBytes, &src_format, SpecifiedMipMaps, rawInfo->data );
+        #endif // _WIN64
 
         free(rawInfo->data);
         rawInfo->data = buffer;
