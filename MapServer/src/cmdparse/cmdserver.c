@@ -1989,11 +1989,11 @@ Cmd server_cmds[] =
     { 0, "incarnate_unequip_all", SCMD_INCARNATE_UNEQUIP_ALL, {0}, 0,
                             "Unequips all equipped Incarnate Abilities." },
     { 9, "incarnate_force_equip", SCMD_INCARNATE_FORCE_EQUIP, {{CMDSTR(tmp_str)}, {CMDSTR(tmp_str2)}}, 0,
-                            "Equips the specified Incarnate Ability.  Does nothing if you don't have it or its slot is locked.  Ignores other restrictions on equipping IAs.  [slot name] [abil name]" },
+                            "Equips the specified Incarnate Ability.  Does nothing if you don't have it or its slot is locked.  Ignores other restrictionions on equipping IAs.  [slot name] [abil name]" },
     { 9, "incarnate_force_unequip", SCMD_INCARNATE_FORCE_UNEQUIP, {{CMDSTR(tmp_str)}, {CMDSTR(tmp_str2)}}, 0,
-                            "Unequips the specified Incarnate Ability.  Does nothing if you don't have it or its slot is locked.  Ignores other restrictions on equipping IAs.  [slot name] [abil name]" },
+                            "Unequips the specified Incarnate Ability.  Does nothing if you don't have it or its slot is locked.  Ignores other restrictionions on equipping IAs.  [slot name] [abil name]" },
     { 9, "incarnate_force_unequip_by_slot", SCMD_INCARNATE_FORCE_UNEQUIP_BY_SLOT, {{CMDSTR(tmp_str)}}, 0,
-                            "Unequips whatever ability is in the specified Incarnate slot.  Does nothing if the slot is locked or empty.  Ignores other restrictions on equipping IAs.  [slot name] [abil name]" },
+                            "Unequips whatever ability is in the specified Incarnate slot.  Does nothing if the slot is locked or empty.  Ignores other restrictionions on equipping IAs.  [slot name] [abil name]" },
     { 9, "incarnate_debugprint_is_equipped", SCMD_INCARNATE_DEBUGPRINT_IS_EQUIPPED, {{CMDSTR(tmp_str)}, {CMDSTR(tmp_str2)}}, 0,
                             "Prints whether the specified Incarnate Ability is equipped or not. [slot name] [abil name]" },
     { 9, "incarnate_debugprint_get_equipped", SCMD_INCARNATE_DEBUGPRINT_GET_EQUIPPED, {{CMDSTR(tmp_str)}}, 0,
@@ -6671,10 +6671,10 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             }
             xcase SCMD_BADGE_STAT_SHOW:
             {
-                char *restrict = NULL;
-                strdup_alloca(restrict, tmp_str);
+                char *restriction = NULL;
+                strdup_alloca(restriction, tmp_str);
 
-                csrBadgeStatsShow(client, restrict);
+                csrBadgeStatsShow(client, restriction);
             }
             xcase SCMD_BADGE_GRANT:
             {
