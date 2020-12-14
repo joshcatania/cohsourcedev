@@ -756,7 +756,7 @@ void gfxGetInitialSettings( GfxSettings * gfxSettings )
     gfxSettings->musicSoundVolume    = DEFAULT_VOLUME_MUSIC;
     gfxSettings->voSoundVolume        = DEFAULT_VOLUME_VO;
     gfxSettings->enable3DSound        = 0;
-    gfxSettings->enableHWLights        = 1;
+    gfxSettings->enableHWLights        = 0;
     gfxSettings->forceSoftwareAudio = 0;
     gfxSettings->renderScaleX        = 1.0;
     gfxSettings->renderScaleY        = 1.0;
