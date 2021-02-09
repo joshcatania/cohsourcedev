@@ -187,6 +187,18 @@ typedef struct CharacterClass
     int iNumBytesTables;
         // The size of the data pointed to by each of the pattr... arrays
         // Used for shared memory stuff. Pay no attention to it.
+    const char** pchStatSlider;
+        //Values for the Stats Slider in the UI
+    const char** pchScreenShots;
+        //Texture Names for the screenshots in the UI
+    const char** pchPlayStyle;
+        //List of acceptable Playstyles for the AT
+    bool pchFMeter;
+        //Does this class use an F Meter?
+    const char *pchFMeterTip;
+        //Name of the TIP for the Meter (ie Rage, Defiance, Primal Energy)
+    int pchShowRage;
+        // Value for ShowRage, used to separate Classes and Rage Tips (Think this is probably redundant, but it is done in the UI...
 
 } CharacterClass;
 
@@ -233,6 +245,12 @@ TokenizerParseInfo ParseCharacterClass[] =
     { "ConnectHPAndIntegrity",        TOK_REDUNDANTNAME|TOK_BOOL(CharacterClass, bConnectHPAndStatus, 0), BoolEnum},
     { "DefiantHitPointsAttrib",        TOK_AUTOINT(CharacterClass, offDefiantHitPointsAttrib, 0), ParsePowerDefines },
     { "DefiantScale",                TOK_F32(CharacterClass, fDefiantScale, 1.0f)  },
+    { "StatSlider",              TOK_STRINGARRAY(CharacterClass, pchStatSlider)},
+    { "ScreenShots",              TOK_STRINGARRAY(CharacterClass, pchScreenShots)},
+    { "PlayStyle",              TOK_STRINGARRAY(CharacterClass, pchPlayStyle)},
+    { "FMeter",            TOK_BOOL(CharacterClass, pchFMeter, 0), BoolEnum},
+    { "FMeterTip",              TOK_STRINGARRAY(CharacterClass, pchFMeterTip)},
+    { "ShowRage",               TOK_INT(CharacterClass, pchShowRage, 0)},
 
     // These are for shared memory stuff. Ignore them.
     { "_FinalAttrMax_",                TOK_POINTER(CharacterClass, pattrMax, iNumBytesTables) },
