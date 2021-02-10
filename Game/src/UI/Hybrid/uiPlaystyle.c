@@ -92,81 +92,26 @@ static void sortPlayStyleClasses()
     {    
         const CharacterClass *pclass = g_CharacterClasses.ppClasses[i];
 
-        if( stricmp(pclass->pchName, "Class_Blaster") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Brute") == 0)
-        {
+        const CharacterClass* pclass = g_CharacterClasses.ppClasses[i];
+
+        if (pclass->iPlaystyles & PLAYSTYLE_TANK)
             eaPushConst(&playStyleClasses[kPlaystyle_Tank], pclass);
+
+        if (pclass->iPlaystyles & PLAYSTYLE_MELEE)
             eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Controller") == 0)
-        {
+
+        if (pclass->iPlaystyles & PLAYSTYLE_RANGED)
+            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
+
+        if (pclass->iPlaystyles & PLAYSTYLE_CONTROL)
             eaPushConst(&playStyleClasses[kPlaystyle_Crowd], pclass);
+
+        if (pclass->iPlaystyles & PLAYSTYLE_SUPPORT)
             eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
+
+        if (pclass->iPlaystyles & PLAYSTYLE_PET)
             eaPushConst(&playStyleClasses[kPlaystyle_Pet], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Corruptor") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Defender") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Dominator") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Crowd], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Pet], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Mastermind") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Pet], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Scrapper") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Stalker") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Tanker") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Tank], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Peacebringer") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Tank], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Warshade") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Tank], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Arachnos_Soldier") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Pet], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Arachnos_Widow") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Range], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-        }
-        else if( stricmp(pclass->pchName, "Class_Primalist") == 0)
-        {
-            eaPushConst(&playStyleClasses[kPlaystyle_Melee], pclass);
-            eaPushConst(&playStyleClasses[kPlaystyle_Support], pclass);
-        }
+
     }
 }
 

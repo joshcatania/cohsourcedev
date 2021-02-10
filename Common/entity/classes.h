@@ -17,6 +17,8 @@
 
 #include "character_attribs.h"
 
+#define MAX_ARCHETYPES 32
+
 /***************************************************************************/
 /***************************************************************************/
 
@@ -188,12 +190,81 @@ typedef struct CharacterClass
         // The size of the data pointed to by each of the pattr... arrays
         // Used for shared memory stuff. Pay no attention to it.
 
+    // Do we show the rage (domination etc) bar?
+    int iShowRageBar;
+    char* pchRageTip;
+
+    // Where is this class banned from starting?
+    int iStartingRestriction;
+
+    // Stats for playstyle screen
+    // Set to -1 for a ? which kheldians apparently use
+
+    int iPlayStyleSurvivability;
+    int iPlayStyleMeleeDamage;
+    int iPlayStyleRangedDamage;
+    int iPlayStyleCrowdControl;
+    int iPlayStyleSupport;
+    int iPlayStylePets;
+
+    // Probably ought to make this an array but I'm not certain on how to make the parser load one
+    char* pchClassImage0;
+    char* pchClassImage1;
+    char* pchClassImage2;
+
+    // Bitmask of playstyles
+
+    int iPlaystyles;
 } CharacterClass;
+
+typedef enum ClassStartingRestriction
+{
+    CSR_NONE,
+    CSR_NO_PRAETORIA,
+    CSR_NO_PRIMAL,
+    CSR_MAX,
+} ClassStartingRestriction;
+
+typedef enum ClassPlaystyle
+{
+    PLAYSTYLE_NONE = 0,
+    PLAYSTYLE_TANK = 1 << 0,
+    PLAYSTYLE_MELEE = 1 << 1,
+    PLAYSTYLE_RANGED = 1 << 2,
+    PLAYSTYLE_CONTROL = 1 << 3,
+    PLAYSTYLE_SUPPORT = 1 << 4,
+    PLAYSTYLE_PET = 1 << 5,
+} ClassPlaystyle;
+
 
 #ifdef CLASSES_PARSE_INFO_DEFINITIONS
 
 extern StaticDefine ParsePowerDefines[]; // defined in load_def.c
 
+StaticDefineInt ParseClassStartingRestriction[] =
+{
+    DEFINE_INT
+    {"None",            CSR_NONE},
+    {"NoPraetoria",     CSR_NO_PRAETORIA},
+    {"NoPrimal",        CSR_NO_PRIMAL},
+    DEFINE_END
+};
+
+StaticDefineInt ParseClassPlaystyle[] =
+{
+    DEFINE_INT
+    {"None",         PLAYSTYLE_NONE},
+    {"Tank",         PLAYSTYLE_TANK},
+    {"Melee",        PLAYSTYLE_MELEE},
+    {"MeleeCombat",  PLAYSTYLE_MELEE},
+    {"Ranged",       PLAYSTYLE_RANGED},
+    {"RangedCombat", PLAYSTYLE_RANGED},
+    {"Control",      PLAYSTYLE_CONTROL},
+    {"CrowdControl", PLAYSTYLE_CONTROL},
+    {"Support",      PLAYSTYLE_SUPPORT},
+    {"Pet",          PLAYSTYLE_PET},
+    DEFINE_END
+};
 TokenizerParseInfo ParseCharacterClass[] =
 {
     { "{",                           TOK_START,            0 },
@@ -233,6 +304,22 @@ TokenizerParseInfo ParseCharacterClass[] =
     { "ConnectHPAndIntegrity",        TOK_REDUNDANTNAME|TOK_BOOL(CharacterClass, bConnectHPAndStatus, 0), BoolEnum},
     { "DefiantHitPointsAttrib",        TOK_AUTOINT(CharacterClass, offDefiantHitPointsAttrib, 0), ParsePowerDefines },
     { "DefiantScale",                TOK_F32(CharacterClass, fDefiantScale, 1.0f)  },
+    { "ShowRageBar",                    TOK_INT(CharacterClass, iShowRageBar, 0) },
+    { "RageBarTip",                    TOK_STRING(CharacterClass, pchRageTip, 0) },
+    { "StartingRestrictions",           TOK_INT(CharacterClass, iStartingRestriction, 0), ParseClassStartingRestriction },
+
+    { "PlaystyleSurvivability",         TOK_INT(CharacterClass, iPlayStyleSurvivability, 0) },
+    { "PlaystyleMeleeDamage",           TOK_INT(CharacterClass, iPlayStyleMeleeDamage,   0) },
+    { "PlaystyleRangedDamage",          TOK_INT(CharacterClass, iPlayStyleRangedDamage,  0) },
+    { "PlaystyleCrowdControl",          TOK_INT(CharacterClass, iPlayStyleCrowdControl,  0) },
+    { "PlaystyleSupport",               TOK_INT(CharacterClass, iPlayStyleSupport,       0) },
+    { "PlaystylePets",                  TOK_INT(CharacterClass, iPlayStylePets,          0) },
+
+    { "PlaystyleImage0",                    TOK_STRING(CharacterClass, pchClassImage0, 0) },
+    { "PlaystyleImage1",                    TOK_STRING(CharacterClass, pchClassImage1, 0) },
+    { "PlaystyleImage2",                    TOK_STRING(CharacterClass, pchClassImage2, 0) },
+
+    { "Playstyles",                    TOK_FLAGS(CharacterClass, iPlaystyles, 0), ParseClassPlaystyle },
 
     // These are for shared memory stuff. Ignore them.
     { "_FinalAttrMax_",                TOK_POINTER(CharacterClass, pattrMax, iNumBytesTables) },

@@ -1319,22 +1319,18 @@ int statusWindow()
 		ringIcon = atlasLoadTexture("tray_ring_power.tga");
 	}
 
+    char rageBarTooltip[128];
+    strncpy(rageBarTooltip, "DefaultRageTip", sizeof(rageBarTooltip));
+
 	if (!e || !e->pchar || !e->pchar->pclass)
 		showRage = 0;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Blaster", 13) == 0)
-		showRage = 0;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Brute", 11) == 0)
-		showRage = 2;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Dominator", 15) == 0)
-		showRage = 3;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Primalist", 15) == 0)
-		showRage = 4;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Rescued_Devoured", 22) == 0)
-		showRage = 5;
-	else if (strncmp(e->pchar->pclass->pchName, "Class_Sentinel", 14) == 0)
-		showRage = 6;
-	else
-		showRage = 0;
+    else
+    {
+        showRage = e->pchar->pclass->iShowRageBar;
+        if (e->pchar->pclass->pchRageTip)
+            strncpy(rageBarTooltip, e->pchar->pclass->pchRageTip, sizeof(rageBarTooltip));
+    }
+
 
 	addToolTip(&HealthTip);
 	addToolTip(&EnduranceTip);
@@ -1460,18 +1456,7 @@ int statusWindow()
 
 		BuildCBox(&box, x + 34 * scale, y + (health_yoff + bar_ht * 2 + 4) * scale, wd - 82 * scale, bar_ht_2 * scale);
 		if (overStatus) {
-			if (showRage == 1)
-				setToolTip(&RageTip, &box, textStd("DesperationTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-			else if (showRage == 2)
-				setToolTip(&RageTip, &box, textStd("RageTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-			else if (showRage == 3)
-				setToolTip(&RageTip, &box, textStd("DominationTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-			else if (showRage == 4)
-				setToolTip(&RageTip, &box, textStd("PrimalEnergyTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-			else if (showRage == 5)
-				setToolTip(&RageTip, &box, textStd("BattleEuphoriaTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
-			else if (showRage == 6)
-				setToolTip(&RageTip, &box, textStd("OpportunityTip", (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
+            setToolTip(&RageTip, &box, textStd(rageBarTooltip, (int)(meter * 100), (int)(meter_total * 100)), &StatusTipParent, MENU_GAME, WDW_STAT_BARS);
 		}
 
 		drawFrame(PIX2, R4, x + 36 * scale, y + (health_yoff + 2) * scale, z + 22, wd - (HEALTH_XOFF + 4) * scale, (bar_ht * 3 + 4) * scale, scale, 0, CLR_BLACK);
