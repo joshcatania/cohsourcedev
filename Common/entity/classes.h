@@ -308,18 +308,18 @@ TokenizerParseInfo ParseCharacterClass[] =
     { "RageBarTip",                    TOK_STRING(CharacterClass, pchRageTip, 0) },
     { "StartingRestrictions",           TOK_INT(CharacterClass, iStartingRestriction, 0), ParseClassStartingRestriction },
 
-    { "PlaystyleSurvivability",         TOK_INT(CharacterClass, iPlayStyleSurvivability, 0) },
-    { "PlaystyleMeleeDamage",           TOK_INT(CharacterClass, iPlayStyleMeleeDamage,   0) },
-    { "PlaystyleRangedDamage",          TOK_INT(CharacterClass, iPlayStyleRangedDamage,  0) },
-    { "PlaystyleCrowdControl",          TOK_INT(CharacterClass, iPlayStyleCrowdControl,  0) },
-    { "PlaystyleSupport",               TOK_INT(CharacterClass, iPlayStyleSupport,       0) },
-    { "PlaystylePets",                  TOK_INT(CharacterClass, iPlayStylePets,          0) },
+    { "PlaystyleSurvivability",         TOK_INT(CharacterClass, iPlayStyleSurvivability, 0), 0, 0, PARSE_VERSION_V23},
+    { "PlaystyleMeleeDamage",           TOK_INT(CharacterClass, iPlayStyleMeleeDamage,   0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystyleRangedDamage",          TOK_INT(CharacterClass, iPlayStyleRangedDamage,  0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystyleCrowdControl",          TOK_INT(CharacterClass, iPlayStyleCrowdControl,  0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystyleSupport",               TOK_INT(CharacterClass, iPlayStyleSupport,       0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystylePets",                  TOK_INT(CharacterClass, iPlayStylePets,          0), 0, 0, PARSE_VERSION_V23 },
 
-    { "PlaystyleImage0",                    TOK_STRING(CharacterClass, pchClassImage0, 0) },
-    { "PlaystyleImage1",                    TOK_STRING(CharacterClass, pchClassImage1, 0) },
-    { "PlaystyleImage2",                    TOK_STRING(CharacterClass, pchClassImage2, 0) },
+    { "PlaystyleImage0",                    TOK_STRING(CharacterClass, pchClassImage0, 0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystyleImage1",                    TOK_STRING(CharacterClass, pchClassImage1, 0), 0, 0, PARSE_VERSION_V23 },
+    { "PlaystyleImage2",                    TOK_STRING(CharacterClass, pchClassImage2, 0), 0, 0, PARSE_VERSION_V23 },
 
-    { "Playstyles",                    TOK_FLAGS(CharacterClass, iPlaystyles, 0), ParseClassPlaystyle },
+    { "Playstyles",                    TOK_FLAGS(CharacterClass, iPlaystyles, 0), ParseClassPlaystyle, 0, 0, PARSE_VERSION_V23 },
 
     // These are for shared memory stuff. Ignore them.
     { "_FinalAttrMax_",                TOK_POINTER(CharacterClass, pattrMax, iNumBytesTables) },
