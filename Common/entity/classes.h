@@ -319,7 +319,7 @@ TokenizerParseInfo ParseCharacterClass[] =
     { "PlaystyleImage1",                    TOK_STRING(CharacterClass, pchClassImage1, 0), 0, 0, PARSE_VERSION_V23 },
     { "PlaystyleImage2",                    TOK_STRING(CharacterClass, pchClassImage2, 0), 0, 0, PARSE_VERSION_V23 },
 
-    { "Playstyles",                    TOK_FLAGS(CharacterClass, iPlaystyles, 0), ParseClassPlaystyle, 0, 0, PARSE_VERSION_V23 },
+    { "Playstyles",                    TOK_FLAGS(CharacterClass, iPlaystyles, 0), ParseClassPlaystyle, PARSE_VERSION_V23 },
 
     // These are for shared memory stuff. Ignore them.
     { "_FinalAttrMax_",                TOK_POINTER(CharacterClass, pattrMax, iNumBytesTables) },

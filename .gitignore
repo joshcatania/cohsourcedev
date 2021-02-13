@@ -46,3 +46,16 @@ x64/
 
 .vscode
 *.dsn
+libs/regfile/Release/regfile.Build.CppClean.log
+libs/regfile/Release/regfile.lib.recipe
+libs/regfile/Release/regfile.log
+libs/regfile/Release/regfile.obj
+libs/regfile/Release/regfile.tlog/CL.command.1.tlog
+libs/regfile/Release/regfile.tlog/CL.read.1.tlog
+libs/regfile/Release/regfile.tlog/CL.write.1.tlog
+libs/regfile/Release/regfile.tlog/Lib-link.read.1.tlog
+libs/regfile/Release/regfile.tlog/Lib-link.write.1.tlog
+libs/regfile/Release/regfile.tlog/Lib.command.1.tlog
+libs/regfile/Release/regfile.tlog/regfile.lastbuildstate
+libs/regfile/Release/regfile.vcxproj.FileListAbsolute.txt
+build/vs2019/Release/regfile.lib

@@ -92,8 +92,6 @@ static void sortPlayStyleClasses()
     {    
         const CharacterClass *pclass = g_CharacterClasses.ppClasses[i];
 
-        const CharacterClass* pclass = g_CharacterClasses.ppClasses[i];
-
         if (pclass->iPlaystyles & PLAYSTYLE_TANK)
             eaPushConst(&playStyleClasses[kPlaystyle_Tank], pclass);
 
