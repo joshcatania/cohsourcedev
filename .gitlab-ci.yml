@@ -2,6 +2,7 @@ build:
   tags: 
     - windows
   script:
+    - msbuild build/vs2019/master.sln /m /p:BuildInParallel=true /p:Configuration=Debug /p:Platform=x86
     - msbuild build/vs2019/master.sln /m /p:BuildInParallel=true /p:Configuration=Release /p:Platform=x86
   artifacts:
     when: on_success
