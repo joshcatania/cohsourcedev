@@ -284,7 +284,6 @@ static int recreateClassList()
     HybridElement * playstyle = g_selected_playstyle;
     int originLocation = getPraetorianChoice();
     const CharacterClass *** ppClassesNew = getCurrentClassList();
-    int i;
     int change = (prev_playstyle != playstyle) || (prev_startinglocation != originLocation);
 
     //remember archetype selected

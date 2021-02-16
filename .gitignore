@@ -59,3 +59,17 @@ libs/regfile/Release/regfile.tlog/Lib.command.1.tlog
 libs/regfile/Release/regfile.tlog/regfile.lastbuildstate
 libs/regfile/Release/regfile.vcxproj.FileListAbsolute.txt
 build/vs2019/Release/regfile.lib
+build/vs2019/Debug/regfile.lib
+libs/regfile/Debug/regfile.Build.CppClean.log
+libs/regfile/Debug/regfile.idb
+libs/regfile/Debug/regfile.lib.recipe
+libs/regfile/Debug/regfile.log
+libs/regfile/Debug/regfile.obj
+libs/regfile/Debug/regfile.tlog/CL.command.1.tlog
+libs/regfile/Debug/regfile.tlog/CL.read.1.tlog
+libs/regfile/Debug/regfile.tlog/CL.write.1.tlog
+libs/regfile/Debug/regfile.tlog/Lib-link.read.1.tlog
+libs/regfile/Debug/regfile.tlog/Lib-link.write.1.tlog
+libs/regfile/Debug/regfile.tlog/Lib.command.1.tlog
+libs/regfile/Debug/regfile.tlog/regfile.lastbuildstate
+libs/regfile/Debug/regfile.vcxproj.FileListAbsolute.txt
