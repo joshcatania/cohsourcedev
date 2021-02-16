@@ -162,7 +162,7 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\*.dll $(ProjectDir)..\..\
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_NONSTDC_NO_DEPRECATE;FINAL;SERVER;USEZLIB;_CRT_SECURE_NO_DEPRECATE;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <LanguageStandard>Default</LanguageStandard>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalIncludeDirectories>$(ProjectDir)..\..\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\game\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\libs\AILib\include;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\3rdparty\lua-5.1.5\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Physics\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Cooking\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\Foundation\include;$(ProjectDir)..\..\..\3rdparty\PhysX\SDKs\PhysXLoader\include</AdditionalIncludeDirectories>
     </ClCompile>
