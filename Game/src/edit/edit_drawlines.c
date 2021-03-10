@@ -511,10 +511,14 @@ void showGridExternal()
 
     if (edit_axisp[0] + edit_axisp[1] + edit_axisp[2])
         copyVec3(edit_axisp,edit_axis);
-    gridsize = 0.5f * (1 << edit_state.gridsize);
-    linesize = MAX(gridsize,0.5) * NUMLINES;
+
     for(i=0;i<3;i++)
         count += edit_axis[i];
+
+    // this needs to be here between these for-loops to avoid an internal compiler error in VS 2019 v16.9.1
+    gridsize = 0.5f * (1 << edit_state.gridsize);
+    linesize = MAX(gridsize, 0.5) * NUMLINES;
+
     for(i=0;i<3;i++)
     {
         if (edit_axis[i])
