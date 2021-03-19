@@ -788,7 +788,7 @@ void trackerPrint(DefTracker * tracker,int start,int end,int * current,char ** t
         if (tracker->def->has_properties)   
         {
             //If this is a Layer, 
-            PropertyEnt* layerProp; 
+            PropertyEnt* layerProp = NULL; 
             stashFindPointer(  tracker->def->properties, "Layer" , &layerProp );
             
             if( layerProp )
@@ -1279,7 +1279,7 @@ void trackerUpdateList(int ref_id,DefTracker *tracker,int depth)
         if (tracker->def->has_properties)   
         {
             //If this is a Layer, 
-            PropertyEnt* layerProp; 
+            PropertyEnt* layerProp = NULL; 
             stashFindPointer(  tracker->def->properties, "Layer" , &layerProp );
             
             if( layerProp )
@@ -1483,7 +1483,7 @@ int editChangePropertyName(StashTable properties, char* oldPropName, int * delet
 }
 
 int editChangePropertyValueString(StashTable properties, char* propName){
-    PropertyEnt* prop;
+    PropertyEnt* prop = NULL;
     char newValue[1024];
     int defChanged = 0;
 
@@ -1576,7 +1576,7 @@ static PropertyEnt* editPropRadiusTarget;
  */
 int propValueScrollCallback(char* oldValue,int idx){
     GroupDef* def;
-    PropertyEnt* prop;
+    PropertyEnt* prop = NULL;
     int updateGroupDef = 0;
 
     if(!isNonLibSingleSelect(0,0))

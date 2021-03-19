@@ -181,7 +181,7 @@ void uiAuctionHouseListItemInfoReceive(Packet * pak)
 AuctionHistoryItem **searchMenuHistory = NULL;
 void uiAuctionHouseHistoryReceive(Packet *pak)
 {
-    AuctionItem *pItem;
+    AuctionItem* pItem = NULL;
     AuctionHistoryItem *pHistory;
     char *pchIdentifier    = pktGetString(pak);
     int i, buying, selling, count;

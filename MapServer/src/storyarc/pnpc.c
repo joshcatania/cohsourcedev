@@ -106,7 +106,7 @@ int pnpcLoader(GroupDefTraverser* traverser)
     Pair* pickPercentageWeightedPair(Array* pairs);
 
     Entity* ent;
-    PropertyEnt* generatorProp;
+    PropertyEnt* generatorProp = NULL;
     const PNPCDef* def;
     const char* displayname;
     char buf[MAX_PATH];
@@ -532,7 +532,7 @@ StoryLocation* PNPCFindLocation(const char* pnpcName)
 
 Entity* PNPCFindEntity(const char* pnpcName)
 {
-    Entity* e;
+    Entity* e = NULL;
     const PNPCDef* def = PNPCFindDef(pnpcName);
 
     if (!def)

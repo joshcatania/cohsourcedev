@@ -287,7 +287,7 @@ StaticDefineInt ParseTableEntryType[] = {
 
 bool aiBehaviorAddToHashTable(AIBTableEntry* entry, int isAlias)
 {
-    AIBTableEntry* oldEntry;
+    AIBTableEntry* oldEntry = NULL;
     if(!BehaviorSystemHashTable)
         BehaviorSystemHashTable = stashTableCreateWithStringKeys(128, StashDefault);
 
@@ -363,7 +363,7 @@ void aiBehaviorTableAddCustom(void* info, int type, const char* name)
 
 AIBTableEntry* aiBehaviorLookUpString(const char* name)
 {
-    AIBTableEntry* entry;
+    AIBTableEntry* entry = NULL;
 
     stashFindPointer(BehaviorSystemHashTable, name, &entry);
     return entry;
@@ -371,7 +371,7 @@ AIBTableEntry* aiBehaviorLookUpString(const char* name)
 
 AIBehaviorInfo* aiBehaviorInfoFromString(const char* name)
 {
-    AIBTableEntry* entry;
+    AIBTableEntry* entry = NULL;
 
     entry = aiBehaviorLookUpString(name);
 
@@ -383,7 +383,7 @@ AIBehaviorInfo* aiBehaviorInfoFromString(const char* name)
 
 AIBehaviorFlagInfo* aiBehaviorFlagInfoFromString(const char* name)
 {
-    AIBTableEntry* entry;
+    AIBTableEntry* entry = NULL;
 
     entry = aiBehaviorLookUpString(name);
 
@@ -395,7 +395,7 @@ AIBehaviorFlagInfo* aiBehaviorFlagInfoFromString(const char* name)
 
 AIBehaviorAliasInfo* aiBehaviorAliasInfoFromString(const char* name)
 {
-    AIBTableEntry* entry;
+    AIBTableEntry* entry = NULL;
 
     entry = aiBehaviorLookUpString(name);
 

@@ -1672,7 +1672,7 @@ void MapHandleXactCmd(Entity *e, XactUpdateType update_type, XactCmd *cmd)
                 AuctionInvItem *itm = NULL;
                 if(AuctionInvItem_FromStr(&itm,cmd->context))
                 {
-                    AuctionItem *pItem;
+                    AuctionItem* pItem = NULL;
                     
                     stashFindPointer( auctionData_GetDict()->stAuctionItems, itm->pchIdentifier, &pItem);
 

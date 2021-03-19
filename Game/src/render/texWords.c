@@ -364,7 +364,7 @@ TexWord *texWordFind(const char *texName, int search)
     char *s;
     char *locale=NULL;
     bool isBase=false;
-    TexWord *ret;
+    TexWord* ret = NULL;
     Strncpyt(baseTexName, texName);
     if (s = strchr(baseTexName, '#')) {
         *s=0;

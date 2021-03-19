@@ -4484,7 +4484,7 @@ static int debugCameraAdd(GroupDef *def, DefTracker *tracker, Mat4 world_mat, vo
 {
     if( tracker && tracker->def->properties )
     {
-        PropertyEnt *prop;
+        PropertyEnt* prop = NULL;
         stashFindPointer( tracker->def->properties, "CutSceneCamera", &prop );
         if (prop)
         {

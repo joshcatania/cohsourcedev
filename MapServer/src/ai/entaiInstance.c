@@ -614,7 +614,7 @@ void aiInitLoadConfigFiles(int forceReload){
             int j;
             for(j = 0; j < eaSize(&config->baseConfigNames); j++){
                 char* name = config->baseConfigNames[j];
-                AIConfig* baseConfig;
+                AIConfig* baseConfig = NULL;
 
                 stashFindPointer( nameToAIConfigTable, name, &baseConfig );
 

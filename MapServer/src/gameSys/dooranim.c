@@ -232,7 +232,7 @@ void DoorAnimGridAdd(DoorAnimPoint* point)
 int centerpointLoader(GroupDefTraverser* traverser)
 {
     PropertyEnt* pointProp;
-    PropertyEnt* otherProp;
+    PropertyEnt* otherProp = NULL;
 
     // EnterMe
     if (traverser->def->properties && stashFindPointer( traverser->def->properties, "EnterMe", &pointProp ))

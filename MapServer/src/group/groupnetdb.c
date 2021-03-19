@@ -436,7 +436,7 @@ static void getGroupDef(Packet *pak,GroupDef *def,char *buf)
         def->properties = ReadGroupPropertiesFromPacket(pak);
         if (def->properties)
         {
-            char    *s;
+            char* s = NULL;
             stashFindPointer( def->properties,"Health", &s );
             if (s!=NULL)
             {

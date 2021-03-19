@@ -36,7 +36,7 @@ static StashTable g_dbidhashes;
 static void AddRegistration(ArenaClientLink* client, U32 dbid)
 {    
     char id[20];
-    DbidListeners* list;
+    DbidListeners* list = NULL;
 
     // set up hash
     sprintf(id, "%i", dbid);
@@ -70,7 +70,7 @@ static void AddRegistration(ArenaClientLink* client, U32 dbid)
 static void RemoveRegistration(ArenaClientLink* client, U32 dbid, int logout)
 {
     char id[20];
-    DbidListeners* list;
+    DbidListeners* list = NULL;
 
     // remove from hash
     sprintf(id, "%i", dbid);
@@ -155,7 +155,7 @@ ArenaClientList* ClientListFromClient(ArenaClientLink* client, int add)
 ArenaClientList* ClientListFromDbid(int dbid, int add)
 {
     char id[20];
-    DbidListeners* list;
+    DbidListeners* list = NULL;
     int c;
 
     ClientListInit(add);
@@ -387,7 +387,7 @@ static StashTable g_ttlhashes = 0;
 // safe to call with zero dbid
 void SetPlayerTTL(U32 dbid, int clear)
 {
-    DbidTTL* rec;
+    DbidTTL* rec = NULL;
     char id[20];
 
     if (!dbid)

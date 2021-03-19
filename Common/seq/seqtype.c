@@ -440,7 +440,7 @@ SeqType *seqTypeLoadSingleFile(const char *fname)
 SeqType *seqTypeFind(const char *type_name)
 {
     SeqType *oldSeqType=NULL;
-    SeqType *seqType;
+    SeqType* seqType = NULL;
     assert(htSeqTypes);
     stashFindPointer( htSeqTypes, type_name, &seqType );
 

@@ -135,7 +135,7 @@ void groupRename( void *rename_void, const char *oldName, char *newName, int typ
 
 static int groupPruneDefsSub(int prune_libs)
 {
-    GroupDef    *def,*test;
+    GroupDef *def, *test = NULL;
     GroupFile    *file;
     char        defname[256];
     int            i,j,k,num_pruned=0;

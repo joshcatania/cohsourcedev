@@ -168,7 +168,7 @@ int        i,total=0;
 GroupDef *groupDefFind(const char *name)
 {
     const char        *s;
-    GroupDef    *def;
+    GroupDef* def = NULL;
 
     PERFINFO_AUTO_START("groupDefFind",1);
 

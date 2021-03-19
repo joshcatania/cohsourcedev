@@ -1350,7 +1350,7 @@ static Vec3 up = {0.0, 1.0, 0.0};
 static int positionLoader(GroupDefTraverser* traverser)
 {
     EncounterPoint* parent = g_pointInst;
-    PropertyEnt* positionProp;
+    PropertyEnt* positionProp = NULL;
     int position;
 
     // find the group
@@ -1391,7 +1391,7 @@ static int positionLoader(GroupDefTraverser* traverser)
 
         //Stealth Camera Options for Encounter Positions
         {
-            PropertyEnt* extraProp;
+            PropertyEnt* extraProp = NULL;
             F32 arc = 0;
             F32 speed = 0;
             eEPFlags flags;
@@ -1497,8 +1497,8 @@ static void AddEncounterPoint(EncounterPoint* point, int independentGroup, int u
 static int spawnLoader(GroupDefTraverser* traverser)
 {
     EncounterPoint* pointInst;
-    PropertyEnt* spawnProp;
-    PropertyEnt* autospawnProp;
+    PropertyEnt* spawnProp = NULL;
+    PropertyEnt* autospawnProp = NULL;
     int missiongroup = 0;
 
     // find the spawn point
@@ -1582,8 +1582,8 @@ static int spawnLoader(GroupDefTraverser* traverser)
 // load the encounter groups
 static int groupLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* generatorProp;
-    PropertyEnt* otherProp;
+    PropertyEnt* generatorProp = NULL;
+    PropertyEnt* otherProp = NULL;
 
     // find the group
     if (!traverser->def->properties) {
@@ -6257,7 +6257,7 @@ static void NeighborhoodPrint(char* format, ...)
 
 static void AddNeighborhoodSpawn(const char* neighborhood, const char* spawndef)
 {
-    NeighborhoodSpawn* neigh;
+    NeighborhoodSpawn* neigh = NULL;
     int count;
 
     stashFindPointer( g_neighborhoodspawnlist, neighborhood, &neigh );

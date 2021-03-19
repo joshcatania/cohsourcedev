@@ -395,7 +395,7 @@ int processMapInitContext(GroupDefTraverser* traverser, int groupDefAccepted){
             char* spawnAreaName = NULL;
             SpawnAreaInst* saInst;
 
-            PropertyEnt* spawnAreaProp;
+            PropertyEnt* spawnAreaProp = NULL;
 
             // Extract the spawn area name
             stashFindPointer( traverser->def->properties, "SpawnArea", &spawnAreaProp );
@@ -703,9 +703,9 @@ void initMapSortActivationCandidatesByType(){
         // The traverser might be pointing at some sort of Scenario.
         // Organize the traverser by its scenario type if possible.
         {
-            PropertyEnt* scenarioProp;
+            PropertyEnt* scenarioProp = NULL;
             char* scenarioType;
-            Array* scenarioList;
+            Array* scenarioList = NULL;
 
             // Extract scenario type;
             stashFindPointer( traverser->def->properties, "Scenario", &scenarioProp );

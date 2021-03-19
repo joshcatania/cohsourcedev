@@ -1220,7 +1220,7 @@ Costume * costume_makeSupergroup( Entity *e )
     if( !e->pl->hide_supergroup_emblem && e->supergroup->emblem[0] )
     {
         U32 index;
-        const char* pcKey;
+        const char* pcKey = NULL;
 
         if( stashFindIndexByKey(costume_HashTable, e->supergroup->emblem, &index) )
         {

@@ -1056,7 +1056,7 @@ void dumpSpawnAreaStack(Array* stack){
 
 // Returns whether a generator was created successfully.
 int loadSingleGenerator(GroupDefTraverser* traverser){
-    PropertyEnt* generatorProp;
+    PropertyEnt* generatorProp = NULL;
     char* generatorTypeName;
     GeneratorInst* generator;
     GeneratorDef* type;

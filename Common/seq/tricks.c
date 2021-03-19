@@ -506,7 +506,7 @@ char const* blendIndexToName(BlendIndex bi)
 TexOpt *trickFromTextureName(const char *name, TexOptFlags *texopt_flags)
 {
     char    buf[1200],*s,*s2,*slash;
-    TexOpt    *tex;
+    TexOpt* tex = NULL;
 
     strcpy(buf,name);
     forwardSlashes(buf);
@@ -574,7 +574,7 @@ Return zero if no suffix or no matching loaded TrickInfo.
 TrickInfo *trickFromObjectName(const char *name, const char *fullpath)
 {
     char        *s;
-    TrickInfo    *trick;
+    TrickInfo* trick = NULL;
     char        dirname[MAX_PATH];
 
     assert(trick_list.trick_name_hashes);
@@ -601,7 +601,7 @@ TrickInfo *trickFromObjectName(const char *name, const char *fullpath)
 
 TrickInfo *trickFromName(const char *name, char *fullpath)
 {
-    TrickInfo    *trick;
+    TrickInfo* trick = NULL;
 
     assert(trick_list.trick_name_hashes);
     stashFindPointer( trick_list.trick_name_hashes,name, &trick );
@@ -638,7 +638,7 @@ static bool texOptNeedsMultiTex(TexOpt *tex)
 static void setupTexOpt(TexOpt *tex, bool shared_memory)
 {
     int        i;
-    TexOpt    *dup_tex;
+    TexOpt* dup_tex = NULL;
 
     assert( tex );
     tex->flags &= ~(TEXOPT_MULTITEX|TEXOPT_FADE|TEXOPT_TREAT_AS_MULTITEX); // Reset flags set only in this function
@@ -817,7 +817,7 @@ static void setupTexOpt(TexOpt *tex, bool shared_memory)
 
 static void setupTrick(TrickInfo *trick, bool shared_memory)
 {
-    TrickInfo    *dup_trick;
+    TrickInfo* dup_trick = NULL;
     U8            *c;
 
     trick->tnode.info = trick;

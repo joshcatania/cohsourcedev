@@ -329,7 +329,7 @@ void handlePatrolsOrBeaconsInDef(GroupDef * def,Mat4 mat) {
             }
         }
         if (def->entries[i].def->has_properties) {
-            PropertyEnt * prop;
+            PropertyEnt* prop = NULL;
             stashFindPointer( def->entries[i].def->properties,"RouteType", &prop );
             if (prop!=NULL) {
                 //here we have a patrol of some kind, so we want to find all the

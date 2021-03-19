@@ -323,7 +323,7 @@ void ItemAdd(RoomInfo* room, Mat4 pos, LocationTypeEnum loctype, char * customNa
 
 static int missionSectionsLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* pairProp;
+    PropertyEnt* pairProp = NULL;
 
     // find the group
     if (traverser->def->properties)
@@ -359,7 +359,7 @@ static int missionSectionsLoader(GroupDefTraverser* traverser)
 int RoomLoader(GroupDefTraverser* traverser)
 {
     Vec3 roomPos;
-    PropertyEnt* roomProp;
+    PropertyEnt* roomProp = NULL;
     DefTracker* tracker;
     int pace;
 
@@ -390,7 +390,7 @@ int RoomLoader(GroupDefTraverser* traverser)
 
 int ItemPosLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* itemProp;
+    PropertyEnt* itemProp = NULL;
 
     // find an ItemPosition marker
     if (traverser->def->properties)
@@ -411,7 +411,7 @@ int ItemPosLoader(GroupDefTraverser* traverser)
 int MarkerLoader(GroupDefTraverser* traverser)
 {
     RoomInfo* info;
-    PropertyEnt* roomProp;
+    PropertyEnt* roomProp = NULL;
 
     // find the group
     if (!traverser->def->properties) {

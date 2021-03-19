@@ -444,7 +444,7 @@ AtlasTex* groupThumbnailGet( const char *groupDefNames, bool rotate, bool lookFr
 {
     static AtlasTex *last_rotated_bind=NULL;
     static int last_rotated_bind_timestamp=0;
-    AtlasTex* bind;
+    AtlasTex* bind = NULL;
 
     if (!rdr_caps.use_pbuffers)
         rotate = false;

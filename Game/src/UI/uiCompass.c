@@ -740,7 +740,7 @@ void ServerWaypointReceive(Packet* pak)
     int                id = pktGetBitsPack(pak, 1);
     int                setCompass = false;
     char            key[20];
-    Destination        *dest;
+    Destination* dest = NULL;
 
     sprintf(key, "%i", id);
 

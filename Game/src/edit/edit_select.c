@@ -1381,7 +1381,7 @@ void propertyUpdateTrackers()
 }
 
 void getAllPropertyValues2Sub(GroupDef * def,char * name,char *** values) {
-    PropertyEnt * prop;
+    PropertyEnt* prop = NULL;
     int i;
     if (!def)
         return;
@@ -1474,7 +1474,7 @@ void addPropertiesToSelectedTrackers(char * name1,char * value1,...) {
         int j;
         for (j=0;j<eaSize(&props);j++)
         {
-            PropertyEnt *prop;
+            PropertyEnt* prop = NULL;
             DefTracker * tracker=sel_list[i].def_tracker;
             stashFindPointer( tracker->def->properties,props[j]->name_str, &prop );
             if (prop==NULL)
@@ -1665,7 +1665,7 @@ void addDestroyableProperties() {
         editorUIEndSubWidgets(addPropInfo.ID);
     editorUIEndSubWidgets(addPropInfo.ID);
     if (stashFindElement(sel_list[0].def_tracker->def->properties,"Health",NULL)) {
-        PropertyEnt * prop;
+        PropertyEnt* prop = NULL;
         stashFindPointer(sel_list[0].def_tracker->def->properties,"Health",&prop);
         addDestroyablePropInfo.health=prop?atoi(prop->value_str):0;
         addDestroyablePropInfo.state=1;
@@ -1673,7 +1673,7 @@ void addDestroyableProperties() {
     if (stashFindElement(sel_list[0].def_tracker->def->properties,"MinHealth",NULL) ||
     stashFindElement(sel_list[0].def_tracker->def->properties,"MaxHealth",NULL) ||
     stashFindElement(sel_list[0].def_tracker->def->properties,"Repairing",NULL)) {
-        PropertyEnt * prop;
+        PropertyEnt* prop = NULL;
         stashFindPointer(sel_list[0].def_tracker->def->properties,"MinHealth",&prop);
         addDestroyablePropInfo.min=prop?atoi(prop->value_str):0;
         stashFindPointer(sel_list[0].def_tracker->def->properties,"MaxHealth",&prop);
@@ -1993,7 +1993,7 @@ void propertiesMenuCallback(MenuEntry * me,ClickInfo * ci)
     if (column<6)
     {
         const char *caretPtr;
-        PropertyEnt * prop;
+        PropertyEnt* prop = NULL;
         DefTracker * tracker;
         char propertyName[TEXT_DIALOG_MAX_STRLEN];
         strncpy(propertyName, me->name, TEXT_DIALOG_MAX_STRLEN - 1);
@@ -2056,7 +2056,7 @@ void propertiesMenuCallback(MenuEntry * me,ClickInfo * ci)
     else
     if (column>=6)
     {
-        PropertyEnt * prop;
+        PropertyEnt* prop = NULL;
         DefTracker * tracker;
         char propertyName[TEXT_DIALOG_MAX_STRLEN];
         char *propertyValue = NULL;

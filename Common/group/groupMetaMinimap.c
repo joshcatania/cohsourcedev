@@ -65,7 +65,7 @@ void missionMapLoad()
 
 static int subGroupLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* spawnProp;
+    PropertyEnt* spawnProp = NULL;
 
     // find the spawn point
     if (!traverser->def->properties) 
@@ -102,7 +102,7 @@ static int subGroupLoader(GroupDefTraverser* traverser)
 
 static int spawnEncounterLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* generatorProp;
+    PropertyEnt* generatorProp = NULL;
 
     // find the group
     if (!traverser->def->properties)
@@ -169,7 +169,7 @@ static int s_blackPolyExtentMarkerGroupNum = 0;
 
 static int findBlackPolyExtentMarkerGroup(GroupDef *def, Mat4 mat)
 {
-    PropertyEnt *pairProp;
+    PropertyEnt *pairProp = NULL;
 
     stashFindPointer(def->properties, "outdoorextentsMarkerGroup", &pairProp);
 
@@ -265,7 +265,7 @@ int minimap_getCurrentSection(int usey, const F32* position)
 
 int minimap_missionExtentsLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* pairProp;
+    PropertyEnt* pairProp = NULL;
 
     groupLoadIfPreload(traverser->def);
     // find the group

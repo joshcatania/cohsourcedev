@@ -97,7 +97,7 @@ static int dumpStatsProcessor(StashElement elem)
 static void addStats(StashTable *ht, char const* fn, int line, int default_num_bits, int bits, int is_zero, int is_small_neg, int log2val, int abslog2val)
 {
     char key[MAX_PATH+20];
-    ProfileRecord *pr;
+    ProfileRecord *pr = NULL;
     if (*ht==0)
         *ht = stashTableCreateWithStringKeys(100, StashDeepCopyKeys | StashCaseSensitive );
 

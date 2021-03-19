@@ -143,7 +143,7 @@ ModuleMemOperationStats* mmGetModuleOperationStats(MemoryMonitor* statsCollectio
     static char* last_module;
     static char* last_module2;
 
-    ModuleMemOperationStats* stats;
+    ModuleMemOperationStats* stats = NULL;
 
     mmCRTHeapLock();
 

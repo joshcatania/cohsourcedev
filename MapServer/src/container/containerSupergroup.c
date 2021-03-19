@@ -93,7 +93,7 @@ void DestroyDummyDetailMP( void )
 Detail * getDummyDetail( const char * pch )
 {
     static StashTable ht_dummyDetails = 0; 
-    Detail * pDetail;
+    Detail * pDetail = NULL;
     if( !pch )
         return 0;
 

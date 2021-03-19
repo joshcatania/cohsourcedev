@@ -796,13 +796,13 @@ int find_name_in_items(char *name) {
 //
 static int miniMapStaticIconLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* typeProp;
-    PropertyEnt* iconProp;
-    PropertyEnt* specialProp;
-    PropertyEnt* hiddenProp;
-    PropertyEnt* requiresProp;
-    PropertyEnt* dirProp;
-    PropertyEnt* categoryProp;
+    PropertyEnt* typeProp = NULL;
+    PropertyEnt* iconProp = NULL;
+    PropertyEnt* specialProp = NULL;
+    PropertyEnt* hiddenProp = NULL;
+    PropertyEnt* requiresProp = NULL;
+    PropertyEnt* dirProp = NULL;
+    PropertyEnt* categoryProp = NULL;
 
     int j;
 
@@ -922,7 +922,7 @@ static int miniMapStaticIconLoader(GroupDefTraverser* traverser)
     if (DestinationIsAContact(&staticIcons[staticIconCount]) ||
         staticIcons[staticIconCount].type == ICON_STORE)
     {
-        PropertyEnt *generatorProp;
+        PropertyEnt* generatorProp = NULL;
         char filename[MAX_PATH];
         char *pos;
 

@@ -552,7 +552,7 @@ static logFileStruct * openAndRotateLogFile(const char *fname_noext, const char 
     bool validFilename = false;
 
     int i;
-    logFileStruct * log_file;
+    logFileStruct * log_file = NULL;
     char fname_timestamp[MAX_PATH];
 
     if (isTextFile)

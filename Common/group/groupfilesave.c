@@ -135,7 +135,7 @@ void setUpLayerFileToWriteTo(DefTracker *ref, char *fnamebuf)
     char * suffix;
     char fname[256];        //using this so we can destroy part of it in the case of autosave file names
     //int    checkoutSuccess = 0;
-    PropertyEnt *layerProp, *shareProp;
+    PropertyEnt *layerProp, *shareProp = NULL;
     LayerInfo * li = 0;
     int autosave,clientsave;
 

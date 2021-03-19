@@ -88,7 +88,7 @@ void entControl(ClientLink* client, const char* commandParam){
     char delim;
     int entID;
     Entity* e = NULL;
-    CommandHandler handler;
+    CommandHandler handler = NULL;
     EntType entType = 0;
 
     estrPrintCharString(&staticBuffer, commandParam);

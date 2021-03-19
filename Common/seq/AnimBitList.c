@@ -95,7 +95,7 @@ void alForEachAnimList(StashElementProcessor proc)
 
 AnimBitList* alGetList(char* name)
 {
-    AnimBitList* list;
+    AnimBitList* list = NULL;
 
     stashFindPointer(AnimListHashes, name, &list);
 
@@ -107,7 +107,7 @@ AnimBitList* alGetList(char* name)
 //returns var replacement ex: "weapons/riktiShotgun.fx"
 char* alGetVariable(char* name, char* varStr)
 {
-    AnimBitList* list;
+    AnimBitList* list = NULL;
     int i;
     int varLen = (int)strlen(varStr);
 

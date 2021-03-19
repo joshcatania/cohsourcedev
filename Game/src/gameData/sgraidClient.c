@@ -93,7 +93,7 @@ char* getSGRaidInfoString(void)
 void addSGName(U32 sgid, char* sgname)
 {
     char id[20];
-    char* value;
+    char* value = NULL;
 
     if (!g_sgdict)
         g_sgdict = stashTableCreateWithStringKeys(10, StashDeepCopyKeys | StashCaseSensitive );

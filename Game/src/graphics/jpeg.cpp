@@ -56,7 +56,7 @@ int jpegLoad(char *mem,int size,TexReadInfo *info)
 
     for ( ; ; )
     {
-        void *Pscan_line_ofs;
+        void* Pscan_line_ofs = NULL;
         uint scan_line_len;
 
         if (Pd->decode(&Pscan_line_ofs, &scan_line_len))

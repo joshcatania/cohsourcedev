@@ -694,7 +694,7 @@ void editSetMode(int on, int move)
 void editTexWord(void)
 {
     GroupDef* def=NULL;
-    PropertyEnt* prop;
+    PropertyEnt* prop = NULL;
     bool bFromDef=false;
 
     if(sel_count != 1)

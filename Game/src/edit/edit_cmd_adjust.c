@@ -925,7 +925,7 @@ extern Vec3 view_pos;
 
 int myPropertyFinder(GroupDefTraverser* traverser)
 {
-    PropertyEnt* property;
+    PropertyEnt* property = NULL;
     DefTracker* tracker = 0;
 
     // find the mission room marker

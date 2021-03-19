@@ -253,7 +253,7 @@ the registry account name getting so it's backwards compatible with old resume i
 */
 int getAutoResumeInfoCryptic( void )
 {
-    char    *s,*mem,*args[10];
+    char *s = NULL, *mem, *args[10];
     int        count;
 
     // Encrypt an empty string

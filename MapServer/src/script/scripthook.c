@@ -111,8 +111,8 @@ ScriptLocation** g_scriptLocations;
 
 static int scriptLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* generatorProp;
-    PropertyEnt* prop;
+    PropertyEnt* generatorProp = NULL;
+    PropertyEnt* prop = NULL;
 
     // find an object with properties
     if (!traverser->def->properties) {
@@ -439,7 +439,7 @@ static ScriptMarker* MarkerAdd(const char* name, int namedvolume)
 
 int markerLoader(GroupDefTraverser* traverser)
 {
-    PropertyEnt* generatorProp;
+    PropertyEnt* generatorProp = NULL;
 
     // find an object with properties
     if (!traverser->def->properties) {
@@ -698,7 +698,7 @@ void ResetPlayerMusic(TEAM team)
         Entity * e = EntTeamInternal(team, i, NULL);
         if (e && ENTTYPE_PLAYER == ENTTYPE(e) )
         {
-            char *nhoodSound;
+            char* nhoodSound = NULL;
             pmotionGetNeighborhoodProperties(e, 0, &nhoodSound);
             if (nhoodSound && strstri(nhoodSound, "_loop"))
             {

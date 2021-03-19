@@ -520,7 +520,7 @@ void persist_freeKey(PersistInfo *info, intptr_t key)
 
 static PersistInfo* s_getInfo(const char *type)
 {
-    PersistInfo *info;
+    PersistInfo *info = NULL;
     assertmsg(stashFindPointer(s_infos, type, &info), "searching an unregistered persist type");
     return info;
 }

@@ -614,7 +614,7 @@ static void beaconServerMakeUniqueFileName(    char** outStr,
 }
 
 static BeaconProcessQueueNode* beaconServerGetProcessNodeByName(const char* name){
-    BeaconProcessQueueNode* node;
+    BeaconProcessQueueNode* node = NULL;
     
     if(!beacon_server.processQueue.htFileNameToRequestNode){
         return NULL;
