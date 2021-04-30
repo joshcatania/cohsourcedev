@@ -120,12 +120,12 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
             if (server_cfg.queue_server && game)
             {
                 ip = getMatchingIpType(map_con->ip_list, game->nonQueueIP);
-                dns = gethostbyaddr(ipFromString(ip),sizeof(ipFromString(ip)),AF_IMPLINK);
+                dns = ip;
             }
             else
             {
                 ip = getMatchingIpType(map_con->ip_list, ent_con->callback_link->addr.sin_addr.S_un.S_addr);
-                dns = gethostbyaddr(ipFromString(ip), sizeof(ipFromString(ip)), AF_IMPLINK);
+                dns = ip;
             }
         }
         
