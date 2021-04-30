@@ -66,6 +66,7 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
     GameClientLink *game =0;
     int        pkt_types[] = {DBSERVER_MAP_XFER_OK,DBGAMESERVER_MAP_CONNECT};
     U32        ip;
+    char*      dns;
 
     if (!ent_con || !ent_con->callback_link)
     {
@@ -111,9 +112,11 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
         {
             // ignore what mapserver says, use value configured in servers.cfg
             ip = server_cfg.advertisedIp;
+            dns = server_cfg.advertisedDNS;
         }
         else
         {
+            //need to figure out what is actually going on here.
             if (server_cfg.queue_server && game)
             {
                 ip = getMatchingIpType(map_con->ip_list, game->nonQueueIP);
@@ -124,8 +127,11 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
             }
         }
         
-        pktSendBitsPack(pak_out,1,ip);
-        pktSendBitsPack(pak_out,1,ip);
+        //pktSendBitsPack(pak_out,1,ip);
+        //pktSendBitsPack(pak_out,1,ip);
+        //We are sending DNS for the client to resolve instead of IPs
+        pktSendString(pak_out, dns);
+        pktSendString(pak_out, dns);
     }
     else
     {
@@ -133,13 +139,19 @@ void sendLoginInfoToGameClient(EntCon *ent_con,int login_cookie)
         {
             // ignore what mapserver says, use value configured in servers.cfg
             ip = server_cfg.advertisedIp;
+            dns = server_cfg.advertisedDNS;
         }
         else
         {
+            //Need to figure out what this is
             ip = getMatchingIpType(map_con->ip_list, ent_con->client_ip);
         }
-        pktSendBitsPack(pak_out,1,ip);
-        pktSendBitsPack(pak_out,1,ip);
+        //pktSendBitsPack(pak_out,1,ip);
+        //pktSendBitsPack(pak_out,1,ip);
+
+        //We are sending DNS instead of ip to client
+        pktSendString(pak_out, dns);
+        pktSendString(pak_out, dns);
     }
     pktSendBitsPack(pak_out,1,map_con->udp_port);
     pktSendBitsPack(pak_out,1,map_con->tcp_port);

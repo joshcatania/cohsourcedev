@@ -397,17 +397,22 @@ static void handleSendPowersetNames(Packet *pak)
 void dbOrMapConnect(Packet *pak)
 {
     int        link_id,map_id,ip_list[2],udp_port,tcp_port,login_cookie;
+    char* dns[2];
     MapServerConn    *mapserver = &db_info.mapserver;
 
     link_id        = pktGetBitsPack(pak,1); // only used by mapservers
     map_id        = pktGetBitsPack(pak,1);
-    ip_list[0]    = pktGetBitsPack(pak,1);
-    ip_list[1]    = pktGetBitsPack(pak,1);
+    //ip_list[0]    = pktGetBitsPack(pak,1);
+    //ip_list[1]    = pktGetBitsPack(pak,1);
+    dns[0]    = pktGetString(pak);
+    dns[1] = pktGetString(pak);
     udp_port    = pktGetBitsPack(pak,1);
     tcp_port    = pktGetBitsPack(pak,1);
     login_cookie = pktGetBitsPack(pak,1);
 
-    mapserver->ip        = ip_list[0];
+    //mapserver->ip        = ip_list[0];
+    //forcing client to resolve domain names for ip
+    mapserver->ip = ipFromString(dns[0]);
     mapserver->port        = udp_port;
     mapserver->cookie    = login_cookie;
     mapserver->user_id    = 0;

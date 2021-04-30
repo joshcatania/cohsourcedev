@@ -257,7 +257,8 @@ void acGetSendServerList(AuthPacket *pak)
     {
         si = &auth_info.servers[i];
         si->id                = authGetU08(pak);
-        si->ip                = authGetU32(pak);
+        //si->ip                = authGetU32(pak);
+        si->ip              = ipFromString(authGetStr(pak));
         si->port            = authGetU32(pak);
         si->age_limit        = authGetU08(pak);
         si->pk_flag            = authGetU08(pak);

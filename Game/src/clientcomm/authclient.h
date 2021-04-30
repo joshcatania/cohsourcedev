@@ -20,6 +20,7 @@ typedef struct
 {
     int        id;
     U32        ip;
+    char*      dns;
     U32        port;
     U8        age_limit;
     U8        pk_flag;

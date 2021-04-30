@@ -499,7 +499,7 @@ void handleDbNewMapReady(Packet *pak) // A static map is ready for an entity who
 }
 
 
-void sendClientNewMap(NetLink *link, int map_id, int ip, int udp_port, int tcp_port, int login_cookie)
+void sendClientNewMap(NetLink *link, int map_id, char dns, int udp_port, int tcp_port, int login_cookie)
 {
     Packet    *pak_out;
 
@@ -507,8 +507,8 @@ void sendClientNewMap(NetLink *link, int map_id, int ip, int udp_port, int tcp_p
     pktSendBitsPack(pak_out,1,SERVER_MAP_XFER);
     pktSendBitsPack(pak_out,1,0);
     pktSendBitsPack(pak_out,1,map_id);
-    pktSendBitsPack(pak_out,1,ip);
-    pktSendBitsPack(pak_out,1,ip);
+    pktSendString(pak_out, dns);
+    pktSendString(pak_out, dns);
     pktSendBitsPack(pak_out,1,udp_port);
     pktSendBitsPack(pak_out,1,tcp_port);
     pktSendBitsPack(pak_out,1,login_cookie);
@@ -518,6 +518,7 @@ void sendClientNewMap(NetLink *link, int map_id, int ip, int udp_port, int tcp_p
 void handleDbNewMap(Packet *pak)
 {
     int        link_id,map_id,ip_list[2],udp_port,tcp_port,login_cookie;
+    char* dns[2];
     NetLink    *link;
     Entity    *e;
 
@@ -525,6 +526,8 @@ void handleDbNewMap(Packet *pak)
     map_id        = pktGetBitsPack(pak,1);
     ip_list[0]    = pktGetBitsPack(pak,1);
     ip_list[1]    = pktGetBitsPack(pak,1);
+    dns[0]        = pktGetString(pak);
+    dns[1]        = pktGetString(pak);
     udp_port    = pktGetBitsPack(pak,1);
     tcp_port    = pktGetBitsPack(pak,1);
     login_cookie = pktGetBitsPack(pak,1);
@@ -533,10 +536,10 @@ void handleDbNewMap(Packet *pak)
     if (!link)
         return;
 
-    sendClientNewMap(link,map_id,ip_list[0],udp_port,tcp_port,login_cookie);
+    sendClientNewMap(link,map_id,dns[0],udp_port,tcp_port,login_cookie);
 
     e = entFromDbIdEvenSleeping(link_id);
-    LOG_OLD( "Sending map %d, %s:%d, cookie: %x to client",map_id,makeIpStr(ip_list[0]),udp_port, login_cookie);
+    LOG_OLD( "Sending map %d, %s:%d, cookie: %x to client",map_id,dns[0],udp_port, login_cookie);
     if (e->dbcomm_state.map_xfer_step == MAPXFER_WAIT_NEW_MAPSERVER_READY)
         e->dbcomm_state.map_xfer_step = MAPXFER_DONE;
 }

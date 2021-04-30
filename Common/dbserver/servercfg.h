@@ -125,6 +125,8 @@ typedef struct ServerCfg
 
     //This is used to tell the mapserver to advertise this address to clients
     U32 advertisedIp;
+    //This is used to pass the hostname to the client for resolution locally (hopefully to fix loopback issues with a hosts file workaround)
+    char* advertisedDNS;
     int petcommandsforall;
 
 } ServerCfg;

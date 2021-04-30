@@ -334,7 +334,8 @@ void CServerList::MakeServerListPacket(std::vector<char> & buffer, ServerId last
 
                  // These add up to 14 bytes:
                 buffer.push_back(i->second.serverid.GetValueChar());
-                PushInt(buffer,i->second.outer_addr.S_un.S_addr);
+                //removed .S_un.S_addr from below after outer_addr
+                PushInt(buffer,i->second.outer_addr);
                 PushInt(buffer,i->second.outer_port);
                 buffer.push_back(i->second.ageLimit);
                 buffer.push_back(i->second.pkflag);

@@ -639,6 +639,7 @@ void serverCfgLoad()
         else if (stricmp(s, "AdvertisedIp") == 0)
         {
             server_cfg.advertisedIp = ipFromString(s2);
+            server_cfg.advertisedDNS = (atoi(s2));
         }
     }
     fclose(file);
