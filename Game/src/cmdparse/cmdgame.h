@@ -576,6 +576,8 @@ typedef struct GameState
 
     int        ignoreBadDrivers;    // This is for false positives in the bad driver logic
 
+    char patchdir[28];
+
     char    chatHandle[128];
     char    chatShard[128];
 

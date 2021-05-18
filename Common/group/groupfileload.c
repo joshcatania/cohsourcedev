@@ -1666,10 +1666,11 @@ static GroupFile *groupLoadInternal(const char *fname, BinForceType reprocessBin
         char bin_name[1000];
         if (makeBinName(fname,bin_name))
         {
+            int binVersionNumber = 0;
             if( fileExists( bin_name ) )
-                binfile = ParserIsPersistNewer(NULL, NULL, bin_name, parse_group_list, NULL);
+                binfile = ParserIsPersistNewer(NULL, NULL, bin_name, parse_group_list, NULL, &binVersionNumber);
             if ( binfile ) 
-                loadedFromBin = ParserReadBinaryFile(binfile, bin_name, parse_group_list, &group_file, NULL, NULL) ;
+                loadedFromBin = ParserReadBinaryFile(binfile, bin_name, parse_group_list, &group_file, NULL, NULL, &binVersionNumber);
 #ifndef FINAL
             else if(!isDevelopmentMode()) {
                 printf("Failed to load group file: %s\n", bin_name);

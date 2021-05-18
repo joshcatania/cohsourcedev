@@ -139,7 +139,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>FINAL;_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;WIN32;NDEBUG;_LIB;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\include;$(ProjectDir)..\..\..\crashrpt\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\..\libs\regfile;$(ProjectDir)..\..\include;$(ProjectDir)..\..\..\crashrpt\include;$(ProjectDir)..\..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4996;4267</DisableSpecificWarnings>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -337,6 +337,7 @@
     <ClInclude Include="..\..\include\utilitieslib\utils\qsortG.h" />
     <ClInclude Include="..\..\include\utilitieslib\utils\Quat.h" />
     <ClInclude Include="..\..\include\utilitieslib\utils\rand.h" />
+    <ClInclude Include="..\..\include\utilitieslib\utils\regfile.h" />
     <ClInclude Include="..\..\include\utilitieslib\utils\RegistryReader.h" />
     <ClInclude Include="..\..\include\utilitieslib\utils\rgb_hsv.h" />
     <ClInclude Include="..\..\include\utilitieslib\utils\scriptvars.h" />
@@ -508,6 +509,7 @@
     <ClCompile Include="..\..\src\utils\Quat.c" />
     <ClCompile Include="..\..\src\utils\quick_sprintf.c" />
     <ClCompile Include="..\..\src\utils\rand.c" />
+    <ClCompile Include="..\..\src\utils\regfile.c" />
     <ClCompile Include="..\..\src\utils\RegistryReader.c" />
     <ClCompile Include="..\..\src\utils\rgb_hsv.c" />
     <ClCompile Include="..\..\src\utils\scriptvars.c" />

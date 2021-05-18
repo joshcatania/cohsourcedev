@@ -392,7 +392,7 @@ int supergroupListWindow(void)
         // of the list view.
         if(sgListView)
         {
-            int fullDrawHeight = uiLVGetFullDrawHeight(sgListView);
+            int fullDrawHeight = uiLVGetFullDrawHeight(sgListView) * sc;
 
             if(sgListView)
             {

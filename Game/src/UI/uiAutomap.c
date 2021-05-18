@@ -1564,7 +1564,8 @@ static FileScanAction  processVisitedMaps(char *dir, struct _finddata32_t *data)
 
     if(strEndsWith(filename, ".vm" ) && fileExists(filename)) // an actual file, not a directory
     {
-        if (ParserReadBinaryFile( NULL, filename, ParseVisitedMaps, &tempVM, &s_vmBinList, 0))
+        int binVersionNum = 0;
+        if (ParserReadBinaryFile(NULL, filename, ParseVisitedMaps, &tempVM, &s_vmBinList, 0, &binVersionNum))
         {
             VisitedStaticMap *vsm = automap_getMapStruct(tempVM.db_id ? tempVM.db_id : playerPtr()->db_id);
             VisitedMap *vm = StructAllocRaw(sizeof(VisitedMap));

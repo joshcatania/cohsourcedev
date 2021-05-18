@@ -10,6 +10,7 @@
 #include <utilitieslib/language/MessageStoreUtil.h>                //    for textStd
 #include <utilitieslib/utils/FolderCache.h>
 #include "UI/uiCustomVillainGroupWindow.h"
+#include <cmdparse\cmdgame.h>
 
 extern MMScrollSet missionMaker;
 
@@ -30,6 +31,8 @@ char * getCustomVillainGroupDir(void)
         {
             getExecutableDir(path);
         }
+        strcat(path, "/");
+        strcat(path, game_state.patchdir);
         strcat(path, "/CustomVillainGroup");
     }
     return path;

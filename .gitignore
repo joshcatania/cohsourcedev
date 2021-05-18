@@ -46,3 +46,9 @@ x64/
 
 .vscode
 *.dsn
+
+# project specific
+/build/**/Debug/
+/build/**/Release/
+/libs/**/Debug/
+/libs/**/Release/

@@ -748,7 +748,7 @@ void gfxGetInitialSettings( GfxSettings * gfxSettings )
     gfxSettings->screenX_pos        = 0;
     gfxSettings->screenY_pos        = 0;
     gfxSettings->maximized            = 0; 
-    gfxSettings->fullScreen            = 1; 
+    gfxSettings->fullScreen            = 0; 
 
     gfxSettings->showAdvanced        = 0;
     gfxSettings->slowUglyScale        = 0.5;    // force recommended mode
@@ -780,7 +780,7 @@ void gfxGetSafeModeSettings( GfxSettings * gfxSettings )
     gfxSettings->screenX_pos = 0;
     gfxSettings->screenY_pos = 0;
     gfxSettings->maximized = 0;
-    gfxSettings->fullScreen = 1;
+    gfxSettings->fullScreen = 0;
     gfxSettings->showAdvanced = 0;
     gfxSettings->slowUglyScale = 0;
     gfxSettings->renderScaleX=1.0;

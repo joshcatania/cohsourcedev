@@ -38,7 +38,7 @@ void TestParseTable(ParseTable pti[])
     int type##_parse(TokenizerHandle tok, ParseTable tpi[], int column, void* structptr, int index, ParserTextCallback callback); \
     void type##_writetext(FILE* out, ParseTable tpi[], int column, const void* structptr, int index, bool showname, int level, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude); \
     int type##_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude); \
-    int type##_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum); \
+    int type##_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum); \
     void type##_initstruct(ParseTable tpi[], int column, void* structptr, int index); \
     void type##_destroystruct(ParseTable tpi[], int column, void* structptr, int index); \
     void type##_updatecrc(ParseTable tpi[], int column, void* structptr, int index); \
@@ -1232,7 +1232,11 @@ void FileListInsert(FileList* list, const char* path, __time32_t date)
 
     // otherwise, create a node and insert
     node = calloc(sizeof(FileEntry), 1);
-    strcpy(node->path, cleanpath);
+    if (node != NULL) {
+        strcpy(node->path, cleanpath);
+    } else {
+        return;
+    }
     if (!date) date = fileLastChanged(path);
     // Date can be 0 at this point, signifying that the file doesn't exist but needs to be checked when
     //  verifying the validity of the .bin file
@@ -1294,9 +1298,13 @@ int FileListRead(FileList* list, SimpleBufHandle file)
         if (size < 0) break;
 
         node = calloc(sizeof(FileEntry), 1);
-        strcpy(node->path, filepath);
-        node->date = filedate;
-        eaPush(list, node);
+        if (node != NULL) {
+            strcpy(node->path, filepath);
+            node->date = filedate;
+            eaPush(list, node);
+        } else {
+            return 0;
+        }
     }
     if (i != n || size != 0)
         return 0; // didn't get correct amount of information, something's screwed

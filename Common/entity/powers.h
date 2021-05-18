@@ -883,6 +883,9 @@ typedef struct BasePower
         //   the power is shut off (if it's a toggle or auto) and the
         //   character will be unable to execute it.
 
+    const int* pFreeBoostSlotsOnPower;
+        // Overrides the free boost schedule from schedules.def for this specific power. Zero-based int array.
+
     const char **ppchAIGroups;
         // List of AI groups this power belongs to. Determines how a
         // particular power is to be used.

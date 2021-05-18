@@ -85,7 +85,7 @@ int regGetInt(const char *key, int deflt) {
     static int value;
     initRR();
     value = deflt;
-    rrReadInt(rr, key, &value);
+    rrReadInt(rr, key, &value, deflt);
     return value;
 }
 
@@ -93,7 +93,7 @@ S64 regGetInt64(const char *key, S64 deflt) {
     static S64 value;
     initRR();
     value = deflt;
-    rrReadInt64(rr, key, &value);
+    rrReadInt64(rr, key, &value, deflt);
     return value;
 }
 

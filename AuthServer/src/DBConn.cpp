@@ -5,6 +5,7 @@
 #include "DBConn.h"
 #include "resource.h"
 #include "config.h"
+#include <utilitieslib/utils/regfile.h>
 
 #define RECOVERY_INTERVAL       30000
 #define GLOBALAUTH_REG_ENTRY        "Software\\NCSoft\\GLOBALAUTH"
@@ -209,14 +210,10 @@ bool DBEnv::LoadConnStrFromConfig() {
 
 bool DBEnv::LoadConnStrFromReg()
 {
-    HKEY hKey;
     unsigned char buffer[MAX_CONN_STR];
-    bool strExists = false;
-    LONG e;
-    DWORD dwType;
-    DWORD dwSize;
 
     const char *keyStr = GameIdToRegistryKey(config.gameId);
+
     if (keyStr == NULL)
     {
         //TBROWN - returning false here instead of exceptioning below
@@ -224,30 +221,25 @@ bool DBEnv::LoadConnStrFromReg()
         return false;
     }
 
-    e = RegOpenKeyExA(HKEY_CURRENT_USER, GLOBALAUTH_REG_ENTRY, 0, KEY_READ, &hKey);
-    if (e == ERROR_SUCCESS) {
-        dwSize = MAX_CONN_STR;
-        e = RegQueryValueEx(hKey, (LPTSTR)keyStr, NULL, &dwType, buffer, &dwSize);
-        if ((e == ERROR_SUCCESS) && (dwType == REG_BINARY)) {
-            strExists = true;
-        }
-        RegCloseKey(hKey);
-    }
+    char keyBuffer[REGFILE_PATH_LEN];
+    REGFILE_CAT_PATH(keyBuffer, "HKEY_CURRENT_USER", GLOBALAUTH_REG_ENTRY);
+    REGFILE_CAT_PATH(keyBuffer, keyBuffer, keyStr);
+    regfileNormalizeKey(keyBuffer);
 
-    if (strExists) {
-        DesReadBlock(buffer, MAX_CONN_STR);
-        strcpy((char *)m_connStr, (const char *)buffer);
-    }
+    int bytesRead = regfileLoadKeyValue(keyBuffer, buffer, MAX_CONN_STR);
 
-    return strExists;
+    if (bytesRead < 0)
+        return false;
+
+    DesReadBlock(buffer, MAX_CONN_STR);
+    strcpy((char *)m_connStr, (const char *)buffer);
+    
+    return true;
 }
 
 void DBEnv::SaveConnStrToReg()
 {
-    HKEY hKey;
-    DWORD dwResult;
     unsigned char buffer[MAX_CONN_STR];
-    //char *keyStr;
 
     //TBROWN - adding the gameId == 0 here because that's the default, and it wasn't handled before
     const char *keyStr = GameIdToRegistryKey(config.gameId);
@@ -262,13 +254,17 @@ void DBEnv::SaveConnStrToReg()
 
     strcpy((char *)buffer, (const char *)m_connStr);
     DesWriteBlock(buffer, MAX_CONN_STR);
-    LONG e = RegCreateKeyExA(HKEY_CURRENT_USER, GLOBALAUTH_REG_ENTRY, 0, NULL, 
-      REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, &dwResult);
-    if (e == ERROR_SUCCESS) {
-        DWORD dwType = REG_BINARY;
-        DWORD dwData = 0;
-        RegSetValueEx(hKey, (LPTSTR)keyStr, NULL, REG_BINARY, buffer, MAX_CONN_STR);
-        RegCloseKey(hKey);
+
+    char keyBuffer[REGFILE_PATH_LEN];
+    REGFILE_CAT_PATH(keyBuffer, "HKEY_CURRENT_USER", GLOBALAUTH_REG_ENTRY);
+    REGFILE_CAT_PATH(keyBuffer, keyBuffer, keyStr);
+    regfileNormalizeKey(keyBuffer);
+
+    int bytesWritten = regfileStoreKeyValue(keyBuffer, buffer, MAX_CONN_STR);
+    if (bytesWritten < 0)
+    {
+        const char* error_message = "Failed to add db connection registry. Could not write to registry file.";
+        logger.AddLog(LOG_ERROR, error_message);
     }
 }
 

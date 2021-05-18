@@ -124,6 +124,7 @@ void serverCfgLoad()
 
     server_cfg.eventhistory_cache_days = 30;
     server_cfg.MARTY_enabled = 0;
+    server_cfg.petcommandsforall = 0;
 
 #ifdef DBSERVER
     //We might be reloading the config file so bits set by prior versions
@@ -398,6 +399,8 @@ void serverCfgLoad()
             server_cfg.aggrocap = atof(s2);
         else if (stricmp(s, "TargetCapMode") == 0)
             server_cfg.targetcapmode = atof(s2);
+        else if (stricmp(s, "PetCommandsForAll") == 0)
+            server_cfg.petcommandsforall = atoi(s2);
         else if (stricmp(s, "AuctionInvMaxLastLoginDays")==0)
             server_cfg.auction_last_login_delay = atoi(s2);
         else if (stricmp(s, "AuthnameLimiterEnabled")==0)

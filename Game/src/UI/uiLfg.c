@@ -880,7 +880,7 @@ int lfgWindow()
     // of the list view.
     if(lfgListView)
     {
-        int fullDrawHeight = uiLVGetFullDrawHeight(lfgListView);
+        int fullDrawHeight = uiLVGetFullDrawHeight(lfgListView) * scale;
         int currentHeight = uiLVGetHeight(lfgListView);
         if(lfgListView)
         {

@@ -31,6 +31,7 @@
 #include "gameData/BodyPart.h"
 #include <utilitieslib/utils/FolderCache.h>
 #include "UI/uiMissionMakerScrollSet.h"        //    for update custom critter list
+#include "cmdparse/cmdgame.h"
 
 static char *pcc_origin = "Villain_Origin";
 static char *pcc_class = "Class_Lt_Grunt";
@@ -60,6 +61,8 @@ char * getCustomCritterDir(void)
         {
             getExecutableDir(path);
         }
+        strcat(path, "/");
+        strcat(path, game_state.patchdir);
         strcat(path, "/Custom_Critter");
     }
     return path;

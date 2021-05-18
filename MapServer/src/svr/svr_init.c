@@ -937,6 +937,8 @@ void parseArgs2(int argc,char **argv)
             server_state.aggrocap = atof(argv[++i]);
         else if (strcmp(argv[i], "-targetcapmode") == 0)
             server_state.targetcapmode = atof(argv[++i]);
+        else if (strcmp(argv[i], "-petcommandsforall") == 0)
+            server_state.petcommandsforall = atof(argv[++i]);
         else if (strcmp(argv[i], "-gridcachebits")==0)
         {
             if(i + 1 < argc)

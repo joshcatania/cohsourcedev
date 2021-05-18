@@ -1570,7 +1570,7 @@ int emailWindow()
 
     {
         UIListView* list = emailListView;
-        int fullDrawHeight = uiLVGetFullDrawHeight(list);
+        int fullDrawHeight = uiLVGetFullDrawHeight(list) * scale;
         int currentHeight = uiLVGetHeight(list) - uiLVGetMinDrawHeight(list)/2;
         if(list)
         {

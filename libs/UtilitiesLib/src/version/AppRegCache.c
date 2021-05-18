@@ -115,38 +115,21 @@ const char* regGetLastVersion(const char* projectName){
 }
 
 void regSetInstallationDir(const char* installDir){
-    int opResult;
-    DWORD disposition;
-    HKEY hKey;    
     char subkey[1000];
 
     // Write the new user setting to the registry.
-    //    Open the key to write to first.
-    STR_COMBINE_SS(subkey, "SOFTWARE\\Cryptic\\", regGetAppName());
-    opResult = RegCreateKeyExA(
-        HKEY_CURRENT_USER,            // handle to open key
-        subkey,    // subkey name
-        0,                        // reserved
-        NULL,                        // class string
-        REG_OPTION_NON_VOLATILE,    // special options
-        KEY_READ | KEY_WRITE ,        // desired security access
-        NULL,                        // inheritance
-        &hKey,                        // key handle 
-        &disposition                // disposition value buffer
-        );
-                
-    assert(ERROR_SUCCESS == opResult);
-    
-    opResult = RegSetValueExA(
-        hKey,                            // handle to key
-        "Installation Directory",        // value name
-        0,                                // reserved
-        REG_SZ,                            // value type
-        installDir,                        // value data
-        (DWORD)strlen(installDir)        // size of value data
-        );
-    
-    assert(ERROR_SUCCESS == opResult);
+    STR_COMBINE_BEGIN(subkey);
+    STR_COMBINE_CAT("HKEY_CURRENT_USER\\");
+    STR_COMBINE_CAT("SOFTWARE\\Cryptic\\");
+    STR_COMBINE_CAT(regGetAppName());
+    STR_COMBINE_END();
+
+    RegReader rr = createRegReader();
+    assert(rr != NULL);
+    assert(initRegReader(rr, subkey) == 1);
+    assert(rrWriteString(rr, "Installation Directory", installDir) == 1);
+    assert(rrClose(rr) == 1);
+    destroyRegReader(rr);
 }
 
 /* Function regGetInstallationDir()
@@ -156,9 +139,6 @@ void regSetInstallationDir(const char* installDir){
  *
  */
 const char* regGetInstallationDir(void){
-    HKEY hKey;
-    DWORD disposition;
-    LONG regCreateResult;
     static char installationDir[MAX_PATH] = "";
     DWORD  installationDirSize = MAX_PATH;
 
@@ -172,66 +152,19 @@ const char* regGetInstallationDir(void){
     {
         char    subkey[1000];
 
-        STR_COMBINE_SS(subkey, "SOFTWARE\\Cryptic\\", regGetAppName());
-        regCreateResult = RegCreateKeyExA(
-                            HKEY_CURRENT_USER,            // handle to open key
-                            subkey,    // subkey name
-                            0,                        // reserved
-                            NULL,                        // class string
-                            REG_OPTION_NON_VOLATILE,    // special options
-                            KEY_READ | KEY_WRITE ,        // desired security access
-                            NULL,                        // inheritance
-                            &hKey,                        // key handle 
-                            &disposition                // disposition value buffer
-                            );
-        
-        
-        // If the key cannot be opened/created, the program cannot proceed in any way.
-        if(ERROR_SUCCESS != regCreateResult){
-            assert(regCreateResult);
-            return NULL;
-        }
-        
-        // If the create key call caused a new key to be created, no installation directory data
-        // is available for retrieval.
-        if(REG_CREATED_NEW_KEY == disposition)
-            return NULL;
-    }
+        STR_COMBINE_BEGIN(subkey);
+        STR_COMBINE_CAT("HKEY_CURRENT_USER\\");
+        STR_COMBINE_CAT("SOFTWARE\\Cryptic\\");
+        STR_COMBINE_CAT(regGetAppName());
+        STR_COMBINE_END();
 
-    {
-        DWORD valueType;
-        int regQueryResult;
-
-        regQueryResult = RegQueryValueExA(
-                            hKey,                        // handle to key
-                            "Installation Directory",    // value name
-                            NULL,                        // reserved
-                            &valueType,                    // type buffer
-                            installationDir,            // data buffer
-                            &installationDirSize        // size of data buffer
-                            );
-
-        // The key exists, but there is no value named "Installation Directory".
-        if(ERROR_SUCCESS != regQueryResult){
-            return NULL;
-        }
-        else{
-            // If the value stored as "Installation Directory" is not a string, the value
-            // cannot be used by the patcher client as intended.
-            if(REG_SZ != valueType){
-                LONG regDeleteResult;
-
-                // Delete the useless value.
-                regDeleteResult = RegDeleteValueA(
-                                    hKey,                        // handle to key
-                                    "Installation Directory"    // value name
-                                    );
-                assert(ERROR_SUCCESS == regDeleteResult);
-                return NULL;
-            }
-            else
-                return (char*)installationDir;
-        }
+        RegReader rr = createRegReader();
+        if (rr == NULL) return NULL;
+        if(initRegReader(rr, subkey) != 1) return NULL;
+        if(rrReadString(rr, "Installation Directory", installationDir, installationDirSize) != 1) return NULL;
+        if(rrClose(rr) != 1) return NULL;
+        destroyRegReader(rr);
+        return (char*)installationDir;
     }
 }
 
@@ -262,7 +195,7 @@ int regGetAppInt(const char *key, int deflt)
 {
     int value = deflt;
     initRR();
-    if (!rrReadInt(rr, key, &value))
+    if (!rrReadInt(rr, key, &value, deflt))
         return deflt;
     return value;
 }

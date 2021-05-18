@@ -993,7 +993,7 @@ int PigSetInit(void) { // Loads all of the Pig files from a given directory
 
 int PigSetAddPatchDir(const char *path) { // Loads all of the Pig files from a given directory
     int np;
-    char** pigNames;
+    char** pigNames = NULL;
     char patchDir[MAX_PATH + 20] = {0};
 
     if(pig_disabled) {
@@ -1014,10 +1014,12 @@ int PigSetAddPatchDir(const char *path) { // Loads all of the Pig files from a g
     // Get the list of pigg file names which need to be loaded
     np = searchForUnloadedPigs(patchDir, &pigNames, false);
 
-    pig_patch_files = realloc(pig_patch_files, sizeof(char*) * (num_pig_patch_files + np));
-    memcpy(&pig_patch_files[num_pig_patch_files], pigNames, sizeof(char*) * np);
-    num_pig_patch_files += np;
-    free(pigNames);
+    if (pigNames) {
+        pig_patch_files = realloc(pig_patch_files, sizeof(char*) * (num_pig_patch_files + np));
+        memcpy(&pig_patch_files[num_pig_patch_files], pigNames, sizeof(char*) * np);
+        num_pig_patch_files += np;
+        free(pigNames);
+    }
 
     fileAddSearchPath(patchDir);
 

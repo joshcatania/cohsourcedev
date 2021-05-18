@@ -97,7 +97,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS; _WINSOCK_DEPRECATED_NO_WARNINGS;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\libs\arda2\include;$(ProjectDir)..\..\..\libs\cryptLib\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\arda2\include;$(ProjectDir)..\..\..\libs\cryptLib\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -145,7 +145,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>FINAL;_CRT_SECURE_NO_WARNINGS; _WINSOCK_DEPRECATED_NO_WARNINGS;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\libs\arda2\include;$(ProjectDir)..\..\..\libs\cryptLib\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\arda2\include;$(ProjectDir)..\..\..\libs\cryptLib\include;$(ProjectDir)..\..\..\3rdparty\zlib-1.2.11\include;$(ProjectDir)..\..\..\3rdparty\cryptopp-8.3\include</AdditionalIncludeDirectories>
       <ExceptionHandling>Async</ExceptionHandling>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
@@ -266,11 +266,17 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
     <ProjectReference Include="..\..\..\3rdparty\cryptopp-8.3\build\vs2019\cryptopp.vcxproj">
       <Project>{aca8c226-ef10-49f2-8b3d-d9939ee4a4fe}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\..\..\3rdparty\zlib-1.2.11\build\vs2019\zlib.vcxproj">
+      <Project>{8426a8d3-2549-4523-b584-fcd81e89b7bc}</Project>
+    </ProjectReference>
     <ProjectReference Include="..\..\..\libs\arda2\build\vs2019\arda2.vcxproj">
       <Project>{34c02977-76f9-4255-a87e-e0353e9e4a19}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\libs\cryptLib\build\vs2019\cryptLib.vcxproj">
       <Project>{eb17772f-c351-41ff-86cf-bb55bc260d99}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\libs\UtilitiesLib\build\vs2019\UtilitiesLib.vcxproj">
+      <Project>{02b25697-0348-423c-8df3-e1bdf89bb43d}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

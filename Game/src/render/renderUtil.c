@@ -1246,7 +1246,7 @@ static void setupOldDriverWarning()
 
 
         // If the last driver date version does not exist or is different
-        if (!rrReadInt(rr, "DriverCheckLastDate", &registryLastDate))
+        if (!rrReadInt(rr, "DriverCheckLastDate", &registryLastDate, 0))
         {
             showDialog = true;
         }

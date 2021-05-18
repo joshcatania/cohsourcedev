@@ -63,6 +63,8 @@ static U32 seconds_offset=0;
 
 int shiftval;
 
+// TODO: Replace with cross-platform alternative
+
 S64 getRegistryMhz()
 {
 // Get the processor speed info.

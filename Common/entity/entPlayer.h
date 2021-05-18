@@ -261,6 +261,7 @@ typedef struct EntPlayer
     int clicktomove;
     int disableDrag;
     int showTimer;
+    int mouseAutomoveTimer;
     int showPetBuffs;
     int preventPetIconDrag;
     int showPetControls;

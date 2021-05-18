@@ -28,6 +28,8 @@
 #include "seq/seq.h"
 #include <utilitieslib/language/MessageStore.h>
 #include "ailib/aiBehaviorPublic.h"
+#include "cmdparse/cmdserver.h"
+#include "gameSys/arenamap.h"
 
 #define MAX_PET_NAMES_ON_PLAYER        100
 
@@ -179,6 +181,20 @@ void petCommand( Entity * pet_owner, Entity * pet, int stance, int action, Vec3 
     }
 }
 
+//There didn't seem to be any mastermind checking method,
+//Seems logical that a mastermind method should be defined in the pets class
+//since there is a reasonable expectation that one might have a relationship to the other
+bool isMastermind(Entity* e)
+{
+    
+    if (!e || !e->pchar || !e->pchar->pclass || !e->pchar->pclass->pchName)
+        return false;
+
+    if (stricmp(e->pchar->pclass->pchName, "Class_Mastermind") == 0)
+        return true;
+    else
+        return false;
+}
 
 void petReceiveCommand( Entity * e, Packet * pak )
 {
@@ -230,9 +246,11 @@ void petReceiveSay( Entity * e, Packet * pak )
         return;
     }
 
-    if( !isPetCommadable(pet) )
+    //If the pet is not commandable OR (not a mastermind, and not on arena map) AND petcommandsForAll is off
+    //Then we send the 'sorry' message
+    if (!isPetCommadable(pet) || ((!isMastermind(e) && !OnArenaMap()) && !server_state.petcommandsforall))
     {
-        chatSendToPlayer( e->db_id, localizedPrintf(e,"PetCommandFailNotMastermind"), INFO_USER_ERROR, 0 );
+        chatSendToPlayer(e->db_id, localizedPrintf(e, "PetCommandFailNotMastermind"), INFO_USER_ERROR, 0);
         return;
     }
 
@@ -311,7 +329,7 @@ void petReceiveRename( Entity * e, Packet * pak )
     }
 
     //Mastermind only For arena pets, no power created you, so you don't have to be a mastermind
-    if( stricmp( e->pchar->pclass->pchName, "Class_Mastermind") != 0 )
+    if (!isMastermind(e))
     {
         chatSendToPlayer( e->db_id, localizedPrintf(e,"PetCommandFailNotMastermind"), INFO_USER_ERROR, 0 );
         pet->petinfo_update = 1;

@@ -135,6 +135,8 @@ UserOption game_options[] =
 	{ kUO_HideConvertConfirmPrompt,		"HideConvertConfirmPrompt",		0, 0, 0, 1, },
 	{ kUO_HideStorePiecesState,			"HideStorePiecesState",			0, 0, 0, 3, },
 	{ kUO_CursorScale,					"CursorScale",					0, 1, 0, -1, },
+	{ kUO_ShowTimer,			        "ShowTimer",			        0, 0, 0, 1, },
+	{ kUO_MouseAutomoveTimer,			"MouseAutomoveTimer",			1, 0, 0, 1, },
 };
 
 static StashTable st_GameOptions;

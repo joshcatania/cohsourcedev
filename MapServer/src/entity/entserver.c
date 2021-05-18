@@ -1470,6 +1470,7 @@ void sendCharacterToClient( Packet *pak, Entity *e)
         pktSendBits( pak, 3, e->pl->hideStorePiecesState );
         pktSendF32( pak, e->pl->cursorScale );
         pktSendBits(pak, 1, e->pl->showTimer);
+        pktSendBits(pak, 1, e->pl->mouseAutomoveTimer);
     }
     else
     {

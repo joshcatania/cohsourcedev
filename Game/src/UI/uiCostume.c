@@ -5076,6 +5076,8 @@ char *getCustomCostumeDir()
         {
             getExecutableDir(path);
         }
+        strcat(path, "/");
+        strcat(path, game_state.patchdir);
         strcat(path, "/costumes");
     }
     return path;

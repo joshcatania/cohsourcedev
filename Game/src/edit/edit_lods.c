@@ -928,9 +928,9 @@ void editLODsUI(void)
 
     rr = createRegReader();
     initRegReader(rr, regGetAppKey());
-    if (!rrReadInt(rr, "LODEditorX", &x))
+    if (!rrReadInt(rr, "LODEditorX", &x, 0))
         x = 0;
-    if (!rrReadInt(rr, "LODEditorY", &y))
+    if (!rrReadInt(rr, "LODEditorY", &y, 0))
         y = 0;
     destroyRegReader(rr);
 

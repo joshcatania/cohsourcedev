@@ -495,7 +495,7 @@ void showGridExternal()
     int *    edit_axisp;
     int *    edit_axis;
     int        style;
-    int        i,count=0;
+    int        i;
     Vec3    lna,lnb,dva,dvb;
     Mat4    mat;
     int        suppress[3] = { 1, 2, 2},dontdraw=0;
@@ -511,10 +511,10 @@ void showGridExternal()
 
     if (edit_axisp[0] + edit_axisp[1] + edit_axisp[2])
         copyVec3(edit_axisp,edit_axis);
+
     gridsize = 0.5f * (1 << edit_state.gridsize);
-    linesize = MAX(gridsize,0.5) * NUMLINES;
-    for(i=0;i<3;i++)
-        count += edit_axis[i];
+    linesize = MAX(gridsize, 0.5) * NUMLINES;
+
     for(i=0;i<3;i++)
     {
         if (edit_axis[i])
@@ -524,16 +524,6 @@ void showGridExternal()
             else
                 dontdraw = 0;
         }
-/*        if (((count > 1 && edit_state.snap3) || edit_axis[i]) && gridsize && !edit_state.nosnap && !edit_state.snaptovert)
-        {
-            if (0 && i == 1)
-                t = 2 * matx[3][i] + gridsize;
-            else
-                t = 2 * matx[3][i];// - gridsize;
-            t &= ~(((int)(gridsize*2))-1);
-            matx[3][i] = 0.5f * t;
-        }
-*/
     }
     if (edit_state.snaptovert)
     {
@@ -544,21 +534,6 @@ void showGridExternal()
     if (!gridsize)
         gridsize = 1;
 
-//as far as i can tell this code is only for snapping a point to some multiple of 16
-//which i don't want to happen
-/*    for(i=0;i<3;i++)
-    {
-        if (edit_axis[i] && gridsize)
-        {
-            if (i == 1)
-                t = mat[3][i] + (((F32)gridsize) * 0.5);
-            else
-                t = mat[3][i] + (((F32)gridsize) * 0.5);
-            t &= ~(((int)(gridsize * 16))-1);        // a comment
-            mat[3][i] = t;
-        }
-    }
-*/
     if (dontdraw != 1) for(i=0;i<NUMLINES+1;i++)
     {
         lna[0] = -linesize/2;

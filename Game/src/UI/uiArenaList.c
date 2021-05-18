@@ -512,7 +512,7 @@ int arenaListWindow(void)
         uiLVHandleInput(lvCurrent, pen);
 
         // scroll bar
-         fullDrawHeight = uiLVGetFullDrawHeight(lvCurrent);
+         fullDrawHeight = uiLVGetFullDrawHeight(lvCurrent) * sc;
         currentHeight = uiLVGetHeight(lvCurrent);
 
         if(fullDrawHeight > currentHeight) 

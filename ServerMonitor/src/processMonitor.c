@@ -305,20 +305,6 @@ LRESULT CALLBACK DlgProcessMonProc (HWND hDlg, UINT iMsg, WPARAM wParam, LPARAM 
             getcwd(cwd, sizeof(cwd));
 
             loadValuesFromReg(hDlg, NULL, mapping, ARRAY_SIZE(mapping));
-            // Check for entry reordering
-            for (i=0; i<ARRAY_SIZE(processmonitors); i++) {
-                if (!strStartsWith(processmonitors[i].cmdline, processmonitors[i].exename)) {
-                    if (strStartsWith(processmonitors[i].exename, "DbServer")) {
-                        strcpy(processmonitors[i].cmdline, "DbServer.exe -startall");
-                    } else if (strStartsWith(processmonitors[i].exename, "Launcher")) {
-                        strcpy(processmonitors[i].cmdline, "Launcher.exe -noversioncheck");
-                    }
-                    else
-                    {
-                        strcpy(processmonitors[i].cmdline, processmonitors[i].exename);
-                    }
-                }
-            }
             saveValuesToReg(hDlg, NULL, mapping, ARRAY_SIZE(mapping));
             loadValuesFromReg(hDlg, NULL, mapping, ARRAY_SIZE(mapping)); // Updates some dialog text
             // Update dialog with text

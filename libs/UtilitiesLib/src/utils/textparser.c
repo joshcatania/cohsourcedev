@@ -1986,7 +1986,7 @@ int ParserWriteBinaryFile(char* filename, ParseTable pti[], void* structptr, Fil
     int success;
 
     crc = ParseTableCRC(pti, defines);
-    file = SerializeWriteOpen(filename, PARSE_SIG, crc);
+    file = SerializeWriteOpen(filename, PARSE_V23, crc);
     if (!file) return 0; // can't create
 
     success = FileListWrite(filelist, file);
@@ -2051,7 +2051,7 @@ void RecvDiffFunctionCalls(Packet* pak, StructFunctionCall*** structarray)
     }
 }
 
-int ParserReadBinaryTable(SimpleBufHandle file, ParseTable pti[], void* structptr, int* sum) // returns success
+int ParserReadBinaryTable(SimpleBufHandle file, ParseTable pti[], void* structptr, int* sum, const int binVersionNum) // returns success
 {
     int succeeded = 1;
     long dataloc;
@@ -2069,11 +2069,17 @@ int ParserReadBinaryTable(SimpleBufHandle file, ParseTable pti[], void* structpt
     // read data segment
     FORALL_PARSEINFO(pti, i)
     {
-        if (pti[i].type & TOK_REDUNDANTNAME) continue; // don't allow TOK_REDUNDANTNAME
-        succeeded = succeeded && TOKARRAY_INFO(pti[i].type).readbin(file, pti, i, structptr, 0, &datasum);
+        if ((pti[i].type & TOK_REDUNDANTNAME) ||  // don't allow TOK_REDUNDANTNAME
+            (pti[i].minversion > binVersionNum))  // don't parse stuct tokens for a bin with an earlier version
+        {
+            //printf("Ignoring a token. name: %s, type flags: %08x, minversion (binversion): %d (%d)\n", pti[i].name, pti[i].type, pti[i].minversion,binVersionNum);
+            continue;
+        }
+        succeeded = succeeded && TOKARRAY_INFO(pti[i].type).readbin(file, pti, i, structptr, 0, &datasum, binVersionNum);
         if (!succeeded)
         {
             printf("ParserReadBinaryTable: unexpected end of file\n");
+            printf("  name: %s, type flags: %08x, minversion (binversion): %d (%d)\n", pti[i].name, pti[i].type, pti[i].minversion, binVersionNum);
             return 0;
         }
     } // each data token
@@ -2081,7 +2087,7 @@ int ParserReadBinaryTable(SimpleBufHandle file, ParseTable pti[], void* structpt
     // check data segment length
     if (datasum != readdatasum)
     {
-        printf("ParserReadBinaryTable: datasum length not correct\n");
+        printf("ParserReadBinaryTable: datasum length not correct.  got %d expected %d\n", datasum, readdatasum);
         return 0;
     }
     *sum += readdatasum;
@@ -2089,7 +2095,7 @@ int ParserReadBinaryTable(SimpleBufHandle file, ParseTable pti[], void* structpt
     return succeeded;
 }
 
-int ParserReadBinaryFile(SimpleBufHandle binfile, char *filename, ParseTable pti[], void* structptr, FileList* filelist, DefineContext* defines)    // returns success
+int ParserReadBinaryFile(SimpleBufHandle binfile, char* filename, ParseTable pti[], void* structptr, FileList* filelist, DefineContext* defines, int* binVersionNum) // returns success
 {
     SimpleBufHandle file;
     int size = 0;
@@ -2100,7 +2106,7 @@ int ParserReadBinaryFile(SimpleBufHandle binfile, char *filename, ParseTable pti
         file = binfile;
     } else {
         int crc = ParseTableCRC(pti, defines);
-        file = SerializeReadOpen(filename, PARSE_SIG, crc, isProductionMode());
+        file = SerializeReadOpen(filename, crc, isProductionMode(), binVersionNum);
     }
 
     if (!file) return 0;  // no file, or failed crc number
@@ -2111,7 +2117,7 @@ int ParserReadBinaryFile(SimpleBufHandle binfile, char *filename, ParseTable pti
     loc = SimpleBufTell(file);
 
     parser_relpath = filename ? allocAddString(filename) : 0;
-    success = ParserReadBinaryTable(file, pti, structptr, &size);
+    success = ParserReadBinaryTable(file, pti, structptr, &size, *binVersionNum);
     parser_relpath = 0;
 
     SimpleBufSeek(file, 0, SEEK_END);
@@ -2231,7 +2237,7 @@ static FileScanAction DateCheckCallback(char* dir, struct _finddata32_t* data)
     return FSA_EXPLORE_DIRECTORY;
 }
 
-SimpleBufHandle ParserIsPersistNewer(const char* dir, const char* filemask, const char* persistfile, ParseTable pti[], DefineContext* defines)
+SimpleBufHandle ParserIsPersistNewer(const char* dir, const char* filemask, const char* persistfile, ParseTable pti[], DefineContext* defines, int* binVersionNum)
 {
     FileList binlist = NULL;
     SimpleBufHandle binfile;
@@ -2241,7 +2247,8 @@ SimpleBufHandle ParserIsPersistNewer(const char* dir, const char* filemask, cons
 
     // open the bin file
     crc = ParseTableCRC(pti, defines);
-    binfile = SerializeReadOpen(persistfile, PARSE_SIG, crc, isProductionMode());
+    
+    binfile = SerializeReadOpen(persistfile, crc, isProductionMode(), binVersionNum);
     if (!binfile)
     {
         verbose_printf("bin file %s is incorrect version\n", persistfile);
@@ -2431,11 +2438,13 @@ bool ParserLoadFiles(const char* dir, const char* filemask, const char* persistf
         path = fileLocateRead(persistfilepath, buf);
         if (path)
         {
-            SimpleBufHandle binfile = ParserIsPersistNewer(dir,filemask,persistfilepath,pti,globaldefines);
+            int binVersionNum = 0;
+            SimpleBufHandle binfile = ParserIsPersistNewer(dir, filemask, persistfilepath, pti, globaldefines, &binVersionNum);
             if (binfile)
             {
                 // try loading persist file
-                if (ParserReadBinaryFile(binfile, persistfilepath, pti, structptr, NULL, globaldefines)) {
+                if (ParserReadBinaryFile(binfile, persistfilepath, pti, structptr, NULL, globaldefines, &binVersionNum))
+                {
                     recursive_call = false;
                     PERFINFO_AUTO_STOP();
                     return 1;
@@ -2899,8 +2908,9 @@ int ParserWriteTextEscaped(char **estr, ParseTable *tpi, void *struct_mem, Struc
     return ok;
 }
 
-
-int ParserReadBin(char *bin,U32 num_bytes,ParseTable *tpi,void *struct_mem)
+// This function is used when a bin is transferred without any file header information.
+// Currently, this is done for SG base updates between the client and server.
+int ParserReadBin(char* bin, U32 num_bytes, ParseTable* tpi, void* struct_mem)
 {
     int sum = num_bytes;
     int                ok;
@@ -2910,7 +2920,7 @@ int ParserReadBin(char *bin,U32 num_bytes,ParseTable *tpi,void *struct_mem)
         return 0;
     sbuf = SimpleBufSetData(bin,num_bytes);
     g_disableLastAuthor = 1;
-    ok = ParserReadBinaryTable(sbuf, tpi, struct_mem, &sum);
+    ok = ParserReadBinaryTable(sbuf, tpi, struct_mem, &sum, 0);
     g_disableLastAuthor = 0;
     free(sbuf);
 
@@ -3331,7 +3341,7 @@ int u8_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* struct
     return success;
 }
 
-int u8_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int u8_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int value = 0;
@@ -3508,7 +3518,7 @@ int int16_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* str
     return success;
 }
 
-int int16_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int int16_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int value = 0;
@@ -3708,7 +3718,7 @@ int int_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* struc
     return success;
 }
 
-int int_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int int_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int value = 0;
@@ -4018,7 +4028,7 @@ int int64_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* str
     return success;
 }
 
-int int64_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int int64_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     S64 value = 0;
@@ -4221,7 +4231,7 @@ int float_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* str
     return success;
 }
 
-int float_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int float_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     F32 value = 0.0f;
@@ -4508,7 +4518,7 @@ int string_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* st
     return success;
 }
 
-int string_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int string_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     char tempstr[MAX_STRING_LENGTH];
     int re, ok = 1;
@@ -4755,7 +4765,7 @@ int pointer_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* s
     return success;
 }
 
-int pointer_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int pointer_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int size = 0;
@@ -4955,7 +4965,7 @@ int raw_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* struc
     return ok;
 }
 
-int raw_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int raw_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     U32 scratch = 0;
     int ok = 1;
@@ -5463,7 +5473,7 @@ int matpyr_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* st
     return ok;
 }
 
-int matpyr_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int matpyr_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int i, ok = 1;
     Vec3    pyr;
@@ -5668,7 +5678,7 @@ int link_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* stru
     return success;    
 }
 
-int link_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int link_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     char buf[MAX_LINK_LEN];
     int re, ok = 1;
@@ -5859,7 +5869,7 @@ int reference_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void*
     return success;    
 }
 
-int reference_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int reference_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     char buf[MAX_STRING_LENGTH];
     int re, ok = 1;
@@ -5983,7 +5993,7 @@ int functioncall_writebin(SimpleBufHandle file, ParseTable tpi[], int column, vo
     return WriteBinaryFunctionCalls(file, ea, datasum);
 }
 
-int functioncall_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int functioncall_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     StructFunctionCall*** ea = (StructFunctionCall***)TokenStoreGetEArray(tpi, column, structptr);
     return ReadBinaryFunctionCalls(file, ea, datasum);
@@ -6120,7 +6130,7 @@ int unparsed_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* 
     return ok;
 }
 
-int unparsed_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int unparsed_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     StructParams* paramstruct = TokenStoreAlloc(tpi, column, structptr, index, sizeof(StructParams), NULL, NULL);
     int re, i, size = 0;
@@ -6297,7 +6307,7 @@ int struct_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* st
     return ok;
 }
 
-int struct_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int struct_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int subsum = 0;
@@ -6315,7 +6325,7 @@ int struct_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* str
 
     // if here, then we have a struct
     substruct = TokenStoreAlloc(tpi, column, structptr, index, tpi[column].param, NULL, NULL);
-    ok = ok && ParserReadBinaryTable(file, tpi[column].subtable, substruct, &subsum);
+    ok = ok && ParserReadBinaryTable(file, tpi[column].subtable, substruct, &subsum, binVersionNum);
     *datasum += subsum;
     return ok;
 }
@@ -6562,10 +6572,10 @@ int nonarray_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* 
     return 1;
 }
 
-int nonarray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int nonarray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     if (TYPE_INFO(tpi[column].type).readbin)
-        return TYPE_INFO(tpi[column].type).readbin(file, tpi, column, structptr, index, datasum);
+        return TYPE_INFO(tpi[column].type).readbin(file, tpi, column, structptr, index, datasum, binVersionNum);
     return 1;
 }
 
@@ -6751,17 +6761,17 @@ int fixedarray_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void
     return ok;
 }
 
-int fixedarray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int fixedarray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int i, numelems = tpi[column].param;
     int type = TOK_GET_TYPE(tpi[column].type);
 
     if (type == TOK_MATPYR_X)    // persisted as pyr
-        return nonarray_readbin(file, tpi, column, structptr, index, datasum);
+        return nonarray_readbin(file, tpi, column, structptr, index, datasum, binVersionNum);
 
     for (i = 0; i < numelems; i++)
-        ok = ok && nonarray_readbin(file, tpi, column, structptr, i, datasum);
+        ok = ok && nonarray_readbin(file, tpi, column, structptr, i, datasum, binVersionNum);
     return ok;
 }
 
@@ -7076,14 +7086,14 @@ int earray_writebin(SimpleBufHandle file, ParseTable tpi[], int column, void* st
     return ok;
 }
 
-int earray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum)
+int earray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum)
 {
     int ok = 1;
     int s, size = 0;
     int type = TOK_GET_TYPE(tpi[column].type);
 
     if (type == TOK_FUNCTIONCALL_X)
-        return nonarray_readbin(file, tpi, column, structptr, 0, datasum);
+        return nonarray_readbin(file, tpi, column, structptr, 0, datasum, binVersionNum);
 
     ok = ok && SimpleBufReadU32((U32*)&size, file);
     *datasum += sizeof(int);
@@ -7091,7 +7101,7 @@ int earray_readbin(SimpleBufHandle file, ParseTable tpi[], int column, void* str
         TokenStoreSetCapacity(tpi, column, structptr, size);
     for (s = 0; s < size; s++)
     {
-        ok = ok && nonarray_readbin(file, tpi, column, structptr, s, datasum);
+        ok = ok && nonarray_readbin(file, tpi, column, structptr, s, datasum, binVersionNum);
     }
     return ok;
 }

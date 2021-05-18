@@ -281,7 +281,7 @@ bool game_validateChecksums(bool bForceFullVerify, bool *pCancelled)
     }
     
     // We force a full verify if the client previously crashed
-    if( rrReadInt(rr,  "VerifyOnNextUpdate", &crashedLastTime) ) {
+    if( rrReadInt(rr,  "VerifyOnNextUpdate", &crashedLastTime, 0) ) {
         bFullVerify = true;
         rrDelete(rr, "VerifyOnNextUpdate");
     }
@@ -302,7 +302,7 @@ bool game_validateChecksums(bool bForceFullVerify, bool *pCancelled)
     if(_AltStat(checksumFileName, &sbuf) != -1) { // shouldnt fail since already read file so it exists
         __time32_t lastModTime = 0;
         modTime = sbuf.st_mtime;
-        if( !rrReadInt(rr,  "ChecksumFileTime", &lastModTime) )
+        if( !rrReadInt(rr,  "ChecksumFileTime", &lastModTime, 0) )
             lastModTime = 0;
         bFullVerify = bFullVerify || !fileDatesEqual(lastModTime, modTime, true);
     }

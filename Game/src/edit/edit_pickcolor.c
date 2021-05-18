@@ -140,9 +140,9 @@ static bool createColorPicker(int* initialColor, int alpha) {
 
     rr = createRegReader();
     initRegReader(rr, regGetAppKey());
-    if (!rrReadInt(rr, "ColorPickerX", &x))
+    if (!rrReadInt(rr, "ColorPickerX", &x, 0))
         x = 0;
-    if (!rrReadInt(rr, "ColorPickerY", &y))
+    if (!rrReadInt(rr, "ColorPickerY", &y, 0))
         y = 0;
     destroyRegReader(rr);
 

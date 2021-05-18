@@ -125,6 +125,7 @@ typedef struct ServerCfg
 
     //This is used to tell the mapserver to advertise this address to clients
     U32 advertisedIp;
+    int petcommandsforall;
 
 } ServerCfg;
 

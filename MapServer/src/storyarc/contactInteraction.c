@@ -639,9 +639,18 @@ static void ContactInteractionShowTrainingImprovements(Entity* player, int link,
             {
                 Power *ppow = pset->ppPowers[j];
                 int iNumBoosts;
+                //Check for power-specific free boost schedule
+                int * FreeBoostSchedule;
+                if (ppow->ppowBase->pFreeBoostSlotsOnPower)
+                {
+                    FreeBoostSchedule = ppow->ppowBase->pFreeBoostSlotsOnPower;
+                }
+                else
+                {
+                    FreeBoostSchedule = g_Schedules.aSchedules.piFreeBoostSlotsOnPower;
+                }
 
-                iNumBoosts = ppow->iNumBoostsBought +
-                    CountForLevel(iLevel+1-ppow->iLevelBought, g_Schedules.aSchedules.piFreeBoostSlotsOnPower);
+                iNumBoosts = ppow->iNumBoostsBought + CountForLevel(iLevel+1-ppow->iLevelBought, FreeBoostSchedule);
                 iNumBoosts = min(iNumBoosts, ppow->ppowBase->iMaxBoosts);
 
                 if(eaSize(&ppow->ppBoosts) < iNumBoosts)

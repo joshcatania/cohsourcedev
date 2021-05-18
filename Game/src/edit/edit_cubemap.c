@@ -107,9 +107,9 @@ void edit_openAdjustCubemapDialog() {
 
     rr = createRegReader();
     initRegReader(rr, regGetAppKey());
-    if (!rrReadInt(rr, "AdjustCubemapDialogX", &x))
+    if (!rrReadInt(rr, "AdjustCubemapDialogX", &x, 0))
         x = 0;
-    if (!rrReadInt(rr, "AdjustCubemapDialogY", &y))
+    if (!rrReadInt(rr, "AdjustCubemapDialogY", &y, 0))
         y = 0;
     destroyRegReader(rr);
 

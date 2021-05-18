@@ -440,6 +440,7 @@ static int UpdateObjectLibraryBin(int production, int force_rebuild)
     int crc;
     int savedpos;
     FileList object_lib_bin = 0;
+    int binVersionNum = 0; // Used by SerializeReadOpen, not necessary otherwise.
 
     if (!production || force_rebuild)
     {
@@ -457,7 +458,7 @@ static int UpdateObjectLibraryBin(int production, int force_rebuild)
 
     // open bin, check crc, check header
     crc = ParserCRCFromParseInfo(GroupNamesSaveInfo, NULL);
-    binfile = SerializeReadOpen(binfile_name, PARSE_SIG, crc, production);
+    binfile = SerializeReadOpen(binfile_name, crc, production, &binVersionNum);
     if (!binfile)
     {
         verbose_printf("UpdateObjectLibraryBin: binfile %s is the incorrect version, rebuilding\n", binfile_name);
@@ -488,7 +489,8 @@ static int UpdateObjectLibraryBin(int production, int force_rebuild)
     if (uptodate)
     {
         // read all data
-        if (!ParserReadBinaryFile(binfile, NULL, GroupNamesSaveInfo, &group_names, NULL, NULL))
+        int binVersionNumber = 0;
+        if (!ParserReadBinaryFile(binfile, NULL, GroupNamesSaveInfo, &group_names, NULL, NULL, &binVersionNumber))
         {
             binfile = 0; // ParserReadBinaryFile closes the stream
             uptodate = 0;
@@ -776,13 +778,14 @@ static int objectLibraryLoadBoundsFileInternal(const char *groupfile_name,U32 ch
     LibFileDesc        lib_desc = {0};
     LibObjEntry        *entry;
     GroupFileEntry    *libfile;
+    int binVersionNumber = 0;
 
     libfile = objectLibraryEntryFromFname(groupfile_name);
     if (libfile->bounds_checksum == checksum)
         return 1;
     boundsFileName(groupfile_name,SAFESTR(boundsname));
     
-    if (!ParserReadBinaryFile(0, boundsname, parse_lib_desc, &lib_desc, NULL, NULL))
+    if (!ParserReadBinaryFile(0, boundsname, parse_lib_desc, &lib_desc, NULL, NULL, &binVersionNumber))
         return 0;
     cryptAdler32Init();
     for(j=-1,i=0;i<eaSize(&lib_desc.entries);i++)

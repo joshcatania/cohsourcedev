@@ -22,4 +22,5 @@ void petReceiveSay( Entity * e, Packet * pak );
 void petReceiveRename( Entity * e, Packet * pak );
 void petUpdateClientUI(Entity* e, int action, int stance);
 void petResetPetNames(Entity* e);
+bool isMastermind(Entity* e);
 #endif

@@ -187,6 +187,7 @@ typedef struct ServerState
     U32        maintenance_daily_start;                    // starting hour of window for automatic daily maintenance (start = end means no maintenance window)
     U32        maintenance_daily_end;                        // ending hour of window for automatic daily maintenance
     int MARTY_enabled;
+    int petcommandsforall;
 
 } ServerState;
 

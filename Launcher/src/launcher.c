@@ -367,7 +367,7 @@ void autoRegisterCrypticStuff()
     int current_timestamp = fileLastChanged("./src/util/NCAutoSetup.exe");
     reader = createRegReader();
     initRegReader(reader, regGetAppKey());
-    if (!rrReadInt(reader, "NCAutoSetup", &last_ran_timestamp))
+    if (!rrReadInt(reader, "NCAutoSetup", &last_ran_timestamp, 0))
         last_ran_timestamp = 0;
     if (current_timestamp>0    // file exists
         && current_timestamp != last_ran_timestamp // hasn't been ran yet

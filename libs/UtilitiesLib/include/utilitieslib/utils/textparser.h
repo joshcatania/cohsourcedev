@@ -27,9 +27,18 @@ typedef struct DefineContext DefineContext;
 typedef struct FileEntry FileEntry;
 typedef FileEntry** FileList;
 
-#define PARSE_SIG                "Parse6"    // should stay at 6 characters
-#define MAX_LINK_LEN            128            // increase as necessary, just for internal buffers
+// Bin header information
+#define PARSE_SIG               "Parse6"    // should stay at 6 characters
+#define PARSE_V23               "ParV23"    // should stay at 6 characters
+#define PARSE_ADDITIONAL_COUNT  1           // Number of supported parse versions IN ADDITION to Parse6.
+                                            // Doubles as the max index into validParseTypes.
+
+#define MAX_LINK_LEN            128         // increase as necessary, just for internal buffers
 #define PRIVATE_PARSER_HEAPS    0
+
+// NOTE! You must add new bin types to this array as they are supported!
+extern const char* validParseTypes[];
+#define PARSE_VERSION_V23 1                 // validParseTypes index for v2i3 supported struct tokens
 
 /////////////////////////////////////////////////////////// Parser
 // The Parser deals with I/O to a variety of formats.  It parses and loads 
@@ -289,13 +298,13 @@ typedef U32 StructFormatField;  // fine for 32 bits here
 // and compatibility with all struct stuff:
 //
 //        name            char* (pointer-size)                    when <name> is hit in a text file, parse this token
-//        type            U32, expandable to 64                    divided into 4 8-bit fields-
+//        type            U32, expandable to 64                   divided into 4 8-bit fields-
 //                        primitive type:8                        int, string, struct, etc.
-//                        options:8                                options for parsing like REDUNDANT_NAME, STRUCT_PARAM
-//                        storage:8                                array, single item, fixed array, any options for allocation
-//                        precision:8                                precision of binary storage/network for numbers
-//        offset            size_t (pointer-size)                    offset into parent struct to store this token
-//        param            intptr_t (pointer-size)                    for structs: size of struct
+//                        options:8                               options for parsing like REDUNDANT_NAME, STRUCT_PARAM
+//                        storage:8                               array, single item, fixed array, any options for allocation
+//                        precision:8                             precision of binary storage/network for numbers
+//        offset          size_t (pointer-size)                   offset into parent struct to store this token
+//        param           intptr_t (pointer-size)                 for structs: size of struct
 //                                                                for fixed arrays: number of elements
 //                                                                for numbers: default value (only integer default allowed)
 //                                                                for direct, single string: embedded string length
@@ -304,11 +313,12 @@ typedef U32 StructFormatField;  // fine for 32 bits here
 //        subtable        void* (pointer-size)                    for complex data types: pointer to subtable or other definition
 //                                                                for primitives: pointer to StaticDefine list for string substitution
 //                                                                -- use interpretfield to find out what is held here
-//        format            U32, expandable to 64                    probably divided into 8-bit fields, only 2 fields right now-
-//                        pretty print:8                            flags for how to print dates nicely, etc
+//        format          U32, expandable to 64                   probably divided into 8-bit fields, only 2 fields right now-
+//                        pretty print:8                          flags for how to print dates nicely, etc
 //                        listview width:8                        width when using listview or the ui to display table
 //                        format options:8                        bits for different options
-//        ?color            U32                                        (may add this later)
+//        minversion      char*                                   Defines the min bin version that supports this field (default == PARSE_SIG)
+//        ?color          U32                                     (may add this later)
 typedef struct ParseTable
 {
     char const* name;
@@ -317,6 +327,7 @@ typedef struct ParseTable
     intptr_t param;            // default to ints, but pointers must fit here
     void* subtable;
     StructFormatField format;
+    int minversion;
 } ParseTable;
 // terminate table with an empty name field
 
@@ -410,9 +421,9 @@ int ParserWriteTextEscaped(char **estr, ParseTable *tpi, void *struct_mem, Struc
 int ParserWriteText(char **estr,ParseTable *tpi,void *struct_mem, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude);
 
 // binary I/O
-int ParserReadBinaryFile(SimpleBufHandle binfile, char* filename, ParseTable pti[], void* structptr, FileList* filelist, DefineContext* defines);    // returns success
+int ParserReadBinaryFile(SimpleBufHandle binfile, char* filename, ParseTable pti[], void* structptr, FileList* filelist, DefineContext* defines, int* binVersionNum); // returns success
 int ParserWriteBinaryFile(char* filename, ParseTable pti[], void* structptr, FileList* filelist, DefineContext* defines, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude); // returns success
-int ParserReadBin(char *bin,U32 num_bytes,ParseTable *tpi,void *struct_mem);
+int ParserReadBin(char* bin, U32 num_bytes, ParseTable* tpi, void* struct_mem);
 int ParserWriteBin(char **estr,ParseTable *tpi,void *struct_mem, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude);
 int ParserReadRegistry(const char *key, ParseTable pti[], void *structptr);
 int ParserWriteRegistry(const char *key, ParseTable pti[], void *structptr, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude);
@@ -457,7 +468,7 @@ bool ParserLoadFiles(const char* dir, const char* filemask, const char* persistf
     // if a preprocessor function is used, it is called ONLY when creating a .bin file.  The .bin file
     // will be created with data already run through the preprocessor.
     // returns success
-SimpleBufHandle ParserIsPersistNewer(const char* dir, const char* filemask, const char* persistfile, ParseTable pti[], DefineContext* defines); 
+SimpleBufHandle ParserIsPersistNewer(const char* dir, const char* filemask, const char* persistfile, ParseTable pti[], DefineContext* defines, int* binVersionNum); 
     // returns a handle if persist file newer than directory files and crc matches
     // caller is responsible for calling SerializeClose() on the SimpleBufHandle, or passing it to
     // ParserReadBinaryFile()

@@ -1386,9 +1386,10 @@ void parseArgs0(int argc, char **argv)
             if (i+1 < argc && argv[i+1])
             {
                 forwardSlashes(argv[i+1]);
-                PigSetAddPatchDir(unquote(argv[i+1]));
-
-                argv[i+1][0] = 0;
+                char* patchdir = unquote(argv[i+1]);
+                PigSetAddPatchDir(patchdir);
+                strncpy(game_state.patchdir, patchdir, 28);
+                argv[i + 1][0] = 0;
                 ++i;
             }
         }
@@ -1582,7 +1583,7 @@ static void checkForCrash()
             progressUserString[0] = 0;
         }
 
-        if (!rrReadInt(rr, "GameProgressDialogType", (int *) &type))
+        if (!rrReadInt(rr, "GameProgressDialogType", (int *) &type, PROGRESSDIALOGTYPE_NONE))
         {
             type = PROGRESSDIALOGTYPE_NONE;
         }

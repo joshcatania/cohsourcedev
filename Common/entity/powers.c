@@ -1096,10 +1096,18 @@ void power_Destroy(Power *ppow, const char *context)
  */
 void power_LevelFinalize(Power *ppow)
 {
+    //Check for schedule override in power, if it exists, use it otherwise default to schedule
+    int * FreeBoostSchedule;
+    if (ppow->ppowBase->pFreeBoostSlotsOnPower){
+        FreeBoostSchedule = ppow->ppowBase->pFreeBoostSlotsOnPower;
+    }
+    else
+    {
+        FreeBoostSchedule = g_Schedules.aSchedules.piFreeBoostSlotsOnPower;
+    }
     // Number of automatically given boost slots is based on when they
     // bought the power.
-    int iNumBoosts = ppow->iNumBoostsBought +
-        CountForLevel( character_GetLevel(ppow->psetParent->pcharParent)-ppow->iLevelBought, g_Schedules.aSchedules.piFreeBoostSlotsOnPower);
+    int iNumBoosts = ppow->iNumBoostsBought + CountForLevel(character_GetLevel(ppow->psetParent->pcharParent) - ppow->iLevelBought, FreeBoostSchedule);
     iNumBoosts = MIN(iNumBoosts, ppow->ppowBase->iMaxBoosts);
 
     if(eaiSize(&ppow->ppowBase->pBoostsAllowed)>0)

@@ -862,7 +862,7 @@ int regGetInt(const char *key, int deflt) {
     static int value;
     initRR();
     value = deflt;
-    rrReadInt(rr, key, &value);
+    rrReadInt(rr, key, &value, deflt);
     return value;
 }
 

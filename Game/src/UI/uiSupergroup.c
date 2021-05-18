@@ -1631,7 +1631,7 @@ int supergroupWindow()
 
     // Draw a scroll bar next to it if needed.
     {
-        int fullDrawHeight = uiLVGetFullDrawHeight(sgListView);
+        int fullDrawHeight = uiLVGetFullDrawHeight(sgListView) * scale;
         int currentHeight = uiLVGetHeight(sgListView);
         if(sgListView)
         {

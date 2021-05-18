@@ -249,7 +249,7 @@ static void handleTransferPickShard(float screenScaleX, float screenScaleY)
         uiLVDisplay( characterTransferShardList, list_pos );
         uiLVHandleInput( characterTransferShardList, list_pos );
         {
-            int fullDrawHeight = uiLVGetFullDrawHeight(characterTransferShardList);
+            int fullDrawHeight = uiLVGetFullDrawHeight(characterTransferShardList) * screenScaleY;
             int currentHeight = uiLVGetHeight(characterTransferShardList);
             if(fullDrawHeight > currentHeight)
             {

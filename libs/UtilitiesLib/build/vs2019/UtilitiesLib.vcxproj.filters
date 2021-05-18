@@ -660,6 +660,9 @@
     <ClInclude Include="..\..\src\UtilsNew\google_sparsehash\src\google\type_traits.h">
       <Filter>Private Header Files\UtilsNew\google_sparsehash</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\utilitieslib\utils\regfile.h">
+      <Filter>Public Header Files\utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\utils\cpu_count.c">
@@ -1156,6 +1159,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\version\AppVersion.c">
       <Filter>Source Files\version</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\utils\regfile.c">
+      <Filter>Source Files\utils</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1817,6 +1817,7 @@ int parseClientInput( Packet *pak, ClientLink *client )
                     pl->hideStorePiecesState = pktGetBits(pak,3);
                     pl->cursorScale = pktGetF32(pak);
                     pl->showTimer = pktGetBits(pak, 1);
+                    pl->mouseAutomoveTimer = pktGetBits(pak, 1);
 
                     if(pl->gmailFriendOnly)
                         shardCommSendf(e,true,"GMailFriendOnlySet");

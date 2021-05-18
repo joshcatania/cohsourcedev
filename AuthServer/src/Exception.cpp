@@ -190,6 +190,7 @@ static void RecordModuleList(HANDLE LogFile)
 
 #define REG_DISPLAY "System\\CurrentControlSet\\Services\\Class\\Display\\0000"
 
+// TODO: Find a cross platform alternative to query display info.
 BOOL getVideoDesc(char *descStr, int bufferSize)
 {
     HKEY hKey;

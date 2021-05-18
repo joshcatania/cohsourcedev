@@ -31,7 +31,7 @@ static int regGetInt(const char *key, int deflt) {
     int value;
     initRR();
     value = deflt;
-    if (0==rrReadInt(rr, key, &value))
+    if (0==rrReadInt(rr, key, &value, deflt))
         value = deflt;
     return value;
 }

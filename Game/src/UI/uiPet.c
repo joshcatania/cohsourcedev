@@ -969,11 +969,11 @@ void pet_command( char * cmd, char *target_str, int command_type )
 
 void pet_say( char * msg, char * target_Str, int command_type )
 {
-    if( !amOnArenaMap() && !playerIsMasterMind() ) 
-    {
-        addSystemChatMsg( textStd("PetCommandFailNotMastermind"), INFO_USER_ERROR, 0 );
-        return;
-    }
+    //Validation as to whether a player can perform petsay commands
+    //is now handled by the server - the server admin can enable petsay to be MM only, or all classes
+    //via adding PetCommandsForAll 1   to the server.cfg
+    // PetCommandsForAll 0 will emulate the default behaviour, but will still be more secure, as it will
+    // validate server-side as opposed to client-side.
 
     if( eaSize(&playerPets) == 0 )
     {

@@ -836,7 +836,7 @@ int channelWindow(float x, float y, float z, float wd, float ht, float sc, int c
     // of the list view.
       if(userLV)
     {
-        int fullDrawHeight = uiLVGetFullDrawHeight(userLV);
+        int fullDrawHeight = uiLVGetFullDrawHeight(userLV) * sc;
         int currentHeight = uiLVGetHeight(userLV);
         if(userLV)
         {

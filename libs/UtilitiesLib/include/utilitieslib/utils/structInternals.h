@@ -54,7 +54,7 @@ typedef void (*preparse_f)(ParseTable tpi[], int column, void* structptr, Tokeni
 typedef int (*parse_f)(TokenizerHandle tok, ParseTable tpi[], int column, void* structptr, int index, ParserTextCallback callback);
 typedef void (*writetext_f)(FILE* out, ParseTable tpi[], int column, const void* structptr, int index, bool showname, int level, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude);
 typedef int (*writebin_f)(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, StructTypeField iOptionFlagsToMatch, StructTypeField iOptionFlagsToExclude);
-typedef int (*readbin_f)(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum);
+typedef int (*readbin_f)(SimpleBufHandle file, ParseTable tpi[], int column, void* structptr, int index, int* datasum, int binVersionNum);
 typedef void (*initstruct_f)(ParseTable tpi[], int column, void* structptr, int index);
 typedef void (*destroystruct_f)(ParseTable tpi[], int column, void* structptr, int index);
 typedef void (*updatecrc_f)(ParseTable tpi[], int column, void* structptr, int index);

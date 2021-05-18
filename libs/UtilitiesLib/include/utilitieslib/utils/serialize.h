@@ -65,7 +65,7 @@ int SerializeWriteData(SimpleBufHandle sfile, int size, void* dataptr);         
 int SerializePatchHeader(SimpleBufHandle sfile, int size, long loc);                    // use loc returned by SerializeWriteHeader
 
 // read functions
-SimpleBufHandle SerializeReadOpen(const char* filename, const char* filetype, int build, int ignore_crc_difference);
+SimpleBufHandle SerializeReadOpen(const char* filename, int build, int ignore_crc_difference, int* binVersionNum);
 int SerializeNextStruct(SimpleBufHandle sfile, char* structname, int namesize, int* size); // loads name, size.  returns success
 int SerializeSkipStruct(SimpleBufHandle sfile);            // returns length skipped
 int SerializeReadStruct(SimpleBufHandle sfile, char* structname, int size, void* structptr);    // returns length read

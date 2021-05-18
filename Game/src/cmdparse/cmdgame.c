@@ -767,6 +767,8 @@ enum
     CMD_SET_SERVERGROUP,
     CMD_MACRO_IMAGE,
 	CMD_SG_ENTER_PASSCODE,
+    CMD_LOCK_POWER_TRAY,
+    CMD_TOGGLE_LOCK_POWER_TRAY,
 };
 
 #define MAX_SCROLL_OUT_DIST 80.0
@@ -2781,7 +2783,8 @@ Cmd game_cmds[] =
     
     { 0, "linkAccountURL", 0, {{ CMDSTR(game_state.linkAccountURL)}}, CMDF_HIDEPRINT,
                         "URL for link account website" },
-
+    {0, "lockpowertray", CMD_LOCK_POWER_TRAY, {{CMDINT(tmp_int)}}, 0, "Locks power tray to prevent accidental power dragging - 1 to enable, 0 to disable"},
+    {0, "togglelockpowertray", CMD_TOGGLE_LOCK_POWER_TRAY, {{0}}, 0, "Toggles power tray locking to prevent accidental power dragging."},
     { 0 },
 };
 
@@ -4117,7 +4120,7 @@ int cmdGameParse(char *str, int x, int y)
                 }
                 else
                 {
-                    if (timerElapsed(game_state.ctm_autorun_timer) > 2.0f)
+                    if (optionGet(kUO_MouseAutomoveTimer) && timerElapsed(game_state.ctm_autorun_timer) > 2.0f)
                     {
                         updateControlState(CONTROLID_FORWARD, MOVE_INPUT_OTHER, 1, cmdGetTimeStamp());
                         cmdParse( "autorun 1" );
@@ -4505,7 +4508,22 @@ int cmdGameParse(char *str, int x, int y)
         xcase CMD_POWEXEC_UNQUEUE:
             tray_CancelQueuedPower();
             trayobj_ExitStance(playerPtr());
-
+        xcase CMD_LOCK_POWER_TRAY:
+        {
+            if (tmp_int <= 0)
+            {
+                optionSet(kUO_DisableDrag, 0, true);
+            }
+            else
+            {
+                optionSet(kUO_DisableDrag, 1, true);
+            } 
+        }
+        xcase CMD_TOGGLE_LOCK_POWER_TRAY:
+            {
+                bool lockTray = optionGet(kUO_DisableDrag);
+                optionSet(kUO_DisableDrag, !lockTray, true); // flip the bool
+            }
         xcase CMD_POWEXEC_AUTO:
             trayslot_findAndSetDefaultPower(playerPtr(), tmp_str);
 

@@ -3715,8 +3715,8 @@ uiSetting uiSettings4[] = {
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    autoFlipSuperPackCards)       }, // 9
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    hideConvertConfirmPrompt)     }, // 10
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    showTimer)                    }, // 11
+    {OFFSET2_PTR(Entity, pl,    EntPlayer,    mouseAutomoveTimer)           }, // 12
 
- // 12
  // 13
  // 14
  // 15

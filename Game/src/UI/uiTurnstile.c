@@ -1327,7 +1327,7 @@ int turnstileWindow()
                     waitingForResponse = 1;
                 }
 
-                fullDrawHeight = uiLVGetFullDrawHeight(eventListView);
+                fullDrawHeight = uiLVGetFullDrawHeight(eventListView) * sc;
 
                 if (fullDrawHeight > (windowDrawArea.height-30))
                 {

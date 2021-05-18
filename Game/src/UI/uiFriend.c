@@ -432,7 +432,7 @@ int oldFriendWindow(float x, float y, float z, float wd, float ht, float scale, 
     // of the list view.
     if(friendListView)
     {
-        int fullDrawHeight = uiLVGetFullDrawHeight(friendListView);
+        int fullDrawHeight = uiLVGetFullDrawHeight(friendListView) * scale;
         int currentHeight = uiLVGetHeight(friendListView);
         if(friendListView)
         {
@@ -1213,7 +1213,7 @@ int newFriendWindow(float x, float y, float z, float wd, float ht, float scale, 
         // of the list view.
         if(globalFriendListView)
         {
-            int fullDrawHeight = uiLVGetFullDrawHeight(globalFriendListView);
+            int fullDrawHeight = uiLVGetFullDrawHeight(globalFriendListView) * scale;
             int currentHeight = uiLVGetHeight(globalFriendListView);
             if(globalFriendListView)
             {
@@ -1768,7 +1768,7 @@ int levelingpactWindow(float x, float y, float z, float wd, float ht, float scal
     // of the list view.
     if(levelingpactListView)
     {
-        int fullDrawHeight = uiLVGetFullDrawHeight(levelingpactListView);
+        int fullDrawHeight = uiLVGetFullDrawHeight(levelingpactListView) * scale;
         int currentHeight = uiLVGetHeight(levelingpactListView);
         if(levelingpactListView)
         {
@@ -1971,7 +1971,7 @@ int globalIgnoreWindow(float x, float y, float z, float wd, float ht, float scal
         // of the list view.
         if(globalIgnoreListView)
         {
-            int fullDrawHeight = uiLVGetFullDrawHeight(globalIgnoreListView);
+            int fullDrawHeight = uiLVGetFullDrawHeight(globalIgnoreListView) * scale;
             int currentHeight = uiLVGetHeight(globalIgnoreListView);
             if(globalIgnoreListView)
             {

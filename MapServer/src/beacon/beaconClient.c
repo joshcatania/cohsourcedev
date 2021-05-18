@@ -1397,12 +1397,30 @@ static void setEnvironmentVar(StashTable st, const char* name, const char* value
 }
 
 static void getDefaultEnvironmentHelper(StashTable st, const char* keyName){
+    char listings[26000];
+
     RegReader    rr = createRegReader();
-    S32            i;
+    //S32            i;
 
     initRegReader(rr, keyName);
+    int names = registryEnumKeys(rr, listings);
+    char* currentName = listings;
+
+    for (int i = 0; i < names; i++)
+    {
+        char value[10000];
+        if (stricmp(currentName, "(default)"));
+        {
+            size_t valueLength = rrReadString(rr, currentName, value, sizeof(value));
+            if (valueLength > 0)
+            {
+                setEnvironmentVar(st, currentName, value, 1);
+            }
+        }
+        currentName += strlen(currentName) + 1;
+    }
     
-    for(i = 0;; i++){
+    /*for(i = 0;; i++){
         char    name[1000];
         S32        nameLen = sizeof(name);
         char    value[10000];
@@ -1417,7 +1435,7 @@ static void getDefaultEnvironmentHelper(StashTable st, const char* keyName){
         else if(retVal > 0){
             setEnvironmentVar(st, name, value, 1);
         }
-    }
+    }*/
     
     destroyRegReader(rr);
 }
@@ -2250,7 +2268,7 @@ static void beaconClientStartup(const char* masterServerName, const char* subSer
     
     printf("CRC of \"%s\" = 0x%8.8x\n", beaconGetExeFileName(), beacon_client.executableCRC);
 
-    printf(    "\n\n[컴컴컴컴컴컴 BEACON %s RUNNING 컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴컴�]\n",
+    printf(    "\n\n[ BEACON %s RUNNING ]\n",
             beaconClientIsSentry() ? "SENTRY" : "CLIENT");
 
     beacon_client_conn.timeHeardFromServer = timerCpuTicks();

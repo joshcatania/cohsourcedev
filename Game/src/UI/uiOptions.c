@@ -936,7 +936,8 @@ static GameOptions s_optListControls[] =
     { kUO_MouseScrollSpeed,    kOptionType_String, "MouseScrollSpeedText",   "MouseScrollSpeedHelp",  NULL, kOptionType_IntSlider, NULL, &s_paramScrollSensitivity,  NULL, NULL },
     { kUO_CamFree,             kOptionType_Bool,   "FreeCamera",             "FreeCameraHelp",  NULL, kOptionType_Bool, NULL,                   NULL, "OptionEnabled",  "OptionDisabled" },
     { kUO_DisableCameraShake,  kOptionType_Bool,   "DisableCameraShakeText", "CameraShakeHelp",  NULL, kOptionType_Bool, NULL,                   NULL, "OptionDisabled", "OptionEnabled"  },
-    { 0,                       kOptionType_Bool,   "OptionRazerNagaTray",     "RazerMouseTrayHelp", &s_razerTray, kOptionType_Bool, &s_razerTray, NULL, "OptionEnabled", "OptionDisabled" },
+    { 0,                       kOptionType_Bool,   "OptionRazerNagaTray",    "RazerMouseTrayHelp", &s_razerTray, kOptionType_Bool, &s_razerTray, NULL, "OptionEnabled", "OptionDisabled" },
+    { kUO_MouseAutomoveTimer,  kOptionType_Bool,   "MouseAutomoveTimer",     "MouseAutomoveTimerHelp", NULL, kOptionType_Bool, NULL, NULL, "OptionEnabled", "OptionDisabled"},
 
     { 0 },
 };

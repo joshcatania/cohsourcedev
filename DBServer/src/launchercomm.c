@@ -1614,6 +1614,10 @@ int launcherCommStartProcess(const char* db_hostname, U32 host_ip, MapCon* map_c
     {
         estrConcatf(&cmd, " -targetcapmode %d", server_cfg.targetcapmode);
     }
+    if (server_cfg.petcommandsforall)
+    {
+        estrConcatf(&cmd, " -petcommandsforall %d", server_cfg.petcommandsforall);
+    }
 
     {
         WeeklyTFCfg *weeklyTF_cfg = WeeklyTFCfg_getCurrentWeek(0);

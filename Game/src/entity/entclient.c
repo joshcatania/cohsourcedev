@@ -3171,7 +3171,7 @@ void entClientProcess()
     PERFINFO_AUTO_STOP();
     PERFINFO_AUTO_START("powerInfo_UpdateTimers",1);
     // Update the power info on the player entity.
-    if(playerPtr() && playerPtr()->powerInfo)
+    if (playerPtr() && playerPtr()->powerInfo && !game_state.viewCutScene)
         powerInfo_UpdateTimers(playerPtr()->powerInfo, TIMESTEP / 30);
     PERFINFO_AUTO_STOP();
 }

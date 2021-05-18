@@ -2152,6 +2152,8 @@ char* powerCustPath()
         {
             getExecutableDir(path);
         }
+        strcat(path, "/");
+        strcat(path, game_state.patchdir);
         strcat(path, "/PowerCust");
     }
 

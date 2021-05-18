@@ -66,12 +66,18 @@
 <tr><td>Banned<td>int1<td>If 1, the character cannot be logged in. (Set and unset by GMs.)
 <tr><td>NumCostumeSlots<td>int4<td>The number of costume slots this character has earned
 <tr><td>SuperPrimary<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryHigh<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondary<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryHigh<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>CurrentCostume<td>int4<td>Index of the costume the character is currently wearing.
 <tr><td>SuperPrimary2<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiary<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryHigh<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternary<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryHigh<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>FxSpecial<td>unicodestring[256]<td>Color - TODO
 <tr><td>FxSpecialExpires<td>int4<td>Color - TODO
 <tr><td>CsrModified<td>int4<td>If non-zero, then a GM has modified this character in some way. (Used to exclude the character in data mining.)
@@ -754,45 +760,81 @@
 <tr><td>JawScales<td>int4<td>The scales for the head shape. These are vec3's compressed into integer format.
 <tr><td>NoseScales<td>int4<td>The scales for the head shape. These are vec3's compressed into integer format.
 <tr><td>SuperPrimary<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
-<tr><td>SuperSecondary<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryHigh<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
+<tr><td>SuperSecondary<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryHigh<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiary<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryHigh<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternary<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryHigh<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperPrimaryAux1<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryAux1High<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondaryAux1<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryAux1High<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2Aux1<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2Aux1High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2Aux1<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2Aux1High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiaryAux1<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryAux1High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternaryAux1<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryAux1High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>PowerColorPrimary1<td>int4<td>Unused - Power customization prototyping
 <tr><td>PowerColorPrimary2<td>int4<td>Unused - Power customization prototyping
 <tr><td>PowerColorSecondary1<td>int4<td>Unused - Power customization prototyping
 <tr><td>PowerColorSecondary2<td>int4<td>Unused - Power customization prototyping
 <tr><td>SuperPrimaryAux2<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryAux2High<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondaryAux2<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryAux2High<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2Aux2<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2Aux2High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2Aux2<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2Aux2High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiaryAux2<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryAux2High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternaryAux2<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryAux2High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperPrimaryAux3<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryAux3High<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondaryAux3<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryAux3High<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2Aux3<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2Aux3High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2Aux3<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2Aux3High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiaryAux3<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryAux3High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternaryAux3<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryAux3High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperPrimaryAux4<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryAux4High<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondaryAux4<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryAux4High<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2Aux4<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2Aux4High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2Aux4<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2Aux4High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiaryAux4<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryAux4High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternaryAux4<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryAux4High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperPrimaryAux5<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors
+<tr><td>SuperPrimaryAux5High<td>int4<td>Bitfield - For the Supergroup costume, determines if primary color is original or one of the supergroup colors, high bits
 <tr><td>SuperSecondaryAux5<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors
+<tr><td>SuperSecondaryAux5High<td>int4<td>Bitfield - For the Supergroup costume, determines if secondary color is original or one of the supergroup colors, high bits
 <tr><td>SuperPrimary2Aux5<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts
+<tr><td>SuperPrimary2Aux5High<td>int4<td>Bitfield - For the Supergroup costume, SuperPrimary was not large enough for all parts, high bits
 <tr><td>SuperSecondary2Aux5<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts
+<tr><td>SuperSecondary2Aux5High<td>int4<td>Bitfield - For the Supergroup costume, SuperSecondary was not large enough for all parts, high bits
 <tr><td>SuperTertiaryAux5<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperTertiaryAux5High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>SuperQuaternaryAux5<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode
+<tr><td>SuperQuaternaryAux5High<td>int4<td>Bitfield - For the Supergroup costume, some parts have 4 colors, determines which color is used for supergorup mode, high bits
 <tr><td>PrimaryPowerToken<td>attribute<td>Unused - Power customization prototyping
 <tr><td>SecondaryPowerToken<td>attribute<td>Unused - Power customization prototyping
 <tr><td>SuperColorSet<td>int4<td>Currently selected super group color set

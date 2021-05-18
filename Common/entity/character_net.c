@@ -944,8 +944,19 @@ void character_ReceivePowers(Packet *pak, Character *pchar)
                 {
                     int k;
                     Power *ppow = NULL;
-
+                    
                     const BasePower *ppowBase = basepower_Receive(pak, &g_PowerDictionary, (pchar ? pchar->entParent : 0));
+                    int * FreeBoostSchedule;
+
+                    if (ppowBase->pFreeBoostSlotsOnPower)
+                    {
+                        FreeBoostSchedule = ppowBase->pFreeBoostSlotsOnPower;
+                    }
+                    else
+                    {
+                        FreeBoostSchedule = g_Schedules.aSchedules.piFreeBoostSlotsOnPower;
+                    }
+
                     int iLevelBought = pktGetBitsPack(pak, 5);
                     float fRange = pktGetF32(pak);
                     int iNumCharges = pktGetBitsPack(pak,3);
@@ -976,7 +987,7 @@ void character_ReceivePowers(Packet *pak, Character *pchar)
 
                             if(ppow)
                             {
-                                int iCntAllowed = CountForLevel(pchar->iLevel-iLevelBought, g_Schedules.aSchedules.piFreeBoostSlotsOnPower);
+                                int iCntAllowed = CountForLevel(pchar->iLevel-iLevelBought, FreeBoostSchedule);
                                 iCntAllowed = min(iCntAllowed, ppow->ppowBase->iMaxBoosts);
                                 ppow->iNumBoostsBought = iCntBoosts-iCntAllowed;
                                 if(ppow->iNumBoostsBought<0) ppow->iNumBoostsBought = 0; // Just for safety

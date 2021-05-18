@@ -1713,6 +1713,7 @@ void demoStartRecord(char *fname)
 
 #ifndef TEST_CLIENT
 
+// TODO: Find cross-platform solution to query cpu info.
 static char *getCpuName(char *cpu_name,int cpu_name_size)
 {
     int result,namesize = cpu_name_size;

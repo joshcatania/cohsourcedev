@@ -26,7 +26,7 @@ int duGetIntDebugSetting(char* keyName){
     initRegReader(reader, buf);
 
     // If the value is present, return the value.  Return 0 otherwise.
-    if(rrReadInt(reader, keyName, &value)){
+    if(rrReadInt(reader, keyName, &value, 0)){
         return value;
     }else
         return 0;

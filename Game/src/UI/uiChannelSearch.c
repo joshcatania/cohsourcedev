@@ -537,7 +537,7 @@ int channelSearchWindow(void)
         // of the list view.
         if(chanListView)
         {
-            int fullDrawHeight = uiLVGetFullDrawHeight(chanListView);
+            int fullDrawHeight = uiLVGetFullDrawHeight(chanListView) * sc;
 
             if(chanListView)
             {
