@@ -1484,7 +1484,7 @@ int gfxTreeDrawNodeJustToFillSeqGfxDataDecide( GfxNode *node, int root, BoneInfo
     return ret;
 }
 
-int gfxTreeDrawNodeJustToFillSeqGfxDataExecute( GfxNode *node, const Mat4 parent_mat, int seqHandle, SeqGfxData * seqGfxDataDst, SeqGfxData * seqGfxDataSrc, int root, int decisionIndex, int *decisionBits )
+int gfxTreeDrawNodeJustToFillSeqGfxDataExecute(GfxNode* node, const Mat4 parent_mat, FxHandle seqHandle, SeqGfxData* seqGfxDataDst, SeqGfxData* seqGfxDataSrc, int root, int decisionIndex, int* decisionBits)
 {
     Mat4 viewspace;
     for(;node;node = node->next)

@@ -727,7 +727,7 @@ void status_removeNotification(AtlasTex * icon) {}
 void browserOpen() {;}
 void browserSetText(char *s) {;}
 void browserClose() {;}
-int FxDebugGetAttributes( int fxid, int attribs ) { return 0; }
+int FxDebugGetAttributes( FxHandle fxid, int attribs ) { return 0; }
 void uiRegisterCopyToEntity(Entity* e, int copyName) {;}
 
 void scrollToSouvenirClue(int uid){;}

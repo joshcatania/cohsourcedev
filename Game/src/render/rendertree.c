@@ -2354,7 +2354,7 @@ extern int totalNodesRejected;
 #include "player/player.h"
 #include "entity/entclient.h"
 
-void printNodesProcessed( int seqHandle, GfxNode * node, int type)
+void printNodesProcessed( FxHandle seqHandle, GfxNode * node, int type)
 {
     Entity * e;
     SeqInst * mySeq = 0;
