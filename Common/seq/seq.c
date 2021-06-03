@@ -85,7 +85,7 @@ const SeqMove *getFirstSeqMoveByName(const SeqInst* seq, char * name)
 
 #ifdef CLIENT
 
-static int seqCreateSeqTypeFx( SeqInst * seq , const char * fxname, Entity *entParent);
+static FxHandle seqCreateSeqTypeFx(SeqInst* seq, const char* fxname, Entity* entParent);
 #endif
 
 //This function manages the fx triggered on an entity when it reaches certain health ranges
@@ -118,7 +118,7 @@ void seqManageHitPointTriggeredFx( SeqInst * seq, F32 percentHealth, int randomN
                 //Only create oneShot fx if I actually saw the guy go to this hp
                 if( eaSize( &healthFx->oneShotFx ) && seq->percentHealthLastCheck != -1 )
                 {
-                    int fxid;
+                    FxHandle fxid;
                     FxParams fxp;
                     char * oneShotFx;
                     
@@ -530,7 +530,7 @@ const SeqType* seqGetSeqType(const char type_name[])
 
 #ifdef CLIENT
 /*Attaches an FX to a seq.  (Used when the enttype wants an FX stuck to it permentantly. */
-static int seqCreateSeqTypeFx( SeqInst * seq , const char * fxname, Entity *entParent)
+static FxHandle seqCreateSeqTypeFx(SeqInst* seq, const char* fxname, Entity* entParent)
 {
     FxParams fxp;
 
@@ -647,13 +647,13 @@ FxParams *seqInitCostumeFxParams( Entity *e, const CostumePart *costumeFx, const
 int seqDelAllCostumeFx(SeqInst *seq, int firstIndex)
 {
     int i;
-    for (i=eaiSize(&seq->seqcostumefx) - 1; i>=firstIndex; i--)
+    for (i = seq->seqcostumefx_count - 1; i >= firstIndex; i--)
     {
         if (seq->seqcostumefx[i]) {
             fxDelete(seq->seqcostumefx[i], HARD_KILL);
             seq->seqcostumefx[i] = 0;
         }
-        eaiSetSize(&seq->seqcostumefx, i);
+        seq->seqcostumefx_count = i;
     }
     return 1;
 }
@@ -677,11 +677,10 @@ int seqAddCostumeFx(Entity *e, const CostumePart *costumeFx, const BodyPart *bp,
     else 
     {
         bool addit=false;
-        int size = eaiSize(&seq->seqcostumefx);
-        if (!seq->seqcostumefx) eaiCreate(&seq->seqcostumefx);    // Auto-create array.
-        if (index >= size)
+        if (index >= seq->seqcostumefx_count)
         {
-            eaiSetSize(&seq->seqcostumefx, index+1);
+            dynArrayFit(&seq->seqcostumefx, sizeof(FxHandle), &seq->seqcostumefx_max, index);
+            seq->seqcostumefx_count = index + 1;
             addit = true;
         }
         if (!empty && !seq->seqcostumefx[index]) 
@@ -800,7 +799,7 @@ int seqAddCostumeFx(Entity *e, const CostumePart *costumeFx, const BodyPart *bp,
         {
             // Add it!
             FxParams *fxp = seqInitCostumeFxParams(e, costumeFx, bp, numColors);
-            int newfx = fxCreate( costumeFx->pchFxName, fxp );
+            FxHandle newfx = fxCreate(costumeFx->pchFxName, fxp);
             if (newfx) 
             {
                 seq->seqcostumefx[index] = newfx;
@@ -905,13 +904,17 @@ static void seqResetSeqType( SeqInst * seq, const char * type_name, int load_typ
         int healthFxCount = eaSize(&seq->type->healthFx);
         if(healthFxCount)
         {
-            eaiSetSize(&seq->healthFx, healthFxCount);
-            eaiSetSize(&seq->healthGeometryFx, healthFxCount);
+            dynArrayFit(&seq->healthFx, sizeof(FxHandle), &seq->healthFx_max, healthFxCount);
+            seq->healthFx_count = healthFxCount;
+            dynArrayFit(&seq->healthGeometryFx, sizeof(FxHandle), &seq->healthGeometryFx_max, healthFxCount);
+            seq->healthGeometryFx_count = healthFxCount;
         }
         else 
         {
-            eaiDestroy(&seq->healthFx);
-            eaiDestroy(&seq->healthGeometryFx);
+            SAFE_FREE(seq->healthFx);
+            seq->healthFx_count = seq->healthFx_max = 0;
+            SAFE_FREE(seq->healthGeometryFx);
+            seq->healthGeometryFx_count = seq->healthGeometryFx_max = 0;
         }
     }
 #endif
@@ -1000,14 +1003,15 @@ static void seqResetSeqType( SeqInst * seq, const char * type_name, int load_typ
         {
             if( seq->type->fx[i][0] ) //if any string is here
             {
-                int newfx;
+                FxHandle newfx;
                 
                 PERFINFO_AUTO_START("seqCreateSeqTypeFx", 1);
                     newfx = seqCreateSeqTypeFx( seq, seq->type->fx[i], entParent );
                 PERFINFO_AUTO_STOP();
                 
                 if (newfx) {
-                    eaiPush(&seq->seqfx, newfx);
+                    FxHandle* tmp = dynArrayAdd(&seq->seqfx, sizeof(FxHandle), &seq->seqfx_count, &seq->seqfx_max, 1);
+                    *tmp = newfx;
                 } else if( !(game_state.minimized || game_state.inactiveDisplay) )
                 {
                     Errorf( "Failed to make %s ", seq->type->fx[i] );
@@ -1143,13 +1147,15 @@ void seqClearExtraGraphics( SeqInst * seq, int for_reinit, int hard_kill )
 #ifdef CLIENT
     int i;
     int killType = hard_kill?HARD_KILL:SOFT_KILL;
-    for( i = eaiSize(&seq->seqfx)-1; i >= 0; i--)
+    for (i = seq->seqfx_count - 1; i >= 0; i--)
     {
         fxDelete(seq->seqfx[i], killType);
     }
-    eaiDestroy(&seq->seqfx);
-    if (!for_reinit) {
-        for( i = eaiSize(&seq->seqcostumefx)-1; i >= 0; i--)
+    SAFE_FREE(seq->seqfx);
+    seq->seqfx_count = seq->seqfx_max = 0;
+    if (!for_reinit)
+    {
+        for (i = seq->seqcostumefx_count - 1; i >= 0; i--)
         {
             // HACK: this assumes seqcostumefx[i] corresponds to bodyPartList.bodyParts[i]
             //    dont_clear is only set on body parts with a relatively high index,
@@ -1161,7 +1167,8 @@ void seqClearExtraGraphics( SeqInst * seq, int for_reinit, int hard_kill )
                     seq->seqcostumefx[i] = 0;
                 }
         }
-        eaiDestroy(&seq->seqfx);
+        SAFE_FREE(seq->seqcostumefx);
+        seq->seqcostumefx_count = seq->seqcostumefx_max = 0;
     }
 
     for( i = 0 ; i < MAX_SEQFX ; i++ )
@@ -1178,7 +1185,7 @@ void seqClearExtraGraphics( SeqInst * seq, int for_reinit, int hard_kill )
     fxDelete( seq->onClickFx, killType );
 
     //HealthFXMultiples
-    for( i = 0 ; i < eaiSize( &seq->healthFx ) ; i++ )
+    for (i = 0; i < seq->healthFx_count; i++)
     {
         if( seq->healthFx[i] )
         {
@@ -1187,7 +1194,7 @@ void seqClearExtraGraphics( SeqInst * seq, int for_reinit, int hard_kill )
         }
     }
 
-    for( i = 0 ; i < eaiSize( &seq->healthGeometryFx ) ; i++ )
+    for (i = 0; i < seq->healthGeometryFx_count; i++)
     {
         if( seq->healthGeometryFx[i] )
         {
@@ -1388,15 +1395,17 @@ SeqInst * seqFreeInst(SeqInst * seq)
     }
     hdlClearHandle(seq->handle); //currently only of interest to client fx
 
-    if( seq->healthFx ) //HealthFXMultiples
-        eaiDestroy( &seq->healthFx );
-    if( seq->healthGeometryFx )
-        eaiDestroy( &seq->healthGeometryFx );
+    //HealthFXMultiples
+    SAFE_FREE(seq->healthFx);
+    seq->healthFx_count = seq->healthFx_max = 0;
+    SAFE_FREE(seq->healthGeometryFx);
+    seq->healthGeometryFx_count = seq->healthGeometryFx_max = 0;
 
     if (seq->seqcostumefx)
     {
         seqDelAllCostumeFx(seq, 0);
-        eaiDestroy(&seq->seqcostumefx);
+        SAFE_FREE(seq->seqcostumefx);
+        seq->seqcostumefx_count = seq->seqcostumefx_max = 0;
     }
 
 #else
@@ -1853,7 +1862,7 @@ void manageEntityHitPointTriggeredfx( Entity * e )
     }
 }
 
-static GfxNode* s_seqFindGfxNodeGivenBoneNumRecur(BoneId bonenum, int seqhandle, GfxNode *node, int requireChild)
+static GfxNode* s_seqFindGfxNodeGivenBoneNumRecur(BoneId bonenum, FxHandle seqhandle, GfxNode* node, int requireChild)
 {
     for(; node; node = node->next)
     {

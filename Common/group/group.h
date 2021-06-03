@@ -4,6 +4,9 @@
 #include <utilitieslib/stdtypes.h>
 #include <utilitieslib/components/EArray.h>
 #include "render/texEnums.h"
+#ifdef CLIENT
+#include "graphics/FX/fxlists.h"
+#endif
 
 typedef struct GroupDef GroupDef;
 typedef struct GroupFileEntry GroupFileEntry;
@@ -289,11 +292,11 @@ typedef struct DefTracker
 #if CLIENT
     struct VisTray        *dyn_parent_tray;    // if dynamic linked, this is the tray I'm visually linked to
 
-    TrickNode            *tricks;
-    U8                    **src_rgbs;        // cached rgbs for individually lit geometry
-    Grid                *light_grid;
+    TrickNode             *tricks;
+    U8                     **src_rgbs;        // cached rgbs for individually lit geometry
+    Grid                   *light_grid;
     F32                    light_luminance; // Average luminance of all lights in this tray (for tone mapping)
-    int                    fx_id;
+    FxHandle               fx_id;
     U32                    burning_buildings_flags;
     U32                    burning_buildings_fade_start_abs_time;
     int                    lod_override;    // lod+1 to display.  set to zero to disable override.

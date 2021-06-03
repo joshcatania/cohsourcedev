@@ -7,6 +7,7 @@
 #include <utilitieslib/utils/utils.h>
 #include "assert.h"   
 #include "graphics/font.h"
+#include "fxlists.h"
 #include <utilitieslib/components/ReferenceList.h>
 
 //#define USE_REFERENCELIST  defining this will disable all of this file and just pass through to ReferenceList.c/h
@@ -28,21 +29,21 @@ int hdlAssignHandle(void * ptr)
 void * hdlGetPtrFromHandle(int handle)  
 void hdlClearHandle(int handle)
 
-//TO DO: hdl_id_to_ptrs needs to know how to automatically grow. (hard limit is 64k things with valid handles)
+//TO DO: hdl_id_to_ptrs needs to know how to automatically grow. (hard limit is 2B things with valid handles)
 //TO DO: rename file to handle.c/.h and moved to utils or common
 */
 
 //(to the outside world a Handle is just an int.)
-typedef struct Handle
+typedef struct HandleImp
 {
-    S16    id;
-    U16    idx;
-} Handle;
+    S32    id;
+    U32    idx;
+} HandleImp;
 
 typedef struct IDtoPtr
 {
     void * ptr;
-    S16    id;
+    S32    id;
 } IDtoPtr;
 
 ////////// Data for handle management ///////////////////////////
@@ -50,14 +51,14 @@ static IDtoPtr    * hdl_id_to_ptrs;    //big array of all handle - pointer match
 static int        max_handles;    //number of entries in hdl_id_to_ptrs array
 static int        curr_hdl_idx;        //place to start searching for a free slot in hdl_id_to_ptrs
 
-static ReferenceList fxReferenceList;
+//static ReferenceList fxReferenceList;
 
-int hdlAssignHandle(void * ptr)
+FxHandle hdlAssignHandle(void* ptr)
 {
 #ifdef USE_REFERENCELIST
     return referenceListAddElement(fxReferenceList, ptr);
 #else
-    Handle handle;
+    HandleImp handle;
     int start;
 
     //Get right curridx idx (Find a spot in the array for the next fx (almost always be the first place it looks))
@@ -85,36 +86,36 @@ int hdlAssignHandle(void * ptr)
     handle.id  = hdl_id_to_ptrs[curr_hdl_idx].id;
     handle.idx = curr_hdl_idx;
 
-    return *((int*)&handle);
+    return *((FxHandle*)&handle);
 #endif
 }
 
-void hdlClearHandle(int handle)
+void hdlClearHandle(FxHandle handle)
 {
 #ifdef USE_REFERENCELIST
     referenceListRemoveElement(fxReferenceList, handle);
 #else
-    assert( ((Handle*)&handle)->idx >= 0 && ((Handle*)&handle)->idx < max_handles );
-    hdl_id_to_ptrs[((Handle*)&handle)->idx].id = -hdl_id_to_ptrs[((Handle*)&handle)->idx].id;
-    hdl_id_to_ptrs[((Handle*)&handle)->idx].ptr = 0;
+    assert( ((HandleImp*)&handle)->idx >= 0 && ((Handle*)&handle)->idx < max_handles );
+    hdl_id_to_ptrs[((HandleImp*)&handle)->idx].id = -hdl_id_to_ptrs[((HandleImp*)&handle)->idx].id;
+    hdl_id_to_ptrs[((HandleImp*)&handle)->idx].ptr = 0;
 #endif
 }
 
 
-void * hdlGetPtrFromHandle(int handle)
+void* hdlGetPtrFromHandle(FxHandle handle)
 {
 #ifdef USE_REFERENCELIST
     return referenceListFindByRef(fxReferenceList, handle);
 #else
-    assert( ((Handle*)&handle)->idx >= 0 && ((Handle*)&handle)->idx < max_handles );
-    if( hdl_id_to_ptrs[((Handle*)&handle)->idx].id == ((Handle*)&handle)->id )
-        return hdl_id_to_ptrs[((Handle*)&handle)->idx].ptr; 
+    assert( ((HandleImp*)&handle)->idx >= 0 && ((Handle*)&handle)->idx < max_handles );
+    if( hdl_id_to_ptrs[((HandleImp*)&handle)->idx].id == ((HandleImp*)&handle)->id )
+        return hdl_id_to_ptrs[((HandleImp*)&handle)->idx].ptr; 
     return 0;
 #endif
 }
 
 /*If you have a pointer and a handle, and just want to be sure its ok before using it.  Really kind of silly*/
-int hdlGetHandleFromPtr(void * ptr, int handle)
+FxHandle hdlGetHandleFromPtr(void* ptr, FxHandle handle)
 {
     if( ptr && ptr == hdlGetPtrFromHandle(handle) )
         return handle;
@@ -129,12 +130,13 @@ void hdlInitHandles(int initial_max_handles)
 #ifdef USE_REFERENCELIST
     fxReferenceList = createReferenceList();
 #else
-    int i;
+    U32 i;
 
-    assert( initial_max_handles < 65536 ); //two bytes allocated for a handle idx
+    assert( initial_max_handles < UINT_MAX - 1 ); //two bytes allocated for a handle idx
     max_handles = initial_max_handles;
 
     hdl_id_to_ptrs = malloc( max_handles * sizeof( IDtoPtr ) );
+    assert(hdl_id_to_ptrs);
 
     //could do a memset to speed it up
     for( i = 0 ; i < max_handles ; i++)
@@ -147,14 +149,14 @@ void hdlInitHandles(int initial_max_handles)
 
 /*Specialty thing respawnfx uses.
 */
-void hdlMoveHandlePtr(int tohandle, int fromhandle)
+void hdlMoveHandlePtr(FxHandle tohandle, FxHandle fromhandle)
 {
 #ifdef USE_REFERENCELIST
     referenceListMoveElement(fxReferenceList, tohandle, fromhandle);
 #else
-    assert( ((Handle*)&tohandle)->idx >= 0 && ((Handle*)&tohandle)->idx < max_handles );
-    assert( ((Handle*)&fromhandle)->idx >= 0 && ((Handle*)&fromhandle)->idx < max_handles );
-    hdl_id_to_ptrs[((Handle*)&tohandle)->idx].ptr = hdl_id_to_ptrs[((Handle*)&fromhandle)->idx].ptr;
-    hdl_id_to_ptrs[((Handle*)&tohandle)->idx].id = ((Handle*)&tohandle)->id;
+    assert( ((HandleImp*)&tohandle)->idx >= 0 && ((HandleImp*)&tohandle)->idx < max_handles );
+    assert( ((HandleImp*)&fromhandle)->idx >= 0 && ((HandleImp*)&fromhandle)->idx < max_handles );
+    hdl_id_to_ptrs[((HandleImp*)&tohandle)->idx].ptr = hdl_id_to_ptrs[((HandleImp*)&fromhandle)->idx].ptr;
+    hdl_id_to_ptrs[((HandleImp*)&tohandle)->idx].id = ((HandleImp*)&tohandle)->id;
 #endif
 }

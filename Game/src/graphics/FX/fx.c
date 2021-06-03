@@ -114,7 +114,7 @@ void fxTestFxInTfxTxt()
     //Shoot an Effect
     if( player)
     {
-        static int    fireball = 0;
+        static FxHandle fireball = 0;
         FxParams    fxp;
 
         fxInitFxParams(&fxp);
@@ -282,7 +282,7 @@ Hack job to be cleaned up
 */
 static void respawnFx(FxObject * fx)
 {
-    int        newhandle, oldhandle;
+    FxHandle newhandle, oldhandle;
     FxObject * newfx;
 
     assert(fx && fx->fxinfo);
@@ -677,7 +677,7 @@ char * fxPrintFxDebug()
 
 /*Instructs the mailbox to notify this mailbox when an event sets this flag
 this function is not finished as it always assumes primehit is the event*/
-/*void fxNotifyMailboxOnEvent(int fxid, Mailbox * mailbox, int flag) //TO DO savage hack
+/*void fxNotifyMailboxOnEvent(FxHandle fxid, Mailbox * mailbox, int flag) //TO DO savage hack
 {
     FxObject * myfx;
 
@@ -706,7 +706,7 @@ FxGeo * getOldestFxGeo( FxObject * fx )
 really isn't the formal concept of a root for an fx, which can have multiple connection
 points to the world.  But World FX only have one always, so they use this
 */
-void fxChangeWorldPosition( int fx_id, Mat4 mat)
+void fxChangeWorldPosition(FxHandle fx_id, Mat4 mat)
 {
     FxObject * fx;
     FxGeo * fxgeo;
@@ -724,7 +724,7 @@ void fxChangeWorldPosition( int fx_id, Mat4 mat)
 }
 
 //Simple query by somebody who has a fx handle, and is curious
-int fxIsFxAlive(int fxid)
+int fxIsFxAlive(FxHandle fxid)
 {
     return (fxid && hdlGetPtrFromHandle(fxid)) ? 1 : 0;
 }
@@ -733,7 +733,7 @@ int fxIsFxAlive(int fxid)
 //tell them when to die.
 //TO DO should I tie extending duration to the parent bits thing?  That might be cleaner
 // This function should no longer get called, cuz the work it does is now done on the server.
-void fxExtendDuration(int fxid, F32 added_duration)
+void fxExtendDuration(FxHandle fxid, F32 added_duration)
 {
     FxObject * fx = 0;
     if(fxid)
@@ -901,7 +901,7 @@ static void fxFindInputs(FxInfo * fxinfo, FxParams * fxp)
 }
 
 //Get parent of this fx.  (Kinda hacked, ?someday formalize: (fxp->origin, fxp->target, etc)
-static int fxGetHandleOfIthSeqInFxParams( FxParams * fxp, int index )
+static FxHandle fxGetHandleOfIthSeqInFxParams(FxParams* fxp, int index)
 {
     int i;
 
@@ -990,7 +990,7 @@ static int getAnimalRigBoneSubstitute(origBoneId)
 }
 
 /*Core fx create function, the ones all the other fxcreates use*/
-int fxCreate( const char * fxname, FxParams * originalfxp )
+FxHandle fxCreate(const char* fxname, FxParams* originalfxp)
 {
     FxObject *    fx;
     FxInfo   *    fxinfo;
@@ -999,12 +999,12 @@ int fxCreate( const char * fxname, FxParams * originalfxp )
     FxEvent        event;
     FxParams *  fxp;
     GfxNode  *    parentofkeygfxnode;
-    int            fxgeoid;
+    FxHandle fxgeoid;
     int            i;
     int            fxi;
     int            iSizeInputs;
     int            okToCreate;
-    int         fxHandle;
+    FxHandle fxHandle;
 
 
     PERFINFO_AUTO_START("fxCreate", 1);
@@ -1236,7 +1236,7 @@ int fxCreate( const char * fxname, FxParams * originalfxp )
 }
 
 // Only works for a few FX types currently
-void fxChangeParams( int fxid, FxParams * fxp )
+void fxChangeParams(FxHandle fxid, FxParams* fxp)
 {
     FxGeo * fxgeo;
     FxObject * fx;
@@ -1281,7 +1281,7 @@ void fxChangeParams( int fxid, FxParams * fxp )
 }
 
 
-void fxFadeOut( int fxid )
+void fxFadeOut(FxHandle fxid)
 {
     FxGeo * fxgeo;
     FxObject * fx;
@@ -1300,7 +1300,7 @@ void fxFadeOut( int fxid )
 }
 
 
-void fxGentlyKill( int fxid )
+void fxGentlyKill(FxHandle fxid)
 {
     FxObject * fx;
 
@@ -1383,7 +1383,7 @@ static int fxEventCreateFxGeo(FxObject * fx, FxEvent * fxevent, int isDeathEvent
 {
     FxGeo * parent;
     FxGeo * fxgeo;
-    int     fxgeoid;
+    FxHandle fxgeoid;
     F32        customscale;
     F32        animScale;
     GfxNode * gfxnode = 0;
@@ -1889,7 +1889,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
                     if( collGrid(NULL, srcPos, dstPos, &coll, 0, COLL_NOTSELECTABLE | COLL_DISTFROMSTART) )
                     {
                         FxParams fxp;
-                        int iChildEventGeoHandle;
+                        FxHandle iChildEventGeoHandle;
                         fxInitFxParams( &fxp );
                         copyMat4(coll.mat, fxp.keys[fxp.keycount].offset);
                         fxp.keys[fxp.keycount].gfxnode = NULL;
@@ -1934,7 +1934,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
                         else if ( nx_state.hardware || pEmissary->fPhysicsHitForce > fxgeo->event->cthresh )
                         {
                             FxParams fxp;
-                            int iChildEventGeoHandle;
+                            FxHandle iChildEventGeoHandle;
                             fxInitFxParams( &fxp );
                             if ( pEmissary->uPhysicsHitObject == 2 ) // 2 means we have pos/norm info, else just use the position of the object
                             {
@@ -1980,7 +1980,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
                     {
                         FxParams fxp;
                         void* pActor = nwGetActorFromEmissaryGuid(fxgeo->nxEmissary);
-                        int iJEventGeoHandle;
+                        FxHandle iJEventGeoHandle;
                         fxInitFxParams(&fxp);
                         nwGetActorMat4(pActor, (float*)fxp.keys[0].offset);
                         fxp.keycount++;
@@ -2122,7 +2122,7 @@ static int fxGeoUpdateAll( FxObject * fx, U8 inheritedAlpha, F32 animScale )
 
 //Given an effect, try bracket it in screen coordinates
 //right now it just works for geometry and
-void fxFetchSides( int fxid, Vec3 ul, Vec3 lr )
+void fxFetchSides(FxHandle fxid, Vec3 ul, Vec3 lr)
 {
 
 
@@ -2633,7 +2633,7 @@ SeqGfxDataHolder * fxSeqGfxDatasToBeFreed;
 int fxSeqGfxDatasToBeFreedCount;
 int fxSeqGfxDatasToBeFreedMax;
 
-void fxDestroyForReal( int fxid, int part_kill_type )
+void fxDestroyForReal(FxHandle fxid, int part_kill_type)
 {
     FxGeo * fxgeo;
     FxGeo * next;
@@ -2699,7 +2699,7 @@ void fxCleanUp(void)
 }
 
 
-int fxDelete( int fxid, int killtype )
+FxHandle fxDelete(FxHandle fxid, int killtype)
 {
     if( killtype == SOFT_KILL )
         fxGentlyKill( fxid );
@@ -2878,7 +2878,7 @@ void fxRunEngine()
 ///////############################################################################################
 ///////##Little functions to ease interaction with Lennard and Bruce's stuff       ################
 //Really belongs somewhere else, but here is OK for now...
-int fxManageWorldFx( int fxid, char * fxname, Mat4 mat, F32 fadestart, F32 fadedist, DefTracker * light, U8* pTintRGB)
+FxHandle fxManageWorldFx(FxHandle fxid, char* fxname, Mat4 mat, F32 fadestart, F32 fadedist, DefTracker* light, U8* pTintRGB)
 {
     FxObject * fx = 0;
     FxParams fxp;
@@ -2936,7 +2936,7 @@ int fxManageWorldFx( int fxid, char * fxname, Mat4 mat, F32 fadestart, F32 faded
     return  fxid;
 }
 
-void fxSetUseStaticLighting( int fxid, int useStaticLighting )
+void fxSetUseStaticLighting(FxHandle fxid, int useStaticLighting)
 {
     FxObject * fx = 0;
     fx = hdlGetPtrFromHandle( fxid );
@@ -2945,7 +2945,7 @@ void fxSetUseStaticLighting( int fxid, int useStaticLighting )
 }
 
 //clears the lighting on all fxgeos so that it will be recalculated next frame
-void fxResetStaticLighting( int fxid )
+void fxResetStaticLighting(FxHandle fxid)
 {
     FxGeo *fxgeo;
     FxObject *fx = 0;
@@ -2961,7 +2961,7 @@ void fxResetStaticLighting( int fxid )
 }
 
 
-FxDebugAttributes * FxDebugGetAttributes( int fxid, const char * name, FxDebugAttributes * attribs )
+FxDebugAttributes* FxDebugGetAttributes(FxHandle fxid, const char* name, FxDebugAttributes* attribs)
 {
     FxObject * fx;
     FxInfo * fxinfo = 0;
@@ -3040,7 +3040,7 @@ void fxSetIndividualAutoTimersOn(int on)
     fx_engine.fx_auto_timers = on ? 1 : 0;
 }
 
-void fxChangeSeqHandles(int oldSeqHandle, int newSeqHandle)
+void fxChangeSeqHandles(FxHandle oldSeqHandle, FxHandle newSeqHandle)
 {
     FxObject * fx;
 

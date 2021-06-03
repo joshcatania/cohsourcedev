@@ -277,7 +277,7 @@ void fxDeinitDebrisManager()
 
 }
 
-bool fxAddDebris(FxGeo* pGeo, Vec3 vScale, int iFxId)
+bool fxAddDebris(FxGeo* pGeo, Vec3 vScale, FxHandle iFxId)
 {
     FxDebris* pNewDebris;
 

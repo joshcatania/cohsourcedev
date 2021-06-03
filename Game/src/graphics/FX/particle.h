@@ -3,6 +3,7 @@
 
 #include <utilitieslib/utils/mathutil.h>
 #include "fxutil.h"
+#include "fxlists.h"
 
 #define MAX_PARTICLES        50000     //unneeded hard limit, should be limited by number updated or number drawn
 #define MAX_PARTSPERSYS        1500     //goofy hard limit that should be much higher but I'm afraid to remove it this close to production
@@ -303,7 +304,7 @@ typedef struct ParticleSystem
 
     GfxNode        * gfxnode; // Cape drawing hack
 
-    int        geo_handle;
+    FxHandle    geo_handle;
             
     //Particles Themselves
     Particle * particles;        //ptr to head of particle list

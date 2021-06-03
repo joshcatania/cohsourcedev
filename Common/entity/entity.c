@@ -47,6 +47,7 @@
 #else
 
 #include "graphics/FX/fx.h"
+#include "graphics/FX/fxlists.h"
 #include "graphics/seqgraphics.h"
 #include "player/player.h"
 #include "gameData/BodyPart.h"
@@ -227,9 +228,12 @@ void entSetSeq(Entity* e, SeqInst* seq)
     MotionState* motion = e->motion;
     bool reattach=false;
     SeqInst *oldseq = e->seq;
-    int oldseqhandle=0;
+    FxHandle oldseqhandle = 0;
 #if CLIENT && !defined(TEST_CLIENT)
-    int i, *tempFX=0;
+    int i;
+    FxHandle *tempFX = 0, *temp = 0;
+    int tempFX_count = 0;
+    int tempFX_max = 0;
 #endif
 
     if (e->seq && e->seq != seq)
@@ -241,15 +245,17 @@ void entSetSeq(Entity* e, SeqInst* seq)
             {
                 reattach = true;
                 // Clear costume FX/constant FX/etc
-                for( i = 0; i < eaiSize(&oldseq->seqcostumefx); i++)
+                for (i = 0; i < oldseq->seqcostumefx_count; i++)
                 {
                     if(bodyPartList.bodyParts[i]->dont_clear)
                     {
-                        eaiPush(&tempFX,oldseq->seqcostumefx[i]);
+                        *temp = oldseq->seqcostumefx[i];
                         oldseq->seqcostumefx[i] = 0;
                     }
                     else
-                        eaiPush(&tempFX,0);
+                    {
+                        *temp = 0;
+                    }
                 }
 
                 seqClearExtraGraphics( oldseq, 0, 1 );
@@ -271,14 +277,18 @@ void entSetSeq(Entity* e, SeqInst* seq)
         fxChangeSeqHandles(oldseqhandle, seq->handle);
         gfxTreeRelinkSuspendedNodes( seq->gfx_root, seq->handle );
 
-        if(eaiSize(&seq->seqcostumefx)<eaiSize(&tempFX))
-            eaiSetSize(&seq->seqcostumefx,eaiSize(&tempFX));
-        for( i = eaiSize(&tempFX)-1; i >= 0; i--)
+        if (seq->seqcostumefx_count < tempFX_count)
+        {
+            dynArrayFit(&seq->seqcostumefx, sizeof(FxHandle), &seq->seqcostumefx_max, tempFX_count);
+            seq->seqcostumefx_count = tempFX_count;
+            
+        }
+        for (i = tempFX_count - 1; i >= 0; i--)
         {
             if(bodyPartList.bodyParts[i]->dont_clear)
                 seq->seqcostumefx[i] = tempFX[i];
         }
-        eaiDestroy(&tempFX);
+        SAFE_FREE(tempFX);
 #endif
         animCalcObjAndBoneUse(seq->gfx_root->child, seq->handle );
     }

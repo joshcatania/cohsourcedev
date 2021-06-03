@@ -83,7 +83,7 @@ void playerStopForcedFollow(void)
 }
 
 static void setTargetPosFX(int on, Mat4 matTarget){
-    static int id;
+    static FxHandle id;
 
     FxParams fxp;
 

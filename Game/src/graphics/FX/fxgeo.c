@@ -171,7 +171,7 @@ static bool fxGeoWillBecomeDebris(FxGeo* fxgeo)
 #endif
 }
 
-Mat4Ptr fxGeoGetWorldSpot(int fxid)
+Mat4Ptr fxGeoGetWorldSpot(FxHandle fxid)
 {
     FxGeo * fxgeo;
 
@@ -239,7 +239,7 @@ int fxGeoAttachSeq(FxGeo * fxgeo, char * anim)
     return 1;
 }
 
-int fxGeoAttachCape(FxGeo * fxgeo, TokenizerParams ** capeList, int seqHandle, FxParams *fxp )
+int fxGeoAttachCape(FxGeo* fxgeo, TokenizerParams** capeList, FxHandle seqHandle, FxParams* fxp)
 {
     int    capeCount;
     char *capeName;
@@ -400,7 +400,7 @@ void fxGeoParticlesChangeParams(FxGeo * fxgeo, FxParams * fxp, FxInfo *fxInfo)
 }
 
 
-int fxGeoAttachChildFx(FxGeo * fxgeo, char * childfxname, FxParams *parentFxp, int seq_handle, int target_seq_handle)
+int fxGeoAttachChildFx(FxGeo* fxgeo, char* childfxname, FxParams* parentFxp, FxHandle seq_handle, FxHandle target_seq_handle)
 {    
     FxParams    fxp;
 //    FxGeo * fxgeo2;
@@ -557,7 +557,7 @@ static GfxNode * fxGeoAddGfxNode(GfxNode * parent, Mat4 offset, Model * newmodel
 //#######################################################################################
 //FxGeo Create
 
-int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset, FxEvent * fxevent, int iskey, FxInfo *fxinfo, DefTracker * lighttracker )
+FxHandle fxGeoCreate(void** fxgeolist, int* fxgeo_count, GfxNode* key, Mat4 offset, FxEvent* fxevent, int iskey, FxInfo* fxinfo, DefTracker* lighttracker)
 {
     Mat4        realoffset;
     Mat4        result;
@@ -572,7 +572,6 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
 
     //###1. Set up basic FxGeo from params
     fxgeo = (FxGeo*)mpAlloc(fx_engine.fxgeo_mp);
-    listAddForeignMember(fxgeolist, fxgeo);
     if(!fxgeo)
     {
         printToScreenLog( 1, "FXGEO: !!Cant alloc fxgeo " );
@@ -584,9 +583,13 @@ int fxGeoCreate(void ** fxgeolist, int * fxgeo_count, GfxNode * key, Mat4 offset
     fxgeo->handle = hdlAssignHandle(fxgeo);
     if (!fxgeo->handle) // Out of handles
     {
+        mpFree(fx_engine.fxgeo_mp, fxgeo);
         PERFINFO_AUTO_STOP();
         return 0;
     }
+
+    listAddForeignMember(fxgeolist, fxgeo);
+
 
     fxgeo->world_spot_age = -1;
     fxgeo->unique_id = fxgeo_id_pool++; // used by sound system
@@ -992,7 +995,8 @@ void fxGeoInitialize(FxGeo * fxgeo, FxGeo * fxgeolist)
     }        
 }
 
-void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, int * state, EntLight * light, U8 alpha, F32 animScale, char * additionalStates )
+void fxGeoUpdateAnimation(FxGeo* fxgeo, FxHandle seq_handle, int parent_seq_handle, int* state, EntLight* light, U8 alpha, F32 animScale,
+                          char* additionalStates)
 {    
     SeqInst * seq, *parent_seq;
 
@@ -1038,7 +1042,7 @@ void fxGeoUpdateAnimation( FxGeo *fxgeo, int seq_handle, int parent_seq_handle, 
             int i;
             for(i=0; i<MAX_SEQFX; i++)
             {
-                int fxid = seq->const_seqfx[i];
+                FxHandle fxid = seq->const_seqfx[i];
                 if(fxid)
                 {
                     FxObject * childfx = hdlGetPtrFromHandle(fxid);
@@ -1306,7 +1310,7 @@ static SoundEvent* pickNewSound(FxEvent* fxevent)
     return fxevent->sound[soundIndex];
 }
 
-void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
+void fxGeoUpdateSound(FxGeo* fxgeo, FxHandle seqHandle)
 {
     Mat4Ptr mat;
     int soundCount;   
@@ -1389,7 +1393,7 @@ void fxGeoUpdateSound( FxGeo* fxgeo, int seqHandle )
 }
 
 //debug: int decision[100];
-int gfxTreeDrawNodeJustToFillSeqGfxDataDecide( GfxNode *node, int root, BoneInfo *bones, int *decisionIndex, int *decisionBits, int seqHandle )
+int gfxTreeDrawNodeJustToFillSeqGfxDataDecide(GfxNode* node, int root, BoneInfo* bones, int* decisionIndex, int* decisionBits, FxHandle seqHandle)
 {
     int ret=0;
     int i;
@@ -2534,9 +2538,9 @@ int fxGeoUpdate( FxGeo * fxgeo, int * fxobject_flags, U8 inheritedAlpha, F32 ani
     return ( fxgeo->alpha ? 1 : 0 ); //if the alpha hits zero, then it's dead...
 }
 
-void fxGeoDestroy(FxGeo * fxgeo, int * fxobject_flags, void ** fxgeolist, int * fxgeo_count, int killtype, int fxobjectid)
+void fxGeoDestroy(FxGeo* fxgeo, int* fxobject_flags, void** fxgeolist, int* fxgeo_count, int killtype, FxHandle fxobjectid)
 {
-    int fxid;
+    FxHandle fxid;
     int i;
 
     bool bMakeDebris = fxGeoWillBecomeDebris(fxgeo);

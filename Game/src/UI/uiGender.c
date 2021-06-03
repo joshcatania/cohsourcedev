@@ -191,7 +191,7 @@ static void drawGenderBackground(float screenScaleX, float screenScaleY)
     }
 }
 
-int green_blobby_fx_id=0; // fx variables
+FxHandle green_blobby_fx_id = 0; // fx variables
 static FxParams fxp;
 // turns on green blobby
 //

@@ -538,7 +538,7 @@ int totalNodesProcessed;
 int totalNodesRejected;
 
 //Debug function for counting rejected nodes
-static int countNonHidChildren(GfxNode * pNode, int seqHandle)
+static int countNonHidChildren(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
     int total = 0; 

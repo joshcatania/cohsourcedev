@@ -4,6 +4,11 @@
 #include "seq/animtrack.h"
 #include "render/thread/rt_state.h"
 #include "render/texEnums.h"
+#ifdef CLIENT
+#include "graphics/FX/fxlists.h"
+#else
+typedef S64 FxHandle;
+#endif
 
 //#include "graphics/splat.h"
 
@@ -96,17 +101,17 @@ typedef enum TrickFrom
 typedef struct GfxNode 
 {
     //Hot
-    int                seqHandle;  //used to check boneidex ptr, but that's sloppy
+    FxHandle          seqHandle;  //used to check boneidex ptr, but that's sloppy
     U8                useFlags;
-    struct GfxNode *next;
+    struct GfxNode    *next;
 
     //Warm
-    struct GfxNode *child;
-    U8                alpha;
-    U16                flags;
-    BoneId            anim_id; //bone that this gfx_node represents
-    Model            *model;
-    Mat4Ptr            viewspace;
+    struct GfxNode  *child;
+    U8              alpha;
+    U16             flags;
+    BoneId          anim_id; //bone that this gfx_node represents
+    Model           *model;
+    Mat4Ptr         viewspace;
     Mat4            mat;
     Vec3            bonescale;
     Vec3            animDelta;   //Different between baseSkeleton and animationTrack, for playing, say male anims on chicks
@@ -114,7 +119,7 @@ typedef struct GfxNode
     //Cool
     void            * splat; //To do, Union with something?
 #if CLOTH_HACK
-    ClothObject        * clothobj; //To do, Union with something?
+    ClothObject     * clothobj; //To do, Union with something?
 #endif
     const BoneAnimTrack   * bt;    //your animation track
     U8                fxRefCount;
@@ -148,7 +153,7 @@ static INLINEDBG int gfxTreeNodeIsValid(GfxNode * node, int id)
 
 void gfxTreeFindWorldSpaceMat(Mat4 result, GfxNode * node);
 GfxNode *gfxTreeFindRecur(char *name,GfxNode *node);
-GfxNode * gfxTreeFindBoneInAnimation(BoneId bone, GfxNode *node, int seqHandle, int root);
+GfxNode * gfxTreeFindBoneInAnimation(BoneId bone, GfxNode *node, FxHandle seqHandle, int root);
 TrickNode * gfxTreeAssignTrick( GfxNode * node );
 void gfxTreeInitGfxNodeWithObjectsTricks(GfxNode * node, TrickNode *trick);
 void gfxTreeInitCharacterAndFxTree();
@@ -160,8 +165,8 @@ void gfxTreeDeleteSky(GfxNode *node);
 #endif
 GfxNode *gfxTreeInsert(GfxNode *parent);
 void gfxTreeDelete(GfxNode *node);
-void gfxTreeDeleteAnimation(GfxNode * node, int seqHandle);
-int gfxTreeRelinkSuspendedNodes(GfxNode * node, int seqHandle);
+void gfxTreeDeleteAnimation(GfxNode* node, FxHandle seqHandle);
+int gfxTreeRelinkSuspendedNodes(GfxNode* node, FxHandle seqHandle);
 void gfxTreeResetTrickFlags( GfxNode * gfxnode );
 bool gfxTreeParentIsVisible(GfxNode * node);
 

@@ -397,7 +397,7 @@ void selectTarget( bool bCycle, bool bBackwards, int friendorfoe, int deadoraliv
         current_pet = erGetRef(current_target);
 }
 
-static int drawPointer(Entity *e, int iID, Vec3 vecLoc, char *pchFX)
+static FxHandle drawPointer(Entity* e, FxHandle iID, Vec3 vecLoc, char* pchFX)
 {
     Mat4 mat;
     Vec3 vec;
@@ -429,7 +429,7 @@ static int drawPointer(Entity *e, int iID, Vec3 vecLoc, char *pchFX)
     return iID;
 }
 
-static int killPointer(Entity *e, int iID)
+static FxHandle killPointer(Entity* e, FxHandle iID)
 {
     fxDelete(iID, SOFT_KILL);
     return 0;

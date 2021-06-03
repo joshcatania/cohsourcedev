@@ -145,7 +145,7 @@ typedef struct
     PowerAnimType type;
     F32 time;
     const char* fxName;
-    int fxid;
+    FxHandle fxid;
     FxKey fxkey0;
     FxKey fxkey1;
     const int** seqBits;
@@ -1274,7 +1274,7 @@ void setSequence(Entity* entity, const U32** sequenceBits)
     }
 }
 
-static int playFX(const char* fxName, FxKey input0, FxKey input1)
+static FxHandle playFX(const char* fxName, FxKey input0, FxKey input1)
 {
     Entity* e = playerPtrForShell(1);
     PowerCustomization* customization;

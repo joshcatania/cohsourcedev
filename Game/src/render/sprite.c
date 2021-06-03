@@ -382,7 +382,7 @@ bool isDrawingSprites(void)
     return g_is_drawing_sprites;
 }
 
-extern int green_blobby_fx_id;
+extern FxHandle green_blobby_fx_id;
 void drawAllSprites()
 {
     static DisplaySprite    **sprites_visible = 0;

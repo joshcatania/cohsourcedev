@@ -392,8 +392,8 @@ void DebuggerPrint(const char * msg);
 #define VA_END()                va_end(*__vaTemp__);}
 
 // cast ints to and from pointers safely
-#define U32_TO_PTR(x)    ((void*)(uintptr_t)(U32)(x))    
-#define    S32_TO_PTR(x)    U32_TO_PTR(x)    // don't sign-extend
+#define U32_TO_PTR(x)    ((void*)(uintptr_t)(U32)(x))
+#define S32_TO_PTR(x)    U32_TO_PTR(x)    // don't sign-extend
 #define PTR_TO_U32(x)    ((U32)(uintptr_t)(x))
 #define PTR_TO_S32(x)    ((S32)PTR_TO_U32(x))
 

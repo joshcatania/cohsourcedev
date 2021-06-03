@@ -4,6 +4,7 @@
 #include <utilitieslib/components/Queue.h>
 #include <utilitieslib/components/memorypool.h>
 #include "NovodeX/NwWrapper.h"
+#include "fxlists.h"
 
 #if NOVODEX
 typedef struct NwEmissaryData NwEmissaryData;
@@ -21,7 +22,7 @@ typedef struct FxDebris
     Vec3 vScale;
     int iLastPos[3];
     GridIdxList* pGridIdxList;
-    int iFxID;
+    FxHandle iFxID;
     //const FxBhvr* bhvr;
 } FxDebris;
 
@@ -45,7 +46,7 @@ typedef struct FxDebrisManager
 
 void fxInitDebrisManager();
 void fxDeinitDebrisManager();
-bool fxAddDebris(FxGeo* pGeo, Vec3 vScale, int iFxID);
+bool fxAddDebris(FxGeo* pGeo, Vec3 vScale, FxHandle iFxID);
 void fxUpdateDebrisManager();
 void fxSetMaxDebrisCount();
 void fxApplyForce(Vec3 vEpicenter, F32 fRadius, F32 fPower, F32 fPowerJitter, F32 fCentripetal, eNxForceType eForce, Mat3Ptr pmXform );

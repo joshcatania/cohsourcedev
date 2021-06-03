@@ -316,7 +316,7 @@ static Model *getCapeGeometry(const char *geoname, const char *filename)
     return model;
 }
 
-void fxCapeInstInit(FxCapeInst *fxCapeInst, char *capeFile, int seqHandle, FxParams *fxp)
+void fxCapeInstInit(FxCapeInst* fxCapeInst, char* capeFile, FxHandle seqHandle, FxParams* fxp)
 {
     const char *capeTextures[4];
     char capeFilePath[MAX_PATH];

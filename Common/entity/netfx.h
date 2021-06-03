@@ -4,6 +4,11 @@
 
 #include <utilitieslib/stdtypes.h>
 #include <utilitieslib/utils/Color.h>
+#ifdef CLIENT
+#include "graphics/FX/fxlists.h"
+#else
+typedef S64 FxHandle;
+#endif
 
 //2 bits
 typedef enum {
@@ -71,9 +76,9 @@ typedef struct NetFx
 typedef struct ClientNetFxTracker
 {
     NetFx    netfx;            //copy of the netfx command received from server
-    int     fxid;            //handle of the fx on the client
-    F32        age;            //how long it's creation has been delayed so far
-    U8        state;            //bookkeeping: what is this FXT doing right now?
+    FxHandle fxid;              // handle of the fx on the client
+    F32      age;            //how long it's creation has been delayed so far
+    U8       state;            //bookkeeping: what is this FXT doing right now?
 
 } ClientNetFxTracker;
 

@@ -5,6 +5,7 @@
 #include <utilitieslib/stdtypes.h>
 #include "gameComm/trayCommon.h"
 #include "entity/entityRef.h"
+#include "graphics/FX/fxlists.h"
 
 typedef    struct DefTracker    DefTracker;
 typedef struct GroupDef GroupDef;
@@ -45,10 +46,10 @@ typedef struct Cursor
 
     int                initted;
 
-    int                s_iCursorID;  //ID of the bullseye fx currently in use for targeting, if any
+    FxHandle        s_iCursorID; // ID of the bullseye fx currently in use for targeting, if any
     EWorldTarget    s_iLastWorldTarget;
 
-}Cursor;
+} Cursor;
 
 extern Cursor cursor;
 extern Vec3    current_location_target;

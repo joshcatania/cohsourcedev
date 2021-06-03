@@ -1114,7 +1114,7 @@ void receiveSGRaidList(Packet *pak) {;}
 void receiveSupergroupList(Packet *pak) {;}
 void sgRaidListRefresh(void) {;}
 
-void animCalcObjAndBoneUse( GfxNode * pNode, int seqHandle ) {;}
+void animCalcObjAndBoneUse( GfxNode * pNode, FxHandle seqHandle ) {;}
 void costume_setCurrentCostume( Entity *e , int supergroup ){;}
 
 void clientLoadMapStart(char *mapname) {;}

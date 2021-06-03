@@ -151,7 +151,7 @@ static bool forceCrashCheck = false;
 
 ParticleSystemInfo sysInfo;
 
-#define MAX_HANDLES 65535 //currently can't be set any higher
+#define MAX_HANDLES 1048576 
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
 
 void parseArgs(int argc,char **argv)

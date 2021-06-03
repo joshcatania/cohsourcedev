@@ -25,6 +25,7 @@
     #include "fxinfo.h"
     #include "graphics/sun.h"
     #include "graphics/groupMiniTrackers.h"
+    #include "graphics/FX/fxlists.h"
 #endif
 
 #define GFXDEBUG 0
@@ -94,7 +95,7 @@ GfxNode    *found;
 
 /*Given a root bone return the node. Pass in gfx_root child, because
 gfx_root doesn't have the seqHandle...*/
-GfxNode * gfxTreeFindBoneInAnimation(BoneId bone, GfxNode *node, int seqHandle, int root)
+GfxNode* gfxTreeFindBoneInAnimation(BoneId bone, GfxNode* node, FxHandle seqHandle, int root)
 {
 GfxNode    *found;
 
@@ -566,7 +567,7 @@ void gfxTreeDeleteSky(GfxNode *node)
 //////////////////////////////////////////////////////////////////////////////////
 /// Main GfxTree ONly functions 
 
-int gfxTreeCountNodes(GfxNode *node, int seqHandle)
+int gfxTreeCountNodes(GfxNode* node, FxHandle seqHandle)
 {
     int ret=0;
     if (!node)
@@ -666,7 +667,7 @@ static void removeSuspendedNode(GfxNode * node)
     }
 }
 
-static void detatchFx(GfxNode * node, int seqHandle)
+static void detatchFx(GfxNode* node, FxHandle seqHandle)
 {
     GfxNode * next;
     GfxNode * freed;
@@ -718,7 +719,7 @@ bool gfxTreeParentIsVisible(GfxNode * node)
 
 
 //seq->gfx_root
-void gfxTreeDeleteAnimation(GfxNode * node, int seqHandle)
+void gfxTreeDeleteAnimation(GfxNode* node, FxHandle seqHandle)
 {
     if(!node) 
         return;
@@ -755,7 +756,7 @@ void gfxTreeMakeMemoryFriendly()
     }
 }*/
 
-static void gfxTreeRelinkSuspendedRecur(GfxNode * node, int seqHandle)
+static void gfxTreeRelinkSuspendedRecur(GfxNode* node, FxHandle seqHandle)
 {    
     for( ; node ; node = node->next)
     {
@@ -781,7 +782,7 @@ static void gfxTreeRelinkSuspendedRecur(GfxNode * node, int seqHandle)
 
 
 //seq->gfx_root
-int gfxTreeRelinkSuspendedNodes(GfxNode * node, int seqHandle)
+int gfxTreeRelinkSuspendedNodes(GfxNode * node, FxHandle seqHandle)
 {
     BoneId i;
 

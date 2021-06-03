@@ -265,7 +265,7 @@ static void entCreateEntityFx( Entity * e, ClientNetFxTracker * fxtracker, NetFx
     FxParams fxp;
     const char *fxname;
     Entity * entOrigin = 0, *entTarget = 0;
-    int fxid = 0;
+    FxHandle fxid = 0;
     int failedToInitFxParams = 0;
 
     assert(e && e->seq && netfx && netfx->handle && netfx->net_id);
@@ -994,7 +994,7 @@ F32 nonRandomRoll( F32 recentResult, int steepness )
     return newRand;
 }
 
-void gfxNodeTest(GfxNode *node,int seqHandle)
+void gfxNodeTest(GfxNode* node, FxHandle seqHandle)
 {
     for(;node;node = node->next)
     {
@@ -1007,7 +1007,7 @@ void gfxNodeTest(GfxNode *node,int seqHandle)
 }
 
 
-void gfxNodeSetEntAlpha(GfxNode *node,U8 alpha,int seqHandle)
+void gfxNodeSetEntAlpha(GfxNode* node, U8 alpha, FxHandle seqHandle)
 {
     for(;node;node = node->next)
     {
@@ -2956,7 +2956,7 @@ PERFINFO_AUTO_STOP_START("NetFx, Updating Collision Grid, and Static Lighting Ch
         // a costume_Apply(...) call can change e->seq, leaving this routine with it's seq pointer dangling.  So we defer the
         // call to here, since we don't care what happens to e->seq at this point.
         Animation anim;
-        int const_seqfx[MAX_SEQFX];
+        FxHandle const_seqfx[MAX_SEQFX];
         int itr;
         for (itr = 0; itr < MAX_SEQFX; ++itr)
         {
@@ -3688,7 +3688,7 @@ void entFree(Entity *ent)
     entFreeCommon(ent);
 }
 
-static void clearBonesWithStaticLights(GfxNode *node, int seqHandle)
+static void clearBonesWithStaticLights(GfxNode* node, FxHandle seqHandle)
 {
     for(; node; node = node->next)
     {

@@ -4,6 +4,7 @@
 #include "seq/gfxtree.h"
 #ifdef CLIENT
 #include <utilitieslib/components/earray.h>
+#include "graphics/FX/fxlists.h"
 #endif
 
 #include "TriggeredMove.h"
@@ -519,7 +520,7 @@ typedef struct SeqInst
     ModelHeader* bonescale_anm_fat;        //+1.0 bonescale_ratio == use %100 of these scale values
     
     int            updated_appearance;
-    int            handle;        //safe identifier fx system uses.  Could be expanded so more things use it.    
+    FxHandle       handle;                      // safe identifier fx system uses.  Could be expanded so more things use it.    
     int            lod_level;                    //Current LOD (which lod_level model should be in use now)
     int            loadingObjects;                //Are any of my bits of geometry still loading.
 
@@ -583,8 +584,12 @@ typedef struct SeqInst
     char *        rgbs_array[BONEID_COUNT];  //is this hackery?
     int            static_light_done;
 
-    int            *healthFx; //the const seq fx to be killed when you leave this health range
-    int            *healthGeometryFx; //the const seq fx geometry to be killed when you leave this health range
+    FxHandle* healthFx; // the const seq fx to be killed when you leave this health range
+    int healthFx_count;
+    int healthFx_max;
+    FxHandle* healthGeometryFx; // the const seq fx geometry to be killed when you leave this health range
+    int healthGeometryFx_count;
+    int healthGeometryFx_max;
 
     Vec3        headOffset; //height of the head in the base animation
 
@@ -593,14 +598,18 @@ typedef struct SeqInst
     F32            chestYaw;
     F32            feetAreStuck;
 
-    eaiHandle seqfx; //the fx spawned on this guy at creation to be killed on death.
-    eaiHandle seqcostumefx; //the fx spawned on this guy from costume definitions
-    int            const_seqfx[MAX_SEQFX]; //the const seq fx to be killed at the end of the move
-    int            volume_fx;  //fx on this guy because of the volume he is in
-    int            volume_fx_type;
-    int            onClickFx;  //fx on this guy because he was clicked
-    int            big_splash;  //have I done a big splash that I do when I'm first submerged?
-    int            worldGroupFx; //the fx created to draw the worldGeometry specified in the entType
+    FxHandle*   seqfx; // the fx spawned on this guy at creation to be killed on death.
+    int         seqfx_count;
+    int         seqfx_max;
+    FxHandle*   seqcostumefx; // the fx spawned on this guy from costume definitions
+    int         seqcostumefx_count;
+    int         seqcostumefx_max;
+    FxHandle    const_seqfx[MAX_SEQFX]; // the const seq fx to be killed at the end of the move
+    FxHandle    volume_fx;              // fx on this guy because of the volume he is in
+    int         volume_fx_type;
+    FxHandle    onClickFx;          // fx on this guy because he was clicked
+    int         big_splash;  //have I done a big splash that I do when I'm first submerged?
+    FxHandle    worldGroupFx;       // the fx created to draw the worldGeometry specified in the entType
     //For move prediction
     FutureMoveTracker futuremovetrackers[MAX_FUTUREMOVETRACKERS]; 
 
@@ -730,7 +739,7 @@ void seqManageVolumeFx(SeqInst * seq, Mat4 mat, Mat4 prevMat, Vec3 velocity );
 //Debug info
 void printScreenSeq(SeqInst * seq);
 void printLod(SeqInst * seq);
-int printGeometry( GfxNode * node, int seqHandle, int * y );
+int printGeometry(GfxNode* node, FxHandle seqHandle, int* y);
 void printSeqType( SeqInst * seq);
 void showAnimationDebugInfo(void);
 

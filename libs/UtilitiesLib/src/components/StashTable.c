@@ -21,7 +21,7 @@
     #pragma warning(disable:4133)
 #endif
 
-    #pragma warning(disable:4028) // parameter differs from declaration
+#pragma warning(disable:4028) // parameter differs from declaration
 #pragma warning(disable:4024) // different types for formal and actual parameter
 #pragma warning(disable:4047) // return type differs in lvl of indirection warning
 #pragma warning(disable:4002) // too manay macro parameters warning

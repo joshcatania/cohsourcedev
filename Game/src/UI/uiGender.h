@@ -3,6 +3,7 @@
 
 #include "UI/uiInclude.h"
 #include "entity/costume.h"
+#include "graphics/FX/fxlists.h"
 
 typedef struct BodyConfigScales
 {
@@ -80,7 +81,7 @@ void setAnims(const char **bitnames);
 void SelectConfig(int idx, int prevIdx);
 int buildMatchConfig(void);
 
-extern int green_blobby_fx_id;
+extern FxHandle green_blobby_fx_id;
 extern int gCurrentGender;
 extern int gCurrentBuild;
 void load_MenuAnimations();

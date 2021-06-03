@@ -225,7 +225,7 @@ int isExtentBone(BoneId bone)
 }
 
 //Finds view space top, bottom, left and right extremes of an anim
-void seqGetExtremes( GfxNode * node, int seqHandle, SeqGfxData * seqGfxData, Vec3 ul, Vec3 lr, Vec3 worldMin, Vec3 worldMax )
+void seqGetExtremes(GfxNode* node, FxHandle seqHandle, SeqGfxData* seqGfxData, Vec3 ul, Vec3 lr, Vec3 worldMin, Vec3 worldMax)
 {
     Vec3 vec;
     Vec3 vecScreen;
@@ -849,7 +849,7 @@ void printSeqType( SeqInst * seq)
     xyprintf( x, y++,"%-55s ", "");
 }
 
-int printGeometry( GfxNode * node, int seqHandle, int * y )
+int printGeometry(GfxNode* node, FxHandle seqHandle, int* y)
 {
     GfxNode * mynode;
     int totalTris = 0;
@@ -1078,7 +1078,7 @@ void printScreenSeq(SeqInst * seq)
 
 //#################################################################
 //##########Load SeqInst
-static int getBonesThatNeedStaticLight(GfxNode * node, GfxNode * bones[BONEID_COUNT], int seqHandle)
+static int getBonesThatNeedStaticLight(GfxNode* node, GfxNode* bones[BONEID_COUNT], FxHandle seqHandle)
 {
     int hits = 0;
 
@@ -1464,13 +1464,13 @@ U8 * getThePixelBuffer( SeqInst * seq, Vec3 headshotCameraPos, F32 headShotFovMa
     fxRunEngine();
     partRunEngine();
     // Check to see if we have any FX on us
-    hasFx = eaiSize(&seq->seqfx);
+    hasFx = seq->seqfx_count;
     for( i = 0 ; i < MAX_SEQFX ; i++ )
     {
         if( seq->const_seqfx[i] )
             hasFx = 1;
     }
-    for( i = 0 ; i < eaiSize(&seq->seqcostumefx) ; i++ )
+    for (i = 0; i < seq->seqcostumefx_count; i++)
     {
         if( seq->seqcostumefx[i] )
             hasFx = 1;
@@ -1672,13 +1672,13 @@ static bool takePicture_viewport_precallback2(ViewportInfo *pViewportInfo)
     partRunEngine();
 
     // Check to see if we have any FX on us
-    hasFx = eaiSize(&seq->seqfx);
+    hasFx = seq->seqfx_count;
     for( i = 0 ; i < MAX_SEQFX ; i++ )
     {
         if( seq->const_seqfx[i] )
             hasFx = 1;
     }
-    for( i = 0 ; i < eaiSize(&seq->seqcostumefx) ; i++ )
+    for (i = 0; i < seq->seqcostumefx_count; i++)
     {
         if( seq->seqcostumefx[i] )
             hasFx = 1;

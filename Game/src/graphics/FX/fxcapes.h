@@ -66,7 +66,7 @@ void destroyFxCapeInst(FxCapeInst *fxCapeInst);
 
 void fxPreloadCapeInfo(void);
 bool fxCapeInitWindInfo(TokenizerParseInfo *tpi, void *structptr);
-void fxCapeInstInit(FxCapeInst *fxCapeInst, char *capeFile, int seqHandle, FxParams *fxp);
+void fxCapeInstInit(FxCapeInst* fxCapeInst, char* capeFile, FxHandle seqHandle, FxParams* fxp);
 void fxCapeInstChangeParams(FxCapeInst *fxCapeInst, FxParams *fxp);
 int fxCapeGeoExists(const char * harnessName, char cape_name[]);
 

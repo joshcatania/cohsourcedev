@@ -75,7 +75,7 @@ static Model * animFindBoneInHeader( ModelHeader * header, int id )
     return 0;
 }
 
-int animCheckForLoadingObjects( GfxNode * node, int seqHandle )
+int animCheckForLoadingObjects(GfxNode* node, FxHandle seqHandle)
 {
     for( ; node ; node = node->next )
     {
@@ -664,7 +664,7 @@ static void getBasePosition( const BoneAnimTrack * bt, Vec3 posVec )
 
 
 
-void gfxNodeSetChildUseFlags( GfxNode * node, int seqHandle )
+void gfxNodeSetChildUseFlags(GfxNode* node, FxHandle seqHandle)
 {
     if( node && node->seqHandle == seqHandle )
     {
@@ -674,7 +674,7 @@ void gfxNodeSetChildUseFlags( GfxNode * node, int seqHandle )
 }
 
 //Clear the GFX_USE_CHILD bit if this node no longer has any children used for anything, recurse up
-void gfxNodeClearChildUseFlags( GfxNode * node, int seqHandle )
+void gfxNodeClearChildUseFlags(GfxNode* node, FxHandle seqHandle)
 {
     int stillHasKids = 0;
     GfxNode * cNode;
@@ -775,7 +775,7 @@ void gfxNodeClearFxUseFlag( GfxNode * node )
 #endif
 
 //Figure out which bones are used by skin in this animation currently
-void animGetBoneUse( GfxNode * pNode, int seqHandle, int bonesUsed[BONEID_COUNT] )
+void animGetBoneUse(GfxNode* pNode, FxHandle seqHandle, int bonesUsed[BONEID_COUNT])
 {
     GfxNode * node;
     BoneInfo * bi;
@@ -807,7 +807,7 @@ void animGetBoneUse( GfxNode * pNode, int seqHandle, int bonesUsed[BONEID_COUNT]
 }
 
 //Now that you know all the bones that are used in the animation, set the useFlags for the anim
-void animSetBoneUseFlags( GfxNode * pNode, int seqHandle, int bonesUsed[BONEID_COUNT] )
+void animSetBoneUseFlags(GfxNode* pNode, FxHandle seqHandle, int bonesUsed[BONEID_COUNT])
 {
     GfxNode * node;
 
@@ -826,7 +826,7 @@ void animSetBoneUseFlags( GfxNode * pNode, int seqHandle, int bonesUsed[BONEID_C
 }
 
 //Clear out all the GFX_USE_CHILD flags so I can set them again from scratch
-void animClearAllParentUse( GfxNode * pNode, int seqHandle )
+void animClearAllParentUse(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
 
@@ -842,7 +842,7 @@ void animClearAllParentUse( GfxNode * pNode, int seqHandle )
 }
 
 //Somewhat inefficient way to look at all the nodes, set their parent's GFX_USE_CHILD if useFlags is true
-void animSetAllParentUse( GfxNode * pNode, int seqHandle )
+void animSetAllParentUse(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
 
@@ -861,7 +861,7 @@ void animSetAllParentUse( GfxNode * pNode, int seqHandle )
 
 //Set GFX_USE_FX again based on foreign nodes attached
 #ifdef CLIENT 
-void animSetFxUse( GfxNode * pNode, int seqHandle )
+void animSetFxUse(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
 
@@ -883,7 +883,7 @@ void animSetFxUse( GfxNode * pNode, int seqHandle )
 #endif
 
 //Debug function for counting rejected nodes
-static int countNonHidChildrenGfx(GfxNode * pNode, int seqHandle)
+static int countNonHidChildrenGfx(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
     int total = 0;
@@ -899,7 +899,7 @@ static int countNonHidChildrenGfx(GfxNode * pNode, int seqHandle)
     return total;
 }
 
-void animCheckUseFlagsResults(GfxNode *node, int seqHandle)
+void animCheckUseFlagsResults(GfxNode* node, FxHandle seqHandle)
 {
     for(;node;node = node->next)
     {
@@ -917,7 +917,7 @@ void animCheckUseFlagsResults(GfxNode *node, int seqHandle)
     }
 }
 
-void animSetBoneUseFlagsForRagdoll( GfxNode* pNode, int seqHandle )
+void animSetBoneUseFlagsForRagdoll(GfxNode* pNode, FxHandle seqHandle)
 {
     GfxNode * node;
 
@@ -933,7 +933,7 @@ void animSetBoneUseFlagsForRagdoll( GfxNode* pNode, int seqHandle )
 
 
 //Recalculate all the GFX_USE_* flags
-void animCalcObjAndBoneUse( GfxNode * pNode, int seqHandle )
+void animCalcObjAndBoneUse(GfxNode* pNode, FxHandle seqHandle)
 {
 #ifdef CLIENT
     int bonesUsed[BONEID_COUNT];
