@@ -339,7 +339,7 @@ void handleAuthUpdateRequest(AccountServerShard *shard, Packet *packet_in)
     }
 
     // provide free monthly server transfer for VIPs
-    if (vip)
+    if ((vip && g_accountServerState.cfg.monthly_vip_xfer_tokens))
     {
         SYSTEMTIME time;
         GetSystemTime(&time);

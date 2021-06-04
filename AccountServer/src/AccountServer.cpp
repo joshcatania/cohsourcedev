@@ -124,6 +124,7 @@ static ParseTable parse_AccountServerCfg[] =
     { "GrantAllSKU",                            TOK_BOOLFLAG(AccountServerCfg,grant_all_sku,0)                    },
     { "MinLoyaltyPoints",                        TOK_INT(AccountServerCfg,min_loyalty_points,0)                    },
     { "AutoBuyProducts",                        TOK_BOOLFLAG(AccountServerCfg,auto_buy_products,0)                },
+    {"MonthlyVipXferTokens",                    TOK_BOOLFLAG(AccountServerCfg, monthly_vip_xfer_tokens, 0)},
     // Legacy stuff
     { "ArchiveMerged",                            TOK_BOOLFLAG(AccountServerCfg,archive_merged,0)                    },
     { "CompMode",                                TOK_BOOLFLAG(AccountServerCfg,comp_mode,0)                        },
