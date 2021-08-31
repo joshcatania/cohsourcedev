@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug-Optimized|Win32">
+      <Configuration>Debug-Optimized</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug-Optimized|x64">
+      <Configuration>Debug-Optimized</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -31,6 +39,12 @@
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -39,6 +53,12 @@
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v142</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
@@ -59,10 +79,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -75,6 +101,12 @@
     <LibraryPath>$(SolutionDir)..\..\libs\UtilitiesLib\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\cryptopp-8.3\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\zlib-1.2.11\bin\$(PlatformTarget)\$(Configuration);$(LibraryPath)</LibraryPath>
     <IncludePath>$(ProjectDir)..\..\..\Launcher\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\Common\entity;$(ProjectDir)..\..\..\CmdRelay\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src\container;$(ProjectDir)..\..\..\MapServer\src\dbcomm;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\crashrpt\include;$(SolutionDir)..\..\3rdparty\zlib-1.2.11\include;$(SolutionDir)..\..\3rdparty\cryptopp-8.3\include;$(SolutionDir)..\..\MapServer\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|Win32'">
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+    <LibraryPath>$(SolutionDir)..\..\libs\UtilitiesLib\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\cryptopp-8.3\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\zlib-1.2.11\bin\$(PlatformTarget)\$(Configuration);$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\..\..\Launcher\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\Common\entity;$(ProjectDir)..\..\..\CmdRelay\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src\container;$(ProjectDir)..\..\..\MapServer\src\dbcomm;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\crashrpt\include;$(SolutionDir)..\..\3rdparty\zlib-1.2.11\include;$(SolutionDir)..\..\3rdparty\cryptopp-8.3\include;$(SolutionDir)..\..\MapServer\src;$(IncludePath)</IncludePath>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(OutDir)intermediate\</IntDir>
@@ -82,6 +114,12 @@
     <IncludePath>$(ProjectDir)..\..\..\Launcher\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\Common\entity;$(ProjectDir)..\..\..\CmdRelay\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src\container;$(ProjectDir)..\..\..\MapServer\src\dbcomm;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\crashrpt\include;$(SolutionDir)..\..\3rdparty\zlib-1.2.11\include;$(SolutionDir)..\..\3rdparty\cryptopp-8.3\include;$(SolutionDir)..\..\MapServer\src;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
+    <IntDir>$(OutDir)intermediate\</IntDir>
+    <IncludePath>$(ProjectDir)..\..\..\Launcher\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\Common\entity;$(ProjectDir)..\..\..\CmdRelay\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src\container;$(ProjectDir)..\..\..\MapServer\src\dbcomm;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\crashrpt\include;$(SolutionDir)..\..\3rdparty\zlib-1.2.11\include;$(SolutionDir)..\..\3rdparty\cryptopp-8.3\include;$(SolutionDir)..\..\MapServer\src;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)..\..\libs\UtilitiesLib\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\cryptopp-8.3\bin\$(PlatformTarget)\$(Configuration);$(SolutionDir)..\..\3rdparty\zlib-1.2.11\bin\$(PlatformTarget)\$(Configuration);$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|x64'">
     <OutDir>$(ProjectDir)..\..\bin\$(PlatformTarget)\$(Configuration)\</OutDir>
     <IntDir>$(OutDir)intermediate\</IntDir>
     <IncludePath>$(ProjectDir)..\..\..\Launcher\src;$(ProjectDir)..\..\..\Common;$(ProjectDir)..\..\..\Common\entity;$(ProjectDir)..\..\..\CmdRelay\src;$(ProjectDir)..\..\..\DBServer\src;$(ProjectDir)..\..\..\MapServer\src\container;$(ProjectDir)..\..\..\MapServer\src\dbcomm;$(ProjectDir)..\..\..\libs\UtilitiesLib\include;$(ProjectDir)..\..\..\libs\crashrpt\include;$(SolutionDir)..\..\3rdparty\zlib-1.2.11\include;$(SolutionDir)..\..\3rdparty\cryptopp-8.3\include;$(SolutionDir)..\..\MapServer\src;$(IncludePath)</IncludePath>
@@ -135,7 +173,45 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_WINDOWS;FULLDEBUG;_CRTDBG_MAP_ALLOC;SVRMONCOMM_PARSE_INFO_DEFSA;RELAYCOMM_PARSE_INFO_DEFSA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpplatest</LanguageStandard>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;_WINSOCK_DEPRECATED_NO_WARNINGS;_CRT_NONSTDC_NO_DEPRECATE;_WINDOWS;FULLDEBUG;_CRTDBG_MAP_ALLOC;SVRMONCOMM_PARSE_INFO_DEFSA;RELAYCOMM_PARSE_INFO_DEFSA;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>psapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+    <PostBuildEvent>
+      <Command>copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin
+copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin</Command>
+    </PostBuildEvent>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug-Optimized|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
