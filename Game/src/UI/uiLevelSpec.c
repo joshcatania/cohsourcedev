@@ -248,6 +248,7 @@ void drawPowerAndEnhancements( Character *pchar, Power * pow, int x, int y, int 
                     && (ea->count+pow->iNumBoostsBought >= MAX_BOOSTS_BOUGHT
                         || ea->count+eaSize(&pow->ppBoosts) >= pow->ppowBase->iMaxBoosts))
                 || pow->iNumBoostsBought >= MAX_BOOSTS_BOUGHT
+                || !pow->ppowBase->bManualBoostSlots
                 || eaSize(&pow->ppBoosts) >= pow->ppowBase->iMaxBoosts
                 || eaiSize(&pow->ppowBase->pBoostsAllowed)<=0)
         {
