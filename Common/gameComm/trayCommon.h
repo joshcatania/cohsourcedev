@@ -26,6 +26,12 @@ typedef enum
     kCurTrayType_Primary,
     kCurTrayType_Alt,
     kCurTrayType_Alt2,
+	kCurTrayType_Alt3,
+    kCurTrayType_Alt4,
+    kCurTrayType_Alt5,
+    kCurTrayType_Alt6,
+    kCurTrayType_Alt7,
+    kCurTrayType_Alt8,
     kCurTrayType_Razer,
     // NOTE: you must update containerloadsave.c if you add elems here
     
@@ -53,7 +59,13 @@ typedef enum
     kCurTrayMask_Primary = 1,
     kCurTrayMask_ALT = kCurTrayMask_Primary<<1,
     kCurTrayMask_ALT2 = kCurTrayMask_ALT<<1,
-    kCurTrayMask_ALL = (kCurTrayMask_ALT2 | kCurTrayMask_ALT | kCurTrayMask_Primary | kCurTrayMask_NONE),
+    kCurTrayMask_ALT3 = kCurTrayMask_ALT2<<1,
+    kCurTrayMask_ALT4 = kCurTrayMask_ALT3<< 1,
+    kCurTrayMask_ALT5 = kCurTrayMask_ALT4<< 1,
+    kCurTrayMask_ALT6 = kCurTrayMask_ALT5<< 1,
+    kCurTrayMask_ALT7 = kCurTrayMask_ALT6<< 1,
+    kCurTrayMask_ALT8 = kCurTrayMask_ALT7<< 1,
+    kCurTrayMask_ALL = (kCurTrayMask_ALT8 | kCurTrayMask_ALT7 | kCurTrayMask_ALT6 | kCurTrayMask_ALT5 | kCurTrayMask_ALT4 | kCurTrayMask_ALT3 | kCurTrayMask_ALT2 | kCurTrayMask_ALT | kCurTrayMask_Primary | kCurTrayMask_NONE),
 } CurTrayMask;
 
 CurTrayMask curtraytype_to_altmask( CurTrayType var );
@@ -191,6 +203,12 @@ typedef struct Tray
     int    current_trays[kCurTrayType_Count];
     int    mode;                    // used to serialize whether the alt trays are open to the database
     int    mode_alt2;                // "
+	int    mode_alt3;                // "
+    int    mode_alt4;
+    int    mode_alt5;
+    int    mode_alt6;
+    int    mode_alt7;
+    int    mode_alt8;
     int    trayIndexes;            // contains 8 four-bit numbers that are the indices of the eight possible trays (1-9)
     TrayInternals    *internals;    // private data that shouldn't be exposed to the external world.
 } Tray;

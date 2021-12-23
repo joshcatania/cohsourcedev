@@ -596,8 +596,9 @@ void respec_allowLevelUp(bool levelUp)
 // used for power pool selection
 void respec_power(void)
 {
-    static ScrollBar sb = {0};
+    static ScrollBar sb[2] = {0};
     CBox box;
+    CBox poolBox;
     int ht;
     float screenScaleX, screenScaleY;
     int screenScalingDisabled = is_scrn_scaling_disabled();
@@ -616,7 +617,8 @@ void respec_power(void)
     if( !respec.initPowerSet )
     {
         respec.initPowerSet = TRUE;
-        sb.offset = 0;
+        sb[0].offset = 0;
+        sb[1].offset = 0;
         s_ShowCombatNumbersHere = 0;
     }
 
@@ -631,12 +633,16 @@ void respec_power(void)
     }
     else
     {
-        ht = powerSetSelector(153 - sb.offset, respec.category, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, &sb.offset, MENU_RESPEC);
+        ht = powerSetSelector(153 - sb[0].offset, respec.category, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, &sb[0].offset,
+                              MENU_RESPEC);
         BuildCBox(&box, 85*screenScaleX,80*screenScaleY,355*screenScaleX,500*screenScaleY);
-        doScrollBarEx( &sb, (475-PIX4*2-R10*2), ht, 88, 110, 30, &box, 0, screenScaleX, screenScaleY );
+        doScrollBarEx( &sb[0], (475-PIX4*2-R10*2), ht, 88, 110, 30, &box, 0, screenScaleX, screenScaleY );
     }
 
-    powerSelector( respec.category, 158, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, 0);
+    int scrollBarX = 636 + 270 + 43;
+    powerSelector(respec.category, 158 - sb[1].offset, respec.pchar, respec.powerSet, respec.power, screenScaleX, screenScaleY, &sb[1].offset);
+    BuildCBox(&poolBox, 600 * screenScaleX, 80 * screenScaleY, 355 * screenScaleX, 500 * screenScaleY);
+    doScrollBarEx(&sb[1], (475 - PIX4 * 2 - R10 * 2), ht, scrollBarX, 110, 30, &poolBox, 0, screenScaleX, screenScaleY);
 
     // the crazy powers frame
     drawMenuPowerFrame( 85, 80, 355, 500, 150, 80, 358, 500, 21, 20, screenScaleX, screenScaleY, CLR_WHITE, 0x00000044 );
@@ -667,7 +673,8 @@ static void respec_powerCounter(bool powerSelected, float screenScaleX, float sc
 {
     Entity *e = playerPtr();
     float screenScale = MIN(screenScaleX, screenScaleY);
-    // subtract 1 because we auto-assign the 1st power in the secondary powerset
+
+
     int remaining = character_CountPowersForLevel( respec.pchar, maxRespecLevel() );
     int color;
 
@@ -781,22 +788,6 @@ void respec_Init()
 
                 dbgBoughtSecondary = 1;
                 pset = character_BuyPowerSet(respec.pchar, e->pchar->ppPowerSets[i]->psetBase);
-
-                // Villain EATs can pick entirely from specialization sets so
-                // they don't get the original secondary for free.
-                if (!class_MatchesSpecialRestriction(e->pchar->pclass, "ArachnosSoldier") &&
-                    !class_MatchesSpecialRestriction(e->pchar->pclass, "ArachnosWidow"))
-                {
-                    // auto-buy the first secondary power, since the user really doesn't have a choice
-                    // keep the same uniqueID, if possible
-                    const BasePower *firstSecondaryPower = e->pchar->ppPowerSets[i]->psetBase->ppPowers[0];
-                    Power *oldPower = character_OwnsPower(e->pchar, firstSecondaryPower);
-                    character_BuyPowerEx(respec.pchar, pset, firstSecondaryPower, NULL, 0, oldPower ? oldPower->iUniqueID : 0, e->pchar);
-                    np->basePow = e->pchar->ppPowerSets[i]->psetBase->ppPowers[0];
-                    np->baseSet = e->pchar->ppPowerSets[i]->psetBase;
-                    eaPush(&respec.powers, np);
-                    respec.pickingPrimary = true;
-                }
             }
         }
 

@@ -3611,15 +3611,15 @@ uiSetting uiSettings[] = {
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    attachArticle),        }, // 28
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    clicktomove),        }, // 29
     {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt2)            }, // 30
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated),        }, // 31 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt3)            }, // 31 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
     // FULL!! Add new fields to uiSettings4
     // DO NOT ADD ANY MORE OPTIONS TO THIS BITFIELD!!!!!!!!!!!!!"
 };
 
 // DO NOT ADD ANY MORE OPTIONS TO THIS BITFIELD!!!!!!!!!!!!!"
 uiSetting uiSettings2[] = {
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated)                    }, // 0 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated),                }, // 1 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt4)                    }, // 0 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt5)                }, // 1 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    disableDrag),                }, // 2
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    showPetBuffs),                }, // 3
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    disablePetSay),                }, // 4
@@ -3653,14 +3653,14 @@ uiSetting uiSettings2[] = {
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    webHideFriends),            }, // 28
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    hideCoopPrompt),            }, // 29
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    is_a_spammer),                }, // 30
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated),                }, // 31 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt6)                }, // 31 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
     // FULL!! Add new fields to uiSettings4
     // DO NOT ADD ANY MORE OPTIONS TO THIS BITFIELD!!!!!!!!!!!!!"
 };
 
 // DO NOT ADD ANY MORE OPTIONS TO THIS BITFIELD!!!!!!!!!!!!!
 uiSetting uiSettings3[] = {
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated)                        }, // 0 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt7)                        }, // 0 deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    hideInspirationFull),            }, // 1
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    hideSalvageFull),                }, // 2
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    hideRecipeFull),                }, // 3
@@ -3691,7 +3691,7 @@ uiSetting uiSettings3[] = {
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    ArchitectAutoSave)                }, // 24
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    noXP)                            }, // 25
     // DO NOT ADD ANY MORE OPTIONS TO THIS BITFIELD!!!!!!!!!!!!!
-    {OFFSET2_PTR(Entity, pl,    EntPlayer,    deprecated)                        }, // 26 Deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
+    {OFFSET3_PTR2(Entity, pl,    EntPlayer,    tray,    Tray,        mode_alt8)                        }, // 26 Deprecated. if you reclaim this, you have to update the deprecated array in unpackUISettings
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    disableEmail)                    }, // 27
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    friendSgEmailOnly)                }, // 28
     {OFFSET2_PTR(Entity, pl,    EntPlayer,    noXPExemplar)                    }, // 29
@@ -3829,14 +3829,14 @@ void unpackUISettings(Entity *e)
     int deprecated[4][32] = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 1, },
-                              { 1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, },
+                              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 1, },
-                              { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                0, 0, },
+                              { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 
+                                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 
                                 0, 0, },
                             { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

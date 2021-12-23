@@ -589,6 +589,12 @@ enum
     CMD_TRAY_PREV_ALT2,
     CMD_TRAY_STICKY,
     CMD_TRAY_STICKY_ALT2,
+	CMD_TRAY_STICKY_ALT3,
+    CMD_TRAY_STICKY_ALT4,
+    CMD_TRAY_STICKY_ALT5,
+    CMD_TRAY_STICKY_ALT6,
+    CMD_TRAY_STICKY_ALT7,
+    CMD_TRAY_STICKY_ALT8,
     CMD_TRAY_CLEAR,
     CMD_SALVAGEDEFS_LIST,
     CMD_CONCEPTDEFS_LIST,
@@ -2083,6 +2089,18 @@ Cmd game_cmds[] =
           "Syntax: tray_sticky <SHOWING TRAY NUM> <0 for non sticky, sticky otherwise>"},
     { 0, "tray_sticky_alt2",        CMD_TRAY_STICKY_ALT2, {{ 0 }}, CMDF_HIDEVARS,
                         "Toggle the sticky-state of the alt2 tray."},
+	{ 0, "tray_sticky_alt3",        CMD_TRAY_STICKY_ALT3, {{ 0 }}, CMDF_HIDEVARS,
+                        "Toggle the sticky-state of the alt3 tray." },
+    { 0, "tray_sticky_alt4",        CMD_TRAY_STICKY_ALT4, {{ 0 }}, CMDF_HIDEVARS,
+                         "Toggle the sticky-state of the alt4 tray." },
+    { 0, "tray_sticky_alt5",        CMD_TRAY_STICKY_ALT5, {{ 0 }}, CMDF_HIDEVARS,
+                         "Toggle the sticky-state of the alt5 tray." },
+    { 0, "tray_sticky_alt6",        CMD_TRAY_STICKY_ALT6, {{ 0 }}, CMDF_HIDEVARS,
+                         "Toggle the sticky-state of the alt6 tray." },
+    { 0, "tray_sticky_alt7",        CMD_TRAY_STICKY_ALT7, {{ 0 }}, CMDF_HIDEVARS,
+                         "Toggle the sticky-state of the alt7 tray." },
+    { 0, "tray_sticky_alt8",        CMD_TRAY_STICKY_ALT8, {{ 0 }}, CMDF_HIDEVARS,
+                         "Toggle the sticky-state of the alt8 tray." },					
     { 0, "next_tray",        CMD_TRAY_NEXT, {{ 0 }}, 0,
                         "Go to next tray." },
     { 0, "prev_tray",        CMD_TRAY_PREV, {{ 0 }}, 0,
@@ -4636,6 +4654,18 @@ int cmdGameParse(char *str, int x, int y)
         xcase CMD_TRAY_STICKY_ALT2:
             // only call on alt trays
              tray_toggleSticky( kCurTrayType_Alt2 );
+		xcase CMD_TRAY_STICKY_ALT3:
+             tray_toggleSticky(kCurTrayType_Alt3);
+        xcase CMD_TRAY_STICKY_ALT4:
+             tray_toggleSticky(kCurTrayType_Alt4);
+        xcase CMD_TRAY_STICKY_ALT5:
+             tray_toggleSticky(kCurTrayType_Alt5);
+        xcase CMD_TRAY_STICKY_ALT6:
+             tray_toggleSticky(kCurTrayType_Alt6);
+        xcase CMD_TRAY_STICKY_ALT7:
+             tray_toggleSticky(kCurTrayType_Alt7);
+        xcase CMD_TRAY_STICKY_ALT8:
+             tray_toggleSticky(kCurTrayType_Alt8);	 
         xcase CMD_TRAY_NEXT:
             tray_change( tray_razer_adjust( kCurTrayType_Primary ), 1 );
         xcase CMD_TRAY_PREV:

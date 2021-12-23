@@ -130,7 +130,8 @@ static int s_next_tray_mode( int tray_mask )
     // find the first un-set bit
     
     int i;
-    for( i = 0; i <= kCurTrayType_Alt2; ++i )
+    for( i = 0; i <= kCurTrayType_Alt8; ++i )
+    //for (i = 0; i <= 9; ++i)
     {
         int mask = 1<<i;
         
@@ -144,7 +145,8 @@ static int s_next_tray_mode( int tray_mask )
     // --------------------
     // if not found, reset sticky to just show primary
     
-    if( i > kCurTrayType_Alt2 )
+    if( i > kCurTrayType_Alt8 )
+    //if (i > 9)
     {
         tray_mask = kCurTrayMask_Primary;
     }
@@ -2946,7 +2948,7 @@ static int get_num_trays_showing()
     // for each mask above the current level, if a bit is set
     // count it as showing. Note that we only deal with the three normal
     // trays here - the Razer tray is not part of the tray stack.
-    for( i = 0; i <= kCurTrayType_Alt2; ++i )
+    for( i = 0; i <= kCurTrayType_Alt8; ++i )
     { 
         if( tray_is_showing( i ) )
         {
@@ -3413,7 +3415,7 @@ int trayWindow()
                 tray_to_use = trays_drawn + 1;
             }
             else if (((serverTrayOverride || s_displayServerTray || !tray_is_showing(trays_drawn)) && ht <= goal_ht) 
-                || trays_drawn > kCurTrayType_Alt2)
+                || trays_drawn > kCurTrayType_Alt8)
             {
                 tray_to_use = -1;
             }
