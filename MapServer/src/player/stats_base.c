@@ -135,22 +135,18 @@ static void InitResultDescs(void)
     for (i = 0; i < n; i++)
     {
         StaticMapInfo* info = staticMapInfos[i];
+        StatResultDesc *pnew = (StatResultDesc *)calloc(sizeof(StatResultDesc), 1);
 
-        if(!info->dontAutoStart && !info->introZone)
-        {
-            StatResultDesc *pnew = (StatResultDesc *)calloc(sizeof(StatResultDesc), 1);
+        pnew->pchItem = info->name;
+        pnew->eCat = kStat_Kills;
+        stashAddInt(s_hashResultTables, GetDescName(pnew->pchItem, pnew->eCat), (int)(intptr_t)pnew, false);
+        eaPush(&g_ppResultDescs, pnew);
 
-            pnew->pchItem = info->name;
-            pnew->eCat = kStat_Kills;
-            stashAddInt(s_hashResultTables, GetDescName(pnew->pchItem, pnew->eCat), (int)(intptr_t)pnew, false);
-            eaPush(&g_ppResultDescs, pnew);
-
-            pnew = (StatResultDesc *)calloc(sizeof(StatResultDesc), 1);
-            pnew->pchItem = info->name;
-            pnew->eCat = kStat_XP;
-            stashAddInt(s_hashResultTables, GetDescName(pnew->pchItem, pnew->eCat), (int)(intptr_t)pnew, false);
-            eaPush(&g_ppResultDescs, pnew);
-        }
+        pnew = (StatResultDesc *)calloc(sizeof(StatResultDesc), 1);
+        pnew->pchItem = info->name;
+        pnew->eCat = kStat_XP;
+        stashAddInt(s_hashResultTables, GetDescName(pnew->pchItem, pnew->eCat), (int)(intptr_t)pnew, false);
+        eaPush(&g_ppResultDescs, pnew);
     }
 
     // All the villain groups
@@ -163,7 +159,6 @@ static void InitResultDescs(void)
         stashAddInt(s_hashResultTables, GetDescName(pnew->pchItem, pnew->eCat), (int)(intptr_t)pnew, false);
         eaPush(&g_ppResultDescs, pnew);
     }
-
 }
 
 /**********************************************************************func*
@@ -201,7 +196,7 @@ void InitStats(void)
     for (i = 0; i < VG_MAX; i++)
     {
         bool bFound = stashAddIntAndGetElement(s_hashStatNames, villainGroupGetName(i), s_iCntStats, false, &he);
-        assertmsgf( bFound, "InitStats: failed to find villian group \"%s\" (duplicate name?)", villainGroupGetName(i));
+        assertmsgf(bFound, "InitStats: failed to find villian group \"%s\" (duplicate name?)", villainGroupGetName(i));
         eaPushConst(&s_ppchStatNames, stashElementGetStringKey(he));
         s_iCntStats++;
     }
@@ -223,9 +218,9 @@ void InitStats(void)
 
 #ifdef STAT_TRACK_VILLAIN_TYPE
     // And all the villains
-    for(i =eaSize(&villainDefs)-1; i>= 0; i--)
+    for(i =eaSize(&villainDefList.villainDefs)-1; i>= 0; i--)
     {
-        bool bFound = stashAddIntAndGetElement(s_hashStatNames, villainDefs[i]->name, s_iCntStats, &he);
+        bool bFound = stashAddIntAndGetElement(s_hashStatNames, villainDefList.villainDefs[i]->name, s_iCntStats, false, &he);
         assert( bFound );
         eaPush(&s_ppchStatNames, stashElementGetStringKey(he));
 
@@ -366,6 +361,55 @@ DBStatResult *stat_GetTable(const char *pchName, StatCategory cat, StatPeriod pe
     }
 
     return NULL;
+}
+
+void stat_UpdateTables(Packet* pak)
+{
+    U32 groups = pktGetBitsAuto(pak);
+    if (groups == -1)
+    {
+        groups = 0;
+    }
+    for (int i = 0; i < groups; ++i)
+    {
+        char* group = pktGetString(pak);
+
+        U32 columns = pktGetBitsAuto(pak);
+        if (columns == -1)
+        {
+            columns = 0;
+        }
+        for (int j = 0; j < columns; ++j)
+        {
+            U32 category = pktGetBitsAuto(pak);
+            U32 period = pktGetBitsAuto(pak);
+            DBStatResult* table = stat_GetTable(group, category, period);
+            if (table)
+            {
+                eaiClear(&table->pIDs);
+                eaiClear(&table->piValues);
+                eaiSetSize(&table->pIDs, 0);
+                eaiSetSize(&table->piValues, 0);
+            }
+
+            U32 topCharacters = pktGetBitsAuto(pak);
+            if (topCharacters == -1)
+            {
+                topCharacters = 0;
+            }
+            for (int k = 0; k < topCharacters; ++k)
+            {
+                U32 id = pktGetBitsAuto(pak);
+                U32 value = pktGetBitsAuto(pak);
+
+                if (table)
+                {
+                    eaiPush(&table->pIDs, id);
+                    eaiPush(&table->piValues, value);
+                }
+            }
+        }
+    }
 }
 
 /* End of File */

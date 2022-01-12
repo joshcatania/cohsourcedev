@@ -238,6 +238,7 @@ enum
     DBSERVER_ACCOUNTSERVER_MULTI_GAME_TRANSACTION,
     DBSERVER_ACCOUNTSERVER_MULTI_GAME_TRANSACTION_COMPLETED,
     DBSERVER_CLIENT_MESSAGE,
+    DBSERVER_KIOSK_STATS,
     // Only add things to the *end* of this enum!
     // Or change the DbServer<->Mapserver version number if you remove anything
     DBSERVER_NUMCMDS,

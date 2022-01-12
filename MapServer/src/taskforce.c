@@ -564,10 +564,9 @@ static char* TaskForceCalcTimeString(int seconds)
 //
 void TaskForceCompleteStatus(Entity *player)
 {
-    char    *text = NULL;
-    int        i;
-    int        challenge = false;
-    char    buf[100];
+    char*   text = NULL;
+    int     i;
+    int     challenge = false;
 
     // don't do anything if the player isn't in a taskforce
     if (!PlayerInTaskForceMode(player))
@@ -621,7 +620,7 @@ void TaskForceCompleteStatus(Entity *player)
     {
         estrConcatf(&text, "%d", TaskForceGetParameter(player, TFPARAM_DEATHS_MAX_VALUE));
     }
-    estrConcatf(&text, "</td><td align=right border=0>%d", TaskForceGetParameter(player, TFPARAM_DEATHS));
+    estrConcatf(&text, "</td><td align=right border=0>");
     if (TaskForceIsParameterEnabled(player, TFPARAM_DEATHS))
     {
         if (TaskForceCheckFailureBit(player, TFPARAM_DEATHS))
@@ -630,7 +629,7 @@ void TaskForceCompleteStatus(Entity *player)
         } else {
             estrConcatStaticCharArray(&text, "<font color=LightGreen>");
         }
-        estrConcatf(&text, "%s</font></td><td align=right border=0>", buf);
+        estrConcatf(&text, "%d</font></td><td align=right border=0>", TaskForceGetParameter(player, TFPARAM_DEATHS));
         if (TaskForceCheckFailureBit(player, TFPARAM_DEATHS))
         {
             estrConcatf(&text, "<font color=FireBrick>%s", textStd("FailedString"));
@@ -639,7 +638,7 @@ void TaskForceCompleteStatus(Entity *player)
         }
         estrConcatStaticCharArray(&text, "</font>");
     } else {
-        estrConcatf(&text, "%s</td><td align=right border=0>", buf);
+        estrConcatf(&text, "%d</td><td align=right border=0>", TaskForceGetParameter(player, TFPARAM_DEATHS));
     }
     estrConcatStaticCharArray(&text, "</td></tr>");
 

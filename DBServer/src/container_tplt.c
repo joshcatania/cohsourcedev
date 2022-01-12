@@ -737,7 +737,7 @@ static bool loadAttributesFromFile(const char * fname, AttributeList * attr)
         }
 
         idx = atoi(args[0]);
-        stashAddIntAndGetElement(attr->hash_table, _strlwr(args[1]), idx, false, &element);
+        stashAddIntAndGetElement(attr->hash_table, args[1], idx, false, &element);
         eaSetForcedConst(&attr->names, stashElementGetStringKey(element), idx);
     }
 

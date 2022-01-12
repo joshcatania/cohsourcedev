@@ -2038,6 +2038,8 @@ int dbMessageCallback(Packet *pak,int cmd,NetLink *link)
             eventHistory_ReceiveResults(pak);
         xcase DBSERVER_REJOIN_FAIL:
             turnstileMapserver_handleRejoinFail(pak);
+        xcase DBSERVER_KIOSK_STATS:
+            handleKioskStats(pak);
 #endif
         // container server messages
 #ifdef CONTAINER_SERVER
@@ -2190,6 +2192,13 @@ void sendAccountCatalogUpdateToClients( Packet* pak_in )
         pak_in->stream.cursor.byte = cursor_byte;
         pak_in->stream.cursor.bit    = cursor_bit;
     }
+}
+
+#include <player/stats_base.h> // for stat_UpdateTables
+
+void handleKioskStats(Packet* pak)
+{
+    stat_UpdateTables(pak);
 }
 
 #endif

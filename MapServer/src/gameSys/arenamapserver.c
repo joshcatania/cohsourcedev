@@ -1729,7 +1729,7 @@ void DumpArenaLeaders(Entity *e, StuffBuff* psb, int iNumPlaces)
     int iLast = -1;
     int iCnt = 0;
 
-    iCnt = eaSize(&g_mapserver_leaderboard[0].entries);
+    // iCnt = eaSize(&g_mapserver_leaderboard[0].entries); // disable until fixed, returns null for all entries
 
     if(iCnt<1)
     {

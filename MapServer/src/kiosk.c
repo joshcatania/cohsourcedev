@@ -213,10 +213,24 @@ static void DumpResults(Entity *e, StuffBuff *psb, DBStatResult *pres, int iNumP
     {
         addStringToStuffBuff(psb, "<tr><td></td>");
 
-        if( dbPlayerTypeFromId(pres->pIDs[i]) == kPlayerType_Hero )
-            addStringToStuffBuff(psb, "<font face=computer outline=0 color=paragon>" );
+        if (dbPraetorianProgressFromId(pres->pIDs[i]) == kPraetorianProgress_Praetoria)
+        {
+            if (dbPlayerTypeFromId(pres->pIDs[i]) == kPlayerType_Hero)
+                addStringToStuffBuff(psb, "<font face=computer outline=0 color=resistagon>");
+            else
+                addStringToStuffBuff(psb, "<font face=computer outline=0 color=loyalagon>");
+        }
+        /*else if (dbPlayerSubTypeFromId(pres->pIDs[i]) == kPlayerSubType_Rogue)
+        {
+            addStringToStuffBuff(psb, "<font face=computer outline=0 color=rogueagon>");
+        }*/
         else
-            addStringToStuffBuff(psb, "<font face=computer outline=0 color=villagon>" );
+        {
+            if (dbPlayerTypeFromId(pres->pIDs[i]) == kPlayerType_Hero)
+                addStringToStuffBuff(psb, "<font face=computer outline=0 color=paragon>");
+            else
+                addStringToStuffBuff(psb, "<font face=computer outline=0 color=villagon>");
+        }
 
         if(iLast != pres->piValues[i])
         {

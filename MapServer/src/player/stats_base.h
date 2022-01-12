@@ -59,6 +59,8 @@ void InitStats(void);
     // Used to init the stats system. Should only be called once at program
     // start.
 
+#include <utilitieslib/network/net_typedefs.h> // for Packet:
+void stat_UpdateTables(Packet* pak);
 
 #endif /* #ifndef STATS_BASE_H__ */
 

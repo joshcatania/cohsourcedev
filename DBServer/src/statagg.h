@@ -16,6 +16,8 @@ void stat_Update(void);
 void stat_UpdateStatsForEnt(int dbid, char *pchEnt);
     // Update all the stats which appear in the given text ent definition.
 
+void BroadcastStats();
+
 #endif /* #ifndef STATAGG_H__ */
 
 /* End of File */

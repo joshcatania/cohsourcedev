@@ -127,6 +127,8 @@ typedef struct ServerCfg
     U32 advertisedIp;
     int petcommandsforall;
 
+    U32 stats_update;
+
 } ServerCfg;
 
 extern ServerCfg server_cfg;

@@ -2003,7 +2003,7 @@ int main(int argc,char **argv)
                     logStatPrint('a');
                 xcase 'b':
                     printf("Broadcasting stats...\n");
-                    stat_Update();
+                    BroadcastStats();
                     printf("Done.\n");
                 xcase 'c':
                     authCommDisconnect();

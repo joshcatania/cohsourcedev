@@ -87,6 +87,7 @@ void handleShutdown(Packet *pak);
 void handleRelayCmd(Packet *pak);
 int handleClientCmdFailed(Packet *pak);
 void handleCustomData(Packet *pak);
+void handleKioskStats(Packet *pak); // data received from DBServer's 10s broadcast
 int dbMessageCallback(Packet *pak,int cmd,NetLink *link);
 void dbSendSaveCmd(void);
 void dbSendPlayerDisconnect(int db_id, int logout, int logout_login);

@@ -126,6 +126,8 @@ void serverCfgLoad()
     server_cfg.MARTY_enabled = 0;
     server_cfg.petcommandsforall = 0;
 
+    server_cfg.stats_update = 60; // default stat broadcast and rotation to every 60s if not defined
+
 #ifdef DBSERVER
     //We might be reloading the config file so bits set by prior versions
     //of the file can't persist
@@ -640,6 +642,10 @@ void serverCfgLoad()
         {
             server_cfg.advertisedIp = ipFromString(s2);
         }
+        else if (stricmp(s, "StatsUpdate") == 0)
+        {
+            server_cfg.stats_update = atoi(s2);
+        }
     }
     fclose(file);
 
@@ -667,6 +673,12 @@ void serverCfgLoad()
     }
     if (server_cfg.MARTY_enabled)
         strcat(server_cfg.map_server_params, " -MARTY_enabled");
+
+    // no reason to process stats if it won't be in a reasonable time
+    if (server_cfg.stats_update == 0 || server_cfg.stats_update > 86400)
+    {
+        server_cfg.no_stats = 1;
+    }
 
     if ((!server_cfg.auth_server[0]) == (!server_cfg.fake_auth))
         FatalErrorf("Either one of UseFakeAuth or AuthServer needs to be enabled in servers.cfg");

@@ -644,7 +644,6 @@ void stat_ReadTable(void)
 
     TODO(); // Code cleanup needed to improve clarity for future audits
 
-    loadstart_printf("Reading stats...");
     TopsInit();
 
     if(server_cfg.no_stats)
@@ -761,7 +760,6 @@ void stat_ReadTable(void)
     freeStuffBuff(&sb);
 
     DbgDumpTops();
-    loadend_printf("");
 }
 
 
@@ -865,6 +863,63 @@ void stat_UpdateStatsForEnt(int dbid, char *pchEnt)
     }
 }
 
+#include <comm_backend.h> // for DBSERVER_KIOSK_STATS
+
+/** Author: Pazaz, 5/28/2021
+ * This function broadcasts the current stat table to all connected MapServers.
+ */
+void BroadcastStats()
+{
+    // generate data
+    Packet* pak = pktCreate();
+    pktSendBitsAuto(pak, stashGetValidElementCount(s_hashTops));
+    StashTableIterator iter;
+    stashGetIterator(s_hashTops, &iter);
+    StashElement elem;
+    while ((stashGetNextElement(&iter, &elem)) != false)
+    {
+        StatTops* ptops = (StatTops*)stashElementGetPointer(elem);
+        // TODO: getAttribString is always lowercase here... would be optimal to return as the original hash table name
+        pktSendString(pak, getAttribString(stashElementGetIntKey(elem)));
+        pktSendBitsAuto(pak, ARRAY_SIZE(cols) - STATS_HASH_BASE);
+        for (int col = STATS_HASH_BASE; col < ARRAY_SIZE(cols); col++)
+        {
+            DBStatResult* pres = &ptops->aTop[cols[col].iCat][cols[col].iPeriod];
+
+            if (cols[col].iCat >= 0)
+            {
+                pktSendBitsAuto(pak, cols[col].iCat);
+                pktSendBitsAuto(pak, cols[col].iPeriod);
+                DBStatResult* pres = &ptops->aTop[cols[col].iCat][cols[col].iPeriod];
+                int entries = eaiSize(&pres->pIDs);
+                if (entries < 0)
+                {
+                    entries = 0;
+                }
+
+                pktSendBitsAuto(pak, entries);
+                for (int i = 0; i < entries; i++)
+                {
+                    pktSendBitsAuto(pak, pres->pIDs[i]);
+                    pktSendBitsAuto(pak, pres->piValues[i]);
+                }
+            }
+        }
+    }
+
+    // send packets
+    for (int i = 0; i < map_list->num_alloced; ++i)
+    {
+        MapCon* map = (MapCon*)map_list->containers[i];
+        if (map->active)
+        {
+            Packet* out = pktCreateEx(map->link, DBSERVER_KIOSK_STATS);
+            pktAppend(out, pak);
+            pktSend(&out, map->link);
+        }
+    }
+}
+
 /**********************************************************************func*
  * stat_Update
  *
@@ -885,14 +940,16 @@ void stat_Update(void)
     }
     else
     {
-        if(timerElapsed(timer) < 10)
+        if (timerElapsed(timer) < server_cfg.stats_update)
         {
             return;
         }
     }
     timerStart(timer);
 
-    RotateStats();
+    stat_ReadTable(); // update stats from db
+    RotateStats();    // rotate periods
+    BroadcastStats(); // send to servers
 }
 
 /* End of File */
