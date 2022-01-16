@@ -1119,9 +1119,9 @@ static void addAttribValue(char **str, AttribType eType, const AttribModTemplate
     else if( offset >= (int)offsetof(CharacterAttributes, fPerceptionRadius) )
     {
         if( bBoth )
-            estrConcatf(str, "<color #ffffff>%+.2f%%%% (%+.2f%%%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
+            estrConcatf(str, "<color #ffffff>%+.2f%% (%+.2f%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
         else
-            estrConcatf(str, "<color #ffffff>%+.2f%%%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
+            estrConcatf(str, "<color #ffffff>%+.2f%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
         return;
     }
     else
@@ -1140,23 +1140,23 @@ static void addAttribValue(char **str, AttribType eType, const AttribModTemplate
         xcase kAttribType_Cur:
         {
             if( bBoth )
-                estrConcatf(str, "%+.2f%%%% (%+.2f%%%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
+                estrConcatf(str, "%+.2f%% (%+.2f%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
             else
-                estrConcatf(str, "%+.2f%%%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
+                estrConcatf(str, "%+.2f%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
         }
         xcase kAttribType_Str:
         {
             if( bBoth )
-                estrConcatf(str, "%+.2f%%%% (%+.2f%%%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
+                estrConcatf(str, "%+.2f%% (%+.2f%%)<color #aaaaaa> ", fMag*100*(1+fBoosted), fMag*100 );
             else
-                estrConcatf(str, "%+.2f%%%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
+                estrConcatf(str, "%+.2f%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
         }
         xcase kAttribType_Res:
         {
             if( bBoth )
-                estrConcatf(str, "%.2f%%%% (%.2f%%%%)<color #aaaaaa> ", fMag*(1+fBoosted)*100, fMag*100 );
+                estrConcatf(str, "%.2f%% (%.2f%%)<color #aaaaaa> ", fMag*(1+fBoosted)*100, fMag*100 );
             else
-                estrConcatf(str, "%.2f%%%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
+                estrConcatf(str, "%.2f%%<color #aaaaaa> ", (bBoost?(1+fBoosted):1)*fMag*100 );
         }
         xcase kAttribType_Max:
         {
