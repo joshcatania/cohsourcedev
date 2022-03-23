@@ -211,6 +211,10 @@ void drawPowerAndEnhancements( Character *pchar, Power * pow, int x, int y, int 
     float screenScale = MIN(screenScaleX, screenScaleY);
     if( stricmp( icon->name, "white" ) == 0 )
         icon = atlasLoadTexture( "Power_Missing.tga" );
+    int maxBoostsBought = MIN(pow->ppowBase->iManualBoostSlots, MAX_BOOSTS_BOUGHT);
+    int expectSlots = pow->iNumBoostsBought;//initialize to the number of boosts bought.
+    expectSlots += 1 + (pow->ppowBase->pFreeBoostSlotsOnPower != NULL) ? CountForLevel(pchar->iLevel, pow->ppowBase->pFreeBoostSlotsOnPower)//If the power has its own free boost schedule, use it
+                                                                   : CountForLevel(pchar->iLevel, g_Schedules.aSchedules.piPower);//otherwise use the global schedule
 
     ea = enhancementAnim( pow );
     if( ea )
@@ -244,11 +248,10 @@ void drawPowerAndEnhancements( Character *pchar, Power * pow, int x, int y, int 
         {
             fadingText( DEFAULT_SCRN_WD/2,( SL_FRAME_TOP+FRAME_HEIGHT-5), z+250, 1.5f*scale*screenScale, CLR_WHITE, CLR_WHITE, 30, "NoSlots" );
         }
-        else if( (ea
-                    && (ea->count+pow->iNumBoostsBought >= MAX_BOOSTS_BOUGHT
-                        || ea->count+eaSize(&pow->ppBoosts) >= pow->ppowBase->iMaxBoosts))
-                || pow->iNumBoostsBought >= MAX_BOOSTS_BOUGHT
-                || !pow->ppowBase->bManualBoostSlots
+        else if( (ea && (ea->count + pow->iNumBoostsBought >= maxBoostsBought
+                        || ea->count+eaSize(&pow->ppBoosts) >= pow->ppowBase->iMaxBoosts
+                        || ea->count+expectSlots >= pow->ppowBase->iMaxBoosts))
+                || pow->iNumBoostsBought >= maxBoostsBought
                 || eaSize(&pow->ppBoosts) >= pow->ppowBase->iMaxBoosts
                 || eaiSize(&pow->ppowBase->pBoostsAllowed)<=0)
         {

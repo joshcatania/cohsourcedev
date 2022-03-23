@@ -2171,7 +2171,7 @@ TokenizerParseInfo ParseBasePower[] =
     { "Deletable",            TOK_BOOL(BasePower, bDeletable, 0),            BoolEnum },
     { "Tradeable",            TOK_BOOL(BasePower, bTradeable,    0),            BoolEnum },
     { "MaxBoosts",          TOK_INT(BasePower, iMaxBoosts, 6) },
-    { "ManualBoostSlots",   TOK_BOOL(BasePower, bManualBoostSlots, 1),     BoolEnum, PARSE_VERSION_V23 },
+    { "ManualBoostSlots",   TOK_INT(BasePower, iManualBoostSlots, 5),   0, PARSE_VERSION_V23},
     { "DoNotSave",          TOK_BOOL(BasePower, bDoNotSave, 0),            BoolEnum },
     { "DoesNotExpire",      TOK_REDUNDANTNAME|TOK_BOOL(BasePower, bBoostIgnoreEffectiveness, 0), BoolEnum },
     { "BoostIgnoreEffectiveness", TOK_BOOL(BasePower, bBoostIgnoreEffectiveness, 0), BoolEnum },
