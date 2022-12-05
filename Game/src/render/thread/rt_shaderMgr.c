@@ -49,10 +49,17 @@
 
 // Subdirectory of C:\Documents and Settings\<your_name>\Local Settings\Application Data
 // where pre-baked shader output is written.
-#define LOCAL_USER_DATA_SUBDIR            "\\NCSoft\\CoX"
+#define LOCAL_USER_DATA_SUBDIR "\\Ouroboros\\"
 
 #define INFO_FILE_CONTENT_MD5_FIELD        "CONTENT="
 #define INFO_FILE_CONTENT_MD5_FIELD_LEN    8                // strlen(INFO_FILE_CONTENT_MD5_FIELD)
+
+//Server specific subfolder in the LOCAL_USER_DATA_SUBDIR,
+//This is the default if the patchDirectory param is not set in client startup -FT
+char* localDir = "CoX";
+
+//final assembly of the local cache Directory path -FT
+char localCacheDirectory[64];
 
 typedef struct {
     int    shaderMode;                        // DrawModeType for VPs and BlendModeType for FPs
@@ -332,6 +339,14 @@ const char* getShaderFileBaseDir(tShaderPathRootType pathRootType)
     
     if ( ! bInitialized )
     {
+        //If patchDir is blank for some reason default the subfolder to a set value,
+        // else set the local cache subfolder to match name with server patch Dir.  -FT
+        if ((strcmp(game_state.patchdir, "") != 0)) {
+            sprintf(localCacheDirectory, "%s%s", LOCAL_USER_DATA_SUBDIR, game_state.patchdir);
+        }
+        else {
+            sprintf(localCacheDirectory, "%s%s", LOCAL_USER_DATA_SUBDIR, localDir);
+        }
         //
         //    kPathRoot_GameData
         //
@@ -362,7 +377,7 @@ const char* getShaderFileBaseDir(tShaderPathRootType pathRootType)
             HRESULT hRes = SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer);
             if (SUCCEEDED(hRes))
             {
-                strcat_s(buffer, buffSz, LOCAL_USER_DATA_SUBDIR );
+                strcat_s(buffer, buffSz, localCacheDirectory);
                 SHCreateDirectoryExA(NULL, buffer, NULL);
                 forwardSlashes(buffer);
                 fixTrailingSlash( buffer, buffSz, '/' ); 
