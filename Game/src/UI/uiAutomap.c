@@ -1523,18 +1523,20 @@ static void fixTrailingSlash( char* buffer, size_t buffSz, char trailingSlash /*
 
 static char sVisitedMapDirectory[_MAX_PATH+1] = { '\0' };    
 #define LOCAL_USER_DATA_VISISTED_MAPDIR "\\VisitedMaps"
+#define LOCAL_DATA_VISTED_MAPDIR_DEFAULT "\\Ouroboros\\CoX\\VisitedMaps"
 char * getVisitedMapsDir(void)
 {
     static bool bInitialized = false;
 
     if ( ! bInitialized )
     {
-        char mapDir[77];
+        char mapDir[_MAX_PATH + 1];
         if ((strcmp(localCacheDirectory, "") != 0)) {
-            sprintf(mapDir, "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
+            int buf = sizeof(localCacheDirectory) + 12;
+            snprintf(mapDir,buf, "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
         }
         else {
-            strcpy(mapDir, "\\Ouroboros\\CoX\\VisitedMaps");
+            strcpy(mapDir, LOCAL_DATA_VISTED_MAPDIR_DEFAULT);
         }
         //    Construct a path which works with Windows7 and beyond -- i.e., something in
         //    the user's directory (c:\documents and settings\<USER_NAME>\blah...).

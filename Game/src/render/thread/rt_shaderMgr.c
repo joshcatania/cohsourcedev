@@ -56,10 +56,10 @@
 
 //Server specific subfolder in the LOCAL_USER_DATA_SUBDIR,
 //This is the default if the patchDirectory param is not set in client startup -FT
-char* localDir = "CoX";
+#define LOCAL_DIR "CoX"
 
 //final assembly of the local cache Directory path -FT
-char localCacheDirectory[64];
+char localCacheDirectory[_MAX_PATH+1];
 
 typedef struct {
     int    shaderMode;                        // DrawModeType for VPs and BlendModeType for FPs
@@ -341,11 +341,12 @@ const char* getShaderFileBaseDir(tShaderPathRootType pathRootType)
     {
         //If patchDir is blank for some reason default the subfolder to a set value,
         // else set the local cache subfolder to match name with server patch Dir.  -FT
-        if ((strcmp(game_state.patchdir, "") != 0)) {
-            sprintf(localCacheDirectory, "%s%s", LOCAL_USER_DATA_SUBDIR, game_state.patchdir);
+        if ((strncmp(game_state.patchdir, "", _MAX_PATH+1) != 0)) {
+            int buf = sizeof(game_state.patchdir) + 11;
+            snprintf(localCacheDirectory,buf, "%s%s", LOCAL_USER_DATA_SUBDIR, game_state.patchdir);
         }
         else {
-            sprintf(localCacheDirectory, "%s%s", LOCAL_USER_DATA_SUBDIR, localDir);
+            snprintf(localCacheDirectory,14, "%s%s", LOCAL_USER_DATA_SUBDIR, LOCAL_DIR);
         }
         //
         //    kPathRoot_GameData
