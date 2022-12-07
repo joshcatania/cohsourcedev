@@ -59,7 +59,7 @@
 #define LOCAL_DIR "CoX"
 
 //final assembly of the local cache Directory path -FT
-char localCacheDirectory[_MAX_PATH+1];
+char localCacheDirectory[_MAX_PATH+1] = "";
 
 typedef struct {
     int    shaderMode;                        // DrawModeType for VPs and BlendModeType for FPs
