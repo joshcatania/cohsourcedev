@@ -346,7 +346,7 @@ const char* getShaderFileBaseDir(tShaderPathRootType pathRootType)
             snprintf(localCacheDirectory,buf, "%s%s", LOCAL_USER_DATA_SUBDIR, game_state.patchdir);
         }
         else {
-            snprintf(localCacheDirectory,14, "%s%s", LOCAL_USER_DATA_SUBDIR, LOCAL_DIR);
+            snprintf(localCacheDirectory, sizeof(localCacheDirectory), "%s%s", LOCAL_USER_DATA_SUBDIR, LOCAL_DIR);
         }
         //
         //    kPathRoot_GameData

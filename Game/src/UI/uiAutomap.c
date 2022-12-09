@@ -1533,10 +1533,10 @@ char * getVisitedMapsDir(void)
         char mapDir[_MAX_PATH + 1];
         if ((strcmp(localCacheDirectory, "") != 0)) {
             int buf = sizeof(localCacheDirectory) + 12;
-            snprintf(mapDir,buf, "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
+            snprintf(mapDir, sizeof(localCacheDirectory), "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
         }
         else {
-            strcpy(mapDir, LOCAL_DATA_VISTED_MAPDIR_DEFAULT);
+            strncpy(mapDir, LOCAL_DATA_VISTED_MAPDIR_DEFAULT, sizeof(mapDir) - 1);
         }
         //    Construct a path which works with Windows7 and beyond -- i.e., something in
         //    the user's directory (c:\documents and settings\<USER_NAME>\blah...).
