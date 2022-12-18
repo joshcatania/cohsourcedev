@@ -713,6 +713,12 @@ typedef struct BasePower
         // Count. Maximum number of boosts (aka enhancements) which can be
         //   on this power. This includes even free boosts given.
 
+    int iManualBoostSlots;
+        // Flag for whether boosts can be manually applied to this power, regardless of maximum boosts
+        // Allows for full Mystic Flight/Translocation functionality
+        // Default is true: Normal behavior for slottable powers, slots can be placed provided there are fewer than the maximum
+        // False: Boost slots can not be manually placed on this power, but they can be placed automatically by the power's schedule.
+
     bool bShowBuffIcon;
         // Bool. If true, then the buff icon is shown for this power,
         //   otherwise it is not.

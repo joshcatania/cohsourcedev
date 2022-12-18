@@ -718,22 +718,22 @@ void character_LevelFinalize(Character *p, bool grantAutoIssuePowers)
     // Skip all temp powers, not just the first power set
     // ARM NOTE: I think this code block is unnecessary, power_LevelFinalize is called after
     //   each power is granted.
-//     iSize = eaSize(&p->ppPowerSets);
-//     for(i=0; i<iSize; i++)
-//     {
-//         int j;
-//         PowerSet *pset = p->ppPowerSets[i];
-//         if (stricmp(pset->psetBase->pcatParent->pchName,"Temporary_Powers") == 0)
-//             continue;
-// 
-//         for(j=eaSize(&pset->ppPowers)-1; j>=0; j--)
-//         {
-//             if(pset->ppPowers[j]!=NULL)
-//             {
-//                 power_LevelFinalize(pset->ppPowers[j]);
-//             }
-//         }
-//     }
+     int iSize = eaSize(&p->ppPowerSets);
+     for(int i=0; i<iSize; i++)
+     {
+         int j;
+         PowerSet *pset = p->ppPowerSets[i];
+         if (stricmp(pset->psetBase->pcatParent->pchName,"Temporary_Powers") == 0)
+             continue;
+ 
+         for(j=eaSize(&pset->ppPowers)-1; j>=0; j--)
+         {
+             if(pset->ppPowers[j]!=NULL)
+             {
+                 power_LevelFinalize(pset->ppPowers[j]);
+             }
+         }
+     }
 
 #if SERVER
     if(p->entParent && p->entParent->pl)
