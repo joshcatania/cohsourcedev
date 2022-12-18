@@ -13,6 +13,7 @@
 #include "dbcomm/staticMapInfo.h"
 #include "gameComm/villainDef.h"
 #include "dbcomm/dbcomm.h"
+#include "cmdparse/cmdserver.h" // needed for server_state
 
 #include "stats_base.h"
 #include "pl_stats_internal.h"
@@ -232,10 +233,15 @@ void InitStats(void)
     for (i = 0; i < n; i++)
     {
         StaticMapInfo* info = staticMapInfos[i];
-        bool bFound = stashAddIntAndGetElement(s_hashStatNames, info->name, s_iCntStats, false, &he);
-        assert(bFound);
-        eaPushConst(&s_ppchStatNames, stashElementGetStringKey(he));
-        s_iCntStats++;
+
+        // Static map info is not present in stash during binning.
+        if (!info->dontAutoStart && server_state.create_bins == 0)
+        {
+            bool bFound = stashAddIntAndGetElement(s_hashStatNames, info->name, s_iCntStats, false, &he);
+            assert( bFound );
+            eaPushConst(&s_ppchStatNames, stashElementGetStringKey(he));
+            s_iCntStats++;
+        }
     }
 
     // Plus anything extra
