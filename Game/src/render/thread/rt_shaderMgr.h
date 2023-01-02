@@ -7,6 +7,8 @@
 extern int shaderMgrVertexPrograms[];            // Index: DrawModeType enum type. DRAWMODE_SPRITE, etc.
 extern int shaderMgrVertexProgramsHQ[];          // Index: DrawModeType enum type. DRAWMODE_SPRITE, etc.
 
+extern char localCacheDirectory[_MAX_PATH + 1];
+
 typedef enum
 {
     kCompileFlag_ARB        = 0x00000000,

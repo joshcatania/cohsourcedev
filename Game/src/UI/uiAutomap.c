@@ -5,6 +5,7 @@
 #include "render/thread/rt_state.h"
 #include "render/rendermodel.h"
 #include "render/renderUtil.h"
+#include "render/thread/rt_shaderMgr.h"
 
 #include "UI/uiGame.h"
 #include "UI/uiUtil.h"
@@ -1521,13 +1522,21 @@ static void fixTrailingSlash( char* buffer, size_t buffSz, char trailingSlash /*
 }
 
 static char sVisitedMapDirectory[_MAX_PATH+1] = { '\0' };    
-#define LOCAL_USER_DATA_VISISTED_MAPDIR            "\\NCSoft\\CoX\\VisitedMaps"
+#define LOCAL_USER_DATA_VISISTED_MAPDIR "\\VisitedMaps"
+#define LOCAL_DATA_VISTED_MAPDIR_DEFAULT "\\Ouroboros\\CoX\\VisitedMaps"
 char * getVisitedMapsDir(void)
 {
     static bool bInitialized = false;
 
     if ( ! bInitialized )
     {
+        char mapDir[_MAX_PATH + 1];
+        if ((strcmp(localCacheDirectory, "") != 0)) {
+            snprintf(mapDir, sizeof(localCacheDirectory), "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
+        }
+        else {
+            strncpy(mapDir, LOCAL_DATA_VISTED_MAPDIR_DEFAULT, sizeof(mapDir) - 1);
+        }
         //    Construct a path which works with Windows7 and beyond -- i.e., something in
         //    the user's directory (c:\documents and settings\<USER_NAME>\blah...).
         //
@@ -1537,7 +1546,7 @@ char * getVisitedMapsDir(void)
             HRESULT hRes = SHGetFolderPathA(NULL, CSIDL_LOCAL_APPDATA|CSIDL_FLAG_CREATE, NULL, 0, buffer);
             if (SUCCEEDED(hRes))
             {
-                strcat_s(buffer, buffSz, LOCAL_USER_DATA_VISISTED_MAPDIR );
+                strcat_s(buffer, buffSz, mapDir);
                 SHCreateDirectoryExA(NULL, buffer, NULL);
                 forwardSlashes(buffer);
                 fixTrailingSlash( buffer, buffSz, '/' ); 
