@@ -1532,7 +1532,6 @@ char * getVisitedMapsDir(void)
     {
         char mapDir[_MAX_PATH + 1];
         if ((strcmp(localCacheDirectory, "") != 0)) {
-            int buf = sizeof(localCacheDirectory) + 12;
             snprintf(mapDir, sizeof(localCacheDirectory), "%s%s", localCacheDirectory, LOCAL_USER_DATA_VISISTED_MAPDIR);
         }
         else {
