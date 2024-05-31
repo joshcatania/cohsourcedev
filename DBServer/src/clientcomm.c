@@ -2771,9 +2771,9 @@ int processGameClientMsg(Packet *pak,int cmd, NetLink *link)
         case DBGAMECLIENT_CAN_START_STATIC_MAP:
             handleCanStartStaticMap(pak,client);
             break;
-        case DBGAMECLIENT_CHOOSE_VISITING_PLAYER:
+        /*case DBGAMECLIENT_CHOOSE_VISITING_PLAYER:
             handleChooseVisitingPlayer(pak,client);
-            break;
+            break;*/
         case DBGAMECLIENT_DELETE_PLAYER:
             handleDeletePlayer(pak,client);
             break;
