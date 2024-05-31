@@ -18,16 +18,18 @@ void groupDynReceive(Packet *pak)
         int        i,byte_count;
 
         groupDynBuildBreakableList();
-        data = pktGetZipped(pak,&byte_count);
-        dyn_group_count_from_server = byte_count / sizeof(DynGroupStatus);
+        data = pktGetZipped(pak,&byte_count, MB256_SIZE);
+        if (data) {
+            dyn_group_count_from_server = byte_count / sizeof(DynGroupStatus);
 #ifndef TEST_CLIENT
-        assert(dyn_group_count_from_server == dyn_group_count);
+            assert(dyn_group_count_from_server == dyn_group_count);
 #endif
-        dyn_group_status = realloc(dyn_group_status,byte_count);
-        memcpy(dyn_group_status,data,byte_count);
-        for(i=0;i<dyn_group_count;i++)
-            groupDynUpdateStatus(i);
-        free(data);
+            dyn_group_status = realloc(dyn_group_status, byte_count);
+            memcpy(dyn_group_status, data, byte_count);
+            for (i = 0; i < dyn_group_count; i++)
+                groupDynUpdateStatus(i);
+            free(data);
+        }
     }
     else if (modified_count)
     {

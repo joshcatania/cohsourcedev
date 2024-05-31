@@ -267,6 +267,9 @@ typedef ptrdiff_t ssize_t;
 #define U16_MAX        0xffffui16
 #define U8_MAX        0xffui8
 
+#define MB256_SIZE (256 * 1024 * 1024)
+#define KB64_SIZE (64 * 1024)
+
 #if defined(DISABLE_SHARED_MEMORY_SEGMENT)
     #define SHARED_MEMORY
     #define SHARED_MEMORY_PARAM

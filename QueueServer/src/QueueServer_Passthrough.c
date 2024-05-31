@@ -34,8 +34,10 @@ void clientPassLogin(Packet *pak_in, Packet *pak_out, GameClientLink *client, U3
     {
         char    *systemSpecs;
         U32 slen;
-        systemSpecs = pktGetZipped(pak_in, &slen);
-        pktSendZipped(pak_out,slen,systemSpecs);
+        systemSpecs = pktGetZipped(pak_in, &slen, KB64_SIZE);
+        if (systemSpecs && slen) {
+            pktSendZipped(pak_out, slen, systemSpecs);
+        }
         free(systemSpecs);
     }
     if (!pktEnd(pak_in)) 

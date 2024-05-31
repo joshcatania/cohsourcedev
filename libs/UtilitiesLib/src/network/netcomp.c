@@ -307,7 +307,8 @@ void pktSendZipped(Packet *pak,int numbytes,void *data)
     free(zip_data);
 }
 
-U8 *pktGetZippedInfo(Packet *pak,U32 *zipbytes_p,U32 *rawbytes_p)
+//Limit the size read from the incomming data packets or else drop them and move on 
+U8 *pktGetZippedInfo(Packet *pak,U32 *zipbytes_p,U32 *rawbytes_p, U32 size)
 {
     U32        zip_size,numbytes;
     U8        *zip_data;
@@ -315,34 +316,44 @@ U8 *pktGetZippedInfo(Packet *pak,U32 *zipbytes_p,U32 *rawbytes_p)
     zip_size = pktGetBitsPack(pak,1);
     numbytes = pktGetBitsPack(pak,1);
 
-    zip_data = malloc(zip_size);
-    pktGetBitsArray(pak,zip_size*8,zip_data);
-    if (zipbytes_p)
-        *zipbytes_p = zip_size;
-    if (rawbytes_p)
-        *rawbytes_p = numbytes;
-    return zip_data;
+    if (zip_size <= size) {
+        zip_data = malloc(zip_size);
+        pktGetBitsArray(pak, zip_size * 8, zip_data);
+        if (zipbytes_p)
+            *zipbytes_p = zip_size;
+        if (rawbytes_p)
+            *rawbytes_p = numbytes;
+        return zip_data;
+    }
+    bsFastForwardBitsArray(pak, zip_size * 8);
+    return 0;
 }
 
-U8 *pktGetZipped(Packet *pak,U32 *numbytes_p)
+U8 *pktGetZipped(Packet *pak,U32 *numbytes_p, U32 size)
 {
     U32        zip_size,numbytes;
     U8        *zip_data,*data;
 
-    zip_data = pktGetZippedInfo(pak,&zip_size,&numbytes);
-    data = malloc(numbytes+1);
-    data[numbytes] = 0;
-    uncompress(data,&numbytes,zip_data,zip_size);
+    zip_data = pktGetZippedInfo(pak,&zip_size,&numbytes,size);
+    if (numbytes <= size && zip_data) {
+        data = malloc(numbytes + 1);
+        data[numbytes] = 0;
+        uncompress(data, &numbytes, zip_data, zip_size);
+        free(zip_data);
+        if (numbytes_p)
+            *numbytes_p = numbytes;
+        return data;
+    }
     free(zip_data);
-    if (numbytes_p)
-        *numbytes_p = numbytes;
-    return data;
+    return 0;
 }
 
 void pktSendGetZipped(Packet *pak_out, Packet *pak_in)
 {
     U32 zsize, rsize;
-    U8 *data = pktGetZippedInfo(pak_in, &zsize, &rsize);
-    pktSendZippedAlready(pak_out, rsize, zsize, data);
+    U8 *data = pktGetZippedInfo(pak_in, &zsize, &rsize, MB256_SIZE);
+    if (data) {
+        pktSendZippedAlready(pak_out, rsize, zsize, data);
+    }
     free(data);
 }

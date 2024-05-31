@@ -48,16 +48,18 @@ static void s_handleLogInternal(Packet *pak, char *log_name, char *msgDelim)
     U32 rawsize;
     static U32 *zipblock,zipblock_max;
 
-    zip_data = pktGetZippedInfo(pak,&zipsize,&rawsize);
-    zmqSend(&mqSocket, zip_data, zipsize+8);
-    dynArrayFit(&zipblock,1,&zipblock_max,zipsize+8);
-    zipblock[0] = zipsize;
-    zipblock[1] = rawsize;
-    memcpy(&zipblock[2],zip_data,zipsize);
-    free(zip_data);
-    {
-        extern void logPutMsgSub(char *msg_str,int len,char *filename,int zip_file,int zipped,int text_file, char *msgDelim);
-        logPutMsgSub((char*)zipblock,zipsize+8,log_name,0,1,0, msgDelim);
+    zip_data = pktGetZippedInfo(pak,&zipsize,&rawsize, MB256_SIZE);
+    if (zip_data) {
+        zmqSend(&mqSocket, zip_data, zipsize + 8);
+        dynArrayFit(&zipblock, 1, &zipblock_max, zipsize + 8);
+        zipblock[0] = zipsize;
+        zipblock[1] = rawsize;
+        memcpy(&zipblock[2], zip_data, zipsize);
+        free(zip_data);
+        {
+            extern void logPutMsgSub(char* msg_str, int len, char* filename, int zip_file, int zipped, int text_file, char* msgDelim);
+            logPutMsgSub((char*)zipblock, zipsize + 8, log_name, 0, 1, 0, msgDelim);
+        }
     }
 }
 

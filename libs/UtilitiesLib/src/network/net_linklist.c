@@ -20,6 +20,12 @@ extern int isDevelopmentMode(void);
 #define isDevelopmentMode() 0
 #endif
 
+// Parameter to determine how often a UDP connection can be made
+#define NETLINK_UDP_CONNECTION_RATE_LIMIT            5
+// Parameter to determine when to remove a tracked UDP connection so that it doesn't grow.
+#define NETLINK_UDP_CONNECTION_RATE_LIMIT_EXPIRE     60
+
+
 /****************************************************************************************************
  * Static function forward declarations                                                                *
  ****************************************************************************************************/
@@ -219,10 +225,36 @@ static NetLink *netAddLink(NetLinkList *nlist, struct sockaddr_in *addr, int soc
     char hashKey[100];
     StashElement element;
 
+    //If the Rate limit table has not been initialized, initialize it
+    if (!nlist->sourceRateLimitTable) {
+        nlist->sourceRateLimitTable = stashTableCreateInt(100);
+    }
+
     if (!nlist->publicAccess && !isLocalIp(addr->sin_addr.S_un.S_addr))
     {
         LOG(LOG_NET, LOG_LEVEL_DEBUG, 0, "public connection attempt on private link from %s\n",makeIpStr(addr->sin_addr.S_un.S_addr));
         return 0;
+    }
+
+    if (type == NLT_UDP)
+    {
+        // Check if the address is in the table
+        U32 connection_time;
+        U32 current_time = timerCpuSeconds();
+        if (stashIntFindInt(nlist->sourceRateLimitTable, addr->sin_addr.S_un.S_addr, &connection_time))
+        {
+            // If sufficient time has passed update the value in the stash table
+            if (current_time - connection_time > NETLINK_UDP_CONNECTION_RATE_LIMIT) {
+                stashIntAddInt(nlist->sourceRateLimitTable, addr->sin_addr.S_un.S_addr, current_time, true);
+            }
+            else
+                return NULL;  // Not enough time has passed, don't process this conenction
+        }
+        else
+        {
+            // New connection, add to the table
+            stashIntAddInt(nlist->sourceRateLimitTable, addr->sin_addr.S_un.S_addr, current_time, true);
+        }
     }
 
     // Create a new link
@@ -442,6 +474,27 @@ void netLinkListProcessMessages(NetLinkList* list, NetPacketCallback *netCallBac
         //    after this point.
         netMessageScan(link, -1, false, netCallBack);
     }
+
+    // Once per cycle check if the next elmeent in the hashtable has expired, and should be removed
+    if (!list->sourceRateLimitTable)
+    {
+        list->sourceRateLimitTable = stashTableCreateInt(100);
+    }
+    if (list->sourceRateLimitIterator.pTable)
+    {
+        StashElement tempElem;
+        // If there isn't a next element, then start over again at the start of the hashtable
+        if (stashGetNextElement(&list->sourceRateLimitIterator, &tempElem)) {
+            U32 accessTime = stashElementGetInt(tempElem);
+            U32 currentTime = timerCpuSeconds();
+            // If the necessary time has elapsed, remove the link from the hash table to save space
+            if (currentTime - accessTime > NETLINK_UDP_CONNECTION_RATE_LIMIT_EXPIRE)
+                stashIntRemoveInt(list->sourceRateLimitTable, stashElementGetIntKey(tempElem), &accessTime);
+        }
+        stashGetIterator(list->sourceRateLimitTable, &list->sourceRateLimitIterator);
+    }
+    else
+        stashGetIterator(list->sourceRateLimitTable, &list->sourceRateLimitIterator);
 }
 
 static void netLinkListBatchRecieveInternal(NetLinkList* nlist, SOCKET sock)

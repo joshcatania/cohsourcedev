@@ -984,7 +984,7 @@ static int handleLogin(Packet *pak,GameClientLink *client)
     if (!pktEnd(pak)) 
     {
         U32 slen;
-        client->systemSpecs = pktGetZipped(pak, &slen);
+        client->systemSpecs = pktGetZipped(pak, &slen, KB64_SIZE);
         if (client->systemSpecs && !client->systemSpecs[0])
         {
             SAFE_FREE(client->systemSpecs);

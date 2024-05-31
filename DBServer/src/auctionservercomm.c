@@ -256,25 +256,26 @@ static int auctionMsgCallback(Packet *pak_in,int cmd,NetLink *auc_link)
         Packet *pak_out;
         AUC_SVR_RECV();
 
-        zipped_data = pktGetZippedInfo(pak_in,&zip_bytes,&raw_bytes);
+        zipped_data = pktGetZippedInfo(pak_in,&zip_bytes,&raw_bytes, MB256_SIZE);
 
-        for(i=0;i<map_list->num_alloced;i++)
-        {
-            MapCon    *map = (MapCon *) map_list->containers[i];
-            if(map->is_static && map->active && map->link) // TODO: allow non-static maps
+        if (zipped_data) {
+            for (i = 0; i < map_list->num_alloced; i++)
             {
-                DBClientLink *client = map->link->userData;
-
-                if (client->has_auctionhouse)
+                MapCon* map = (MapCon*)map_list->containers[i];
+                if (map->is_static && map->active && map->link) // TODO: allow non-static maps
                 {
-                    Packet *pak = pktCreateEx(map->link,DBSERVER_AUCTION_BATCH_INFO);
-                    pktSendZippedAlready(pak,raw_bytes,zip_bytes,zipped_data);
-                    pktSend(&pak,map->link);
+                    DBClientLink* client = map->link->userData;
+
+                    if (client->has_auctionhouse)
+                    {
+                        Packet* pak = pktCreateEx(map->link, DBSERVER_AUCTION_BATCH_INFO);
+                        pktSendZippedAlready(pak, raw_bytes, zip_bytes, zipped_data);
+                        pktSend(&pak, map->link);
+                    }
                 }
             }
         }
-
-        free(zipped_data);
+        SAFE_FREE(zipped_data);
 
         // Let the auctionserver know it's okay to send more
         pak_out = auctionCreatePkt(auc_link,AUCTION_CLIENT_DATAOK);
