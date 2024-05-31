@@ -3897,24 +3897,26 @@ void missionserver_game_receiveArcData(Packet *pak_in)
     int arcid = pktGetBitsAuto(pak_in);
     if(pktGetBool(pak_in))
     {
-        char *arcdata = pktGetZipped(pak_in, NULL);
+        char *arcdata = pktGetZipped(pak_in, NULL, MB256_SIZE);
 #ifndef TEST_CLIENT
-        missionsearch_SetArcData(arcid, arcdata);
+        if (arcdata) {
+            missionsearch_SetArcData(arcid, arcdata);
 
-        if(arcid == game_state.architect_dumpid)
-        {
-            char *buf = estrTemp();
-            PlayerCreatedStoryArc *arc = playerCreatedStoryArc_FromString(arcdata, NULL, 0, 0, 0, 0);
-            estrPrintf(&buf, "%s/arc%d%s", missionMakerPath(), arcid, missionMakerExt());
-            if(!arc)
-                conPrintf("Damaged arc, could not decode");
-            else if(!playerCreatedStoryArc_Save(arc, buf))
-                conPrintf("Error writing file\n");
-            else
-                conPrintf("Success");
-            game_state.architect_dumpid = 0;
-            StructDestroy(ParsePlayerStoryArc, arc);
-            estrDestroy(&buf);
+            if (arcid == game_state.architect_dumpid)
+            {
+                char* buf = estrTemp();
+                PlayerCreatedStoryArc* arc = playerCreatedStoryArc_FromString(arcdata, NULL, 0, 0, 0, 0);
+                estrPrintf(&buf, "%s/arc%d%s", missionMakerPath(), arcid, missionMakerExt());
+                if (!arc)
+                    conPrintf("Damaged arc, could not decode");
+                else if (!playerCreatedStoryArc_Save(arc, buf))
+                    conPrintf("Error writing file\n");
+                else
+                    conPrintf("Success");
+                game_state.architect_dumpid = 0;
+                StructDestroy(ParsePlayerStoryArc, arc);
+                estrDestroy(&buf);
+            }
         }
 #else
         testMissionSearch_registerData(arcdata);
@@ -3930,19 +3932,21 @@ void missionserver_game_receiveArcData(Packet *pak_in)
 void missionserver_game_receiveArcData_otherUser(Packet *pak_in)
 {
     int arcid = pktGetBitsAuto(pak_in);
-    char *arcdata = pktGetZipped(pak_in, NULL);
-    char *buf = estrTemp();
-    PlayerCreatedStoryArc *arc = playerCreatedStoryArc_FromString(arcdata, NULL, 0, 0, 0, 0);
-    estrPrintf(&buf, "%s/csrarc%d%s", missionMakerPath(), arcid, missionMakerExt());
-    if(!arc)
-        conPrintf("Damaged arc, could not decode");
-    else if(!playerCreatedStoryArc_Save(arc, buf))
-        conPrintf("Error writing file\n");
-    else
-        conPrintf("Success");
-    if(arc)
-        StructDestroy(ParsePlayerStoryArc, arc);
-    estrDestroy(&buf);
+    char *arcdata = pktGetZipped(pak_in, NULL, MB256_SIZE);
+    if (arcdata) {
+        char* buf = estrTemp();
+        PlayerCreatedStoryArc* arc = playerCreatedStoryArc_FromString(arcdata, NULL, 0, 0, 0, 0);
+        estrPrintf(&buf, "%s/csrarc%d%s", missionMakerPath(), arcid, missionMakerExt());
+        if (!arc)
+            conPrintf("Damaged arc, could not decode");
+        else if (!playerCreatedStoryArc_Save(arc, buf))
+            conPrintf("Error writing file\n");
+        else
+            conPrintf("Success");
+        if (arc)
+            StructDestroy(ParsePlayerStoryArc, arc);
+        estrDestroy(&buf);
+    }
     SAFE_FREE(arcdata);
 }
 

@@ -696,15 +696,22 @@ void handleOnlineEnts(Packet *pak)
     StaticMapInfo        *info;
     Packet                tmp_pack = {0};
 
-    staticMapInfoResetPlayerCount();
+    
 
     // create a fake packet to cram zipped data into an read out of as if
     // it were a packet
     tmp_pack.stream.bitLength = pktGetBits(pak, 32);
     tmp_pack.stream.size = pktGetBits(pak, 32);
-    tmp_pack.stream.data = pktGetZipped(pak, &num_bytes);
+    tmp_pack.stream.data = pktGetZipped(pak, &num_bytes, MB256_SIZE);
+    // Packet data invalid, just give up
+    if (!tmp_pack.stream.data) {
+        return;
+    }
     tmp_pack.stream.byteAlignedMode = true;
     tmp_pack.hasDebugInfo = pak->hasDebugInfo;
+
+    //Don't want to actually do anything like reseting if nothing is going to happen due to bad data
+    staticMapInfoResetPlayerCount();
 
     if( !online_players )
         eaCreate(&online_players);

@@ -1070,7 +1070,7 @@ void handleMapXferRequest(Packet *pak,NetLink *link)
     if(pktGetBits(pak, 1))
     {
         extra_crc = pktGetBitsAuto(pak);
-        extra_data = pktGetZippedInfo(pak, &extra_zsize, &extra_size); // mallocs data
+        extra_data = pktGetZippedInfo(pak, &extra_zsize, &extra_size, MB256_SIZE); // mallocs data
         if(!devassert(mapinfo[0]))
             SAFE_FREE(extra_data);
     }

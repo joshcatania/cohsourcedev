@@ -66,6 +66,7 @@ unsigned int bsReadBits(BitStream* bs, int numbits);
 
 int bsWriteBitsArray(BitStream* bs, int numbits, const void* data);
 int bsReadBitsArray(BitStream* bs, int numbits, void* data);
+int bsFastForwardBitsArray(BitStream* bs, int numbits);
 
 void bsWriteBitsPack(BitStream* bs, int minbits, unsigned int val);
 int bsGetLengthWriteBitsPack(BitStream* bs, int minbits, unsigned int val);

@@ -415,6 +415,32 @@ int bsReadBitsArray(BitStream* bs, int numbits, void* data){
     return 1;
 }
 
+//Function copied from BS read, this should set the BS cursor in the right place,
+// while also not reading any actual data -FT
+int bsFastForwardBitsArray(BitStream* bs, int numbits) {
+    int fullBytes;
+
+    // Note: this always aligns to bytes currently, if that changes, we'll need to add a case for byteAligned here
+
+    // How many full bytes are being retrieved?
+    fullBytes = (numbits + 7) / 8;
+
+    if (bs->cursor.bit) { // align to bye
+        bs->cursor.bit = 0;
+        bs->cursor.byte++;
+    }
+    if ((bs->cursor.byte << 3) + bs->cursor.bit + numbits > bs->bitLength) {
+        BSASSERT(!"Read off of the end of the bitstream!");
+        bs->errorFlags = BSE_OVERRUN;
+        return 0;
+    }
+
+    bs->cursor.byte += fullBytes;
+
+    return 1;
+}
+
+
 // measure how the packed bits stuff is doing
 unsigned int g_packetsizes_one[33];
 unsigned int g_packetsizes_success[33];

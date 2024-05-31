@@ -2521,7 +2521,7 @@ void missionserver_map_receiveArcData(Packet *pak_in)
         rating.i = pktGetBitsAuto(pak_in);
 
         //arcdata = pktGetZipped(pak_in, NULL);
-        arcdata = pktGetZippedInfo(pak_in,&arcdata_zip_bytes,&arcdata_raw_bytes);
+        arcdata = pktGetZippedInfo(pak_in,&arcdata_zip_bytes,&arcdata_raw_bytes, MB256_SIZE);
     }
 
     if(test == MISSIONSEARCH_ARCDATA_MAPTEST && arcid)
@@ -2584,7 +2584,7 @@ void missionserver_map_receiveArcDataOtherUser(Packet *pak_in)
 
     if(pktGetBitsPack(pak_in, 1))
     {
-        arcdata = pktGetZippedInfo(pak_in,&arcdata_zip_bytes,&arcdata_raw_bytes);
+        arcdata = pktGetZippedInfo(pak_in,&arcdata_zip_bytes,&arcdata_raw_bytes, MB256_SIZE);
 
         if(arcdata)
         {
