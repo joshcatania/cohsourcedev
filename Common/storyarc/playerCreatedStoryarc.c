@@ -453,7 +453,7 @@ int playerCreatedStoryArc_ValidateFromString(char *str, int allowErrors)
 
 char * playerCreatedStoryArc_Receive(Packet * pak)
 {
-    return (char*)pktGetZipped(pak,0);
+    return (char*)pktGetZipped(pak,0, MB256_SIZE);
 }
 
 

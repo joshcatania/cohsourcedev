@@ -81,7 +81,12 @@ static int baseReceiveAndLoad(Packet *pak, int raidIndex)
     if (not_diff)
     {
         base->curr_id = pktGetBitsPack(pak,1);
-        str = pktGetZipped(pak,&len);
+        str = pktGetZipped(pak, &len, MB256_SIZE);
+        if (!str) {
+            //Packet was bad or ran into an issue with size limitations,
+            //error out and let the client request a full update
+            return 0;
+        }
         sBadBase = 0;
     }
     else
@@ -93,7 +98,7 @@ static int baseReceiveAndLoad(Packet *pak, int raidIndex)
                 
         crc = pktGetBits(pak,32);
         base->curr_id = pktGetBitsPack(pak,1);
-        diff = pktGetZipped(pak,&diff_size);
+        diff = pktGetZipped(pak,&diff_size, MB256_SIZE);
 
         cryptAdler32Init();
         if (sBadBase)
@@ -102,6 +107,9 @@ static int baseReceiveAndLoad(Packet *pak, int raidIndex)
             same = 1; //Null string, let it try to apply patch-from-null
         else if (cryptAdler32(base->data_str, base->data_len) == crc)
             same = 1; //The crc of what we're patching from matches current, try patch
+        else if (!diff) {
+            return 0;
+        }
 
         if (same)
             len = bindiffApplyPatch(base->data_str,diff,&str);

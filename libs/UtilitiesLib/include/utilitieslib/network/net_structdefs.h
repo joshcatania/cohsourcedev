@@ -12,6 +12,7 @@
 #include "../components/MemoryPool.h"
 #include "../utils/memcheck.h"
 #include "../components/BitStream.h"
+#include "../components/StashTable.h"
 
 C_DECLARATIONS_BEGIN
 
@@ -389,6 +390,8 @@ struct NetLinkList
     NetPacketCallback        *packetCallback;
     
     StashTable                netLinkTable;
+    StashTable                sourceRateLimitTable; // Used to track when last log in was to limit attempted logins 
+    StashTableIterator        sourceRateLimitIterator; // Used to track where we are in the linked list for cleanup 
 
     U32                        sendBufferSize; // Current size of the send buffer (low-level network buffer size)
     U32                        recvBufferSize; // Current size of the receive buffer (low-level network buffer size)

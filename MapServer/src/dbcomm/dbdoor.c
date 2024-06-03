@@ -664,10 +664,17 @@ void handleServerDoorUpdate(Packet *pak)
     char        *s,*args[10],*doors_str,*doors_args[10],*curr_doors_str;
     char        buf[1024];
 
+    count = pktGetBitsPack(pak, 1);
+    curr_doors_str = doors_str = pktGetZipped(pak, 0, MB256_SIZE);
+
+    //Check if packet data is good before doing anything else
+    if (!doors_str) {
+        return;
+    }
+
     doors = &db_doors;
     freeDoorList(doors);
-    count = pktGetBitsPack(pak,1);
-    curr_doors_str = doors_str = pktGetZipped(pak,0);
+    
 
     for(i=0;i<count;i++)
     {

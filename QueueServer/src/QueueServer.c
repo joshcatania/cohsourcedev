@@ -257,11 +257,11 @@ int clientMsgCallback(Packet *pak_in, int cmd, NetLink *link)
         pktSend(&pak_out,&g_queueServerState.db_comm_link);
     }
     
-    xcase DBGAMECLIENT_CHOOSE_VISITING_PLAYER:
+    /*xcase DBGAMECLIENT_CHOOSE_VISITING_PLAYER:
     {
         clientPassChooseVisitingPlayer(pak_in, pak_out);
         pktSend(&pak_out,&g_queueServerState.db_comm_link);
-    }
+    }*/
 
     xcase DBGAMECLIENT_MAKE_PLAYER_ONLINE:
     {
