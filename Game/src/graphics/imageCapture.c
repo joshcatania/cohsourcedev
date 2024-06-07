@@ -566,13 +566,13 @@ static void imageCaptureUpdateImage(SeqInst *seq)
     texForceTexLoaderToComplete(0);
 
     // Check to see if we have any FX on us
-    hasFx = eaiSize(&seq->seqfx);
-    for( i = 0 ; i < MAX_SEQFX ; i++ )
+    hasFx = seq->seqfx_count;
+    for (i = 0; i < MAX_SEQFX; i++)
     {
-        if( seq->const_seqfx[i] )
+        if (seq->const_seqfx[i])
             hasFx = 1;
     }
-    for( i = 0 ; i < eaiSize(&seq->seqcostumefx) ; i++ )
+    for (i = 0; i < seq->seqcostumefx_count; i++)
     {
         if( seq->seqcostumefx[i] )
             hasFx = 1;
