@@ -515,6 +515,11 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
             //svrDisconnectAndSleepClient(client);
         }
         xcase CLIENT_REQSHORTCUTS:
+            if (!client->entity) {
+                // Data received without an entity, drop them!
+                netRemoveLink(client->link);
+                break;
+            }
             pak_out = pktCreate();
             pktSendBitsPack(pak_out,1,SERVER_CMDSHORTCUTS);
             cmdOldServerSendShortcuts(pak_out);
