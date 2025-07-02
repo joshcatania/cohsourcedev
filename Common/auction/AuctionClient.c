@@ -549,7 +549,7 @@ int auction_dbMessageCallback(Packet *pak,int cmd,NetLink *link)
     break;
     case DBSERVER_AUCTION_BATCH_INFO:
     {
-        char *batch_info_str = pktGetZipped(pak,NULL);
+        char *batch_info_str = pktGetZipped(pak,NULL, MB256_SIZE);
 
         AuctionInvItemInfoCache_Clear();
         AuctionClient_ProcessBatchInfo(batch_info_str);

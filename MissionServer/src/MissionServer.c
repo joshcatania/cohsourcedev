@@ -2609,7 +2609,7 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
                         estrDestroy(&guestName);
                     }
 
-                    missionserver_UpdateArcData(arc, pktGetZippedInfo(pak_in, &arc->zsize, &arc->size)); // pktGetZippedInfo mallocs, s_updateArcData owns
+                    missionserver_UpdateArcData(arc, pktGetZippedInfo(pak_in, &arc->zsize, &arc->size, MB256_SIZE)); // pktGetZippedInfo mallocs, s_updateArcData owns
 
                     switch(arc->ban)
                     {
@@ -2749,7 +2749,7 @@ int shardMsgCallback(Packet *pak_in, int cmd, NetLink *link)
                     }
 
                     Strncpyt(arc->header.author_shard, shard->name);
-                    missionserver_UpdateArcData(arc, pktGetZippedInfo(pak_in, &arc->zsize, &arc->size)); // pktGetZippedInfo mallocs, s_updateArcData owns
+                    missionserver_UpdateArcData(arc, pktGetZippedInfo(pak_in, &arc->zsize, &arc->size, MB256_SIZE)); // pktGetZippedInfo mallocs, s_updateArcData owns
 
                     eaiPush(&user->arcids_published, arc->id);
                     missionserver_IndexNewArc(arc);

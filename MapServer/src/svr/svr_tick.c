@@ -523,7 +523,8 @@ int svrHandleClientMsg(Packet *pak, int cmd, NetLink *link)
             pak_out = pktCreate();
             pktSendBitsPack(pak_out,1,SERVER_CMDSHORTCUTS);
             cmdOldServerSendShortcuts(pak_out);
-            if ( client->entity->access_level > 0 )
+            //Add null check on entity to stop a known crash under specific conditions
+            if ((client->entity) && client->entity->access_level > 0 )
                 cmdOldServerSendCommands(pak_out, client->entity->access_level);
             else
                 pktSendBitsPack(pak_out, 1, 0);

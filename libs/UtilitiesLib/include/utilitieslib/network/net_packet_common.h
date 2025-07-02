@@ -76,8 +76,8 @@ static INLINEDBG int pktSendBit(Packet *pak, int val) { pktSendBits(pak, 1, val)
 
 void pktSendZippedAlready(Packet *pak,int numbytes,int zipbytes,void *zipdata);
 void pktSendZipped(Packet *pak,int numbytes,void *data);
-U8 *pktGetZipped(Packet *pak,U32 *numbytes_p);
-U8 *pktGetZippedInfo(Packet *pak,U32 *zipbytes_p,U32 *rawbytes_p);
+U8 *pktGetZipped(Packet *pak,U32 *numbytes_p, U32 size);
+U8 *pktGetZippedInfo(Packet *pak,U32 *zipbytes_p,U32 *rawbytes_p, U32 size);
 void pktSendGetZipped(Packet *pak_out, Packet *pak_in);
 
 void pktSendF(Packet *pak, int precision, F32 min, F32 max, F32 f);
