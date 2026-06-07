@@ -117,8 +117,12 @@ copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconServer.ex
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconServer.pdb
 copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconClient.exe
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconClient.pdb
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\*.dll $(ProjectDir)..\..\..\bin
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\*.dll $(ProjectDir)..\..\..\bin</Command>
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\cudart64_30_9.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\PhysXDevice64.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\NxCharacter64CHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXCooking64CHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXCore64CHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXLoader64CHECKED.dll $(ProjectDir)..\..\..\bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -149,8 +153,14 @@ copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconServer.ex
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconServer.pdb
 copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconClient.exe
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconClient.pdb
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\*.dll $(ProjectDir)..\..\..\bin
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\*.dll $(ProjectDir)..\..\..\bin</Command>
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\cudart32_30_9.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\NxCooking.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\physxcudart_20.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\PhysXDevice.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\NxCharacterCHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXCookingCHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXCoreCHECKED.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Debug\PhysXLoaderCHECKED.dll $(ProjectDir)..\..\..\bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -184,8 +194,14 @@ copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconServer.ex
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconServer.pdb
 copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconClient.exe
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconClient.pdb
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\*.dll $(ProjectDir)..\..\..\bin
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\..\..\bin</Command>
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\cudart32_30_9.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\NxCooking.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\physxcudart_20.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\PhysXDevice.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\NxCharacter.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXCooking.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXCore.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXLoader.dll $(ProjectDir)..\..\..\bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -220,8 +236,12 @@ copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconServer.ex
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconServer.pdb
 copy /Y $(TargetDir)$(ProjectName).exe $(ProjectDir)..\..\..\bin\BeaconClient.exe
 copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\bin\BeaconServer.pdb
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\*.dll $(ProjectDir)..\..\..\bin
-copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\..\..\bin</Command>
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\cudart64_30_9.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Shared\PhysXDevice64.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\NxCharacter64.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXCooking64.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXCore64.dll $(ProjectDir)..\..\..\bin
+copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXLoader64.dll $(ProjectDir)..\..\..\bin</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
