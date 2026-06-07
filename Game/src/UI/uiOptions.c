@@ -3281,6 +3281,8 @@ int optionsWindow()
     static int s_lastScreenY = -1;
     static int s_lastRefresRate = -1;
     static int s_lastFullscreen = -1;
+    static GfxSettings s_lastDynamicGfx;
+    static bool s_lastDynamicGfxValid = false;
 
     if(!window_getDims(WDW_OPTIONS, &x, &y, &z, &wd, &ht, &sc, &color, &bcolor))
     {
@@ -3376,6 +3378,7 @@ int optionsWindow()
         s_lastScreenY = -1;
         s_lastRefresRate = -1;
         s_lastFullscreen = -1;
+        s_lastDynamicGfxValid = false;
 
         gWindowRGBA[0] = (winDefs[WDW_STAT_BARS].loc.color>>24 & 0xff);
         gWindowRGBA[1] = (winDefs[WDW_STAT_BARS].loc.color>>16 & 0xff);
@@ -3688,7 +3691,12 @@ int optionsWindow()
 
         doScrollBar( &graphicsSB, ht - (PIX3+R10)*2*sc, dht, wd, (PIX3+R10)*sc, z, &clipbox, 0 );
         
-        gfxApplySettings(&s_gfx, true, true);
+        if (!s_lastDynamicGfxValid || memcmp(&s_lastDynamicGfx, &s_gfx, sizeof(s_gfx)) != 0)
+        {
+            gfxApplySettings(&s_gfx, true, true);
+            s_lastDynamicGfx = s_gfx;
+            s_lastDynamicGfxValid = true;
+        }
     }
     else
     {
@@ -3728,6 +3736,8 @@ int optionsWindow()
        if( D_MOUSEHIT == drawStdButton(x+60*sc,y+ht-(TAB_HT/2+PIX3)*sc,z,100*sc,TAB_HT*sc,applyNowButtonColor,"ApplyNow",sc,0) )
     {
          gfxApplySettings(&s_gfx, true, false);
+        s_lastDynamicGfx = s_gfx;
+        s_lastDynamicGfxValid = true;
 
         if (isMenu(MENU_GAME))
         {
