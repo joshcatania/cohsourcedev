@@ -1395,6 +1395,9 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\PhysXLoader64.dll $(Pro
     <ResourceCompile Include="..\..\src\resource.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Manifest Include="..\..\src\Game.manifest" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\..\3rdparty\cryptopp-8.3\build\vs2019\cryptopp.vcxproj">
       <Project>{aca8c226-ef10-49f2-8b3d-d9939ee4a4fe}</Project>
     </ProjectReference>
