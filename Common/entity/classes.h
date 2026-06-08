@@ -116,7 +116,7 @@ typedef struct CharacterClass
         //   hit points will affect status points and vice-versa. Hit points 
         //   are are set to be the same as status points.
 
-    size_t offDefiantHitPointsAttrib;
+    int offDefiantHitPointsAttrib;
         // Byte offset to the attribute in the CharacterAttributes struct.
         // If non-zero, points to the attrib which is used as hitpoints
         //   after the character has been defeated.

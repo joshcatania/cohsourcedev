@@ -36,7 +36,7 @@ static void TargetTypeMatches(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
 #ifdef SERVER
     if(bFound && e->villainDef)
@@ -61,7 +61,7 @@ static void TargetFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Target", (int *)&e);
+    eval_FetchPointer(pcontext, "Target", (void **)&e);
     chareval_EntityFetchHelper(pcontext, e, rhs);
 }
 
@@ -74,7 +74,7 @@ static void TargetOwnerFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Target", (int *)&e);
+    eval_FetchPointer(pcontext, "Target", (void **)&e);
     if (e && e->erOwner)
     {
         e = erGetEnt(e->erOwner);
@@ -91,7 +91,7 @@ static void TargetCreatorFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Target", (int *)&e);
+    eval_FetchPointer(pcontext, "Target", (void **)&e);
     if (e && e->erCreator)
     {
         e = erGetEnt(e->erCreator);
@@ -107,7 +107,7 @@ static void TargetHasTag(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -127,7 +127,7 @@ static void TargetHasBadge(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -148,7 +148,7 @@ static void TargetTokenOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -169,7 +169,7 @@ static void TargetTokenVal(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -190,7 +190,7 @@ static void TargetLoyaltyOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -211,7 +211,7 @@ static void SourceLoyaltyOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -231,7 +231,7 @@ static void TargetLoyaltyTeirOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -252,7 +252,7 @@ static void SourceLoyaltyTeirOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -272,7 +272,7 @@ static void TargetLoyaltyLevelOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -293,7 +293,7 @@ static void SourceLoyaltyLevelOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -313,7 +313,7 @@ static void TargetProductOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -334,7 +334,7 @@ static void SourceProductOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -355,7 +355,7 @@ static void SourceProductOwned(EvalContext *pcontext)
 static void TargetLoyaltyPointsEarned(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -375,7 +375,7 @@ static void TargetLoyaltyPointsEarned(EvalContext *pcontext)
 static void SourceLoyaltyPointsEarned(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -395,7 +395,7 @@ static void SourceLoyaltyPointsEarned(EvalContext *pcontext)
 static void TargetIsVIP(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -415,7 +415,7 @@ static void TargetIsVIP(EvalContext *pcontext)
 static void SourceIsVIP(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -431,7 +431,7 @@ static void SourceIsVIP(EvalContext *pcontext)
 static void SourceIsAccountServerAvailable(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound && e)
     {
@@ -447,7 +447,7 @@ static void SourceIsAccountServerAvailable(EvalContext *pcontext)
 static void TargetIsAccountServerAvailable(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound && e)
     {
@@ -462,7 +462,7 @@ static void TargetIsAccountServerAvailable(EvalContext *pcontext)
 static void SourceIsAccountInventoryLoaded(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound && e)
     {
@@ -478,7 +478,7 @@ static void SourceIsAccountInventoryLoaded(EvalContext *pcontext)
 static void TargetIsAccountInventoryLoaded(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound && e)
     {
@@ -498,7 +498,7 @@ static void TargetEventCount(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -518,7 +518,7 @@ static void SourceEventCount(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -539,7 +539,7 @@ static void TargetTeamSize(EvalContext *pcontext)
 {
     Entity *e;
     float fRadius = eval_FloatPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -559,7 +559,7 @@ static void SourceTeamSize(EvalContext *pcontext)
 {
     Entity *e;
     float fRadius = eval_FloatPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -581,7 +581,7 @@ static void TargetEventTime(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -601,7 +601,7 @@ static void SourceEventTime(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -622,7 +622,7 @@ static void SourceFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Source", (int *)&e);
+    eval_FetchPointer(pcontext, "Source", (void **)&e);
     chareval_EntityFetchHelper(pcontext, e, rhs);
 }
 
@@ -635,7 +635,7 @@ static void SourceOwnerFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Source", (int *)&e);
+    eval_FetchPointer(pcontext, "Source", (void **)&e);
     if (e && e->erOwner)
     {
         e = erGetEnt(e->erOwner);
@@ -652,7 +652,7 @@ static void SourceCreatorFetch(EvalContext *pcontext)
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Source", (int *)&e);
+    eval_FetchPointer(pcontext, "Source", (void **)&e);
     if (e && e->erCreator)
     {
         e = erGetEnt(e->erCreator);
@@ -668,8 +668,8 @@ static void TargetIsFriend(EvalContext *pcontext)
 {
     Entity *pTarget;
     Entity *pSrc;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&pSrc);
-    bFound &= eval_FetchInt(pcontext, "Target", (int *)&pTarget);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&pSrc);
+    bFound &= eval_FetchPointer(pcontext, "Target", (void **)&pTarget);
     
     if(bFound)
     {
@@ -692,7 +692,7 @@ static void SourceHasTag(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -712,7 +712,7 @@ static void SourceHasBadge(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -732,7 +732,7 @@ static void SourceTokenOwned(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -752,7 +752,7 @@ static void SourceTokenVal(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -768,7 +768,7 @@ static void TargetTokenTime(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -784,7 +784,7 @@ static void SourceTokenTime(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -804,7 +804,7 @@ static void TargetInMode(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -824,7 +824,7 @@ static void SourceInMode(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -840,7 +840,7 @@ void chareval_TargetIsToggleActive(EvalContext *pcontext)
 {
     Entity *e;
     const char *powerFullName = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if (bFound)
     {
@@ -856,7 +856,7 @@ void chareval_SourceIsToggleActive(EvalContext *pcontext)
 {
     Entity *e;
     const char *powerFullName = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if (bFound)
     {
@@ -875,7 +875,7 @@ void chareval_SourceIsToggleActive(EvalContext *pcontext)
 static void TargetMapTeamArea(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
 
     if(bFound)
     {
@@ -894,7 +894,7 @@ static void TargetMapTeamArea(EvalContext *pcontext)
 static void SourceMapTeamArea(EvalContext *pcontext)
 {
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
 
     if(bFound)
     {
@@ -910,7 +910,7 @@ static void CheckAuthBit(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
     int i = 0;
 
     if(bFound && e && e->pl)
@@ -931,8 +931,8 @@ static void Distance(EvalContext *pcontext)
 {
     Entity *eTarget;
     Entity *eSrc;
-    bool bFoundSrc = eval_FetchInt(pcontext, "Source", (int *)&eSrc);
-    bool bFoundTarget = eval_FetchInt(pcontext, "Target", (int *)&eTarget);
+    bool bFoundSrc = eval_FetchPointer(pcontext, "Source", (void **)&eSrc);
+    bool bFoundTarget = eval_FetchPointer(pcontext, "Target", (void **)&eTarget);
 
     if(bFoundSrc && bFoundTarget)
     {
@@ -949,7 +949,7 @@ void chareval_TargetOnStoryArc(EvalContext *pcontext)
 {
 #if SERVER
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Target", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Target", (void **)&e);
     const char *storyArcName = eval_StringPop(pcontext);
 
     if(bFound)
@@ -966,7 +966,7 @@ void chareval_SourceOnStoryArc(EvalContext *pcontext)
 {
 #if SERVER
     Entity *e;
-    bool bFound = eval_FetchInt(pcontext, "Source", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Source", (void **)&e);
     const char *storyArcName = eval_StringPop(pcontext);
 
     if(bFound)
@@ -1193,7 +1193,7 @@ static void combateval_BasePowerFetch(EvalContext *pcontext)
 {
     BasePower *ppowBase;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "BasePower", (int *)&ppowBase);
+    bool bFound = eval_FetchPointer(pcontext, "BasePower", (void **)&ppowBase);
 
     if(bFound)
     {
@@ -1210,8 +1210,8 @@ static void combateval_BoostedPowerFetch(EvalContext *pcontext)
     BasePower *ppowBase;
     Power *ppow;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "BasePower", (int *)&ppowBase);
-    bFound &= eval_FetchInt(pcontext, "Power", (int *)&ppow);
+    bool bFound = eval_FetchPointer(pcontext, "BasePower", (void **)&ppowBase);
+    bFound &= eval_FetchPointer(pcontext, "Power", (void **)&ppow);
 
     if(bFound)
     {
@@ -1226,7 +1226,7 @@ static void combateval_BoostedPowerFetch(EvalContext *pcontext)
 static void combateval_PowerAttackTypeCount(EvalContext *pcontext)
 {
     BasePower *ppowBase;
-    bool bFound = eval_FetchInt(pcontext, "BasePower", (int *)&ppowBase);
+    bool bFound = eval_FetchPointer(pcontext, "BasePower", (void **)&ppowBase);
 
     if (bFound)
     {
@@ -1359,24 +1359,24 @@ float combateval_Eval(Entity *eSrc, Entity *eTarget, const Power *pPow, const ch
         PERFINFO_AUTO_START("combateval_Eval", 1);
 
         if (eTarget)
-            eval_StoreInt(s_pCombatEval, "Target", (int)eTarget);
+            eval_StorePointer(s_pCombatEval, "Target", eTarget);
         else
-            eval_ForgetInt(s_pCombatEval, "Target");
+            eval_ForgetPointer(s_pCombatEval, "Target");
 
         if (eSrc)
-            eval_StoreInt(s_pCombatEval, "Source", (int)eSrc);
+            eval_StorePointer(s_pCombatEval, "Source", eSrc);
         else
-            eval_ForgetInt(s_pCombatEval, "Source");
+            eval_ForgetPointer(s_pCombatEval, "Source");
 
         if (pPow)
         {
-            eval_StoreInt(s_pCombatEval, "Power", (int)pPow);
-            eval_StoreInt(s_pCombatEval, "BasePower", (int)pPow->ppowBase);
+            eval_StorePointer(s_pCombatEval, "Power", pPow);
+            eval_StorePointer(s_pCombatEval, "BasePower", pPow->ppowBase);
         }
         else
         {
-            eval_ForgetInt(s_pCombatEval, "Power");
-            eval_ForgetInt(s_pCombatEval, "BasePower");
+            eval_ForgetPointer(s_pCombatEval, "Power");
+            eval_ForgetPointer(s_pCombatEval, "BasePower");
         }
 
         eval_ClearStack(s_pCombatEval);
@@ -1401,21 +1401,21 @@ float combateval_EvalFromBasePower(Entity *eSrc, Entity *eTarget, const BasePowe
         PERFINFO_AUTO_START("combateval_Eval", 1);
 
         if (eTarget)
-            eval_StoreInt(s_pCombatEval, "Target", (int)eTarget);
+            eval_StorePointer(s_pCombatEval, "Target", eTarget);
         else
-            eval_ForgetInt(s_pCombatEval, "Target");
+            eval_ForgetPointer(s_pCombatEval, "Target");
         
         if (eSrc)
-            eval_StoreInt(s_pCombatEval, "Source", (int)eSrc);
+            eval_StorePointer(s_pCombatEval, "Source", eSrc);
         else
-            eval_ForgetInt(s_pCombatEval, "Source");
+            eval_ForgetPointer(s_pCombatEval, "Source");
         
-        eval_StoreInt(s_pCombatEval, "Power", 0);
+        eval_StorePointer(s_pCombatEval, "Power", NULL);
         
         if (pPowBase)
-            eval_StoreInt(s_pCombatEval, "BasePower", (int)pPowBase);
+            eval_StorePointer(s_pCombatEval, "BasePower", pPowBase);
         else
-            eval_ForgetInt(s_pCombatEval, "BasePower");
+            eval_ForgetPointer(s_pCombatEval, "BasePower");
         
         eval_ClearStack(s_pCombatEval);
 

@@ -449,14 +449,16 @@ void preloadDLLs(int silent) {
 }
 
 
-HANDLE CreateFileMappingSafe( DWORD lpProtect, int size, const char* handleName, int silent)
+HANDLE CreateFileMappingSafe( DWORD lpProtect, UPTR size, const char* handleName, int silent)
 {
     HANDLE hMapFile = NULL;
     int iNumTriesLeft = 5; // try 5 times
+    DWORD sizeHigh = (DWORD)(size >> 32);
+    DWORD sizeLow = (DWORD)(size & 0xffffffff);
 
     while ( !hMapFile && iNumTriesLeft > 0)
     {
-        hMapFile = CreateFileMappingA(NULL, NULL, lpProtect, 0, size, handleName);
+        hMapFile = CreateFileMappingA(NULL, NULL, lpProtect, sizeHigh, sizeLow, handleName);
         if ( !hMapFile )
         {
             iNumTriesLeft--;
@@ -559,8 +561,11 @@ LPVOID MapViewOfFileExSafe(HANDLE handle, const char* handleName, void* desiredA
 
 void trickGoogleDesktopDll(int silent)
 {
+#ifdef _M_X64
+    return;
+#else
     HANDLE hMapFile = NULL;
-    void* startingAddress = (void*)(intptr_t)0xA0000000;
+    void* startingAddress = (void*)(SPTR)0xA0000000;
     int size = 0x30000000; // 0xA0... to 0xD0...  768MB
     SOCKET dummySock;
     LPVOID lpMapAddress;
@@ -598,6 +603,7 @@ void trickGoogleDesktopDll(int silent)
     closesocket(dummySock);
     UnmapViewOfFile(lpMapAddress);
     CloseHandle(hMapFile);
+#endif
 }
 
 #else

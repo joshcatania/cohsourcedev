@@ -213,17 +213,16 @@ static void unpackNames(void *mem,PackNames *names)
 {
 int        i,count;
 int        *imem,*idxs;
-char    **idxs_ptr,*base_offset;
+char       *base_offset;
 
     imem = (void *)mem;
     count = imem[0];
     names->count = count;
     idxs = &imem[1];
-    idxs_ptr = (void *)idxs;
-    names->strings = idxs_ptr;
     base_offset = (char *)(&idxs[count]);
+    names->strings = calloc(MAX(1, count), sizeof(names->strings[0]));
     for(i=0;i<count;i++)
-        idxs_ptr[i] = idxs[i] + base_offset;
+        names->strings[i] = idxs[i] + base_offset;
 }
 
 int uncompressDeltas(void *dst,U8 *src,int stride,int count,PackType pack_type)
@@ -287,8 +286,108 @@ int uncompressDeltas(void *dst,U8 *src,int stride,int count,PackType pack_type)
 }
 
 
-#define IDX2PTR(idx,base) ((void *)((uintptr_t)idx + (uintptr_t)base))
-#define PTR2IDX(ptr,base) ((void *)((uintptr_t)ptr - (uintptr_t)base))
+#define IDX2PTR(idx,base) ((void *)((UPTR)idx + (UPTR)base))
+#define PTR2IDX(ptr,base) ((void *)((UPTR)ptr - (UPTR)base))
+
+#ifdef _M_X64
+typedef struct PolyCellOnDisk
+{
+    U32 children;
+    U32 tri_idxs;
+    int tri_count;
+} PolyCellOnDisk;
+
+static bool polyCellFileRangeOk(U32 offset, size_t bytes, size_t buffer_size)
+{
+    return offset <= buffer_size && bytes <= buffer_size - offset;
+}
+
+static void polyCellFreeNative(PolyCell *cell)
+{
+    int i;
+
+    if (!cell)
+        return;
+
+    if (cell->children)
+    {
+        for (i = 0; i < 8; i++)
+            polyCellFreeNative(cell->children[i]);
+        free(cell->children);
+    }
+    else
+    {
+        free(cell->tri_idxs);
+    }
+
+    free(cell);
+}
+
+static PolyCell *polyCellUnpackFileData(const U8 *base, size_t buffer_size, U32 offset)
+{
+    const PolyCellOnDisk *disk_cell;
+    PolyCell *cell;
+    int i;
+
+    if (!polyCellFileRangeOk(offset, sizeof(*disk_cell), buffer_size))
+    {
+        return NULL;
+    }
+
+    disk_cell = (const PolyCellOnDisk *)(base + offset);
+    cell = calloc(sizeof(*cell), 1);
+    if (!cell)
+        return NULL;
+
+    cell->tri_count = disk_cell->tri_count;
+
+    if (disk_cell->children)
+    {
+        const U32 *disk_children;
+
+        if (!polyCellFileRangeOk(disk_cell->children, sizeof(U32) * 8, buffer_size))
+        {
+            free(cell);
+            return NULL;
+        }
+
+        disk_children = (const U32 *)(base + disk_cell->children);
+        cell->children = calloc(sizeof(cell->children[0]) * 8, 1);
+        if (!cell->children)
+        {
+            free(cell);
+            return NULL;
+        }
+
+        for (i = 0; i < 8; i++)
+        {
+            if (disk_children[i])
+                cell->children[i] = polyCellUnpackFileData(base, buffer_size, disk_children[i]);
+        }
+    }
+
+    if (disk_cell->tri_idxs)
+    {
+        if (cell->tri_count < 0 ||
+            !polyCellFileRangeOk(disk_cell->tri_idxs, sizeof(U16) * cell->tri_count, buffer_size))
+        {
+            polyCellFreeNative(cell);
+            return NULL;
+        }
+
+        cell->tri_idxs = malloc(sizeof(cell->tri_idxs[0]) * cell->tri_count);
+        if (!cell->tri_idxs)
+        {
+            polyCellFreeNative(cell);
+            return NULL;
+        }
+
+        memcpy(cell->tri_idxs, base + disk_cell->tri_idxs, sizeof(cell->tri_idxs[0]) * cell->tri_count);
+    }
+
+    return cell;
+}
+#endif
 
 
 PolyCell *polyCellUnpack(Model* model,PolyCell *cell,void *base_offset)
@@ -348,7 +447,7 @@ PolyCell *polyCellPack(Model* model, PolyCell *cell, void *base_offset, PolyCell
         dest_base_offset = dest;
     }
     
-    assert((U32)(uintptr_t)PTR2IDX(dest, dest_base_offset) + sizeof(*dest) <= model->pack.grid.unpacksize);
+    assert((U32)(UPTR)PTR2IDX(dest, dest_base_offset) + sizeof(*dest) <= model->pack.grid.unpacksize);
         
     *dest = *cell;
     
@@ -376,7 +475,7 @@ PolyCell *polyCellPack(Model* model, PolyCell *cell, void *base_offset, PolyCell
     {
         dest->tri_idxs = PTR2IDX(cell->tri_idxs,base_offset);
         
-        assert((U32)(uintptr_t)dest->tri_idxs + sizeof(cell->tri_idxs[0]) * cell->tri_count <= model->pack.grid.unpacksize);
+        assert((U32)(UPTR)dest->tri_idxs + sizeof(cell->tri_idxs[0]) * cell->tri_count <= model->pack.grid.unpacksize);
         
         if(dest != cell)
         {
@@ -517,7 +616,12 @@ void modelFreeCtris(Model *model)
     }
     else
     {
+#ifdef _M_X64
+        polyCellFreeNative(model->grid.cell);
+        SAFE_FREE(model->ctris);
+#else
         SAFE_FREE(model->grid.cell);
+#endif
     }
     //SAFE_FREE(model->tags);
     //SAFE_FREE(model->ctris);
@@ -707,7 +811,11 @@ int modelCreateCtris(Model *model)
     STR_COMBINE_CAT(model->name);
     STR_COMBINE_END();
 
+#ifdef _M_X64
+    uiGridAllocSize = 0;
+#else
     uiGridAllocSize = model->pack.grid.unpacksize;
+#endif
     uiCTrisAllocSize = model->tri_count * sizeof(CTri);
 
     uiTotalAllocSize = uiGridAllocSize + uiCTrisAllocSize + sizeof(int)*2;
@@ -832,9 +940,21 @@ int modelCreateCtris(Model *model)
 
 
     ctri_total += model->pack.grid.unpacksize;
+#ifdef _M_X64
+    {
+        int grid_unpack_size = model->pack.grid.unpacksize;
+        U8 *disk_grid = malloc(grid_unpack_size);
+        if (!disk_grid)
+            return 0;
+        geoUncompress(disk_grid, &grid_unpack_size, model->pack.grid.data, model->pack.grid.packsize, model->name, model->filename);
+        model->grid.cell = polyCellUnpackFileData(disk_grid, grid_unpack_size, 0);
+        free(disk_grid);
+    }
+#else
     model->grid.cell = pTotalAlloc; //malloc(model->pack.grid.unpacksize);
     geoUncompress((U8*)model->grid.cell,&model->pack.grid.unpacksize,model->pack.grid.data,model->pack.grid.packsize,model->name,model->filename);
     model->grid.cell = polyCellUnpack(model,model->grid.cell,(void*)model->grid.cell);
+#endif
 
     if (model->vert_count > maxvcount)
     {
@@ -854,7 +974,7 @@ int modelCreateCtris(Model *model)
     modelGetVerts(verts, model);
     
     model->tags = calloc(sizeof(model->tags[0]) * model->tri_count,1);
-    model->ctris = (void*)((char*)pTotalAlloc + model->pack.grid.unpacksize);//calloc(sizeof(model->tags[0]) * model->tri_count,1);
+    model->ctris = (void*)((char*)pTotalAlloc + uiGridAllocSize);//calloc(sizeof(model->tags[0]) * model->tri_count,1);
     for(i=0;i<model->tri_count;i++)
     {
         
@@ -1109,27 +1229,70 @@ static void testGeoUnpack(Model *model)
     free(matidxs);
 }
 
-static void patchPackPtr(PackData *pack,int offset)
+static void patchPackPtr(PackData *pack, UPTR offset)
 {
     if (pack->unpacksize)
     {
-        pack->data += offset;
+        pack->data = (U8*)((UPTR)pack->data + offset);
     }
 }
 
-static void unpatchPackPtr(PackData *pack,int offset)
+static void unpatchPackPtr(PackData *pack, UPTR offset)
 {
 
     if (pack->unpacksize)
     {
-        pack->data -= offset;
+        pack->data = (U8*)((UPTR)pack->data - offset);
     }
 }
+
+#ifdef _M_X64
+STATIC_ASSERT(offsetof(BoneInfo, weights) == 4 + sizeof(BoneId) * MAX_OBJBONES);
+
+static BoneInfo *boneInfoLoadFileData(const GeoLoadData *gld, U32 offset)
+{
+    const BoneInfo *src;
+    BoneInfo *dst;
+
+    if (offset > (U32)gld->datasize ||
+        offsetof(BoneInfo, weights) > (size_t)gld->datasize - offset)
+    {
+        return NULL;
+    }
+
+    src = (const BoneInfo *)((U8 *)gld->geo_data + offset);
+    dst = calloc(sizeof(*dst), 1);
+    if (!dst)
+        return NULL;
+
+    dst->numbones = src->numbones;
+    memcpy(dst->bone_ID, src->bone_ID, sizeof(dst->bone_ID));
+    dst->weights = 0;
+    dst->matidxs = 0;
+    dst->file_offset = offset;
+
+    return dst;
+}
+
+static bool boneInfoIsLoadedFileCopy(const GeoLoadData *gld, const BoneInfo *boneinfo)
+{
+    UPTR ptr = (UPTR)boneinfo;
+    UPTR base = (UPTR)gld->geo_data;
+
+    if (!boneinfo || ptr < 0x10000)
+        return false;
+    if (gld->geo_data && ptr >= base && ptr < base + (UPTR)gld->datasize)
+        return false;
+
+    return boneinfo->file_offset && boneinfo->file_offset < (U32)gld->datasize;
+}
+
+#endif
 
 
 static void restoreStubOffsets(GeoLoadData* gld)
 {
-    U32 base_offset = (U32)(uintptr_t)(gld->geo_data);
+    UPTR base_offset = (UPTR)(gld->geo_data);
     int j;
 
     for( j=0 ; j < gld->modelheader.model_count ; j++ )
@@ -1149,9 +1312,21 @@ static void restoreStubOffsets(GeoLoadData* gld)
         if (gld->file_format_version >= 8)
             unpatchPackPtr(&model->pack.reflection_quads,base_offset);
         if (model->api)
-            model->api            = (void *)((uintptr_t)model->api - base_offset);
+            model->api            = (void *)((UPTR)model->api - base_offset);
         if(model->boneinfo)
-            model->boneinfo        = (void *)((uintptr_t)model->boneinfo - base_offset);
+        {
+#ifdef _M_X64
+            if (boneInfoIsLoadedFileCopy(gld, model->boneinfo))
+            {
+                U32 offset = model->boneinfo->file_offset;
+                SAFE_FREE(model->boneinfo);
+                model->boneinfo = (BoneInfo *)(UPTR)offset;
+            }
+            else if ((UPTR)model->boneinfo >= base_offset &&
+                (UPTR)model->boneinfo < base_offset + (UPTR)gld->datasize)
+#endif
+            model->boneinfo        = (void *)((UPTR)model->boneinfo - base_offset);
+        }
     }
 }
 
@@ -1160,7 +1335,7 @@ void geoLoadData(GeoLoadData* gld)
 {
     U8 * mem;
     int j;
-    U32 base_offset;
+    UPTR base_offset;
 
     if(!gld->file)
         gld->file = fileOpen(gld->name, "rb"); //if failure, I need to do something
@@ -1174,8 +1349,8 @@ void geoLoadData(GeoLoadData* gld)
 
     gld->geo_data = mem = malloc(gld->datasize);
     fread(mem, 1, gld->datasize, gld->file);
-    assert((U32)gld->headersize < (uintptr_t)mem);
-    base_offset = (U32)(uintptr_t)mem;
+    assert((UPTR)gld->headersize < (UPTR)mem);
+    base_offset = (UPTR)mem;
 
     for( j=0 ; j < gld->modelheader.model_count ; j++ )
     {
@@ -1195,12 +1370,16 @@ void geoLoadData(GeoLoadData* gld)
             patchPackPtr(&model->pack.reflection_quads,base_offset);
 
         if (model->api)
-            model->api            = (void *)(base_offset + (uintptr_t)model->api);
+            model->api            = (void *)(base_offset + (UPTR)model->api);
         if(model->boneinfo)
         {
-            model->boneinfo    = (void *) (base_offset + (uintptr_t)model->boneinfo);
+#ifdef _M_X64
+            model->boneinfo    = boneInfoLoadFileData(gld, (U32)(UPTR)model->boneinfo);
+#else
+            model->boneinfo    = (void *) (base_offset + (UPTR)model->boneinfo);
             model->boneinfo->weights    = 0;
             model->boneinfo->matidxs    = 0;
+#endif
         }
         //testGeoUnpack(model);
     }
@@ -1213,46 +1392,97 @@ void geoLoadData(GeoLoadData* gld)
 
 typedef struct
 {
-    PackData        tris;
-    PackData        verts;
-    PackData        norms;
-    PackData        sts;
-    PackData        weights;
-    PackData        matidxs;
-    PackData        grid;
+    int        packsize;
+    U32        unpacksize;
+    U32        data;
+} PackDataOnDisk;
+
+typedef struct
+{
+    U32        cell;
+    F32        pos[3];
+    F32        size;
+    F32        inv_size;
+    int        tag;
+    int        num_bits;
+} PolyGridOnDisk;
+
+typedef struct
+{
+    PackDataOnDisk    tris;
+    PackDataOnDisk    verts;
+    PackDataOnDisk    norms;
+    PackDataOnDisk    sts;
+    PackDataOnDisk    weights;
+    PackDataOnDisk    matidxs;
+    PackDataOnDisk    grid;
 } PackBlockOnDisk;
+
+STATIC_ASSERT(sizeof(PackDataOnDisk) == 12);
+STATIC_ASSERT(sizeof(PolyGridOnDisk) == 32);
+STATIC_ASSERT(sizeof(PackBlockOnDisk) == 84);
 
 typedef struct ModelFormatOnDisk_v2 // Do not change this structure
 {
     // frequently used data keep in same cache block
     U32                flags;
     F32                radius;
-    VBO                *vbo;
+    U32                vbo;
     int                tex_count;        //number of tex_idxs (sum of all tex_idx->counts == tri_count)
     S16                id;            //I am this bone 
     U8                blend_mode;
     U8                loadstate; 
-    BoneInfo        *boneinfo; //if I am skinned, everything about that
-    TrickNode        *trick;
+    U32                boneinfo; //if I am skinned, everything about that
+    U32                trick;
     int                vert_count;
     int                tri_count;
-    TexID            *tex_idx;        //array of (textures + number of tris that have it)
+    U32                tex_idx;        //array of (textures + number of tris that have it)
 
     // collision
-    PolyGrid        grid;
-    CTri            *ctris;
-    int                *tags;
+    PolyGridOnDisk    grid;
+    U32                ctris;
+    U32                tags;
 
     // Less frequently used data
-    char            *name;
-    AltPivotInfo    *api;    // if I have alternate pivot points defined for fx, everything about that
-    ModelExtra        *extra;    // Portals
-    Vec3            scale;    // hardly used at all, but dont remove, jeremy scaling files
-    Vec3            min,max;
-    GeoLoadData        *gld;
+    U32                name;
+    U32                api;    // if I have alternate pivot points defined for fx, everything about that
+    U32                extra;    // Portals
+    F32             scale[3];    // hardly used at all, but dont remove, jeremy scaling files
+    F32             min[3], max[3];
+    U32                gld;
 
     PackBlockOnDisk    pack;
 } ModelFormatOnDisk_v2;
+
+STATIC_ASSERT(sizeof(ModelFormatOnDisk_v2) == 216);
+
+typedef struct ModelHeaderOnDisk
+{
+    char        name[124];
+    U32         model_data;
+    F32         length;
+    U32         models;
+    int         model_count;
+} ModelHeaderOnDisk;
+
+STATIC_ASSERT(sizeof(ModelHeaderOnDisk) == 140);
+
+static void copyPackDataFromDisk(PackData *dst, const PackDataOnDisk *src)
+{
+    dst->packsize = src->packsize;
+    dst->unpacksize = src->unpacksize;
+    dst->data = (U8*)(UPTR)src->data;
+}
+
+static void copyPolyGridFromDisk(PolyGrid *dst, const PolyGridOnDisk *src)
+{
+    dst->cell = (PolyCell*)(UPTR)src->cell;
+    copyVec3(src->pos, dst->pos);
+    dst->size = src->size;
+    dst->inv_size = src->inv_size;
+    dst->tag = src->tag;
+    dst->num_bits = src->num_bits;
+}
 
 
 static int readModel(Model *dst, char *data, int version_num, U8 *objname_base, U8 *texidx_base)
@@ -1269,31 +1499,31 @@ static int readModel(Model *dst, char *data, int version_num, U8 *objname_base, 
             COPY(tex_count);
             COPY(id);
             COPY(loadstate);
-            COPY(boneinfo);
+            dst->boneinfo = (BoneInfo*)(UPTR)src->boneinfo;
             assert(!src->trick);
             COPY(vert_count);
             COPY(tri_count);
-            dst->tex_idx = (TexID*)(texidx_base + (uintptr_t)src->tex_idx);
+            dst->tex_idx = (TexID*)(texidx_base + (UPTR)src->tex_idx);
 
-            COPY(grid);
+            copyPolyGridFromDisk(&dst->grid, &src->grid);
             assert(!src->ctris);
             assert(!src->tags);
 
-            dst->name = objname_base + (uintptr_t)src->name;
-            COPY(api);
+            dst->name = objname_base + (UPTR)src->name;
+            dst->api = (AltPivotInfo*)(UPTR)src->api;
             assert(!src->extra);    // Portals
             copyVec3(src->scale, dst->scale);
             copyVec3(src->min, dst->min);
             copyVec3(src->max, dst->max);
 
-            COPY(pack.tris);
-            COPY(pack.verts);
-            COPY(pack.norms);
-            COPY(pack.sts);
+            copyPackDataFromDisk(&dst->pack.tris, &src->pack.tris);
+            copyPackDataFromDisk(&dst->pack.verts, &src->pack.verts);
+            copyPackDataFromDisk(&dst->pack.norms, &src->pack.norms);
+            copyPackDataFromDisk(&dst->pack.sts, &src->pack.sts);
             memset(&dst->pack.sts3, 0, sizeof(dst->pack.sts3));
-            COPY(pack.weights);
-            COPY(pack.matidxs);
-            COPY(pack.grid);
+            copyPackDataFromDisk(&dst->pack.weights, &src->pack.weights);
+            copyPackDataFromDisk(&dst->pack.matidxs, &src->pack.matidxs);
+            copyPackDataFromDisk(&dst->pack.grid, &src->pack.grid);
         #undef COPY
 
         size = sizeof(*src);
@@ -1302,47 +1532,50 @@ static int readModel(Model *dst, char *data, int version_num, U8 *objname_base, 
     {
         #define COPY(fld,bytes) { memcpy(&(dst->fld), data, bytes); data += bytes; }
         #define COPY2(fld,bytes) { memcpy((dst->fld), data, bytes); data += bytes; }
+        #define COPY_FILE_PTR(fld,type) { U32 offset; memcpy(&offset, data, 4); data += 4; dst->fld = (type)(UPTR)offset; }
+        #define COPY_PACK(fld) { PackDataOnDisk pack; memcpy(&pack, data, sizeof(pack)); data += sizeof(pack); copyPackDataFromDisk(&(dst->fld), &pack); }
+        #define COPY_POLYGRID(fld) { PolyGridOnDisk grid; memcpy(&grid, data, sizeof(grid)); data += sizeof(grid); copyPolyGridFromDisk(&(dst->fld), &grid); }
 
             memcpy(&size, data, 4); data += 4;
             
             COPY(radius, 4);
             COPY(tex_count, 4);
-            COPY(boneinfo, 4);
+            COPY_FILE_PTR(boneinfo, BoneInfo*);
             COPY(vert_count, 4);
             COPY(tri_count, 4);
             if (version_num >= 8)
             {
                 COPY(reflection_quad_count, 4);
             }
-            COPY(tex_idx, 4);
-            dst->tex_idx = (TexID*)(texidx_base + (intptr_t)dst->tex_idx);
-            COPY(grid, sizeof(PolyGrid));
-            COPY(name, 4);
-            dst->name = objname_base + (intptr_t)dst->name;
-            COPY(api, 4);
+            COPY_FILE_PTR(tex_idx, TexID*);
+            dst->tex_idx = (TexID*)(texidx_base + (SPTR)dst->tex_idx);
+            COPY_POLYGRID(grid);
+            COPY_FILE_PTR(name, char*);
+            dst->name = objname_base + (SPTR)dst->name;
+            COPY_FILE_PTR(api, AltPivotInfo*);
             COPY2(scale, sizeof(Vec3));
             COPY2(min, sizeof(Vec3));
             COPY2(max, sizeof(Vec3));
-            COPY(pack.tris, sizeof(PackData));
-            COPY(pack.verts, sizeof(PackData));
-            COPY(pack.norms, sizeof(PackData));
-            COPY(pack.sts, sizeof(PackData));
-            COPY(pack.sts3, sizeof(PackData));
-            COPY(pack.weights, sizeof(PackData));
-            COPY(pack.matidxs, sizeof(PackData));
-            COPY(pack.grid, sizeof(PackData));
+            COPY_PACK(pack.tris);
+            COPY_PACK(pack.verts);
+            COPY_PACK(pack.norms);
+            COPY_PACK(pack.sts);
+            COPY_PACK(pack.sts3);
+            COPY_PACK(pack.weights);
+            COPY_PACK(pack.matidxs);
+            COPY_PACK(pack.grid);
             if (version_num == 4)
             {
-                data += sizeof(PackData); // used to be pack.lmap_utransforms
-                data += sizeof(PackData); // used to be pack.lmap_vtransforms
+                data += sizeof(PackDataOnDisk); // used to be pack.lmap_utransforms
+                data += sizeof(PackDataOnDisk); // used to be pack.lmap_vtransforms
             }
             if (version_num >= 7)
             {
-                COPY(pack.reductions, sizeof(PackData));
+                COPY_PACK(pack.reductions);
             }
             if (version_num >= 8)
             {
-                COPY(pack.reflection_quads, sizeof(PackData));
+                COPY_PACK(pack.reflection_quads);
             }
 #if 0
             if (version_num < 8)
@@ -1369,6 +1602,9 @@ static int readModel(Model *dst, char *data, int version_num, U8 *objname_base, 
 
         #undef COPY
         #undef COPY2
+        #undef COPY_FILE_PTR
+        #undef COPY_PACK
+        #undef COPY_POLYGRID
     }
 
     assert(!dst->grid.cell);
@@ -1672,7 +1908,7 @@ static GeoLoadData *geoLoadStubs(FILE * file, GeoLoadData * gld,GeoUseType type)
                     texidx_blocksize  +
                     lodinfo_blocksize;
 
-        totalSize += sizeof(ModelHeader);
+        totalSize += sizeof(ModelHeaderOnDisk);
         
         mem = malloc(totalSize);
         
@@ -1696,13 +1932,19 @@ static GeoLoadData *geoLoadStubs(FILE * file, GeoLoadData * gld,GeoUseType type)
             lod_data = (void *)MEM_NEXT(lodinfo_blocksize);
         }
 
-        MEM_NEXT(sizeof(ModelHeader));
+        MEM_NEXT(sizeof(ModelHeaderOnDisk));
         
         assert(mem_pos == totalSize);
         
         aps = (void*)((U8*)gld->header_data + mem_pos);
 
-        memcpy(&gld->modelheader, (void*)((U8*)mem + mem_pos - sizeof(gld->modelheader)), sizeof(gld->modelheader));
+        {
+            ModelHeaderOnDisk *disk_header = (ModelHeaderOnDisk*)((U8*)mem + mem_pos - sizeof(ModelHeaderOnDisk));
+            memset(&gld->modelheader, 0, sizeof(gld->modelheader));
+            memcpy(gld->modelheader.name, disk_header->name, sizeof(gld->modelheader.name));
+            gld->modelheader.length = disk_header->length;
+            gld->modelheader.model_count = disk_header->model_count;
+        }
         gld->modelheader.models = allocModelList(gld->modelheader.model_count);
         gld->modelheader.model_data = gld->modelheader.models?gld->modelheader.models[0]:NULL;
 
@@ -2585,6 +2827,10 @@ void modelListFree(GeoLoadData *gld)
         Model* model = gld->modelheader.models[j];
         modelFreeCache(model);
         SAFE_FREE(model->trick);
+#ifdef _M_X64
+        if (boneInfoIsLoadedFileCopy(gld, model->boneinfo))
+            SAFE_FREE(model->boneinfo);
+#endif
 #if CLIENT
         SAFE_FREE(model->tex_binds);
         assert(!model->vbo); // freed in modelFreeCache
@@ -2604,6 +2850,7 @@ void modelListFree(GeoLoadData *gld)
         stashRemovePointer(glds_ht, gld->name, NULL);
     SAFE_FREE(gld->modelheader.model_data);
     eaDestroy(&gld->modelheader.models);
+    SAFE_FREE(gld->texnames.strings);
     SAFE_FREE(gld->header_data);
     SAFE_FREE(gld->geo_data);
     SAFE_FREE(gld);

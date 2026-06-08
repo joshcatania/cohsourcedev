@@ -48,9 +48,9 @@ TextAttribs gTextAttr_Gray12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_12,
+    /* piFace        */  (void **)&game_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0x80e080ff,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0x66ff66ff,
@@ -71,9 +71,9 @@ TextAttribs gTextAttr_White9 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_9,
+    /* piFace        */  (void **)&game_9,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0x80e080ff,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0x66ff66ff,
@@ -94,9 +94,9 @@ TextAttribs gTextAttr_White12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_12,
+    /* piFace        */  (void **)&game_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0x80e080ff,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0x66ff66ff,
@@ -117,9 +117,9 @@ TextAttribs gTextAttr_WhiteNoOutline12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_12,
+    /* piFace        */  (void **)&game_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0x80e080ff,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0x66ff66ff,
@@ -140,9 +140,9 @@ TextAttribs gTextAttr_Chat =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&chatFont,
+    /* piFace        */  (void **)&chatFont,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0x80e080ff,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0x66ff66ff,
@@ -163,9 +163,9 @@ TextAttribs gTextAttr_Arena =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.1f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_12,
+    /* piFace        */  (void **)&game_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -186,9 +186,9 @@ TextAttribs gTextAttr_Green =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.1f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&game_12,
+    /* piFace        */  (void **)&game_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -209,9 +209,9 @@ TextAttribs gTextAttr_LightHybridBlueHybrid12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&hybridbold_12,
+    /* piFace        */  (void **)&hybridbold_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -232,9 +232,9 @@ TextAttribs gTextAttr_DarkHybridBlueHybrid12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&hybridbold_12,
+    /* piFace        */  (void **)&hybridbold_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -255,9 +255,9 @@ TextAttribs gTextAttr_WhiteHybridBold12 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&hybridbold_12,
+    /* piFace        */  (void **)&hybridbold_12,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -278,9 +278,9 @@ TextAttribs gTextAttr_WhiteHybridBold18 =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&hybridbold_18,
+    /* piFace        */  (void **)&hybridbold_18,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -301,9 +301,9 @@ TextAttribs gTextAttr_WhiteTitle18Italics =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&title_18,
+    /* piFace        */  (void **)&title_18,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -324,9 +324,9 @@ TextAttribs gTextAttr_WhiteTitle24Italics =
     /* piColorSelect */  (int *)0,
     /* piColorSelectBG*/ (int *)0x333333ff,
     /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-    /* piFace        */  (int *)&title_24,
+    /* piFace        */  (void **)&title_24,
     /* piFont        */  (int *)0,
-    /* piAnchor      */  (int *)0,
+    /* piAnchor      */  (void **)0,
     /* piLink        */  (int *)0,
     /* piLinkBG      */  (int *)0,
     /* piLinkHover   */  (int *)0,
@@ -814,9 +814,9 @@ TextAttribs* smf_CreateTextAttribs()
     eaiCreate(&pattrs->piColorSelect);
     eaiCreate(&pattrs->piColorSelectBG);
     eaiCreate(&pattrs->piScale);
-    eaiCreate(&pattrs->piFace);
+    eaCreate(&pattrs->piFace);
     eaiCreate(&pattrs->piFont);
-    eaiCreate(&pattrs->piAnchor);
+    eaCreate(&pattrs->piAnchor);
     eaiCreate(&pattrs->piLink);
     eaiCreate(&pattrs->piLinkBG);
     eaiCreate(&pattrs->piLinkHover);
@@ -846,9 +846,9 @@ void smf_DestroyTextAttribs(TextAttribs *pattrs)
         eaiDestroy(&pattrs->piColorSelect);
         eaiDestroy(&pattrs->piColorSelectBG);
         eaiDestroy(&pattrs->piScale);
-        eaiDestroy(&pattrs->piFace);
+        eaDestroy(&pattrs->piFace);
         eaiDestroy(&pattrs->piFont);
-        eaiDestroy(&pattrs->piAnchor);
+        eaDestroy(&pattrs->piAnchor);
         eaiDestroy(&pattrs->piLink);
         eaiDestroy(&pattrs->piLinkBG);
         eaiDestroy(&pattrs->piLinkHover);
@@ -888,9 +888,9 @@ void smf_InitTextAttribs(TextAttribs *pattrs, TextAttribs *pdefaults)
         /* piColorSelect */  (int *)0,
         /* piColorSelectBG*/ (int *)0x333333ff,
         /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-        /* piFace        */  (int *)&smfDefault,
+        /* piFace        */  (void **)&smfDefault,
         /* piFont        */  (int *)0,
-        /* piAnchor      */  (int *)0,
+        /* piAnchor      */  (void **)0,
         /* piLink        */  (int *)0x80e080ff,
         /* piLinkBG      */  (int *)0,
         /* piLinkHover   */  (int *)0x66ff66ff,
@@ -918,9 +918,9 @@ void smf_InitTextAttribs(TextAttribs *pattrs, TextAttribs *pdefaults)
         eaiCreate(&pattrs->piColorSelect);
         eaiCreate(&pattrs->piColorSelectBG);
         eaiCreate(&pattrs->piScale);
-        eaiCreate(&pattrs->piFace);
+        eaCreate(&pattrs->piFace);
         eaiCreate(&pattrs->piFont);
-        eaiCreate(&pattrs->piAnchor);
+        eaCreate(&pattrs->piAnchor);
         eaiCreate(&pattrs->piLink);
         eaiCreate(&pattrs->piLinkBG);
         eaiCreate(&pattrs->piLinkHover);
@@ -941,9 +941,9 @@ void smf_InitTextAttribs(TextAttribs *pattrs, TextAttribs *pdefaults)
         eaiSetSize(&pattrs->piColorSelect,    0);
         eaiSetSize(&pattrs->piColorSelectBG,    0);
         eaiSetSize(&pattrs->piScale,            0);
-        eaiSetSize(&pattrs->piFace,            0);
+        eaSetSize(&pattrs->piFace,            0);
         eaiSetSize(&pattrs->piFont,            0);
-        eaiSetSize(&pattrs->piAnchor,            0);
+        eaSetSize(&pattrs->piAnchor,            0);
         eaiSetSize(&pattrs->piLink,            0);
         eaiSetSize(&pattrs->piLinkBG,            0);
         eaiSetSize(&pattrs->piLinkHover,        0);
@@ -963,9 +963,9 @@ void smf_InitTextAttribs(TextAttribs *pattrs, TextAttribs *pdefaults)
     eaiPush(&pattrs->piColorSelect,    (int)pdefaults->piColorSelect);
     eaiPush(&pattrs->piColorSelectBG, (int)pdefaults->piColorSelectBG);
     eaiPush(&pattrs->piScale,            (int)pdefaults->piScale);
-    eaiPush(&pattrs->piFace,            (int)pdefaults->piFace);
+    eaPush(&pattrs->piFace,            pdefaults->piFace);
     eaiPush(&pattrs->piFont,            (int)pdefaults->piFont);
-    eaiPush(&pattrs->piAnchor,        (int)pdefaults->piAnchor);
+    eaPush(&pattrs->piAnchor,        pdefaults->piAnchor);
     eaiPush(&pattrs->piLink,            (int)pdefaults->piLink);
     eaiPush(&pattrs->piLinkBG,        (int)pdefaults->piLinkBG);
     eaiPush(&pattrs->piLinkHover,        (int)pdefaults->piLinkHover);
@@ -993,9 +993,9 @@ void smf_InitDefaultTextAttribs(TextAttribs *pattrs, TextAttribs *pdefaults)
         /* piColorSelect */  (int *)0,
         /* piColorSelectBG*/ (int *)0x333333ff,
         /* piScale       */  (int *)(int)(1.0f*SMF_FONT_SCALE),
-        /* piFace        */  (int *)&smfDefault,
+        /* piFace        */  (void **)&smfDefault,
         /* piFont        */  (int *)0,
-        /* piAnchor      */  (int *)0,
+        /* piAnchor      */  (void **)0,
         /* piLink        */  (int *)0x80e080ff,
         /* piLinkBG      */  (int *)0,
         /* piLinkHover   */  (int *)0x66ff66ff,

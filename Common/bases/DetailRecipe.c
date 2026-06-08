@@ -707,7 +707,7 @@ bool entity_DetailRecipeUsable(Entity *e, DetailRecipe *pDef)
 void recipeeval_RecipeFetch(EvalContext *pcontext)
 {
     DetailRecipe *precipe;
-    bool bFound = eval_FetchInt(pcontext, "Recipe", (int *)&precipe);
+    bool bFound = eval_FetchPointer(pcontext, "Recipe", (void **)&precipe);
     const char *rhs = eval_StringPop(pcontext);
 
     if(bFound && precipe && rhs)
@@ -759,7 +759,7 @@ static void recipeeval_EmptyDetailFetchHelper(EvalContext *pcontext, const char 
 void recipeeval_DetailFetch(EvalContext *pcontext)
 {
     RoomDetail *pdetail;
-    bool bFound = eval_FetchInt(pcontext, "Detail", (int *)&pdetail);
+    bool bFound = eval_FetchPointer(pcontext, "Detail", (void **)&pdetail);
     const char *rhs = eval_StringPop(pcontext);
 
     if(bFound && rhs && !pdetail)
@@ -843,9 +843,9 @@ static bool recipeeval_Eval(const DetailRecipe *pRecipe, Entity *e, RoomDetail *
     if(!s_pRecipeEval)
         recipeeval_Init();
 
-    eval_StoreInt(s_pRecipeEval, "Entity", (intptr_t)e);
-    eval_StoreInt(s_pRecipeEval, "DetailSrc", (intptr_t)pSrc);
-    eval_StoreInt(s_pRecipeEval, "Recipe", (intptr_t)pRecipe);
+    eval_StorePointer(s_pRecipeEval, "Entity", e);
+    eval_StorePointer(s_pRecipeEval, "DetailSrc", pSrc);
+    eval_StorePointer(s_pRecipeEval, "Recipe", (void *)pRecipe);
     eval_ClearStack(s_pRecipeEval);
 
     eval_Evaluate(s_pRecipeEval, ppchExpr);

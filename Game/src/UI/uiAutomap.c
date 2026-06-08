@@ -82,7 +82,6 @@
 #include "entity/EntPlayer.h"
 #include <utilitieslib/utils/sysutil.h>
 #include "shlobj.h"
-#include <nvdxt_options.h>
 
 #ifndef TEST_CLIENT
 #include "group/groupMetaMinimap.h"

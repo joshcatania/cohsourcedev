@@ -18,6 +18,152 @@
 
 AnimationEngine animEngine = {0};
 
+typedef struct BoneAnimTrackOnDisk
+{
+    U32    rot_idx;
+    U32    pos_idx;
+    U16    rot_fullkeycount;
+    U16    pos_fullkeycount;
+    U16    rot_count;
+    U16    pos_count;
+    char    id;
+    char    flags;
+    U16    pack_pad;
+} BoneAnimTrackOnDisk;
+
+#pragma pack(push, 1)
+typedef struct SkeletonAnimTrackOnDisk
+{
+    int        headerSize;
+    char    name[MAX_ANIM_FILE_NAME_LEN];
+    char    baseAnimName[MAX_ANIM_FILE_NAME_LEN];
+    F32        max_hip_displacement;
+    F32        length;
+    U32        bone_tracks;
+    int        bone_track_count;
+    int        rotation_compression_type;
+    int        position_compression_type;
+    U32        skeletonHeirarchy;
+    U32        backupAnimTrack;
+    int        loadstate;
+    F32        lasttimeused;
+    int        fileAge;
+    int        spare_room[9];
+} SkeletonAnimTrackOnDisk;
+#pragma pack(pop)
+
+STATIC_ASSERT(sizeof(BoneAnimTrackOnDisk) == 20);
+STATIC_ASSERT(sizeof(BoneLink) == 12);
+STATIC_ASSERT(sizeof(SkeletonAnimTrackOnDisk) == 596);
+
+static bool animDiskRangeOk(U32 offset, size_t bytes, int file_size)
+{
+    return file_size >= 0 && offset <= (U32)file_size && bytes <= (size_t)file_size - offset;
+}
+
+static bool animValidateDiskHeirarchyBranch(const SkeletonHeirarchy *heirarchy, bool visited[BONES_ON_DISK], int link_count, int idx)
+{
+    while (idx != BONEID_INVALID)
+    {
+        const BoneLink *link;
+
+        if (idx < 0 || idx >= link_count || visited[idx])
+            return false;
+
+        link = &heirarchy->skeleton_heirarchy[idx];
+        if (link->id != idx || !bone_IdIsValid(link->id))
+            return false;
+        if (link->child != BONEID_INVALID && (link->child < 0 || link->child >= link_count))
+            return false;
+        if (link->next != BONEID_INVALID && (link->next < 0 || link->next >= link_count))
+            return false;
+
+        visited[idx] = true;
+        if (link->child != BONEID_INVALID && !animValidateDiskHeirarchyBranch(heirarchy, visited, link_count, link->child))
+            return false;
+
+        idx = link->next;
+    }
+
+    return true;
+}
+
+static bool animValidateDiskHeirarchy(const SkeletonHeirarchy *heirarchy, size_t link_count)
+{
+    bool visited[BONES_ON_DISK] = {0};
+
+    if (!link_count || link_count > BONES_ON_DISK)
+        return false;
+
+    return animValidateDiskHeirarchyBranch(heirarchy, visited, (int)link_count, heirarchy->heirarchy_root);
+}
+
+static bool animCopyDiskHeirarchy(SkeletonHeirarchy *dst, const U8 *src, size_t bytes)
+{
+    const BoneLink *links;
+    size_t link_count;
+    int i;
+
+    if (bytes < sizeof(S32))
+        return false;
+
+    memcpy(&dst->heirarchy_root, src, sizeof(dst->heirarchy_root));
+    links = (const BoneLink*)(src + sizeof(S32));
+    bytes -= sizeof(S32);
+
+    if (bytes % sizeof(BoneLink) != 0)
+        return false;
+
+    link_count = bytes / sizeof(BoneLink);
+    if (!link_count || link_count > BONES_ON_DISK)
+        return false;
+
+    for (i = 0; i < BONES_ON_DISK; i++)
+    {
+        dst->skeleton_heirarchy[i].child = BONEID_INVALID;
+        dst->skeleton_heirarchy[i].next = BONEID_INVALID;
+        dst->skeleton_heirarchy[i].id = BONEID_INVALID;
+    }
+
+    for (i = 0; i < (int)link_count; i++)
+    {
+        dst->skeleton_heirarchy[i].child = links[i].child;
+        dst->skeleton_heirarchy[i].next = links[i].next;
+        dst->skeleton_heirarchy[i].id = (BoneId)links[i].id;
+    }
+
+    if (animValidateDiskHeirarchy(dst, link_count))
+        return true;
+
+    /*
+     * Some asset files carry a shortened hierarchy block. Keep the load alive
+     * by dropping links outside the copied span without inventing asset-specific
+     * exceptions.
+     */
+    if (dst->heirarchy_root < 0 || dst->heirarchy_root >= (int)link_count)
+        return false;
+
+    for (i = 0; i < (int)link_count; i++)
+    {
+        BoneLink *link = &dst->skeleton_heirarchy[i];
+
+        if (link->id != i || !bone_IdIsValid(link->id))
+        {
+            link->child = BONEID_INVALID;
+            link->next = BONEID_INVALID;
+            link->id = BONEID_INVALID;
+            continue;
+        }
+
+        if (link->child != BONEID_INVALID && (link->child < 0 || link->child >= (int)link_count))
+            link->child = BONEID_INVALID;
+        if (link->next != BONEID_INVALID && (link->next < 0 || link->next >= (int)link_count))
+            link->next = BONEID_INVALID;
+    }
+
+    return dst->skeleton_heirarchy[dst->heirarchy_root].id == dst->heirarchy_root;
+}
+
 static void animDebugCheckBoneTrackOnLoad( BoneAnimTrack * bt, const char *fileName )
 {
     int i;
@@ -60,6 +206,128 @@ static void animDebugCheckBoneTrackOnLoad( BoneAnimTrack * bt, const char *fileN
     }
 }
 
+static SkeletonAnimTrack *animConvertTrackFile(const U8 *file_data, int file_size, bool load_all)
+{
+    const SkeletonAnimTrackOnDisk *disk = (const SkeletonAnimTrackOnDisk*)file_data;
+    const BoneAnimTrackOnDisk *disk_bones;
+    SkeletonAnimTrack *skeleton;
+    BoneAnimTrack *bone_tracks;
+    SkeletonHeirarchy *heirarchy;
+    U8 *raw_data;
+    size_t alloc_size;
+    size_t heirarchy_size;
+    size_t disk_heirarchy_size;
+    int i;
+
+    if (!file_data)
+    {
+        return NULL;
+    }
+    if (file_size < (int)sizeof(*disk))
+    {
+        return NULL;
+    }
+    if (disk->bone_track_count < 0)
+    {
+        return NULL;
+    }
+    if (disk->bone_track_count > BONES_ON_DISK)
+    {
+        return NULL;
+    }
+    if (!animDiskRangeOk(disk->bone_tracks, (size_t)disk->bone_track_count * sizeof(BoneAnimTrackOnDisk), file_size))
+    {
+        return NULL;
+    }
+    if (!disk->skeletonHeirarchy)
+        disk_heirarchy_size = 0;
+    else if (disk->bone_tracks > disk->skeletonHeirarchy)
+        disk_heirarchy_size = disk->bone_tracks - disk->skeletonHeirarchy;
+    else
+        disk_heirarchy_size = (U32)file_size - disk->skeletonHeirarchy;
+
+    if (disk->skeletonHeirarchy &&
+        !animDiskRangeOk(disk->skeletonHeirarchy, disk_heirarchy_size, file_size))
+    {
+        return NULL;
+    }
+
+    disk_bones = (const BoneAnimTrackOnDisk*)(file_data + disk->bone_tracks);
+    if (load_all)
+    {
+        for (i = 0; i < disk->bone_track_count; i++)
+        {
+            if (disk_bones[i].rot_idx && disk_bones[i].rot_idx >= (U32)file_size)
+            {
+                return NULL;
+            }
+            if (disk_bones[i].pos_idx && disk_bones[i].pos_idx >= (U32)file_size)
+            {
+                return NULL;
+            }
+        }
+    }
+
+    heirarchy_size = disk->skeletonHeirarchy ? sizeof(SkeletonHeirarchy) : 0;
+    alloc_size = sizeof(SkeletonAnimTrack) + disk->bone_track_count * sizeof(BoneAnimTrack) + heirarchy_size + file_size;
+    skeleton = calloc(1, alloc_size);
+    if (!skeleton)
+    {
+        return NULL;
+    }
+
+    bone_tracks = (BoneAnimTrack*)((U8*)skeleton + sizeof(SkeletonAnimTrack));
+    heirarchy = disk->skeletonHeirarchy ? (SkeletonHeirarchy*)(bone_tracks + disk->bone_track_count) : NULL;
+    raw_data = disk->skeletonHeirarchy ? (U8*)(heirarchy + 1) : (U8*)(bone_tracks + disk->bone_track_count);
+    memcpy(raw_data, file_data, file_size);
+    disk_bones = (const BoneAnimTrackOnDisk*)(raw_data + disk->bone_tracks);
+
+    skeleton->headerSize = disk->headerSize;
+    memcpy(skeleton->name, disk->name, sizeof(skeleton->name));
+    skeleton->name[sizeof(skeleton->name) - 1] = 0;
+    memcpy(skeleton->baseAnimName, disk->baseAnimName, sizeof(skeleton->baseAnimName));
+    skeleton->baseAnimName[sizeof(skeleton->baseAnimName) - 1] = 0;
+    skeleton->max_hip_displacement = disk->max_hip_displacement;
+    skeleton->length = disk->length;
+    skeleton->bone_tracks = bone_tracks;
+    skeleton->bone_track_count = disk->bone_track_count;
+    skeleton->rotation_compression_type = disk->rotation_compression_type;
+    skeleton->position_compression_type = disk->position_compression_type;
+    if (heirarchy)
+    {
+        if (!animCopyDiskHeirarchy(heirarchy, raw_data + disk->skeletonHeirarchy, disk_heirarchy_size))
+        {
+            free(skeleton);
+            return NULL;
+        }
+        skeleton->skeletonHeirarchy = heirarchy;
+    }
+    else
+    {
+        skeleton->skeletonHeirarchy = NULL;
+    }
+    skeleton->backupAnimTrack = NULL;
+    skeleton->loadstate = disk->loadstate;
+    skeleton->lasttimeused = disk->lasttimeused;
+    skeleton->fileAge = disk->fileAge;
+    memcpy(skeleton->spare_room, disk->spare_room, sizeof(skeleton->spare_room));
+
+    for (i = 0; i < disk->bone_track_count; i++)
+    {
+        bone_tracks[i].rot_idx = (load_all && disk_bones[i].rot_idx) ? raw_data + disk_bones[i].rot_idx : NULL;
+        bone_tracks[i].pos_idx = (load_all && disk_bones[i].pos_idx) ? raw_data + disk_bones[i].pos_idx : NULL;
+        bone_tracks[i].rot_fullkeycount = disk_bones[i].rot_fullkeycount;
+        bone_tracks[i].pos_fullkeycount = disk_bones[i].pos_fullkeycount;
+        bone_tracks[i].rot_count = disk_bones[i].rot_count;
+        bone_tracks[i].pos_count = disk_bones[i].pos_count;
+        bone_tracks[i].id = disk_bones[i].id;
+        bone_tracks[i].flags = disk_bones[i].flags;
+        bone_tracks[i].pack_pad = disk_bones[i].pack_pad;
+    }
+
+    return skeleton;
+}
+
 static SkeletonAnimTrack * animReadTrackFile( FILE * file, int load_type, const char* fileName, SharedHeapAcquireResult* ret ) 
 {
     SkeletonAnimTrack * skeleton;
@@ -67,6 +335,14 @@ static SkeletonAnimTrack * animReadTrackFile( FILE * file, int load_type, const 
     BoneAnimTrack * bt;
     void * track_data = 0;
     SharedHeapHandle* pHandle = NULL;
+
+#ifdef _M_X64
+    if ( load_type == LOAD_ALL_SHARED )
+    {
+        load_type = LOAD_ALL;
+        *ret = SHAR_Error;
+    }
+#endif
 
     if ( load_type == LOAD_ALL_SHARED )
     {
@@ -96,13 +372,17 @@ static SkeletonAnimTrack * animReadTrackFile( FILE * file, int load_type, const 
     }
 
 
-    if( load_type == LOAD_ALL || load_type == LOAD_ALL_SHARED )
+    if( load_type == LOAD_ALL || load_type == LOAD_ALL_SHARED
+#ifdef _M_X64
+        || load_type == LOAD_SKELETONS_ONLY
+#endif
+        )
     {
         file_size = fileGetSize( file );
     }
     else //LOAD_SKELETONS_ONLY
     {
-        fread( &file_size, sizeof( int ), 1, file );    
+        fread( &file_size, sizeof( int ), 1, file );
         fseek( file, 0, SEEK_SET );
     }
 
@@ -128,6 +408,26 @@ static SkeletonAnimTrack * animReadTrackFile( FILE * file, int load_type, const 
 
     assert( skeleton );
     fread( skeleton, 1, file_size, file );
+
+#ifdef _M_X64
+    {
+        bool load_all = (load_type == LOAD_ALL);
+        SkeletonAnimTrack *converted = animConvertTrackFile((U8*)skeleton, file_size, load_all);
+        free(skeleton);
+        skeleton = converted;
+        if (!skeleton)
+            return NULL;
+
+        if (load_all)
+        {
+            for( i = 0 ; i < skeleton->bone_track_count ; i++ )
+                animDebugCheckBoneTrackOnLoad( &skeleton->bone_tracks[i], fileName );
+        }
+
+        return skeleton;
+    }
+#endif
+
     skeleton->backupAnimTrack = NULL;
 
     skeleton->bone_tracks = (void*)((size_t)skeleton->bone_tracks + (size_t)skeleton);
@@ -161,18 +461,18 @@ void animPatchLoadedRawData( SkeletonAnimTrack * skeleton )
     int i;
 
     skeleton->backupAnimTrack = NULL;
-    skeleton->bone_tracks = (void*)((size_t)skeleton->bone_tracks + (size_t)skeleton);
+    skeleton->bone_tracks = (void*)((UPTR)skeleton->bone_tracks + (UPTR)skeleton);
 
     for( i = 0 ; i < skeleton->bone_track_count ; i++ )
     {
         BoneAnimTrack* bt = &(skeleton->bone_tracks[i]);
 
-        bt->pos_idx = (void*)((size_t)bt->pos_idx + (size_t)skeleton);
-        bt->rot_idx = (void*)((size_t)bt->rot_idx + (size_t)skeleton);
+        bt->pos_idx = (void*)((UPTR)bt->pos_idx + (UPTR)skeleton);
+        bt->rot_idx = (void*)((UPTR)bt->rot_idx + (UPTR)skeleton);
     }
 
     if( skeleton->skeletonHeirarchy )
-        skeleton->skeletonHeirarchy = (void*)((size_t)skeleton->skeletonHeirarchy + (size_t)skeleton);
+        skeleton->skeletonHeirarchy = (void*)((UPTR)skeleton->skeletonHeirarchy + (UPTR)skeleton);
 }
 
 // walk the track data looking for anomalies
@@ -190,6 +490,7 @@ void animValidateTrackData( SkeletonAnimTrack * skeleton )
 SkeletonAnimTrack * animLoadAnimFile( const char* fileName )
 {
     SkeletonAnimTrack* pTrack = NULL;
+    void *file_data = NULL;
     int file_size;
     FILE* f;
 
@@ -201,15 +502,27 @@ SkeletonAnimTrack * animLoadAnimFile( const char* fileName )
     }
 
     file_size = fileGetSize( f );
-    pTrack = malloc(file_size);
-    if (!pTrack)
+    file_data = malloc(file_size);
+    if (!file_data)
     {
         Errorf("Not enough memory to load anim file");
+        fclose(f);
         return NULL;
     }
-    fread( pTrack, 1, file_size, f );
+    fread( file_data, 1, file_size, f );
 
+#ifdef _M_X64
+    pTrack = animConvertTrackFile(file_data, file_size, true);
+    free(file_data);
+    if (!pTrack)
+    {
+        fclose(f);
+        return NULL;
+    }
+#else
+    pTrack = file_data;
     animPatchLoadedRawData( pTrack );
+#endif
     animValidateTrackData( pTrack );
 
     fclose(f);

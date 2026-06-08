@@ -1624,7 +1624,7 @@ static void processActorCreationQueue(int iSceneNum, bool bCreateActor)
         delete pNewActorDesc->body;
         while ( pNewActorDesc->shapes.size() > 0 )
         {
-            if ( (U32)pNewActorDesc->shapes.back()->userData != NX_SHAPE_STORED )
+            if ( (UPTR)pNewActorDesc->shapes.back()->userData != NX_SHAPE_STORED )
                 delete pNewActorDesc->shapes.back();
             pNewActorDesc->shapes.popBack();
         }
@@ -2894,13 +2894,13 @@ void  nwRemoveCCDSkeletonForActor(void* actor)
 // ACTOR FUNCTION QUEUE
 // -------------------------------------------------------------------------------------------------------------------
 Queue actorFunctionQueueOneParam;
-typedef void (*ActorFunctionOneParam)(NxActorGuid guidActor, U32 paramOne);
+typedef void (*ActorFunctionOneParam)(NxActorGuid guidActor, UPTR paramOne);
 
 typedef struct AFQOneParam
 {
     ActorFunctionOneParam    pFunc;
     NxActorGuid                guidActor;
-    U32                        paramOne;
+    UPTR                  paramOne;
 } AFQOneParam;
 
 
@@ -2953,9 +2953,9 @@ static void nwDestroyActorFunctionQueues( )
 // -------------------------------------------------------------------------------------------------------------------
 // ACTOR WRITE FUNCTIONS (delayed)
 // -------------------------------------------------------------------------------------------------------------------
-static void nwInternalSetActorMat4(NxActorGuid guidActor, U32 pMatPtrInU32Form )
+static void nwInternalSetActorMat4(NxActorGuid guidActor, UPTR pMatPtr)
 {
-    NxMat34* pMat = (NxMat34*)(uintptr_t)pMatPtrInU32Form;
+    NxMat34* pMat = (NxMat34*)pMatPtr;
     NxActor* pActor = getActorFromGuid(guidActor);
     if (pActor)
     {
@@ -2978,7 +2978,7 @@ void  nwSetActorMat4(NxActorGuid guidActor , float* mat4)
         pAFQObject->guidActor = guidActor;
         pAFQObject->pFunc = nwInternalSetActorMat4;
 
-        pAFQObject->paramOne = (U32)(uintptr_t)pNxMat;
+        pAFQObject->paramOne = (UPTR)pNxMat;
 
         nwEnqueueActorFunctionOneParam(pAFQObject);
     }
@@ -2986,7 +2986,7 @@ void  nwSetActorMat4(NxActorGuid guidActor , float* mat4)
     {
         NxMat34 tempMat;
         nwSetNxMat34FromMat4(tempMat, (Vec3*)mat4);
-        nwInternalSetActorMat4(guidActor, (U32)(uintptr_t)(&tempMat));
+        nwInternalSetActorMat4(guidActor, (UPTR)(&tempMat));
     }
 
 }

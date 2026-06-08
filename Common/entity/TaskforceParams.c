@@ -642,7 +642,7 @@ static void TaskForceEvalMaxDefeats(EvalContext* context)
         result = 0;
         rhs = eval_StringPop(context);
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -671,7 +671,7 @@ static void TaskForceEvalTimeLimit(EvalContext* context)
         result = 0;
         rhs = eval_StringPop(context);
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -698,7 +698,7 @@ static void TaskForceEvalNoEnhancements(EvalContext* context)
     {
         result = 0;
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -728,7 +728,7 @@ static void TaskForceEvalDisabledPowers(EvalContext* context)
         result = 0;
         rhs = eval_StringPop(context);
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -755,7 +755,7 @@ static void TaskForceEvalBuffEnemies(EvalContext* context)
     {
         result = 0;
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -783,7 +783,7 @@ static void TaskForceEvalDebuffPlayers(EvalContext* context)
     {
         result = 0;
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)
@@ -811,7 +811,7 @@ static void TaskForceEvalNoInspirations(EvalContext* context)
     {
         result = 0;
 
-        if (eval_FetchInt(context, "entity", (int*)(&e)) &&
+        if (eval_FetchPointer(context, "entity", (void **)&e) &&
             e && e->pl)
         {
 #if defined(SERVER)

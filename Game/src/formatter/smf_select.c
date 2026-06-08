@@ -458,7 +458,7 @@ void smf_Select(SMBlock *pBlock, TextAttribs *pattrs, int iXBase, int iYBase, in
             smf_CompileSelectionString(pBlock, iXBase, iYBase, iZBase);
         }
 
-        if (eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+        if (eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
         {
             // Although tracked, multiply nested anchors are ignored. Always use
             // the first anchor if available.

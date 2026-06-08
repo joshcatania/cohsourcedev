@@ -108,7 +108,7 @@ static void freeEntries(Grid *grid,GridEnts *ents)
     }
 }
 
-static U32 *findEntry(GridEnts *ents,U32 old_val)
+static UPTR *findEntry(GridEnts *ents,UPTR old_val)
 {
     int        i;
 
@@ -123,7 +123,7 @@ static U32 *findEntry(GridEnts *ents,U32 old_val)
     return 0;
 }
 
-static U32 **findListIdx(GridIdxList *list,U32 *old_val)
+static UPTR **findListIdx(GridIdxList *list,UPTR *old_val)
 {
     int        i;
 
@@ -213,7 +213,7 @@ static void gridInsert(GridInsertState *state,GridCell *cell,Vec3 pos,F32 cell_s
     //filled = tp[0] + tp[1] + tp[2];
     if (filled || cell_size <= state->fit_size)
     {
-    U32        *mptr,**mmptr;
+    UPTR    *mptr,**mmptr;
 
         mptr = findEntry(cell->entries,0);
         if (!mptr)
@@ -224,7 +224,7 @@ static void gridInsert(GridInsertState *state,GridCell *cell,Vec3 pos,F32 cell_s
             cell->entries = ents;
             mptr = findEntry(cell->entries,0);
         }
-        *mptr = (U32)(uintptr_t)state->node;
+        *mptr = (UPTR)state->node;
         if (state->idx_list)
         {
             mmptr = findListIdx(state->idx_list,0);
@@ -323,7 +323,7 @@ int gridAdd(Grid *grid,void *node,Vec3 min,Vec3 max,int nodetype,GridIdxList **g
     state.fit_size = fit_size;
     copyVec3(min,state.min);
     copyVec3(size,state.size);
-    state.node = (void *)((uintptr_t)node | nodetype);
+    state.node = (void *)((UPTR)node | nodetype);
     state.idx_list = 0;
     if (grids_used)
         state.idx_list = gridAllocIdxList(grid);

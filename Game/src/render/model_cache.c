@@ -66,7 +66,7 @@ void *modelConvertRgbBuffer(U8 *rgbs,int vert_count)
     c->vert_count    = vert_count;
     c->handle        = handle;
     rdrQueueSend();
-    return (void*)handle;
+    return (void*)(SPTR)handle;
 }
 #endif
 
@@ -75,7 +75,7 @@ void modelFreeRgbBuffer(U8 *rgbs)
     if (!rdr_caps.use_vbos)
         rdrFreeMem(rgbs); // Free asynchronously
     else
-        rdrFreeBuffer(*(int *)&rgbs,"RGB_VBO");
+        rdrFreeBuffer((int)(SPTR)rgbs,"RGB_VBO");
 }
 
 
@@ -336,7 +336,8 @@ void modelSetupVertexObject(Model *model, int useVbos, BlendModeType blend_mode 
 {
     static int crit_init = 0;
     int            idx,total,vert_total,tri_bytes,vert_bytes,norm_bytes,st1_bytes,st2_bytes,st3_bytes,
-                tangent_bytes,weight_bytes,matidx_bytes,delta;
+                tangent_bytes,weight_bytes,matidx_bytes;
+    SPTR           delta;
     U8            *data;
     VBO            *vbo;
     bool        needBump = blendModeHasBump(blend_mode);
@@ -402,11 +403,11 @@ void modelSetupVertexObject(Model *model, int useVbos, BlendModeType blend_mode 
     }
 
     vert_total = vert_bytes + norm_bytes + st1_bytes + st2_bytes + st3_bytes + tangent_bytes + weight_bytes + matidx_bytes;
-    total = vert_total + tri_bytes + sizeof(U32) + model->tex_count * sizeof(TexID);
+    total = vert_total + tri_bytes + sizeof(VBO*) + model->tex_count * sizeof(TexID);
     data = rdrQueueAlloc(DRAWCMD_CREATEVBO,total);
 
     *((VBO**)data)    = vbo;
-    vbo->tex_ids    = (TexID*) (data+4);
+    vbo->tex_ids    = (TexID*) (data + sizeof(VBO*));
      vbo->tris        = (int*) (vbo->tex_ids + model->tex_count);
     modelGetTris(vbo->tris, model);
 
@@ -499,7 +500,7 @@ void modelSetupVertexObject(Model *model, int useVbos, BlendModeType blend_mode 
     vbo->flags                = model->flags;
     memcpy(vbo->tex_ids,model->tex_idx,sizeof(TexID) * vbo->tex_count);
 
-    delta = (int)vbo->verts;
+    delta = (SPTR)vbo->verts;
     if (!rdr_caps.use_vbos || useVbos == VBOS_DONTUSE)
     {
         vbo->tris = memcpy(malloc(vbo->tri_count * 3 * sizeof(int)),vbo->tris,vbo->tri_count * 3 * sizeof(int));
@@ -511,22 +512,22 @@ void modelSetupVertexObject(Model *model, int useVbos, BlendModeType blend_mode 
         vbo->verts            = 0;
         vbo->tris            = 0;
     }
-    delta -= (int)vbo->verts;
+    delta -= (SPTR)vbo->verts;
 
     if (vbo->norms)
-        vbo->norms        = (void *)((int)vbo->norms - delta);
+        vbo->norms        = (void *)((SPTR)vbo->norms - delta);
     if (vbo->sts)
-        vbo->sts        = (void *)((int)vbo->sts - delta);
+        vbo->sts        = (void *)((SPTR)vbo->sts - delta);
     if (vbo->sts2)
-        vbo->sts2        = (void *)((int)vbo->sts2 - delta);
+        vbo->sts2        = (void *)((SPTR)vbo->sts2 - delta);
     if (vbo->sts3)
-        vbo->sts3        = (void *)((int)vbo->sts3 - delta);
+        vbo->sts3        = (void *)((SPTR)vbo->sts3 - delta);
     if (vbo->tangents)
-        vbo->tangents    = (void *)((int)vbo->tangents - delta);
+        vbo->tangents    = (void *)((SPTR)vbo->tangents - delta);
     if (vbo->weights)
-        vbo->weights    = (void *)((int)vbo->weights - delta);
+        vbo->weights    = (void *)((SPTR)vbo->weights - delta);
     if (vbo->matidxs)
-        vbo->matidxs    = (void *)((int)vbo->matidxs - delta);
+        vbo->matidxs    = (void *)((SPTR)vbo->matidxs - delta);
     if (!vbo->verts)
         rdrQueueSend();
     else

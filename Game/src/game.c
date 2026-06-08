@@ -91,7 +91,6 @@
 #include "seq/seqstate.h"
 #include "group/groupfilelib.h"
 #include <utilitieslib/utils/strings_opt.h>
-#include "render/dxtlibwrapper.h"
 #include "bases/DetailRecipe.h"
 #include <utilitieslib/utils/cpu_count.h>
 #include <utilitieslib/utils/osdependent.h>
@@ -1806,7 +1805,6 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
     hdlInitHandles( MAX_HANDLES ); //fx and seqs use handles so this needs to be called before you do anything with either
     initBackgroundLoader();
     initBackgroundTexWordRenderer();
-    initNVDXTCriticalSection();
 
     toggle_3d_game_modes(SHOW_NONE);
 

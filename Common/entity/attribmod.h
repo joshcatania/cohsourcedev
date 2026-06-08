@@ -244,10 +244,10 @@ typedef struct AttribModTemplate
         // How much to scale the basic value given by the class table for
         //   the given attribute.
 
-    size_t offAttrib;
+    int offAttrib;
         // Byte offset to the attribute in the CharacterAttributes struct.
 
-    size_t offAspect;
+    int offAspect;
         // Byte offset to the structure in the Character to the CharacterAttributes
         //   to modify
 

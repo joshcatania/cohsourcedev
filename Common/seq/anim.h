@@ -83,6 +83,9 @@ typedef struct BoneInfo
     BoneId        bone_ID[MAX_OBJBONES];        //My geometry needs these bones
     Weights        *weights;                    //per vert: list of weights
     Matidxs        *matidxs;                    //per vert: list of mat associated with each weight
+#ifdef _M_X64
+    U32            file_offset;                // original geo-data offset while x64 uses native pointers
+#endif
 } BoneInfo;
 STATIC_ASSERT(sizeof(BoneId)==4)    // this is necessary because BoneInfo is used for loading from disk
 

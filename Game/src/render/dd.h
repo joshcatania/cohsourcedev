@@ -129,7 +129,7 @@ typedef struct DDSURFACEDESC2
     } DUMMYUNIONNAMEN(2);
     DWORD               dwAlphaBitDepth;        // depth of alpha buffer requested
     DWORD               dwReserved;             // reserved
-    LPVOID              lpSurface;              // pointer to the associated surface memory
+    DWORD               lpSurface;              // pointer to the associated surface memory
     union
     {
         DDCOLORKEY      ddckCKDestOverlay;      // color key for destination overlay use

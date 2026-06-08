@@ -2775,7 +2775,7 @@ void ParserUnload(ParseTable pti[], SHARED_MEMORY_PARAM void* sm_structptr, size
             if (pti[i].type & TOK_REDUNDANTNAME)
                 continue;
             if (pti[i].type & TOK_INDIRECT)
-                sharedMemoryUnshare((void*)((intptr_t)structptr + pti[i].storeoffset));
+                sharedMemoryUnshare((void*)((SPTR)structptr + pti[i].storeoffset));
         }
 
         sharedHeapMemoryManagerUnlock();

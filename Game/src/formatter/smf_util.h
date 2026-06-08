@@ -495,9 +495,9 @@ typedef struct TextAttribs
     int *piColorSelect;
     int *piColorSelectBG;
     int *piScale;
-    int *piFace;
+    void **piFace;
     int *piFont; // I think this value isn't actually used for anything... apparently it's supposed to be a TTDrawContext cast to an int?
-    int *piAnchor;
+    void **piAnchor;
     int *piLink;
     int *piLinkBG;
     int *piLinkHover;

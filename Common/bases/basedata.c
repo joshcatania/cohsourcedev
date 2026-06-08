@@ -891,9 +891,9 @@ static bool requirementsMet( const char** ppchReq, Entity * e )
 
     if( ppchReq && e )
     {
-        eval_StoreInt(eval, "Entity", (int)(intptr_t)e);
+        eval_StorePointer(eval, "Entity", e);
         if(e->supergroup)
-            eval_StoreInt(eval, "Supergroup", (int)(intptr_t)e->supergroup);
+            eval_StorePointer(eval, "Supergroup", e->supergroup);
         eval_ClearStack(eval);
 
         res = eval_Evaluate(eval, ppchReq);

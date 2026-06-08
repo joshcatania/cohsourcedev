@@ -2304,8 +2304,8 @@ void power_sloteval_powerBoostsSlotted(EvalContext *pcontext)
     Entity *e;
     Power *pPower;
     const char *enhancement = eval_StringPop(pcontext);
-    bool bFoundEnt = eval_FetchInt(pcontext, "Entity", (int *)&e);
-    bool bFoundPower = eval_FetchInt(pcontext, "Power", (int *)&pPower);
+    bool bFoundEnt = eval_FetchPointer(pcontext, "Entity", (void **)&e);
+    bool bFoundPower = eval_FetchPointer(pcontext, "Power", (void **)&pPower);
     int k;
     int count = 0;
     int numBoosts;
@@ -2368,9 +2368,9 @@ bool power_sloteval_Eval(Power *pPower, Boost *pBoost, Entity *e, const char * c
     if(!s_pPowerSlotEval)
         power_sloteval_Init();
 
-    eval_StoreInt(s_pPowerSlotEval, "Entity", (intptr_t)e);
-    eval_StoreInt(s_pPowerSlotEval, "Power", (intptr_t)pPower);
-    eval_StoreInt(s_pPowerSlotEval, "Boost", (intptr_t)pBoost);
+    eval_StorePointer(s_pPowerSlotEval, "Entity", e);
+    eval_StorePointer(s_pPowerSlotEval, "Power", pPower);
+    eval_StorePointer(s_pPowerSlotEval, "Boost", pBoost);
     eval_ClearStack(s_pPowerSlotEval);
 
     eval_Evaluate(s_pPowerSlotEval, ppchExpr);

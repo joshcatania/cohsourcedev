@@ -75,7 +75,7 @@ void createVboDirect(U8 *data)
     VBO        *vbo;
 
     vbo        = *(VBO**)    data;
-    tex_ids    = (TexID*)    (data+4);
+    tex_ids    = (TexID*)    (data + sizeof(VBO*));
     tris    = (int*)    (tex_ids + vbo->tex_count);
     verts    = (Vec3*)    (tris + vbo->tri_count * 3);
 

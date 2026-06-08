@@ -636,7 +636,7 @@ void *sharedMemorySetSizeEx(SharedMemoryHandle *handle, uintptr_t size, int allo
     if (ret == NULL) { // unlock on error
 
         // fpe - dont allow fake sharing, just abort here
-        FatalErrorf("Failed to allocate shared memory, size %d.  Try running with -nosharedmemory.", size);
+        FatalErrorf("Failed to allocate shared memory, size %Id.  Try running with -nosharedmemory.", size);
 
         sharedMemoryChunkUnlock(pManager);
         if(allowFakeSharing) 

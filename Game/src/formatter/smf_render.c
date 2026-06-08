@@ -197,7 +197,7 @@ static void smf_RenderTextAndWhitespace(SMBlock *pBlock, TextAttribs *pattrs, in
 
     // Although tracked, multiply nested anchors are ignored. 
     // Always use the first anchor if available.
-    if(eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+    if(eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
     {
         pAnchor = (SMAnchor *)pattrs->piAnchor[1];
     }
@@ -226,7 +226,7 @@ static void smf_RenderTextAndWhitespace(SMBlock *pBlock, TextAttribs *pattrs, in
     {
         // Nested anchors ARE used, at least in mission descriptions... but they're just used as color tags.
         // Would be nice to fix the nested anchors so this hack wouldn't be needed...
-        if(eaiSize(&pattrs->piAnchor)>2)
+        if(eaSize(&pattrs->piAnchor)>2)
         {
             colorNormal = 0x80e080ff;
             colorNormal2 = 0x80e080ff;
@@ -544,7 +544,7 @@ static void smf_RenderImage(SMBlock *pBlock, TextAttribs *pattrs, int iXBase, in
 
     // Although tracked, multiply nested anchors are ignored. Always use
     // the first anchor if available.
-    if(eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+    if(eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
     {
         pAnchor = (SMAnchor *)pattrs->piAnchor[1];
     }
@@ -793,7 +793,7 @@ static void smf_RenderTableRow(SMBlock *pBlock, TextAttribs *pattrs, int iXBase,
 
     // Although tracked, multiply nested anchors are ignored. Always use
     // the first anchor if available.
-    if(eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+    if(eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
     {
         pAnchor = (SMAnchor *)pattrs->piAnchor[1];
     }
@@ -868,7 +868,7 @@ static void smf_RenderTableDataAndSpan(SMBlock *pBlock, TextAttribs *pattrs, int
 
     // Although tracked, multiply nested anchors are ignored. Always use
     // the first anchor if available.
-    if(eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+    if(eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
     {
         pAnchor = (SMAnchor *)pattrs->piAnchor[1];
     }

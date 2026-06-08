@@ -253,6 +253,9 @@ typedef __int64 S64;
 typedef volatile __int64 VS64;
 typedef volatile unsigned __int64 VU64;
 
+typedef uintptr_t UPTR;
+typedef intptr_t SPTR;
+
 typedef float F32;
 typedef volatile float VF32;
 

@@ -985,10 +985,10 @@ U8* uncompressRawTexInfo(TexReadInfo *rawInfo) // Uncompresses to GL_RGBA8
     int w, h, depth, total_width, rowBytes, src_format, SpecifiedMipMaps;
     U8 *buffer, *rawBuffer;
     if (rawInfo->format == TEXFMT_RAW_DDS) {
-        lsprintf("nvDXTdecompress()...");
+        lsprintf("dxtDdecompressC()...");
         SpecifiedMipMaps = 1;
         // total_width is the sum total of the widths of all mip levels
-        buffer = nvDXTdecompressC(&w, &h, &depth, &total_width, &rowBytes, &src_format, SpecifiedMipMaps, rawInfo->data );
+        buffer = dxtDecompressC(&w, &h, &depth, &total_width, &rowBytes, &src_format, SpecifiedMipMaps, rawInfo->data, rawInfo->size );
 
         free(rawInfo->data);
         rawInfo->data = buffer;
@@ -1569,7 +1569,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
                         F32 bottomAlphaFact = (1.0 - topAlpha)*bottomAlpha;
                         F32 finalAlpha = topAlpha + bottomAlphaFact;
                         F32 finalAlphaSaturateFact = 1.0/finalAlpha;
-#if 0
+#if !defined(_M_IX86)
                         // ftol calls happen here!
                         d->r = (topAlpha * t.r + bottomAlphaFact * b.r)*finalAlphaSaturateFact;
                         d->g = (topAlpha * t.g + bottomAlphaFact * b.g)*finalAlphaSaturateFact;
@@ -1621,7 +1621,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
 #endif
                     }
                 xcase TWBLEND_MULTIPLY:
-#if 0
+#if !defined(_M_IX86)
                     d->r = t.r*b.r >> 8;
                     d->g = t.g*b.g >> 8;
                     d->b = t.b*b.b >> 8;
@@ -1673,7 +1673,7 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
             }
             // TODO: is the loss of precision here (1.0*1.0 = 254/255) acceptable?
             if (topWeightByte!=255) {
-#if 0
+#if !defined(_M_IX86)
                 d->r = (d->r * topWeightByte + b.r * invTopWeightByte) >> 8;
                 d->g = (d->g * topWeightByte + b.g * invTopWeightByte) >> 8;
                 d->b = (d->b * topWeightByte + b.b * invTopWeightByte) >> 8;
@@ -1708,9 +1708,11 @@ static void blendLayers(U8* dest, U8* bottom, U8* top, TexWordBlendType blend, F
         texWordsPixelsRendered(bufferSizeX*4, yield);
     }
     // Empty Machine State (reset FPU for FP ops instead of MMX)
+#if defined(_M_IX86)
     __asm {
         emms
     }
+#endif
 }
 #pragma warning(pop)
 
@@ -1968,7 +1970,9 @@ static void filterKernelColorizeNoSpreadNoAlpha(U8* dest, U8* src, S32 *intKerne
                         continue;
                     if (kernelNotZero[ki]) {
                         F32 kw = kernel[ki];
-                        // Orig: dest[(bufferSizeX*y + x)] += s.a*kw;
+#if !defined(_M_IX86)
+                        dest[(bufferSizeX*y + x)] += s.a*kw;
+#else
                         DWORD dwadd;
                         DWORD alpha = s.a;
                         _asm {
@@ -1984,6 +1988,7 @@ static void filterKernelColorizeNoSpreadNoAlpha(U8* dest, U8* src, S32 *intKerne
                         } else {
                             dest[(bufferSizeX*y + x)] = dwadd;
                         }
+#endif
                     }
                 }
             }

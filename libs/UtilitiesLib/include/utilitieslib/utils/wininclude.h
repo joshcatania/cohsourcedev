@@ -4,9 +4,33 @@
 #include "../stdtypes.h"
 
 #undef CreateThread
+#pragma push_macro("R8")
+#pragma push_macro("R9")
+#pragma push_macro("R10")
+#pragma push_macro("R11")
+#pragma push_macro("R12")
+#pragma push_macro("R13")
+#pragma push_macro("R14")
+#pragma push_macro("R15")
+#undef R8
+#undef R9
+#undef R10
+#undef R11
+#undef R12
+#undef R13
+#undef R14
+#undef R15
 #include <winsock2.h>
 #include <winbase.h>
 #include <iphlpapi.h>
+#pragma pop_macro("R15")
+#pragma pop_macro("R14")
+#pragma pop_macro("R13")
+#pragma pop_macro("R12")
+#pragma pop_macro("R11")
+#pragma pop_macro("R10")
+#pragma pop_macro("R9")
+#pragma pop_macro("R8")
 #define CreateThread include_utils_h_for_threads
 
 #if __SAL_H_FULL_VER >= 140050727

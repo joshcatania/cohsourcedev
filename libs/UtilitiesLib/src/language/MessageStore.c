@@ -453,10 +453,17 @@ static void copyTextMessageStructsToShared(    MessageStore* store,
         if ( uiNumNamedVariableDefIndices > 0 )
         {
             Array* indices = pNewTm->variableDefNameIndices = (Array*)pCurrentAddress;
+            U32 i;
+
             pCurrentAddress += sizeof(*indices);
             indices->storage = (void*)pCurrentAddress;
             indices->size = indices->maxSize = uiNumNamedVariableDefIndices;
-            memcpy(indices->storage, pOldTM->variableDefNameIndices->storage, sizeof(int) * uiNumNamedVariableDefIndices);
+
+            for (i = 0; i < uiNumNamedVariableDefIndices; ++i)
+            {
+                ((int*)indices->storage)[i] = (int)(intptr_t)pOldTM->variableDefNameIndices->storage[i];
+            }
+
             pCurrentAddress += sizeof(int) * uiNumNamedVariableDefIndices;
         }
 
@@ -1621,9 +1628,11 @@ static void msGetTypeDefPointers(Array* messageTypeDef, va_list arg)
         int variableTypeSize = sizeof(int);
         def = messageTypeDef->storage[i];
 
+#if defined(_M_X64) || defined(_WIN64)
+        variableTypeSize = sizeof(void*);
+#else
         // Different variable types occupy different amount of stack space.
         // How much space does this kind of variable take up?
-        
         switch(def->variableTypeChar){
             // Doubles are 8 bytes long.
             case 'f':
@@ -1632,6 +1641,7 @@ static void msGetTypeDefPointers(Array* messageTypeDef, va_list arg)
                 variableTypeSize = sizeof(double);
                 break;
         }
+#endif
         def->variablePointer = arg;
         va_advance(arg, variableTypeSize);
     }
@@ -2088,11 +2098,14 @@ int msvaPrintfInternalEx(    MessageStore* store,
         for (uiIndex=0; uiIndex < uiNumVariableDefs; ++uiIndex)
         {
             NamedVariableDef*    pDef = _alloca(sizeof(*pDef));
-            int*                indices = (int*)textMessage->variableDefNameIndices->storage;
+            Array*              indices = textMessage->variableDefNameIndices;
+            int                 nameIndex = store && store->pHandle ?
+                                                ((int*)indices->storage)[uiIndex] :
+                                                (int)(intptr_t)indices->storage[uiIndex];
             
             initVariableNameAndType(pDef,
-                                    strTableGetConstString(store->variableStringTable, indices[uiIndex]),
-                                    strTableGetConstString(store->variableStringTable, indices[uiIndex] + 1));
+                                    strTableGetConstString(store->variableStringTable, nameIndex),
+                                    strTableGetConstString(store->variableStringTable, nameIndex + 1));
 
             pDef->variablePointer = NULL;
             messageTypeDef->storage[uiIndex] = pDef;

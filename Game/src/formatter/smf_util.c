@@ -698,7 +698,12 @@ void smf_PushAttrib(SMBlock *pBlock, TextAttribs *pattr)
         && pBlock->iType>=0
         && pBlock->iType<kFormatTags_Count)
     {
-        eaiPush(&ppi[pBlock->iType], *(int *)(&pBlock->pv));
+        if (pBlock->iType == kFormatTags_Face)
+            eaPush(&pattr->piFace, pBlock->pv);
+        else if (pBlock->iType == kFormatTags_Anchor)
+            eaPush(&pattr->piAnchor, pBlock->pv);
+        else
+            eaiPush(&ppi[pBlock->iType], (int)(SPTR)pBlock->pv);
     }
 }
 
@@ -720,6 +725,19 @@ int smf_PopAttrib(SMBlock *pBlock, TextAttribs *pattr)
 int smf_PopAttribInt(int idx, TextAttribs *pattr)
 {
     int **ppi = (int **)pattr;
+
+    if (pattr && idx == kFormatTags_Face)
+    {
+        if (eaSize(&pattr->piFace) > 1)
+            eaPop(&pattr->piFace);
+        return 0;
+    }
+    if (pattr && idx == kFormatTags_Anchor)
+    {
+        if (eaSize(&pattr->piAnchor) > 1)
+            eaPop(&pattr->piAnchor);
+        return 0;
+    }
 
     if(ppi!=NULL
         && idx>=0
@@ -807,22 +825,31 @@ bool smf_ApplyFormatting(SMBlock *pBlock, TextAttribs *pattrs)
 */
 void smf_MakeFont(TTDrawContext **ppttFont, TTFontRenderParams *prp, TextAttribs *pattrs)
 {
+    int count;
+
     // Set the font
-    *ppttFont = (TTDrawContext *)pattrs->piFace[eaiSize(&pattrs->piFace)-1];
+    count = eaSize(&pattrs->piFace);
+    *ppttFont = count ? (TTDrawContext *)pattrs->piFace[count - 1] : NULL;
+    if (!*ppttFont)
+        return;
 
     // Remember the original renderparams
     *prp = (*ppttFont)->renderParams;
 
     // Now set each renderparam
-    (*ppttFont)->renderParams.bold      = pattrs->piBold[eaiSize(&pattrs->piBold)-1]   ? 1 : 0;
-    (*ppttFont)->renderParams.italicize = pattrs->piItalic[eaiSize(&pattrs->piItalic)-1] ? 1 : 0;
+    count = eaiSize(&pattrs->piBold);
+    (*ppttFont)->renderParams.bold      = count && pattrs->piBold[count - 1] ? 1 : 0;
+    count = eaiSize(&pattrs->piItalic);
+    (*ppttFont)->renderParams.italicize = count && pattrs->piItalic[count - 1] ? 1 : 0;
 
-    (*ppttFont)->renderParams.outlineWidth = pattrs->piOutline[eaiSize(&pattrs->piOutline)-1];
+    count = eaiSize(&pattrs->piOutline);
+    (*ppttFont)->renderParams.outlineWidth = count ? pattrs->piOutline[count - 1] : 0;
     (*ppttFont)->renderParams.outline = (*ppttFont)->renderParams.outlineWidth ? 1 : 0;
 
+    count = eaiSize(&pattrs->piShadow);
     (*ppttFont)->renderParams.dropShadowXOffset =
         (*ppttFont)->renderParams.dropShadowYOffset =
-        pattrs->piShadow[eaiSize(&pattrs->piShadow)-1];
+        count ? pattrs->piShadow[count - 1] : 0;
     (*ppttFont)->renderParams.dropShadow = (*ppttFont)->renderParams.dropShadowXOffset ? 1 : 0;
 
     // We could add these later

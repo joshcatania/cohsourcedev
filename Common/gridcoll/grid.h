@@ -15,13 +15,13 @@
 
 typedef struct GridEnts
 {
-    U32        entries[7];
+    UPTR    entries[7];
     struct GridEnts    *next;
 } GridEnts;
 
 typedef struct GridIdxList
 {
-    U32        *entries[7];
+    UPTR    *entries[7];
     struct GridIdxList    *next;
 } GridIdxList;
 

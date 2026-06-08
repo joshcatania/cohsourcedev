@@ -132,7 +132,7 @@ Supergroup *sgeval_SupergroupHelper(EvalContext *pcontext)
 {
     Entity *e = NULL;
     Supergroup *sg = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Supergroup", (int *)&sg) || eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Supergroup", (void **)&sg) || eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound && !sg && e)
     {
@@ -326,7 +326,7 @@ void sgeval_SupergroupHasPermission(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(e && e->supergroup)
     {
@@ -345,7 +345,7 @@ void sgeval_SupergroupHasIoP(EvalContext *pcontext)
 {
     Entity *e;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(e && e->supergroup)
     {

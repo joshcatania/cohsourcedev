@@ -171,7 +171,7 @@ Vec3    dv,dv_p1,dv_ln,line_pos;
 static int checkGridCellObjs(GridCell *cell,CollInfo *coll)
 {
     int            i,tag,group_opened;
-    U32            t;
+    UPTR           t;
     static        int rndo;
     void        *node;
     DefTracker    *tracker;
@@ -185,10 +185,10 @@ static int checkGridCellObjs(GridCell *cell,CollInfo *coll)
         {
             for(i=0;i<ARRAY_SIZE(ents->entries);i++)
             {
-                t = (U32)ents->entries[i];
+                t = ents->entries[i];
                 if (!t)
                     continue;
-                node = (void*)(uintptr_t)(t & ~1);
+                node = (void*)(UPTR)(t & ~1);
                 tracker = node;
 
                 if (!(coll->flags & COLL_NOTTRACKERS))

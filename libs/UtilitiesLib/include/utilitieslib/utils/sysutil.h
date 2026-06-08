@@ -23,7 +23,7 @@ HWND compatibleGetConsoleWindow(void);
 void disableRtlHeapChecking(void *heap);
 void preloadDLLs(int silent);
 #ifndef _XBOX
-    HANDLE CreateFileMappingSafe( DWORD lpProtect, int size, const char* handleName, int silent);
+    HANDLE CreateFileMappingSafe( DWORD lpProtect, UPTR size, const char* handleName, int silent);
     HANDLE OpenFileMappingSafe(DWORD dwDesiredAccess, bool bInheritHandle, const char* handleName, int silent );
     LPVOID MapViewOfFileExSafe(HANDLE handle, const char* handleName, void* desiredAddress, int silent);
 #endif

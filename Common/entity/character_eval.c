@@ -1014,7 +1014,7 @@ void chareval_CanBuyPowerWithoutOverflow(EvalContext *pcontext)
 
     if (ppowBase)
     {
-        bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+        bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
         if (bFound && ppowBase && e && e->pchar)
         {
             pushMe = character_CanBuyPowerWithoutOverflow(e->pchar, ppowBase);
@@ -1043,7 +1043,7 @@ void chareval_OwnsPower(EvalContext *pcontext, const char *entString)
     if (powerdict_GetBasePtrsByStringEx(&g_PowerDictionary, rhs,
         &pCat, &psetBase, &ppowBase, NULL, false))
     {
-        bool bFound = eval_FetchInt(pcontext, entString, (int *)&e);
+        bool bFound = eval_FetchPointer(pcontext, entString, (void **)&e);
         if (bFound && e && e->pchar)
         {
             if (ppowBase != NULL)
@@ -1086,7 +1086,7 @@ void chareval_OwnsPowerNum(EvalContext *pcontext, const char *entString)
     if (ppowBase)
     {
         Entity *e = NULL;
-        bool bFound = eval_FetchInt(pcontext, entString, (int *)&e);
+        bool bFound = eval_FetchPointer(pcontext, entString, (void **)&e);
         if (bFound && e && e->pchar)
             pushMe = character_OwnsPowerNum(e->pchar, ppowBase);
     }
@@ -1124,7 +1124,7 @@ void chareval_EntityAllowedToActivatePower(EvalContext *pcontext)
 
     if (ppowBase)
     {
-        bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+        bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
         if(bFound && e && e->pchar)
         {
@@ -1154,7 +1154,7 @@ void chareval_EntityFetch(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     chareval_EntityFetchHelper(pcontext, e, rhs);
 }
@@ -1167,7 +1167,7 @@ void chareval_EntitysOwnerFetch(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (e && e->erOwner)
     {
@@ -1188,7 +1188,7 @@ void chareval_EntityHasTag(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     chareval_EntityHasTagHelper(pcontext, e, rhs);
 }
@@ -1201,7 +1201,7 @@ void chareval_EntityInMode(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     chareval_EntityInModeHelper(pcontext, e, rhs);
 }
@@ -1211,7 +1211,7 @@ void chareval_EntityHasPowerset(EvalContext *pcontext)
     int pushMe = 0;
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
     const BasePowerSet *psetBase;
 
     if (!(psetBase = powerdict_GetBasePowerSetByFullNameEx(&g_PowerDictionary, rhs, false)))
@@ -1240,7 +1240,7 @@ void chareval_EntityHasEnabledPower(EvalContext *pcontext)
 
     if (ppowBase)
     {
-        bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+        bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
         if (bFound)
         {
             ppow = character_OwnsPower(e->pchar, ppowBase);
@@ -1261,7 +1261,7 @@ void chareval_EntityIsToggleActive(EvalContext *pcontext)
     Entity *e = NULL;
     const char *powerFullName = eval_StringPop(pcontext);
 
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityIsToggleActiveHelper(pcontext, e, powerFullName);
 }
 
@@ -1274,7 +1274,7 @@ void chareval_EntityHasSouvenirClue(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
 
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityHasSouvenirClueHelper(pcontext, e, rhs);
 }
 
@@ -1287,7 +1287,7 @@ void chareval_EntityHasClue(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
 
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityHasClueHelper(pcontext, e, rhs);
 }
 
@@ -1301,7 +1301,7 @@ void chareval_EntityEventCount(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityEventCountHelper(pcontext, e, rhs);
 }
 
@@ -1314,7 +1314,7 @@ void chareval_EntityEventTime(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityEventTimeHelper(pcontext, e, rhs);
 }
 
@@ -1327,7 +1327,7 @@ void chareval_EntityTokenOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityTokenOwnedHelper(pcontext, e, rhs);
 }
 
@@ -1340,7 +1340,7 @@ void  chareval_EntityArchitectTokenOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     eval_IntPush(pcontext, playerCreatedStoryArc_CheckUnlockKey(e, rhs));
 }
 
@@ -1352,7 +1352,7 @@ void chareval_EntityCostumeKeyOwned(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound && e->pchar)
     {
@@ -1381,7 +1381,7 @@ void chareval_EntityOnTaskForce(EvalContext *pcontext)
 {
 #ifdef SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound)
     {
@@ -1405,7 +1405,7 @@ void chareval_EntityOnFlashback(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityTokenOwnedHelper(pcontext, e, "OnFlashback");
 }
 
@@ -1417,7 +1417,7 @@ void chareval_EntityOnArchitect(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityTokenOwnedHelper(pcontext, e, "OnArchitect");
 }
 
@@ -1430,7 +1430,7 @@ void chareval_EntityTokenVal(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityTokenValHelper(pcontext, e, rhs);
 }
 
@@ -1443,7 +1443,7 @@ void chareval_EntityTokenTime(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityTokenTimeHelper(pcontext, e, rhs);
 }
 
@@ -1457,7 +1457,7 @@ void chareval_EntityTeamSize(EvalContext *pcontext)
     float fRadius = eval_FloatPop(pcontext);
 #if SERVER
     Entity *e = NULL;
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_TeamSizeHelper(pcontext, e, fRadius);
 #else
     //estrConcatf(&pcontext->ppchError, "\nThe evaluator tried to determine the number of teammates for an entity within %f distance on the client, but this operation is only supported on the server. It found this while analyzing '%s'.", fRadius, pcontext->ppchExpr[pcontext->iCurToken - 1]);
@@ -1480,7 +1480,7 @@ void chareval_MissionObjective(EvalContext *pcontext)
     }
     else
     {
-        eval_FetchInt(pcontext, "Entity", (int *)&e);
+        eval_FetchPointer(pcontext, "Entity", (void **)&e);
         // TODO: Is there a way to do this validation at load-time?
         if (e) // don't error here during a load-time check, since we do that on static maps
             estrConcatf(&pcontext->ppchError, "\nThe evaluator tried to determine if the mission objective '%s' has been completed on a static map server, but this operation is only supported on mission map servers. It found this while analyzing '%s'.", rhs, pcontext->ppchExpr[pcontext->iCurToken - 1]);
@@ -1502,8 +1502,8 @@ void chareval_TaskOwner(EvalContext *pcontext)
 #if SERVER
     Entity *e = NULL;
     StoryTaskInfo *pTask; 
-    bool bTaskFound = eval_FetchInt(pcontext, "Task", (int *)&pTask);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bTaskFound = eval_FetchPointer(pcontext, "Task", (void **)&pTask);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (bTaskFound && pTask)
     {
@@ -1536,8 +1536,8 @@ void chareval_MissionStarted(EvalContext *pcontext)
 #if SERVER
     Entity *e = NULL;
     StoryTaskInfo *pTask;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
-    bool bTaskFound = eval_FetchInt(pcontext, "Task", (int *)&pTask);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
+    bool bTaskFound = eval_FetchPointer(pcontext, "Task", (void **)&pTask);
 
     if (!bTaskFound)
     {
@@ -1565,7 +1565,7 @@ void chareval_IsOnStoryArc(EvalContext *pcontext)
     const char *storyArcName = eval_StringPop(pcontext);
 #if SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound)
     {
@@ -1585,7 +1585,7 @@ void chareval_EntityHasAnyActiveMission(EvalContext *pcontext)
 {
 #if SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound)
     {    
@@ -1804,7 +1804,7 @@ void chareval_MapTeamArea(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_MapTeamAreaHelper(pcontext, e);
 }
 
@@ -1856,7 +1856,7 @@ void chareval_EntityBadgeStatFetch(EvalContext *pcontext)
     const char *rhs = eval_StringPop(pcontext);
 #if SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if(bFound && e && e->pl)
     {
@@ -1918,7 +1918,7 @@ void chareval_EntityOwnsBadge(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     chareval_EntityOwnsBadgeHelper(pcontext, e, rhs);
 }
@@ -1958,7 +1958,7 @@ void chareval_LoyaltyOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
 
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityLoyaltyOwnedHelper(pcontext, e, rhs);
 }
 
@@ -1997,7 +1997,7 @@ void chareval_LoyaltyTierOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityLoyaltyTierOwnedHelper(pcontext, e, rhs);
 }
 
@@ -2037,7 +2037,7 @@ void chareval_LoyaltyLevelOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityLoyaltyLevelOwnedHelper(pcontext, e, rhs);
 }
 
@@ -2066,7 +2066,7 @@ void chareval_LoyaltyNodesBought(EvalContext *pcontext)
 {
     Entity *e = NULL;
 
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityLoyaltyNodesBoughtHelper(pcontext, e);
 }
 
@@ -2094,7 +2094,7 @@ void chareval_LoyaltyPointsEarned(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityLoyaltyPointsEarnedHelper(pcontext, e);
 }
 
@@ -2133,7 +2133,7 @@ void chareval_ProductOwned(EvalContext *pcontext)
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityProductOwnedHelper(pcontext, e, rhs);
 }
 
@@ -2171,7 +2171,7 @@ void chareval_ProductAvailable(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     chareval_EntityProductAvailableHelper(pcontext, e, rhs);
 }
@@ -2201,7 +2201,7 @@ void chareval_IsVIP(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityIsVIPHelper(pcontext, e);
 }
 
@@ -2227,7 +2227,7 @@ void chareval_IsAccountServerAvailable(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_EntityIsAccountServerAvailableHelper(pcontext, e);
 }
 
@@ -2253,7 +2253,7 @@ void chareval_IsAccountInventoryLoaded(EvalContext *pcontext)
 {
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_IsAccountInventoryLoadedHelper(pcontext, e);
 }
 
@@ -2264,7 +2264,7 @@ void chareval_IsAccountInventoryLoaded(EvalContext *pcontext)
 void chareval_EntityCountBadges(EvalContext *pcontext)
 {
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (bFound && e && e->pl)
     {
@@ -2300,7 +2300,7 @@ void chareval_EntityEmptySlots(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (!rhs)
     {
@@ -2339,7 +2339,7 @@ void chareval_EntityBoostsSlotted(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
     int i, j, k;
     int count = 0;
     int numPowerSets, numPowers, numBoosts;
@@ -2393,7 +2393,7 @@ void chareval_CertificationsPurchased(EvalContext *pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (!rhs)
     {
@@ -2419,7 +2419,7 @@ void chareval_VouchersUnclaimed(EvalContext * pcontext)
 {
     Entity *e = NULL;
     const char *rhs = eval_StringPop(pcontext);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (!rhs)
     {
@@ -2447,7 +2447,7 @@ void chareval_EntityHasContact(EvalContext *pcontext)
 #if SERVER
     Entity *e = NULL;
     ContactHandle contact = ContactGetHandleLoose(rhs);
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (!contact)
     {
@@ -2477,7 +2477,7 @@ void chareval_EntityIsInVolume(EvalContext *pcontext, const char *ent)
     int pushMe = 0;
 #if SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, ent, (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, ent, (void **)&e);
     
     if (bFound && e)
     {
@@ -2525,7 +2525,7 @@ void chareval_EntityCanGiveRespec(EvalContext *pcontext)
 {
 #if SERVER
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (bFound && e)
     {
@@ -2548,7 +2548,7 @@ void chareval_EntityCanGiveRespec(EvalContext *pcontext)
 void chareval_EntityHasFreespec(EvalContext *pcontext)
 {
     Entity *e = NULL;
-    bool bFound = eval_FetchInt(pcontext, "Entity", (int *)&e);
+    bool bFound = eval_FetchPointer(pcontext, "Entity", (void **)&e);
 
     if (bFound && e && e->pl)
     {
@@ -2590,7 +2590,7 @@ void chareval_AuthFetch(EvalContext *pcontext)
     const char *rhs = eval_StringPop(pcontext);
     Entity *e = NULL;
     
-    eval_FetchInt(pcontext, "Entity", (int *)&e);
+    eval_FetchPointer(pcontext, "Entity", (void **)&e);
     chareval_AuthFetchHelper(pcontext, e && e->pl ? e->pl->auth_user_data : NULL, rhs);
 }
 
@@ -2657,10 +2657,10 @@ void chareval_Init(void)
 void chareval_JustEval(Character *p, const char * const *ppchExpr)
 {
     if (p && p->entParent)
-        eval_StoreInt(s_pCharEval, "Entity", (int)(intptr_t)p->entParent);
+        eval_StorePointer(s_pCharEval, "Entity", p->entParent);
     else
-        eval_ForgetInt(s_pCharEval, "Entity");
-    eval_ForgetInt(s_pCharEval, "Task");
+        eval_ForgetPointer(s_pCharEval, "Entity");
+    eval_ForgetPointer(s_pCharEval, "Task");
     eval_ClearStack(s_pCharEval);
 
     eval_Evaluate(s_pCharEval, ppchExpr);
@@ -2685,10 +2685,10 @@ int chareval_Eval(Character *p, const char * const *ppchExpr, const char *dataFi
 static void chareval_JustEvalWithTask(Character *p, const char **ppchExpr, StoryTaskInfo *pTask)
 {
     if (p)
-        eval_StoreInt(s_pCharEval, "Entity", (int)(intptr_t)p->entParent);
+        eval_StorePointer(s_pCharEval, "Entity", p->entParent);
     else
-        eval_ForgetInt(s_pCharEval, "Entity");
-    eval_StoreInt(s_pCharEval, "Task", (int)(intptr_t)pTask);
+        eval_ForgetPointer(s_pCharEval, "Entity");
+    eval_StorePointer(s_pCharEval, "Task", pTask);
     eval_ClearStack(s_pCharEval);
 
     eval_Evaluate(s_pCharEval, ppchExpr);

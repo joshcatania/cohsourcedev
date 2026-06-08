@@ -2390,7 +2390,7 @@ static void smf_InteractWithSMBlock(SMBlock *pBlock, TextAttribs *pattrs, int iX
 
         if (!pBlock->pSMFBlock->scissorsBox || mouseCollision(pBlock->pSMFBlock->scissorsBox))
         {
-            if (eaiSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
+            if (eaSize(&pattrs->piAnchor) > 1 && s_bAllowAnchor)
             {
                 // Although tracked, multiply nested anchors are ignored. Always use
                 // the first anchor if available.
