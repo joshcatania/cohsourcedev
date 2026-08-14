@@ -1,8 +1,9 @@
 [CmdletBinding()]
 param(
     [string]$AuthAddress = '127.0.0.1',
-    [string]$AuthName = '',
-    [string]$Password = '',
+    [int]$AuthPort = 2106,
+    [string]$AuthName = 'Dummy00001',
+    [string]$Password = '11111111',
     [int]$TimeoutSeconds = 90,
     [switch]$Json
 )
@@ -31,7 +32,8 @@ function Finish([object]$Result, [int]$ExitCode) {
         }
         Write-Host ("Stage: {0}" -f $Result.stage)
         Write-Host ("Duration: {0:N1}s" -f $Result.durationSeconds)
-        Write-Host ("TestClient exit code: {0}" -f $Result.testClientExitCode)
+        Write-Host ("Auth TCP port open: {0}" -f $Result.authPortOpen)
+        Write-Host ("TestClient exit code: {0}" -f $(if ($null -eq $Result.testClientExitCode) { '<unavailable>' } else { $Result.testClientExitCode }))
         if ($Result.reason) { Write-Host ("Reason: {0}" -f $Result.reason) }
         Write-Host ("Stdout log: {0}" -f $stdoutLog)
         Write-Host ("Stderr log: {0}" -f $stderrLog)
@@ -40,89 +42,142 @@ function Finish([object]$Result, [int]$ExitCode) {
             Write-Host ''
             Write-Host 'Useful TestClient output:'
             $Result.tail | ForEach-Object { Write-Host $_ }
+        } elseif (-not $Result.passed) {
+            Write-Host ''
+            Write-Host 'No TestClient console output was captured. This is itself diagnostic; inspect bin\logs\TestClient if present.'
         }
     }
     exit $ExitCode
 }
 
+function Test-TcpPort([string]$HostName, [int]$Port, [int]$TimeoutMs = 3000) {
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $async = $client.BeginConnect($HostName, $Port, $null, $null)
+        if (-not $async.AsyncWaitHandle.WaitOne($TimeoutMs, $false)) { return $false }
+        $client.EndConnect($async)
+        return $true
+    } catch {
+        return $false
+    } finally {
+        $client.Close()
+    }
+}
+
 if (-not (Test-Path $testClient)) {
     $r = [pscustomobject]@{
-        passed = $false
-        stage = 'preflight'
-        reason = 'bin/TestClient.exe is missing. Run .\agent\build.ps1 first.'
-        durationSeconds = 0
-        testClientExitCode = $null
-        authAddress = $AuthAddress
-        tail = @()
+        passed = $false; stage = 'preflight'; reason = 'bin/TestClient.exe is missing. Run .\agent\build.ps1 first.'
+        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
+        authPortOpen = $false; tail = @()
     }
     Finish $r 1
 }
 
-$required = @('ServerMonitor','AuthServer','DbServer')
+$required = @('ServerMonitor','AuthServer','DbServer','Launcher')
 $missing = @()
 foreach ($name in $required) {
     if (-not (Get-Process -Name $name -ErrorAction SilentlyContinue)) { $missing += $name }
 }
 if ($missing.Count -gt 0) {
     $r = [pscustomobject]@{
-        passed = $false
-        stage = 'preflight'
-        reason = "Required process(es) not running: $($missing -join ', '). Run .\agent\start-shard.ps1 and inspect .\agent\status.ps1."
-        durationSeconds = 0
-        testClientExitCode = $null
-        authAddress = $AuthAddress
-        tail = @()
+        passed = $false; stage = 'preflight'; reason = "Required process(es) not running: $($missing -join ', ')."
+        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
+        authPortOpen = $false; tail = @()
     }
     Finish $r 1
 }
 
-# -justlogin is an existing TestClient mode that authenticates, connects to the
-# selected DbServer, then returns without creating/resuming a character.
-# -dontpause makes failures automation-safe instead of waiting for a keypress.
-$argsList = @('-auth', $AuthAddress, '-justlogin', '-dontpause')
-if ($AuthName) { $argsList += @('-authname', $AuthName) }
-if ($Password) { $argsList += @('-password', $Password) }
+$authPortOpen = Test-TcpPort $AuthAddress $AuthPort
+if (-not $authPortOpen) {
+    $r = [pscustomobject]@{
+        passed = $false; stage = 'auth-listener'; reason = "AuthServer process exists but TCP $AuthAddress`:$AuthPort did not accept a connection."
+        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
+        authPortOpen = $false; tail = @()
+    }
+    Finish $r 1
+}
+
+# TestClient's source defines Dummy00001 / 11111111 as its default generated
+# credentials, but that does NOT prove the account exists in the local cohauth DB.
+# Using them explicitly makes this test deterministic and lets a login error tell
+# us whether account bootstrapping is the next missing layer.
+$argsList = @(
+    '-auth', $AuthAddress,
+    '-authname', $AuthName,
+    '-password', $Password,
+    '-justlogin',
+    '-dontpause',
+    '-silent'
+)
 
 if (-not $Json) {
     Write-Host 'COH LOGIN SMOKE TEST'
-    Write-Host ("Auth address: {0}" -f $AuthAddress)
-    if ($AuthName) {
-        Write-Host ("Account: {0}" -f $AuthName)
-    } else {
-        Write-Host 'Account: TestClient built-in default (Dummy00001 / built-in test password)'
-    }
+    Write-Host ("Auth address: {0}:{1}" -f $AuthAddress, $AuthPort)
+    Write-Host ("Account: {0}" -f $AuthName)
     Write-Host ("Timeout: {0}s" -f $TimeoutSeconds)
     Write-Host ''
+    Write-Host 'Auth TCP listener... PASS'
     Write-Host 'Launching TestClient...'
 }
 
-$sw = [System.Diagnostics.Stopwatch]::StartNew()
-$proc = Start-Process -FilePath $testClient `
-    -ArgumentList $argsList `
-    -WorkingDirectory $binDir `
-    -RedirectStandardOutput $stdoutLog `
-    -RedirectStandardError $stderrLog `
-    -PassThru
+# Use System.Diagnostics.Process directly instead of Start-Process. On Windows
+# PowerShell, Start-Process + redirected output can leave ExitCode unavailable
+# even after the child exits, which made the first smoke result ambiguous.
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = $testClient
+$psi.WorkingDirectory = $binDir
+$psi.UseShellExecute = $false
+$psi.CreateNoWindow = $true
+$psi.RedirectStandardOutput = $true
+$psi.RedirectStandardError = $true
+$psi.Arguments = (($argsList | ForEach-Object {
+    if ($_ -match '[\s"]') { '"' + ($_ -replace '"','\"') + '"' } else { $_ }
+}) -join ' ')
 
-$timedOut = -not $proc.WaitForExit($TimeoutSeconds * 1000)
+$proc = New-Object System.Diagnostics.Process
+$proc.StartInfo = $psi
+$sw = [System.Diagnostics.Stopwatch]::StartNew()
+$started = $proc.Start()
+if (-not $started) {
+    $r = [pscustomobject]@{
+        passed = $false; stage = 'launch'; reason = 'System.Diagnostics.Process failed to start TestClient.'
+        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
+        authPortOpen = $authPortOpen; tail = @()
+    }
+    Finish $r 1
+}
+
+$stdoutTask = $proc.StandardOutput.ReadToEndAsync()
+$stderrTask = $proc.StandardError.ReadToEndAsync()
+$exited = $proc.WaitForExit($TimeoutSeconds * 1000)
+$timedOut = -not $exited
 if ($timedOut) {
-    try { Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue } catch {}
+    try { $proc.Kill() } catch {}
     $proc.WaitForExit()
 }
+$proc.Refresh()
 $sw.Stop()
 
-$stdout = if (Test-Path $stdoutLog) { @(Get-Content $stdoutLog -ErrorAction SilentlyContinue) } else { @() }
-$stderr = if (Test-Path $stderrLog) { @(Get-Content $stderrLog -ErrorAction SilentlyContinue) } else { @() }
-$combined = @($stdout + $stderr)
-$text = $combined -join "`n"
-$tail = @($combined | Select-Object -Last 25)
+$stdoutText = $stdoutTask.Result
+$stderrText = $stderrTask.Result
+Set-Content -Path $stdoutLog -Value $stdoutText -Encoding UTF8
+Set-Content -Path $stderrLog -Value $stderrText -Encoding UTF8
 
-$hasLoginError = $text -match '(?im)Error logging on|AuthServer Error:|DBServer Error:'
-$hasFatal = $text -match '(?im)Fatal Error:|CRT Error:|Exception caught:'
-$hasServerSelection = $text -match '(?im)Using server\s+\d+'
-$exitCode = if ($timedOut) { $null } else { $proc.ExitCode }
+$combinedText = (($stdoutText, $stderrText) -join "`n")
+$combinedLines = @($combinedText -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 })
+$tail = @($combinedLines | Select-Object -Last 35)
 
-$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal)
+$exitCode = $null
+if (-not $timedOut) {
+    try { $exitCode = [int]$proc.ExitCode } catch { $exitCode = $null }
+}
+
+$hasLoginError = $combinedText -match '(?im)Error logging on|AuthServer Error:|DBServer Error:'
+$hasFatal = $combinedText -match '(?im)Fatal Error:|CRT Error:|Exception caught:'
+$hasServerSelection = $combinedText -match '(?im)Using server\s+\d+'
+$hasConnectMarker = $combinedText -match '(?im)Connecting as\s+'
+
+$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal) -and $hasServerSelection
 $reason = $null
 $stage = 'auth-db-login'
 if ($timedOut) {
@@ -130,14 +185,13 @@ if ($timedOut) {
 } elseif ($hasFatal) {
     $reason = 'TestClient reported a fatal/CRT/exception condition.'
 } elseif ($hasLoginError) {
-    $reason = 'TestClient reported an AuthServer or DbServer login error.'
+    $reason = 'TestClient reported an AuthServer or DbServer login error. The useful output below should identify which one.'
+} elseif ($null -eq $exitCode) {
+    $reason = 'TestClient exited, but Windows did not expose an exit code. Inspect captured output.'
 } elseif ($exitCode -ne 0) {
     $reason = "TestClient exited with code $exitCode."
 } elseif (-not $hasServerSelection) {
-    # Exit 0 is still meaningful, but flag the missing expected marker so we
-    # do not overstate what was observed from stdout.
-    $reason = 'TestClient exited successfully, but the expected server-selection marker was not captured. Inspect the log before treating this as a strong pass.'
-    $passed = $false
+    $reason = 'TestClient exited without the expected server-selection marker; login/DB success is not proven.'
 }
 
 $result = [pscustomobject]@{
@@ -148,7 +202,10 @@ $result = [pscustomobject]@{
     testClientExitCode = $exitCode
     timedOut = $timedOut
     authAddress = $AuthAddress
-    usedExplicitAccount = [bool]$AuthName
+    authPort = $AuthPort
+    authPortOpen = $authPortOpen
+    authName = $AuthName
+    sawConnectMarker = $hasConnectMarker
     sawServerSelection = $hasServerSelection
     sawLoginError = $hasLoginError
     sawFatalError = $hasFatal
