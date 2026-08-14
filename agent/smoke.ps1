@@ -1,9 +1,7 @@
 [CmdletBinding()]
 param(
-    [string]$AuthAddress = '127.0.0.1',
-    [int]$AuthPort = 2106,
-    [string]$AuthName = 'Dummy00001',
-    [string]$Password = '11111111',
+    [string]$DbAddress = '127.0.0.1',
+    [string]$AccountName = 'Dummy00001',
     [int]$TimeoutSeconds = 90,
     [switch]$Json
 )
@@ -15,9 +13,9 @@ $testClient = Join-Path $binDir 'TestClient.exe'
 $logDir = Join-Path $PSScriptRoot 'logs'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
-$stdoutLog = Join-Path $logDir "smoke-login-$stamp.out.log"
-$stderrLog = Join-Path $logDir "smoke-login-$stamp.err.log"
-$resultLog = Join-Path $logDir "smoke-login-$stamp.json"
+$stdoutLog = Join-Path $logDir "smoke-directdb-$stamp.out.log"
+$stderrLog = Join-Path $logDir "smoke-directdb-$stamp.err.log"
+$resultLog = Join-Path $logDir "smoke-directdb-$stamp.json"
 
 function Finish([object]$Result, [int]$ExitCode) {
     $Result | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 $resultLog
@@ -26,13 +24,12 @@ function Finish([object]$Result, [int]$ExitCode) {
     } else {
         Write-Host ''
         if ($Result.passed) {
-            Write-Host 'SMOKE PASS - AuthServer + DbServer login path verified'
+            Write-Host 'SMOKE PASS - direct DbServer login path verified'
         } else {
-            Write-Host 'SMOKE FAIL - login/DB path not verified'
+            Write-Host 'SMOKE FAIL - direct DbServer login path not verified'
         }
         Write-Host ("Stage: {0}" -f $Result.stage)
         Write-Host ("Duration: {0:N1}s" -f $Result.durationSeconds)
-        Write-Host ("Auth TCP port open: {0}" -f $Result.authPortOpen)
         Write-Host ("TestClient exit code: {0}" -f $(if ($null -eq $Result.testClientExitCode) { '<unavailable>' } else { $Result.testClientExitCode }))
         if ($Result.reason) { Write-Host ("Reason: {0}" -f $Result.reason) }
         Write-Host ("Stdout log: {0}" -f $stdoutLog)
@@ -44,36 +41,25 @@ function Finish([object]$Result, [int]$ExitCode) {
             $Result.tail | ForEach-Object { Write-Host $_ }
         } elseif (-not $Result.passed) {
             Write-Host ''
-            Write-Host 'No TestClient console output was captured. This is itself diagnostic; inspect bin\logs\TestClient if present.'
+            Write-Host 'No TestClient console output was captured.'
         }
     }
     exit $ExitCode
 }
 
-function Test-TcpPort([string]$HostName, [int]$Port, [int]$TimeoutMs = 3000) {
-    $client = New-Object System.Net.Sockets.TcpClient
-    try {
-        $async = $client.BeginConnect($HostName, $Port, $null, $null)
-        if (-not $async.AsyncWaitHandle.WaitOne($TimeoutMs, $false)) { return $false }
-        $client.EndConnect($async)
-        return $true
-    } catch {
-        return $false
-    } finally {
-        $client.Close()
-    }
-}
-
 if (-not (Test-Path $testClient)) {
     $r = [pscustomobject]@{
         passed = $false; stage = 'preflight'; reason = 'bin/TestClient.exe is missing. Run .\agent\build.ps1 first.'
-        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
-        authPortOpen = $false; tail = @()
+        durationSeconds = 0; testClientExitCode = $null; dbAddress = $DbAddress; tail = @()
     }
     Finish $r 1
 }
 
-$required = @('ServerMonitor','AuthServer','DbServer','Launcher')
+# OuroDev's local development workflow bypasses AuthServer and connects clients
+# directly to DbServer with -db 127.0.0.1. TestClient implements the same path:
+# supplying -db sets game_state.cs_address, causing authLogin() to synthesize a
+# single local server entry rather than connecting to AuthServer.
+$required = @('ServerMonitor','DbServer','Launcher')
 $missing = @()
 foreach ($name in $required) {
     if (-not (Get-Process -Name $name -ErrorAction SilentlyContinue)) { $missing += $name }
@@ -81,48 +67,35 @@ foreach ($name in $required) {
 if ($missing.Count -gt 0) {
     $r = [pscustomobject]@{
         passed = $false; stage = 'preflight'; reason = "Required process(es) not running: $($missing -join ', ')."
-        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
-        authPortOpen = $false; tail = @()
+        durationSeconds = 0; testClientExitCode = $null; dbAddress = $DbAddress; tail = @()
     }
     Finish $r 1
 }
 
-$authPortOpen = Test-TcpPort $AuthAddress $AuthPort
-if (-not $authPortOpen) {
-    $r = [pscustomobject]@{
-        passed = $false; stage = 'auth-listener'; reason = "AuthServer process exists but TCP $AuthAddress`:$AuthPort did not accept a connection."
-        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
-        authPortOpen = $false; tail = @()
-    }
-    Finish $r 1
-}
-
-# TestClient's source defines Dummy00001 / 11111111 as its default generated
-# credentials, but that does NOT prove the account exists in the local cohauth DB.
-# Using them explicitly makes this test deterministic and lets a login error tell
-# us whether account bootstrapping is the next missing layer.
+# -justlogin intentionally tests only the direct DbServer connection and exits.
+# It does not request a character or MapServer yet. -dontpause prevents legacy
+# error paths from waiting for keyboard input. -selfversion avoids depending on
+# TestClientLauncher for a version handshake. No password is required by the
+# direct local development path.
 $argsList = @(
-    '-auth', $AuthAddress,
-    '-authname', $AuthName,
-    '-password', $Password,
+    '-db', $DbAddress,
+    '-authname', $AccountName,
     '-justlogin',
     '-dontpause',
+    '-selfversion',
     '-silent'
 )
 
 if (-not $Json) {
-    Write-Host 'COH LOGIN SMOKE TEST'
-    Write-Host ("Auth address: {0}:{1}" -f $AuthAddress, $AuthPort)
-    Write-Host ("Account: {0}" -f $AuthName)
+    Write-Host 'COH DIRECT-DB SMOKE TEST'
+    Write-Host ("DbServer address: {0}" -f $DbAddress)
+    Write-Host ("Development account label: {0}" -f $AccountName)
     Write-Host ("Timeout: {0}s" -f $TimeoutSeconds)
     Write-Host ''
-    Write-Host 'Auth TCP listener... PASS'
+    Write-Host 'AuthServer: BYPASSED (intentional local-dev path)'
     Write-Host 'Launching TestClient...'
 }
 
-# Use System.Diagnostics.Process directly instead of Start-Process. On Windows
-# PowerShell, Start-Process + redirected output can leave ExitCode unavailable
-# even after the child exits, which made the first smoke result ambiguous.
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $testClient
 $psi.WorkingDirectory = $binDir
@@ -141,8 +114,7 @@ $started = $proc.Start()
 if (-not $started) {
     $r = [pscustomobject]@{
         passed = $false; stage = 'launch'; reason = 'System.Diagnostics.Process failed to start TestClient.'
-        durationSeconds = 0; testClientExitCode = $null; authAddress = $AuthAddress; authPort = $AuthPort
-        authPortOpen = $authPortOpen; tail = @()
+        durationSeconds = 0; testClientExitCode = $null; dbAddress = $DbAddress; tail = @()
     }
     Finish $r 1
 }
@@ -165,33 +137,33 @@ Set-Content -Path $stderrLog -Value $stderrText -Encoding UTF8
 
 $combinedText = (($stdoutText, $stderrText) -join "`n")
 $combinedLines = @($combinedText -split "`r?`n" | Where-Object { $_ -and $_.Trim().Length -gt 0 })
-$tail = @($combinedLines | Select-Object -Last 35)
+$tail = @($combinedLines | Select-Object -Last 45)
 
 $exitCode = $null
 if (-not $timedOut) {
     try { $exitCode = [int]$proc.ExitCode } catch { $exitCode = $null }
 }
 
-$hasLoginError = $combinedText -match '(?im)Error logging on|AuthServer Error:|DBServer Error:'
+$hasLoginError = $combinedText -match '(?im)Error logging on|DBServer Error:|Error connecting|Failed to connect'
 $hasFatal = $combinedText -match '(?im)Fatal Error:|CRT Error:|Exception caught:'
-$hasServerSelection = $combinedText -match '(?im)Using server\s+\d+'
 $hasConnectMarker = $combinedText -match '(?im)Connecting as\s+'
+$hasDirectDbArg = $combinedText -match '(?im)cmdline args:.*-db\s+'
 
-$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal) -and $hasServerSelection
+$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal) -and $hasConnectMarker
 $reason = $null
-$stage = 'auth-db-login'
+$stage = 'direct-db-login'
 if ($timedOut) {
     $reason = "TestClient did not exit within $TimeoutSeconds seconds."
 } elseif ($hasFatal) {
     $reason = 'TestClient reported a fatal/CRT/exception condition.'
 } elseif ($hasLoginError) {
-    $reason = 'TestClient reported an AuthServer or DbServer login error. The useful output below should identify which one.'
+    $reason = 'TestClient reported a DbServer connection/login error. See useful output below.'
 } elseif ($null -eq $exitCode) {
     $reason = 'TestClient exited, but Windows did not expose an exit code. Inspect captured output.'
 } elseif ($exitCode -ne 0) {
-    $reason = "TestClient exited with code $exitCode."
-} elseif (-not $hasServerSelection) {
-    $reason = 'TestClient exited without the expected server-selection marker; login/DB success is not proven.'
+    $reason = "TestClient exited with code $exitCode. See useful output below."
+} elseif (-not $hasConnectMarker) {
+    $reason = 'TestClient exited without the expected connection marker; direct-DB success is not proven.'
 }
 
 $result = [pscustomobject]@{
@@ -201,12 +173,11 @@ $result = [pscustomobject]@{
     durationSeconds = [math]::Round($sw.Elapsed.TotalSeconds, 2)
     testClientExitCode = $exitCode
     timedOut = $timedOut
-    authAddress = $AuthAddress
-    authPort = $AuthPort
-    authPortOpen = $authPortOpen
-    authName = $AuthName
+    dbAddress = $DbAddress
+    accountName = $AccountName
+    authBypassed = $true
     sawConnectMarker = $hasConnectMarker
-    sawServerSelection = $hasServerSelection
+    sawDirectDbArgument = $hasDirectDbArg
     sawLoginError = $hasLoginError
     sawFatalError = $hasFatal
     stdoutLog = $stdoutLog
