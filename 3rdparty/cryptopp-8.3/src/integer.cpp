@@ -3048,7 +3048,7 @@ Integer::Integer(const byte *encodedInteger, size_t byteCount, Signedness s, Byt
     else
     {
         SecByteBlock block(byteCount);
-#if (_MSC_VER >= 1500)
+#if (_MSC_VER >= 1500) && (_MSC_VER < 1930)
         std::reverse_copy(encodedInteger, encodedInteger+byteCount,
             stdext::make_checked_array_iterator(block.begin(), block.size()));
 #else

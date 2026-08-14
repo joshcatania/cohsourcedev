@@ -18,7 +18,12 @@ $processNames = @(
     'MissionServer',
     'TurnstileServer',
     'QueueServer',
-    'StatServer'
+    'StatServer',
+    'ArenaServer',
+    'RaidServer',
+    'LogServer',
+    'BeaconServer',
+    'BeaconClient'
 )
 
 $rows = foreach ($name in $processNames) {

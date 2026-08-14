@@ -13,6 +13,7 @@ typedef enum
 } PROGRESSDIALOGTYPE;
 
 void parseArgs(int argc,char **argv);
+void game_applyCommandLineCredentials(void);
 
 // these are in the order they will typically be called
 void parseArgsForCovFlag(int argc, char **argv);

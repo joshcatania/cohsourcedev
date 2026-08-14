@@ -553,6 +553,9 @@ typedef struct GameState
     int        alwaysMission;
     int        noMapFog;
     int        screenshot_ui;    // 1=make screenshots with ui, 0=just save 3d graphics
+    char       capture_target[256];
+    int        capture_state;    // 0=idle, 1=wait for stable map, 2=wait after screenshot, 3=complete
+    int        capture_frame_count;
     
     char    world_name[MAX_PATH];
     int        mission_map;

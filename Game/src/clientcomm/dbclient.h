@@ -122,6 +122,7 @@ void dbPingIfConnected();
 int dbclient_getQueueStatus(int *position, int *count);
 void dbSendQuit();
 void dbclient_resetQueueStatus();
+int dbWaitForStartOrQueue(F32 timeout);
 
 int dbclient_getTimeSinceMessage(U32 currentTime);
 

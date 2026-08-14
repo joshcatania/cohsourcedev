@@ -6,32 +6,23 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $results = New-Object System.Collections.Generic.List[object]
+. (Join-Path $PSScriptRoot 'lib\toolchain.ps1')
 
 function Add-Check {
     param(
         [string]$Name,
         [bool]$Pass,
         [string]$Detail,
-        [string]$Fix = ''
+        [string]$Fix = '',
+        [bool]$Blocking = $true
     )
     $results.Add([pscustomobject]@{
         name = $Name
         pass = $Pass
+        blocking = $Blocking
         detail = $Detail
         fix = $Fix
     })
-}
-
-function Find-MSBuild {
-    $cmd = Get-Command msbuild.exe -ErrorAction SilentlyContinue
-    if ($cmd) { return $cmd.Source }
-
-    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-    if (Test-Path $vswhere) {
-        $path = & $vswhere -latest -products * -requires Microsoft.Component.MSBuild -find 'MSBuild\**\Bin\MSBuild.exe' 2>$null | Select-Object -First 1
-        if ($path) { return $path }
-    }
-    return $null
 }
 
 Push-Location $repoRoot
@@ -42,27 +33,36 @@ try {
     $solution = Join-Path $repoRoot 'build\vs2019\master.sln'
     Add-Check 'VS2019 master solution' (Test-Path $solution) $solution 'Restore the repository build/vs2019 tree.'
 
-    $msbuild = Find-MSBuild
+    $msbuild = Find-COH-MSBuild
     Add-Check 'MSBuild' ([bool]$msbuild) $(if ($msbuild) { $msbuild } else { 'MSBuild not found' }) 'Install Visual Studio 2019/2022 Build Tools with Desktop development with C++ and the v142 toolset.'
 
-    $vswhere = Join-Path ${env:ProgramFiles(x86)} 'Microsoft Visual Studio\Installer\vswhere.exe'
-    $v142Found = $false
-    $winSdkFound = $false
-    if (Test-Path $vswhere) {
-        $installations = & $vswhere -products * -format json | ConvertFrom-Json
-        foreach ($install in $installations) {
-            $root = $install.installationPath
-            if (Test-Path (Join-Path $root 'VC\Tools\MSVC')) {
-                $v142Found = $v142Found -or [bool](Get-ChildItem (Join-Path $root 'VC\Tools\MSVC') -Directory -ErrorAction SilentlyContinue | Where-Object { $_.Name -like '14.2*' })
-            }
+    $v142Compiler = @(Get-COH-V142CompilerInfo)
+    $v142CompileFiles = $v142Compiler | Where-Object { $_.compileUsable } | Select-Object -First 1
+    $v142CompilerPass = ($null -ne $v142CompileFiles)
+    Add-Check 'MSVC v142 compiler files' $v142CompilerPass $(if ($v142CompilerPass) { "compiler $($v142CompileFiles.toolsetVersion) at $($v142CompileFiles.compilerPath); x86 runtime libraries: $($v142CompileFiles.x86RuntimePresent)" } else { 'v142 compiler headers or x86 compiler are missing' }) 'Install the MSVC v142 x86/x64 build tools component.'
+
+    $v142Probe = $null
+    $v145Probe = $null
+    if ($msbuild) {
+        Normalize-COH-ProcessEnvironment
+        $v142Probe = Test-COH-MSBuildToolset -MSBuildPath $msbuild -Toolset 'v142' -RepoRoot $repoRoot
+        $v142Usable = $v142Probe.success
+        $v142Detail = if ($v142Usable) { 'MSBuild compiled and produced the v142 probe library' } elseif ($v142CompilerPass) { "compiler files are present, but the v142 MSBuild project probe failed: $($v142Probe.summary)" } else { "v142 project probe failed: $($v142Probe.summary)" }
+        if (-not $v142Usable) {
+            $v145Probe = Test-COH-MSBuildToolset -MSBuildPath $msbuild -Toolset 'v145' -RepoRoot $repoRoot
+            Add-Check 'Fallback MSVC v145 toolset' $v145Probe.success $(if ($v145Probe.success) { 'MSBuild compiled and produced the v145 probe library; agent/build.ps1 can use this fallback with its compatibility props' } else { "v145 fallback probe failed: $($v145Probe.summary)" }) 'Install a complete current C++ toolset or repair the MSBuild installation.'
         }
+        Add-Check 'MSVC v142 toolset' $v142Usable $v142Detail 'Install Visual Studio 2019 Build Tools with the v142 C++ workload, including Win32/x86 and x64 support. Directory presence alone is not sufficient.' -Blocking (-not $v145Probe.success)
+    } else {
+        Add-Check 'MSVC v142 toolset' $false 'not tested because MSBuild is unavailable' 'Install MSBuild before testing the C++ project toolset.'
     }
+
+    $winSdkFound = $false
     $kits = 'HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots'
     if (Test-Path $kits) {
         $kitRoot = (Get-ItemProperty $kits -ErrorAction SilentlyContinue).KitsRoot10
         if ($kitRoot -and (Test-Path (Join-Path $kitRoot 'Lib'))) { $winSdkFound = $true }
     }
-    Add-Check 'MSVC v142 toolset' $v142Found $(if ($v142Found) { 'v142 toolset detected' } else { 'v142 toolset not detected' }) 'Add the MSVC v142 build tools component in Visual Studio Installer.'
     Add-Check 'Windows 10 SDK' $winSdkFound $(if ($winSdkFound) { 'Windows 10 SDK detected' } else { 'Windows 10 SDK not detected' }) 'Install a Windows 10 SDK through Visual Studio Installer.'
 
     $expectedSubmodules = @('bin/data/server/maps', 'bin/piggs')
@@ -150,7 +150,7 @@ finally {
     Pop-Location
 }
 
-$failed = @($results | Where-Object { -not $_.pass })
+$failed = @($results | Where-Object { -not $_.pass -and $_.blocking })
 if ($Json) {
     [pscustomobject]@{
         ready = ($failed.Count -eq 0)
@@ -161,7 +161,7 @@ if ($Json) {
     Write-Host 'COH DEVELOPMENT DOCTOR'
     Write-Host ''
     foreach ($r in $results) {
-        $label = if ($r.pass) { 'PASS' } else { 'FAIL' }
+        $label = if ($r.pass) { 'PASS' } elseif ($r.blocking) { 'FAIL' } else { 'WARN' }
         Write-Host ('[{0}] {1} - {2}' -f $label, $r.name, $r.detail)
         if (-not $r.pass -and $r.fix) { Write-Host ('       Fix: {0}' -f $r.fix) }
     }

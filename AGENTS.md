@@ -20,15 +20,14 @@ This repository contains a large Windows-native City of Heroes/OuroDev codebase.
 
 Verified on a Windows development machine on 2026-08-14:
 
-- Git, MSBuild, MSVC v142, Windows 10 SDK, both runtime-data submodules, ODBC Driver 17 (32-bit and 64-bit), runtime paths, TestClient, and ServerMonitor build inputs were detected successfully.
-- `Release|x86` full build completed successfully with `agent/build.ps1`.
-- Observed full-build duration: 311.4 seconds.
-- `agent/start-shard.ps1` successfully launched ServerMonitor.
-- ServerMonitor subsequently launched and kept `DbServer` and `Launcher` running; AuthServer also remained as a process, although its TCP 2106 listener was not ready.
+- Git, MSBuild, the Windows 10 SDK, both runtime-data submodules, ODBC Driver 17 (32-bit and 64-bit), SQL Server `Server=localhost`, TestClient, and ServerMonitor build inputs are functional.
+- The installed v142 compiler files are present, but the v142 MSBuild project probe reproduces `MSB8020`; its x86 runtime library set is incomplete. The doctor reports this as a non-blocking warning when the fallback succeeds.
+- `agent/build.ps1 -Configuration Release -Platform x86` completes successfully by selecting the tested v145 fallback and importing `agent/v145-compat.props`. The latest verified rebuild took 39.0 seconds; earlier full v145 builds also passed.
+- `agent/start-shard.ps1` successfully launched ServerMonitor and observed `ServerMonitor`, `DbServer`, and `Launcher` after 6.83 seconds. Process readiness is followed by the application-level smoke test.
+- The direct-DB smoke path created character `TEST-40283` for `Dummy00009`, reached a MapServer, and exited cleanly. The row was confirmed in `cohdb` with `StaticMapId=1` and `LoginCount=1`.
+- `cohdb` is available. `cohauth` and the optional `cohacc`/other auxiliary databases are not present; they are outside the critical direct-DB development loop.
 
-The SQL-connectivity checks added after this observation still require local execution before the environment should again be described as fully `READY`.
-
-`Release|x86` is the current locally verified build baseline.
+`Release|x86` with the v145 fallback is the current locally verified build baseline. See [`docs/agent-status.md`](docs/agent-status.md) for exact evidence and log paths.
 
 ## Agent workflow
 
@@ -75,7 +74,7 @@ If one of those is tested successfully, update this document with the result.
 .\agent\start-shard.ps1
 ```
 
-This intentionally wraps the repository's existing `ServerMonitor.exe -connect` startup convention.
+This intentionally wraps the repository's existing `ServerMonitor.exe -connect` startup convention and polls for `DbServer` and `Launcher` instead of relying on a fixed sleep. For a slower machine, use `-StartupWaitSeconds 60`.
 
 Successful launch of ServerMonitor alone does **not** prove the complete shard is healthy.
 
@@ -99,11 +98,15 @@ Process presence is diagnostic only. Do not equate process existence with applic
 .\agent\smoke.ps1
 ```
 
-The primary local-development smoke path intentionally uses TestClient's `-db 127.0.0.1` mode and bypasses AuthServer. This matches the simpler OuroDev local-development model and removes the legacy `cohauth` database from the critical edit/build/test loop.
+The primary local-development smoke path intentionally uses TestClient's `-db 127.0.0.1` mode and bypasses AuthServer. This matches the simpler OuroDev local-development model and removes the legacy `cohauth` database from the critical edit/build/test loop. Ensure the reversible development switch is enabled with `.\agent\set-directdb-mode.ps1 -Enable`.
 
-Current smoke scope is deliberately small: prove that TestClient can exercise the direct DbServer login path and exit cleanly. After that works, extend the same harness to select/create a character, request a MapServer, enter a map, and remain healthy for a controlled period.
+The default smoke proves direct DbServer login. The staged character/map check proves reproducible character creation, Launcher/MapServer startup, client MapServer entry, and a clean exit:
 
-The smoke test writes complete stdout/stderr plus JSON under `agent/logs/` and returns a non-zero exit code on failure.
+```powershell
+.\agent\smoke.ps1 -ExerciseCharacter -AccountName Dummy00009 -TimeoutSeconds 180
+```
+
+The smoke test writes complete stdout/stderr, an autonomous status file, and JSON under `agent/logs/`, and returns a non-zero exit code on failure. Headless runs include `-nosharedmemory` so the autonomous path does not depend on the GUI client's shared heap.
 
 ### 6. Optional AuthServer diagnostics
 
@@ -129,19 +132,16 @@ For a disposable local development shard only:
 .\agent\stop-shard.ps1 -ForceProcessStop
 ```
 
-Prefer replacing the forced path with a verified graceful ServerMonitor control path once discovered.
+The forced path now includes the known ServerMonitor children (`LogServer`, `BeaconServer`, and `BeaconClient`) and performs a bounded post-shutdown rescan so late-spawned children and exit races are reported accurately. Prefer replacing it with a verified graceful ServerMonitor control path once discovered.
 
 ## Current highest-priority missing capability
 
-Prove the direct-DbServer TestClient smoke test locally, then extend it one level at a time:
+Phase 0 is complete. An unverified Phase 1 deterministic developer-control scaffold is present; do not report it as working until it produces a real image and clean client exit. The next priority is:
 
-1. direct DbServer connection/login path
-2. character selection or reproducible development-character creation
-3. Launcher requests/spawns a MapServer
-4. TestClient connects to the MapServer
-5. player entity enters a map and stays healthy briefly
-6. machine-readable detection of crashes/assertions/fatal server errors
-7. deterministic gameplay/AI scenarios
+1. deterministic map selection and teleport
+2. fixed camera/FOV and hidden UI
+3. a repeatable screenshot command and clean client exit
+4. machine-readable capture success/failure and regression evidence
 
 Prefer TestClient over GUI automation of `Ouroboros.exe`.
 

@@ -464,6 +464,7 @@ enum
     CMD_MACRO_SLOT,
     CMD_MANAGE_ENHANCEMENTS,
     CMD_SCREENSHOT,
+    CMD_CAPTURE,
     CMD_RELOADSEQUENCERS,
     CMD_SHOULDERSCALE,
     CMD_SETDEBUGENTITY,
@@ -2174,6 +2175,8 @@ Cmd game_cmds[] =
                         "Save a .jpg format screenshot." },
     { 0, "screenshottitle",    CMD_SCREENSHOT_TITLE, {CMDSENTENCE(tmp_str)}, 0,
                         "Save a .jpg format screenshot with the given title." },
+    { 0, "capture",    CMD_CAPTURE, {{ CMDSTR(game_state.capture_target) }}, 0,
+                        "Capture a deterministic developer screenshot and exit cleanly." },
     { 0, "screenshottga",CMD_SCREENSHOT_TGA, {{0}}, 0,
                         "Save a .tga format screenshot." },
     { 0, "screenshotui",0, {{ CMDINT(game_state.screenshot_ui) }}, 0,
@@ -4438,6 +4441,14 @@ int cmdGameParse(char *str, int x, int y)
             jpeg_screenshot(NULL);
         xcase CMD_SCREENSHOT_TITLE:
             jpeg_screenshot(tmp_str);
+        xcase CMD_CAPTURE:
+            game_state.capture_state = 1;
+            game_state.capture_frame_count = 0;
+            game_state.quick_login = 1;
+            game_state.no_version_check = 1;
+            game_state.screenshot_ui = 0;
+            game_state.fov_3rd = 55.0f;
+            control_state.notimeout = 1;
         xcase CMD_SCREENSHOT_TGA:
             gfxScreenDump("screenshots", 0, "tga");
         xcase CMD_POWEXEC_NAME:

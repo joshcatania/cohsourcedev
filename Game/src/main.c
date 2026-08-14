@@ -328,6 +328,7 @@ int main(int argc, char **argv)
     //No, instead, always use resume_info if you have it, that way cryptic people can use resume_info when running off the patch
     //if( game_state.cryptic )
     getAutoResumeInfoCryptic();
+    game_applyCommandLineCredentials();
 
     game_loadData(0);
 

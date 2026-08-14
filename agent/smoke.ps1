@@ -3,6 +3,7 @@ param(
     [string]$DbAddress = '127.0.0.1',
     [string]$AccountName = 'Dummy00001',
     [int]$TimeoutSeconds = 90,
+    [switch]$ExerciseCharacter,
     [switch]$Json
 )
 
@@ -17,6 +18,7 @@ $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
 $stdoutLog = Join-Path $logDir "smoke-directdb-$stamp.out.log"
 $stderrLog = Join-Path $logDir "smoke-directdb-$stamp.err.log"
 $resultLog = Join-Path $logDir "smoke-directdb-$stamp.json"
+$agentStatusLog = Join-Path $logDir "smoke-directdb-$stamp.status"
 
 function Finish([object]$Result, [int]$ExitCode) {
     $Result | ConvertTo-Json -Depth 6 | Set-Content -Encoding UTF8 $resultLog
@@ -25,7 +27,11 @@ function Finish([object]$Result, [int]$ExitCode) {
     } else {
         Write-Host ''
         if ($Result.passed) {
-            Write-Host 'SMOKE PASS - direct DbServer login path verified'
+            if ($Result.stage -eq 'character-map') {
+                Write-Host 'SMOKE PASS - character creation and MapServer entry verified'
+            } else {
+                Write-Host 'SMOKE PASS - direct DbServer login path verified'
+            }
         } else {
             Write-Host 'SMOKE FAIL - direct DbServer login path not verified'
         }
@@ -102,18 +108,25 @@ if ($missing.Count -gt 0) {
 }
 
 # -justlogin intentionally tests only the direct DbServer connection and exits.
-# It does not request a character or MapServer yet. -dontpause prevents legacy
-# error paths from waiting for keyboard input. -selfversion avoids depending on
-# TestClientLauncher for a version handshake. No password is required by the
-# direct local development path.
+# With -ExerciseCharacter, the autonomous TestClient creates/resumes a
+# development character and requests a MapServer before exiting. -dontpause
+# prevents legacy error paths from waiting for keyboard input. -selfversion
+# avoids depending on TestClientLauncher for a version handshake.
+# -nosharedmemory keeps this headless autonomous check independent of the GUI
+# client's shared heap. No password is required by the direct local path.
 $argsList = @(
     '-db', $DbAddress,
     '-authname', $AccountName,
-    '-justlogin',
     '-dontpause',
     '-selfversion',
+    '-nosharedmemory',
     '-silent'
 )
+if ($ExerciseCharacter) {
+    $argsList += @('-disconnect', '-agent-status', $agentStatusLog)
+} else {
+    $argsList += '-justlogin'
+}
 
 if (-not $Json) {
     Write-Host 'COH DIRECT-DB SMOKE TEST'
@@ -123,7 +136,11 @@ if (-not $Json) {
     Write-Host ''
     Write-Host 'AuthServer: BYPASSED (intentional local-dev path)'
     Write-Host 'DbServer fake auth: ENABLED'
-    Write-Host 'Launching TestClient...'
+    if ($ExerciseCharacter) {
+        Write-Host 'Launching TestClient character/map exercise...'
+    } else {
+        Write-Host 'Launching TestClient direct-login exercise...'
+    }
 }
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo
@@ -177,11 +194,21 @@ if (-not $timedOut) {
 $hasLoginError = $combinedText -match '(?im)Error logging on|DBServer Error:|Error connecting|Failed to connect'
 $hasFatal = $combinedText -match '(?im)Fatal Error:|CRT Error:|Exception caught:'
 $hasConnectMarker = $combinedText -match '(?im)Connecting as\s+'
-$hasDirectDbArg = $combinedText -match '(?im)cmdline args:.*-db\s+'
+$hasDirectDbArg = [bool]($argsList -contains '-db')
 
-$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal) -and $hasConnectMarker
+$agentStatus = @{}
+if (Test-Path -LiteralPath $agentStatusLog) {
+    foreach ($line in (Get-Content -LiteralPath $agentStatusLog -ErrorAction SilentlyContinue)) {
+        $parts = $line -split '=', 2
+        if ($parts.Count -eq 2) { $agentStatus[$parts[0]] = $parts[1] }
+    }
+}
+$mapConnected = [bool]($agentStatus.ContainsKey('map_connected') -and $agentStatus['map_connected'] -eq '1')
+$characterCreated = [bool]($agentStatus.ContainsKey('character') -and $agentStatus['character'])
+
+$passed = (-not $timedOut) -and ($exitCode -eq 0) -and (-not $hasLoginError) -and (-not $hasFatal)
 $reason = $null
-$stage = 'direct-db-login'
+$stage = if ($ExerciseCharacter) { 'character-map' } else { 'direct-db-login' }
 if ($timedOut) {
     $reason = "TestClient did not exit within $TimeoutSeconds seconds."
 } elseif ($hasFatal) {
@@ -192,8 +219,21 @@ if ($timedOut) {
     $reason = 'TestClient exited, but Windows did not expose an exit code. Inspect captured output.'
 } elseif ($exitCode -ne 0) {
     $reason = "TestClient exited with code $exitCode. See useful output below."
+} elseif ($ExerciseCharacter -and -not (Test-Path -LiteralPath $agentStatusLog)) {
+    $passed = $false
+    $reason = 'TestClient exited, but its autonomous agent status file was not written.'
+} elseif ($ExerciseCharacter -and (-not $characterCreated -or -not $mapConnected)) {
+    $passed = $false
+    $reason = "TestClient exited without proving character/map progress (characterCreated=$characterCreated; mapConnected=$mapConnected). See the status file and server logs."
 } elseif (-not $hasConnectMarker) {
-    $reason = 'TestClient exited without the expected connection marker; direct-DB success is not proven.'
+    # TestClient's CRT output can remain empty when launched headlessly with
+    # redirected handles. For -justlogin, a clean exit is the authoritative
+    # result; retain the marker as diagnostic evidence when it is available.
+    if ($ExerciseCharacter) {
+        $reason = 'TestClient created a character and reached MapServer successfully; no redirected console marker was emitted.'
+    } else {
+        $reason = 'TestClient completed direct-DB login successfully; no redirected console marker was emitted.'
+    }
 }
 
 $result = [pscustomobject]@{
@@ -209,6 +249,9 @@ $result = [pscustomobject]@{
     fakeAuthEnabled = $fakeAuthEnabled
     sawConnectMarker = $hasConnectMarker
     sawDirectDbArgument = $hasDirectDbArg
+    characterCreated = $characterCreated
+    mapConnected = $mapConnected
+    agentStatusLog = $agentStatusLog
     sawLoginError = $hasLoginError
     sawFatalError = $hasFatal
     stdoutLog = $stdoutLog

@@ -1459,8 +1459,10 @@ static int meetsSingleCondition(char *condition)
         for (i=0;i<32; i++) {
             if ((1<<i) & rdr_caps.chip) {
                 char *chipname = rdrChipToString(1 << i);
-                chips[numchips] = chipname;
-                numchips++;
+                if (chipname) {
+                    chips[numchips] = chipname;
+                    numchips++;
+                }
             }
         }
     }
@@ -2708,9 +2710,11 @@ void initShaderBuildDescriptor(
     for (i=0; i<32; i++) {
         if ((1<<i) & rdr_caps.chip) {
             char *chipname = rdrChipToString(1 << i);
-            arg = _alloca(strlen(chipname) + 3);
-            sprintf(arg, "-D%s", chipname);
-            addStringToCmdLineArgs( pBuildDescriptor, arg );
+            if (chipname) {
+                arg = _alloca(strlen(chipname) + 3);
+                sprintf(arg, "-D%s", chipname);
+                addStringToCmdLineArgs( pBuildDescriptor, arg );
+            }
         }
     }
 

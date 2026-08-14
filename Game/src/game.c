@@ -148,11 +148,27 @@ bool consoleStarted = false;
 static progressStringUpdatingEnabled = false; // starts off disabled so we don't overwrite the previous strings
 static char testGameProgressString[100] = "";
 static bool forceCrashCheck = false;
+static char commandLineAccountName[32] = "";
+static char commandLinePassword[32] = "";
+static int commandLineAccountSet = 0;
+static int commandLinePasswordSet = 0;
 
 ParticleSystemInfo sysInfo;
 
 #define MAX_HANDLES 1048576 
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
+
+void game_applyCommandLineCredentials(void)
+{
+    if (commandLineAccountSet)
+        Strncpyt(g_achAccountName, commandLineAccountName);
+
+    if (commandLinePasswordSet)
+    {
+        strncpy_s(g_achPassword, sizeof(g_achPassword), commandLinePassword, _TRUNCATE);
+        cryptStore(g_achPassword, g_achPassword, sizeof(g_achPassword));
+    }
+}
 
 void parseArgs(int argc,char **argv)
 {
@@ -163,6 +179,29 @@ void parseArgs(int argc,char **argv)
         cmdAccessOverride(9);
     for(i=1;i<argc;)
     {
+        if (stricmp(argv[i], "-authname") == 0 && i + 1 < argc)
+        {
+            Strncpyt(commandLineAccountName, argv[i + 1]);
+            commandLineAccountSet = 1;
+            i += 2;
+            continue;
+        }
+        if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
+        {
+            Strncpyt(commandLinePassword, argv[i + 1]);
+            commandLinePasswordSet = 1;
+            i += 2;
+            continue;
+        }
+        if (stricmp(argv[i], "-db") == 0 && i + 1 < argc)
+        {
+            // Development-only direct DbServer mode.  authLogin() already
+            // treats a non-empty cs_address as a synthesized local server,
+            // which is the same path used by TestClient -db.
+            Strncpyt(game_state.cs_address, argv[i + 1]);
+            i += 2;
+            continue;
+        }
         if (strEndsWith(argv[i],".cohdemo") || strEndsWith(argv[i],".cohdemo\""))
         {
             sprintf(buf,"demoplay %s",argv[i]);
@@ -846,17 +885,47 @@ void GameShutdown(void)
 void checkQuickLogin(void)
 {
     char    err_msg[1000];
+    int     auth_result;
+    int     db_result;
+    int     quick_slot = game_state.quick_login - 1;
 
     if (game_state.quick_login && !game_state.editnpc) {
+        if (game_state.capture_state)
+            writeConsole(OUTPUT_INFO, "Capture quick login: account=%s populated=%d max=%d", g_achAccountName,
+                         db_info.players ? db_info.player_count : 0,
+                         db_info.players ? db_info.max_slots : 0);
         //serve_menus(); // Needed to load the graphics used in the loading bar? //JE: removed because it was messing up resume_info.txt by catching keypresses
-        if (loginToAuthServer(0) && loginToDbServer(0,err_msg) && db_info.players &&  (game_state.quick_login - 1) < db_info.player_count) {
+        auth_result = loginToAuthServer(0);
+        db_result = auth_result ? loginToDbServer(0,err_msg) : 0;
+        if (game_state.capture_state)
+            writeConsole((auth_result && db_result) ? OUTPUT_INFO : OUTPUT_ERROR,
+                         "Capture login result: auth=%d db=%d slots=%d max=%d error=%s",
+                         auth_result, db_result, db_info.players ? db_info.player_count : 0,
+                         db_info.players ? db_info.max_slots : 0,
+                         err_msg[0] ? err_msg : "none");
+        // db_info.player_count counts populated characters, not available
+        // character slots. Capture mode deliberately uses the first slot so
+        // a fresh development account can create a reproducible character.
+        if (auth_result && db_result && db_info.players && quick_slot >= 0 && quick_slot < db_info.max_slots) {
             int newchar;
-            gPlayerNumber = game_state.quick_login - 1;
+            gPlayerNumber = quick_slot;
             newchar = stricmp(db_info.players[gPlayerNumber].name, "empty")==0;
             if (!newchar) {
-                if(!choosePlayerWrapper( gPlayerNumber, 0 )) {
+                int choose_result = choosePlayerWrapper( gPlayerNumber, 0 );
+                if (game_state.capture_state)
+                    writeConsole(choose_result ? OUTPUT_INFO : OUTPUT_ERROR,
+                                 "Capture character handoff: slot=%d name=%s result=%d error=%s",
+                                 gPlayerNumber, db_info.players[gPlayerNumber].name, choose_result,
+                                 choose_result ? "none" : (db_info.error_msg[0] ? db_info.error_msg : "unknown"));
+                if(!choose_result) {
                     Sleep(30);
-                    if (!choosePlayerWrapper( gPlayerNumber, 0 )) {
+                    choose_result = choosePlayerWrapper( gPlayerNumber, 0 );
+                    if (game_state.capture_state)
+                        writeConsole(choose_result ? OUTPUT_INFO : OUTPUT_ERROR,
+                                     "Capture character retry: slot=%d result=%d error=%s",
+                                     gPlayerNumber, choose_result,
+                                     choose_result ? "none" : (db_info.error_msg[0] ? db_info.error_msg : "unknown"));
+                    if (!choose_result) {
                         return;
                     }
                 }
@@ -2117,6 +2186,49 @@ void checkForStartupExec()
     }
 }
 
+static void game_processCapture(void)
+{
+    extern int glob_have_camera_pos;
+    char command[512];
+
+    if (game_state.capture_state == 0 || game_state.capture_state == 3)
+        return;
+
+    if (game_state.capture_state == 1)
+    {
+        if (!commConnected() || !playerPtr() || glob_have_camera_pos != PLAYING_GAME ||
+            game_state.game_mode != SHOW_GAME || !isMenu(MENU_GAME))
+            return;
+
+        if (game_state.capture_frame_count == 0)
+        {
+            // Fixed Atlas Park developer position. The label supplied to
+            // capture identifies the artifact; the position remains stable.
+            cmdParse("hide_all");
+            cmdParse("third 1");
+            cmdParse("camdist 30");
+            cmdParse("setpospyr -5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000");
+            game_state.capture_frame_count = 1;
+            return;
+        }
+
+        if (++game_state.capture_frame_count < 90)
+            return;
+
+        sprintf_s(SAFESTR(command), "screenshottitle %s", game_state.capture_target);
+        cmdParse(command);
+        game_state.capture_state = 2;
+        game_state.capture_frame_count = 0;
+        return;
+    }
+
+    if (++game_state.capture_frame_count >= 3)
+    {
+        cmdParse("quit");
+        game_state.capture_state = 3;
+    }
+}
+
 void game_beforeLoop(int isCostumeCreator, int timer)
 {
     showBgReset();
@@ -2339,6 +2451,8 @@ int game_mainLoop(int timer)
         PERFINFO_AUTO_START("engine_update", 1);
             engine_update();
         PERFINFO_AUTO_STOP_CHECKED("engine_update");
+
+        game_processCapture();
         
         demoRecordClientInfo();
 
