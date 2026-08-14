@@ -94,7 +94,10 @@ try {
     if ($odbc17x86) {
         $conn = $null
         try {
-            $connString = 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;Connection Timeout=3;'
+            # ODBC Driver 17 does not accept the SqlClient-style
+            # "Connection Timeout" keyword. Keep this connection string aligned
+            # with the checked-in game config to avoid misleading diagnostics.
+            $connString = 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;'
             $conn = New-Object System.Data.Odbc.OdbcConnection($connString)
             $conn.Open()
             $sqlReachable = ($conn.State -eq [System.Data.ConnectionState]::Open)
