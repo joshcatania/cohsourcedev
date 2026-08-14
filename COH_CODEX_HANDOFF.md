@@ -6,6 +6,12 @@ Repository: `D:\github\cohsourcedev`
 
 Branch: `agent/agent-dev-foundation`, tracking `origin/agent/agent-dev-foundation`
 
+GitHub repository: [joshcatania/cohsourcedev](https://github.com/joshcatania/cohsourcedev)
+
+Published branch: [agent/agent-dev-foundation](https://github.com/joshcatania/cohsourcedev/tree/agent/agent-dev-foundation)
+
+Draft pull request: [#1 – Establish local development foundation and capture scaffold](https://github.com/joshcatania/cohsourcedev/pull/1), targeting `64-bit-fx`
+
 ## Handoff purpose
 
 This is a Windows-native City of Heroes/OuroDev codebase. The immediate engineering goal is a reproducible local development loop, followed by deterministic developer controls for graphical capture. Phase 0 is verified. Phase 1 has an implemented but unverified scaffold and is currently blocked at the graphical client login/map handoff.
