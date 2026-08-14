@@ -81,7 +81,7 @@ try {
         $odbc17x86 = [bool](Get-OdbcDriver -Platform '32-bit' -ErrorAction SilentlyContinue | Where-Object Name -EQ 'ODBC Driver 17 for SQL Server')
         $odbc17x64 = [bool](Get-OdbcDriver -Platform '64-bit' -ErrorAction SilentlyContinue | Where-Object Name -EQ 'ODBC Driver 17 for SQL Server')
     } catch {}
-    Add-Check 'SQL Server ODBC Driver 17 (32-bit)' $odbc17x86 $(if ($odbc17x86) { 'ODBC Driver 17 detected for 32-bit processes' } else { 'ODBC Driver 17 not detected for 32-bit processes' }) 'Install Microsoft ODBC Driver 17 for SQL Server. On 64-bit Windows, use Microsoft\'s x64 Driver 17 installer; it installs both 64-bit and 32-bit drivers.'
+    Add-Check 'SQL Server ODBC Driver 17 (32-bit)' $odbc17x86 $(if ($odbc17x86) { 'ODBC Driver 17 detected for 32-bit processes' } else { 'ODBC Driver 17 not detected for 32-bit processes' }) "Install Microsoft ODBC Driver 17 for SQL Server. On 64-bit Windows, use Microsoft's x64 Driver 17 installer; it installs both 64-bit and 32-bit drivers."
     Add-Check 'SQL Server ODBC Driver 17 (64-bit)' $odbc17x64 $(if ($odbc17x64) { 'ODBC Driver 17 detected for 64-bit processes' } else { 'ODBC Driver 17 not detected for 64-bit processes' }) 'Install Microsoft ODBC Driver 17 for SQL Server.'
 
     foreach ($rel in @('bin\data\server\db', 'bin\etc', 'bin')) {
