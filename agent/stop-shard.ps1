@@ -5,7 +5,7 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$names = @('ServerMonitor','AuthServer','DbServer','MapServer','AccountServer','ChatServer','AuctionServer','MissionServer','TurnstileServer','QueueServer','StatServer')
+$names = @('ServerMonitor','AuthServer','DbServer','Launcher','MapServer','AccountServer','ChatServer','AuctionServer','MissionServer','TurnstileServer','QueueServer','StatServer')
 $running = @()
 foreach ($name in $names) {
     $running += @(Get-Process -Name $name -ErrorAction SilentlyContinue)
