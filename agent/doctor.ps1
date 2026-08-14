@@ -65,7 +65,6 @@ try {
     Add-Check 'MSVC v142 toolset' $v142Found $(if ($v142Found) { 'v142 toolset detected' } else { 'v142 toolset not detected' }) 'Add the MSVC v142 build tools component in Visual Studio Installer.'
     Add-Check 'Windows 10 SDK' $winSdkFound $(if ($winSdkFound) { 'Windows 10 SDK detected' } else { 'Windows 10 SDK not detected' }) 'Install a Windows 10 SDK through Visual Studio Installer.'
 
-    $submoduleText = if ($git) { (& git submodule status 2>$null) } else { @() }
     $expectedSubmodules = @('bin/data/server/maps', 'bin/piggs')
     foreach ($sub in $expectedSubmodules) {
         $path = Join-Path $repoRoot ($sub -replace '/', '\')
@@ -73,12 +72,17 @@ try {
         Add-Check "Submodule: $sub" $hasFiles $(if ($hasFiles) { 'content present' } else { 'missing or empty' }) 'Run: git submodule update --init --recursive'
     }
 
-    $odbcFound = $false
+    # The checked-in AuthServer config explicitly names "ODBC Driver 17 for SQL Server".
+    # Release|x86 is the currently validated baseline, so the 32-bit driver is required.
+    # Microsoft's x64 Driver 17 installer installs both 64-bit and 32-bit drivers on x64 Windows.
+    $odbc17x86 = $false
+    $odbc17x64 = $false
     try {
-        $drivers = Get-OdbcDriver -Platform '64-bit' -ErrorAction SilentlyContinue
-        $odbcFound = [bool]($drivers | Where-Object Name -Match 'ODBC Driver 17 for SQL Server|ODBC Driver 18 for SQL Server')
+        $odbc17x86 = [bool](Get-OdbcDriver -Platform '32-bit' -ErrorAction SilentlyContinue | Where-Object Name -EQ 'ODBC Driver 17 for SQL Server')
+        $odbc17x64 = [bool](Get-OdbcDriver -Platform '64-bit' -ErrorAction SilentlyContinue | Where-Object Name -EQ 'ODBC Driver 17 for SQL Server')
     } catch {}
-    Add-Check 'SQL Server ODBC driver' $odbcFound $(if ($odbcFound) { 'Microsoft SQL Server ODBC driver detected' } else { 'ODBC Driver 17/18 not detected' }) 'Install Microsoft ODBC Driver 17 or 18 for SQL Server.'
+    Add-Check 'SQL Server ODBC Driver 17 (32-bit)' $odbc17x86 $(if ($odbc17x86) { 'ODBC Driver 17 detected for 32-bit processes' } else { 'ODBC Driver 17 not detected for 32-bit processes' }) 'Install Microsoft ODBC Driver 17 for SQL Server. On 64-bit Windows, use Microsoft\'s x64 Driver 17 installer; it installs both 64-bit and 32-bit drivers.'
+    Add-Check 'SQL Server ODBC Driver 17 (64-bit)' $odbc17x64 $(if ($odbc17x64) { 'ODBC Driver 17 detected for 64-bit processes' } else { 'ODBC Driver 17 not detected for 64-bit processes' }) 'Install Microsoft ODBC Driver 17 for SQL Server.'
 
     foreach ($rel in @('bin\data\server\db', 'bin\etc', 'bin')) {
         $path = Join-Path $repoRoot $rel
