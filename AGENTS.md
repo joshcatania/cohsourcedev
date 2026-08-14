@@ -13,6 +13,17 @@ This repository contains a large Windows-native City of Heroes/OuroDev codebase.
   - `bin/piggs`
 - `Utilities/TestClient` is part of the modern build and contains autonomous login, movement, combat, mission, stress, social, and network-test functionality.
 
+## Locally verified development baseline
+
+Verified on a Windows development machine on 2026-08-14:
+
+- `agent/doctor.ps1` reports `READY`.
+- Git, MSBuild, MSVC v142, Windows 10 SDK, both runtime-data submodules, SQL Server ODBC driver, runtime paths, TestClient, and ServerMonitor build inputs were all detected successfully.
+- `Release|x86` full build completed successfully with `agent/build.ps1`.
+- Observed full-build duration: 311.4 seconds.
+
+This makes `Release|x86` the current locally verified development baseline.
+
 ## Agent workflow
 
 Run these from the repository root in PowerShell.
@@ -33,7 +44,7 @@ Do not start changing source code until failures here are understood.
 
 ### 2. Build
 
-Current repo-proven baseline from CI:
+Locally verified baseline:
 
 ```powershell
 .\agent\build.ps1 -Configuration Release -Platform x86
@@ -116,4 +127,5 @@ The smoke test should emit both a concise terminal summary and JSON.
 - Avoid broad project modernization unless a concrete compatibility failure requires it.
 - Before gameplay/AI/render changes, establish a reproducible baseline and rerun the same validation afterward.
 - Keep agent scripts safe to rerun.
-- Treat `Release|x86` as the current known build baseline because that is what checked-in CI uses; do not infer that other configurations work merely because they are declared in the solution.
+- Treat `Release|x86` as the current locally verified build baseline.
+- Do not infer that other configurations work merely because they are declared in the solution.
