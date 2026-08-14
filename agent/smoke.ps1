@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $binDir = Join-Path $repoRoot 'bin'
 $testClient = Join-Path $binDir 'TestClient.exe'
+$serverCfg = Join-Path $binDir 'data\server\db\servers.cfg'
 $logDir = Join-Path $PSScriptRoot 'logs'
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -55,10 +56,38 @@ if (-not (Test-Path $testClient)) {
     Finish $r 1
 }
 
+if (-not (Test-Path $serverCfg)) {
+    $r = [pscustomobject]@{
+        passed = $false; stage = 'preflight'; reason = "Server config is missing: $serverCfg"
+        durationSeconds = 0; testClientExitCode = $null; dbAddress = $DbAddress; tail = @()
+    }
+    Finish $r 1
+}
+
 # OuroDev's local development workflow bypasses AuthServer and connects clients
-# directly to DbServer with -db 127.0.0.1. TestClient implements the same path:
-# supplying -db sets game_state.cs_address, causing authLogin() to synthesize a
-# single local server entry rather than connecting to AuthServer.
+# directly to DbServer with -db 127.0.0.1. The server side must also be in its
+# built-in fake-auth mode. servercfg.c explicitly requires exactly one of
+# AuthServer or UseFakeAuth, so detect a production/auth-server configuration
+# here instead of allowing a later TestClient login failure to obscure it.
+$cfgText = Get-Content -Raw -Path $serverCfg
+$fakeAuthEnabled = [bool]($cfgText -match '(?im)^\s*UseFakeAuth\s+1\s*(?:#.*)?$')
+$activeAuthServer = [bool]($cfgText -match '(?im)^\s*AuthServer\s+\S+')
+if (-not $fakeAuthEnabled -or $activeAuthServer) {
+    $state = "UseFakeAuth enabled=$fakeAuthEnabled; active AuthServer directive=$activeAuthServer"
+    $r = [pscustomobject]@{
+        passed = $false
+        stage = 'fake-auth-config'
+        reason = "Direct-DB development requires DbServer fake-auth mode, but servers.cfg is not configured for it ($state). Do not hand-edit it yet; this diagnostic intentionally stops before TestClient so the development-mode switch can be made explicitly and reversibly."
+        durationSeconds = 0
+        testClientExitCode = $null
+        dbAddress = $DbAddress
+        fakeAuthEnabled = $fakeAuthEnabled
+        activeAuthServer = $activeAuthServer
+        tail = @()
+    }
+    Finish $r 1
+}
+
 $required = @('ServerMonitor','DbServer','Launcher')
 $missing = @()
 foreach ($name in $required) {
@@ -93,6 +122,7 @@ if (-not $Json) {
     Write-Host ("Timeout: {0}s" -f $TimeoutSeconds)
     Write-Host ''
     Write-Host 'AuthServer: BYPASSED (intentional local-dev path)'
+    Write-Host 'DbServer fake auth: ENABLED'
     Write-Host 'Launching TestClient...'
 }
 
@@ -176,6 +206,7 @@ $result = [pscustomobject]@{
     dbAddress = $DbAddress
     accountName = $AccountName
     authBypassed = $true
+    fakeAuthEnabled = $fakeAuthEnabled
     sawConnectMarker = $hasConnectMarker
     sawDirectDbArgument = $hasDirectDbArg
     sawLoginError = $hasLoginError
