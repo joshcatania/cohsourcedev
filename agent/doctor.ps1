@@ -72,9 +72,9 @@ try {
         Add-Check "Submodule: $sub" $hasFiles $(if ($hasFiles) { 'content present' } else { 'missing or empty' }) 'Run: git submodule update --init --recursive'
     }
 
-    # The checked-in AuthServer config explicitly names "ODBC Driver 17 for SQL Server".
-    # Release|x86 is the currently validated baseline, so the 32-bit driver is required.
-    # Microsoft's x64 Driver 17 installer installs both 64-bit and 32-bit drivers on x64 Windows.
+    # The checked-in AuthServer and DbServer configs explicitly name
+    # "ODBC Driver 17 for SQL Server". Release|x86 is the locally verified
+    # baseline, so the 32-bit registration matters in particular.
     $odbc17x86 = $false
     $odbc17x64 = $false
     try {
@@ -83,6 +83,51 @@ try {
     } catch {}
     Add-Check 'SQL Server ODBC Driver 17 (32-bit)' $odbc17x86 $(if ($odbc17x86) { 'ODBC Driver 17 detected for 32-bit processes' } else { 'ODBC Driver 17 not detected for 32-bit processes' }) "Install Microsoft ODBC Driver 17 for SQL Server. On 64-bit Windows, use Microsoft's x64 Driver 17 installer; it installs both 64-bit and 32-bit drivers."
     Add-Check 'SQL Server ODBC Driver 17 (64-bit)' $odbc17x64 $(if ($odbc17x64) { 'ODBC Driver 17 detected for 64-bit processes' } else { 'ODBC Driver 17 not detected for 64-bit processes' }) 'Install Microsoft ODBC Driver 17 for SQL Server.'
+
+    # A driver is not a database server. Both checked-in server configs use
+    # Server=localhost with Windows integrated authentication, so verify that
+    # exact endpoint. Use ODBC here to exercise the same driver family as the
+    # game servers rather than merely checking for a Windows service name.
+    $sqlReachable = $false
+    $sqlDetail = 'not tested because ODBC Driver 17 (32-bit) is missing'
+    $sqlDatabases = @()
+    if ($odbc17x86) {
+        $conn = $null
+        try {
+            $connString = 'Driver={ODBC Driver 17 for SQL Server};Server=localhost;Database=master;Trusted_Connection=yes;Connection Timeout=3;'
+            $conn = New-Object System.Data.Odbc.OdbcConnection($connString)
+            $conn.Open()
+            $sqlReachable = ($conn.State -eq [System.Data.ConnectionState]::Open)
+            if ($sqlReachable) {
+                $sqlDetail = 'connected to Server=localhost / Database=master using Windows authentication'
+                $cmd = $conn.CreateCommand()
+                $cmd.CommandText = "SELECT name FROM sys.databases WHERE name IN ('cohdb','cohauth') ORDER BY name"
+                $reader = $cmd.ExecuteReader()
+                while ($reader.Read()) { $sqlDatabases += [string]$reader.GetString(0) }
+                $reader.Close()
+            }
+        } catch {
+            $sqlDetail = $_.Exception.Message -replace '[\r\n]+',' '
+        } finally {
+            if ($conn) { try { $conn.Close() } catch {} }
+        }
+    }
+    Add-Check 'SQL Server localhost' $sqlReachable $sqlDetail 'Install/configure SQL Server and ensure the checked-in Server=localhost connection works with Windows authentication. A named instance such as localhost\SQLEXPRESS will not satisfy the current config unless the config is changed.'
+
+    if ($sqlReachable) {
+        $hasCohDb = $sqlDatabases -contains 'cohdb'
+        $hasCohAuth = $sqlDatabases -contains 'cohauth'
+        # cohdb may legitimately be absent before the first DbServer launch;
+        # servers.cfg contains SqlInit directives to create it. Report this as
+        # informational without making the pre-start doctor fail.
+        Add-Check 'Development database: cohdb' $true $(if ($hasCohDb) { 'cohdb exists' } else { 'not present yet; DbServer config contains SqlInit create-database directives' }) ''
+        # cohauth is not required for the primary local-development smoke path,
+        # which intentionally uses TestClient -db and bypasses AuthServer.
+        Add-Check 'Optional auth database: cohauth' $true $(if ($hasCohAuth) { 'cohauth exists' } else { 'not present; AuthServer integration will not be considered ready, but direct-DB development can proceed' }) ''
+    } else {
+        Add-Check 'Development database: cohdb' $false 'cannot inspect because Server=localhost is unreachable' 'Fix the SQL Server localhost check first.'
+        Add-Check 'Optional auth database: cohauth' $true 'not inspected; optional for the primary direct-DB development workflow' ''
+    }
 
     foreach ($rel in @('bin\data\server\db', 'bin\etc', 'bin')) {
         $path = Join-Path $repoRoot $rel
