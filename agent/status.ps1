@@ -3,10 +3,14 @@ param(
     [switch]$Json
 )
 
+# Process presence is diagnostic only. Launcher is important because DbServer
+# can use it to start MapServers on demand; a stopped MapServer is therefore
+# not, by itself, evidence that a freshly started shard is unhealthy.
 $processNames = @(
     'ServerMonitor',
     'AuthServer',
     'DbServer',
+    'Launcher',
     'MapServer',
     'AccountServer',
     'ChatServer',
@@ -35,7 +39,7 @@ $result = [pscustomobject]@{
     observedServerProcessTypes = $serverCount
     processes = $rows
     readiness = 'unknown'
-    note = 'Process presence is diagnostic only. Full shard readiness requires a validated application-level health signal or TestClient smoke test.'
+    note = 'Process presence is diagnostic only. MapServer may be started on demand through Launcher. Full readiness requires an application-level check such as agent/smoke.ps1.'
 }
 
 if ($Json) {
@@ -49,7 +53,7 @@ if ($Json) {
         Write-Host ('{0,-20} {1}{2}' -f $row.name, $state, $extra)
     }
     Write-Host ''
-    Write-Host 'READINESS: UNKNOWN (process presence alone is not treated as healthy)'
+    Write-Host 'READINESS: UNKNOWN (run .\agent\smoke.ps1 for an application-level login/DB check)'
 }
 
 if (-not $monitorRunning) { exit 1 }
