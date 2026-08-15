@@ -127,3 +127,26 @@ The 2026-08-14 checkpoint's next actions were executed and Phase 1 passed its de
 5. The disposable shard was stopped with `agent/stop-shard.ps1 -ForceProcessStop -Json`; a post-stop status scan showed zero running shard processes.
 
 Next priorities are recorded in `AGENTS.md`: multi-scene deterministic capture, a capture-comparison regression harness, and only then renderer changes guarded by before/after captures.
+
+## Phase 2 verified — 2026-08-15 (multi-scene capture + regression harness)
+
+Phase 2 extends Phase 1 from a single shot to a deterministic multi-scene capture suite with a machine-readable image-comparison harness.
+
+Changes:
+
+- `Game/src/game.c` — the capture setup now selects from a shot table (`s_captureShots`): five Atlas Park labels (CityHall_03 default, East_01, North_01, West_01, Closeup_01 with camdist 10) mapping to fixed `setpospyr`/`camdist` values; unknown labels keep the historically verified default. The setup also freezes the world clock (`timeset 16; timescale 0`).
+- `agent/compare-captures.ps1` — image comparator: downsamples both JPGs to 320px width, pixel-diffs via LockBits, reports `changedPercent`/`meanDelta`/`maxDelta`, fails above `MaxChangedPercent` (2.0) or `MaxMeanDelta` (2.0).
+- `agent/capture-regression.ps1` — orchestrator: runs `capture.ps1` per label, adopts missing baselines into `agent/baselines` (unless `-NoAdopt`), compares against baselines, writes a summary JSON under `agent/logs/`, exit 0 only when no shot regressed or failed.
+
+Determinism findings:
+
+- The world clock runs at `DAY_TIMESCALE 48` (svr_tick.c) — one in-game hour every 75 real seconds — so images taken minutes apart differ by hours of lighting unless frozen. `timeset`/`timescale` are server commands requiring access level 9; characters created under the default config have `AccessLevel 0`, so the freeze was silently rejected until the capture characters were granted `AccessLevel=9` in `cohdb.dbo.Ents`. Note the MapServer can serve a stale in-memory entity for the first login after the SQL change; re-adopt baselines once after granting access.
+- Verified results: cross-scene comparison fails as expected (35.6% changed); same-scene reruns pass at 0.03–1.7% changed pixels across all five shots.
+
+Evidence:
+
+- Regression summary (adopt + verify pair): `agent/logs/regression-20260815-121*.json` and `agent/logs/regression-20260815-12*.json` under `agent/logs/`
+- Baselines: `agent/baselines/AtlasPlaza_{CityHall_03,East_01,North_01,West_01,Closeup_01}.jpg`
+- Visual check: `AtlasPlaza_East_01` confirmed as a genuinely different valid view (Atlas statue dominant) vs the City Hall default.
+
+Next: renderer changes guarded by `agent/capture-regression.ps1` before/after runs.

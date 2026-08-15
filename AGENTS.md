@@ -136,20 +136,25 @@ The forced path now includes the known ServerMonitor children (`LogServer`, `Bea
 
 ## Current milestone status
 
-Phase 0 (local development loop) and Phase 1 (deterministic graphical capture) are both complete and verified on 2026-08-15:
+Phase 0 (local development loop), Phase 1 (deterministic graphical capture), and Phase 2 (multi-scene capture + regression harness) are all complete and verified on 2026-08-15:
 
-1. deterministic map selection and teleport — done (`capture <label>` applies the fixed Atlas Plaza position)
-2. fixed camera/FOV and hidden UI — done (visually verified in the produced image)
-3. a repeatable screenshot command and clean client exit — done (two consecutive passing runs with exit code 0)
+1. deterministic map selection and teleport — done (`capture <label>` selects from the shot table in `Game/src/game.c`)
+2. fixed camera/FOV and hidden UI — done (visually verified in the produced images)
+3. a repeatable screenshot command and clean client exit — done (verified runs with exit code 0)
 4. machine-readable capture success/failure — done (`agent/capture.ps1 -Json`)
+5. multi-scene deterministic capture — done (five Atlas Park shots; `agent/capture-regression.ps1`)
+6. capture-comparison regression harness — done (`agent/compare-captures.ps1`; five shots pass at 0.03–1.7% pixel drift, cross-scene comparisons correctly fail)
 
-Known operational constraint: the shard needs a warm-up period (a few minutes) after `agent/start-shard.ps1` before logins are admitted. During warm-up, clients can stall in the login queue or while waiting for the first mapserver update. Do not treat a failure as real until it reproduces on a shard that has been up for several minutes and has passed one `agent/smoke.ps1 -ExerciseCharacter` run.
+Known operational constraints:
+
+- The shard needs a warm-up period (a few minutes) after `agent/start-shard.ps1` before logins are admitted. Do not treat a failure as real until it reproduces on a warmed shard that has passed one `agent/smoke.ps1 -ExerciseCharacter` run.
+- Deterministic lighting requires the server-side time freeze (`timeset 16; timescale 0`, sent by the capture setup). The server only accepts those commands at access level 9, so capture accounts need `AccessLevel=9` in `cohdb.dbo.Ents` (one-time SQL update per account, or `DefaultAccessLevel 9` in `servers.cfg` before creating the character).
+- The world clock runs at `DAY_TIMESCALE` 48 by default; without the freeze, images taken minutes apart differ by in-game hours of lighting.
 
 The next priorities are:
 
-1. expand deterministic capture to multiple scenes/labels beyond `AtlasPlaza_CityHall_03`
-2. a capture-comparison regression harness (baseline vs. current image) so renderer changes can be validated
-3. only then begin renderer work (for example, retiring the dead fixed-function/ATI shader paths in favor of the GLSL path), with before/after captures for every change
+1. renderer work guarded by before/after captures — for example, retiring the dead fixed-function/ATI shader paths in favor of the GLSL path — rerunning `agent/capture-regression.ps1` after every change
+2. expanding capture coverage further only when a renderer change needs it (cross-map capture requires a verified map-transfer path first)
 
 Prefer TestClient over GUI automation of `Ouroboros.exe`.
 

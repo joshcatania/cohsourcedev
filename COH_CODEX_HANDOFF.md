@@ -367,3 +367,12 @@ A freshly started shard does not admit logins for the first few minutes (queue/o
 2. Build the capture-comparison regression harness (baseline vs. current image, machine-readable diff verdict).
 3. Only then begin renderer changes, guarded by before/after captures.
 4. Update `AGENTS.md` and `docs/agent-status.md` with each verified result, as done here.
+
+## Phase 2 verified — 2026-08-15 multi-scene capture + regression harness
+
+Actions 1 and 2 above are complete. See `docs/agent-status.md` "Phase 2 verified — 2026-08-15" for full detail. Summary:
+
+- `Game/src/game.c` now has a five-shot Atlas Park capture table (`s_captureShots`) selected by label, plus a server-side world-clock freeze (`timeset 16; timescale 0`) executed in the capture setup.
+- `agent/compare-captures.ps1` (image comparator) and `agent/capture-regression.ps1` (orchestrator with baseline adoption) provide machine-readable regression verdicts.
+- Critical determinism lesson: the world clock runs at 48x real time and `timeset`/`timescale` require character access level 9 on the server. Characters created with the default `AccessLevel 0` silently fail the freeze. Grant `AccessLevel=9` in `cohdb.dbo.Ents` for capture accounts (one-time), re-adopt baselines after the first post-grant run, and the suite becomes deterministic: same-scene reruns differ by 0.03–1.7% of pixels; cross-scene comparisons fail at ~36%.
+- Current next action: begin renderer changes (fixed-function/ATI shader path retirement toward the GLSL path) guarded by before/after `agent/capture-regression.ps1` runs on a warmed shard.
