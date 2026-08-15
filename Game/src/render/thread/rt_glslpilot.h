@@ -3,20 +3,23 @@
 
 // Native GLSL pilot path (development experiment).
 //
-// Renders BLENDMODE_MODULATE and BLENDMODE_MULTIPLY draws through
-// hand-written GLSL 1.20 compatibility-profile programs instead of the
-// Cg->ARB pipeline, to prove that materials can be moved to native GLSL
-// without a visual regression (verified with agent/compare-captures.ps1).
-// The GLSL programs ride on top of the existing ARB binding state: while a
-// pilot program is bound with glUseProgram it simply overrides the bound
-// ARB vertex/fragment programs, and unbinding it restores them untouched.
-// See docs/agent-status.md for the pilot report.
+// Renders BLENDMODE_MODULATE, BLENDMODE_MULTIPLY, and
+// BLENDMODE_COLORBLEND_DUAL draws through hand-written GLSL 1.20
+// compatibility-profile programs instead of the Cg->ARB pipeline, to prove
+// that materials can be moved to native GLSL without a visual regression
+// (verified with agent/compare-captures.ps1). The GLSL programs ride on top
+// of the existing ARB binding state: while a pilot program is bound with
+// glUseProgram it simply overrides the bound ARB vertex/fragment programs,
+// and unbinding it restores them untouched. See docs/agent-status.md for
+// the pilot report.
 
-// Which material a fragment program id belongs to. The multiply material
-// additionally consumes the g_Env0FP engine constant (constColor0).
+// Which material a fragment program id belongs to. Multiply consumes the
+// g_Env0FP engine constant (constColor0); colorBlendDual consumes g_Env0FP
+// and g_Env1FP (constColor0/constColor1, the dual tint colors).
 typedef enum ePilotMaterial {
     kPilotMaterial_Modulate = 0,    // modulatefp.cg
     kPilotMaterial_Multiply,        // multiplyRegfp.cg
+    kPilotMaterial_ColorBlendDual,  // colorBlendDualfp.cg
     kPilotMaterial_Count
 } tPilotMaterialId;
 
@@ -44,14 +47,14 @@ bool rt_glslpilot_isActive( void );
 
 // Mirrors of the engine constants the pilot cannot read from GL state.
 // g_ReflectionParamVP is written to program.env[1] (vertex target) by
-// WCW_SetCgShaderParamArray4fv; g_Env0FP is written to fragment
-// program.env[8] (TIE(ENV8)) by setFragmentProgramConstColor from the
-// engine's constColor0. GLSL has no access to program env registers, so
-// the engine pushes these into the pilot's uniforms as well; both are
-// mirrored continuously, not just while active, so they are correct at
-// any activation time.
+// WCW_SetCgShaderParamArray4fv; g_Env0FP/g_Env1FP are written to fragment
+// program.env[8]/env[9] (TIE(ENV8)/TIE(ENV9)) by setFragmentProgramConstColor
+// from the engine's constColor0/constColor1. GLSL has no access to program
+// env registers, so the engine pushes these into the pilot's uniforms as
+// well; all are mirrored continuously, not just while active, so they are
+// correct at any activation time. index 0 = g_Env0FP, 1 = g_Env1FP.
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 );
-void rt_glslpilot_onEnv0Param( const GLfloat* vec4 );
+void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 );
 
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
 // variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5); only

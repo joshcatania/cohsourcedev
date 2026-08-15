@@ -962,6 +962,7 @@ void shaderMgr_InitFPs(void)
     // shader reload so re-register after each compile pass
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Modulate, g_shaderMgrFragmentProgramVariants[BLENDMODE_MODULATE][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Multiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTIPLY][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_ColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_COLORBLEND_DUAL][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();

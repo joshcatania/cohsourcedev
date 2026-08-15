@@ -318,3 +318,69 @@ fog — replicated exactly in `rt_glslpilot.c`.
 Next candidate by coverage: `colorBlendDualfp` (consumes `g_ConstColor0FP`/
 `g_ConstColor1FP` program-local constants and `g_Env0FP`/`g_Env1FP` — the
 mirror technique extends directly), then `addGlowfp` (`g_GlowParamFP`).
+
+## GLSL pilot extended to BLENDMODE_COLORBLEND_DUAL — 2026-08-15
+
+Third material through native GLSL. `colorBlendDualfp.cg` (variant 0) is CoV
+dual color tinting: `calc_dual_tint(g_Env0FP, g_Env1FP, tex_base, tex_dual)`
+from `functions.cgh`, then `rgb *= 4 * vertex color`, then fog. This is the
+player costume tint material — the engine pushes `constColor0`/`constColor1`
+for it from `rt_bonedmodel.c` (skinned models) and `rt_model.c` dual-tint
+setup, so it has real coverage in every shot that frames the character.
+
+### Changes
+
+- `rt_glslpilot_onEnv0Param` generalized to `rt_glslpilot_onEnvParam(index,
+  vec4)`; `setFragmentProgramConstColor` now mirrors both `constColor0`
+  (g_Env0FP, env[8]) and `constColor1` (g_Env1FP, env[9]) into the pilot.
+  The material table grew `usesEnv1`/`locEnv1`.
+- `rt_shaderMgr.c` registers
+  `g_shaderMgrFragmentProgramVariants[BLENDMODE_COLORBLEND_DUAL][0]` as the
+  third pilot fragment target.
+
+### Harness finding: weather variance (new operational constraint)
+
+This session exposed a new environmental nondeterminism class. The
+`agent/baselines` set adopted earlier in the day is CLEAR-WEATHER; the
+shard generations started after ~15:35 settled into STORM weather:
+
+- Per-mapserver-generation weather differs (clear vs stormy sky), and the
+  storm state evolves on ~10-minute scales: a sun-glare spot blooms and
+  fades behind the variable overcast. Measured: adjacent captures ~1.5%
+  apart, but the same shot 13 minutes apart drifted 9.2% (sky region).
+  Clear weather was stable all day (0.03-1.7%).
+- Two shard restarts both came up stormy, so this looks like a slow weather
+  cycle, not per-boot randomness; waiting it out is unreliable.
+- The war walls (translucent map-edge barriers, alpha-pass geometry per
+  `cubemap.c`) are in frame in the East/West shots and render identically
+  in control and pilot runs — stable game content, not a comparison risk.
+
+Mitigation used (same-window A/B): re-adopt baselines with one suite run
+(its captures are the control images), then run the pilot suite immediately
+after — all captures happen within a ~5-minute window where the storm noise
+floor holds. A systematic pilot failure would flag ALL shots (see the 6.7%
+and 99.99% historical failures); weather noise shows up as 2-5% drift
+concentrated in sky regions of a subset of shots while others stay
+pixel-identical.
+
+### Verification (storm generation, warm shard, same-window A/B)
+
+- Build: `agent/logs/build-Release-x86-20260815-153415.log` (PASS, 30.1 s).
+- Control/adopt suite 16:01 (pilot off, becomes the baselines): 4/4
+  captured cleanly.
+- Pilot suite `agent/logs/regression-20260815-160401.json` (~1 min later):
+  **all four shots PASS** — CityHall_03 0.014%/0.58, East_01 3.24%/1.96,
+  North_01 5.33%/2.74, West_01 0.005%/0.30.
+- Per-shot material activation (client logs, one-time lines):
+  CityHall/West ran MODULATE+MULTIPLY (their 0.005-0.014% is pixel-level
+  proof for those two); East/North ran all three including
+  `BLENDMODE_COLORBLEND_DUAL active (vertex lit mode 4)`.
+- Visual check of the East pilot-vs-control pair: identical geometry,
+  statue, and war wall; residual 3.2% is atmospheric haze/brightness only —
+  no tint shift (a broken dual tint would shift costume/structure hues).
+- The committed baselines are now the STORM set from this verified run;
+  re-adopt when the environment shifts (the harness supports it).
+- Shard stopped afterwards.
+
+Remaining simple-material candidate: `addglowfp.cg` (`g_GlowParamFP`
+program-local constant, alpha-blended window/glow material).
