@@ -52,3 +52,6 @@ x64/
 /build/**/Release/
 /libs/**/Debug/
 /libs/**/Release/
+
+# extracted shader sources (regenerable: pig.exe x bin/piggs/misc.pigg)
+/agent/shadersrc/

@@ -498,3 +498,96 @@ bumpmapped set (needs tangent-space interpolants and more engine
 constants) and the effects/ post-processing set (bloom/ssao/etc.).
 Verifying ADDGLOW/ALPHADETAIL requires scenes that bind them — the
 map-transfer capture path remains the gate for that.
+
+## GLSL pilot: bumpmapColorblendDual (static + skinned) — 2026-08-15
+
+Sixth material ported: the first bumpmapped one. This one needed new
+machinery — a tangent-space vertex path, more engine constants, and
+skinning — and one real discovery about what the coverage actually is.
+
+### What Atlas Park actually binds
+
+The earlier coverage diagnostic observed fragment ids 100/101. Id
+arithmetic (fragment ids allocate 16 per blend mode; MODULATE=4,
+MULTIPLY=20, COLORBLEND_DUAL=36, ADDGLOW=52, ALPHADETAIL=68,
+BUMPMAP_MULTIPLY=84) puts 100/101 at BUMPMAP_COLORBLEND_DUAL variants
+0 (LQ) and 1 (HQ). The first pilot attempt registered the static
+`DRAWMODE_BUMPMAP_DUALTEX` vertex program (id 232) and declined: the
+LQ fragment bound with vertex program **228**, which is
+`DRAWMODE_BUMPMAP_SKINNED` — the *skinned* bump_dual variant. On Atlas
+Park the bump-dual material is bound by `rt_bonedmodel.c` for the
+player/NPC costumes (every third-person shot frames it), not by static
+building geometry (`drawLoopBumpDual`/`rt_cloth` also exist and are
+registered, but the character drives activation).
+
+### What was ported
+
+- `bumpmapColorblendDualfp.cg` variant 0: normal-map decode + gloss
+  (`map_color_to_normal`, no DXT5NM by default), `calc_dual_tint` base
+  color, `calc_lighting_factors`/`apply_lighting` per-pixel lighting
+  with the engine bump constants, fog. Consumes g_Env0/1FP (already
+  mirrored) plus new mirrors: g_AmbientColorFP, g_DiffuseColorFP,
+  g_GlossParamFP (.w gloss), g_Specular1ColorAndExponentFP
+  (TIE(ENV0/1/2/5), pushed by setupBumpPixelShader/setupSpecularColor).
+- One bump vertex shader replicating BOTH vp_master bump_dual (SKIN=0)
+  and skin_bump (SKIN=1) variants (both VIEW space, VERTEX_LIT=NONE,
+  TC_XFORM=NONE, PIXEL_LIT=BUMP_ALL, non-HQ) behind a `g_Skinned`
+  uniform — same pattern as the dualtex shader's mode switch. Static
+  branch: normal/tangent via modelview rows (Cg semantics, not the
+  normal matrix). Skinned branch: two-bone blend
+  (blend_bone_positions/blend_bone_normals) through g_BoneMatrixArrVP
+  (ENV16, 48 vec4s) mirrored from loadBoneMatrices' array push
+  (bone_count*3 vec4s; stale-tail semantics match ARB env regs).
+- Tangent-space light/view vectors per vertex
+  (calc_tangent_space_light_and_position; Cg mul(M_ts, v) is the
+  transpose of GLSL column-major mat3 — explicit dots used). Binormal
+  sign from the tangent attribute's w.
+- Vertex attributes: tangent on generic attribute 7 (vec4; cloth feeds
+  a vec3 whose w defaults to 1 → sign +1, matching ARB), bone weights
+  on attribute 1, bone indices on attribute 5 — bound with
+  glBindAttribLocation before linking.
+- `g_LightDirVP` mirror (vertex ENV0) — pushed per draw by the bump
+  draw paths.
+- Pilot activation now pairs a material with a *set* of vertex kinds
+  (bitmask): the bump material accepts bump_dual and skin_bump; the
+  re-bind path re-modes g_Skinned when the vertex variant switches
+  static↔skinned while the material stays bound.
+- Diagnostics added: vertex registrations print (id, kind, lit mode),
+  and the decline line now distinguishes "not registered" from
+  "registered for a different vertex variant" (this is what localized
+  the skinned-path discovery).
+
+### Verification (fresh generation, warm shard, same-window A/B)
+
+- Build: `agent/logs/build-Release-x86-20260815-18*.log` (PASS).
+- Diagnostic capture (pilot on): bump program compiled/linked/active
+  `(skin_bump vertex variant)`; coverage line for fragment 100 gone
+  (intercepted), 101 (HQ) still ARB as designed.
+- Adopt suite `agent/logs/regression-20260815-180801.json` (control),
+  pilot suite `agent/logs/regression-20260815-181036.json`: **all four
+  shots PASS** — CityHall_03 0.0035%/0.19, East_01 0.0035%/0.08
+  (pixel-level equivalence), North_01 1.45%/1.24, West_01 5.13%/2.71
+  (storm-glare noise floor; thresholds 6%/3.0).
+- Per-shot activation evidence: `BLENDMODE_BUMPMAP_COLORBLEND_DUAL
+  active (skin_bump vertex variant)` in all four client logs; no bump
+  declines — the only decline line in each log is the known benign
+  MULTIPLY post-reset sentinel (`vertex program -1`).
+- The committed baselines are the adopt-suite set from this run
+  (new shard generation — the prior generation had drifted 6.5-7.1%,
+  the documented fresh-generation weather shift, and was re-adopted
+  per the documented same-window A/B flow).
+- Operational reminder reconfirmed: a running shard locks `bin\`
+  (build fails at the copy step); stop it before rebuilding. A
+  cancelled capture run can leave an `Ouroboros.exe` behind — kill it
+  before the next build.
+
+### Remaining in the bumpmapped family
+
+HQ bump variants (fragment 101; HQ vertex interpolants
+tangent/normal/position + cubemap/shadow paths), bumpmapMultiply
+(model-space lighting, DIFFUSE vertex lighting, TC_OFFSET),
+multi9 (multi-material), water. The map-transfer capture path remains
+the gate for addGlow/alphaDetail verification and non-Atlas scenes.
+Shader sources for all of these are extracted at `agent/shadersrc/`
+(ignored; regenerate with
+`Utilities/pig/bin/x86/Release/pig.exe x bin\piggs\misc.pigg`).

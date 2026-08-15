@@ -965,6 +965,7 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_ColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_COLORBLEND_DUAL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AddGlow, g_shaderMgrFragmentProgramVariants[BLENDMODE_ADDGLOW][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AlphaDetail, g_shaderMgrFragmentProgramVariants[BLENDMODE_ALPHADETAIL][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1228,18 +1229,24 @@ void shaderMgr_InitVPs(void)
     loadProgramCacheReset(false); // Destroy temporary caches
     PERFINFO_AUTO_STOP();
 
-    // Register the simple-material vertex variants the GLSL pilot replicates
-    // (from the sVertexProgramTbl rows using vp_master_vp.cg). The mode values
-    // are the variants.cgh VERTEX_LIT constants: FF_UNLIT_GL=5, FF_LIT_GL=4,
+    // Register the vertex variants the GLSL pilot replicates (from the
+    // sVertexProgramTbl rows using vp_master_vp.cg). The mode values are the
+    // variants.cgh VERTEX_LIT constants: FF_UNLIT_GL=5, FF_LIT_GL=4,
     // VERT_COLOR=1. All of these rows are SKIN=0 TC_XFORM=TC_MATRIX
-    // REFLECT=FAUX_0_1, which is what the pilot's vertex shader implements.
+    // REFLECT=FAUX_0_1, which is what the pilot's dualtex vertex shader
+    // implements. The bump_dual row (static geometry) and skin_bump row
+    // (boned models: player/NPC costumes) both feed the bumpColorBlendDual
+    // pilot material through its skinning-switch vertex shader; their HQ
+    // siblings (shaderMgrVertexProgramsHQ) are not ported.
     rt_glslpilot_resetPrograms();
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_COLORONLY], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_FILL], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_NORMALS], 4 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], 1 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_COLORONLY], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_FILL], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_NORMALS], kPilotVertexKind_DualTex, 4 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], kPilotVertexKind_DualTex, 1 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDual, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBump, 0 );
 }
 
 

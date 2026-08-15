@@ -16,15 +16,32 @@
 // Which material a fragment program id belongs to. Multiply consumes the
 // g_Env0FP engine constant (constColor0); colorBlendDual consumes g_Env0FP
 // and g_Env1FP (constColor0/constColor1, the dual tint colors); addGlow
-// consumes g_Env0FP and g_GlowParamFP (the window-glow threshold/seed).
+// consumes g_Env0FP and g_GlowParamFP (the window-glow threshold/seed);
+// bumpColorBlendDual additionally consumes the bump lighting constants
+// (ambient/diffuse/gloss/specular1 fragment constants, lightdir vertex
+// constant) and reads the tangent vertex attribute.
 typedef enum ePilotMaterial {
     kPilotMaterial_Modulate = 0,    // modulatefp.cg
     kPilotMaterial_Multiply,        // multiplyRegfp.cg
     kPilotMaterial_ColorBlendDual,  // colorBlendDualfp.cg
     kPilotMaterial_AddGlow,         // addglowfp.cg
     kPilotMaterial_AlphaDetail,     // alphaDetailfp.cg
+    kPilotMaterial_BumpColorBlendDual, // bumpmapColorblendDualfp.cg (variant 0)
     kPilotMaterial_Count
 } tPilotMaterialId;
+
+// Which replicated vp_master_vp.cg variant a registered vertex program id
+// was built from. The simple materials pair with the DUALTEX-family
+// variants (differing only in VERTEX_LIT mode); the bump material pairs
+// with the bump_dual variant (static geometry) and the skin_bump variant
+// (boned models: the player/NPC costumes), both VERTEX_LIT=NONE
+// TC_XFORM=NONE PIXEL_LIT=BUMP_ALL — the pilot's bump vertex shader covers
+// both behind a skinning uniform.
+typedef enum ePilotVertexKind {
+    kPilotVertexKind_DualTex = 0,
+    kPilotVertexKind_BumpDual,
+    kPilotVertexKind_SkinBump,
+} tPilotVertexKind;
 
 // Called by WCW_BindFragmentProgram. Returns true when the pilot handled
 // the bind (a GLSL program is in use and the caller must not bind the
@@ -62,6 +79,21 @@ void rt_glslpilot_onReflectionParam( const GLfloat* vec4 );
 void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 );
 void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
 
+// Mirrors of the bump lighting constants (consumed by the
+// bumpColorBlendDual material): g_LightDirVP is the view-space light
+// direction pushed to the vertex program by rt_model.c/rt_bonedmodel.c;
+// g_AmbientColorFP/g_DiffuseColorFP/g_GlossParamFP/g_Specular1ColorAndExponentFP
+// are the fragment constants pushed by setupBumpPixelShader/setupSpecularColor
+// (TIE(ENV0)/ENV1/ENV2/ENV5); the bone matrix array (TIE(ENV16), up to 48
+// vec4s = 16 bones x 3 rows) is pushed by loadBoneMatrices for the skinned
+// bump draws. Same always-mirror contract as above.
+void rt_glslpilot_onLightDirParam( const GLfloat* vec4 );
+void rt_glslpilot_onAmbientColorParam( const GLfloat* vec4 );
+void rt_glslpilot_onDiffuseColorParam( const GLfloat* vec4 );
+void rt_glslpilot_onGlossParam( const GLfloat* vec4 );
+void rt_glslpilot_onSpecular1Param( const GLfloat* vec4 );
+void rt_glslpilot_onBoneMatrixParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
+
 // Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
 // did not handle. Logs each distinct fragment program id once (per process)
 // so a capture's client log enumerates which materials still render through
@@ -69,11 +101,13 @@ void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
 void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId );
 
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
-// variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5); only
-// registered vertex programs can activate the pilot. Re-runs after every
-// shader reload because program ids are regenerated.
+// variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5; NONE=0 for
+// the bump_dual variant, which has no vertex-lit mode); only registered
+// vertex programs can activate the pilot, and the kind must match the
+// material's replicated vertex variant. Re-runs after every shader reload
+// because program ids are regenerated.
 void rt_glslpilot_resetPrograms( void );
-void rt_glslpilot_addVertexProgram( GLuint vertexPgmId, int vertexLitMode );
+void rt_glslpilot_addVertexProgram( GLuint vertexPgmId, tPilotVertexKind kind, int vertexLitMode );
 void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentPgmId );
 
 #endif

@@ -2499,7 +2499,9 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     // the GLSL pilot cannot read program env registers, so mirror the
     // engine-fed constants its shaders need. The glow param is pushed by
     // rt_tricks.c between the addglow bind and its draws; mirror it
-    // unconditionally like the env constants
+    // unconditionally like the env constants. The bump lighting constants
+    // are pushed by setupBumpPixelShader/setupSpecularColor and the bump
+    // draw paths (lightdir) right before the bump draws; same contract.
     if ( id == kShaderParam_GlowParamFP )
     {
         rt_glslpilot_onGlowParam( vec4Arr );
@@ -2507,6 +2509,30 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     if (( id == kShaderParam_ReflectionParamVP ) && rt_glslpilot_isActive() )
     {
         rt_glslpilot_onReflectionParam( vec4Arr );
+    }
+    if ( id == kShaderParam_LightDirVP )
+    {
+        rt_glslpilot_onLightDirParam( vec4Arr );
+    }
+    if ( id == kShaderParam_AmbientColorFP )
+    {
+        rt_glslpilot_onAmbientColorParam( vec4Arr );
+    }
+    if ( id == kShaderParam_DiffuseColorFP )
+    {
+        rt_glslpilot_onDiffuseColorParam( vec4Arr );
+    }
+    if ( id == kShaderParam_GlossParamFP )
+    {
+        rt_glslpilot_onGlossParam( vec4Arr );
+    }
+    if ( id == kShaderParam_Specular1ColorAndExponentFP )
+    {
+        rt_glslpilot_onSpecular1Param( vec4Arr );
+    }
+    if ( id == kShaderParam_BoneMatrixArrVP )
+    {
+        rt_glslpilot_onBoneMatrixParam( vec4Arr, nNumVec4s );
     }
 
     #if RT_SUPPORT_ARB_SHADER_PATH
