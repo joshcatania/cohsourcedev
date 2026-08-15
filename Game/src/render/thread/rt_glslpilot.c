@@ -192,6 +192,34 @@ static const char s_addGlowFragmentSource[] =
 "    gl_FragColor = out_color;\n"
 "}\n";
 
+// alphaDetailfp.cg, default variant (no BIT_HIGH_QUALITY / shadow): base
+// alpha blends between the blend and base rgb; blend alpha modulates the
+// constant (g_Env0FP) alpha.
+static const char s_alphaDetailFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D sampler_base;   // TEXUNIT0\n"
+"uniform sampler2D sampler_blend;  // TEXUNIT1\n"
+"uniform vec4 g_Env0FP;            // engine constColor0 (TIE(ENV8) -> fragment program.env[8])\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 tex_base = texture2D( sampler_base, gl_TexCoord[0].xy );\n"
+"    vec4 tex_blend = texture2D( sampler_blend, gl_TexCoord[0].zw );\n"
+"\n"
+"    // texture 0 (base) alpha blends between texture 0 and 1 rgb;\n"
+"    // texture 1 (blend) alpha modulates the current constant alpha\n"
+"    vec4 out_color;\n"
+"    out_color.rgb = mix( tex_blend.rgb, tex_base.rgb, tex_base.a );\n"
+"    out_color.rgb *= 4.0 * gl_Color.rgb;\n"
+"    out_color.a = g_Env0FP.a * tex_blend.a;\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
 // variants.cgh values for g_VertexLitMode
 enum {
     kPilotVertLit_VertColor = 1,
@@ -261,6 +289,7 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     { 0, "BLENDMODE_MULTIPLY",       s_multiplyFragmentSource,       s_dualSamplers,     true,  false, false, 0, -1, -1, -1, -1, -1, false, false, false },
     { 0, "BLENDMODE_COLORBLEND_DUAL", s_colorBlendDualFragmentSource, s_dualTintSamplers, true,  true,  false, 0, -1, -1, -1, -1, -1, false, false, false },
     { 0, "BLENDMODE_ADDGLOW",        s_addGlowFragmentSource,        s_addGlowSamplers,  true,  false, true,  0, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_ALPHADETAIL",    s_alphaDetailFragmentSource,    s_dualSamplers,     true,  false, false, 0, -1, -1, -1, -1, -1, false, false, false },
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
@@ -514,6 +543,26 @@ bool rt_glslpilot_isActive( void )
     return s_activeMaterial >= 0;
 }
 
+void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId )
+{
+    // one-time-per-id coverage map: with the pilot on, the client log ends
+    // up enumerating every material that still renders through ARB/Cg
+    static GLuint seenIds[32];
+    static int seenCount = 0;
+    int i;
+
+    if ( ! game_state.glslPilot || ( ! fragmentPgmId ) || ( fragmentPgmId == 0xFFFFFFFF ) )
+        return;
+    for ( i = 0; i < seenCount; i++ )
+    {
+        if ( seenIds[i] == fragmentPgmId )
+            return;
+    }
+    if ( seenCount < (int)( sizeof( seenIds ) / sizeof( seenIds[0] ) ) )
+        seenIds[seenCount++] = fragmentPgmId;
+    printf( "GLSL pilot: coverage: unported fragment program %d bound\n", (int)fragmentPgmId );
+}
+
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 )
 {
     // always mirror, active or not: the value must be correct whenever the
@@ -584,11 +633,12 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
             (int)s_materials[kPilotMaterial_AddGlow].arbFragmentId,
+            (int)s_materials[kPilotMaterial_AlphaDetail].arbFragmentId,
             s_vertexEntryCount );
     }
 }

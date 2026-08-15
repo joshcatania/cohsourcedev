@@ -22,6 +22,7 @@ typedef enum ePilotMaterial {
     kPilotMaterial_Multiply,        // multiplyRegfp.cg
     kPilotMaterial_ColorBlendDual,  // colorBlendDualfp.cg
     kPilotMaterial_AddGlow,         // addglowfp.cg
+    kPilotMaterial_AlphaDetail,     // alphaDetailfp.cg
     kPilotMaterial_Count
 } tPilotMaterialId;
 
@@ -60,6 +61,12 @@ bool rt_glslpilot_isActive( void );
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 );
 void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 );
 void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
+
+// Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
+// did not handle. Logs each distinct fragment program id once (per process)
+// so a capture's client log enumerates which materials still render through
+// the ARB/Cg path. No-ops unless the pilot switch is on.
+void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId );
 
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
 // variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5); only
