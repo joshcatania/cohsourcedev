@@ -5,6 +5,7 @@
 #include "render/render.h"
 #include "render/thread/wcw_statemgmt.h"
 #include "render/thread/rt_cgfx.h"
+#include "render/thread/rt_glslpilot.h"
 #include "render/thread/shadersATI.h"
 #include "edit/edit_cmd.h"
 #include "cmdparse/cmdgame.h"
@@ -2161,7 +2162,10 @@ void WCW_EnableVertexProgram(void)
     rdrBeginMarker(__FUNCTION__);
     if (NO_STATEMANAGEMENT || vertexProgramEnabled!=1)
     {
-        // NOTE GL_VERTEX_PROGRAM_ARB == GL_VERTEX_PROGRAM_NV; so it isn't 
+        // see WCW_EnableFragmentProgram: re-check the pilot after a
+        // disable/enable cycle that did not change tracked program ids
+        rt_glslpilot_tryBindVertex( boundVertexProgram, boundFragmentProgram );
+        // NOTE GL_VERTEX_PROGRAM_ARB == GL_VERTEX_PROGRAM_NV; so it isn't
         // necessary to check this conditional
         if(rdr_caps.chip & (ARBVP|GLSL))
         {
@@ -2186,6 +2190,10 @@ void WCW_BindVertexProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ " : %s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundVertexProgram)
     {
+        // The engine's program binds are state-cached, so the pilot watches
+        // this path too; the ARB vertex program bound below only acts as
+        // state tracking while the pilot's GLSL program is in use.
+        rt_glslpilot_tryBindVertex( id, boundFragmentProgram );
         if(rdr_caps.chip & (ARBVP|GLSL))
         {
             RT_STAT_VP_CHANGE;
@@ -2212,6 +2220,7 @@ void WCW_DisableVertexProgram(void)
     rdrSetMarker(__FUNCTION__);
     if(NO_STATEMANAGEMENT || vertexProgramEnabled!=0)
     {
+        rt_glslpilot_onFragmentProgramDisable();
         if(rdr_caps.chip & (ARBVP|GLSL))
         {
             tCgShaderMode shaderMode = rt_cgGetCgShaderMode();
@@ -2232,6 +2241,7 @@ void WCW_DisableVertexProgram(void)
 void WCW_ResetVertexProgram(void)
 {
     rdrBeginMarker(__FUNCTION__);
+    rt_glslpilot_onVertexProgramChange( 0 );
 #if 0
     if(rdr_caps.chip & (ARBVP|GLSL))
     {
@@ -2264,6 +2274,10 @@ void WCW_EnableFragmentProgram(void)
     rdrBeginMarker(__FUNCTION__);
     if(NO_STATEMANAGEMENT || fragmentProgramEnabled!=1)
     {
+        // a disable/enable cycle does not change the tracked program ids, so
+        // the id-cached bind will not fire again; try reactivating the pilot
+        // for the still-tracked pairing
+        rt_glslpilot_tryBindFragment( boundFragmentProgram, boundVertexProgram );
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             tCgShaderMode shaderMode = rt_cgGetCgShaderMode();
@@ -2290,6 +2304,13 @@ void WCW_BindFragmentProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ ":%s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundFragmentProgram)
     {
+        if ( rt_glslpilot_tryBindFragment( id, boundVertexProgram ) )
+        {
+            // the GLSL pilot handled this bind and its program object now
+            // overrides the bound ARB fragment (and vertex) program
+            boundFragmentProgram = id;
+            return;
+        }
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             if ( rt_cgGetCgShaderMode() )
@@ -2316,6 +2337,7 @@ void WCW_DisableFragmentProgram(void)
     rdrBeginMarker(__FUNCTION__);
     if(NO_STATEMANAGEMENT || fragmentProgramEnabled!=0)
     {
+        rt_glslpilot_onFragmentProgramDisable();
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             tCgShaderMode shaderMode = rt_cgGetCgShaderMode();
@@ -2341,6 +2363,7 @@ void WCW_DisableFragmentProgram(void)
 void WCW_ResetFragmentProgram(void)
 {
     rdrBeginMarker(__FUNCTION__);
+    rt_glslpilot_onFragmentProgramDisable();
 #if 0
     if (fragmentProgramEnabled == 1)
     {
@@ -2470,6 +2493,20 @@ void WCW_SetParamDirtyFlags( bool bVertexPgm, bool bFragmentPgm )
 void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, const GLfloat *vec4Arr, GLuint nNumVec4s )
 {
     tShaderParamSpec* pSpec = &sShaderParamSpecTbl[id];
+
+    // the GLSL pilot cannot read program env registers, so mirror the
+    // engine-fed constants its shaders need. The glow param is pushed by
+    // rt_tricks.c between the addglow bind and its draws; mirror it
+    // unconditionally like the env constants
+    if ( id == kShaderParam_GlowParamFP )
+    {
+        rt_glslpilot_onGlowParam( vec4Arr );
+    }
+    if (( id == kShaderParam_ReflectionParamVP ) && rt_glslpilot_isActive() )
+    {
+        rt_glslpilot_onReflectionParam( vec4Arr );
+    }
+
     #if RT_SUPPORT_ARB_SHADER_PATH
     if ( ! rt_cgGetCgShaderMode() )
     {
@@ -2511,7 +2548,16 @@ void setFragmentProgramConstColor( GLuint index, const GLfloat* vec4 )
 {
     #define kNumEnvParamsDefined 2
     assert( index < kNumEnvParamsDefined );
-    
+
+    // the GLSL pilot cannot read program env registers; mirror constColor0/
+    // constColor1 (g_Env0FP/g_Env1FP, consumed by the multiplyReg and
+    // colorBlendDual materials) continuously so they are correct at any
+    // pilot activation time
+    if ( index < 2 )
+    {
+        rt_glslpilot_onEnvParam( index, vec4 );
+    }
+
     #if RT_SUPPORT_ARB_SHADER_PATH
         if ( ! rt_cgGetCgShaderMode() )
         {

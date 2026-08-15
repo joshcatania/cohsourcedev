@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <!--
+    Visual Studio 18's v145 compiler promotes C4703 to an error when /sdl is
+    enabled. The legacy City of Heroes codebase was built with v142, where
+    these diagnostics were not promoted. Keep the fallback narrowly scoped to
+    v145 builds so native v142 builds retain their original warning policy.
+  -->
+  <ItemDefinitionGroup Condition="'$(CohBuildToolset)' == 'v145'">
+    <ClCompile>
+      <DisableSpecificWarnings>%(DisableSpecificWarnings);4703</DisableSpecificWarnings>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

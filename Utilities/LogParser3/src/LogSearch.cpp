@@ -246,5 +246,5 @@ std::string Search::popResult()
         return ret;
     }
     throw "popResult on Search without a pimpl.";
-    return NULL;
+    return std::string();
 }

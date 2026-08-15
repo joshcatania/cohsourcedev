@@ -184,11 +184,14 @@ int main(int argc, char **argv)
     int timer;
     int maximize;
 
+    game_startupTrace("process.start");
     memCheckInit();
 
     timer = timerAlloc();
     
+    game_startupTrace("registry.init.begin");
     clientInitRegistry(argc, argv);
+    game_startupTrace("registry.init.complete");
 
 //     quickAuthCheck(TRUE); // TRUE for localhost
 
@@ -218,7 +221,9 @@ int main(int argc, char **argv)
 
     PERFINFO_AUTO_START("top", 1);
     
+    game_startupTrace("folder-cache.init.begin");
     game_beforeFolderCacheIgnore(timer, argc, argv);
+    game_startupTrace("folder-cache.init.complete");
 
     //writeConsole(OUTPUT_INFO, "CityOfHeroes client count: %d", game_runningCohClientCount());
 
@@ -227,9 +232,13 @@ int main(int argc, char **argv)
     //    FolderCacheAddIgnorePrefix("server/"); // Server data files do not exist on the client, hide them in dev mode!
 
     // Do this before parseArgs0 where -lwc is processed, and before any data is loaded
+    game_startupTrace("config.lwc.init.begin");
     LWC_Init();
+    game_startupTrace("config.lwc.init.complete");
 
+    game_startupTrace("command-line.parse0.begin");
     parseArgs0(argc, argv);
+    game_startupTrace("command-line.parse0.complete");
 
     if (!isDevelopmentMode())
     {
@@ -305,7 +314,9 @@ int main(int argc, char **argv)
 
     PERFINFO_AUTO_STOP_START("middle2", 1);
 
+    game_startupTrace("graphics-audio-input.load.begin");
     maximize = game_loadSoundsTricksFonts(argc, argv);
+    game_startupTrace("graphics-audio-input.load.complete");
 
     PERFINFO_AUTO_STOP_START("middle3", 1);
 
@@ -327,13 +338,22 @@ int main(int argc, char **argv)
     //get account name and password from c:resume_info.txt if you are running -cryptic
     //No, instead, always use resume_info if you have it, that way cryptic people can use resume_info when running off the patch
     //if( game_state.cryptic )
+    game_startupTrace("resume-info.load.begin");
     getAutoResumeInfoCryptic();
+    game_startupTrace("resume-info.load.complete");
+    game_applyCommandLineCredentials();
 
+    game_startupTrace("data-load.call.begin");
     game_loadData(0);
+    game_startupTrace("data-load.call.complete");
 
     // init sound in development mode and in create-bins mode
     if (game_state.create_bins || FolderCacheGetMode() == FOLDER_CACHE_MODE_DEVELOPMENT_DYNAMIC)
+    {
+        game_startupTrace("audio.late-init.begin");
         sndInit();
+        game_startupTrace("audio.late-init.complete");
+    }
 
     // exit before main loop and graphics stuff if we're just creating binaries
     if (game_state.create_bins)
@@ -368,6 +388,7 @@ int main(int argc, char **argv)
     autoTimerTickEnd();
 
 
+    game_startupTrace("game-loop.call.begin");
     return game_mainLoop(timer);
 }
 

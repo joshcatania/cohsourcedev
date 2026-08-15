@@ -218,7 +218,7 @@ bool TestSettings()
 	word32 w;
 	const byte s[] = "\x01\x02\x03\x04";
 
-#if (_MSC_VER >= 1500)
+#if (_MSC_VER >= 1500) && (_MSC_VER < 1930)
 	std::copy(s, s+4,
 		stdext::make_checked_array_iterator(reinterpret_cast<byte*>(&w), sizeof(w)));
 #else

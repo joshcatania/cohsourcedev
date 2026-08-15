@@ -55,6 +55,8 @@
 #include "comm_backend.h"
 #if defined TEST_CLIENT
 #include "player/inventory_client.h" //for unlocking slot when creating new random character
+extern int g_direct_db_mode;
+extern int g_agent_smoke_map_connected;
 #endif
 
 //-----------------------------------------------------------------------------------------
@@ -363,7 +365,7 @@ int checkForCharacterCreate()
 
 #if defined TEST_CLIENT
 
-        if (inventoryClient_GetAcctAuthoritativeState() == ACCOUNT_SERVER_UP)
+        if (g_direct_db_mode || inventoryClient_GetAcctAuthoritativeState() == ACCOUNT_SERVER_UP)
         {
             //Redeem a slot (if allowed) if there are no unlocked slots
             if (getTotalServerSlots() - getSlotUnlockedPlayerCount() < 1)
@@ -454,6 +456,9 @@ int checkForCharacterCreate()
         if(commReqScene(0))                    //Get the scene
         {
             player_being_created = FALSE;
+#if defined TEST_CLIENT
+            g_agent_smoke_map_connected = 1;
+#endif
         }
 
         return FALSE; // Because of stuff in commReqScene and queueResume, we will get the mode set appropriately later

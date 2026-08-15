@@ -74,6 +74,7 @@
 #include "testMissionSearch.h"
 #include "comm_backend.h"
 #include <utilitieslib/utils/log.h>
+#include <utilitieslib/utils/file.h>
 #include "player/inventory_client.h"
 #include "entity/character_eval.h"
 #include "entity/character_combat_eval.h"
@@ -204,6 +205,32 @@ U32 g_mission_hop_time = 30; // seconds on mission then hop
 bool g_verbose_client;
 char g_achPasswordTC[32];
 bool dontpause = false;
+// The direct -db path is the supported autonomous local-development mode.
+// It intentionally does not require the optional AuthServer/AccountServer
+// stack to be available.
+int g_direct_db_mode = 0;
+int g_agent_smoke_map_connected = 0;
+char g_agent_smoke_status_path[MAX_PATH] = {0};
+
+static void agentSmokeWriteStatus(int exit_code)
+{
+    FILE *status_file;
+
+    if (!g_agent_smoke_status_path[0])
+        return;
+
+    status_file = fopen(g_agent_smoke_status_path, "w");
+    if (!status_file)
+        return;
+
+    fprintf(status_file, "account=%s\n", g_achAccountName);
+    fprintf(status_file, "map_connected=%d\n", g_agent_smoke_map_connected);
+    fprintf(status_file, "error=%d\n", err);
+    fprintf(status_file, "exit_code=%d\n", exit_code);
+    if (playerPtr())
+        fprintf(status_file, "character=%s\n", playerPtr()->name);
+    fclose(status_file);
+}
 
 void gameStateInit() {
     strcpy(game_state.cs_address, connserver);
@@ -433,9 +460,17 @@ void checkArgs(int argc, char **argv) {
         } else if (CMDEQ("-evilchat")) {
             g_testMode |= TEST_CHAT;
             setEvilChat(1);
-        } else if (CMDEQ("-cs") || CMDEQ("-db")) {
+        } else if (CMDEQ("-db")) {
             i++;
             strcpy(connserver, argv[i]);
+            g_direct_db_mode = 1;
+        } else if (CMDEQ("-cs")) {
+            i++;
+            strcpy(connserver, argv[i]);
+        } else if (CMDEQ("-agent-status")) {
+            i++;
+            strncpy(g_agent_smoke_status_path, argv[i], sizeof(g_agent_smoke_status_path) - 1);
+            g_agent_smoke_status_path[sizeof(g_agent_smoke_status_path) - 1] = 0;
         } else if (CMDEQ("-auth")) {
             i++;
             strcpy(game_state.auth_address, argv[i]);
@@ -1097,6 +1132,12 @@ int main(int argc, char **argv)
     int timer;
     int global_count=0;
 
+    // TestClient is frequently launched headlessly by agent tooling. Keep
+    // progress and failure markers visible through redirected stdio instead
+    // of waiting for the CRT's normal fully-buffered flush behavior.
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+
     memCheckInit();
 
     timer = timerAlloc();
@@ -1404,7 +1445,8 @@ int main(int argc, char **argv)
                     } else {
                         // this is where we receive costume back
                         loadstart_printf("commReqScene()");
-                        commReqScene(1);
+                        if (commReqScene(1))
+                            g_agent_smoke_map_connected = 1;
                         loadend_printf("");
                     }
                 }
@@ -1458,8 +1500,11 @@ int main(int argc, char **argv)
 
         printf("Press Esc to exit...\n");
         if (err || !(g_testMode & TEST_STAY_CONNECTED)) {
-            if (err)
+            if (err) {
+                agentSmokeWriteStatus(1);
                 error_exit(0);
+            }
+            agentSmokeWriteStatus(0);
             return 0;
         }
         game_state.local_map_server = 0; // So that it gets booted back to login screen when it gets disconnected

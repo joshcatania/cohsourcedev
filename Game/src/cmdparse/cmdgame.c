@@ -464,6 +464,7 @@ enum
     CMD_MACRO_SLOT,
     CMD_MANAGE_ENHANCEMENTS,
     CMD_SCREENSHOT,
+    CMD_CAPTURE,
     CMD_RELOADSEQUENCERS,
     CMD_SHOULDERSCALE,
     CMD_SETDEBUGENTITY,
@@ -1312,6 +1313,8 @@ Cmd game_cmds[] =
                         "Use FBOs, if supported, for off-screen rendering" },
     { 0, "useCg", CMD_TOGGLE_USECG, {{ CMDINT(tmp_int)}}, CMDF_HIDEPRINT,
                         "Use Cg shaders instead of ARB" },
+    { 0, "glslPilot", 0, {{ CMDINT(game_state.glslPilot) }}, CMDF_HIDEPRINT,
+                        "Render BLENDMODE_MODULATE through the native GLSL pilot program (development experiment; set at startup)" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -2174,6 +2177,8 @@ Cmd game_cmds[] =
                         "Save a .jpg format screenshot." },
     { 0, "screenshottitle",    CMD_SCREENSHOT_TITLE, {CMDSENTENCE(tmp_str)}, 0,
                         "Save a .jpg format screenshot with the given title." },
+    { 0, "capture",    CMD_CAPTURE, {{ CMDSTR(game_state.capture_target) }}, 0,
+                        "Capture a deterministic developer screenshot and exit cleanly." },
     { 0, "screenshottga",CMD_SCREENSHOT_TGA, {{0}}, 0,
                         "Save a .tga format screenshot." },
     { 0, "screenshotui",0, {{ CMDINT(game_state.screenshot_ui) }}, 0,
@@ -4438,6 +4443,14 @@ int cmdGameParse(char *str, int x, int y)
             jpeg_screenshot(NULL);
         xcase CMD_SCREENSHOT_TITLE:
             jpeg_screenshot(tmp_str);
+        xcase CMD_CAPTURE:
+            game_state.capture_state = 1;
+            game_state.capture_frame_count = 0;
+            game_state.quick_login = 1;
+            game_state.no_version_check = 1;
+            game_state.screenshot_ui = 0;
+            game_state.fov_3rd = 55.0f;
+            control_state.notimeout = 1;
         xcase CMD_SCREENSHOT_TGA:
             gfxScreenDump("screenshots", 0, "tga");
         xcase CMD_POWEXEC_NAME:

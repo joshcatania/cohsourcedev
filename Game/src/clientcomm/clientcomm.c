@@ -45,6 +45,7 @@
 #include "player/player.h"
 #include "render/texUnload.h"
 #include "render/tex.h"
+#include "game.h"
 
 #include "UI/uiWindows.h"
 #include "UI/uiConsole.h"
@@ -1858,6 +1859,7 @@ int commReqScene(int isInitialLogin)
 #endif
 
     PERFINFO_AUTO_START("commReqScene", 1);
+        game_startupTrace("map.scene.request");
     
         clearWaitingForFullUpdate();
 
@@ -1889,6 +1891,7 @@ int commReqScene(int isInitialLogin)
         }
         testClientRandomDisconnect(TCS_commReqScene_2);
         if (timeout || !commConnected()){
+            game_startupTrace("map.scene.groups.timeout");
             printf("Server timeout\n");
             texLoadQueueFinish();
             quitToLogin(0);
@@ -1896,6 +1899,7 @@ int commReqScene(int isInitialLogin)
             PERFINFO_AUTO_STOP();
             return 0;
         }
+        game_startupTrace("map.scene.groups.complete");
         //loadend_printf("");
 
 
@@ -1917,6 +1921,7 @@ int commReqScene(int isInitialLogin)
         }
         testClientRandomDisconnect(TCS_commReqScene_4);
         if (timeout || !commConnected()){
+            game_startupTrace("map.scene.entities.timeout");
             //FatalErrorf("Server timeout");
             texLoadQueueFinish();
             quitToLogin(0);
@@ -1925,6 +1930,7 @@ int commReqScene(int isInitialLogin)
             return 0;
         }
 
+        game_startupTrace("map.scene.entities.complete");
         PERFINFO_AUTO_START("load stuff", 1);
             gfxLoadRelevantTextures();
             forceGeoLoaderToComplete(); // This doesn't seem to do anything?
@@ -1948,6 +1954,7 @@ int commReqScene(int isInitialLogin)
         timerFree(timer);
 
     PERFINFO_AUTO_STOP_CHECKED("commReqScene");
+    game_startupTrace("map.scene.complete");
 
     return 1;
 }
@@ -1995,6 +2002,8 @@ void clearCutScene( void )
 int commConnect(char *addr,int port,int cookie)
 {
     int result;
+
+    game_startupTrace("map.connect.begin");
     
     writeConsole(OUTPUT_INFO, "Connecting to MapServer %s:%d (UDP) Cookie: %x", addr, port, cookie);
 
@@ -2004,8 +2013,10 @@ int commConnect(char *addr,int port,int cookie)
     
     if (!result)
     {
+        game_startupTrace("map.connect.start.failed");
         return 0;
     }
+    game_startupTrace("map.connect.start.complete");
 
     clearCutScene();
     
@@ -2021,8 +2032,10 @@ int commConnect(char *addr,int port,int cookie)
     
     if(!result)
     {
+        game_startupTrace("map.shortcuts.failed");
         return 0;
     }
+    game_startupTrace("map.shortcuts.complete");
 
     lastRecvId = comm_link.last_recv_id;
 

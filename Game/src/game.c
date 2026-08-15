@@ -123,6 +123,7 @@
 #include "render/perfcounter.h"
 #include "ui/uiPopHelp.h"
 #include "render/rendershadowmap.h"
+#include <stdarg.h>
 #include <utilitieslib/UtilsNew/profiler.h>
 #include <utilitieslib/utils/ssemath.h>
 #include "UI/uiAuction.h"
@@ -148,21 +149,139 @@ bool consoleStarted = false;
 static progressStringUpdatingEnabled = false; // starts off disabled so we don't overwrite the previous strings
 static char testGameProgressString[100] = "";
 static bool forceCrashCheck = false;
+static char commandLineAccountName[32] = "";
+static char commandLinePassword[32] = "";
+static int commandLineAccountSet = 0;
+static int commandLinePasswordSet = 0;
 
 ParticleSystemInfo sysInfo;
 
 #define MAX_HANDLES 1048576 
 #define UPDATE_PROGRESS_STRING(X) loadstart_printf(X); game_setProgressString(X, NULL, PROGRESSDIALOGTYPE_OK);
 
+static HANDLE s_startupTraceFile = INVALID_HANDLE_VALUE;
+static char s_startupTracePath[MAX_PATH];
+
+static const char *game_startupTracePrefix(void)
+{
+    static char prefix[32];
+    static int initialized;
+    char module[MAX_PATH];
+    char *name;
+
+    if (initialized)
+        return prefix;
+
+    initialized = 1;
+    strcpy_s(prefix, sizeof(prefix), "ouroboros");
+    if (GetModuleFileNameA(NULL, module, ARRAY_SIZE_CHECKED(module)))
+    {
+        name = strrchr(module, '\\');
+        name = name ? name + 1 : module;
+        if (stricmp(name, "TestClient.exe") == 0)
+            strcpy_s(prefix, sizeof(prefix), "testclient");
+    }
+
+    return prefix;
+}
+
+void game_startupTrace(const char *marker)
+{
+    SYSTEMTIME now;
+    char line[768];
+    DWORD written;
+
+    if (!marker || !marker[0])
+        marker = "empty";
+
+    if (s_startupTraceFile == INVALID_HANDLE_VALUE)
+    {
+        CreateDirectoryA("logs", NULL);
+        sprintf_s(s_startupTracePath, sizeof(s_startupTracePath),
+                  "logs/%s-startup-%lu.trace", game_startupTracePrefix(),
+                  (unsigned long)GetCurrentProcessId());
+        s_startupTraceFile = CreateFileA(s_startupTracePath, GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (s_startupTraceFile != INVALID_HANDLE_VALUE)
+            SetFilePointer(s_startupTraceFile, 0, NULL, FILE_END);
+    }
+
+    GetLocalTime(&now);
+    sprintf_s(line, sizeof(line),
+              "%04u-%02u-%02uT%02u:%02u:%02u.%03u pid=%lu tid=%lu marker=%s\n",
+              (unsigned)now.wYear, (unsigned)now.wMonth, (unsigned)now.wDay,
+              (unsigned)now.wHour, (unsigned)now.wMinute, (unsigned)now.wSecond,
+              (unsigned)now.wMilliseconds, (unsigned long)GetCurrentProcessId(),
+              (unsigned long)GetCurrentThreadId(), marker);
+
+    if (s_startupTraceFile != INVALID_HANDLE_VALUE)
+    {
+        WriteFile(s_startupTraceFile, line, (DWORD)strlen(line), &written, NULL);
+        FlushFileBuffers(s_startupTraceFile);
+    }
+
+    OutputDebugStringA(line);
+}
+
+void game_startupTracef(const char *format, ...)
+{
+    char marker[512];
+    va_list args;
+
+    va_start(args, format);
+    vsprintf_s(marker, sizeof(marker), format, args);
+    va_end(args);
+    game_startupTrace(marker);
+}
+
+void game_applyCommandLineCredentials(void)
+{
+    game_startupTrace("credentials.apply.begin");
+    if (commandLineAccountSet)
+        Strncpyt(g_achAccountName, commandLineAccountName);
+
+    if (commandLinePasswordSet)
+    {
+        strncpy_s(g_achPassword, sizeof(g_achPassword), commandLinePassword, _TRUNCATE);
+        cryptStore(g_achPassword, g_achPassword, sizeof(g_achPassword));
+    }
+    game_startupTrace("credentials.apply.complete");
+}
+
 void parseArgs(int argc,char **argv)
 {
     int    i;
     char    buf[1000];
 
+    game_startupTrace("command-line.parse.begin");
+
     if (isDevelopmentMode())
         cmdAccessOverride(9);
     for(i=1;i<argc;)
     {
+        if (stricmp(argv[i], "-authname") == 0 && i + 1 < argc)
+        {
+            Strncpyt(commandLineAccountName, argv[i + 1]);
+            commandLineAccountSet = 1;
+            i += 2;
+            continue;
+        }
+        if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
+        {
+            Strncpyt(commandLinePassword, argv[i + 1]);
+            commandLinePasswordSet = 1;
+            i += 2;
+            continue;
+        }
+        if (stricmp(argv[i], "-db") == 0 && i + 1 < argc)
+        {
+            // Development-only direct DbServer mode.  authLogin() already
+            // treats a non-empty cs_address as a synthesized local server,
+            // which is the same path used by TestClient -db.
+            Strncpyt(game_state.cs_address, argv[i + 1]);
+            game_startupTrace("direct-db.argument");
+            i += 2;
+            continue;
+        }
         if (strEndsWith(argv[i],".cohdemo") || strEndsWith(argv[i],".cohdemo\""))
         {
             sprintf(buf,"demoplay %s",argv[i]);
@@ -205,6 +324,8 @@ void parseArgs(int argc,char **argv)
         }
     }
     cmdAccessOverride(0);
+
+    game_startupTrace("command-line.parse.complete");
 
     //    fileAddSearchPath("./data");
     //    if(!game_state.nodebug){
@@ -846,32 +967,76 @@ void GameShutdown(void)
 void checkQuickLogin(void)
 {
     char    err_msg[1000];
+    int     auth_result;
+    int     db_result;
+    int     quick_slot = game_state.quick_login - 1;
 
     if (game_state.quick_login && !game_state.editnpc) {
+        game_startupTrace("login.quick.begin");
+        if (game_state.capture_state)
+            writeConsole(OUTPUT_INFO, "Capture quick login: account=%s populated=%d max=%d", g_achAccountName,
+                         db_info.players ? db_info.player_count : 0,
+                         db_info.players ? db_info.max_slots : 0);
         //serve_menus(); // Needed to load the graphics used in the loading bar? //JE: removed because it was messing up resume_info.txt by catching keypresses
-        if (loginToAuthServer(0) && loginToDbServer(0,err_msg) && db_info.players &&  (game_state.quick_login - 1) < db_info.player_count) {
+        game_startupTrace("login.auth.request");
+        auth_result = loginToAuthServer(0);
+        game_startupTrace(auth_result ? "login.auth.complete" : "login.auth.failed");
+        game_startupTrace("login.db.request");
+        db_result = auth_result ? loginToDbServer(0,err_msg) : 0;
+        game_startupTrace(db_result ? "login.db.complete" : "login.db.failed");
+        if (game_state.capture_state)
+            writeConsole((auth_result && db_result) ? OUTPUT_INFO : OUTPUT_ERROR,
+                         "Capture login result: auth=%d db=%d slots=%d max=%d error=%s",
+                         auth_result, db_result, db_info.players ? db_info.player_count : 0,
+                         db_info.players ? db_info.max_slots : 0,
+                         err_msg[0] ? err_msg : "none");
+        // db_info.player_count counts populated characters, not available
+        // character slots. Capture mode deliberately uses the first slot so
+        // a fresh development account can create a reproducible character.
+        if (auth_result && db_result && db_info.players && quick_slot >= 0 && quick_slot < db_info.max_slots) {
             int newchar;
-            gPlayerNumber = game_state.quick_login - 1;
+            gPlayerNumber = quick_slot;
             newchar = stricmp(db_info.players[gPlayerNumber].name, "empty")==0;
             if (!newchar) {
-                if(!choosePlayerWrapper( gPlayerNumber, 0 )) {
+                game_startupTrace("character.selection.resume.begin");
+                int choose_result = choosePlayerWrapper( gPlayerNumber, 0 );
+                game_startupTrace(choose_result ? "character.selection.resume.complete" : "character.selection.resume.failed");
+                if (game_state.capture_state)
+                    writeConsole(choose_result ? OUTPUT_INFO : OUTPUT_ERROR,
+                                 "Capture character handoff: slot=%d name=%s result=%d error=%s",
+                                 gPlayerNumber, db_info.players[gPlayerNumber].name, choose_result,
+                                 choose_result ? "none" : (db_info.error_msg[0] ? db_info.error_msg : "unknown"));
+                if(!choose_result) {
                     Sleep(30);
-                    if (!choosePlayerWrapper( gPlayerNumber, 0 )) {
+                    choose_result = choosePlayerWrapper( gPlayerNumber, 0 );
+                    if (game_state.capture_state)
+                        writeConsole(choose_result ? OUTPUT_INFO : OUTPUT_ERROR,
+                                     "Capture character retry: slot=%d result=%d error=%s",
+                                     gPlayerNumber, choose_result,
+                                     choose_result ? "none" : (db_info.error_msg[0] ? db_info.error_msg : "unknown"));
+                    if (!choose_result) {
                         return;
                     }
                 }
                 dbDisconnect();           //Character being resumed, no longer need DbServer.
+                game_startupTrace("map.handoff.resume.begin");
                 doCreatePlayer(0);
                 player_being_created = 0;
                 tryConnect();
+                game_startupTrace(commConnected() ? "map.connection.resume.complete" : "map.connection.resume.failed");
                 if( commConnected() ) {
+                    game_startupTrace("map.scene.resume.request");
                     commReqScene(0);
+                    game_startupTrace("map.scene.resume.complete");
                 }
             } else {
                 // New character
+                game_startupTrace("character.selection.create.begin");
                 simulateCharacterCreate(0, 0);
+                game_startupTrace("character.selection.create.complete");
             }
         }
+        game_startupTrace("login.quick.complete");
         UPDATE_PROGRESS_STRING("Waiting for mapserver update.." );
     }
 }
@@ -1616,6 +1781,7 @@ static void checkForCrash()
 
 void game_beforeParseArgs(int doLogging)
 {
+    game_startupTrace("config-load.begin");
     if(game_state.create_bins)
         SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS);
     else if(isProductionMode())
@@ -1690,7 +1856,9 @@ void game_beforeParseArgs(int doLogging)
     determineIfSSEAvailable();
 
     game_setProgressString("INIT: Before renderThreadStart", "CrashPromptSafeMode", PROGRESSDIALOGTYPE_SAFEMODE);
+    game_startupTrace("graphics.render-thread.start.begin");
     renderThreadStart();
+    game_startupTrace("graphics.render-thread.start.complete");
     game_setProgressString("INIT: After renderThreadStart", NULL, PROGRESSDIALOGTYPE_OK);
 
     //Get last gfxSettings and last accountName from registry (done for everybody)
@@ -1711,12 +1879,15 @@ void game_beforeParseArgs(int doLogging)
             gfxGetInitialSettings( &gfxSettings );
         }
 
+        game_startupTrace("graphics.settings.apply.begin");
         gfxApplySettings( &gfxSettings, 0, false );
+        game_startupTrace("graphics.settings.apply.complete");
     }
 
 #if NOVODEX
     nwSetNovodexDefaults();
 #endif
+    game_startupTrace("config-load.complete");
 }
 
 void game_reapplyGfxSettings(void)
@@ -1737,6 +1908,8 @@ static void finalizeRenderer(void)
 {
     int expected_allowed;
 
+    game_startupTrace("graphics.renderer.finalize.begin");
+
     // make any modifications to the supported hardware configuration
     // based on command line flags, etc.
     rdrSetChipOptions();
@@ -1756,6 +1929,7 @@ static void finalizeRenderer(void)
     // Initialization and fundamental extension collection etc was began during 
     // renderThreadStart which issued a DRAWCMD_RDRSETUP and blocked on completion
     // This will also compile and load shaders as appropriate.
+    game_startupTrace("graphics.renderer.init-command.begin");
     rdrQueueCmd(DRAWCMD_INIT);
 
     // *BLOCK* until renderer initialization completes.
@@ -1771,7 +1945,9 @@ static void finalizeRenderer(void)
     // to make sure we wait until that work completes before something else
     // tries to use struct parser in the main thread.
 
+    game_startupTrace("graphics.renderer.flush.begin");
     rdrQueueFlush();    // *BLOCK* until renderer initialization completes.
+    game_startupTrace("graphics.renderer.flush.complete");
 
     // Mark the render caps as FINALIZED!
     // Development console commands can still change the caps on the fly
@@ -1793,13 +1969,17 @@ static void finalizeRenderer(void)
     // Reapply graphics settings in case we forced something off
     // Do this after rdr_caps are finalized
     game_reapplyGfxSettings();
+    game_startupTrace("graphics.renderer.finalize.complete");
 }
 
 int game_loadSoundsTricksFonts(int argc, char **argv)
 {
     int maximize;
 
+    game_startupTrace("graphics-audio-input.init.begin");
+
     inpClear();
+    game_startupTrace("input.clear.complete");
 
     finalizeRenderer();    // finalize renderer initialization, caps, compile/load shaders
 
@@ -1823,7 +2003,9 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
         cacheRelevantFolders();
         writeConsole(OUTPUT_INFO, "Cached relevant folders");
 
+        game_startupTrace("audio.init.begin");
         sndInit();
+        game_startupTrace("audio.init.complete");
         writeConsole(OUTPUT_INFO, "Loaded sounds");
     }
     writeConsole(OUTPUT_DEBUG, "Loading tricks");
@@ -1865,12 +2047,14 @@ int game_loadSoundsTricksFonts(int argc, char **argv)
     }
     
     fontInitCriticalSection();
+    game_startupTrace("graphics-audio-input.init.complete");
 
     return maximize;
 }
 
 void game_initWindow(int maximize)
 {
+    game_startupTrace("window.init.begin");
     //Kinda cheesy.  Message boxes can force a window show before we've set the, that will be interpreted as as user resize
     //and set the window size wrong, so we say don't record the window size changes till here.
     //globPastStartUp = 1;
@@ -1878,13 +2062,16 @@ void game_initWindow(int maximize)
     //Moved this down here to keep the thing from changing resolution until splash screen comes up
     windowResize(&game_state.screen_x,&game_state.screen_y,&game_state.refresh_rate,game_state.screen_x_pos,game_state.screen_y_pos,game_state.fullscreen);
     gfxWindowReshape();
+    game_startupTrace("window.resize.complete");
 
+    game_startupTrace("input.startup.begin");
     if (InputStartup()) {
         // Input failed to initialize!
         if (isProductionMode()) {
             FatalErrorf("%s", textStd("DirectInputDied"));
         }
     }
+    game_startupTrace("input.startup.complete");
 
     if (game_state.nodebug)
         inpDisableAltTab();
@@ -1895,7 +2082,9 @@ void game_initWindow(int maximize)
         initChatUIOnce();    // MJP: must be loaded at some point before networking startup
 
         loadBG(); // after windowResize
+        game_startupTrace("window.show.begin");
         windowShow(game_state.fullscreen,maximize);
+        game_startupTrace("window.show.complete");
         rdrInitTopOfFrame();
         rdrInitTopOfView(cam_info.viewmat,cam_info.inv_viewmat); // width and height were not getting inited
 
@@ -1917,20 +2106,25 @@ void game_initWindow(int maximize)
     }
 
     setupUIColors();
+    game_startupTrace("window.init.complete");
 }
 
 void game_networkStart(void)
 {
+    game_startupTrace("network.init.begin");
     packetStartup(game_state.packet_mtu,1);
     commNewInputPak();
     sockStart();
+    game_startupTrace("network.socket.init.complete");
     writeConsole(OUTPUT_INFO, "Initialized network library");
     inpClear();
+    game_startupTrace("network.init.complete");
 }
 
 void game_loadData(int isCostumeCreator)
 {
     bool bNewAttribs = 0; 
+    game_startupTrace("data-load.begin");
     PERFINFO_AUTO_START("top", 1);
     
     chareval_Init();
@@ -1965,6 +2159,7 @@ void game_loadData(int isCostumeCreator)
     //Misc
     writeConsole(OUTPUT_DEBUG, "Loading message stores");
     commInit();
+    game_startupTrace("network.comm-init.complete");
 
     PERFINFO_AUTO_STOP_START("middle5", 1);
 
@@ -2090,6 +2285,7 @@ void game_loadData(int isCostumeCreator)
     auction_Init();
     writeConsole(OUTPUT_INFO, "Created auction data");
     PERFINFO_AUTO_STOP();
+    game_startupTrace("data-load.complete");
 }
 
 void reShowWindow(void)
@@ -2117,8 +2313,122 @@ void checkForStartupExec()
     }
 }
 
+typedef struct CaptureShot {
+    const char *label;   // artifact label; also the -capture selector
+    const char *posPyr;  // setpospyr arguments: x y z pitch yaw roll
+    const char *camdist; // third-person camera distance
+    int timeHour;        // world-clock hour to freeze at (16 = day default;
+                         // night hours open the AddGlow window-lamp tricks)
+} CaptureShot;
+
+// Deterministic capture shots. All current shots sit on the Atlas Park
+// static map (StaticMapId 1); other maps need a verified map-transfer
+// path before they can be captured deterministically. The Night* variants
+// exist to exercise night-only materials (AddGlow window glow); they are
+// not part of the default regression suite.
+static const CaptureShot s_captureShots[] = {
+    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30", 16 },
+    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 16 },
+    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16 },
+    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16 },
+    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16 },
+    { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0  },
+    { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0 },
+};
+
+static const CaptureShot *captureFindShot(const char *label)
+{
+    int i;
+    for (i = 0; i < ARRAY_SIZE(s_captureShots); i++)
+    {
+        if (label && label[0] && stricmp(label, s_captureShots[i].label) == 0)
+            return &s_captureShots[i];
+    }
+    return &s_captureShots[0];
+}
+
+static void game_processCapture(void)
+{
+    extern int glob_have_camera_pos;
+    char command[512];
+    static int lastCaptureBlock = -1;
+
+    if (game_state.capture_state == 0 || game_state.capture_state == 3)
+        return;
+
+    if (game_state.capture_state == 1)
+    {
+        if (!commConnected() || !playerPtr() || glob_have_camera_pos != PLAYING_GAME ||
+            game_state.game_mode != SHOW_GAME || !isMenu(MENU_GAME))
+        {
+            int block = (!commConnected() ? 1 : 0) |
+                        (!playerPtr() ? 2 : 0) |
+                        (glob_have_camera_pos != PLAYING_GAME ? 4 : 0) |
+                        (game_state.game_mode != SHOW_GAME ? 8 : 0) |
+                        (!isMenu(MENU_GAME) ? 16 : 0);
+            if (block != lastCaptureBlock)
+            {
+                game_startupTracef("capture.wait comm=%d player=%d camera=%d mode=%d menu=%d",
+                                   commConnected(), playerPtr() != NULL, glob_have_camera_pos,
+                                   game_state.game_mode, isMenu(MENU_GAME));
+                lastCaptureBlock = block;
+            }
+            return;
+        }
+
+        if (lastCaptureBlock != 0)
+        {
+            game_startupTrace("capture.readiness.ready");
+            lastCaptureBlock = 0;
+        }
+
+        if (game_state.capture_frame_count == 0)
+        {
+            const CaptureShot *shot = captureFindShot(game_state.capture_target);
+            // The label supplied to capture selects the shot; unknown labels
+            // keep the historically verified default Atlas Plaza view.
+            cmdParse("hide_all");
+            cmdParse("third 1");
+            sprintf_s(SAFESTR(command), "camdist %s", shot->camdist);
+            cmdParse(command);
+            sprintf_s(SAFESTR(command), "setpospyr %s", shot->posPyr);
+            cmdParse(command);
+            // Freeze the world clock so lighting matches between runs. The
+            // shot's hour selects day (16) or night-only material states.
+            sprintf_s(SAFESTR(command), "timeset %d", shot->timeHour);
+            cmdParse(command);
+            cmdParse("timescale 0");
+            game_startupTrace("capture.camera.fixed");
+            game_state.capture_frame_count = 1;
+            return;
+        }
+
+        // Let the scene settle after the teleport and time freeze: the sky,
+        // sun, and fog systems interpolate toward the new state for a few
+        // seconds, so the first capture after a mapserver restart would
+        // otherwise catch a mid-transition image.
+        if (++game_state.capture_frame_count < 300)
+            return;
+
+        sprintf_s(SAFESTR(command), "screenshottitle %s", game_state.capture_target);
+        game_startupTrace("capture.screenshot.request");
+        cmdParse(command);
+        game_state.capture_state = 2;
+        game_state.capture_frame_count = 0;
+        return;
+    }
+
+    if (++game_state.capture_frame_count >= 3)
+    {
+        game_startupTrace("capture.quit.request");
+        cmdParse("quit");
+        game_state.capture_state = 3;
+    }
+}
+
 void game_beforeLoop(int isCostumeCreator, int timer)
 {
+    game_startupTrace("game.before-loop.begin");
     showBgReset();
 
     if (!isCostumeCreator)
@@ -2145,6 +2455,7 @@ void game_beforeLoop(int isCostumeCreator, int timer)
 
     if (!isCostumeCreator)
         checkQuickLogin();
+    game_startupTrace("game.before-loop.login-complete");
 
     server_visible_state.timestepscale = 1;
 
@@ -2168,6 +2479,7 @@ void game_beforeLoop(int isCostumeCreator, int timer)
     // the old driver warning on the login page.  The dialog is there just in case the drivers
     // are bad and the game won't initialize.
     rdrClearOldDriverCheck();
+    game_startupTrace("game.before-loop.complete");
 }
 
 void game_setProgressString(const char *progressString, const char *userMessageID, PROGRESSDIALOGTYPE type)
@@ -2299,9 +2611,11 @@ int game_mainLoop(int timer)
         SetPriorityClass(GetCurrentProcess(),BELOW_NORMAL_PRIORITY_CLASS);
 
     game_setProgressString("game_mainLoop", NULL, PROGRESSDIALOGTYPE_NONE);
+    game_startupTrace("game-loop.enter");
 
     for(;;)
     {
+        static int firstFrame = 1;
         // Nothing goes above autoTimerTickBegin()!!!!!
 
         autoTimerTickBegin();
@@ -2337,8 +2651,17 @@ int game_mainLoop(int timer)
 
 
         PERFINFO_AUTO_START("engine_update", 1);
+            if (firstFrame)
+                game_startupTrace("game-loop.engine-update.begin");
             engine_update();
+            if (firstFrame)
+            {
+                game_startupTrace("game-loop.engine-update.complete");
+                firstFrame = 0;
+            }
         PERFINFO_AUTO_STOP_CHECKED("engine_update");
+
+        game_processCapture();
         
         demoRecordClientInfo();
 

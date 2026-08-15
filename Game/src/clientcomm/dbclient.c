@@ -39,6 +39,7 @@
 #include "clientComm/authclient.h"
 #include "clientcomm/clientcomm.h"
 #include "graphics/font.h"
+#include "game.h"
 
 
 #if defined(TEST_CLIENT)
@@ -411,6 +412,7 @@ void dbOrMapConnect(Packet *pak)
     mapserver->port        = udp_port;
     mapserver->cookie    = login_cookie;
     mapserver->user_id    = 0;
+    game_startupTrace("db.map-connect.packet");
 }
 
 void handleCanStartStaticMapResponse(Packet *pak)
@@ -752,6 +754,8 @@ int dbChoosePlayer(int slot_number, U32 local_map_ip, int createLocation, F32 ti
     Packet    *pak;
     int ret;
 
+    game_startupTrace("character.choose.request");
+
     pak = pktCreateEx(&db_comm_link,DBGAMECLIENT_CHOOSE_PLAYER);
     pktSendBitsPack(pak,1,slot_number);
     pktSendBitsPack(pak,1,local_map_ip);
@@ -762,8 +766,10 @@ int dbChoosePlayer(int slot_number, U32 local_map_ip, int createLocation, F32 ti
     testClientRandomDisconnect(TCS_dbChoosePlayer_1);
 
     if (!dbWaitFor(DBGAMESERVER_MAP_CONNECT, timeout)) {
+        game_startupTrace("character.choose.map-connect.timeout");
         ret = 0;
     } else {
+        game_startupTrace("character.choose.map-connect.response");
         if (db_info.mapserver.cookie==0)
         {
             Strncpyt(db_info.error_msg,"InvalidName");
@@ -784,6 +790,8 @@ int dbChoosePlayer(int slot_number, U32 local_map_ip, int createLocation, F32 ti
         // Make sure to acknowledge the packet the DbServer just sent us!
         netSendIdle(&db_comm_link);
     }
+
+    game_startupTrace(ret ? "character.choose.complete" : "character.choose.failed");
 
     return ret;
 }
@@ -1056,6 +1064,8 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
     static U32 checksum[4] = {0, 0, 0, 0};
     int commandFound;
 
+    game_startupTrace("db.login.begin");
+
     PERFINFO_AUTO_START("dbConnect", 1);
 
         writeConsole(OUTPUT_INFO, "Connecting to DBServer %s:%d (UDP) Cookie: %x", server, port, cookie);
@@ -1070,6 +1080,7 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
             PERFINFO_AUTO_STOP();
             return 0;
         }
+        game_startupTrace("db.socket.connected");
         db_comm_link.alwaysProcessPacket = 1;
         testClientRandomDisconnect(TCS_dbConnect_1);
 
@@ -1128,6 +1139,7 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
             pktSendString(pak, encrypedKeyIssuedTo);
         }
         pktSend(&pak,&db_comm_link);
+        game_startupTrace("db.login.request-sent");
         testClientRandomDisconnect(TCS_dbConnect_2);
 
         if (!(commandFound=dbWaitForStartOrQueue(timeout)))
@@ -1136,6 +1148,9 @@ int dbConnect(char *server,int port,int user_id,int cookie,char *auth_name,int n
             PERFINFO_AUTO_STOP();
             return 0;
         }
+
+        game_startupTrace(commandFound == DBGAMESERVER_SEND_PLAYERS ?
+                          "db.login.response.players" : "db.login.response.queue-or-other");
 
         testClientRandomDisconnect(TCS_dbConnect_3);
 

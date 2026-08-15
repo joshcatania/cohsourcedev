@@ -100,6 +100,7 @@
 #include "LWC.h"
 #include "LWC_common.h"
 #include "graphics/gfxLoadScreens.h"
+#include "game.h"
 
 #define MAX_SERVER_COUNT 50
 #define MAX_PASSWORD_LEN 32
@@ -2708,9 +2709,34 @@ int loginToDbServer( int idx,char *err_msg )
 
     AccountInventorySet_Release( &db_info.account_inventory );
 
+    game_startupTrace("login.dbconnect.call.begin");
     ret = dbConnect(makeIpStr(auth_info.servers[idx].ip),auth_info.servers[idx].port,
                     auth_info.uid,auth_info.game_key, g_achAccountName,
                     game_state.local_map_server | game_state.no_version_check, control_state.notimeout?NO_TIMEOUT:90.0f,control_state.notimeout);
+    game_startupTrace("login.dbconnect.call.complete");
+
+    // The autonomous capture path has no UI queue screen to drive the
+    // legacy queue state machine.  Follow the same bounded queue-drain path
+    // used by TestClient so a direct-DB capture reaches the player list.
+    if (ret == DBGAMESERVER_QUEUE_POSITION && game_state.capture_state)
+    {
+        int queue_ret;
+
+        writeConsole(OUTPUT_INFO, "Capture waiting for DbServer queue admission");
+        do
+        {
+            game_startupTrace("login.queue.wait");
+            queue_ret = dbWaitForStartOrQueue(NO_TIMEOUT);
+        }
+        while (queue_ret == DBGAMESERVER_QUEUE_POSITION);
+
+        game_startupTrace("login.queue.complete");
+
+        writeConsole(queue_ret == DBGAMESERVER_SEND_PLAYERS ? OUTPUT_INFO : OUTPUT_ERROR,
+                     "Capture queue result: %d", queue_ret);
+        ret = queue_ret;
+    }
+
     if (!ret || ret == DBGAMESERVER_MSG)
     {
         s = dbGetError();
