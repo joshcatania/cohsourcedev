@@ -2311,6 +2311,8 @@ void WCW_BindFragmentProgram(GLuint id)
             boundFragmentProgram = id;
             return;
         }
+        // coverage diagnostic: record materials still on the ARB/Cg path
+        rt_glslpilot_noteUnportedFragmentBind( id );
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             if ( rt_cgGetCgShaderMode() )

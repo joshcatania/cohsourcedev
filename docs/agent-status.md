@@ -450,3 +450,51 @@ hardcoded two-sampler materials to a per-material sampler/unit table.
    covered Atlas Park interior/view) and run the night A/B there.
 2. Otherwise continue with the remaining fragment materials
    (`alphaDetailfp`, `waterfp`, effects/ set) using the same template.
+
+## GLSL pilot: alphaDetail port + fragment coverage map — 2026-08-15
+
+Fifth material ported and the coverage question systematized.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_AlphaDetail` —
+  `rgb = lerp(blend.rgb, base.rgb, base.a)`, `rgb *= 4*vertex color`,
+  `a = g_Env0FP.a * blend.a`, then fog (alphaDetailfp.cg variant 0; only
+  the already-mirrored g_Env0FP constant; sampler_base/sampler_blend on
+  units 0/1).
+- New coverage diagnostic: `WCW_BindFragmentProgram` calls
+  `rt_glslpilot_noteUnportedFragmentBind(id)` for binds the pilot did not
+  handle; each distinct fragment program id is logged once per process
+  (only when `-glslPilot 1`). A capture's client log now enumerates every
+  material still rendering through ARB/Cg.
+
+### Coverage map (AtlasPlaza_East_01, pilot on)
+
+- Active through the pilot: MODULATE (4), MULTIPLY (20), COLORBLEND_DUAL
+  (36).
+- Registered but never bound: ADDGLOW (52), ALPHADETAIL (68) — Atlas Park
+  has no coverage for either (day or night shots).
+- Unported fragment programs observed bound: 20 (the MULTIPLY post-reset
+  sentinel decline fallback), 100/101 (bumpmapColorblendDual and a variant,
+  by load-order id arithmetic), and 201-216 (the special-effects set;
+  `ssao` CgFX warnings appear in the same log).
+
+### Verification (same-window A/B, storm generation)
+
+- Adopt suite `agent/logs/regression-20260815-171312.json` (control),
+  pilot suite `agent/logs/regression-20260815-171520.json`: CityHall
+  1.50%/1.57, East 3.84%/1.71, West 3.44%/1.90 PASS; North flagged
+  7.63%/2.76 once (sky movement between suites) and an immediate pilot
+  re-capture of North measured **1.44%/1.28 PASS** vs the same baseline —
+  transient, not reproduced.
+- The alphaDetail and addGlow programs never intercept a bind (coverage
+  lines absent), so their presence is provably render-neutral in these
+  scenes; the three active materials are unchanged.
+
+### Where the remaining Atlas Park work lives
+
+The un-ported material families with real scene coverage are the
+bumpmapped set (needs tangent-space interpolants and more engine
+constants) and the effects/ post-processing set (bloom/ssao/etc.).
+Verifying ADDGLOW/ALPHADETAIL requires scenes that bind them — the
+map-transfer capture path remains the gate for that.
