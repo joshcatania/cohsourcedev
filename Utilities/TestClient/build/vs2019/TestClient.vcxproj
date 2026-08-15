@@ -449,6 +449,7 @@ copy /Y $(TargetDir)$(ProjectName).pdb $(ProjectDir)..\..\..\..\bin</Command>
     <ClCompile Include="..\..\..\..\Game\src\clientcomm\clientcommreceive.c" />
     <ClCompile Include="..\..\..\..\Game\src\clientcomm\dbclient.c" />
     <ClCompile Include="..\..\..\..\Game\src\clientcomm\Des.c" />
+    <ClCompile Include="..\..\..\..\Utilities\TestClient\src\startupTrace.c" />
     <ClCompile Include="..\..\..\..\Game\src\entity\character_net_client.c" />
     <ClCompile Include="..\..\..\..\Game\src\entity\costume_client.c" />
     <ClCompile Include="..\..\..\..\Game\src\entity\entclient.c" />

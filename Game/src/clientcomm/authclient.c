@@ -483,6 +483,7 @@ int authLogin(char *name,char *password)
 {
     int            ret;
     char passwordCopy[128];
+    game_startupTrace("auth.login.begin");
     acCleanup();
     memset(&auth_info,0,sizeof(auth_info));
     Strncpyt(auth_info.name,name);
@@ -492,6 +493,7 @@ int authLogin(char *name,char *password)
     memset(passwordCopy, 0, sizeof(passwordCopy));
     if (!game_state.auth_address[0] || game_state.cs_address[0])
     {
+        game_startupTrace("auth.login.direct-db.synthesis.begin");
         game_state.auth_address[0] = 0;
         auth_info.server_count = 1;
         SAFE_FREE(auth_info.servers);
@@ -503,6 +505,7 @@ int authLogin(char *name,char *password)
         auth_info.servers[0].ip = ipFromString(game_state.cs_address);
         auth_info.servers[0].port = DEFAULT_DBGAMECLIENT_PORT;
         Strncpyt(auth_info.servers[0].name,game_state.cs_address);
+        game_startupTrace("auth.login.direct-db.synthesis.complete");
         return 1;
     }
     writeConsole(OUTPUT_INFO, "Connecting to AuthServer %s:%d (TCP)", game_state.auth_address, AUTH_SERVER_PORT);
@@ -547,6 +550,7 @@ int authLogin(char *name,char *password)
             return 0;
         }
     }
+    game_startupTrace("auth.login.complete");
     return 1;
 }
 

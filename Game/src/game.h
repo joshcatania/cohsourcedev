@@ -15,6 +15,12 @@ typedef enum
 void parseArgs(int argc,char **argv);
 void game_applyCommandLineCredentials(void);
 
+// Low-overhead startup evidence for unattended client runs.  Capture tooling
+// collects the trace externally and uses it to identify the last completed
+// initialization stage.
+void game_startupTrace(const char *marker);
+void game_startupTracef(const char *format, ...);
+
 // these are in the order they will typically be called
 void parseArgsForCovFlag(int argc, char **argv);
 int getProjectKey(int argc, char **argv);

@@ -171,3 +171,163 @@ Phase 1 is done only when a bounded command such as:
 ```
 
 reliably produces a real JPG at `agent/captures/AtlasPlaza_CityHall_03.jpg`, reports a successful JSON result, and exits Ouroboros cleanly. The image must visibly reflect the intended map/teleport, fixed camera/FOV, and hidden UI. Repeat the command at least once to establish repeatability before changing the status to verified.
+
+## Latest Phase 1 debugging checkpoint — 2026-08-14 stopping point
+
+This section is the most recent handoff and supersedes the older wording above that said Ouroboros stopped before its login markers. The exact bounded capture run below proves that the graphical client gets substantially farther: it initializes the renderer, performs the direct-DB login, resumes the existing character, connects to MapServer, loads the target scene, and then hangs before capture readiness/clean exit.
+
+### Mission and non-goals
+
+The active mission is still Phase 1: make
+
+```powershell
+.\agent\capture.ps1 -Target AtlasPlaza_CityHall_03 -AccountName Dummy00018 -Password 11111111 -TimeoutSeconds 180 -Json
+```
+
+produce a real JPG, report the known map/location and camera state, and exit Ouroboros cleanly with machine-readable evidence. Do not start texture generation, renderer modernization, or broad graphical-asset work. Do not replace the existing ServerMonitor/TestClient infrastructure. Do not paper over the hang with arbitrary sleeps.
+
+### Repository and GitHub location
+
+- Local repository: D:\github\cohsourcedev
+- GitHub repository: joshcatania/cohsourcedev
+- Current branch: agent/agent-dev-foundation
+- Branch URL: https://github.com/joshcatania/cohsourcedev/tree/agent/agent-dev-foundation
+- Draft PR: https://github.com/joshcatania/cohsourcedev/pull/1, targeting 64-bit-fx
+- Last clean published commit before this debugging attempt: 56c4b5740 (Document GitHub handoff location)
+
+The current worktree is intentionally dirty because the instrumentation below was started but not completed. Do not reset or discard it without reviewing the diff.
+
+### Known-good Phase 0 baseline
+
+The direct database path is the reliable baseline. bin/data/server/db/servers.cfg is in the reversible local-development mode:
+
+```text
+// AuthServer 127.0.0.1 2104
+UseFakeAuth 1
+UseQueueServer 1
+```
+
+TestClient uses -db 127.0.0.1, bypasses AuthServer, reaches DbServer and MapServer, and can exit cleanly. The historical verified character/map run is:
+
+- Result JSON: agent/logs/smoke-directdb-20260814-161149.json
+- Status: agent/logs/smoke-directdb-20260814-161149.status
+- Account: Dummy00018
+- Character: TEST-35034
+- passed=true, stage=character-map, map_connected=true, exit code 0
+- Duration: 58.93 seconds
+- Read-only SQL confirmation: AuthName=Dummy00018 Name=TEST-35034 StaticMapId=1 MapId=NULL LoginCount=1
+
+Several later short smoke attempts were timing-sensitive: some logged in or reached MapServer but returned before the TestClient map_connected marker. Treat those as diagnostic observations, not replacements for the historical verified baseline. Before the next graphical experiment, rerun the full -ExerciseCharacter smoke and preserve its JSON/status/log paths.
+
+### Exact graphical hang reproduction
+
+The exact current capture command was run from the repository root with bin as the client working directory:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\agent\capture.ps1 -Target AtlasPlaza_CityHall_03 -AccountName Dummy00018 -Password 11111111 -TimeoutSeconds 180 -Json
+```
+
+Evidence:
+
+- Result JSON: agent/logs/capture-AtlasPlaza_CityHall_03-20260814-171750.json
+- Complete stdout: agent/logs/capture-AtlasPlaza_CityHall_03-20260814-171750.stdout.log
+- Complete stderr: agent/logs/capture-AtlasPlaza_CityHall_03-20260814-171750.stderr.log
+- Local start: 2026-08-14T17:17:50.9014304-05:00
+- Local finish: 2026-08-14T17:20:51.0509751-05:00
+- Timeout: 180 seconds
+- Ouroboros PID: 6792
+- Parent PowerShell PID observed: 15060; capture shell parent observed: 24384
+- Command line:
+
+  ```text
+  "D:\github\cohsourcedev\bin\Ouroboros.exe" -db 127.0.0.1 -authname Dummy00018 -password 11111111 -noverify -quicklogin 1 -noversioncheck -capture AtlasPlaza_CityHall_03 -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0
+  ```
+
+- Working directory: D:\github\cohsourcedev\bin
+- While hung, PID 6792 was present, Responding=True, working set approximately 73 MB, and had minimal CPU activity.
+- Result: passed=false, timedOut=true, exitCode=124, reason Ouroboros timed out before clean capture exit, screenshot path empty.
+- No JPG was produced.
+- The old wrapper did not save a complete inherited environment snapshot. The next capture.ps1 implementation must capture the environment before launch rather than claiming this run preserved it.
+
+The important stdout sequence (logger timestamps are UTC, approximately five hours ahead of the local wrapper timestamps) was:
+
+```text
+22:17:51 Project: Ouroboros; Preloaded PhysX DLLs
+22:17:51 Loaded message stores
+22:20:24 Initialized error log
+22:20:25 Initialized hardware lights
+22:20:25-22:20:25 Compiled fragment/vertex shaders; Renderer initialization complete
+22:20:25-22:20:33 Loaded folders, sounds, tricks, textures, fonts, network library, game data, FX, NPCs, costume bins, animations, and other data
+22:20:33.779 Capture quick login: account=Dummy00018 populated=0 max=0
+22:20:33.834 Connecting to DBServer 127.0.0.1:7000 (UDP)
+22:20:33.958 Capture waiting for DbServer queue admission
+22:20:34.149 Capture queue result: 2
+22:20:34.149 Capture login result: auth=1 db=4 slots=1 max=48 error=none
+22:20:34.225 Capture character handoff: slot=0 name=TEST-35034 result=1 error=none
+22:20:34.263 Connecting to MapServer 127.0.0.1:7001 (UDP)
+22:20:38.110 Detailed trays; 22:20:38.158 Welded 764 interior models
+22:20:38.281 Applied 4057 different, 381590 same texture swaps
+22:20:38.285 Loaded 7 zowies; 22:20:41.810 Created 2311 PhysX objects
+22:20:42.287 Loaded 28 textures
+22:20:42.287 Waiting for mapserver update..
+```
+
+There is no later Loaded all data!, no capture-ready marker, no screenshot request/result, and no clean Ouroboros exit. This places the current known stop after MapServer scene/asset initialization and before the capture state can finish. The exact blocking call still needs a native stack or more precise markers.
+
+The repeated stderr messages are legacy registry lookup warnings (regfileLoadKeyValue: No such file or directory). They were not the apparent fatal cause.
+
+### Instrumentation currently present but not usable yet
+
+Uncommitted source edits add startup markers in these files:
+
+- Game/src/main.c: process start, registry/folder setup, command-line parse, graphics/audio load, resume info, data load, and game-loop entry.
+- Game/src/game.c / Game/src/game.h: startup trace functions plus markers around argument parsing, direct credentials, quick login, game_beforeParseArgs, renderer finalization, audio/input, window setup, network start, data load, capture processing, game_beforeLoop, and first game-loop update.
+- Game/src/UI/uiLogin.c: DbServer connection and queue markers.
+- Game/src/clientcomm/authclient.c: direct-auth request/response markers.
+- Game/src/clientcomm/dbclient.c: DbServer login, character selection, and MapServer handoff markers.
+- Game/src/clientcomm/clientcomm.c: MapServer connection, scene request, groups/entities, and scene completion markers.
+
+The marker design is intended to reveal the actual transition between checkQuickLogin(), game_beforeLoop(), MapServer packet handling, commReqScene(), and capture readiness. No instrumented trace has been collected yet.
+
+Important implementation problems to fix before using this build:
+
+1. Game/src/game.c currently declares the trace output as standard FILE *, but this translation unit has a project FileWrapper/FILE collision. The build emitted C4133 warnings around the trace writer. Replace it with an unambiguous Win32 handle or another type-safe writer before trusting the trace.
+2. authclient.c is shared with TestClient and now calls game_startupTrace, but TestClient does not link the Ouroboros game.c implementation. The build therefore fails at TestClient link with LNK2001: unresolved external symbol _game_startupTrace and LNK1120.
+3. A previous attempt to add a TestClient trace implementation did not apply. Either add a small compatible implementation to the TestClient target or move the trace implementation into a shared source/library linked by both targets. Keep TestClient's existing autonomous status behavior intact.
+
+The current build log is agent/logs/build-Release-x86-20260814-172832.log. Do not run capture from this failed/incomplete build and do not report the instrumentation as validated.
+
+### Native debugging discovery
+
+No command-line CDB, WinDbg, WinDbgX, or ProcDump executable was found in PATH or the searched Visual Studio/Windows SDK locations. The Windows SDK does contain dbghelp.dll/dbgcore.dll, and the repository contains:
+
+- Utilities/dumpstk/bin/x86/Release/dumpstk.exe
+- Utilities/dumpstk/src/dumpstk.cpp
+- bin/Ouroboros.exe and bin/Ouroboros.pdb
+
+dumpstk.exe is a dump analyzer, not a live attach debugger. It accepts a dump with -f, an image path with -i, symbols with -y, and address options. It can be useful after a dump is created.
+
+agent/dump-process.ps1 was added as a separate-process minidump helper. It uses dbghelp.dll MiniDumpWriteDump and records process metadata (command line, parent, modules, threads) beside the dump. It has only been tested against an already-exited PID, so it produced metadata with Cannot find a process with the process identifier 6792 and no .dmp. Test and repair it against a live hung Ouroboros process before relying on it. If MiniDumpWriteDump is blocked by access rights or P/Invoke flags, solve that in the helper or install/use a real Windows debugger; do not make Ouroboros dump itself.
+
+The target process was stopped after the run with agent/stop-shard.ps1 -ForceProcessStop -Json; no ServerMonitor, DbServer, Launcher, MapServer, Ouroboros, or TestClient processes remain.
+
+### Required next actions, in order
+
+1. Inspect git status --short, git diff, AGENTS.md, this section, and docs/agent-status.md. Preserve the existing edits; do not reset.
+2. Repair the trace implementation/type collision and provide the shared trace symbol for TestClient. Build with the only verified baseline: agent/build.ps1 -Configuration Release -Platform x86 -Json. Confirm the build completes before any new capture.
+3. Run agent/doctor.ps1 -Json, start a disposable shard, and immediately run the historical-style TestClient character/map smoke. Save the JSON/status/log paths and ensure it passes before comparing Ouroboros.
+4. Start one bounded capture. At timeout, invoke agent/dump-process.ps1 while Ouroboros is still alive. Capture PID, command line, parent, cwd, environment, modules, threads, dump path, and last startup marker. Analyze the dump with dumpstk.exe using Ouroboros's PDB and save all evidence under agent/logs/.
+5. Use the marker and native stack to determine whether the wait is in MapServer update/packet dispatch, game_beforeLoop, rendering, input/audio, or synchronization. Compare the same direct-DB account flow against TestClient; do not assume UseFakeAuth 1 eliminates every graphical login-state dependency.
+6. Update agent/capture.ps1 so timeout is self-diagnosing: machine-readable failure JSON, timestamps, PID/cmdline/cwd/environment, client stdout/stderr, server status/logs, last marker, dump/stack evidence, bounded client cleanup, and disposable shard cleanup. Preserve the normal success JSON and screenshot validation.
+7. Test one hypothesis at a time. Do not add arbitrary delays. Only after the client reaches the known map and produces a real JPG should you work on deterministic camera repeatability and Atlas Park capture.
+8. Update this handoff and docs/agent-status.md with every confirmed result. Phase 1 must remain explicitly unverified until two bounded captures produce the intended JPG and clean exits.
+
+### Final state at handoff
+
+- Phase 0: historically verified and should remain the regression baseline.
+- Phase 1 graphical capture: NOT VERIFIED; no JPG exists.
+- Exact hang: after direct-DB login, character handoff, MapServer connection, and scene loading; last baseline message is Waiting for mapserver update..
+- Native stack: NOT YET COLLECTED.
+- Capture timeout diagnostics: NOT YET IMPLEMENTED in agent/capture.ps1.
+- Instrumented build: NOT BUILDING because of the TestClient unresolved trace symbol; also has a FILE/FileWrapper warning issue in the trace writer.
+- Working tree: dirty with the source instrumentation and agent/dump-process.ps1; no commit or push was made for this debugging attempt.

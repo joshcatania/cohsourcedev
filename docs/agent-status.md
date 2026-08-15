@@ -82,3 +82,25 @@ The remaining blocker is before deterministic map entry: the rebuilt graphical c
 .\agent\status.ps1 -Json
 .\agent\stop-shard.ps1 -ForceProcessStop -Json
 ```
+
+## Phase 1 debugging checkpoint — 2026-08-14 stopping point
+
+The direct-DB TestClient path remains the Phase 0 baseline. The latest exact graphical capture was bounded at 180 seconds and did not produce an image, but it progressed farther than previously recorded:
+
+- Command: agent/capture.ps1 -Target AtlasPlaza_CityHall_03 -AccountName Dummy00018 -Password 11111111 -TimeoutSeconds 180 -Json
+- Result: agent/logs/capture-AtlasPlaza_CityHall_03-20260814-171750.json
+- Stdout/stderr: agent/logs/capture-AtlasPlaza_CityHall_03-20260814-171750.stdout.log and .stderr.log
+- Ouroboros PID: 6792
+- Working directory: D:\github\cohsourcedev\bin
+- Local runtime: 17:17:50.901 to 17:20:51.051
+- Result: passed=false, timedOut=true, exitCode=124, no screenshot
+
+The captured Ouroboros log proves renderer/shader initialization, direct DbServer connection, queue admission, successful login (auth=1 db=4 slots=1), character handoff (TEST-35034), MapServer connection, scene/model/PhysX/texture loading, then Waiting for mapserver update... No capture-ready marker, JPG, or clean exit followed. This is the current known hang point; Phase 1 remains NOT VERIFIED.
+
+The historical direct-DB smoke that must remain the comparison baseline is agent/logs/smoke-directdb-20260814-161149.json (passed=true, character-map, map_connected=true, Dummy00018 / TEST-35034, clean exit). Several later short attempts were timing-sensitive and must not replace that evidence.
+
+The worktree now contains uncommitted startup instrumentation in Game/src/main.c, Game/src/game.c, Game/src/game.h, Game/src/UI/uiLogin.c, Game/src/clientcomm/authclient.c, Game/src/clientcomm/clientcomm.c, and Game/src/clientcomm/dbclient.c, plus agent/dump-process.ps1. No instrumented trace has been captured. The rebuild failed at TestClient link because shared authclient.c references _game_startupTrace; the trace writer in Game/src/game.c also needs its FILE/FileWrapper type collision corrected. Build log: agent/logs/build-Release-x86-20260814-172832.log.
+
+No CDB/WinDbg/ProcDump executable was found. The Windows SDK dbghelp.dll is present, and the separate-process dump helper was added but has only been exercised after the target PID had already exited. It must be tested against a live hang and analyzed with Utilities/dumpstk/bin/x86/Release/dumpstk.exe plus bin/Ouroboros.pdb.
+
+The next agent should repair/build the instrumentation, rerun the verified TestClient smoke immediately before capture, obtain a live dump/stack at timeout, and then make agent/capture.ps1 preserve PID, command line, environment, cwd, client/server logs, last marker, dump/stack evidence, cleanup state, and machine-readable failure JSON. Do not claim Phase 1 success or begin camera/asset work until a real AtlasPlaza_CityHall_03.jpg and clean Ouroboros exit are verified twice. Full context and exact resume steps are in [COH_CODEX_HANDOFF.md](../COH_CODEX_HANDOFF.md).
