@@ -576,6 +576,7 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
     <ClInclude Include="..\..\src\render\thread\rt_bonedmodel.h" />
     <ClInclude Include="..\..\src\render\thread\rt_cgfx.h" />
     <ClInclude Include="..\..\src\render\thread\rt_cgfx_statemgmt.h" />
+    <ClInclude Include="..\..\src\render\thread\rt_glslpilot.h" />
     <ClInclude Include="..\..\src\render\thread\rt_cloth.h" />
     <ClInclude Include="..\..\src\render\thread\rt_cubemap.h" />
     <ClInclude Include="..\..\src\render\thread\rt_cursor.h" />
@@ -1136,6 +1137,7 @@ copy /Y $(ProjectDir)..\..\..\3rdparty\PhysX\bin\Release\*.dll $(ProjectDir)..\.
     <ClCompile Include="..\..\src\render\thread\rt_bonedmodel.c" />
     <ClCompile Include="..\..\src\render\thread\rt_cgfx.c" />
     <ClCompile Include="..\..\src\render\thread\rt_cgfx_statemgmt.c" />
+    <ClCompile Include="..\..\src\render\thread\rt_glslpilot.c" />
     <ClCompile Include="..\..\src\render\thread\rt_cloth.c" />
     <ClCompile Include="..\..\src\render\thread\rt_cubemap.c" />
     <ClCompile Include="..\..\src\render\thread\rt_cursor.c" />

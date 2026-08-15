@@ -174,3 +174,87 @@ Harness hardening (all empirically driven):
 - Comparator thresholds set to 6% changed / 3.0 mean: measured same-scene variance peaks near 4% on the sun-facing West shot (glare shimmer) while cross-scene comparisons measure 35%+.
 
 Final verification: full regression suite green (exit 0) with per-shot drift 0-1.5%; one shot measured exactly 0.0% changed pixels. Evidence: `agent/logs/regression-20260815-13*.json`.
+
+## Native GLSL pilot for BLENDMODE_MODULATE — 2026-08-15
+
+The shader-port feasibility spike completed successfully: one material now renders
+through a hand-written native GLSL program, harness-verified visually equivalent
+to the Cg->ARB path.
+
+### Root cause of the `-useCg 2` failure (completed diagnosis)
+
+Reproduced offline with the repo's own compiler (`3rdparty/cg/bin/cgc.exe`, version
+2.2.0017, matching `bin/cg.dll`):
+
+- The shipped shaders' `TIE(ENVn)` constant-bind semantics (from
+  `shaders/cgfx/variants.cgh`, applied throughout `constants_fp.cgh` /
+  `constants_vp.cgh`) crash the Cg 2.2 `glslf`/`glslv` backends with
+  `fatal error C9999: *** exception during compilation ***`. GL-state semantics
+  like `state.fog.params` compile fine; any custom `ENVn` crashes.
+- With ties disabled (`#if !defined(GLSL)` guard around `#define USE_CONSTANT_TIES`),
+  all 16 main scene shaders compile cleanly under both GLSL profiles with the
+  production define set. The 12 remaining failures are `effects/` post-processing
+  shaders (bloom/tonemap/DOF) that carry their own `TIE(ENV0)` struct-member
+  semantics via `constants_vfx.cgh` — unused at default capture settings.
+- Even compiling, Cg->GLSL mode cannot run: the engine always builds with
+  `RT_SUPPORT_CG_COMBO_SHADERS 0`, so `WCW_SetCgShaderParamArray4fv` pushes
+  constants to `program.env[]` registers, which GLSL shaders cannot read. Full
+  GLSL-mode revival would need a native GLSL parameter path — which is exactly
+  what the pilot now demonstrates for one material.
+
+Shader sources live in `bin/piggs/misc.pigg`; extract with
+`Utilities/pig/bin/x86/Release/pig.exe x bin\piggs\misc.pigg` (already-built tool).
+
+### Pilot implementation
+
+- `Game/src/render/thread/rt_glslpilot.{c,h}` (new): one GLSL 1.20
+  compatibility-profile program replicating `modulatefp.cg` + the DUALTEX-family
+  `vp_master_vp.cg` variants (`VERT_COLOR`/`FF_LIT_GL`/`FF_UNLIT_GL` ×
+  `TC_MATRIX` + faux reflection). It reads the same GL server state the Cg
+  `state.*` semantics read (`gl_ModelViewMatrix`, `gl_TextureMatrix`,
+  `gl_LightSource[0]`, `gl_Fog`, `gl_FogFragCoord`), so no new engine parameter
+  plumbing exists beyond `g_ReflectionParamVP`, which `WCW_SetCgShaderParamArray4fv`
+  mirrors into a pilot uniform.
+- Activation rides the existing WCW state machine (`WCW_BindFragmentProgram`,
+  `WCW_BindVertexProgram`, enable/disable/reset paths in `wcw_statemgmt.c`):
+  while the pilot's GLSL program is bound with `glUseProgram` it overrides the
+  tracked ARB programs, and unbinding restores them untouched. Because the
+  engine's binds are id-cached, the (modulate fragment, simple vertex variant)
+  pairing is re-checked on both bind paths and on enable after disable/enable
+  cycles — without this, activation is bind-order dependent and nondeterministic.
+- Program ids are registered from `shaderMgr_InitVPs`/`shaderMgr_InitFPs` after
+  every shader reload (ids regenerate). GLSL entry points are the raw GLEW
+  pointers (`__glewUseProgram` etc.) because `ogl.h` `#undef`s the macro names
+  as a "do not use" policy for the fixed pipelines.
+- Enabled at startup with `-glslPilot 1` (new `game_state.glslPilot`, registered
+  as the `glslPilot` console command; command-line passthrough works because
+  argument parsing precedes renderer init). `agent/capture.ps1` gained
+  `-ExtraClientArgs` to pass it.
+
+### Verification (final clean binary, shard warm, clock settled)
+
+- Control (pilot off) vs baseline, AtlasPlaza_CityHall_03: 1.27% changed / mean 1.43 — PASS.
+- Pilot (verified active via `GLSL pilot: BLENDMODE_MODULATE program compiled and linked`
+  in `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-145*.stdout.log`):
+  - CityHall_03: 1.27% / 1.53 — PASS
+  - East_01: 1.51% / 2.64 — PASS
+- Earlier broken variants measured 6.7% (timing-dependent activation) and 99.99%
+  (unfrozen world clock), both diagnosed and fixed; the passing numbers above are
+  from the committed code.
+- Operational note: `capture.ps1`'s default account `Dummy00010` lacked
+  `AccessLevel 9` in `cohdb.dbo.Ents`, so `timeset 16; timescale 0` was silently
+  rejected and the world clock drifted (orange-sky captures, ~100% false diffs).
+  Fixed with `UPDATE cohdb.dbo.Ents SET AccessLevel=9 WHERE AuthName='Dummy00010'`.
+  Any future capture account needs the same grant.
+
+### What this unlocks
+
+The migration template is now proven end to end for simple materials: replicate
+the Cg math in compatibility GLSL, read GL state through built-ins, mirror the
+one program-local constant, hook the WCW bind paths, and verify with
+`compare-captures.ps1` against the ARB baseline. Next candidates by coverage:
+`multiplyRegfp` (BLENDMODE_MULTIPLY, pairs with vertex 227/225-class variants),
+then `colorBlendDualfp`/`addGlowfp`. Bumpmapped materials additionally need
+tangent-space interpolants and more engine constants, and the `effects/`
+post-processing set needs the same `TIE` treatment or native ports before
+`-useCg 2` could ever be revisited.

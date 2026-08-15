@@ -6,6 +6,7 @@
 #include "rt_shaderMgr.h"
 #include "render/thread/rt_state.h"
 #include "render/thread/rt_cgfx.h"
+#include "render/thread/rt_glslpilot.h"
 #include "render/renderUtil.h"
 #include "render/thread/wcw_statemgmt.h"
 #include <utilitieslib/utils/utils.h>
@@ -957,6 +958,10 @@ void shaderMgr_InitFPs(void)
     if (!executedOnce) // do not disable features on shader reload
         rdr_caps.features &= rdr_caps.allowed_features;
 
+    // the GLSL pilot renders this one material; ids are regenerated on every
+    // shader reload so re-register after each compile pass
+    rt_glslpilot_setFragmentTarget( g_shaderMgrFragmentProgramVariants[BLENDMODE_MODULATE][0] );
+
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
     PERFINFO_AUTO_STOP();
@@ -1218,6 +1223,19 @@ void shaderMgr_InitVPs(void)
     PERFINFO_AUTO_STOP();
     loadProgramCacheReset(false); // Destroy temporary caches
     PERFINFO_AUTO_STOP();
+
+    // Register the simple-material vertex variants the GLSL pilot replicates
+    // (from the sVertexProgramTbl rows using vp_master_vp.cg). The mode values
+    // are the variants.cgh VERTEX_LIT constants: FF_UNLIT_GL=5, FF_LIT_GL=4,
+    // VERT_COLOR=1. All of these rows are SKIN=0 TC_XFORM=TC_MATRIX
+    // REFLECT=FAUX_0_1, which is what the pilot's vertex shader implements.
+    rt_glslpilot_resetPrograms();
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_COLORONLY], 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_FILL], 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_NORMALS], 4 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], 1 );
 }
 
 

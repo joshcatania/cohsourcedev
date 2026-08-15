@@ -155,13 +155,14 @@ Known operational constraints:
 
 Shader-path findings (2026-08-15, evidence in `docs/agent-status.md`):
 
-- The default and only verified shader path is Cg compiling to ARB assembly (`useCg 1`). `useCg 0` uses precompiled ARB programs without Cg.
-- `useCg 2` (Cg->GLSL) is **broken** with the shipped shader sources: every `.cgfx` shader fails to load in the `glslf` profile and the renderer falls back to shaderless output. Do not default to it; reaching real GLSL requires a shader-porting effort, verified incrementally with the capture harness.
+- The default and only verified full-scene shader path is Cg compiling to ARB assembly (`useCg 1`). `useCg 0` uses precompiled ARB programs without Cg.
+- `useCg 2` (Cg->GLSL) is **broken** with the shipped shader sources: the custom `TIE(ENVn)` constant-bind semantics crash the Cg 2.2 `glslf`/`glslv` compiler backends (reproduced offline with `3rdparty/cg/bin/cgc.exe`), and even with those guarded out the engine pushes constants to `program.env[]` registers that GLSL cannot read. Do not default to it.
+- A **native GLSL pilot** now renders `BLENDMODE_MODULATE` through a hand-written GLSL 1.20 compatibility-profile program (`Game/src/render/thread/rt_glslpilot.{c,h}`), enabled with `-glslPilot 1` (or `agent/capture.ps1 -ExtraClientArgs "-glslPilot 1"`). It is harness-verified visually equivalent to the ARB path (drift within the control band, e.g. 1.27%/1.53 vs 1.27%/1.43 on AtlasPlaza_CityHall_03) and is the proven template for porting further materials off Cg.
 - The legacy fixed-function/ATI/NV-combiner branches (`R200`, `NV1X/NV2X`, `TEX_ENV_COMBINE`) cannot execute on modern drivers (extensions no longer exist) and are candidates for later deletion.
 
 The next priorities are:
 
-1. shader modernization in small, harness-verified steps — starting with a feasibility spike on porting one material off the Cg->GLSL backend, or off Cg entirely
+1. extend the GLSL pilot to further materials in small, harness-verified steps (next by coverage: `multiplyRegfp`/BLENDMODE_MULTIPLY, then `colorBlendDualfp`/`addGlowfp`); bumpmapped materials additionally need tangent-space interpolants and more engine constants
 2. dead-path deletion (`shadersATI.c`, `shadersTexEnv.c`, and their `rt_state.c`/`wcw_statemgmt.c` branches) as bounded hygiene once a renderer change justifies touching those files
 3. idle-animation phase determinism if close-up captures are needed for future shader work
 

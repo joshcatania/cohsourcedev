@@ -1313,6 +1313,8 @@ Cmd game_cmds[] =
                         "Use FBOs, if supported, for off-screen rendering" },
     { 0, "useCg", CMD_TOGGLE_USECG, {{ CMDINT(tmp_int)}}, CMDF_HIDEPRINT,
                         "Use Cg shaders instead of ARB" },
+    { 0, "glslPilot", 0, {{ CMDINT(game_state.glslPilot) }}, CMDF_HIDEPRINT,
+                        "Render BLENDMODE_MODULATE through the native GLSL pilot program (development experiment; set at startup)" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,

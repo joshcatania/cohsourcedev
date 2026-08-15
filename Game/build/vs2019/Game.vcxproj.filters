@@ -1155,6 +1155,9 @@
     <ClInclude Include="..\..\src\render\thread\rt_cgfx_statemgmt.h">
       <Filter>Header Files\render\thread</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\render\thread\rt_glslpilot.h">
+      <Filter>Header Files\render\thread</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\src\render\thread\rt_cloth.h">
       <Filter>Header Files\render\thread</Filter>
     </ClInclude>
@@ -2919,6 +2922,9 @@
       <Filter>Source Files\render\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\render\thread\rt_cgfx_statemgmt.c">
+      <Filter>Source Files\render\thread</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\render\thread\rt_glslpilot.c">
       <Filter>Source Files\render\thread</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\render\thread\rt_cloth.c">

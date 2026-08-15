@@ -386,3 +386,44 @@ The first renderer step ran and produced a corrected understanding (full detail 
 - The regression harness was hardened against three measured nondeterminism sources (post-freeze sky interpolation, first-shot-of-generation transitions, close-up idle-animation phase); the suite now passes with 0-1.5% drift and one shot at exactly 0%.
 - Dead fixed-function/ATI/NV branches cannot execute on modern drivers; deleting them is safe hygiene for whenever those files are next touched.
 - Real GLSL modernization = a shader-porting project (per-material, harness-verified), not a mode switch. Scope it before starting.
+
+## Native GLSL pilot verified — 2026-08-15
+
+The feasibility spike from the previous checkpoint is complete and successful:
+one material (`BLENDMODE_MODULATE`) now renders through native GLSL, verified
+visually equivalent to the Cg->ARB path by the capture harness. Full detail and
+evidence paths in `docs/agent-status.md`, "Native GLSL pilot for
+BLENDMODE_MODULATE — 2026-08-15". Key facts for continuing work:
+
+- The `-useCg 2` failure is fully diagnosed: the shipped shaders' custom
+  `TIE(ENVn)` semantics crash the Cg 2.2 GLSL compiler backends (reproduced
+  offline with the repo's own `cgc.exe`; GL-state semantics compile fine), and
+  with ties guarded out all 16 main scene shaders compile under
+  `glslf`/`glslv`. Independently, the engine's hard-const parameter path writes
+  `program.env[]` registers, which GLSL cannot read — so GLSL mode needs a
+  native parameter path regardless. Shader sources are inside
+  `bin/piggs/misc.pigg` (extract with the already-built
+  `Utilities/pig/bin/x86/Release/pig.exe`).
+- The pilot lives in `Game/src/render/thread/rt_glslpilot.{c,h}` with hooks in
+  `wcw_statemgmt.c` (bind/enable/disable paths) and id registration in
+  `rt_shaderMgr.c`. It overrides the ARB programs via `glUseProgram` while
+  active and restores them on deactivate. Enable with `-glslPilot 1`
+  (`agent/capture.ps1 -ExtraClientArgs "-glslPilot 1"`).
+- Two hard-won implementation constraints: the engine's program binds are
+  id-cached, so the pilot must re-check its (fragment, vertex) pairing on both
+  bind paths *and* on enable-after-disable cycles, or activation becomes
+  bind-order dependent and images vary run to run (~5% drift); and the
+  reflection selector constant must be mirrored continuously rather than read
+  back from GL at activation.
+- Verification standard for any follow-up port: control (pilot off) and pilot
+  captures must both land inside the harness thresholds vs the committed
+  baselines on a warmed, clock-settled shard, with pilot activation confirmed
+  in the client stdout log ("GLSL pilot: ... compiled and linked").
+- Operational: `capture.ps1`'s default account `Dummy00010` now has
+  `AccessLevel=9` in `cohdb.dbo.Ents` (was NULL — the clock freeze was being
+  silently rejected). Any new capture account needs the same grant.
+
+Next actions, in order: extend the pilot to `multiplyRegfp` (BLENDMODE_MULTIPLY,
+the next-most-covered simple material), then `colorBlendDualfp`/`addGlowfp`;
+treat bumpmapped materials and the `effects/` post-processing set as separate
+work packages (extra interpolants/constants and `TIE` cleanup respectively).
