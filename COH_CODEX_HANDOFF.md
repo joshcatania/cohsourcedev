@@ -376,3 +376,13 @@ Actions 1 and 2 above are complete. See `docs/agent-status.md` "Phase 2 verified
 - `agent/compare-captures.ps1` (image comparator) and `agent/capture-regression.ps1` (orchestrator with baseline adoption) provide machine-readable regression verdicts.
 - Critical determinism lesson: the world clock runs at 48x real time and `timeset`/`timescale` require character access level 9 on the server. Characters created with the default `AccessLevel 0` silently fail the freeze. Grant `AccessLevel=9` in `cohdb.dbo.Ents` for capture accounts (one-time), re-adopt baselines after the first post-grant run, and the suite becomes deterministic: same-scene reruns differ by 0.03–1.7% of pixels; cross-scene comparisons fail at ~36%.
 - Current next action: begin renderer changes (fixed-function/ATI shader path retirement toward the GLSL path) guarded by before/after `agent/capture-regression.ps1` runs on a warmed shard.
+
+## Renderer investigation checkpoint — 2026-08-15
+
+The first renderer step ran and produced a corrected understanding (full detail in `docs/agent-status.md`, "Renderer shader-path findings"):
+
+- Cg->GLSL (`-useCg 2`) is broken with the shipped shaders — all CgFX loads fail at `glslf`; do not assume a working GLSL path exists. The only verified path is Cg->ARB assembly (`useCg 1`, the default).
+- `agent/capture.ps1 -CgMode <n>` enables no-rebuild shader-mode A/B runs.
+- The regression harness was hardened against three measured nondeterminism sources (post-freeze sky interpolation, first-shot-of-generation transitions, close-up idle-animation phase); the suite now passes with 0-1.5% drift and one shot at exactly 0%.
+- Dead fixed-function/ATI/NV branches cannot execute on modern drivers; deleting them is safe hygiene for whenever those files are next touched.
+- Real GLSL modernization = a shader-porting project (per-material, harness-verified), not a mode switch. Scope it before starting.

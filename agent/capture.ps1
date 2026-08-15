@@ -6,6 +6,9 @@ param(
     [int]$TimeoutSeconds = 180,
     [int]$Width = 1280,
     [int]$Height = 720,
+    # 0 = no Cg (precompiled ARB programs), 1 = Cg->ARB assembly (default),
+    # 2 = Cg->GLSL. Passed to the client as -useCg.
+    [int]$CgMode = -1,
     [switch]$Json
 )
 $ErrorActionPreference = 'Stop'
@@ -86,6 +89,9 @@ try {
     $before = @{}
     Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.FullName]=$_.LastWriteTimeUtc }
     $arguments = @('-db','127.0.0.1','-authname',$AccountName,'-password',$Password,'-noverify','-quicklogin','1','-noversioncheck','-capture',$Target,'-fullscreen','0','-screen',$Width.ToString(),$Height.ToString(),'-stopinactivedisplay','0')
+    if ($CgMode -ge 0) {
+        $arguments += @('-useCg', $CgMode.ToString())
+    }
     $argString = ($arguments | ForEach-Object { if ($_ -match '[\s"]') { '"' + ($_ -replace '"','\"') + '"' } else { $_ } }) -join ' '
     # Start-Process -PassThru with redirected streams never populates ExitCode on
     # this PowerShell build, and DataReceivedEventHandler scriptblocks run on

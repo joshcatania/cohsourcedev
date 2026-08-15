@@ -3,7 +3,9 @@ param(
     # Comma-separated capture labels. Each must exist in the game's capture
     # shot table (Game/src/game.c, s_captureShots); unknown labels capture the
     # default shot but still produce artifacts under their own name.
-    [string]$Targets = 'AtlasPlaza_CityHall_03,AtlasPlaza_East_01,AtlasPlaza_North_01,AtlasPlaza_West_01,AtlasPlaza_Closeup_01',
+    # Closeup_01 is excluded by default: at camdist 10 the player's idle
+    # animation phase differs between runs, which is future engine work.
+    [string]$Targets = 'AtlasPlaza_CityHall_03,AtlasPlaza_East_01,AtlasPlaza_North_01,AtlasPlaza_West_01',
     [string]$AccountName = 'Dummy00018',
     [string]$Password = '11111111',
     [int]$TimeoutSeconds = 180,
@@ -27,6 +29,14 @@ New-Item -ItemType Directory -Force -Path $BaselineDir, $captureDir, $logRoot | 
 $startedAt = Get-Date
 $results = @()
 $labels = @($Targets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
+
+# Warmup capture: the first client to run on a fresh mapserver generation is
+# also the one that freezes the world clock, and the sky/sun systems keep
+# interpolating toward the frozen state for a while afterwards. Run one
+# throwaway capture so every baseline and comparison sees a settled server.
+if ($labels.Count -gt 0) {
+    $null = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $captureScript -Target $labels[0] -AccountName $AccountName -Password $Password -TimeoutSeconds $TimeoutSeconds -Json 2>&1
+}
 
 foreach ($label in $labels) {
     $safeLabel = $label -replace '[^A-Za-z0-9_-]', '_'

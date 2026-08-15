@@ -2395,7 +2395,11 @@ static void game_processCapture(void)
             return;
         }
 
-        if (++game_state.capture_frame_count < 90)
+        // Let the scene settle after the teleport and time freeze: the sky,
+        // sun, and fog systems interpolate toward the new state for a few
+        // seconds, so the first capture after a mapserver restart would
+        // otherwise catch a mid-transition image.
+        if (++game_state.capture_frame_count < 300)
             return;
 
         sprintf_s(SAFESTR(command), "screenshottitle %s", game_state.capture_target);

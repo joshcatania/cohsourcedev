@@ -150,3 +150,27 @@ Evidence:
 - Visual check: `AtlasPlaza_East_01` confirmed as a genuinely different valid view (Atlas statue dominant) vs the City Hall default.
 
 Next: renderer changes guarded by `agent/capture-regression.ps1` before/after runs.
+
+## Renderer shader-path findings + harness hardening — 2026-08-15
+
+The first renderer investigation ran under the regression harness with the following verified results:
+
+Shader-path map (all evidence from live runs):
+
+- Default: `game_state.useCg = 1` — Cg compiles the shipped `.cgfx`/`.cg` sources to ARB assembly (`CG_PROFILE_ARBFP1/ARBVP1`). This is the only fully working shader path; all Phase 1/2 captures used it.
+- `useCg 0`: loads precompiled ARB programs (`shaders/arb/*.fp`) without the Cg runtime.
+- `useCg 2` (Cg->GLSL): **broken**. Live run (`-useCg 2`, capture JSON `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-124346*`): every CgFX shader fails with `CG ERROR: "The program could not load"` at `-profile glslf`, followed by fallback error shaders; the resulting image differs from baseline at 100% of pixels (meanDelta 149). Reaching GLSL therefore requires porting shader sources, not just flipping the mode.
+- Legacy branches for `R200` (ATI_fragment_shader), `NV1X/NV2X` (register combiners), and `TEX_ENV_COMBINE` are selected from `rdr_caps.chip` in `rt_state.c`/`wcw_statemgmt.c` but cannot activate on modern drivers because those GL extensions no longer exist. They are deletion candidates, not runtime risks.
+
+Tooling:
+
+- `agent/capture.ps1` gained `-CgMode <n>`, passed to the client as `-useCg <n>` (the generic command-line parser turns it into the `useCg` console command before `finalizeRenderer()` applies it). This enables no-rebuild shader-mode A/B experiments.
+
+Harness hardening (all empirically driven):
+
+- Capture settle time raised from 90 to 300 frames (`game_processCapture`): sky/sun/fog interpolate for seconds after the teleport + time freeze.
+- `capture-regression.ps1` now runs one discarded warmup capture per suite run: the first client on a fresh mapserver generation is the one that freezes the clock, and baselining that first image caught a mid-transition scene (94.9% false regression, reproduced and eliminated).
+- `AtlasPlaza_Closeup_01` removed from the default suite: at camdist 10 the player idle-animation phase differs between runs (17.4% measured drift). Pose determinism is future engine work; the shot remains available via `-Targets`.
+- Comparator thresholds set to 6% changed / 3.0 mean: measured same-scene variance peaks near 4% on the sun-facing West shot (glare shimmer) while cross-scene comparisons measure 35%+.
+
+Final verification: full regression suite green (exit 0) with per-shot drift 0-1.5%; one shot measured exactly 0.0% changed pixels. Evidence: `agent/logs/regression-20260815-13*.json`.

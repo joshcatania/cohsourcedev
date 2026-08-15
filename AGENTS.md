@@ -150,11 +150,20 @@ Known operational constraints:
 - The shard needs a warm-up period (a few minutes) after `agent/start-shard.ps1` before logins are admitted. Do not treat a failure as real until it reproduces on a warmed shard that has passed one `agent/smoke.ps1 -ExerciseCharacter` run.
 - Deterministic lighting requires the server-side time freeze (`timeset 16; timescale 0`, sent by the capture setup). The server only accepts those commands at access level 9, so capture accounts need `AccessLevel=9` in `cohdb.dbo.Ents` (one-time SQL update per account, or `DefaultAccessLevel 9` in `servers.cfg` before creating the character).
 - The world clock runs at `DAY_TIMESCALE` 48 by default; without the freeze, images taken minutes apart differ by in-game hours of lighting.
+- The first capture on a fresh mapserver generation catches the sky/sun systems mid-transition to the frozen clock; `agent/capture-regression.ps1` runs a discarded warmup capture to absorb this. Run the regression suite (not bare `capture.ps1`) when comparing against baselines.
+- Shots framing the player character up close vary with the idle-animation phase; `AtlasPlaza_Closeup_01` is therefore excluded from the default regression suite (available via `-Targets`).
+
+Shader-path findings (2026-08-15, evidence in `docs/agent-status.md`):
+
+- The default and only verified shader path is Cg compiling to ARB assembly (`useCg 1`). `useCg 0` uses precompiled ARB programs without Cg.
+- `useCg 2` (Cg->GLSL) is **broken** with the shipped shader sources: every `.cgfx` shader fails to load in the `glslf` profile and the renderer falls back to shaderless output. Do not default to it; reaching real GLSL requires a shader-porting effort, verified incrementally with the capture harness.
+- The legacy fixed-function/ATI/NV-combiner branches (`R200`, `NV1X/NV2X`, `TEX_ENV_COMBINE`) cannot execute on modern drivers (extensions no longer exist) and are candidates for later deletion.
 
 The next priorities are:
 
-1. renderer work guarded by before/after captures — for example, retiring the dead fixed-function/ATI shader paths in favor of the GLSL path — rerunning `agent/capture-regression.ps1` after every change
-2. expanding capture coverage further only when a renderer change needs it (cross-map capture requires a verified map-transfer path first)
+1. shader modernization in small, harness-verified steps — starting with a feasibility spike on porting one material off the Cg->GLSL backend, or off Cg entirely
+2. dead-path deletion (`shadersATI.c`, `shadersTexEnv.c`, and their `rt_state.c`/`wcw_statemgmt.c` branches) as bounded hygiene once a renderer change justifies touching those files
+3. idle-animation phase determinism if close-up captures are needed for future shader work
 
 Prefer TestClient over GUI automation of `Ouroboros.exe`.
 

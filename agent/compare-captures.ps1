@@ -4,10 +4,13 @@ param(
     [Parameter(Mandatory=$true)][string]$Current,
     # A pixel counts as changed when any channel differs by more than this (0-255)
     [int]$PixelTolerance = 12,
-    # Percent of sampled pixels allowed to change before the verdict fails
-    [double]$MaxChangedPercent = 2.0,
-    # Average per-channel delta allowed before the verdict fails
-    [double]$MaxMeanDelta = 2.0,
+    # Percent of sampled pixels allowed to change before the verdict fails.
+    # Measured run-to-run variance reaches ~4% on sun-facing shots (glare
+    # shimmer); cross-scene comparisons measure 35%+.
+    [double]$MaxChangedPercent = 6.0,
+    # Average per-channel delta allowed before the verdict fails. Cloud drift
+    # between runs adds a small broadband delta on clear days.
+    [double]$MaxMeanDelta = 3.0,
     # Images are compared downsampled to this width for speed; JPEG noise
     # averages out and genuine scene changes do not.
     [int]$CompareWidth = 320,
