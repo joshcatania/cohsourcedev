@@ -150,6 +150,48 @@ static const char s_colorBlendDualFragmentSource[] =
 "    gl_FragColor = out_color;\n"
 "}\n";
 
+// addglowfp.cg, default variant (no BIT_HIGH_QUALITY / shadow): old-style
+// tinting of the base texture (calc_old_tint with g_Env0FP), then the
+// random window-glow add (has_glow/add_glow_orig with g_GlowParamFP).
+static const char s_addGlowFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D sampler_base;       // TEXUNIT0\n"
+"uniform sampler2D sampler_glow;       // TEXUNIT1\n"
+"uniform sampler2D sampler_glow_mask;  // TEXUNIT2 (e.g. buildingLightPattern, 128x128)\n"
+"uniform vec4 g_Env0FP;                // engine constColor0 (TIE(ENV8) -> fragment program.env[8])\n"
+"uniform vec4 g_GlowParamFP;           // .x glow threshold, .y per-model random seed\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = gl_TexCoord[0].xy;\n"
+"    vec2 uv1 = gl_TexCoord[0].zw;\n"
+"\n"
+"    // calc_old_tint: lerp from the tint color by base alpha; alpha from tint\n"
+"    vec4 tex_base = texture2D( sampler_base, uv0 );\n"
+"    vec4 out_color;\n"
+"    out_color.rgb = mix( g_Env0FP.rgb, tex_base.rgb, tex_base.a );\n"
+"    out_color.a = g_Env0FP.a;\n"
+"\n"
+"    // modulate with vertex color * 4 (matches old assets and reg\n"
+"    // combiner programs)\n"
+"    out_color.rgb *= 4.0 * gl_Color.rgb;\n"
+"\n"
+"    // has_glow: each 1x1 tile of the base texture shares one glow-mask\n"
+"    // texel (0.0078125 == 1/128); glow fires when mask < threshold\n"
+"    vec2 maskUv = ( floor( uv0 ) * 0.0078125 ) + g_GlowParamFP.yw;\n"
+"    float mask = texture2D( sampler_glow_mask, maskUv ).r;\n"
+"    if ( mask < g_GlowParamFP.x )\n"
+"    {\n"
+"        out_color.rgb += texture2D( sampler_glow, uv1 ).rgb;\n"
+"    }\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
 // variants.cgh values for g_VertexLitMode
 enum {
     kPilotVertLit_VertColor = 1,
@@ -163,20 +205,30 @@ typedef struct tPilotVertexEntry
     int            vertexLitMode;
 } tPilotVertexEntry;
 
+typedef struct tPilotSampler
+{
+    const char*    name;                // GLSL sampler uniform name
+    int                unit;                // fixed texture unit (TEXUNITn)
+} tPilotSampler;
+
 typedef struct tPilotMaterial
 {
     GLuint        arbFragmentId;        // target ARB/Cg program id (0 = none)
     const char*    name;                // for logging
     const char*    fragmentSource;      // GLSL fragment source
+    const tPilotSampler* samplers;      // NULL-terminated sampler/unit map
     bool            usesEnv0;            // fragment consumes the g_Env0FP mirror
     bool            usesEnv1;            // fragment consumes the g_Env1FP mirror
+    bool            usesGlowParam;        // fragment consumes the g_GlowParamFP mirror
     GLuint        program;                // compiled GLSL program (0 = not yet)
     GLint            locReflectionParam;
     GLint            locVertexLitMode;
     GLint            locEnv0;
     GLint            locEnv1;
+    GLint            locGlowParam;
     bool            failed;
     bool            activationLogged;    // one-time activation evidence for logs
+    bool            declineLogged;        // one-time unregistered-vertex diagnostic
 } tPilotMaterial;
 
 #define kPilotMaxVertexEntries 8
@@ -184,10 +236,31 @@ typedef struct tPilotMaterial
 static tPilotVertexEntry    s_vertexEntries[kPilotMaxVertexEntries];
 static int                    s_vertexEntryCount = 0;
 
+// sampler names mirror the Cg sources; units are the TEXUNITn semantics
+static const tPilotSampler s_dualSamplers[] = {
+    { "sampler_base",  0 },
+    { "sampler_blend", 1 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_dualTintSamplers[] = {
+    { "sampler_base", 0 },
+    { "sampler_dual", 1 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_addGlowSamplers[] = {
+    { "sampler_base",      0 },
+    { "sampler_glow",      1 },
+    { "sampler_glow_mask", 2 },
+    { NULL, -1 },
+};
+
 static tPilotMaterial s_materials[kPilotMaterial_Count] = {
-    { 0, "BLENDMODE_MODULATE",       s_modulateFragmentSource,      false, false, 0, -1, -1, -1, -1, false, false },
-    { 0, "BLENDMODE_MULTIPLY",       s_multiplyFragmentSource,      true,  false, 0, -1, -1, -1, -1, false, false },
-    { 0, "BLENDMODE_COLORBLEND_DUAL", s_colorBlendDualFragmentSource, true,  true,  0, -1, -1, -1, -1, false, false },
+    { 0, "BLENDMODE_MODULATE",       s_modulateFragmentSource,       s_dualSamplers,     false, false, false, 0, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_MULTIPLY",       s_multiplyFragmentSource,       s_dualSamplers,     true,  false, false, 0, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_COLORBLEND_DUAL", s_colorBlendDualFragmentSource, s_dualTintSamplers, true,  true,  false, 0, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_ADDGLOW",        s_addGlowFragmentSource,        s_addGlowSamplers,  true,  false, true,  0, -1, -1, -1, -1, -1, false, false, false },
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
@@ -196,6 +269,7 @@ static bool                    s_vertexShaderFailed = false;
 static GLfloat                s_reflectionParamMirror[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 static GLfloat                s_envMirrors[2][4] = { { 1.0f, 1.0f, 1.0f, 1.0f },
                                                      { 1.0f, 1.0f, 1.0f, 1.0f } };
+static GLfloat                s_glowParamMirror[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 
 static GLuint pilotCompileShader( GLenum type, const char* source, const char* descr )
 {
@@ -274,19 +348,28 @@ static bool pilotInit( int material )
         m->locEnv0 = __glewGetUniformLocation( m->program, "g_Env0FP" );
     if ( m->usesEnv1 )
         m->locEnv1 = __glewGetUniformLocation( m->program, "g_Env1FP" );
+    if ( m->usesGlowParam )
+        m->locGlowParam = __glewGetUniformLocation( m->program, "g_GlowParamFP" );
     if (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ) ||
         ( m->usesEnv0 && ( m->locEnv0 < 0 )) ||
-        ( m->usesEnv1 && ( m->locEnv1 < 0 )))
+        ( m->usesEnv1 && ( m->locEnv1 < 0 )) ||
+        ( m->usesGlowParam && ( m->locGlowParam < 0 )))
     {
         printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
         m->failed = true;
         return false;
     }
 
-    // sampler units are fixed for these materials: base on TEXUNIT0, blend on TEXUNIT1
+    // bind each sampler uniform to its fixed TEXUNITn; the engine binds the
+    // textures themselves through the normal state machine either way
     __glewUseProgram( m->program );
-    __glewUniform1i( __glewGetUniformLocation( m->program, "sampler_base" ), 0 );
-    __glewUniform1i( __glewGetUniformLocation( m->program, "sampler_blend" ), 1 );
+    {
+        const tPilotSampler* sampler;
+        for ( sampler = m->samplers; sampler->name; sampler++ )
+        {
+            __glewUniform1i( __glewGetUniformLocation( m->program, sampler->name ), sampler->unit );
+        }
+    }
     __glewUseProgram( 0 );
 
     printf( "GLSL pilot: %s program compiled and linked\n", m->name );
@@ -334,8 +417,8 @@ static bool pilotActivate( int material, int vertexLitMode )
         return false;
 
     // the mirrors track the engine constants continuously (see
-    // rt_glslpilot_onReflectionParam / rt_glslpilot_onEnvParam), so they
-    // are valid at any activation time
+    // rt_glslpilot_onReflectionParam / rt_glslpilot_onEnvParam /
+    // rt_glslpilot_onGlowParam), so they are valid at any activation time
     __glewUseProgram( m->program );
     __glewUniform4fv( m->locReflectionParam, 1, s_reflectionParamMirror );
     __glewUniform1i( m->locVertexLitMode, vertexLitMode );
@@ -343,6 +426,8 @@ static bool pilotActivate( int material, int vertexLitMode )
         __glewUniform4fv( m->locEnv0, 1, s_envMirrors[0] );
     if ( m->locEnv1 >= 0 )
         __glewUniform4fv( m->locEnv1, 1, s_envMirrors[1] );
+    if ( m->locGlowParam >= 0 )
+        __glewUniform4fv( m->locGlowParam, 1, s_glowParamMirror );
     s_activeMaterial = material;
 
     if ( ! m->activationLogged )
@@ -367,6 +452,12 @@ bool rt_glslpilot_tryBindFragment( GLuint fragmentPgmId, GLuint vertexPgmId )
     vertexLitMode = pilotFindVertexMode( vertexPgmId );
     if ( ! vertexLitMode )
     {
+        if ( ! s_materials[material].declineLogged )
+        {
+            s_materials[material].declineLogged = true;
+            printf( "GLSL pilot: %s bind declined, vertex program %d not registered\n",
+                s_materials[material].name, (int)vertexPgmId );
+        }
         pilotDeactivate();
         return false;
     }
@@ -454,6 +545,20 @@ void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 )
     }
 }
 
+void rt_glslpilot_onGlowParam( const GLfloat* vec4 )
+{
+    // always mirror, active or not; rt_tricks.c pushes this between the
+    // addglow program bind and its draws, so the value is fresh whenever
+    // the pilot activates for the material
+    memcpy( s_glowParamMirror, vec4, sizeof( s_glowParamMirror ) );
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( m->locGlowParam >= 0 )
+            __glewUniform4fv( m->locGlowParam, 1, s_glowParamMirror );
+    }
+}
+
 void rt_glslpilot_resetPrograms( void )
 {
     // only the vertex table; fragment targets are refreshed independently
@@ -479,10 +584,11 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
+            (int)s_materials[kPilotMaterial_AddGlow].arbFragmentId,
             s_vertexEntryCount );
     }
 }

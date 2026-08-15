@@ -2494,8 +2494,14 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
 {
     tShaderParamSpec* pSpec = &sShaderParamSpecTbl[id];
 
-    // the GLSL pilot cannot read program env registers, so mirror the one
-    // engine-fed constant its vertex shader needs
+    // the GLSL pilot cannot read program env registers, so mirror the
+    // engine-fed constants its shaders need. The glow param is pushed by
+    // rt_tricks.c between the addglow bind and its draws; mirror it
+    // unconditionally like the env constants
+    if ( id == kShaderParam_GlowParamFP )
+    {
+        rt_glslpilot_onGlowParam( vec4Arr );
+    }
     if (( id == kShaderParam_ReflectionParamVP ) && rt_glslpilot_isActive() )
     {
         rt_glslpilot_onReflectionParam( vec4Arr );

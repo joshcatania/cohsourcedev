@@ -963,6 +963,7 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Modulate, g_shaderMgrFragmentProgramVariants[BLENDMODE_MODULATE][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Multiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTIPLY][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_ColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_COLORBLEND_DUAL][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_AddGlow, g_shaderMgrFragmentProgramVariants[BLENDMODE_ADDGLOW][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();

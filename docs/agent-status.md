@@ -384,3 +384,69 @@ pixel-identical.
 
 Remaining simple-material candidate: `addglowfp.cg` (`g_GlowParamFP`
 program-local constant, alpha-blended window/glow material).
+
+## GLSL pilot: BLENDMODE_ADDGLOW ported; night capture shots — 2026-08-15
+
+Fourth material ported. `addglowfp.cg` (variant 0): old-style tint
+(`calc_old_tint(g_Env0FP, tex_base)`), `rgb *= 4 * vertex color`, then the
+random window-glow add — `has_glow` looks up one 128x128 glow-mask texel per
+1x1 base-texture tile (`floor(uv)/128 + params.yw`, glow when
+`mask < params.x`) and adds the glow texture — then fog. Three samplers
+(base/glow/glow_mask on TEXUNIT0/1/2) required generalizing the pilot from
+hardcoded two-sampler materials to a per-material sampler/unit table.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_AddGlow` with
+  `s_addGlowSamplers`; materials now carry a NULL-terminated
+  `tPilotSampler` list (name -> fixed TEXUNITn) instead of hardcoded
+  base/blend units. New `rt_glslpilot_onGlowParam` mirror; the default
+  `{1,0,0,0}` is overwritten by the engine push before any draw (rt_tricks.c
+  pushes between the addglow bind and its draws).
+- `wcw_statemgmt.c`: `WCW_SetCgShaderParamArray4fv` mirrors
+  `kShaderParam_GlowParamFP` into the pilot unconditionally (same pattern
+  as the env mirrors).
+- `rt_shaderMgr.c` registers the ADDGLOW fragment target.
+- New one-time diagnostics in the pilot: activation lines existed already;
+  a `bind declined, vertex program N not registered` line now
+  distinguishes "bound but declined" from "never bound". Observed in night
+  runs: `BLENDMODE_MULTIPLY bind declined, vertex program -1` — the
+  post-reset sentinel (0xFFFFFFFF) reaching a fragment bind before any
+  vertex bind; the ARB path renders it (safe fallback, no visual effect).
+- `Game/src/game.c`: `CaptureShot` gained `timeHour` (16 = day default);
+  new shots `AtlasPlaza_NightEast_01` and `AtlasPlaza_NightCityHall_01`
+  (hour 0) to exercise night-only material states. Not in the default
+  regression suite.
+
+### Verification
+
+- Build: `agent/logs/build-Release-x86-20260815-163441.log` and later
+  passes (a running shard locks `bin\` — stop it before rebuilding; the
+  build fails at the copy step otherwise).
+- Night A/B (`AtlasPlaza_NightEast_01`, control then pilot, settled clock):
+  **PASS 2.12% changed / 1.49 mean** — the three active materials are
+  equivalent under night lighting too (moon/stars, lamp alpha, no sun).
+  The FIRST night pair after the hour-0 freeze measured 99.9% — the known
+  first-capture-after-time-change transition, caught mid-shift (the control
+  even framed the spawn orientation because its teleport raced map entry);
+  the settled rerun is the valid pair.
+- Day suite, final binary, same-window A/B
+  (`agent/logs/regression-20260815-165504.json`): **all four shots PASS** —
+  CityHall 0.17%/0.75, East 5.51%/2.26, North 1.45%/1.20, West
+  1.47%/1.43; MODULATE/MULTIPLY active in all runs, COLORBLEND_DUAL in
+  East/North.
+- **ADDGLOW visual verification is BLOCKED on scene coverage**: the
+  program compiles, links, and registers (target id logged), but the
+  ADDGLOW fragment program is never bound in any available view — day
+  4-shot suite, night East, and night CityHall all show neither activation
+  nor decline lines. Atlas Park's night window/lamp lighting does not use
+  the ADDGLOW blend mode (likely baked emissive textures). Verifying this
+  material needs a scene that draws AddGlow-trick geometry; other maps
+  require the verified map-transfer path first.
+
+### Next
+
+1. ADDGLOW coverage: establish the map-transfer capture path (or a
+   covered Atlas Park interior/view) and run the night A/B there.
+2. Otherwise continue with the remaining fragment materials
+   (`alphaDetailfp`, `waterfp`, effects/ set) using the same template.

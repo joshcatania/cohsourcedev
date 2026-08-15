@@ -15,11 +15,13 @@
 
 // Which material a fragment program id belongs to. Multiply consumes the
 // g_Env0FP engine constant (constColor0); colorBlendDual consumes g_Env0FP
-// and g_Env1FP (constColor0/constColor1, the dual tint colors).
+// and g_Env1FP (constColor0/constColor1, the dual tint colors); addGlow
+// consumes g_Env0FP and g_GlowParamFP (the window-glow threshold/seed).
 typedef enum ePilotMaterial {
     kPilotMaterial_Modulate = 0,    // modulatefp.cg
     kPilotMaterial_Multiply,        // multiplyRegfp.cg
     kPilotMaterial_ColorBlendDual,  // colorBlendDualfp.cg
+    kPilotMaterial_AddGlow,         // addglowfp.cg
     kPilotMaterial_Count
 } tPilotMaterialId;
 
@@ -49,12 +51,15 @@ bool rt_glslpilot_isActive( void );
 // g_ReflectionParamVP is written to program.env[1] (vertex target) by
 // WCW_SetCgShaderParamArray4fv; g_Env0FP/g_Env1FP are written to fragment
 // program.env[8]/env[9] (TIE(ENV8)/TIE(ENV9)) by setFragmentProgramConstColor
-// from the engine's constColor0/constColor1. GLSL has no access to program
-// env registers, so the engine pushes these into the pilot's uniforms as
-// well; all are mirrored continuously, not just while active, so they are
-// correct at any activation time. index 0 = g_Env0FP, 1 = g_Env1FP.
+// from the engine's constColor0/constColor1; g_GlowParamFP is a program
+// local constant pushed by WCW_SetCgShaderParamArray4fv from rt_tricks.c.
+// GLSL has no access to program env registers, so the engine pushes these
+// into the pilot's uniforms as well; all are mirrored continuously, not
+// just while active, so they are correct at any activation time.
+// index 0 = g_Env0FP, 1 = g_Env1FP.
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 );
 void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 );
+void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
 
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
 // variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5); only

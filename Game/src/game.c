@@ -2317,17 +2317,23 @@ typedef struct CaptureShot {
     const char *label;   // artifact label; also the -capture selector
     const char *posPyr;  // setpospyr arguments: x y z pitch yaw roll
     const char *camdist; // third-person camera distance
+    int timeHour;        // world-clock hour to freeze at (16 = day default;
+                         // night hours open the AddGlow window-lamp tricks)
 } CaptureShot;
 
 // Deterministic capture shots. All current shots sit on the Atlas Park
 // static map (StaticMapId 1); other maps need a verified map-transfer
-// path before they can be captured deterministically.
+// path before they can be captured deterministically. The Night* variants
+// exist to exercise night-only materials (AddGlow window glow); they are
+// not part of the default regression suite.
 static const CaptureShot s_captureShots[] = {
-    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30" },
-    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30" },
-    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30" },
-    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30" },
-    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10" },
+    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30", 16 },
+    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 16 },
+    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16 },
+    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16 },
+    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16 },
+    { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0  },
+    { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0 },
 };
 
 static const CaptureShot *captureFindShot(const char *label)
@@ -2387,8 +2393,10 @@ static void game_processCapture(void)
             cmdParse(command);
             sprintf_s(SAFESTR(command), "setpospyr %s", shot->posPyr);
             cmdParse(command);
-            // Freeze the world clock so lighting matches between runs.
-            cmdParse("timeset 16");
+            // Freeze the world clock so lighting matches between runs. The
+            // shot's hour selects day (16) or night-only material states.
+            sprintf_s(SAFESTR(command), "timeset %d", shot->timeHour);
+            cmdParse(command);
             cmdParse("timescale 0");
             game_startupTrace("capture.camera.fixed");
             game_state.capture_frame_count = 1;
