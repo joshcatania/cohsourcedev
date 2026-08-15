@@ -134,14 +134,22 @@ For a disposable local development shard only:
 
 The forced path now includes the known ServerMonitor children (`LogServer`, `BeaconServer`, and `BeaconClient`) and performs a bounded post-shutdown rescan so late-spawned children and exit races are reported accurately. Prefer replacing it with a verified graceful ServerMonitor control path once discovered.
 
-## Current highest-priority missing capability
+## Current milestone status
 
-Phase 0 is complete. An unverified Phase 1 deterministic developer-control scaffold is present; do not report it as working until it produces a real image and clean client exit. The next priority is:
+Phase 0 (local development loop) and Phase 1 (deterministic graphical capture) are both complete and verified on 2026-08-15:
 
-1. deterministic map selection and teleport
-2. fixed camera/FOV and hidden UI
-3. a repeatable screenshot command and clean client exit
-4. machine-readable capture success/failure and regression evidence
+1. deterministic map selection and teleport — done (`capture <label>` applies the fixed Atlas Plaza position)
+2. fixed camera/FOV and hidden UI — done (visually verified in the produced image)
+3. a repeatable screenshot command and clean client exit — done (two consecutive passing runs with exit code 0)
+4. machine-readable capture success/failure — done (`agent/capture.ps1 -Json`)
+
+Known operational constraint: the shard needs a warm-up period (a few minutes) after `agent/start-shard.ps1` before logins are admitted. During warm-up, clients can stall in the login queue or while waiting for the first mapserver update. Do not treat a failure as real until it reproduces on a shard that has been up for several minutes and has passed one `agent/smoke.ps1 -ExerciseCharacter` run.
+
+The next priorities are:
+
+1. expand deterministic capture to multiple scenes/labels beyond `AtlasPlaza_CityHall_03`
+2. a capture-comparison regression harness (baseline vs. current image) so renderer changes can be validated
+3. only then begin renderer work (for example, retiring the dead fixed-function/ATI shader paths in favor of the GLSL path), with before/after captures for every change
 
 Prefer TestClient over GUI automation of `Ouroboros.exe`.
 

@@ -1,23 +1,23 @@
 # Autonomous Agent Status
 
-Last verified: 2026-08-14 (America/Chicago)
+Last verified: 2026-08-15 (America/Chicago)
 
 ## Current milestone
 
-Phase 0 is complete on the current Windows development machine. The documented direct-DbServer path reaches login, creates a reproducible development character, starts/uses a MapServer, and exits with machine-readable evidence. Phase 1 capture scaffolding is present, but the graphical client capture exit test is not yet verified.
+Phase 0 and Phase 1 are both complete and verified on the current Windows development machine. The direct-DbServer path reaches login, resumes or creates a reproducible development character, enters a MapServer, and exits with machine-readable evidence. The deterministic graphical capture now produces a real image of Atlas Plaza with fixed camera and hidden UI, reports machine-readable results, and exits Ouroboros cleanly — verified twice consecutively.
 
 ## Verified ladder
 
 | Check | Result | Evidence |
 |---|---|---|
 | Toolchain | PASS with documented fallback | `agent/doctor.ps1 -Json` reports a functional v145 probe; the native v142 probe preserves the exact `MSB8020` warning and is non-blocking because v145 succeeds. |
-| Build | PASS | `agent/logs/build-Release-x86-20260814-160726.log`; Release/x86 selected v145 and exited 0 after the capture-path rebuild. |
+| Build | PASS | `agent/logs/build-Release-x86-20260815-112932.log`; Release/x86 selected v145 and exited 0 after the TestClient startup-trace link fix was validated. |
 | Database | PASS | `Server=localhost` ODBC connectivity succeeded; `cohdb` exists and contains the initialized schema. |
 | Server startup | PASS | `agent/start-shard.ps1` observed ServerMonitor, DbServer, and Launcher. |
-| Server readiness | PASS | Application-level smoke reached DbServer and MapServer; process presence alone remains diagnostic. |
+| Server readiness | PASS | Application-level smoke reached DbServer and MapServer; process presence alone remains diagnostic only. |
 | Client startup | PASS | TestClient exited 0 in both smoke stages. |
-| Smoke test | PASS | Latest character/map run: `agent/logs/smoke-directdb-20260814-161149.json`; TestClient exited 0 and reached MapServer after the capture-path rebuild. |
-| Graphical capture | NOT VERIFIED | `agent/logs/capture-AtlasPlaza_CityHall_03-20260814-160829.json` timed out after 180 seconds without a screenshot or clean Ouroboros exit. |
+| Smoke test | PASS | `agent/logs/smoke-directdb-20260815-113420.json` — passed=true with `map_connected=1` on the resume path after the marker fix. |
+| Graphical capture | PASS | `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114556.json` and `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114700.json` — both passed=true, exitCode=0, real JPG at `agent/captures/AtlasPlaza_CityHall_03.jpg` (verified visually: Atlas Plaza/City Hall, third-person camera, no UI). |
 
 The latest character/map smoke also wrote `agent/logs/smoke-directdb-20260814-161149.status`:
 
@@ -37,7 +37,7 @@ AuthName=Dummy00018 Name=TEST-35034 StaticMapId=1 MapId=NULL LoginCount=1
 
 `MapId=NULL` is expected after the short autonomous client disconnect; the TestClient agent marker proves it reached the MapServer before exit.
 
-The capture scaffold adds the `capture <label>` command and `agent/capture.ps1` wrapper. The graphical client can be built and launched, but the direct-DB Ouroboros path did not emit its login/map markers during the bounded run and produced no JPG. A capture-only queue-drain path was added to mirror TestClient's queue handling; it did not change that result. Keep this path explicitly unverified until a real image and clean exit are observed.
+The capture scaffold adds the `capture <label>` command and `agent/capture.ps1` wrapper. This path is now verified (see the Phase 1 verified section below); it requires a warmed-up shard, exactly like the TestClient smoke.
 
 ## Toolchain decision
 
@@ -63,11 +63,11 @@ Use `agent/set-directdb-mode.ps1 -Disable` to restore the checked-in AuthServer 
 - AuthServer/AccountServer integration remains unverified because `cohauth`/`cohacc` are absent. ServerMonitor may still launch those processes; their process presence is not integration readiness.
 - `agent/start-shard.ps1` establishes process readiness. `agent/smoke.ps1` is the application-level readiness check.
 - The repository still emits legacy map-data warnings during startup. They did not prevent the verified character/map smoke.
-- The graphical `agent/capture.ps1` path remains unverified: the latest bounded run timed out with no screenshot. The direct TestClient path remains the reliable Phase 0 baseline.
+- The shard needs several minutes of warm-up after startup before logins are admitted reliably. A login/queue/map-entry stall on a freshly started shard is expected to clear once warm; see the 2026-08-15 checkpoint below.
 
-## Phase 1 blocker / next action
+## Phase 1 blocker — RESOLVED 2026-08-15
 
-The remaining blocker is before deterministic map entry: the rebuilt graphical client hangs before producing the capture login marker, while the same shard and database pass the TestClient character/map smoke. Future work should capture a native client hang/stack or run the graphical direct-DB login under a debugger, then resolve that handoff before claiming the screenshot command is repeatable.
+The graphical-client stall was real but environmental, not a code path defect in the capture scaffold: on a freshly started shard, logins stall in the login queue and the first mapserver update never arrives until the shard has warmed up (TSR mapservers preloading/overload protection window). On a warm shard, the same exact capture command completes. The wrapper also had two real bugs (see below) that produced false results during verification.
 
 ## Useful commands
 
@@ -84,6 +84,8 @@ The remaining blocker is before deterministic map entry: the rebuilt graphical c
 ```
 
 ## Phase 1 debugging checkpoint — 2026-08-14 stopping point
+
+(Superseded by "Phase 1 verified — 2026-08-15" below; kept as historical record.)
 
 The direct-DB TestClient path remains the Phase 0 baseline. The latest exact graphical capture was bounded at 180 seconds and did not produce an image, but it progressed farther than previously recorded:
 
@@ -104,3 +106,24 @@ The worktree now contains uncommitted startup instrumentation in Game/src/main.c
 No CDB/WinDbg/ProcDump executable was found. The Windows SDK dbghelp.dll is present, and the separate-process dump helper was added but has only been exercised after the target PID had already exited. It must be tested against a live hang and analyzed with Utilities/dumpstk/bin/x86/Release/dumpstk.exe plus bin/Ouroboros.pdb.
 
 The next agent should repair/build the instrumentation, rerun the verified TestClient smoke immediately before capture, obtain a live dump/stack at timeout, and then make agent/capture.ps1 preserve PID, command line, environment, cwd, client/server logs, last marker, dump/stack evidence, cleanup state, and machine-readable failure JSON. Do not claim Phase 1 success or begin camera/asset work until a real AtlasPlaza_CityHall_03.jpg and clean Ouroboros exit are verified twice. Full context and exact resume steps are in [COH_CODEX_HANDOFF.md](../COH_CODEX_HANDOFF.md).
+
+## Phase 1 verified — 2026-08-15
+
+The 2026-08-14 checkpoint's next actions were executed and Phase 1 passed its definition of done:
+
+1. The committed instrumentation build was validated: `agent/logs/build-Release-x86-20260815-084019.log` and `agent/logs/build-Release-x86-20260815-112932.log` both exited 0. The TestClient `LNK2001` was resolved by `Utilities/TestClient/src/startupTrace.c` and the `FILE*`/FileWrapper collision by the Win32-handle trace writer in `Game/src/game.c`.
+2. The startup traces immediately localized both prior stalls:
+   - A TestClient smoke run started ~30 seconds after shard start hung at `db.login.response.queue-or-other` for the full window (login queued, no admission). Root cause family: shard warm-up — launcher/TSR preload and overload protection keep queue admissions closed on a fresh shard.
+   - On a warmed shard, the same smoke passed: `agent/logs/smoke-directdb-20260815-113420.json` (passed=true, `map_connected=1`, exit 0).
+   - The graphical client's historical `Waiting for mapserver update..` stall also cleared on a warm shard: the full-update packet arrives, `capture.readiness.ready` → `capture.camera.fixed` → `capture.screenshot.request` → `capture.quit.request` completes, and Ouroboros exits.
+3. Three defects were found and fixed on the way to a truthful PASS:
+   - `Utilities/TestClient/src/main.c`: the resume path never set `g_agent_smoke_map_connected`, so smokes against an account with an existing character reported `map_connected=0` despite full map entry (the source of the "timing-sensitive" smoke failures recorded on 2026-08-14). The marker is now set when `commReqScene(1)` succeeds on resume.
+   - `agent/capture.ps1`: helper functions declared a `$Pid` parameter, which collides with PowerShell's read-only automatic `$PID` and aborted the script before any run. Renamed to `$ProcessId`.
+   - `agent/capture.ps1`: `Start-Process -PassThru` with redirected streams never populates `ExitCode` on this PowerShell build (verified with a controlled `cmd /c exit 7` test), which misclassified a clean exit as a failure; managed `DataReceivedEventHandler` scriptblocks crashed the host outright. The launcher now runs the client through `cmd.exe /v:on /c` with file redirection and records the client's real exit code via `!ERRORLEVEL!` to a file. Two consecutive official runs then passed with exitCode=0.
+4. Verification evidence:
+   - Run 1: `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114556.json` (passed=true, exitCode=0)
+   - Run 2: `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114700.json` (passed=true, exitCode=0)
+   - Artifact: `agent/captures/AtlasPlaza_CityHall_03.jpg` — visually verified twice (Atlas Plaza with City Hall and the Atlas statue, third-person camera behind the character, no visible UI).
+5. The disposable shard was stopped with `agent/stop-shard.ps1 -ForceProcessStop -Json`; a post-stop status scan showed zero running shard processes.
+
+Next priorities are recorded in `AGENTS.md`: multi-scene deterministic capture, a capture-comparison regression harness, and only then renderer changes guarded by before/after captures.

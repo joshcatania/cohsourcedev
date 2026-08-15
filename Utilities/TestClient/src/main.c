@@ -1445,7 +1445,8 @@ int main(int argc, char **argv)
                     } else {
                         // this is where we receive costume back
                         loadstart_printf("commReqScene()");
-                        commReqScene(1);
+                        if (commReqScene(1))
+                            g_agent_smoke_map_connected = 1;
                         loadend_printf("");
                     }
                 }

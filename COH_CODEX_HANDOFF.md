@@ -14,7 +14,7 @@ Draft pull request: [#1 – Establish local development foundation and capture s
 
 ## Handoff purpose
 
-This is a Windows-native City of Heroes/OuroDev codebase. The immediate engineering goal is a reproducible local development loop, followed by deterministic developer controls for graphical capture. Phase 0 is verified. Phase 1 has an implemented but unverified scaffold and is currently blocked at the graphical client login/map handoff.
+This is a Windows-native City of Heroes/OuroDev codebase. The immediate engineering goal was a reproducible local development loop, followed by deterministic developer controls for graphical capture. **Phase 0 and Phase 1 are both verified as of 2026-08-15.** The most recent checkpoint ("Phase 1 verified — 2026-08-15" at the end of this document) supersedes all earlier checkpoint wording.
 
 The authoritative repository instructions are in `AGENTS.md`. The latest detailed status is in `docs/agent-status.md`. Do not treat this handoff as permission to discard the existing dirty worktree or to claim an unverified path works.
 
@@ -174,7 +174,9 @@ reliably produces a real JPG at `agent/captures/AtlasPlaza_CityHall_03.jpg`, rep
 
 ## Latest Phase 1 debugging checkpoint — 2026-08-14 stopping point
 
-This section is the most recent handoff and supersedes the older wording above that said Ouroboros stopped before its login markers. The exact bounded capture run below proves that the graphical client gets substantially farther: it initializes the renderer, performs the direct-DB login, resumes the existing character, connects to MapServer, loads the target scene, and then hangs before capture readiness/clean exit.
+(Superseded by "Phase 1 verified — 2026-08-15" at the end of this document; kept as historical record.)
+
+This section was previously the most recent handoff. The exact bounded capture run below proves that the graphical client gets substantially farther: it initializes the renderer, performs the direct-DB login, resumes the existing character, connects to MapServer, loads the target scene, and then hangs before capture readiness/clean exit.
 
 ### Mission and non-goals
 
@@ -331,3 +333,37 @@ The target process was stopped after the run with agent/stop-shard.ps1 -ForcePro
 - Capture timeout diagnostics: NOT YET IMPLEMENTED in agent/capture.ps1.
 - Instrumented build: NOT BUILDING because of the TestClient unresolved trace symbol; also has a FILE/FileWrapper warning issue in the trace writer.
 - Working tree: dirty with the source instrumentation and agent/dump-process.ps1; no commit or push was made for this debugging attempt.
+
+## Phase 1 verified — 2026-08-15 final checkpoint
+
+This section supersedes every earlier checkpoint. Phase 1 is complete: the deterministic graphical capture produces a real image with fixed camera and hidden UI, reports machine-readable results, and exits Ouroboros cleanly — verified twice consecutively. The dump/stack tooling was never needed because the startup traces localized both stalls without it.
+
+### What the 2026-08-14 next-actions produced
+
+1. The committed instrumentation build was validated (`agent/logs/build-Release-x86-20260815-084019.log` and `agent/logs/build-Release-x86-20260815-112932.log`, both exit 0). The TestClient `LNK2001` was resolved by `Utilities/TestClient/src/startupTrace.c`; the `FILE*`/FileWrapper collision by the Win32-handle writer in `Game/src/game.c`.
+2. The startup traces localized the stalls:
+   - TestClient started ~30 seconds after shard start hung at `db.login.response.queue-or-other` for the full 180-second window — login admitted by DbServer but held in the login queue with no admission packets. On a warmed shard the same smoke passes. Root cause family: shard warm-up (launcher/TSR preload; overload protection keeps `queueserver_letPlayersThrough()` frozen and `s_skipQueue()` queueing everyone).
+   - The graphical client's `Waiting for mapserver update..` stall also cleared on a warm shard: the full entity update arrives, `notifyReceivedCharacter()` fires, and the capture sequence (`capture.readiness.ready` → `capture.camera.fixed` → `capture.screenshot.request` → `capture.quit.request`) completes with a clean exit.
+3. Defects fixed during verification:
+   - `Utilities/TestClient/src/main.c` — the character-resume path never set `g_agent_smoke_map_connected`, so smokes against an account with an existing character reported `map_connected=0` despite full map entry. This produced the recorded "timing-sensitive" smoke failures. The marker is now set when `commReqScene(1)` succeeds on resume.
+   - `agent/capture.ps1` — helper functions declared a `$Pid` parameter (collides with the read-only automatic `$PID`), aborting the wrapper before any launch. Renamed to `$ProcessId`.
+   - `agent/capture.ps1` — `Start-Process -PassThru` with redirected streams never populates `ExitCode` on this PowerShell build (confirmed with a controlled `cmd /c exit 7` test), misclassifying clean exits as failures; managed stream-drain event handlers crashed the PowerShell host outright (the earlier exit-code-5 orphan). The launcher now runs Ouroboros through `cmd.exe /v:on /c` with file redirection and records the client's real exit code via `!ERRORLEVEL!`.
+
+### Definition of done evidence
+
+- Run 1: `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114556.json` — passed=true, exitCode=0, timedOut=false.
+- Run 2: `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-114700.json` — passed=true, exitCode=0, timedOut=false.
+- Artifact: `agent/captures/AtlasPlaza_CityHall_03.jpg` (verified visually twice: Atlas Plaza with City Hall and the Atlas statue, third-person camera behind the character, no visible UI).
+- Supporting baseline: `agent/logs/smoke-directdb-20260815-113420.json` (passed=true, `map_connected=1`, exit 0).
+- The disposable shard was stopped and a post-stop scan showed zero running shard processes.
+
+### Operational rule discovered
+
+A freshly started shard does not admit logins for the first few minutes (queue/overload warm-up). Always let the shard warm up and pass one `agent/smoke.ps1 -ExerciseCharacter` run before judging any login, queue, map-entry, or capture failure as real.
+
+### Next actions
+
+1. Expand deterministic capture to more scenes/labels (multiple fixed positions across maps).
+2. Build the capture-comparison regression harness (baseline vs. current image, machine-readable diff verdict).
+3. Only then begin renderer changes, guarded by before/after captures.
+4. Update `AGENTS.md` and `docs/agent-status.md` with each verified result, as done here.

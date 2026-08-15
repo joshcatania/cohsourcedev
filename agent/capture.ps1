@@ -47,26 +47,26 @@ function Get-LastStartupTrace {
     return @{ path=$latest.FullName; lastMarker=$last; tail=$lines; exists=$true; lastWriteTimeUtc=$latest.LastWriteTimeUtc.ToString('o') }
 }
 function Get-ProcessSnapshot {
-    param([int]$Pid, [string]$WorkingDirectory)
+    param([int]$ProcessId, [string]$WorkingDirectory)
     try {
-        $cim = Get-CimInstance Win32_Process -Filter "ProcessId=$Pid" -ErrorAction Stop
-        $proc = Get-Process -Id $Pid -ErrorAction Stop
+        $cim = Get-CimInstance Win32_Process -Filter "ProcessId=$ProcessId" -ErrorAction Stop
+        $proc = Get-Process -Id $ProcessId -ErrorAction Stop
         return [ordered]@{
-            pid=$Pid; executablePath=$cim.ExecutablePath; commandLine=$cim.CommandLine; parentProcessId=$cim.ParentProcessId
+            pid=$ProcessId; executablePath=$cim.ExecutablePath; commandLine=$cim.CommandLine; parentProcessId=$cim.ParentProcessId
             creationDate=$cim.CreationDate; workingDirectory=$WorkingDirectory; processStartTime=$proc.StartTime.ToString('o')
             responding=$proc.Responding; workingSetBytes=$proc.WorkingSet64; threadCount=$proc.Threads.Count
         }
-    } catch { return @{ error=$_.Exception.Message; pid=$Pid } }
+    } catch { return @{ error=$_.Exception.Message; pid=$ProcessId } }
 }
 function New-CaptureResult {
     param([bool]$Passed,[string]$Reason,[int]$ExitCode,[bool]$TimedOut,[string]$ScreenshotPath,
-          [int]$Pid,[string]$CommandLine,[string]$WorkingDirectory,[object]$ProcessSnapshot,
+          [int]$ProcessId,[string]$CommandLine,[string]$WorkingDirectory,[object]$ProcessSnapshot,
           [string]$DumpPath,[string]$DumpMetaPath,[bool]$DumpSucceeded,[string]$DumpError,
           [string]$DumpStkPath,[string]$TracePath,[string]$LastTraceMarker,[string[]]$TraceTail,
           [string]$ServerStatusPath,[object]$ServerStatus)
     [ordered]@{
         passed=$Passed; reason=$Reason; target=$Target; accountName=$AccountName; exitCode=$ExitCode; timedOut=$TimedOut
-        screenshot=$ScreenshotPath; pid=$Pid; commandLine=$CommandLine; workingDirectory=$WorkingDirectory; processSnapshot=$ProcessSnapshot
+        screenshot=$ScreenshotPath; pid=$ProcessId; commandLine=$CommandLine; workingDirectory=$WorkingDirectory; processSnapshot=$ProcessSnapshot
         dumpPath=$DumpPath; dumpMetadata=$DumpMetaPath; dumpSucceeded=$DumpSucceeded; dumpError=$DumpError; dumpStkOutput=$DumpStkPath
         tracePath=$TracePath; lastTraceMarker=$LastTraceMarker; traceTail=$TraceTail
         serverStatusPath=$ServerStatusPath; serverStatus=$ServerStatus
@@ -87,11 +87,26 @@ try {
     Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.FullName]=$_.LastWriteTimeUtc }
     $arguments = @('-db','127.0.0.1','-authname',$AccountName,'-password',$Password,'-noverify','-quicklogin','1','-noversioncheck','-capture',$Target,'-fullscreen','0','-screen',$Width.ToString(),$Height.ToString(),'-stopinactivedisplay','0')
     $argString = ($arguments | ForEach-Object { if ($_ -match '[\s"]') { '"' + ($_ -replace '"','\"') + '"' } else { $_ } }) -join ' '
-    $client = Start-Process -FilePath $ouroboros -WorkingDirectory $binRoot -ArgumentList $arguments -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -PassThru
-    $ouroPid = $client.Id
-    $processSnapshot = Get-ProcessSnapshot -Pid $ouroPid -WorkingDirectory $binRoot
+    # Start-Process -PassThru with redirected streams never populates ExitCode on
+    # this PowerShell build, and DataReceivedEventHandler scriptblocks run on
+    # threadpool threads where they crash the host. Instead, let cmd.exe perform
+    # the redirection and record the client's real exit code via !ERRORLEVEL!.
+    $exitCodePath = Join-Path $logRoot "capture-$safeTarget-$stamp.exitcode"
+    $cmdLine = '/v:on /c ""' + $ouroboros + '" ' + $argString + ' 1> "' + $stdoutPath + '" 2> "' + $stderrPath + '" & echo !ERRORLEVEL!> "' + $exitCodePath + '""'
+    $client = Start-Process -FilePath $env:ComSpec -ArgumentList $cmdLine -WorkingDirectory $binRoot -PassThru
+    Start-Sleep -Seconds 2
+    $ouroProc = Get-Process -Name 'Ouroboros' -ErrorAction SilentlyContinue | Select-Object -First 1
+    $ouroPid = if ($ouroProc) { $ouroProc.Id } else { 0 }
+    $processSnapshot = Get-ProcessSnapshot -ProcessId $ouroPid -WorkingDirectory $binRoot
     $commandLine = if ($processSnapshot.commandLine) { $processSnapshot.commandLine } else { "$ouroboros $argString" }
     $exited = $client.WaitForExit($TimeoutSeconds*1000)
+    $clientExitCode = $null
+    if ($exited) {
+        if (Test-Path -LiteralPath $exitCodePath) {
+            $clientExitCode = [int](Get-Content -Raw -LiteralPath $exitCodePath).Trim()
+        }
+        if ($null -eq $clientExitCode) { $clientExitCode = -1 }
+    }
     $dumpSucceeded=$false; $dumpError=$null; $dumpStkOutput=$null
     if (-not $exited) {
         try {
@@ -106,25 +121,26 @@ try {
             }
         } catch { $dumpError=$_.Exception.Message }
         Stop-Process -Id $ouroPid -Force -ErrorAction SilentlyContinue
+        Stop-Process -Id $client.Id -Force -ErrorAction SilentlyContinue
         Start-Sleep -Milliseconds 800
         $trace = Get-LastStartupTrace -BinRoot $binRoot -LogRoot $logRoot
         $serverStatus=$null
         try { if (Test-Path -LiteralPath $statusScript) { $serverStatus = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $statusScript -Json 2>$null | ConvertFrom-Json } } catch {}
         if ($serverStatus) { $serverStatus | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $serverStatusPath -Encoding UTF8 }
-        $result = New-CaptureResult -Passed $false -Reason 'Ouroboros timed out before clean capture exit (dump attempted)' -ExitCode 124 -TimedOut $true -ScreenshotPath '' -Pid $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $dumpSucceeded -DumpError $dumpError -DumpStkPath $dumpStkPath -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
+        $result = New-CaptureResult -Passed $false -Reason 'Ouroboros timed out before clean capture exit (dump attempted)' -ExitCode 124 -TimedOut $true -ScreenshotPath '' -ProcessId $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $dumpSucceeded -DumpError $dumpError -DumpStkPath $dumpStkPath -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
     } else {
-        $client.Refresh()
+        if ($null -eq $clientExitCode) { $clientExitCode = -1 }
         $trace = Get-LastStartupTrace -BinRoot $binRoot -LogRoot $logRoot
         $serverStatus=$null
         try { if (Test-Path -LiteralPath $statusScript) { $serverStatus = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $statusScript -Json 2>$null | ConvertFrom-Json } } catch {}
         if ($serverStatus) { $serverStatus | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $serverStatusPath -Encoding UTF8 }
         $newScreenshots = @(Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | Where-Object { $oldTime=$before[$_.FullName]; (-not $oldTime) -or $_.LastWriteTimeUtc -gt $oldTime } | Sort-Object LastWriteTimeUtc -Descending)
         if ($newScreenshots.Count -eq 0) {
-            $result = New-CaptureResult -Passed $false -Reason 'Ouroboros exited without producing a JPG screenshot' -ExitCode $client.ExitCode -TimedOut $false -ScreenshotPath '' -Pid $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
+            $result = New-CaptureResult -Passed $false -Reason 'Ouroboros exited without producing a JPG screenshot' -ExitCode $clientExitCode -TimedOut $false -ScreenshotPath '' -ProcessId $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
         } else {
             Copy-Item -LiteralPath $newScreenshots[0].FullName -Destination $outputPath -Force
-            $isPass = ($client.ExitCode -eq 0)
-            $result = New-CaptureResult -Passed $isPass -Reason $(if ($isPass) {'Deterministic capture completed and Ouroboros exited cleanly'} else {'Capture produced an image but Ouroboros returned a non-zero exit code'}) -ExitCode $client.ExitCode -TimedOut $false -ScreenshotPath $outputPath -Pid $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
+            $isPass = ($clientExitCode -eq 0)
+            $result = New-CaptureResult -Passed $isPass -Reason $(if ($isPass) {'Deterministic capture completed and Ouroboros exited cleanly'} else {'Capture produced an image but Ouroboros returned a non-zero exit code'}) -ExitCode $clientExitCode -TimedOut $false -ScreenshotPath $outputPath -ProcessId $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
         }
     }
 } catch {
