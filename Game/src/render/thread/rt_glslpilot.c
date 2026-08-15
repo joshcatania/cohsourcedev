@@ -7,7 +7,8 @@
 //   shaders/cgfx/colorBlendDualfp.cg        (dual tint fragment)
 //   shaders/cgfx/addglowfp.cg               (window-glow fragment)
 //   shaders/cgfx/alphaDetailfp.cg           (alpha detail fragment)
-//   shaders/cgfx/bumpmapColorblendDualfp.cg (bumped dual tint fragment)
+//   shaders/cgfx/bumpmapColorblendDualfp.cg (bumped dual tint fragment,
+//                                            default + BIT_HIGH_QUALITY)
 //   shaders/cgfx/vp_master_vp.cg            (vertex: DUALTEX + bump_dual variants)
 //   shaders/cgfx/functions.cgh              (fog, tinting, tangent-space, lighting)
 // The GLSL builds on compatibility-profile built-ins (gl_ModelViewMatrix,
@@ -16,7 +17,8 @@
 // the engine needs no new parameter plumbing beyond the mirrored
 // program-local constants (g_ReflectionParamVP, g_Env0/1FP, g_GlowParamFP,
 // and the bump lighting constants + tangent attribute for the bump
-// material).
+// materials; the HQ bump fragment reads g_LightDirFP instead of a
+// vertex-interpolated light vector).
 
 #include "render/thread/ogl.h"
 #include "render/thread/rt_glslpilot.h"
@@ -304,6 +306,79 @@ static const char s_bumpDualVertexSource[] =
 "    vViewTs = -position_ts;\n"
 "}\n";
 
+// vp_master_vp.cg "bump_dual"/"skin_bump" variants compiled with
+// BIT_HIGH_QUALITY: instead of the tangent-space light/view vectors, the HQ
+// vertex program passes the view-space tangent (binormal sign in w), normal,
+// and position through as interpolants — the HQ fragment shader builds the
+// tangent basis and lighting vectors per pixel. The skinned branch is the
+// same two-bone blend as the low-quality shader; g_LightDirVP is dead code
+// in the HQ Cg variants (the fragment reads g_LightDirFP instead), so it is
+// not declared here.
+static const char s_bumpDualHQVertexSource[] =
+"#version 120\n"
+"\n"
+"attribute vec4 attr_tangent;      // generic vertex attribute 7 (see rt_model.c/rt_bonedmodel.c)\n"
+"attribute vec4 attr_boneweights;  // generic vertex attribute 1 (skinned draws only)\n"
+"attribute vec4 attr_boneindices;  // generic vertex attribute 5 (skinned draws only; x/y = bone*3)\n"
+"uniform vec4 g_BoneMatrixArrVP[48]; // engine bone matrices, 3 vec4 rows per bone\n"
+"uniform int  g_Skinned;           // 1 = skin through the bone matrices (skin_bump variant)\n"
+"\n"
+"varying vec3 vNormalVs;           // OUT.normal_vs (TEXCOORD semantics in the Cg program)\n"
+"varying vec4 vTangentVs;          // OUT.tangent_vs; .w = binormal sign, already sign()'d\n"
+"varying vec3 vPositionVs;         // OUT.position_vs\n"
+"\n"
+"// Cg mul(boneMatrix, v): the three array vec4s are the matrix rows\n"
+"vec3 boneXform( int bone, vec3 v, float w )\n"
+"{\n"
+"    return vec3( dot( g_BoneMatrixArrVP[bone + 0], vec4( v, w ) ),\n"
+"                 dot( g_BoneMatrixArrVP[bone + 1], vec4( v, w ) ),\n"
+"                 dot( g_BoneMatrixArrVP[bone + 2], vec4( v, w ) ) );\n"
+"}\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec3 position_vs;\n"
+"    vec3 normal;\n"
+"    vec3 tangent;\n"
+"\n"
+"    if ( g_Skinned != 0 )\n"
+"    {\n"
+"        // two-bone skinning directly to view space; the weight comes in on\n"
+"        // boneWeights.y and the indices are premultiplied by 3 (ARB layout)\n"
+"        int bone0 = int( attr_boneindices.x );\n"
+"        int bone1 = int( attr_boneindices.y );\n"
+"        float weight = attr_boneweights.y;\n"
+"\n"
+"        position_vs = mix( boneXform( bone0, gl_Vertex.xyz, 1.0 ),\n"
+"                           boneXform( bone1, gl_Vertex.xyz, 1.0 ), weight );\n"
+"        normal = normalize( mix( boneXform( bone0, gl_Normal, 0.0 ),\n"
+"                                 boneXform( bone1, gl_Normal, 0.0 ), weight ) );\n"
+"        tangent = normalize( mix( boneXform( bone0, attr_tangent.xyz, 0.0 ),\n"
+"                                  boneXform( bone1, attr_tangent.xyz, 0.0 ), weight ) );\n"
+"    }\n"
+"    else\n"
+"    {\n"
+"        position_vs = ( gl_ModelViewMatrix * gl_Vertex ).xyz;\n"
+"        // Cg uses the modelview rows, not the normal matrix; identical for\n"
+"        // the rigid transforms these draw with\n"
+"        normal = normalize( mat3( gl_ModelViewMatrix ) * gl_Normal );\n"
+"        tangent = normalize( mat3( gl_ModelViewMatrix ) * attr_tangent.xyz );\n"
+"    }\n"
+"\n"
+"    gl_Position = gl_ProjectionMatrix * vec4( position_vs, 1.0 );\n"
+"\n"
+"    // fog coordinate: eye-radial distance (vp_master_vp.cg)\n"
+"    gl_FogFragCoord = sqrt( dot( position_vs, position_vs ) + 1e-16 );\n"
+"\n"
+"    // TC_XFORM == NONE: texture coordinates pass through untransformed\n"
+"    gl_TexCoord[0] = vec4( gl_MultiTexCoord0.xy, gl_MultiTexCoord1.xy );\n"
+"\n"
+"    // HQ interpolants (the fragment shader renormalizes the basis)\n"
+"    vNormalVs = normal;\n"
+"    vTangentVs = vec4( tangent, sign( attr_tangent.w ) );\n"
+"    vPositionVs = position_vs;\n"
+"}\n";
+
 // bumpmapColorblendDualfp.cg, default variant (no BIT_HIGH_QUALITY /
 // cubemap / shadow): the dual-tint material color from colorBlendDual, lit
 // per pixel with the tangent-space vectors from the bump_dual vertex
@@ -334,6 +409,91 @@ static const char s_bumpColorBlendDualFragmentSource[] =
 "    // half vector = view + light, both in tangent space\n"
 "    vec3 light_ts = normalize( vLightTs );\n"
 "    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
+"\n"
+"    // map_color_to_normal: expand [0,1] to [-1,1] and renormalize; the\n"
+"    // alpha channel piggybacks the gloss map\n"
+"    vec4 normal_gloss = texture2D( sampler_normal_and_gloss_1, uv1 );\n"
+"    normal_gloss.xyz = normalize( normal_gloss.xyz * 2.0 - 1.0 );\n"
+"\n"
+"    // base material color: calc_dual_tint with the engine tint constants\n"
+"    vec4 tex_base = texture2D( sampler_base_1, uv0 );\n"
+"    vec4 tex_dual = texture2D( sampler_dual_1, uv1 );\n"
+"    vec4 out_color;\n"
+"    out_color.rgb = mix( g_Env1FP.rgb, g_Env0FP.rgb, tex_dual.rgb );\n"
+"    out_color.rgb = mix( out_color.rgb, vec3( 1.0 ), tex_base.a );\n"
+"    out_color.rgb *= tex_base.rgb;\n"
+"    out_color.a = tex_dual.a * g_Env0FP.a;\n"
+"\n"
+"    // calc_lighting_factors (shade_factor = 1 without shadowmaps):\n"
+"    // (1, saturate(NdotL), specular) with gloss-masked specular\n"
+"    float n_dot_l = dot( normal_gloss.xyz, light_ts );\n"
+"    float n_dot_h = dot( normal_gloss.xyz, half_ts );\n"
+"    float specular = pow( clamp( n_dot_h, 0.0, 1.0 ), g_Specular1ColorAndExponentFP.a );\n"
+"    specular *= normal_gloss.w;\n"
+"\n"
+"    // apply_lighting with get_default_light_properties\n"
+"    vec3 ambient = g_AmbientColorFP.rgb;\n"
+"    vec3 diffuse = clamp( n_dot_l, 0.0, 1.0 ) * g_DiffuseColorFP.rgb;\n"
+"    vec3 gloss = clamp( specular * g_GlossParamFP.w * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"    out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"\n"
+"    // calc_fogged_color (same GL fog state as the other materials)\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
+// bumpmapColorblendDualfp.cg, BIT_HIGH_QUALITY variant (no cubemap /
+// shadow): same material color and lighting model as the default variant,
+// but the tangent-space basis and lighting vectors are computed per pixel
+// from the HQ vertex interpolants (populate_lighting_vectors_hq in
+// functions.cgh) and the light direction comes from the g_LightDirFP
+// fragment constant instead of a vertex-interpolated vector. Note the Cg
+// source deliberately does NOT renormalize half_ts after the basis change
+// (the original ARB programs don't either; renormalizing changes the
+// specular response).
+static const char s_bumpColorBlendDualHQFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D sampler_base_1;              // TEXUNIT0\n"
+"uniform sampler2D sampler_dual_1;              // TEXUNIT1\n"
+"uniform sampler2D sampler_normal_and_gloss_1;  // TEXUNIT2\n"
+"uniform vec4 g_Env0FP;                         // engine constColor0 (TIE(ENV8))\n"
+"uniform vec4 g_Env1FP;                         // engine constColor1 (TIE(ENV9))\n"
+"uniform vec4 g_LightDirFP;                     // TIE(ENV11), view-space light dir (HQ only)\n"
+"uniform vec4 g_AmbientColorFP;                 // TIE(ENV0), setupBumpPixelShader ambient*2\n"
+"uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n"
+"uniform vec4 g_GlossParamFP;                   // TIE(ENV2), .w = glossConst\n"
+"uniform vec4 g_Specular1ColorAndExponentFP;    // TIE(ENV5), rgb spec color, a exponent\n"
+"\n"
+"varying vec3 vNormalVs;\n"
+"varying vec4 vTangentVs;\n"
+"varying vec3 vPositionVs;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = gl_TexCoord[0].xy;\n"
+"    vec2 uv1 = gl_TexCoord[0].zw;\n"
+"\n"
+"    // populate_lighting_vectors_hq: renormalize the interpolated basis,\n"
+"    // rebuild the binormal from the sign in tangent.w\n"
+"    vec3 normal_vs = normalize( vNormalVs );\n"
+"    vec3 tangent_vs = normalize( vTangentVs.xyz );\n"
+"    vec3 binormal_vs = cross( tangent_vs, normal_vs ) * vTangentVs.w;\n"
+"    vec3 light_vs = g_LightDirFP.xyz;\n"
+"\n"
+"    vec3 u_to_eye = normalize( -vPositionVs );\n"
+"    // toBasis: dot(row, v) per basis row (the transpose of GLSL's\n"
+"    // column-major mat3); light_ts IS renormalized...\n"
+"    vec3 light_ts = normalize( vec3( dot( light_vs, tangent_vs ),\n"
+"                                     dot( light_vs, binormal_vs ),\n"
+"                                     dot( light_vs, normal_vs ) ) );\n"
+"    vec3 h_vs = normalize( u_to_eye + light_vs );\n"
+"    // ...but half_ts deliberately is not (see comment above)\n"
+"    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
+"                         dot( h_vs, binormal_vs ),\n"
+"                         dot( h_vs, normal_vs ) );\n"
 "\n"
 "    // map_color_to_normal: expand [0,1] to [-1,1] and renormalize; the\n"
 "    // alpha channel piggybacks the gloss map\n"
@@ -410,6 +570,7 @@ typedef struct tPilotMaterial
     GLint                locEnv1;
     GLint                locGlowParam;
     GLint                locLightDir;            // g_LightDirVP (bump vertex shader)
+    GLint                locLightDirFP;            // g_LightDirFP (HQ bump fragment shader)
     GLint                locAmbient;            // g_AmbientColorFP (bump fragment)
     GLint                locDiffuse;            // g_DiffuseColorFP (bump fragment)
     GLint                locGloss;                // g_GlossParamFP (bump fragment)
@@ -424,6 +585,8 @@ typedef struct tPilotMaterial
 #define kPilotKindBit( kind ) ( 1u << (kind) )
 #define kPilotBumpKindMask ( kPilotKindBit( kPilotVertexKind_BumpDual ) | \
                              kPilotKindBit( kPilotVertexKind_SkinBump ) )
+#define kPilotBumpHQKindMask ( kPilotKindBit( kPilotVertexKind_BumpDualHQ ) | \
+                               kPilotKindBit( kPilotVertexKind_SkinBumpHQ ) )
 
 #define kPilotMaxVertexEntries 12
 
@@ -461,12 +624,13 @@ static const tPilotSampler s_bumpDualTintSamplers[] = {
 // glow, bump constants, vertex kind mask, vertex source, program, locs...,
 // failed, activationLogged, declineLogged
 static tPilotMaterial s_materials[kPilotMaterial_Count] = {
-    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ", s_bumpColorBlendDualHQFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpHQKindMask, s_bumpDualHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
@@ -474,11 +638,14 @@ static GLuint                s_vertexShader = 0;        // shared: one source se
 static bool                    s_vertexShaderFailed = false;
 static GLuint                s_bumpVertexShader = 0;    // shared by bump-material programs (static + skinned)
 static bool                    s_bumpVertexShaderFailed = false;
+static GLuint                s_bumpHQVertexShader = 0;    // shared by HQ bump-material programs
+static bool                    s_bumpHQVertexShaderFailed = false;
 static GLfloat                s_reflectionParamMirror[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
 static GLfloat                s_envMirrors[2][4] = { { 1.0f, 1.0f, 1.0f, 1.0f },
                                                      { 1.0f, 1.0f, 1.0f, 1.0f } };
 static GLfloat                s_glowParamMirror[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 static GLfloat                s_lightDirMirror[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
+static GLfloat                s_lightDirFPMirror[4] = { 0.0f, 0.0f, 1.0f, 0.0f };
 static GLfloat                s_ambientMirror[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat                s_diffuseMirror[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat                s_glossMirror[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -527,11 +694,24 @@ static GLuint pilotGetBumpVertexShader( void )
     return s_bumpVertexShader;
 }
 
+static GLuint pilotGetBumpHQVertexShader( void )
+{
+    if ( s_bumpHQVertexShader || s_bumpHQVertexShaderFailed )
+        return s_bumpHQVertexShader;
+    s_bumpHQVertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_bumpDualHQVertexSource, "bump_dual HQ vertex shader" );
+    if ( ! s_bumpHQVertexShader )
+        s_bumpHQVertexShaderFailed = true;
+    return s_bumpHQVertexShader;
+}
+
 static bool pilotInit( int material )
 {
     tPilotMaterial* m = &s_materials[material];
-    bool isBump = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
-    GLuint vertexShader = isBump ? pilotGetBumpVertexShader() : pilotGetVertexShader();
+    bool isBumpLQ = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
+    bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
+    GLuint vertexShader = isBumpHQ ? pilotGetBumpHQVertexShader()
+                      : isBumpLQ ? pilotGetBumpVertexShader()
+                                 : pilotGetVertexShader();
     GLuint fragmentShader;
     GLint status = 0;
 
@@ -547,7 +727,7 @@ static bool pilotInit( int material )
     // weights/indices on attributes 1 and 5 (glVertexAttribPointerARB in
     // rt_model.c / rt_bonedmodel.c); bind the GLSL attributes to the same
     // indices before linking
-    if ( isBump )
+    if ( isBumpLQ || isBumpHQ )
     {
         __glewBindAttribLocation( m->program, 7, "attr_tangent" );
         __glewBindAttribLocation( m->program, 1, "attr_boneweights" );
@@ -587,9 +767,15 @@ static bool pilotInit( int material )
         m->locEnv1 = __glewGetUniformLocation( m->program, "g_Env1FP" );
     if ( m->usesGlowParam )
         m->locGlowParam = __glewGetUniformLocation( m->program, "g_GlowParamFP" );
-    if ( isBump )
+    if ( isBumpLQ )
     {
         m->locLightDir = __glewGetUniformLocation( m->program, "g_LightDirVP" );
+        m->locSkinned = __glewGetUniformLocation( m->program, "g_Skinned" );
+        m->locBoneMatrices = __glewGetUniformLocation( m->program, "g_BoneMatrixArrVP[0]" );
+    }
+    if ( isBumpHQ )
+    {
+        m->locLightDirFP = __glewGetUniformLocation( m->program, "g_LightDirFP" );
         m->locSkinned = __glewGetUniformLocation( m->program, "g_Skinned" );
         m->locBoneMatrices = __glewGetUniformLocation( m->program, "g_BoneMatrixArrVP[0]" );
     }
@@ -600,8 +786,9 @@ static bool pilotInit( int material )
         m->locGloss = __glewGetUniformLocation( m->program, "g_GlossParamFP" );
         m->locSpecular1 = __glewGetUniformLocation( m->program, "g_Specular1ColorAndExponentFP" );
     }
-    if (( ! isBump && (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ))) ||
-        ( isBump && (( m->locLightDir < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
+    if (( ! isBumpLQ && ! isBumpHQ && (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ))) ||
+        ( isBumpLQ && (( m->locLightDir < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
+        ( isBumpHQ && (( m->locLightDirFP < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
         ( m->usesEnv0 && ( m->locEnv0 < 0 )) ||
         ( m->usesEnv1 && ( m->locEnv1 < 0 )) ||
         ( m->usesGlowParam && ( m->locGlowParam < 0 )) ||
@@ -682,6 +869,8 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
     {
         case kPilotVertexKind_SkinBump: return "skin_bump";
         case kPilotVertexKind_BumpDual: return "bump_dual";
+        case kPilotVertexKind_SkinBumpHQ: return "skin_bump HQ";
+        case kPilotVertexKind_BumpDualHQ: return "bump_dual HQ";
         default: return "dualtex";
     }
 }
@@ -709,8 +898,12 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
         __glewUniform4fv( m->locGlowParam, 1, s_glowParamMirror );
     if ( m->locLightDir >= 0 )
         __glewUniform4fv( m->locLightDir, 1, s_lightDirMirror );
+    if ( m->locLightDirFP >= 0 )
+        __glewUniform4fv( m->locLightDirFP, 1, s_lightDirFPMirror );
     if ( m->locSkinned >= 0 )
-        __glewUniform1i( m->locSkinned, ( entry->kind == kPilotVertexKind_SkinBump ) ? 1 : 0 );
+        __glewUniform1i( m->locSkinned,
+            (( entry->kind == kPilotVertexKind_SkinBump ) ||
+             ( entry->kind == kPilotVertexKind_SkinBumpHQ )) ? 1 : 0 );
     if ( m->locBoneMatrices >= 0 && s_boneMatrixMirrorCount > 0 )
         __glewUniform4fv( m->locBoneMatrices, s_boneMatrixMirrorCount, &s_boneMatrixMirror[0][0] );
     if ( m->usesBumpConstants )
@@ -725,7 +918,7 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
     if ( ! m->activationLogged )
     {
         m->activationLogged = true;
-        if ( m->vertexKindMask & kPilotBumpKindMask )
+        if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask ))
             printf( "GLSL pilot: %s active (%s vertex variant)\n", m->name,
                 pilotVertexKindName( entry->kind ) );
         else
@@ -803,7 +996,9 @@ void rt_glslpilot_tryBindVertex( GLuint vertexPgmId, GLuint fragmentPgmId )
         if ( m->locVertexLitMode >= 0 )
             __glewUniform1i( m->locVertexLitMode, entry->vertexLitMode );
         if ( m->locSkinned >= 0 )
-            __glewUniform1i( m->locSkinned, ( entry->kind == kPilotVertexKind_SkinBump ) ? 1 : 0 );
+            __glewUniform1i( m->locSkinned,
+                (( entry->kind == kPilotVertexKind_SkinBump ) ||
+                 ( entry->kind == kPilotVertexKind_SkinBumpHQ )) ? 1 : 0 );
     }
 }
 
@@ -904,6 +1099,21 @@ void rt_glslpilot_onLightDirParam( const GLfloat* vec4 )
     }
 }
 
+// g_LightDirFP (TIE(ENV11)): the HQ bump fragment's light direction, pushed
+// by setupBumpPixelShader only for BMB_HIGH_QUALITY draws; the env register
+// persists between pushes, so the mirror deliberately keeps the last value
+// the same way the ARB path would
+void rt_glslpilot_onLightDirFPParam( const GLfloat* vec4 )
+{
+    memcpy( s_lightDirFPMirror, vec4, sizeof( s_lightDirFPMirror ) );
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( m->locLightDirFP >= 0 )
+            __glewUniform4fv( m->locLightDirFP, 1, s_lightDirFPMirror );
+    }
+}
+
 void rt_glslpilot_onAmbientColorParam( const GLfloat* vec4 )
 {
     memcpy( s_ambientMirror, vec4, sizeof( s_ambientMirror ) );
@@ -999,13 +1209,14 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
             (int)s_materials[kPilotMaterial_AddGlow].arbFragmentId,
             (int)s_materials[kPilotMaterial_AlphaDetail].arbFragmentId,
             (int)s_materials[kPilotMaterial_BumpColorBlendDual].arbFragmentId,
+            (int)s_materials[kPilotMaterial_BumpColorBlendDualHQ].arbFragmentId,
             s_vertexEntryCount );
     }
 }

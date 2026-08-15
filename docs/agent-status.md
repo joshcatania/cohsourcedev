@@ -591,3 +591,88 @@ the gate for addGlow/alphaDetail verification and non-Atlas scenes.
 Shader sources for all of these are extracted at `agent/shadersrc/`
 (ignored; regenerate with
 `Utilities/pig/bin/x86/Release/pig.exe x bin\piggs\misc.pigg`).
+
+## GLSL pilot: bumpmapColorblendDual HQ variant (fragment 101) — 2026-08-15
+
+Seventh material ported: the BIT_HIGH_QUALITY variant of the bumped
+dual-tint material — the `101` id the coverage diagnostic had observed
+bound on Atlas Park next to the LQ `100`.
+
+### What the HQ variant actually is
+
+The HQ fragment (`bumpmapColorblendDualfp.cg` with `BIT_HIGH_QUALITY`)
+does not receive tangent-space light/view vectors from the vertex
+stage. Instead the engine pairs it with the HQ compiles of the same
+vertex variants (`shaderMgrVertexProgramsHQ[]`, selected via
+`BIT_HIGH_QUALITY_VERTEX_PROGRAM` in the bump draw paths when
+`blend_bits & BMB_HIGH_QUALITY`), which pass view-space normal, tangent
+(binormal sign in w), and position as interpolants. The fragment builds
+the tangent basis per pixel (`populate_lighting_vectors_hq`) and takes
+the light direction from the `g_LightDirFP` fragment constant
+(TIE(ENV11)) — pushed by `setupBumpPixelShader` only for HQ draws —
+instead of a vertex-interpolated vector. Two faithful-to-source
+nuances: `light_ts` IS renormalized after the basis change but
+`half_ts` deliberately is NOT (the Cg source documents that
+renormalizing changes the specular response), and the binormal sign is
+`sign(tangent.w)` applied at the vertex stage and multiplied in raw at
+the fragment.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_BumpColorBlendDualHQ` with its
+  own HQ fragment source and an HQ bump vertex source (same two-bone
+  skinning switch behind `g_Skinned`; no `g_LightDirVP` — dead code in
+  the HQ Cg variants). New vertex kinds `BumpDualHQ`/`SkinBumpHQ`;
+  materials pair by kind mask exactly like the LQ set. New
+  `g_LightDirFP` mirror (`rt_glslpilot_onLightDirFPParam`); the env
+  register persists between pushes, so the mirror deliberately keeps
+  the last value like the ARB path.
+- `wcw_statemgmt.c`: `kShaderParam_LightDirFP` hooked into the mirror
+  dispatch in `WCW_SetCgShaderParamArray4fv`.
+- `rt_shaderMgr.c`: registers
+  `g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY]`
+  as the HQ fragment target and `shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX/SKINNED]`
+  (observed ids 251/247 this run) as HQ vertex entries.
+- MSVC C lesson: positional material-table initializers count against
+  the struct — adding a uniform-location field requires adding exactly
+  one initializer to every row (first build failed C2078 with one
+  extra `-1` per row).
+
+### Verification (fresh generation, warm shard, same-window A/B)
+
+- Build: `agent/logs/build-Release-x86-20260815-182923.log` (PASS,
+  28.5 s).
+- Warm-up: first `-ExerciseCharacter` smoke timed out at 180 s on the
+  fresh shard (documented warm-up), passed after 4 minutes.
+- Diagnostic capture (pilot on, East): HQ program compiled/linked and
+  activated `(skin_bump HQ vertex variant)`; HQ vertex programs
+  registered (251 bump_dual HQ, 247 skin_bump HQ). One benign
+  end-of-log decline: a fragment-101 bind arrived while LQ vertex 228
+  was still tracked (last pilot line of the run); the vertex re-bind
+  path recovers such pairings, and if a draw really happened in the
+  mismatched state it is byte-identical to what the ARB control does
+  in the same state.
+- Adopt suite `agent/logs/regression-20260815-184116.json` (control,
+  fresh baselines for this generation), pilot suite
+  `agent/logs/regression-20260815-184335.json`: East_01 **0.02%/0.21
+  PASS** (pixel-level), North_01 1.46%/1.52 PASS, West_01
+  **0.0035%/0.34 PASS** (pixel-level). CityHall_03 flagged 10.66% once
+  (sky movement between suites — the shot's client log shows the HQ
+  material active with no declines); the immediate pilot re-capture
+  `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-184621.json`
+  measured **1.41%/1.65 PASS** against the same baseline — transient,
+  not reproduced.
+- All four shots show `BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ active`
+  in their client logs; East alone shows the single late fragment-101
+  coverage line described above.
+- Shard stopped afterwards; post-stop rescan found no shard processes.
+
+### Remaining Atlas Park coverage after this port
+
+The unported bound fragment ids in an East capture are now only the
+special-effects set (201-216, the effects/ post-processing family).
+Remaining material families for later steps: `bumpmapMultiply`
+(BUMPMAP_MULTIPLY LQ — not observed bound in the Atlas shots so far),
+`multi9`, water, and the effects/ set. The map-transfer capture path
+remains the gate for addGlow/alphaDetail verification and non-Atlas
+scenes.

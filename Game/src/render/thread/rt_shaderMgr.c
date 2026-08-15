@@ -966,6 +966,7 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AddGlow, g_shaderMgrFragmentProgramVariants[BLENDMODE_ADDGLOW][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AlphaDetail, g_shaderMgrFragmentProgramVariants[BLENDMODE_ALPHADETAIL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDualHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1237,7 +1238,8 @@ void shaderMgr_InitVPs(void)
     // implements. The bump_dual row (static geometry) and skin_bump row
     // (boned models: player/NPC costumes) both feed the bumpColorBlendDual
     // pilot material through its skinning-switch vertex shader; their HQ
-    // siblings (shaderMgrVertexProgramsHQ) are not ported.
+    // siblings (shaderMgrVertexProgramsHQ, same variants compiled with
+    // BIT_HIGH_QUALITY) feed the HQ pilot material.
     rt_glslpilot_resetPrograms();
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], kPilotVertexKind_DualTex, 5 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], kPilotVertexKind_DualTex, 5 );
@@ -1247,6 +1249,8 @@ void shaderMgr_InitVPs(void)
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], kPilotVertexKind_DualTex, 1 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDual, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBump, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDualHQ, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBumpHQ, 0 );
 }
 
 

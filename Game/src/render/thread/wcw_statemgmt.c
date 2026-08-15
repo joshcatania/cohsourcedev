@@ -2514,6 +2514,10 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onLightDirParam( vec4Arr );
     }
+    if ( id == kShaderParam_LightDirFP )
+    {
+        rt_glslpilot_onLightDirFPParam( vec4Arr );
+    }
     if ( id == kShaderParam_AmbientColorFP )
     {
         rt_glslpilot_onAmbientColorParam( vec4Arr );

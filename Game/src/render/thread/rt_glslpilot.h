@@ -3,8 +3,9 @@
 
 // Native GLSL pilot path (development experiment).
 //
-// Renders BLENDMODE_MODULATE, BLENDMODE_MULTIPLY, and
-// BLENDMODE_COLORBLEND_DUAL draws through hand-written GLSL 1.20
+// Renders the simple materials (MODULATE, MULTIPLY, COLORBLEND_DUAL, ADDGLOW,
+// ALPHADETAIL) and the bumped dual-tint material (BUMPMAP_COLORBLEND_DUAL,
+// default and BIT_HIGH_QUALITY variants) through hand-written GLSL 1.20
 // compatibility-profile programs instead of the Cg->ARB pipeline, to prove
 // that materials can be moved to native GLSL without a visual regression
 // (verified with agent/compare-captures.ps1). The GLSL programs ride on top
@@ -27,6 +28,7 @@ typedef enum ePilotMaterial {
     kPilotMaterial_AddGlow,         // addglowfp.cg
     kPilotMaterial_AlphaDetail,     // alphaDetailfp.cg
     kPilotMaterial_BumpColorBlendDual, // bumpmapColorblendDualfp.cg (variant 0)
+    kPilotMaterial_BumpColorBlendDualHQ, // bumpmapColorblendDualfp.cg (BIT_HIGH_QUALITY)
     kPilotMaterial_Count
 } tPilotMaterialId;
 
@@ -41,6 +43,8 @@ typedef enum ePilotVertexKind {
     kPilotVertexKind_DualTex = 0,
     kPilotVertexKind_BumpDual,
     kPilotVertexKind_SkinBump,
+    kPilotVertexKind_BumpDualHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX]
+    kPilotVertexKind_SkinBumpHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED]
 } tPilotVertexKind;
 
 // Called by WCW_BindFragmentProgram. Returns true when the pilot handled
@@ -80,14 +84,18 @@ void rt_glslpilot_onEnvParam( int index, const GLfloat* vec4 );
 void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
 
 // Mirrors of the bump lighting constants (consumed by the
-// bumpColorBlendDual material): g_LightDirVP is the view-space light
+// bumpColorBlendDual materials): g_LightDirVP is the view-space light
 // direction pushed to the vertex program by rt_model.c/rt_bonedmodel.c;
+// g_LightDirFP is its fragment-program sibling (TIE(ENV11)) that the HQ
+// fragment variant consumes instead, pushed by setupBumpPixelShader only
+// when BMB_HIGH_QUALITY is set;
 // g_AmbientColorFP/g_DiffuseColorFP/g_GlossParamFP/g_Specular1ColorAndExponentFP
 // are the fragment constants pushed by setupBumpPixelShader/setupSpecularColor
 // (TIE(ENV0)/ENV1/ENV2/ENV5); the bone matrix array (TIE(ENV16), up to 48
 // vec4s = 16 bones x 3 rows) is pushed by loadBoneMatrices for the skinned
 // bump draws. Same always-mirror contract as above.
 void rt_glslpilot_onLightDirParam( const GLfloat* vec4 );
+void rt_glslpilot_onLightDirFPParam( const GLfloat* vec4 );
 void rt_glslpilot_onAmbientColorParam( const GLfloat* vec4 );
 void rt_glslpilot_onDiffuseColorParam( const GLfloat* vec4 );
 void rt_glslpilot_onGlossParam( const GLfloat* vec4 );
