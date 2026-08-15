@@ -958,9 +958,10 @@ void shaderMgr_InitFPs(void)
     if (!executedOnce) // do not disable features on shader reload
         rdr_caps.features &= rdr_caps.allowed_features;
 
-    // the GLSL pilot renders this one material; ids are regenerated on every
+    // the GLSL pilot renders these materials; ids are regenerated on every
     // shader reload so re-register after each compile pass
-    rt_glslpilot_setFragmentTarget( g_shaderMgrFragmentProgramVariants[BLENDMODE_MODULATE][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Modulate, g_shaderMgrFragmentProgramVariants[BLENDMODE_MODULATE][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTIPLY][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();

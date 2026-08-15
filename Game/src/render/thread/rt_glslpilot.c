@@ -1,13 +1,16 @@
-// Native GLSL pilot path for BLENDMODE_MODULATE. See rt_glslpilot.h.
+// Native GLSL pilot path for BLENDMODE_MODULATE and BLENDMODE_MULTIPLY.
+// See rt_glslpilot.h.
 //
 // The shader math replicates the Cg sources shipped in the piggs:
-//   shaders/cgfx/modulatefp.cg          (fragment)
+//   shaders/cgfx/modulatefp.cg          (modulate fragment)
+//   shaders/cgfx/multiplyRegfp.cg       (multiply fragment)
 //   shaders/cgfx/vp_master_vp.cg        (vertex, DUALTEX variants)
 //   shaders/cgfx/functions.cgh          (calc_fogged_color, faux reflection)
 // The GLSL builds on compatibility-profile built-ins (gl_ModelViewMatrix,
 // gl_TextureMatrix, gl_LightSource[0], gl_Fog, gl_Color, gl_FogFragCoord)
 // which read the same GL server state the Cg `state.*` semantics read, so
-// the engine needs no new parameter plumbing beyond g_ReflectionParamVP.
+// the engine needs no new parameter plumbing beyond the two mirrored
+// program-local constants (g_ReflectionParamVP, g_Env0FP).
 
 #include "render/thread/ogl.h"
 #include "render/thread/rt_glslpilot.h"
@@ -19,7 +22,7 @@
 // pointers (GLEW_GET_FUN targets, gl-prefix stripped) remain the supported
 // way to reach them.
 
-static const char* s_pilotVertexSource =
+static const char s_pilotVertexSource[] =
 "#version 120\n"
 "\n"
 "uniform vec4 g_ReflectionParamVP;   // engine constant, see header\n"
@@ -66,7 +69,7 @@ static const char* s_pilotVertexSource =
 "    }\n"
 "}\n";
 
-static const char* s_pilotFragmentSource =
+static const char s_modulateFragmentSource[] =
 "#version 120\n"
 "\n"
 "uniform sampler2D sampler_base;   // TEXUNIT0\n"
@@ -86,6 +89,33 @@ static const char* s_pilotFragmentSource =
 "    gl_FragColor = out_color;\n"
 "}\n";
 
+// multiplyRegfp.cg, default variant (no BIT_HIGH_QUALITY / cubemap / shadow):
+// straight modulation of base by blend texture (alpha included), then
+// out_color.rgb *= 8*IN.color.rgb and out_color.a *= g_Env0FP.a.
+static const char s_multiplyFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D sampler_base;   // TEXUNIT0\n"
+"uniform sampler2D sampler_blend;  // TEXUNIT1\n"
+"uniform vec4 g_Env0FP;            // engine constColor0 (TIE(ENV8) -> fragment program.env[8])\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 out_color = texture2D( sampler_base, gl_TexCoord[0].xy )\n"
+"        * texture2D( sampler_blend, gl_TexCoord[0].zw );\n"
+"\n"
+"    // modulate by vertex color and scale (x8 to match the multiplyReg\n"
+"    // register combiner program and old assets)\n"
+"    out_color.rgb *= 8.0 * gl_Color.rgb;\n"
+"    // modulate by lod alpha\n"
+"    out_color.a *= g_Env0FP.a;\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
 // variants.cgh values for g_VertexLitMode
 enum {
     kPilotVertLit_VertColor = 1,
@@ -99,18 +129,35 @@ typedef struct tPilotVertexEntry
     int            vertexLitMode;
 } tPilotVertexEntry;
 
+typedef struct tPilotMaterial
+{
+    GLuint        arbFragmentId;        // target ARB/Cg program id (0 = none)
+    const char*    name;                // for logging
+    const char*    fragmentSource;      // GLSL fragment source
+    bool            usesEnv0;            // fragment consumes the g_Env0FP mirror
+    GLuint        program;                // compiled GLSL program (0 = not yet)
+    GLint            locReflectionParam;
+    GLint            locVertexLitMode;
+    GLint            locEnv0;
+    bool            failed;
+    bool            activationLogged;    // one-time activation evidence for logs
+} tPilotMaterial;
+
 #define kPilotMaxVertexEntries 8
 
 static tPilotVertexEntry    s_vertexEntries[kPilotMaxVertexEntries];
 static int                    s_vertexEntryCount = 0;
-static GLuint                s_fragmentTarget = 0;
 
-static GLuint                s_program = 0;
-static GLint                s_locReflectionParam = -1;
-static GLint                s_locVertexLitMode = -1;
-static bool                s_active = false;
-static bool                s_failed = false;
+static tPilotMaterial s_materials[kPilotMaterial_Count] = {
+    { 0, "BLENDMODE_MODULATE", s_modulateFragmentSource, false, 0, -1, -1, -1, false, false },
+    { 0, "BLENDMODE_MULTIPLY", s_multiplyFragmentSource, true,  0, -1, -1, -1, false, false },
+};
+
+static int                    s_activeMaterial = -1;    // -1 = pilot inactive
+static GLuint                s_vertexShader = 0;        // shared: one source serves both materials
+static bool                    s_vertexShaderFailed = false;
 static GLfloat                s_reflectionParamMirror[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+static GLfloat                s_env0Mirror[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 
 static GLuint pilotCompileShader( GLenum type, const char* source, const char* descr )
 {
@@ -133,70 +180,84 @@ static GLuint pilotCompileShader( GLenum type, const char* source, const char* d
     return shader;
 }
 
-static bool pilotInit( void )
+static GLuint pilotGetVertexShader( void )
 {
-    GLuint vertexShader;
+    if ( s_vertexShader || s_vertexShaderFailed )
+        return s_vertexShader;
+    s_vertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_pilotVertexSource, "vertex shader" );
+    if ( ! s_vertexShader )
+        s_vertexShaderFailed = true;
+    return s_vertexShader;
+}
+
+static bool pilotInit( int material )
+{
+    tPilotMaterial* m = &s_materials[material];
+    GLuint vertexShader = pilotGetVertexShader();
     GLuint fragmentShader;
     GLint status = 0;
 
-    s_program = __glewCreateProgram();
-    if ( ! s_program )
+    m->program = __glewCreateProgram();
+    if (( ! m->program ) || ( ! vertexShader ))
     {
-        printf( "GLSL pilot: glCreateProgram failed (GL 2.0 entry points missing?)\n" );
-        s_failed = true;
+        printf( "GLSL pilot: %s program creation failed (GL 2.0 entry points missing?)\n", m->name );
+        m->failed = true;
         return false;
     }
 
-    vertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_pilotVertexSource, "vertex shader" );
-    fragmentShader = pilotCompileShader( GL_FRAGMENT_SHADER, s_pilotFragmentSource, "fragment shader" );
-    if ( ! vertexShader || ! fragmentShader )
+    fragmentShader = pilotCompileShader( GL_FRAGMENT_SHADER, m->fragmentSource, m->name );
+    if ( ! fragmentShader )
     {
-        s_failed = true;
+        m->failed = true;
         return false;
     }
 
-    __glewAttachShader( s_program, vertexShader );
-    __glewAttachShader( s_program, fragmentShader );
-    __glewDeleteShader( vertexShader );
+    __glewAttachShader( m->program, vertexShader );
+    __glewAttachShader( m->program, fragmentShader );
     __glewDeleteShader( fragmentShader );
+    // the shared vertex shader object is intentionally kept alive for the
+    // other materials' programs
 
-    __glewLinkProgram( s_program );
-    __glewGetProgramiv( s_program, GL_LINK_STATUS, &status );
+    __glewLinkProgram( m->program );
+    __glewGetProgramiv( m->program, GL_LINK_STATUS, &status );
     if ( ! status )
     {
         char infoLog[2048];
         infoLog[0] = '\0';
-        __glewGetProgramInfoLog( s_program, sizeof(infoLog) - 1, NULL, infoLog );
-        printf( "GLSL pilot: program link failed:\n%s\n", infoLog );
-        s_failed = true;
+        __glewGetProgramInfoLog( m->program, sizeof(infoLog) - 1, NULL, infoLog );
+        printf( "GLSL pilot: %s program link failed:\n%s\n", m->name, infoLog );
+        m->failed = true;
         return false;
     }
 
-    s_locReflectionParam = __glewGetUniformLocation( s_program, "g_ReflectionParamVP" );
-    s_locVertexLitMode = __glewGetUniformLocation( s_program, "g_VertexLitMode" );
-    if (( s_locReflectionParam < 0 ) || ( s_locVertexLitMode < 0 ))
+    m->locReflectionParam = __glewGetUniformLocation( m->program, "g_ReflectionParamVP" );
+    m->locVertexLitMode = __glewGetUniformLocation( m->program, "g_VertexLitMode" );
+    if ( m->usesEnv0 )
+        m->locEnv0 = __glewGetUniformLocation( m->program, "g_Env0FP" );
+    if (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ) ||
+        ( m->usesEnv0 && ( m->locEnv0 < 0 )))
     {
-        printf( "GLSL pilot: required uniforms optimized away or missing\n" );
-        s_failed = true;
+        printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
+        m->failed = true;
         return false;
     }
 
-    // sampler units are fixed for this material: base on TEXUNIT0, blend on TEXUNIT1
-    __glewUseProgram( s_program );
-    __glewUniform1i( __glewGetUniformLocation( s_program, "sampler_base" ), 0 );
-    __glewUniform1i( __glewGetUniformLocation( s_program, "sampler_blend" ), 1 );
+    // sampler units are fixed for these materials: base on TEXUNIT0, blend on TEXUNIT1
+    __glewUseProgram( m->program );
+    __glewUniform1i( __glewGetUniformLocation( m->program, "sampler_base" ), 0 );
+    __glewUniform1i( __glewGetUniformLocation( m->program, "sampler_blend" ), 1 );
     __glewUseProgram( 0 );
 
-    printf( "GLSL pilot: BLENDMODE_MODULATE program compiled and linked\n" );
+    printf( "GLSL pilot: %s program compiled and linked\n", m->name );
     return true;
 }
 
 static void pilotDeactivate( void )
 {
-    if ( s_active )
+    if ( s_activeMaterial >= 0 )
     {
         __glewUseProgram( 0 );
-        s_active = false;
+        s_activeMaterial = -1;
     }
 }
 
@@ -211,28 +272,53 @@ static int pilotFindVertexMode( GLuint vertexPgmId )
     return 0;
 }
 
-static bool pilotActivate( int vertexLitMode )
+static int pilotFindMaterial( GLuint fragmentPgmId )
 {
-    if ( ! s_program && ! pilotInit() )
+    int i;
+    if ( ! fragmentPgmId )
+        return -1;
+    for ( i = 0; i < kPilotMaterial_Count; i++ )
+    {
+        if ( s_materials[i].arbFragmentId == fragmentPgmId )
+            return i;
+    }
+    return -1;
+}
+
+static bool pilotActivate( int material, int vertexLitMode )
+{
+    tPilotMaterial* m = &s_materials[material];
+
+    if ( ! m->program && ! pilotInit( material ) )
         return false;
 
-    // s_reflectionParamMirror tracks the engine constant continuously (see
-    // rt_glslpilot_onReflectionParam), so it is valid at any activation time
-    __glewUseProgram( s_program );
-    __glewUniform4fv( s_locReflectionParam, 1, s_reflectionParamMirror );
-    __glewUniform1i( s_locVertexLitMode, vertexLitMode );
-    s_active = true;
+    // the mirrors track the engine constants continuously (see
+    // rt_glslpilot_onReflectionParam / rt_glslpilot_onEnv0Param), so they
+    // are valid at any activation time
+    __glewUseProgram( m->program );
+    __glewUniform4fv( m->locReflectionParam, 1, s_reflectionParamMirror );
+    __glewUniform1i( m->locVertexLitMode, vertexLitMode );
+    if ( m->locEnv0 >= 0 )
+        __glewUniform4fv( m->locEnv0, 1, s_env0Mirror );
+    s_activeMaterial = material;
+
+    if ( ! m->activationLogged )
+    {
+        m->activationLogged = true;
+        printf( "GLSL pilot: %s active (vertex lit mode %d)\n", m->name, vertexLitMode );
+    }
     return true;
 }
 
 bool rt_glslpilot_tryBindFragment( GLuint fragmentPgmId, GLuint vertexPgmId )
 {
+    int material = pilotFindMaterial( fragmentPgmId );
     int vertexLitMode;
 
-    if ( s_active && ( fragmentPgmId != s_fragmentTarget ) )
+    if (( s_activeMaterial >= 0 ) && ( s_activeMaterial != material ))
         pilotDeactivate();
 
-    if ( ! game_state.glslPilot || s_failed || ( fragmentPgmId != s_fragmentTarget ) )
+    if ( ! game_state.glslPilot || ( material < 0 ) || s_materials[material].failed )
         return false;
 
     vertexLitMode = pilotFindVertexMode( vertexPgmId );
@@ -242,25 +328,26 @@ bool rt_glslpilot_tryBindFragment( GLuint fragmentPgmId, GLuint vertexPgmId )
         return false;
     }
 
-    return pilotActivate( vertexLitMode );
+    return pilotActivate( material, vertexLitMode );
 }
 
 void rt_glslpilot_tryBindVertex( GLuint vertexPgmId, GLuint fragmentPgmId )
 {
     int vertexLitMode = pilotFindVertexMode( vertexPgmId );
+    int material = pilotFindMaterial( fragmentPgmId );
 
-    if ( ! s_active )
+    if ( s_activeMaterial < 0 )
     {
-        if (( ! game_state.glslPilot ) || s_failed || ( fragmentPgmId != s_fragmentTarget ) || ( ! vertexLitMode ))
+        if (( ! game_state.glslPilot ) || ( material < 0 ) || s_materials[material].failed || ( ! vertexLitMode ))
             return;
-        pilotActivate( vertexLitMode );
+        pilotActivate( material, vertexLitMode );
         return;
     }
 
-    if ( fragmentPgmId != s_fragmentTarget )
+    if ( s_activeMaterial != material )
     {
-        // the tracked fragment program moved off the pilot target without a
-        // bind call to tell us; stop overriding the pipeline
+        // the tracked fragment program moved off the pilot targets without
+        // a bind call to tell us; stop overriding the pipeline
         pilotDeactivate();
         return;
     }
@@ -271,9 +358,9 @@ void rt_glslpilot_tryBindVertex( GLuint vertexPgmId, GLuint fragmentPgmId )
         return;
     }
 
-    // still the modulate fragment target; a registered vertex variant took
-    // over, so just re-mode the vertex shader
-    __glewUniform1i( s_locVertexLitMode, vertexLitMode );
+    // still a pilot fragment target; a registered vertex variant took over,
+    // so just re-mode the vertex shader
+    __glewUniform1i( s_materials[s_activeMaterial].locVertexLitMode, vertexLitMode );
 }
 
 void rt_glslpilot_onVertexProgramChange( GLuint vertexPgmId )
@@ -290,7 +377,7 @@ void rt_glslpilot_onFragmentProgramDisable( void )
 
 bool rt_glslpilot_isActive( void )
 {
-    return s_active;
+    return s_activeMaterial >= 0;
 }
 
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 )
@@ -299,15 +386,30 @@ void rt_glslpilot_onReflectionParam( const GLfloat* vec4 )
     // pilot activates next, and engine bind order is not guaranteed relative
     // to activation
     memcpy( s_reflectionParamMirror, vec4, sizeof( s_reflectionParamMirror ) );
-    if ( s_active && ( s_locReflectionParam >= 0 ) )
+    if ( s_activeMaterial >= 0 )
     {
-        __glewUniform4fv( s_locReflectionParam, 1, s_reflectionParamMirror );
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( m->locReflectionParam >= 0 )
+            __glewUniform4fv( m->locReflectionParam, 1, s_reflectionParamMirror );
+    }
+}
+
+void rt_glslpilot_onEnv0Param( const GLfloat* vec4 )
+{
+    // always mirror, active or not (same rationale as the reflection param;
+    // constColor0 changes with draw alpha/tinting while other materials draw)
+    memcpy( s_env0Mirror, vec4, sizeof( s_env0Mirror ) );
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( m->locEnv0 >= 0 )
+            __glewUniform4fv( m->locEnv0, 1, s_env0Mirror );
     }
 }
 
 void rt_glslpilot_resetPrograms( void )
 {
-    // only the vertex table; the fragment target is refreshed independently
+    // only the vertex table; fragment targets are refreshed independently
     // by rt_glslpilot_setFragmentTarget because shaderMgr_InitVPs and
     // shaderMgr_InitFPs run in no guaranteed order
     s_vertexEntryCount = 0;
@@ -323,11 +425,16 @@ void rt_glslpilot_addVertexProgram( GLuint vertexPgmId, int vertexLitMode )
     }
 }
 
-void rt_glslpilot_setFragmentTarget( GLuint fragmentPgmId )
+void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentPgmId )
 {
-    s_fragmentTarget = fragmentPgmId;
+    if (( material < 0 ) || ( material >= kPilotMaterial_Count ))
+        return;
+    s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment target id %d, %d registered vertex programs\n", (int)fragmentPgmId, s_vertexEntryCount );
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d, %d registered vertex programs\n",
+            (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
+            (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
+            s_vertexEntryCount );
     }
 }

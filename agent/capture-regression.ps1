@@ -12,6 +12,9 @@ param(
     # Baseline directory. Missing baselines are adopted automatically unless
     # -NoAdopt is given; adopted shots are reported, never counted as passes.
     [string]$BaselineDir = '',
+    # Extra client arguments forwarded verbatim to capture.ps1 for every shot,
+    # e.g. '-glslPilot 1' to run the suite through the native GLSL pilot.
+    [string]$ExtraClientArgs = '',
     [switch]$NoAdopt,
     [switch]$Json
 )
@@ -30,12 +33,17 @@ $startedAt = Get-Date
 $results = @()
 $labels = @($Targets -split ',' | ForEach-Object { $_.Trim() } | Where-Object { $_ })
 
+# splatted only when non-empty: an empty -ExtraClientArgs would be dropped by
+# the child invocation and reported as a missing parameter
+$extraClientArgList = @()
+if ($ExtraClientArgs) { $extraClientArgList = @('-ExtraClientArgs', $ExtraClientArgs) }
+
 # Warmup capture: the first client to run on a fresh mapserver generation is
 # also the one that freezes the world clock, and the sky/sun systems keep
 # interpolating toward the frozen state for a while afterwards. Run one
 # throwaway capture so every baseline and comparison sees a settled server.
 if ($labels.Count -gt 0) {
-    $null = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $captureScript -Target $labels[0] -AccountName $AccountName -Password $Password -TimeoutSeconds $TimeoutSeconds -Json 2>&1
+    $null = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $captureScript -Target $labels[0] -AccountName $AccountName -Password $Password -TimeoutSeconds $TimeoutSeconds @extraClientArgList -Json 2>&1
 }
 
 foreach ($label in $labels) {
@@ -44,7 +52,7 @@ foreach ($label in $labels) {
     $baseline = Join-Path $BaselineDir "$safeLabel.jpg"
     $entry = [ordered]@{ target=$label; artifact=$artifact; baseline=$baseline }
 
-    $captureOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $captureScript -Target $label -AccountName $AccountName -Password $Password -TimeoutSeconds $TimeoutSeconds -Json 2>&1 | Out-String
+    $captureOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $captureScript -Target $label -AccountName $AccountName -Password $Password -TimeoutSeconds $TimeoutSeconds @extraClientArgList -Json 2>&1 | Out-String
     $captureExit = $LASTEXITCODE
     $entry.captureExitCode = $captureExit
     $entry.capturePassed = ($captureExit -eq 0)

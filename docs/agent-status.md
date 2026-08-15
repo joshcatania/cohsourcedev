@@ -258,3 +258,63 @@ then `colorBlendDualfp`/`addGlowfp`. Bumpmapped materials additionally need
 tangent-space interpolants and more engine constants, and the `effects/`
 post-processing set needs the same `TIE` treatment or native ports before
 `-useCg 2` could ever be revisited.
+
+## GLSL pilot extended to BLENDMODE_MULTIPLY — 2026-08-15
+
+The second material now renders through native GLSL, reusing the pilot's
+migration template. `multiplyRegfp` (variant 0: no HQ/cubemap/shadow bits) is
+`tex_base * tex_blend` (alpha included), `rgb *= 8 * vertex color` (x8 to
+match the register-combiner program and old assets), `a *= g_Env0FP.a`, then
+fog — replicated exactly in `rt_glslpilot.c`.
+
+### Changes
+
+- `rt_glslpilot.{c,h}` refactored from a single program to a material table
+  (`tPilotMaterial`): each material owns its ARB fragment target id, GLSL
+  fragment source, program object, and uniform locations. Both materials
+  share one compiled `vp_master_vp.cg` vertex shader object (the DUALTEX
+  variants are identical for both materials), attached to both programs.
+- New `g_Env0FP` mirror: `setFragmentProgramConstColor(0, ...)` in
+  `wcw_statemgmt.c` (the single funnel for the engine's `constColor0`, i.e.
+  fragment `program.env[8]` via `TIE(ENV8)`) now calls
+  `rt_glslpilot_onEnv0Param`, which mirrors continuously regardless of
+  active state — same lesson as `g_ReflectionParamVP`: engine constant
+  pushes are not ordered relative to pilot activation.
+- `rt_shaderMgr.c` registers `g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTIPLY][0]`
+  as the second pilot fragment target after every shader reload.
+- Per-material one-time activation logging (`GLSL pilot: <material> active
+  (vertex lit mode N)`) so captures carry positive activation evidence.
+- MSVC C lesson: static initializers may reference string-literal arrays but
+  not pointer *variables* — the GLSL sources are `static const char[]` so
+  the material table can point at them (error C2099 otherwise).
+- `agent/capture-regression.ps1` gained `-ExtraClientArgs`, forwarded to
+  every capture.ps1 invocation (warmup included) for whole-suite shader A/B
+  runs. Empty by default; splatted only when non-empty because an empty
+  `-ExtraClientArgs` is dropped by the child invocation and reported as a
+  missing parameter.
+
+### Verification (fresh shard, warmed, clock settled)
+
+- Warm-up: `smoke.ps1 -ExerciseCharacter` timed out once at 180 s ~3 min
+  after `start-shard.ps1` (documented fresh-shard warm-up), then passed
+  after 4 more minutes.
+- Control suite (pilot off): East/North/West PASS; CityHall_03 flagged
+  48.8% once — fresh-generation sky transition (stormy mid-transition sky
+  vs the clear baseline), not reproduced: an immediate single re-capture of
+  CityHall_03 measured 0.14%/2.15 vs baseline. A fresh shard can need more
+  than the suite's single discarded warmup before the sky settles.
+- Pilot suite (`-ExtraClientArgs "-glslPilot 1"`), summary
+  `agent/logs/regression-20260815-152502.json`: **all four shots PASS** —
+  CityHall_03 0.00%/0.26, East_01 0.00%/0.19, North_01 1.48%/1.48,
+  West_01 2.15%/2.73 (thresholds 6%/3.0).
+- Both materials confirmed rendering through GLSL in every client log
+  (`GLSL pilot: BLENDMODE_MODULATE active (vertex lit mode 5)` and
+  `GLSL pilot: BLENDMODE_MULTIPLY active (vertex lit mode 4)` — the
+  multiply activation exercises the replicated fixed-function lighting
+  branch too).
+- Build: `agent/logs/build-Release-x86-20260815-151109.log` (PASS, 24.7 s).
+- Shard stopped afterwards; post-stop rescan found no shard processes.
+
+Next candidate by coverage: `colorBlendDualfp` (consumes `g_ConstColor0FP`/
+`g_ConstColor1FP` program-local constants and `g_Env0FP`/`g_Env1FP` — the
+mirror technique extends directly), then `addGlowfp` (`g_GlowParamFP`).

@@ -2542,7 +2542,15 @@ void setFragmentProgramConstColor( GLuint index, const GLfloat* vec4 )
 {
     #define kNumEnvParamsDefined 2
     assert( index < kNumEnvParamsDefined );
-    
+
+    // the GLSL pilot cannot read program env registers; mirror constColor0
+    // (g_Env0FP, consumed by the multiplyReg material) continuously so it is
+    // correct at any pilot activation time
+    if ( index == 0 )
+    {
+        rt_glslpilot_onEnv0Param( vec4 );
+    }
+
     #if RT_SUPPORT_ARB_SHADER_PATH
         if ( ! rt_cgGetCgShaderMode() )
         {
