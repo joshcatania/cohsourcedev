@@ -676,3 +676,71 @@ Remaining material families for later steps: `bumpmapMultiply`
 `multi9`, water, and the effects/ set. The map-transfer capture path
 remains the gate for addGlow/alphaDetail verification and non-Atlas
 scenes.
+
+## GLSL pilot: effects/post-processing family — 2026-08-16
+
+All 19 effects fragment programs (rt_effects.c fullscreen passes) are
+ported to native GLSL and harness-verified visually equivalent to the
+ARB path. The port adds `kPilotMaterial_Fx*` (indices 7-25), a
+`tPilotFxConstId` mirror set for the per-program
+`g_Effects_*` locals, a fixed-function vertex pairing
+(`kPilotVertexKind_FixedFunction`, vertex program id 0) with a second
+program object per effects material, and registration from
+`rt_effects_registerGlslPilotTargets()`.
+
+### The activeFF constant-mirror bug
+
+The first full-chain A/B measured 8-12% pixel drift. Root cause:
+`rt_glslpilot_onEffectsParam` pushed effects constants to `m->locFx`
+(the dualtex-linked program) regardless of which program object was
+bound; the pbuffer passes run on `programFF` whose constants live at
+`m->locFxFor`, so every pass drew with stale offsets. Fix: select the
+location array with `m->activeFF` (set in `pilotActivate`). After the
+fix, changed-pixel drift collapsed to 0.005-0.76% across the suite
+(threshold 6%).
+
+### The meanDelta noise floor is capture-procedure noise
+
+After the fix, meanDelta hovered at 3.0-3.7 — marginal against the 3.0
+threshold — as a *uniform* per-image brightness offset varying per
+shot. Bisect + direct measurement established this is NOT a shader
+difference:
+
+- A temporary 1x1 `glReadPixels` readback in `lightAdaptation()` showed
+  the GLSL adaptation trajectory tracks the ARB trajectory within
+  frame-time noise (<=0.002 lum at freeze; worth <=0.5/255).
+- Pure-ARB control pairs in the same window measure the same
+  meanDelta range (1.3-4.4 observed).
+- Mechanism: the capture freeze (`timeset 16; timescale 0`) collapses
+  `TIMESTEP` (`global_state.frame_time_30`) from ~0.45 to ~0.015,
+  freezing the eye adaptation mid-convergence (~300 frames in, ~70%
+  converged). Each capture locks a slightly different exposure state
+  into the screenshot. The tone-map amplifies the residual adaptation
+  spread into a uniform integer RGB offset per shot.
+
+changedPercent (localized pixels) is the discriminating metric for
+effects-chain regressions; meanDelta marginality on day shots is
+expected noise unless it exceeds ~5.
+
+### Verification evidence
+
+- Full-chain pilot suite vs same-window control adopt
+  (`agent/logs/regression-20260816-130241.json` control,
+  `regression-20260816-130455.json` pilot): changedPercent
+  0.019/0.76/0.33/0.03 (CityHall/East/North/West) — all far under the
+  6% threshold.
+- Adaptation trajectory A/B (temporary diagnostic, removed):
+  frame-0 pyramid output and freeze-state values track within noise;
+  see `capture-AtlasPlaza_West_01-20260816-1254*.stdout.log`.
+- Live chain confirmed via client log: SHRINK2 -> SHRINK4LUM ->
+  SHRINK4 x3 -> LIGHTADAPTATION -> HBLUR -> VBLUR -> DOF_BLOOM_FINAL
+  (pbuffer passes on the fixed-function pairing, final pass on the
+  DRAWMODE_SPRITE dualtex pairing, vertex lit mode 5).
+
+### Remaining Atlas Park coverage
+
+The unported bound fragment ids in Atlas captures are now down to
+none from the effects set; remaining families: `bumpmapMultiply` (not
+yet observed bound), `multi9`, water. The map-transfer capture path
+remains the gate for addGlow/alphaDetail verification and non-Atlas
+scenes.

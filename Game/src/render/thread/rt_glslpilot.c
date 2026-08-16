@@ -1921,8 +1921,15 @@ void rt_glslpilot_onEffectsParam( int fxConstSlot, const GLfloat* vec4 )
     if ( s_activeMaterial >= 0 )
     {
         tPilotMaterial* m = &s_materials[s_activeMaterial];
-        if (( m->fxConstMask & kFxBit( fxConstSlot )) && ( m->locFx[fxConstSlot] >= 0 ))
-            __glewUniform4fv( m->locFx[fxConstSlot], 1, s_fxConstMirrors[fxConstSlot] );
+        if ( m->fxConstMask & kFxBit( fxConstSlot ) )
+        {
+            // effects materials keep two program objects (dualtex vertex for
+            // the final composite pass, fixed-function vertex for the pbuffer
+            // passes); push to whichever one is currently bound
+            GLint loc = m->activeFF ? m->locFxFor[fxConstSlot] : m->locFx[fxConstSlot];
+            if ( loc >= 0 )
+                __glewUniform4fv( loc, 1, s_fxConstMirrors[fxConstSlot] );
+        }
     }
 }
 

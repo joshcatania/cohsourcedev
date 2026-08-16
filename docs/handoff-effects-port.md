@@ -2,7 +2,12 @@
 
 **Date**: 2026-08-16
 **Branch**: `agent/glsl-pilot-materials`
-**Status**: Uncommitted work in progress — **does not compile** (see Bug #1 below)
+**Status**: RESOLVED 2026-08-16 — the activeFF fix is applied, the full chain is
+harness-verified (changedPercent 0.02-0.76% vs 6% threshold), and the port is
+committed. The residual meanDelta 3.0-3.7 was proven to be capture-procedure
+noise (the time freeze locks eye adaptation mid-convergence; pure-ARB pairs
+measure the same), not a shader difference. This document is retained for
+architecture reference only; see docs/agent-status.md for the full evidence.
 
 ## What this is
 
