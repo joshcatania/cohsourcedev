@@ -938,6 +938,26 @@ void shaderMgr_InitFPs(void)
     // Compile special effects shaders used by rt_effects
     PERFINFO_AUTO_STOP_START("loadProgram:specialEffects", 1);
     {
+        // exact id->(mode,variant) mapping for the pilot's coverage diagnostic
+        if ( game_state.glslPilot )
+        {
+            static const char* s_blendModeNames[BLENDMODE_NUMENTRIES] = {
+                "modulate", "multiply", "colorBlendDual", "addGlow", "alphaDetail",
+                "bumpmapMultiply", "bumpmapColorblendDual", "water", "multi9", "sunflare"
+            };
+            for ( i = 0; i < BLENDMODE_NUMENTRIES; ++i )
+            {
+                int bmb;
+                for ( bmb = 0; bmb < BMB_VARIANT_COUNT; ++bmb )
+                {
+                    if ( g_shaderMgrFragmentProgramVariants[i][bmb] )
+                    {
+                        printf( "GLSL pilot: fragment variant %s[%d] id %d\n",
+                                s_blendModeNames[i], bmb, g_shaderMgrFragmentProgramVariants[i][bmb] );
+                    }
+                }
+            }
+        }
         char shaderRelativePath[128];
         U32 compileFlags = 0;
         char* shaderExtraDefineSet = NULL;

@@ -887,6 +887,26 @@ static void texResetTrickBasedParametersComposite(TexBind *bind, bool forceFallb
 
     if (texopt_flags & TEXOPT_MULTITEX || (texopt_flags & TEXOPT_TREAT_AS_MULTITEX && !supportsMultiTex && texopt->fallback.useFallback))
     {
+        // One-shot-per-texopt diagnostic for the GLSL pilot water coverage
+        // investigation: why does the fancy-water bind decision differ
+        // between runs?
+        if (game_state.glslPilot && (texopt->model_flags & OBJ_FANCYWATER))
+        {
+            static const char *s_lastNoted[8] = {0};
+            int slot;
+            bool seen = false;
+            for (slot = 0; slot < 8; slot++)
+            {
+                if (s_lastNoted[slot] && s_lastNoted[slot] == texopt->name) { seen = true; break; }
+                if (!s_lastNoted[slot]) { s_lastNoted[slot] = texopt->name; break; }
+            }
+            if (!seen)
+            {
+                printf("WATERTRACE: texbind %s multiTexFeature=%d waterMode=%d multitexFlag=%d\n",
+                       texopt->name ? texopt->name : "?", supportsMultiTex ? 1 : 0,
+                       game_state.waterMode, (texopt_flags & TEXOPT_MULTITEX) ? 1 : 0);
+            }
+        }
         bind->tex_layers[TEXLAYER_BASE1] = texFindVerify(texopt->blend_names[BLEND_BASE1], white_tex, "Base1", trickFileName, trickName);
         if ((rdr_caps.features & GFXF_BUMPMAPS))
             bind->tex_layers[TEXLAYER_BUMPMAP1] = texFindVerify(texopt->blend_names[BLEND_BUMPMAP1], dummy_bump_tex, "BumpMap1", trickFileName, trickName);

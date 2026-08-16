@@ -915,6 +915,18 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
     F32 score;
 
     assert(waterModel && (waterModel->flags & OBJ_FANCYWATER));
+
+    // One-shot diagnostic for the GLSL pilot water coverage investigation
+    if (game_state.glslPilot)
+    {
+        static bool s_noted = false;
+        if (!s_noted)
+        {
+            s_noted = true;
+            printf("WATERTRACE: addViewSortNode_Water first entry model=%s waterMode=%d\n",
+                   waterModel->name ? waterModel->name : "(null)", game_state.waterMode);
+        }
+    }
     
     // Reset the blend mode if the water mode changed
     if ((game_state.waterMode >  WATER_OFF && waterModel->tex_binds[0]->bind_blend_mode.shader != BLENDMODE_WATER) ||

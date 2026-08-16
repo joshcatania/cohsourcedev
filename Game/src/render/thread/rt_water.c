@@ -313,6 +313,17 @@ void modelDrawWater( RdrModel *draw, U8 * rgbs, RdrTexList *texlist)
     Mat4    matx;
     static    F32 offset;
 
+    // One-shot diagnostic for the GLSL pilot water coverage investigation
+    if (game_state.glslPilot)
+    {
+        static bool s_noted = false;
+        if (!s_noted)
+        {
+            s_noted = true;
+            printf("WATERTRACE: modelDrawWater first entry\n");
+        }
+    }
+
     rdrBeginMarker(__FUNCTION__);
     MODEL_PERFINFO_AUTO_START(__FUNCTION__, 1);
 

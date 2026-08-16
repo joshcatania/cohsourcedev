@@ -744,3 +744,119 @@ none from the effects set; remaining families: `bumpmapMultiply` (not
 yet observed bound), `multi9`, water. The map-transfer capture path
 remains the gate for addGlow/alphaDetail verification and non-Atlas
 scenes.
+
+## Map-transfer capture path + non-Atlas coverage findings — 2026-08-16
+
+The capture state machine in `game.c` now supports shots on any static
+map. Each `CaptureShot` gained a `mapId` field (the static map container
+id from `bin/data/server/db/maps.db`; 0 keeps the current map). During
+capture setup, if the shot's map differs from `game_state.base_map_id`,
+the client sends `mapmove <id>` (access level 1, `SCMD_MAPMOVE`) and
+keeps waiting; the existing readiness conditions drop out during the
+transfer and re-trigger on the target map, where `base_map_id` is the
+static container id the server sent for the new world. A transfer takes
+~3 s per hop and was verified end-to-end across nine zones (Atlas,
+Founders Falls, Talos, Independence Port, Galaxy, King's Row, Skyway,
+Peregrine, plus interiors Pocket D and Midnighter Club via probes).
+
+Two developer iteration aids ride along, both read from a loose
+`bin/capture_override.txt` (absent by default; never commit it):
+
+- line 1 `x y z pitch yaw roll` — overrides the shot's camera position
+  without a rebuild (position scouting);
+- line 2 `map <id>` — overrides the shot's map (zone probing).
+
+An empty `posPyr` in the shot table keeps the map-transfer arrival
+position, which is itself deterministic per map (used by the
+`TalosArrive_01` authoring probe shot).
+
+### Fragment variant id table
+
+A startup diagnostic in `shaderMgr_InitFPs()` (pilot on) prints the
+exact fragment program id for every compiled blend-mode/variant pair.
+16 ids per blend mode base; the ids matter because the pilot keys
+coverage and registration off them:
+
+| Blend mode | Fragment ids |
+|---|---|
+| modulate | 4-7 |
+| multiply | 20-23 |
+| colorBlendDual | 36-39 |
+| addGlow | 52-55 |
+| alphaDetail | 68-71 |
+| bumpmapMultiply | 84-87 |
+| bumpmapColorblendDual | 100 (LQ) / 101 (HQ BIT_HIGH_QUALITY) |
+| water | 116-119 (118 = the fancy-water fragment) |
+| multi9 | 120-123 |
+| sunflare | 184-185 |
+| effects family | 201-216 |
+
+### Water does not bind deterministically: GFXF_MULTITEX startup ordering
+
+`BLENDMODE_WATER` is assigned at texture-load time (`tex.c`
+`texResetTrickBasedParametersComposite`), not at draw time, and the
+multi-texture branch requires the `GFXF_MULTITEX` capability bit at
+that moment. On this machine the bit is already absent when map texopts
+load: the `DRAWMODE_BUMPMAP_MULTITEX` vertex program load inside
+`shaderMgr_InitVPs()` (which requires `GFXF_WATER` and can clear
+`GFXF_MULTITEX` when its compile fails) runs before map textures bind.
+Every water texopt therefore takes its `useFallback` path and binds
+`BLENDMODE_BUMPMAP_COLORBLEND_DUAL`-style bump lighting — concretely
+fragment 84, bumpmapMultiply. Pinning `game_state.waterMode` per frame
+does not help: the gate is the capability bit at load time, not the
+mode. The probe evidence (`WATERTRACE` diagnostics in `tex.c`,
+`rendertree.c`, `rt_water.c`, all pilot-gated and retained):
+
+- every water texopt on every probed zone logs `multiTexFeature=0`;
+- `addViewSortNode_Water`/`modelDrawWater` still run (the sort node and
+  water draw path are mode-driven), but the bound fragment is 84;
+- true water (fragment 118) bound in exactly one early exploratory run
+  whose startup timing differed — a timing-dependent path, unusable for
+  regression.
+
+Consequence: the deterministic water surface coverage is bumpmapMultiply
+(84), which is exactly the next material family to port. A true water
+port is gated on fixing the `GFXF_MULTITEX` startup ordering (or
+re-running texopt binding after shader init), a separate engine change.
+
+### multi9 is static-zone-absent
+
+Eleven zones probed (including Pocket D and Midnighter Club interiors):
+fragment 120 (multi9) never bound. It is almost certainly a
+mission-instance-only material (multi-material geometry). The multi9
+port is gated on a mission-instance capture path, not just map
+transfer.
+
+### FoundersCanal_01: first non-Atlas regression shot
+
+`FoundersCanal_01` (map 10, Founders Falls canal view) is the first
+non-Atlas shot in the table. The view deterministically binds
+bumpmapMultiply (fragment 84, the water fallback described above) and
+alphaDetail (fragment 68) — the two families with no Atlas Park
+coverage. Baseline adopted and pilot regression-verified in the same
+window: **changedPercent 1.08 / meanDelta 1.69**
+(`agent/logs/regression-20260816-153510.json`) — both far under
+threshold; note the day-shot meanDelta noise floor does not apply to
+this shot, which measures clean.
+
+### Atlas suite re-verified after the infrastructure change
+
+Atlas baselines were re-adopted in the current weather window
+(`regression-20260816-154059.json` adopt); two consecutive pilot runs
+against them measured changedPercent 2.21/2.37/0.31/1.51 and
+3.19/0.15/1.47/0.17 (CityHall/East/North/West;
+`regression-20260816-154258.json`, `regression-20260816-154532.json`)
+— all far under the 6% threshold. meanDelta 5.4-8.0 is the documented
+exposure-lock noise floor (eye adaptation frozen mid-convergence);
+changedPercent is the discriminating metric and is green.
+
+### Remaining material coverage after this step
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs).
+Ported, now with deterministic coverage awaiting a port-verify cycle:
+none (addGlow/alphaDetail were ported earlier; FoundersCanal_01 now
+covers alphaDetail for a future re-verify if ever needed).
+Unported with deterministic coverage: **bumpmapMultiply (84)** — next.
+Gated: water (118, GFXF_MULTITEX startup ordering), multi9 (120,
+mission-instance capture path).
