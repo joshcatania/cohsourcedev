@@ -11,6 +11,9 @@
 //                                            default + BIT_HIGH_QUALITY)
 //   shaders/cgfx/vp_master_vp.cg            (vertex: DUALTEX + bump_dual variants)
 //   shaders/cgfx/functions.cgh              (fog, tinting, tangent-space, lighting)
+//   shaders/cgfx/effects/*.cg               (post-processing family; fullscreen
+//                                            quads under the DRAWMODE_SPRITE
+//                                            dualtex vertex variant)
 // The GLSL builds on compatibility-profile built-ins (gl_ModelViewMatrix,
 // gl_TextureMatrix, gl_LightSource[0], gl_Fog, gl_Color, gl_FogFragCoord)
 // which read the same GL server state the Cg `state.*` semantics read, so
@@ -18,7 +21,8 @@
 // program-local constants (g_ReflectionParamVP, g_Env0/1FP, g_GlowParamFP,
 // and the bump lighting constants + tangent attribute for the bump
 // materials; the HQ bump fragment reads g_LightDirFP instead of a
-// vertex-interpolated light vector).
+// vertex-interpolated light vector; the effects materials read the
+// per-program g_Effects_* locals).
 
 #include "render/thread/ogl.h"
 #include "render/thread/rt_glslpilot.h"
@@ -75,6 +79,21 @@ static const char s_pilotVertexSource[] =
 "    {\n"
 "        gl_FrontColor = gl_Color;\n"
 "    }\n"
+"}\n";
+
+// Fixed-function vertex path for the pbuffer effects passes (rt_effects.c):
+// those draws run with vertex programs disabled — positions through the
+// fixed-function modelview/projection, texture coordinates through the GL
+// texture matrices, exactly what a vertex-program-less pipeline does.
+static const char s_ffVertexSource[] =
+"#version 120\n"
+"\n"
+"void main()\n"
+"{\n"
+"    gl_Position = ftransform();\n"
+"    gl_TexCoord[0] = gl_TextureMatrix[0] * gl_MultiTexCoord0;\n"
+"    gl_TexCoord[1] = gl_TextureMatrix[1] * gl_MultiTexCoord1;\n"
+"    gl_FrontColor = gl_Color;\n"
 "}\n";
 
 static const char s_modulateFragmentSource[] =
@@ -529,6 +548,554 @@ static const char s_bumpColorBlendDualHQFragmentSource[] =
 "    gl_FragColor = out_color;\n"
 "}\n";
 
+// ---------------------------------------------------------------------------
+// effects/ post-processing family (rt_effects.c). Fullscreen quads drawn
+// under the 2D rendering setup, which force-binds the DRAWMODE_SPRITE
+// vertex program — the pilot's dualtex vertex shader covers it, so these
+// materials pair with kPilotVertexKind_DualTex. The fragments read
+// gl_TexCoord[0].xy (uv0 through the same texture-matrix path the Cg
+// programs see). Note utilFinalColor always writes alpha 1; several passes
+// rely on that even when the intermediate math carries alpha.
+// ---------------------------------------------------------------------------
+
+// shrinkfp.cg, HIGH_RANGE (SHADER_SHRINK_EXTEND): 4-tap box downsample
+// (utilShrinkSample) with the [0,1] -> extended-range conversion
+// saturate(rgb*3-2).
+static const char s_fxShrinkExtendFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP; // per-pass half-texel offsets\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec4 t = g_Effects_TextTransformFP;\n"
+"    // utilShrinkSample: the Cg swizzles xyzz/zyzz/xwzz/zwzz + texCoord\n"
+"    vec4 c = texture2D( texSampler0, t.xy + tc )\n"
+"           + texture2D( texSampler0, t.zy + tc )\n"
+"           + texture2D( texSampler0, t.xw + tc )\n"
+"           + texture2D( texSampler0, t.zw + tc );\n"
+"    c *= 0.25;\n"
+"\n"
+"    // utilFinalColor with HIGH_RANGE\n"
+"    gl_FragColor = vec4( clamp( c.rgb * 3.0 - 2.0, 0.0, 1.0 ), 1.0 );\n"
+"}\n";
+
+// shrinkfp.cg without defines (SHADER_SHRINK2 and SHADER_SHRINK2DOF — the
+// DOF branch is #undef'd in the source, so both compile identically).
+static const char s_fxShrinkPlainFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec4 t = g_Effects_TextTransformFP;\n"
+"    vec4 c = texture2D( texSampler0, t.xy + tc )\n"
+"           + texture2D( texSampler0, t.zy + tc )\n"
+"           + texture2D( texSampler0, t.xw + tc )\n"
+"           + texture2D( texSampler0, t.zw + tc );\n"
+"    c *= 0.25;\n"
+"\n"
+"    gl_FragColor = vec4( c.rgb, 1.0 );\n"
+"}\n";
+
+// blurfp.cg BLUR_HOR / BLUR_VER (SHADER_HBLUR/SHADER_VBLUR): SMALL_FILTER
+// 7-tap gaussian. Alpha accumulates like the Cg (oColor = H2).
+static const char s_fxHBlurFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 t = g_Effects_TextTransformFP;\n"
+"    vec2 base = gl_TexCoord[0].xy;\n"
+"    vec4 h2 = vec4( 0.0 );\n"
+"    // horizontal: offsets along TextTransform.xz\n"
+"    h2 += ( 0.06963716 * texture2D( texSampler0, ( t.xz * -3.0 ) + base ) );\n"
+"    h2 += ( 0.13009916 * texture2D( texSampler0, ( t.xz * -2.0 ) + base ) );\n"
+"    h2 += ( 0.18929282 * texture2D( texSampler0, ( t.xz * -1.0 ) + base ) );\n"
+"    h2 += ( 0.22194172 * texture2D( texSampler0, ( t.xz *  0.0 ) + base ) );\n"
+"    h2 += ( 0.18929282 * texture2D( texSampler0, ( t.xz *  1.0 ) + base ) );\n"
+"    h2 += ( 0.13009916 * texture2D( texSampler0, ( t.xz *  2.0 ) + base ) );\n"
+"    h2 += ( 0.06963716 * texture2D( texSampler0, ( t.xz *  3.0 ) + base ) );\n"
+"    gl_FragColor = h2;\n"
+"}\n";
+
+static const char s_fxVBlurFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 t = g_Effects_TextTransformFP;\n"
+"    vec2 base = gl_TexCoord[0].xy;\n"
+"    vec4 h2 = vec4( 0.0 );\n"
+"    // vertical: offsets along TextTransform.zy\n"
+"    h2 += ( 0.06963716 * texture2D( texSampler0, ( t.zy * -3.0 ) + base ) );\n"
+"    h2 += ( 0.13009916 * texture2D( texSampler0, ( t.zy * -2.0 ) + base ) );\n"
+"    h2 += ( 0.18929282 * texture2D( texSampler0, ( t.zy * -1.0 ) + base ) );\n"
+"    h2 += ( 0.22194172 * texture2D( texSampler0, ( t.zy *  0.0 ) + base ) );\n"
+"    h2 += ( 0.18929282 * texture2D( texSampler0, ( t.zy *  1.0 ) + base ) );\n"
+"    h2 += ( 0.13009916 * texture2D( texSampler0, ( t.zy *  2.0 ) + base ) );\n"
+"    h2 += ( 0.06963716 * texture2D( texSampler0, ( t.zy *  3.0 ) + base ) );\n"
+"    gl_FragColor = h2;\n"
+"}\n";
+
+// tonemapfp.cg (SHADER_TONEMAP): the nVidia-demo tonemapper; the
+// blur/exposure uniforms are constants (1.5 / 1.0) in the shipped source —
+// the engine's BlurAmtAndExposure push is read by no live shader.
+static const char s_fxTonemapFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (blurred)\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec4 orig = texture2D( texSampler0, tc );\n"
+"    vec4 blurred = texture2D( texSampler1, tc );\n"
+"\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    float brightness = clamp( 1.5 * dot( blurred.rgb, LUM ), 0.0, 1.0 );\n"
+"    vec4 blursat = clamp(( blurred * 0.25 ) + 0.75, 0.0, 1.0 );\n"
+"    vec4 a = mix( orig, blursat, brightness );\n"
+"    a *= 1.0; // exposure\n"
+"\n"
+"    gl_FragColor = vec4( a.rgb, 1.0 );\n"
+"}\n";
+
+// shrink4xfp.cg (SHADER_SHRINK4 / SHRINK4LUM / SHRINK4EXP): 16-tap
+// downsample; the LUM variant reduces to luminance, the EXP variant to
+// exp2 of the red channel (the luminance chain's averaging stages).
+static const char s_fxShrink4FragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec2 s = g_Effects_TextTransformFP.xy;\n"
+"    vec4 c = vec4( 0.0 );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  3.0 ) ) + tc );\n"
+"    c *= 0.0625;\n"
+"\n"
+"    gl_FragColor = vec4( c.rgb, 1.0 );\n"
+"}\n";
+
+static const char s_fxShrink4LumFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec2 s = g_Effects_TextTransformFP.xy;\n"
+"    vec4 c = vec4( 0.0 );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  3.0 ) ) + tc );\n"
+"    c *= 0.0625;\n"
+"\n"
+"    // USE_LUMINANCE: reduce to the luminance scalar (broadcast like Cg)\n"
+"    float lum = dot( c.rgb, vec3( 0.35, 0.45, 0.20 ) );\n"
+"    gl_FragColor = vec4( lum, lum, lum, 1.0 );\n"
+"}\n";
+
+static const char s_fxShrink4ExpFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec2 s = g_Effects_TextTransformFP.xy;\n"
+"    vec4 c = vec4( 0.0 );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -3.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  1.0 ) ) + tc );\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  3.0 ) ) + tc );\n"
+"    c *= 0.0625;\n"
+"\n"
+"    // USE_EXP: exp2 of the red channel, broadcast like Cg\n"
+"    float e = exp2( c.x );\n"
+"    gl_FragColor = vec4( e, e, e, 1.0 );\n"
+"}\n";
+
+// lightAdaptationfp.cg (SHADER_LIGHTADAPTATION): the eye-adaptation pass on
+// the 1x1-class targets. texCoord1 reads the quad's unit-1 texture
+// coordinates — with no vertex program bound, fixed function provides
+// texcoord[1] from glMultiTexCoord(GL_TEXTURE1), and the pilot's
+// fixed-function vertex shader writes the same gl_TexCoord[1].
+static const char s_fxLightAdaptationFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (avgLum)\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (lastLum)\n"
+"uniform vec4 g_TimeStepFP;            // .x frame time\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 avgLum = texture2D( texSampler0, gl_TexCoord[0].xy );\n"
+"    vec4 lastLum = texture2D( texSampler1, gl_TexCoord[1].xy );\n"
+"\n"
+"    float scaleLum = 1.0 - pow( 0.99, g_TimeStepFP.x );\n"
+"    vec4 deltaLum = ( avgLum - lastLum ) * scaleLum;\n"
+"    float initVar = ( -lastLum.x >= 0.0 ) ? 1.0 : 0.0;\n"
+"    vec3 color = mix( lastLum + deltaLum, avgLum, initVar ).rgb;\n"
+"    gl_FragColor = vec4( color, 1.0 );\n"
+"}\n";
+
+// logfp.cg (SHADER_LOG): 16-tap luminance log2 sampling for the adaptation
+// chain (useLogSampling).
+static const char s_fxLogFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_TextTransformFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec2 s = g_Effects_TextTransformFP.xy;\n"
+"    vec3 c = vec3( 0.0 );\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0, -1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -3.0,  3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0, -1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2( -1.0,  3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0, -1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  1.0,  3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -3.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0, -1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  1.0 ) ) + tc ).rgb;\n"
+"    c += texture2D( texSampler0, ( s * vec2(  3.0,  3.0 ) ) + tc ).rgb;\n"
+"    c *= 0.0625;\n"
+"\n"
+"    float cDotL = dot( c, vec3( 0.2125, 0.7154, 0.0721 ) );\n"
+"    float logSample = log2( cDotL + 0.01 );\n"
+"    gl_FragColor = vec4( logSample, logSample, logSample, 1.0 );\n"
+"}\n";
+
+// brightpassfp.cg (SHADER_BRIGHTPASS): exposure-style tone scale toward the
+// adapted luminance (the pass is currently disabled in the engine flow).
+static const char s_fxBrightpassFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (avgLum, 1x1)\n"
+"uniform vec4 g_Effects_ExpectedLumFP; // .x middleGray .y tonemap weight\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec4 sample = texture2D( texSampler0, gl_TexCoord[0].xy );\n"
+"    vec4 avgLum = texture2D( texSampler1, vec2( 0.5, 0.0 ) );\n"
+"\n"
+"    // DoToneMapping\n"
+"    float lum = 1.0 / ( avgLum.x + 0.1 );\n"
+"    float effMiddleGray = ( g_Effects_ExpectedLumFP.x - 0.5 ) * 0.4 + 0.5;\n"
+"    float scale = ( effMiddleGray * lum ) - 1.0;\n"
+"    sample *= ( scale * g_Effects_ExpectedLumFP.y * 0.7 ) + 1.0;\n"
+"\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
+// tonemap2fp.cg (SHADER_TONEMAP2, optional DESATURATE): the default bloom
+// final pass — tone scale against the adapted 1x1 luminance, then bloom
+// glow from the blurred buffer (utilBlurredToneMap + utilBloomGlow).
+static const char s_fxTonemap2FragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (adapted avgLum, 1x1)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform vec4 g_Effects_ExpectedLumFP; // .x middleGray .y weight .z glow weight\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 avgLum = clamp( texture2D( texSampler1, vec2( 0.5, 0.0 ) ), 0.01, 1.0 );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"\n"
+"    // utilBlurredToneMap (DO_TONEMAP, scaleScale = 0.4)\n"
+"    float scaleCalc = ( g_Effects_ExpectedLumFP.x - avgLum.x ) * g_Effects_ExpectedLumFP.y * 0.4;\n"
+"    sample += sample * abs( scaleCalc );\n"
+"    sample += scaleCalc * (( scaleCalc < 0.0 ) ? 1.0 : 0.0 );\n"
+"    vec4 blurredTonemapped = ( blurred * abs( scaleCalc ) ) + blurred;\n"
+"    blurredTonemapped += scaleCalc;\n"
+"\n"
+"    // utilBloomGlow (blur = 1.5, glow weight = ExpectedLum.z)\n"
+"    vec3 blurBiased = ( blurred.rgb * 3.0 ) - 2.0;\n"
+"    float blurBloom = clamp( 1.5 * dot( blurBiased, LUM ), 0.0, 1.0 );\n"
+"    blurBloom = clamp( blurBloom * g_Effects_ExpectedLumFP.z, 0.0, 1.0 );\n"
+"    sample = max( sample, mix( sample, blurredTonemapped, blurBloom ) );\n"
+"\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
+static const char s_fxTonemap2DesatFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (adapted avgLum, 1x1)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform vec4 g_Effects_ExpectedLumFP;\n"
+"uniform vec4 g_Effects_DesaturateParamFP; // .x desaturate amount\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 avgLum = clamp( texture2D( texSampler1, vec2( 0.5, 0.0 ) ), 0.01, 1.0 );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"\n"
+"    float scaleCalc = ( g_Effects_ExpectedLumFP.x - avgLum.x ) * g_Effects_ExpectedLumFP.y * 0.4;\n"
+"    sample += sample * abs( scaleCalc );\n"
+"    sample += scaleCalc * (( scaleCalc < 0.0 ) ? 1.0 : 0.0 );\n"
+"    vec4 blurredTonemapped = ( blurred * abs( scaleCalc ) ) + blurred;\n"
+"    blurredTonemapped += scaleCalc;\n"
+"\n"
+"    vec3 blurBiased = ( blurred.rgb * 3.0 ) - 2.0;\n"
+"    float blurBloom = clamp( 1.5 * dot( blurBiased, LUM ), 0.0, 1.0 );\n"
+"    blurBloom = clamp( blurBloom * g_Effects_ExpectedLumFP.z, 0.0, 1.0 );\n"
+"    sample = max( sample, mix( sample, blurredTonemapped, blurBloom ) );\n"
+"\n"
+"    // DoDesaturate\n"
+"    vec4 desat = vec4( 1.0, 0.91, 0.65, 0.0 ) * dot( sample.rgb, LUM );\n"
+"    sample = mix( sample, desat, g_Effects_DesaturateParamFP.x );\n"
+"\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
+// dofFinalfp.cg (SHADER_DOF_FINAL, optional DESATURATE): depth-of-field
+// composite — distance from the depth buffer through the 1D blur lookup,
+// lerping frame vs blurred.
+static const char s_fxDofFinalFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform sampler2D texSampler3;        // TEXUNIT3 (depth)\n"
+"uniform sampler1D texSampler4;        // TEXUNIT4 (blur-distance lookup)\n"
+"uniform vec4 g_Effects_DofParam2FP;   // .x minDistance .z 1/range\n"
+"uniform vec4 g_Effects_DofProjectFP;  // projection terms\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"    float depth = texture2D( texSampler3, tc ).x;\n"
+"\n"
+"    // utilDistanceFromDepth\n"
+"    float distXY = ( g_Effects_DofProjectFP.x * depth ) - g_Effects_DofProjectFP.y;\n"
+"    float distZW = ( g_Effects_DofProjectFP.z * depth ) - g_Effects_DofProjectFP.w;\n"
+"    float scaled = (( distXY / distZW ) - g_Effects_DofParam2FP.x ) * g_Effects_DofParam2FP.z;\n"
+"    float distance = texture1D( texSampler4, scaled ).x;\n"
+"\n"
+"    vec4 lerpSample = mix( sample, blurred, distance );\n"
+"    gl_FragColor = vec4( lerpSample.rgb, 1.0 );\n"
+"}\n";
+
+static const char s_fxDofFinalDesatFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform sampler2D texSampler3;        // TEXUNIT3 (depth)\n"
+"uniform sampler1D texSampler4;        // TEXUNIT4 (blur-distance lookup)\n"
+"uniform vec4 g_Effects_DofParam2FP;\n"
+"uniform vec4 g_Effects_DofProjectFP;\n"
+"uniform vec4 g_Effects_DesaturateParamFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"    float depth = texture2D( texSampler3, tc ).x;\n"
+"\n"
+"    float distXY = ( g_Effects_DofProjectFP.x * depth ) - g_Effects_DofProjectFP.y;\n"
+"    float distZW = ( g_Effects_DofProjectFP.z * depth ) - g_Effects_DofProjectFP.w;\n"
+"    float scaled = (( distXY / distZW ) - g_Effects_DofParam2FP.x ) * g_Effects_DofParam2FP.z;\n"
+"    float distance = texture1D( texSampler4, scaled ).x;\n"
+"\n"
+"    vec4 lerpSample = mix( sample, blurred, distance );\n"
+"\n"
+"    vec4 desat = vec4( 1.0, 0.91, 0.65, 0.0 ) * dot( lerpSample.rgb, LUM );\n"
+"    lerpSample = mix( lerpSample, desat, g_Effects_DesaturateParamFP.x );\n"
+"\n"
+"    gl_FragColor = vec4( lerpSample.rgb, 1.0 );\n"
+"}\n";
+
+// dofBloomFinalfp.cg (SHADER_DOF_BLOOM_FINAL, optional DESATURATE): DOF
+// composite followed by the tonemap2 bloom chain (applied to the lerped
+// sample, as in the Cg).
+static const char s_fxDofBloomFinalFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (adapted avgLum, 1x1)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform sampler2D texSampler3;        // TEXUNIT3 (depth)\n"
+"uniform sampler1D texSampler4;        // TEXUNIT4 (blur-distance lookup)\n"
+"uniform vec4 g_Effects_ExpectedLumFP;\n"
+"uniform vec4 g_Effects_DofParam2FP;\n"
+"uniform vec4 g_Effects_DofProjectFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 avgLum = clamp( texture2D( texSampler1, vec2( 0.5, 0.0 ) ), 0.01, 1.0 );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"    float depth = texture2D( texSampler3, tc ).x;\n"
+"\n"
+"    float distXY = ( g_Effects_DofProjectFP.x * depth ) - g_Effects_DofProjectFP.y;\n"
+"    float distZW = ( g_Effects_DofProjectFP.z * depth ) - g_Effects_DofProjectFP.w;\n"
+"    float scaled = (( distXY / distZW ) - g_Effects_DofParam2FP.x ) * g_Effects_DofParam2FP.z;\n"
+"    float dist = texture1D( texSampler4, scaled ).x;\n"
+"    sample = mix( sample, blurred, dist );\n"
+"\n"
+"    float scaleCalc = ( g_Effects_ExpectedLumFP.x - avgLum.x ) * g_Effects_ExpectedLumFP.y * 0.4;\n"
+"    sample += sample * abs( scaleCalc );\n"
+"    sample += scaleCalc * (( scaleCalc < 0.0 ) ? 1.0 : 0.0 );\n"
+"    vec4 blurredTonemapped = ( blurred * abs( scaleCalc ) ) + blurred;\n"
+"    blurredTonemapped += scaleCalc;\n"
+"\n"
+"    vec3 blurBiased = ( blurred.rgb * 3.0 ) - 2.0;\n"
+"    float blurBloom = clamp( 1.5 * dot( blurBiased, LUM ), 0.0, 1.0 );\n"
+"    blurBloom = clamp( blurBloom * g_Effects_ExpectedLumFP.z, 0.0, 1.0 );\n"
+"    sample = max( sample, mix( sample, blurredTonemapped, blurBloom ) );\n"
+"\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
+static const char s_fxDofBloomFinalDesatFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0 (frame)\n"
+"uniform sampler2D texSampler1;        // TEXUNIT1 (adapted avgLum, 1x1)\n"
+"uniform sampler2D texSampler2;        // TEXUNIT2 (blurred)\n"
+"uniform sampler2D texSampler3;        // TEXUNIT3 (depth)\n"
+"uniform sampler1D texSampler4;        // TEXUNIT4 (blur-distance lookup)\n"
+"uniform vec4 g_Effects_ExpectedLumFP;\n"
+"uniform vec4 g_Effects_DofParam2FP;\n"
+"uniform vec4 g_Effects_DofProjectFP;\n"
+"uniform vec4 g_Effects_DesaturateParamFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 tc = gl_TexCoord[0].xy;\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, tc );\n"
+"    vec4 avgLum = clamp( texture2D( texSampler1, vec2( 0.5, 0.0 ) ), 0.01, 1.0 );\n"
+"    vec4 blurred = texture2D( texSampler2, tc );\n"
+"    float depth = texture2D( texSampler3, tc ).x;\n"
+"\n"
+"    float distXY = ( g_Effects_DofProjectFP.x * depth ) - g_Effects_DofProjectFP.y;\n"
+"    float distZW = ( g_Effects_DofProjectFP.z * depth ) - g_Effects_DofProjectFP.w;\n"
+"    float scaled = (( distXY / distZW ) - g_Effects_DofParam2FP.x ) * g_Effects_DofParam2FP.z;\n"
+"    float dist = texture1D( texSampler4, scaled ).x;\n"
+"    sample = mix( sample, blurred, dist );\n"
+"\n"
+"    float scaleCalc = ( g_Effects_ExpectedLumFP.x - avgLum.x ) * g_Effects_ExpectedLumFP.y * 0.4;\n"
+"    sample += sample * abs( scaleCalc );\n"
+"    sample += scaleCalc * (( scaleCalc < 0.0 ) ? 1.0 : 0.0 );\n"
+"    vec4 blurredTonemapped = ( blurred * abs( scaleCalc ) ) + blurred;\n"
+"    blurredTonemapped += scaleCalc;\n"
+"\n"
+"    vec3 blurBiased = ( blurred.rgb * 3.0 ) - 2.0;\n"
+"    float blurBloom = clamp( 1.5 * dot( blurBiased, LUM ), 0.0, 1.0 );\n"
+"    blurBloom = clamp( blurBloom * g_Effects_ExpectedLumFP.z, 0.0, 1.0 );\n"
+"    sample = max( sample, mix( sample, blurredTonemapped, blurBloom ) );\n"
+"\n"
+"    vec4 desat = vec4( 1.0, 0.91, 0.65, 0.0 ) * dot( sample.rgb, LUM );\n"
+"    sample = mix( sample, desat, g_Effects_DesaturateParamFP.x );\n"
+"\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
+// simple_desaturatefp.cg (SHADER_SIMPLE_DESATURATE): desaturate-only final.
+static const char s_fxSimpleDesaturateFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D texSampler0;        // TEXUNIT0\n"
+"uniform vec4 g_Effects_DesaturateParamFP;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec3 LUM = vec3( 0.35, 0.45, 0.20 );\n"
+"    vec4 sample = texture2D( texSampler0, gl_TexCoord[0].xy );\n"
+"    vec4 desat = vec4( 1.0, 0.91, 0.65, 0.0 ) * dot( sample.rgb, LUM );\n"
+"    sample = mix( sample, desat, g_Effects_DesaturateParamFP.x );\n"
+"    gl_FragColor = vec4( sample.rgb, 1.0 );\n"
+"}\n";
+
 // variants.cgh values for g_VertexLitMode
 enum {
     kPilotVertLit_VertColor = 1,
@@ -577,6 +1144,12 @@ typedef struct tPilotMaterial
     GLint                locSpecular1;            // g_Specular1ColorAndExponentFP (bump fragment)
     GLint                locSkinned;            // g_Skinned (bump vertex shader skinning switch)
     GLint                locBoneMatrices;        // g_BoneMatrixArrVP[0] (bump vertex shader)
+    unsigned            fxConstMask;            // kPilotFxConst bits (effects materials)
+    GLint                locFx[kPilotFxConst_Count]; // effects constant uniform locations
+    GLuint                programFF;                // effects: program linked with the fixed-function vertex shader
+    GLint                locFxFor[kPilotFxConst_Count]; // effects constants on programFF
+    bool                failedFF;
+    bool                activeFF;                // which program object is in use (effects materials)
     bool                failed;
     bool                activationLogged;    // one-time activation evidence for logs
     bool                declineLogged;        // one-time unregistered-vertex diagnostic
@@ -620,17 +1193,82 @@ static const tPilotSampler s_bumpDualTintSamplers[] = {
     { NULL, -1 },
 };
 
+// effects sampler/unit maps (names mirror the Cg sources; texSampler4 is
+// the 1D blur-distance lookup on unit 4)
+static const tPilotSampler s_fxTex0Samplers[] = {
+    { "texSampler0", 0 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_fxTex01Samplers[] = {
+    { "texSampler0", 0 },
+    { "texSampler1", 1 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_fxTex012Samplers[] = {
+    { "texSampler0", 0 },
+    { "texSampler1", 1 },
+    { "texSampler2", 2 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_fxDofSamplers[] = {
+    { "texSampler0", 0 },
+    { "texSampler2", 2 },
+    { "texSampler3", 3 },
+    { "texSampler4", 4 },
+    { NULL, -1 },
+};
+
+static const tPilotSampler s_fxDofBloomSamplers[] = {
+    { "texSampler0", 0 },
+    { "texSampler1", 1 },
+    { "texSampler2", 2 },
+    { "texSampler3", 3 },
+    { "texSampler4", 4 },
+    { NULL, -1 },
+};
+
 // field order: fragment id, name, fragment source, samplers, env0, env1,
 // glow, bump constants, vertex kind mask, vertex source, program, locs...,
-// failed, activationLogged, declineLogged
+// fx const mask, fx locs, failed, activationLogged, declineLogged
+#define kFxBit( c ) ( 1u << (c) )
+// effects materials pair with the dualtex vertex kind (the 2D setup's
+// DRAWMODE_SPRITE program, for the final pass) and with the fixed-function
+// "no vertex program" pairing (the pbuffer passes)
+#define kPilotFxKindMask ( kPilotKindBit( kPilotVertexKind_DualTex ) | \
+                           kPilotKindBit( kPilotVertexKind_FixedFunction ) )
 static tPilotMaterial s_materials[kPilotMaterial_Count] = {
-    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
-    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ", s_bumpColorBlendDualHQFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpHQKindMask, s_bumpDualHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, false, false, false },
+    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ", s_bumpColorBlendDualHQFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpHQKindMask, s_bumpDualHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // effects/post-processing materials (see the sources above for the
+    // per-pass math); they pair with the dualtex vertex kind because the 2D
+    // rendering setup force-binds the DRAWMODE_SPRITE vertex variant
+    { 0, "FX_SHRINK_EXTEND",         s_fxShrinkExtendFragmentSource,      s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_HBLUR",                 s_fxHBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_VBLUR",                 s_fxVBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP",               s_fxTonemapFragmentSource,           s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK2",               s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK2DOF",            s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4",               s_fxShrink4FragmentSource,           s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4LUM",            s_fxShrink4LumFragmentSource,        s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4EXP",            s_fxShrink4ExpFragmentSource,        s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_LIGHTADAPTATION",       s_fxLightAdaptationFragmentSource,   s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TimeStep ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_LOG",                   s_fxLogFragmentSource,               s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_BRIGHTPASS",            s_fxBrightpassFragmentSource,        s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP2",              s_fxTonemap2FragmentSource,          s_fxTex012Samplers,   false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP2_DESATURATE",   s_fxTonemap2DesatFragmentSource,     s_fxTex012Samplers,   false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_FINAL",             s_fxDofFinalFragmentSource,          s_fxDofSamplers,      false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_FINAL_DESATURATE",  s_fxDofFinalDesatFragmentSource,     s_fxDofSamplers,      false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_BLOOM_FINAL",       s_fxDofBloomFinalFragmentSource,     s_fxDofBloomSamplers, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_BLOOM_FINAL_DESATURATE", s_fxDofBloomFinalDesatFragmentSource, s_fxDofBloomSamplers, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SIMPLE_DESATURATE",     s_fxSimpleDesaturateFragmentSource,  s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
@@ -650,6 +1288,7 @@ static GLfloat                s_ambientMirror[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat                s_diffuseMirror[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
 static GLfloat                s_glossMirror[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 static GLfloat                s_specular1Mirror[4] = { 1.0f, 1.0f, 1.0f, 8.0f };
+static GLfloat                s_fxConstMirrors[kPilotFxConst_Count][4]; // ARB local params default to 0
 static GLfloat                s_boneMatrixMirror[kPilotMaxBoneVec4s][4];
 static GLuint                s_boneMatrixMirrorCount = 0;
 
@@ -702,6 +1341,103 @@ static GLuint pilotGetBumpHQVertexShader( void )
     if ( ! s_bumpHQVertexShader )
         s_bumpHQVertexShaderFailed = true;
     return s_bumpHQVertexShader;
+}
+
+static GLuint s_ffVertexShader = 0;
+static bool s_ffVertexShaderFailed = false;
+
+static GLuint pilotGetFFVertexShader( void )
+{
+    if ( s_ffVertexShader || s_ffVertexShaderFailed )
+        return s_ffVertexShader;
+    s_ffVertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_ffVertexSource, "fixed-function vertex shader" );
+    if ( ! s_ffVertexShader )
+        s_ffVertexShaderFailed = true;
+    return s_ffVertexShader;
+}
+
+// Builds the effects material's second program object: same fragment source
+// linked with the fixed-function vertex shader for the pbuffer passes that
+// run with vertex programs disabled. Returns false on failure (the material
+// still works for the dualtex pairing).
+static bool pilotInitFF( int material )
+{
+    tPilotMaterial* m = &s_materials[material];
+    GLuint vertexShader = pilotGetFFVertexShader();
+    GLuint fragmentShader;
+    GLint status = 0;
+
+    if ( m->programFF )
+        return true;
+
+    m->programFF = __glewCreateProgram();
+    if (( ! m->programFF ) || ( ! vertexShader ))
+    {
+        printf( "GLSL pilot: %s fixed-function program creation failed\n", m->name );
+        m->failedFF = true;
+        return false;
+    }
+
+    fragmentShader = pilotCompileShader( GL_FRAGMENT_SHADER, m->fragmentSource, m->name );
+    if ( ! fragmentShader )
+    {
+        m->failedFF = true;
+        return false;
+    }
+
+    __glewAttachShader( m->programFF, vertexShader );
+    __glewAttachShader( m->programFF, fragmentShader );
+    __glewDeleteShader( fragmentShader );
+
+    __glewLinkProgram( m->programFF );
+    __glewGetProgramiv( m->programFF, GL_LINK_STATUS, &status );
+    if ( ! status )
+    {
+        char infoLog[2048];
+        infoLog[0] = '\0';
+        __glewGetProgramInfoLog( m->programFF, sizeof(infoLog) - 1, NULL, infoLog );
+        printf( "GLSL pilot: %s fixed-function program link failed:\n%s\n", m->name, infoLog );
+        m->failedFF = true;
+        m->programFF = 0;
+        return false;
+    }
+
+    {
+        static const char* fxNames[kPilotFxConst_Count] = {
+            "g_Effects_TextTransformFP",
+            "g_Effects_ExpectedLumFP",
+            "g_TimeStepFP",
+            "g_Effects_DofParam2FP",
+            "g_Effects_DofProjectFP",
+            "g_Effects_DesaturateParamFP",
+        };
+        const tPilotSampler* sampler;
+        int c;
+
+        for ( c = 0; c < kPilotFxConst_Count; c++ )
+            m->locFxFor[c] = -1;
+
+        __glewUseProgram( m->programFF );
+        for ( sampler = m->samplers; sampler->name; sampler++ )
+            __glewUniform1i( __glewGetUniformLocation( m->programFF, sampler->name ), sampler->unit );
+        __glewUseProgram( 0 );
+
+        for ( c = 0; c < kPilotFxConst_Count; c++ )
+        {
+            if ( m->fxConstMask & kFxBit( c ) )
+                m->locFxFor[c] = __glewGetUniformLocation( m->programFF, fxNames[c] );
+            if (( m->fxConstMask & kFxBit( c )) && ( m->locFxFor[c] < 0 ))
+            {
+                printf( "GLSL pilot: %s fixed-function program uniforms missing\n", m->name );
+                m->failedFF = true;
+                m->programFF = 0;
+                return false;
+            }
+        }
+    }
+
+    printf( "GLSL pilot: %s fixed-function program compiled and linked\n", m->name );
+    return true;
 }
 
 static bool pilotInit( int material )
@@ -786,6 +1522,28 @@ static bool pilotInit( int material )
         m->locGloss = __glewGetUniformLocation( m->program, "g_GlossParamFP" );
         m->locSpecular1 = __glewGetUniformLocation( m->program, "g_Specular1ColorAndExponentFP" );
     }
+    if ( m->fxConstMask )
+    {
+        // effects constants are per-program locals in the Cg sources;
+        // several share local slot numbers across different programs, so
+        // they are keyed by constant identity here
+        static const char* fxNames[kPilotFxConst_Count] = {
+            "g_Effects_TextTransformFP",
+            "g_Effects_ExpectedLumFP",
+            "g_TimeStepFP",
+            "g_Effects_DofParam2FP",
+            "g_Effects_DofProjectFP",
+            "g_Effects_DesaturateParamFP",
+        };
+        int c;
+        for ( c = 0; c < kPilotFxConst_Count; c++ )
+        {
+            if ( m->fxConstMask & kFxBit( c ) )
+                m->locFx[c] = __glewGetUniformLocation( m->program, fxNames[c] );
+            else
+                m->locFx[c] = -1;
+        }
+    }
     if (( ! isBumpLQ && ! isBumpHQ && (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ))) ||
         ( isBumpLQ && (( m->locLightDir < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
         ( isBumpHQ && (( m->locLightDirFP < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
@@ -798,6 +1556,19 @@ static bool pilotInit( int material )
         printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
         m->failed = true;
         return false;
+    }
+    {
+        // every masked fx constant must have resolved
+        int c;
+        for ( c = 0; c < kPilotFxConst_Count; c++ )
+        {
+            if (( m->fxConstMask & kFxBit( c )) && ( m->locFx[c] < 0 ))
+            {
+                printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
+                m->failed = true;
+                return false;
+            }
+        }
     }
 
     // bind each sampler uniform to its fixed TEXUNITn; the engine binds the
@@ -828,8 +1599,8 @@ static void pilotDeactivate( void )
 static int pilotFindVertexEntry( GLuint vertexPgmId )
 {
     int i;
-    if ( ! vertexPgmId )
-        return -1;
+    // id 0 is a legitimate entry: the fixed-function pairing for the
+    // pbuffer effects passes (only the post-reset sentinel is excluded)
     for ( i = 0; i < s_vertexEntryCount; i++ )
     {
         if ( s_vertexEntries[i].pgmId == vertexPgmId )
@@ -871,6 +1642,7 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
         case kPilotVertexKind_BumpDual: return "bump_dual";
         case kPilotVertexKind_SkinBumpHQ: return "skin_bump HQ";
         case kPilotVertexKind_BumpDualHQ: return "bump_dual HQ";
+        case kPilotVertexKind_FixedFunction: return "fixed-function";
         default: return "dualtex";
     }
 }
@@ -878,49 +1650,73 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
 static bool pilotActivate( int material, const tPilotVertexEntry* entry )
 {
     tPilotMaterial* m = &s_materials[material];
+    // effects materials keep two program objects: one linked with the
+    // dualtex vertex shader (final pass, DRAWMODE_SPRITE bound) and one
+    // with the fixed-function vertex shader (pbuffer passes, no vertex
+    // program bound)
+    bool useFF = ( entry->kind == kPilotVertexKind_FixedFunction );
 
-    if ( ! m->program && ! pilotInit( material ) )
+    if ( useFF )
+    {
+        if (( ! m->programFF ) && ( ! pilotInitFF( material ) ))
+            return false;
+    }
+    else if ( ! m->program && ! pilotInit( material ) )
         return false;
 
     // the mirrors track the engine constants continuously (see
     // rt_glslpilot_onReflectionParam / rt_glslpilot_onEnvParam /
     // rt_glslpilot_onGlowParam), so they are valid at any activation time
-    __glewUseProgram( m->program );
-    if ( m->locReflectionParam >= 0 )
-        __glewUniform4fv( m->locReflectionParam, 1, s_reflectionParamMirror );
-    if ( m->locVertexLitMode >= 0 )
-        __glewUniform1i( m->locVertexLitMode, entry->vertexLitMode );
-    if ( m->locEnv0 >= 0 )
-        __glewUniform4fv( m->locEnv0, 1, s_envMirrors[0] );
-    if ( m->locEnv1 >= 0 )
-        __glewUniform4fv( m->locEnv1, 1, s_envMirrors[1] );
-    if ( m->locGlowParam >= 0 )
-        __glewUniform4fv( m->locGlowParam, 1, s_glowParamMirror );
-    if ( m->locLightDir >= 0 )
-        __glewUniform4fv( m->locLightDir, 1, s_lightDirMirror );
-    if ( m->locLightDirFP >= 0 )
-        __glewUniform4fv( m->locLightDirFP, 1, s_lightDirFPMirror );
-    if ( m->locSkinned >= 0 )
-        __glewUniform1i( m->locSkinned,
-            (( entry->kind == kPilotVertexKind_SkinBump ) ||
-             ( entry->kind == kPilotVertexKind_SkinBumpHQ )) ? 1 : 0 );
-    if ( m->locBoneMatrices >= 0 && s_boneMatrixMirrorCount > 0 )
-        __glewUniform4fv( m->locBoneMatrices, s_boneMatrixMirrorCount, &s_boneMatrixMirror[0][0] );
-    if ( m->usesBumpConstants )
+    __glewUseProgram( useFF ? m->programFF : m->program );
+    if ( ! useFF )
     {
-        __glewUniform4fv( m->locAmbient, 1, s_ambientMirror );
-        __glewUniform4fv( m->locDiffuse, 1, s_diffuseMirror );
-        __glewUniform4fv( m->locGloss, 1, s_glossMirror );
-        __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
+        if ( m->locReflectionParam >= 0 )
+            __glewUniform4fv( m->locReflectionParam, 1, s_reflectionParamMirror );
+        if ( m->locVertexLitMode >= 0 )
+            __glewUniform1i( m->locVertexLitMode, entry->vertexLitMode );
+        if ( m->locEnv0 >= 0 )
+            __glewUniform4fv( m->locEnv0, 1, s_envMirrors[0] );
+        if ( m->locEnv1 >= 0 )
+            __glewUniform4fv( m->locEnv1, 1, s_envMirrors[1] );
+        if ( m->locGlowParam >= 0 )
+            __glewUniform4fv( m->locGlowParam, 1, s_glowParamMirror );
+        if ( m->locLightDir >= 0 )
+            __glewUniform4fv( m->locLightDir, 1, s_lightDirMirror );
+        if ( m->locLightDirFP >= 0 )
+            __glewUniform4fv( m->locLightDirFP, 1, s_lightDirFPMirror );
+        if ( m->locSkinned >= 0 )
+            __glewUniform1i( m->locSkinned,
+                (( entry->kind == kPilotVertexKind_SkinBump ) ||
+                 ( entry->kind == kPilotVertexKind_SkinBumpHQ )) ? 1 : 0 );
+        if ( m->locBoneMatrices >= 0 && s_boneMatrixMirrorCount > 0 )
+            __glewUniform4fv( m->locBoneMatrices, s_boneMatrixMirrorCount, &s_boneMatrixMirror[0][0] );
+        if ( m->usesBumpConstants )
+        {
+            __glewUniform4fv( m->locAmbient, 1, s_ambientMirror );
+            __glewUniform4fv( m->locDiffuse, 1, s_diffuseMirror );
+            __glewUniform4fv( m->locGloss, 1, s_glossMirror );
+            __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
+        }
+    }
+    if ( m->fxConstMask )
+    {
+        const GLint* fxLocs = useFF ? m->locFxFor : m->locFx;
+        int c;
+        for ( c = 0; c < kPilotFxConst_Count; c++ )
+        {
+            if ( fxLocs[c] >= 0 )
+                __glewUniform4fv( fxLocs[c], 1, s_fxConstMirrors[c] );
+        }
     }
     s_activeMaterial = material;
-
-    if ( ! m->activationLogged )
+    m->activeFF = useFF;
     {
         m->activationLogged = true;
         if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask ))
             printf( "GLSL pilot: %s active (%s vertex variant)\n", m->name,
                 pilotVertexKindName( entry->kind ) );
+        else if ( entry->kind == kPilotVertexKind_FixedFunction )
+            printf( "GLSL pilot: %s active (fixed-function quad)\n", m->name );
         else
             printf( "GLSL pilot: %s active (vertex lit mode %d)\n", m->name, entry->vertexLitMode );
     }
@@ -955,7 +1751,12 @@ bool rt_glslpilot_tryBindFragment( GLuint fragmentPgmId, GLuint vertexPgmId )
         return false;
     }
 
-    return pilotActivate( material, entry );
+    if ( ! pilotActivate( material, entry ) )
+    {
+        pilotDeactivate();
+        return false;
+    }
+    return true;
 }
 
 void rt_glslpilot_tryBindVertex( GLuint vertexPgmId, GLuint fragmentPgmId )
@@ -988,18 +1789,12 @@ void rt_glslpilot_tryBindVertex( GLuint vertexPgmId, GLuint fragmentPgmId )
     }
 
     // still a pilot fragment target; a registered vertex variant took over,
-    // so re-mode the vertex shader (bump variants switch static/skinned
-    // instead of lit mode; bone matrices refresh via the mirror push that
-    // follows the vertex bind)
-    {
-        tPilotMaterial* m = &s_materials[s_activeMaterial];
-        if ( m->locVertexLitMode >= 0 )
-            __glewUniform1i( m->locVertexLitMode, entry->vertexLitMode );
-        if ( m->locSkinned >= 0 )
-            __glewUniform1i( m->locSkinned,
-                (( entry->kind == kPilotVertexKind_SkinBump ) ||
-                 ( entry->kind == kPilotVertexKind_SkinBumpHQ )) ? 1 : 0 );
-    }
+    // so re-activate — bump variants re-mode the skinning switch, effects
+    // materials switch between their dualtex and fixed-function program
+    // objects (bone matrices refresh via the mirror push that follows the
+    // vertex bind)
+    if ( ! pilotActivate( s_activeMaterial, entry ) )
+        pilotDeactivate();
 }
 
 void rt_glslpilot_onVertexProgramChange( GLuint vertexPgmId )
@@ -1114,6 +1909,23 @@ void rt_glslpilot_onLightDirFPParam( const GLfloat* vec4 )
     }
 }
 
+// Effects/post-processing fragment constants: program-local params in the
+// Cg sources (several share local slot numbers across different programs,
+// hence the identity-keyed slots). rt_effects.c pushes them between the
+// program bind and the draw of each pass.
+void rt_glslpilot_onEffectsParam( int fxConstSlot, const GLfloat* vec4 )
+{
+    if (( fxConstSlot < 0 ) || ( fxConstSlot >= kPilotFxConst_Count ))
+        return;
+    memcpy( s_fxConstMirrors[fxConstSlot], vec4, sizeof( s_fxConstMirrors[0] ) );
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if (( m->fxConstMask & kFxBit( fxConstSlot )) && ( m->locFx[fxConstSlot] >= 0 ))
+            __glewUniform4fv( m->locFx[fxConstSlot], 1, s_fxConstMirrors[fxConstSlot] );
+    }
+}
+
 void rt_glslpilot_onAmbientColorParam( const GLfloat* vec4 )
 {
     memcpy( s_ambientMirror, vec4, sizeof( s_ambientMirror ) );
@@ -1188,7 +2000,8 @@ void rt_glslpilot_resetPrograms( void )
 
 void rt_glslpilot_addVertexProgram( GLuint vertexPgmId, tPilotVertexKind kind, int vertexLitMode )
 {
-    if (( vertexPgmId ) && ( s_vertexEntryCount < kPilotMaxVertexEntries ))
+    // vertexPgmId 0 is the fixed-function entry (pbuffer effects passes)
+    if (( vertexPgmId != 0xFFFFFFFF ) && ( s_vertexEntryCount < kPilotMaxVertexEntries ))
     {
         s_vertexEntries[s_vertexEntryCount].pgmId = vertexPgmId;
         s_vertexEntries[s_vertexEntryCount].kind = kind;

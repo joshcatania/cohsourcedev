@@ -16,6 +16,7 @@
 #include <utilitieslib/utils/timing.h>
 #include "graphics/font.h"
 #include "rt_shaderMgr.h"
+#include "render/thread/rt_glslpilot.h"
 
 
 typedef enum EffectShader {
@@ -44,6 +45,34 @@ typedef enum EffectShader {
 } EffectShader;
 
 int shaderEffectsPrograms[SHADER_NUM_SPECIAL_SHADERS];
+
+// Register the effects fragment programs the GLSL pilot replicates; called
+// from rt_shaderMgr.c after every effects shader load pass (program ids are
+// regenerated on reload). SHADER_SUNFLAREADAPTATION and
+// SHADER_PERFORMANCE_TEST are not ported and render through the ARB path.
+void rt_effects_registerGlslPilotTargets(void)
+{
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrinkExtend, shaderEffectsPrograms[SHADER_SHRINK_EXTEND] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxHBlur, shaderEffectsPrograms[SHADER_HBLUR] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxVBlur, shaderEffectsPrograms[SHADER_VBLUR] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxTonemap, shaderEffectsPrograms[SHADER_TONEMAP] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrink2, shaderEffectsPrograms[SHADER_SHRINK2] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrink2Dof, shaderEffectsPrograms[SHADER_SHRINK2DOF] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrink4, shaderEffectsPrograms[SHADER_SHRINK4] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrink4Lum, shaderEffectsPrograms[SHADER_SHRINK4LUM] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxShrink4Exp, shaderEffectsPrograms[SHADER_SHRINK4EXP] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxLightAdaptation, shaderEffectsPrograms[SHADER_LIGHTADAPTATION] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxLog, shaderEffectsPrograms[SHADER_LOG] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxBrightpass, shaderEffectsPrograms[SHADER_BRIGHTPASS] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxTonemap2, shaderEffectsPrograms[SHADER_TONEMAP2] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxTonemap2Desat, shaderEffectsPrograms[SHADER_TONEMAP2_DESATURATE] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxDofFinal, shaderEffectsPrograms[SHADER_DOF_FINAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxDofFinalDesat, shaderEffectsPrograms[SHADER_DOF_FINAL_DESATURATE] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxDofBloomFinal, shaderEffectsPrograms[SHADER_DOF_BLOOM_FINAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxDofBloomFinalDesat, shaderEffectsPrograms[SHADER_DOF_BLOOM_FINAL_DESATURATE] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_FxSimpleDesaturate, shaderEffectsPrograms[SHADER_SIMPLE_DESATURATE] );
+}
+
 const char* shaderEffectNames[2][SHADER_NUM_SPECIAL_SHADERS] = {
     {   //ARB
       "shrink",                    

@@ -945,13 +945,23 @@ void shaderMgr_InitFPs(void)
             if(shaderExtraDefineSet)
                 addDefineSet(shaderExtraDefineSet);
             loadProgram(
-                    compileFlags, 
-                    shaderRelativePath, 
-                    kShaderPgmType_FRAGMENT, 
+                    compileFlags,
+                    shaderRelativePath,
+                    kShaderPgmType_FRAGMENT,
                     ( bUseCG ) ? 0 : GL_FRAGMENT_PROGRAM_ARB,
                     shaderEffectsPrograms[i]
                 );
+            // exact id->name mapping for the pilot's coverage diagnostic
+            // (the ids are allocated in one contiguous batch, but the base
+            // depends on everything loaded before this pass; the per-index
+            // extra defines are listed in rt_effects.c's tables)
+            if ( game_state.glslPilot )
+            {
+                printf( "GLSL pilot: effects shader %d (%s) id %d\n", i,
+                    shaderRelativePath, shaderEffectsPrograms[i] );
+            }
         }
+        rt_effects_registerGlslPilotTargets();
     }
 
     // Disable features that failed to compile and load
@@ -1251,6 +1261,9 @@ void shaderMgr_InitVPs(void)
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBump, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDualHQ, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBumpHQ, 0 );
+    // id 0 pairs the effects materials with the fixed-function vertex path
+    // (the pbuffer post-processing passes run with vertex programs disabled)
+    rt_glslpilot_addVertexProgram( 0, kPilotVertexKind_FixedFunction, 0 );
 }
 
 

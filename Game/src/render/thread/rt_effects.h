@@ -63,5 +63,9 @@ void rdrMulTexturesDirect(RdrAddTexturesParams *params);
 
 extern int shaderEffectsPrograms[];
 
+// registers the effects fragment programs the GLSL pilot replicates; called
+// by rt_shaderMgr.c after every effects shader load pass
+void rt_effects_registerGlslPilotTargets(void);
+
 
 #endif//_RT_EFFECTS_H_

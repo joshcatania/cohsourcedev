@@ -29,8 +29,44 @@ typedef enum ePilotMaterial {
     kPilotMaterial_AlphaDetail,     // alphaDetailfp.cg
     kPilotMaterial_BumpColorBlendDual, // bumpmapColorblendDualfp.cg (variant 0)
     kPilotMaterial_BumpColorBlendDualHQ, // bumpmapColorblendDualfp.cg (BIT_HIGH_QUALITY)
+    // effects/ post-processing family (rt_effects.c fullscreen quads; they
+    // pair with the DRAWMODE_SPRITE dualtex vertex variant that the 2D
+    // rendering setup force-binds). SHADER_SUNFLAREADAPTATION and
+    // SHADER_PERFORMANCE_TEST are not ported.
+    kPilotMaterial_FxShrinkExtend,      // shrinkfp.cg HIGH_RANGE
+    kPilotMaterial_FxHBlur,             // blurfp.cg BLUR_HOR
+    kPilotMaterial_FxVBlur,             // blurfp.cg BLUR_VER
+    kPilotMaterial_FxTonemap,           // tonemapfp.cg
+    kPilotMaterial_FxShrink2,           // shrinkfp.cg
+    kPilotMaterial_FxShrink2Dof,        // shrinkfp.cg (DOF branch compiled out)
+    kPilotMaterial_FxShrink4,           // shrink4xfp.cg
+    kPilotMaterial_FxShrink4Lum,        // shrink4xfp.cg USE_LUMINANCE
+    kPilotMaterial_FxShrink4Exp,        // shrink4xfp.cg USE_EXP
+    kPilotMaterial_FxLightAdaptation,   // lightAdaptationfp.cg
+    kPilotMaterial_FxLog,               // logfp.cg
+    kPilotMaterial_FxBrightpass,        // brightpassfp.cg
+    kPilotMaterial_FxTonemap2,          // tonemap2fp.cg
+    kPilotMaterial_FxTonemap2Desat,     // tonemap2fp.cg DESATURATE
+    kPilotMaterial_FxDofFinal,          // dofFinalfp.cg
+    kPilotMaterial_FxDofFinalDesat,     // dofFinalfp.cg DESATURATE
+    kPilotMaterial_FxDofBloomFinal,     // dofBloomFinalfp.cg
+    kPilotMaterial_FxDofBloomFinalDesat,// dofBloomFinalfp.cg DESATURATE
+    kPilotMaterial_FxSimpleDesaturate,  // simple_desaturatefp.cg
     kPilotMaterial_Count
 } tPilotMaterialId;
+
+// Effects fragment constants (per-program local params in the Cg sources —
+// several share local slot numbers across different programs, so the mirror
+// is keyed by constant identity, not slot).
+typedef enum ePilotFxConst {
+    kPilotFxConst_TextTransform = 0,    // g_Effects_TextTransformFP
+    kPilotFxConst_ExpectedLum,          // g_Effects_ExpectedLumFP
+    kPilotFxConst_TimeStep,             // g_TimeStepFP
+    kPilotFxConst_DofParam2,            // g_Effects_DofParam2FP
+    kPilotFxConst_DofProject,           // g_Effects_DofProjectFP
+    kPilotFxConst_DesaturateParam,      // g_Effects_DesaturateParamFP
+    kPilotFxConst_Count
+} tPilotFxConstId;
 
 // Which replicated vp_master_vp.cg variant a registered vertex program id
 // was built from. The simple materials pair with the DUALTEX-family
@@ -45,6 +81,7 @@ typedef enum ePilotVertexKind {
     kPilotVertexKind_SkinBump,
     kPilotVertexKind_BumpDualHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX]
     kPilotVertexKind_SkinBumpHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED]
+    kPilotVertexKind_FixedFunction, // no vertex program (pbuffer effects passes)
 } tPilotVertexKind;
 
 // Called by WCW_BindFragmentProgram. Returns true when the pilot handled
@@ -96,6 +133,13 @@ void rt_glslpilot_onGlowParam( const GLfloat* vec4 );
 // bump draws. Same always-mirror contract as above.
 void rt_glslpilot_onLightDirParam( const GLfloat* vec4 );
 void rt_glslpilot_onLightDirFPParam( const GLfloat* vec4 );
+
+// Mirror for the effects/post-processing fragment constants (consumed by the
+// kPilotMaterial_Fx* materials). These are program-local params in the
+// Cg sources, pushed by rt_effects.c between the effects program binds and
+// their draws; same always-mirror contract. fxConstSlot is a
+// tPilotFxConstId.
+void rt_glslpilot_onEffectsParam( int fxConstSlot, const GLfloat* vec4 );
 void rt_glslpilot_onAmbientColorParam( const GLfloat* vec4 );
 void rt_glslpilot_onDiffuseColorParam( const GLfloat* vec4 );
 void rt_glslpilot_onGlossParam( const GLfloat* vec4 );

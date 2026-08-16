@@ -2506,7 +2506,7 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onGlowParam( vec4Arr );
     }
-    if (( id == kShaderParam_ReflectionParamVP ) && rt_glslpilot_isActive() )
+    if ( id == kShaderParam_ReflectionParamVP )
     {
         rt_glslpilot_onReflectionParam( vec4Arr );
     }
@@ -2517,6 +2517,32 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     if ( id == kShaderParam_LightDirFP )
     {
         rt_glslpilot_onLightDirFPParam( vec4Arr );
+    }
+    // effects/post-processing program-local constants (rt_effects.c); the
+    // GfxPerfTest params are not consumed by any ported shader
+    if ( id == kShaderParam_Effects_TextTransformFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_TextTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_ExpectedLumFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_ExpectedLum, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_TimeStepFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_TimeStep, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DofParam2FP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DofParam2, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DofProjectFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DofProject, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DesaturateParamFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DesaturateParam, vec4Arr );
     }
     if ( id == kShaderParam_AmbientColorFP )
     {
