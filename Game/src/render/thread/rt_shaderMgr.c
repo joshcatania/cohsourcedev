@@ -771,6 +771,22 @@ static bool isVariantSupported( int shader, int bmb )
     return true;
 }
 
+// One-line dump of the water/multitex capability bits for the FEATTRACE
+// startup diagnostics (water port investigation; see docs/agent-status.md).
+static void traceFeatureState(const char *where)
+{
+    printf("FEATTRACE: %s allowed[water=%d multi=%d multiDual=%d bump=%d] features[water=%d multi=%d bump=%d] waterMode=%d\n",
+           where,
+           (rdr_caps.allowed_features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX_DUAL) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_BUMPMAPS) ? 1 : 0,
+           (rdr_caps.features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.features & GFXF_BUMPMAPS) ? 1 : 0,
+           game_state.waterMode);
+}
+
 // If compilation fails then disable problem feature variations
 // this will disable features for whatever bits are set, though
 // generally you would want to do it one bit at time as you
@@ -781,6 +797,9 @@ static bool isVariantSupported( int shader, int bmb )
 // failure as needed or desired.
 static void disableVariantFeature( int shader, int bmb )
 {
+    // Feature strips must never be silent: they gate downstream
+    // material selection (e.g. water texopts need GFXF_MULTITEX).
+    printf("FEATTRACE: disableVariantFeature shader=%d bmb=%d\n", shader, bmb);
     // MULTI has the most variations and the most can go wrong
     // with support for it
     if (shader == BLENDMODE_MULTI)
@@ -906,6 +925,7 @@ void shaderMgr_InitFPs(void)
     //****
     // Compile the shaders for each base material and its variations
     PERFINFO_AUTO_STOP_START("CompileShaderVariations", 1);
+    traceFeatureState("InitFPs.compile-loop.begin");
     for ( i_shader = 0; i_shader < BLENDMODE_NUMENTRIES; ++i_shader )
     {
         int bmb, bmb_prev = 0;
@@ -986,7 +1006,10 @@ void shaderMgr_InitFPs(void)
 
     // Disable features that failed to compile and load
     if (!executedOnce) // do not disable features on shader reload
+    {
         rdr_caps.features &= rdr_caps.allowed_features;
+        traceFeatureState("InitFPs.end");
+    }
 
     // the GLSL pilot renders these materials; ids are regenerated on every
     // shader reload so re-register after each compile pass
@@ -998,6 +1021,9 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDualHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpMultiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_MULTIPLY][0] );
+    // water variant 0 (BMB_DEFAULT: refraction, no planar reflection / shadow);
+    // only present in the variant table when GFXF_WATER survives startup
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Water, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1243,6 +1269,8 @@ void shaderMgr_InitVPs(void)
 
     if (!executedOnce) // do not disable features on shader reload
     {
+        printf("FEATTRACE: InitVPs.load-results multiOkay=%d multiHqOkay=%d hqOkay=%d waterOkay=%d\n",
+               multiOkay ? 1 : 0, multiHqOkay ? 1 : 0, hqOkay ? 1 : 0, waterOkay ? 1 : 0);
         if (!multiOkay)
             rdr_caps.allowed_features &= ~(GFXF_MULTITEX|GFXF_MULTITEX_DUAL|GFXF_MULTITEX_HQBUMP);
         if (!multiHqOkay)
@@ -1254,6 +1282,7 @@ void shaderMgr_InitVPs(void)
 
         // Disable features that failed to load
         rdr_caps.features &= rdr_caps.allowed_features;
+        traceFeatureState("InitVPs.end");
     }
 
     executedOnce = 1;
@@ -1289,6 +1318,9 @@ void shaderMgr_InitVPs(void)
     // g_Prelit switch
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_NORMALS], kPilotVertexKind_BumpNormals, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_RGBS], kPilotVertexKind_BumpRGBS, 0 );
+    // the static FAUX_MULTI variant the water material (and unported multi9)
+    // pairs with: bump_dual_multi, VERTEX_LIT=PRELIT_WHITE (constant color)
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_MULTITEX], kPilotVertexKind_BumpMulti, 0 );
     // id 0 pairs the effects materials with the fixed-function vertex path
     // (the pbuffer post-processing passes run with vertex programs disabled)
     rt_glslpilot_addVertexProgram( 0, kPilotVertexKind_FixedFunction, 0 );

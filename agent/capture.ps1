@@ -88,6 +88,18 @@ try {
     $missing = @($requiredProcesses | Where-Object { -not (Get-Process -Name $_ -ErrorAction SilentlyContinue) })
     if ($missing.Count -gt 0) { throw "Required shard processes are missing: $($missing -join ', ')" }
     if (Get-Process -Name 'Ouroboros' -ErrorAction SilentlyContinue) { throw 'An Ouroboros.exe process is already running' }
+    # The client persists graphics settings in a file-backed "shadow registry"
+    # (bin/registry-keys/...) and re-saves them on every clean exit, deriving
+    # shaderDetail from the run's feature bits. A single run that lost
+    # GFXF_MULTITEX (e.g. a transient shader-load failure) therefore poisons
+    # shaderdetail=0 permanently, which silently degrades every later capture
+    # (water surfaces fall back to bumpmapMultiply; multi9 stops binding).
+    # Pin both values before each launch so captures are deterministic.
+    $shadowReg = Join-Path $binRoot 'registry-keys/hkey_current_user/software/cryptic/coh'
+    if (Test-Path -LiteralPath $shadowReg) {
+        Set-Content -LiteralPath (Join-Path $shadowReg 'shaderdetail') -Value '3' -NoNewline
+        Set-Content -LiteralPath (Join-Path $shadowReg 'usewater') -Value '2' -NoNewline
+    }
     $before = @{}
     Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.FullName]=$_.LastWriteTimeUtc }
     $arguments = @('-db','127.0.0.1','-authname',$AccountName,'-password',$Password,'-noverify','-quicklogin','1','-noversioncheck','-capture',$Target,'-fullscreen','0','-screen',$Width.ToString(),$Height.ToString(),'-stopinactivedisplay','0')

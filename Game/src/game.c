@@ -2340,12 +2340,11 @@ static const CaptureShot s_captureShots[] = {
     { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0, 1 },
     // First non-Atlas regression shot: Founders Falls canals. Reaching map
     // 10 exercises the mapmove capture path, and the view deterministically
-    // binds bumpmapMultiply (fragment 84) and alphaDetail (fragment 68) —
-    // families with no Atlas Park coverage. The fancy-water shader
-    // (fragment 118) does not bind in the current startup state: the
-    // multi/water vertex program load ordering leaves GFXF_MULTITEX out of
-    // rdr_caps.features, so water texopts take their auto-fallback
-    // (bumpmapMultiply) instead — see docs/agent-status.md.
+    // binds alphaDetail (fragment 68), the fancy-water material (fragment
+    // 116, once GFXF_MULTITEX survives startup — the shadow-registry pin in
+    // agent/capture.ps1 keeps it alive) and the multi9 family (fragments
+    // 120+) — coverage Atlas Park does not provide. See
+    // docs/agent-status.md for the water/multitex feature-state history.
     { "FoundersCanal_01", "4497.49 60.00 991.49 0.2500 0.7854 0.0000", "30", 16, 10 },
     { "TalosArrive_01", "", "30", 16, 8 },
 };

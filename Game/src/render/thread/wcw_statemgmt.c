@@ -2584,6 +2584,34 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onAmbientDiffuseParam( 1, vec4Arr );
     }
+    // water/multitex fragment constants: the tint colors, selector flags and
+    // per-layer scroll/scale array pushed by setupBumpMultiPixelShader
+    // (rt_model.c), and the refraction transform/skew parameters pushed per
+    // draw by rt_water.c; same always-mirror contract
+    if ( id == kShaderParam_ConstColor0FP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ConstColor0, vec4Arr );
+    }
+    if ( id == kShaderParam_ConstColor1FP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ConstColor1, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterRefractionTransformFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_RefractionTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterRefractionParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_RefractionParams, vec4Arr );
+    }
+    if ( id == kShaderParam_BumpMultiFlagsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_BumpMultiFlags, vec4Arr );
+    }
+    if ( id == kShaderParam_ScrollScaleArrFP )
+    {
+        rt_glslpilot_onScrollScaleParam( vec4Arr, nNumVec4s );
+    }
 
     #if RT_SUPPORT_ARB_SHADER_PATH
     if ( ! rt_cgGetCgShaderMode() )

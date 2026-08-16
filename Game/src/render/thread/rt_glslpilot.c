@@ -671,6 +671,168 @@ static const char s_bumpModelVertexSource[] =
 "    vViewTs = -position_ts;\n"
 "}\n";
 
+// vp_master_vp.cg \"bump_dual_multi\" variant (DRAWMODE_BUMPMAP_MULTITEX:
+// SKIN=0 LIGHT_SPACE=VIEW VERTEX_LIT=PRELIT_WHITE TC_XFORM=NONE
+// PIXEL_LIT=BUMP_ALL REFLECT=FAUX_MULTI): the vertex pairing of the water
+// material (and, unported, multi9). Same tangent-space lighting setup as
+// bump_dual, but TEXCOORD0 carries (uv0, faux spheremap reflection uv) and
+// the vertex color is the constant white of VERTEX_LIT=PRELIT_WHITE.
+static const char s_bumpMultiVertexSource[] =
+"#version 120\n"
+"\n"
+"attribute vec4 attr_tangent;      // generic vertex attribute 7 (see rt_model.c)\n"
+"uniform vec4 g_LightDirVP;        // engine constant, view-space light direction\n"
+"\n"
+"varying vec3 vLightTs;            // OUT.light_ts (TEXCOORD2 in the Cg program)\n"
+"varying vec3 vViewTs;             // OUT.view_ts (TEXCOORD1); = -position in tangent space\n"
+"varying vec4 vUv0Faux;            // OUT.uv0_uv1 (TEXCOORD0); zw = faux reflection uv\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec3 position_vs = ( gl_ModelViewMatrix * gl_Vertex ).xyz;\n"
+"    vec3 normal = normalize( mat3( gl_ModelViewMatrix ) * gl_Normal );\n"
+"    vec3 tangent = normalize( mat3( gl_ModelViewMatrix ) * attr_tangent.xyz );\n"
+"    gl_Position = gl_ProjectionMatrix * vec4( position_vs, 1.0 );\n"
+"\n"
+"    // fog coordinate: eye-radial distance (vp_master_vp.cg)\n"
+"    gl_FogFragCoord = sqrt( dot( position_vs, position_vs ) + 1e-16 );\n"
+"\n"
+"    // VERTEX_LIT == PRELIT_WHITE: constant vertex color\n"
+"    gl_FrontColor = vec4( 1.0 );\n"
+"\n"
+"    // calc_faux_reflection_uv: legacy sphere-map uv from the view-space\n"
+"    // normal and the incident (position) vector\n"
+"    vec3 rr = reflect( position_vs, normal );\n"
+"    vec3 ro = normalize( rr + vec3( 0.0, 0.0, 1.0 ) );\n"
+"    vUv0Faux = vec4( gl_MultiTexCoord0.xy, 0.5 * ro.xy + 0.5 );\n"
+"\n"
+"    // calc_tangent_space_light_and_position (see bump_dual vertex shader)\n"
+"    vec3 binormal = cross( tangent, normal ) * sign( attr_tangent.w );\n"
+"    vec3 light_vs = g_LightDirVP.xyz;\n"
+"    vLightTs = vec3( dot( light_vs, tangent ), dot( light_vs, binormal ), dot( light_vs, normal ) );\n"
+"    vec3 position_ts = vec3( dot( position_vs, tangent ), dot( position_vs, binormal ), dot( position_vs, normal ) );\n"
+"    vViewTs = -position_ts;\n"
+"}\n";
+
+// waterfp.cg, variant 0 (no BIT_PLANAR_REFLECTION / BIT_SHADOWMAP / HQ):
+// the fancy-water material. Dual scrolling normal maps are averaged into a
+// tangent-space normal; the base color is 2*vertexColor*multiply1*base1 (the
+// vertex color is the constant white of the PRELIT_WHITE pairing) tinted by
+// the two material constants blended on the view-normal term and base1.a,
+// lit without gloss, then blended toward the depth-skewed refraction sample
+// by g_GlossParamFP.w, with per-pixel bumped gloss added on top. The depth
+// test clamps the normal skew so the refraction never samples geometry in
+// front of the water surface (two depth taps, ARB-faithful). Alpha comes
+// from g_Env0FP.a, optionally modulated by base1.a. scroll_scale(i) is the
+// per-texlayer uv scroll/scale array; the selector bits (faux reflection uv
+// for multiply1, water alpha) live in g_BumpMultiFlagsFP.x as integer-valued
+// floats tested with the Cg frac(x/(bit*2)) >= 0.5 idiom.
+static const char s_waterFragmentSource[] =
+"#version 120\n"
+"\n"
+"uniform sampler2D sampler_base_1;              // TEXUNIT0\n"
+"uniform sampler2D sampler_multiply_1;          // TEXUNIT1\n"
+"uniform sampler2D sampler_normal_and_gloss_1;  // TEXUNIT2\n"
+"uniform sampler2D sampler_refraction;          // TEXUNIT5 (rt_water.c pbuffer)\n"
+"uniform sampler2D sampler_refraction_depth;    // TEXUNIT6 (depth for the skew clamp)\n"
+"uniform sampler2D sampler_normal_and_gloss_2;  // TEXUNIT7\n"
+"uniform vec4 g_Env0FP;                         // TIE(ENV8); .a = water alpha\n"
+"uniform vec4 g_AmbientColorFP;                 // TIE(ENV0), setupBumpPixelShader ambient*2\n"
+"uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n"
+"uniform vec4 g_GlossParamFP;                   // TIE(ENV2); .x = glossConst, .w = refraction blend\n"
+"uniform vec4 g_Specular1ColorAndExponentFP;    // TIE(ENV5), rgb spec color, a exponent\n"
+"uniform vec4 g_ConstColor0FP;                  // TIE(ENV3), material tint color 0\n"
+"uniform vec4 g_ConstColor1FP;                  // TIE(ENV4), material tint color 1\n"
+"uniform vec4 g_WaterRefractionTransformFP;     // TIE(ENV7); .xy = 1/refraction texture size\n"
+"uniform vec4 g_WaterRefractionParamsFP;        // TIE(ENV22); skew normal/depth scale, min skew\n"
+"uniform vec4 g_BumpMultiFlagsFP;               // TIE(ENV10); bit0 = reflect uv, bit3 = alpha water\n"
+"uniform vec4 g_ScrollScaleArrFP[10];           // TIE(ENV12..21); xy scroll, zw scale per layer\n"
+"\n"
+"varying vec3 vLightTs;\n"
+"varying vec3 vViewTs;\n"
+"varying vec4 vUv0Faux;\n"
+"\n"
+"// isBitSet idiom from functions.cgh (integer-valued float bits)\n"
+"bool isBitSet( float bits, float bit )\n"
+"{\n"
+"    return fract( bits / ( bit * 2.0 ) ) >= 0.5;\n"
+"}\n"
+"\n"
+"// scroll_scale from functions.cgh: uv * scale + scroll\n"
+"vec2 scrollScale( int layer, vec2 uv )\n"
+"{\n"
+"    return uv * g_ScrollScaleArrFP[layer].zw + g_ScrollScaleArrFP[layer].xy;\n"
+"}\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = vUv0Faux.xy;\n"
+"    vec2 uv_reflect = vUv0Faux.zw;\n"
+"    vec2 uv_multiply1 = isBitSet( g_BumpMultiFlagsFP.x, 1.0 ) ? uv_reflect : uv0;\n"
+"\n"
+"    // renormalize the interpolated lighting vectors; half = view + light\n"
+"    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 view_ts = normalize( vViewTs );\n"
+"    vec3 half_ts = normalize( view_ts + light_ts );\n"
+"\n"
+"    vec4 texBase1 = texture2D( sampler_base_1, scrollScale( 0, uv0 ) );\n"
+"    vec4 texMultiply1 = texture2D( sampler_multiply_1, scrollScale( 1, uv_multiply1 ) );\n"
+"    vec4 texNormal1 = texture2D( sampler_normal_and_gloss_1, scrollScale( 2, uv0 ) );\n"
+"    vec4 texNormal2 = texture2D( sampler_normal_and_gloss_2, scrollScale( 7, uv0 ) );\n"
+"\n"
+"    // map_color_to_normal on both normal maps, averaged (gloss alphas too)\n"
+"    vec4 n1 = texNormal1;  n1.xyz = normalize( n1.xyz * 2.0 - 1.0 );\n"
+"    vec4 n2 = texNormal2;  n2.xyz = normalize( n2.xyz * 2.0 - 1.0 );\n"
+"    vec4 normal_ts = 0.5 * ( n1 + n2 );\n"
+"\n"
+"    float nDOTv = clamp( dot( normal_ts.xyz, view_ts ), 0.0, 1.0 );\n"
+"\n"
+"    // calc_lighting_factors (shade_factor = 1): (1, saturate(NdotL), gloss-masked spec)\n"
+"    float n_dot_l = clamp( dot( normal_ts.xyz, light_ts ), 0.0, 1.0 );\n"
+"    float specular = pow( clamp( dot( normal_ts.xyz, half_ts ), 0.0, 1.0 ),\n"
+"                          g_Specular1ColorAndExponentFP.a ) * normal_ts.w;\n"
+"\n"
+"    // base color: 2 * vertexColor(=1) * multiply1 * base1\n"
+"    vec3 out_color = 2.0 * gl_Color.rgb * texMultiply1.rgb * texBase1.rgb;\n"
+"\n"
+"    // refraction: screen-space uv, normal-derived skew clamped by two\n"
+"    // depth taps so we never sample geometry in front of the surface\n"
+"    vec2 texCoord_raw = gl_FragCoord.xy * g_WaterRefractionTransformFP.xy;\n"
+"    vec2 skewFromNormal = normal_ts.xy * g_WaterRefractionTransformFP.xy * 1024.0;\n"
+"    float z = gl_FragCoord.z;\n"
+"    float w = gl_FragCoord.w;\n"
+"    float depth1 = clamp( g_WaterRefractionParamsFP.y *\n"
+"                          ( texture2D( sampler_refraction_depth, texCoord_raw ).x - z ) / w, 0.0, 1.0 );\n"
+"    vec2 texCoord = skewFromNormal * g_WaterRefractionParamsFP.x + texCoord_raw;\n"
+"    float depth2 = clamp( g_WaterRefractionParamsFP.y *\n"
+"                          ( texture2D( sampler_refraction_depth, texCoord ).x - z ) / w, 0.0, 1.0 );\n"
+"    float skewAmount = min( g_WaterRefractionParamsFP.z,\n"
+"                            depth2 * depth1 * g_WaterRefractionParamsFP.x );\n"
+"    texCoord = skewFromNormal * skewAmount + texCoord_raw;\n"
+"    vec3 refracted = texture2D( sampler_refraction, texCoord ).xyz;\n"
+"\n"
+"    // surface tint blends the two material constants on the view-normal term\n"
+"    vec3 surfaceColor = mix( g_ConstColor1FP.rgb, g_ConstColor0FP.rgb, nDOTv );\n"
+"    out_color = out_color * surfaceColor * texBase1.a;\n"
+"\n"
+"    // apply_lighting_no_gloss\n"
+"    out_color = out_color * ( g_AmbientColorFP.rgb + n_dot_l * g_DiffuseColorFP.rgb );\n"
+"\n"
+"    // refraction blend, then apply_lighting_gloss_only\n"
+"    out_color = mix( out_color, refracted, g_GlossParamFP.w );\n"
+"    out_color += clamp( specular * g_GlossParamFP.x * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"\n"
+"    // calc_fogged_color (same GL fog state as the other materials)\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color = mix( gl_Fog.color.rgb, out_color, fogAmount );\n"
+"\n"
+"    float alpha = g_Env0FP.a;\n"
+"    if ( isBitSet( g_BumpMultiFlagsFP.x, 8.0 ) )\n"
+"        alpha *= texBase1.a;\n"
+"\n"
+"    gl_FragColor = vec4( out_color, alpha );\n"
+"}\n";
+
 // ---------------------------------------------------------------------------
 // effects/ post-processing family (rt_effects.c). Fullscreen quads drawn
 // under the 2D rendering setup, which force-binds the DRAWMODE_SPRITE
@@ -1251,6 +1413,7 @@ typedef struct tPilotMaterial
     bool                usesEnv1;            // fragment consumes the g_Env1FP mirror
     bool                usesGlowParam;        // fragment consumes the g_GlowParamFP mirror
     bool                usesBumpConstants;    // fragment consumes the bump lighting mirrors
+    bool                usesWaterConstants;    // fragment consumes the water/multitex mirrors
     unsigned            vertexKindMask;        // ePilotVertexKind bits this material pairs with
     const char*            vertexSource;        // GLSL vertex source for those variants
     GLuint                program;                // compiled GLSL program (0 = not yet)
@@ -1272,6 +1435,12 @@ typedef struct tPilotMaterial
     GLint                locAmbientVP;            // g_AmbientParameterVP (VERTEX_LIT=DIFFUSE)
     GLint                locDiffuseVP;            // g_DiffuseParameterVP (VERTEX_LIT=DIFFUSE)
     GLint                locPrelit;                // g_Prelit (model-space bump: PRELIT vs DIFFUSE)
+    GLint                locConstColor0FP;        // g_ConstColor0FP (water fragment)
+    GLint                locConstColor1FP;        // g_ConstColor1FP (water fragment)
+    GLint                locWaterRefractTransform;// g_WaterRefractionTransformFP (water fragment)
+    GLint                locWaterRefractParams;    // g_WaterRefractionParamsFP (water fragment)
+    GLint                locBumpMultiFlags;        // g_BumpMultiFlagsFP (water fragment)
+    GLint                locScrollScaleArr;        // g_ScrollScaleArrFP[0] (water fragment)
     unsigned            fxConstMask;            // kPilotFxConst bits (effects materials)
     GLint                locFx[kPilotFxConst_Count]; // effects constant uniform locations
     GLuint                programFF;                // effects: program linked with the fixed-function vertex shader
@@ -1290,6 +1459,7 @@ typedef struct tPilotMaterial
                                kPilotKindBit( kPilotVertexKind_SkinBumpHQ ) )
 #define kPilotBumpModelKindMask ( kPilotKindBit( kPilotVertexKind_BumpNormals ) | \
                                   kPilotKindBit( kPilotVertexKind_BumpRGBS ) )
+#define kPilotBumpMultiKindMask ( kPilotKindBit( kPilotVertexKind_BumpMulti ) )
 
 #define kPilotMaxVertexEntries 16
 
@@ -1327,6 +1497,19 @@ static const tPilotSampler s_bumpMultiplySamplers[] = {
     { "sampler_base",         0 },
     { "sampler_blend",        1 },
     { "sampler_normal_gloss", 2 },
+    { NULL, -1 },
+};
+
+// water sampler/unit map (names mirror waterfp.cg; units 5/6 are the
+// refraction pbuffer color/depth bound by rt_water.c, unit 7 the second
+// scrolling normal map)
+static const tPilotSampler s_waterSamplers[] = {
+    { "sampler_base_1",              0 },
+    { "sampler_multiply_1",          1 },
+    { "sampler_normal_and_gloss_1",  2 },
+    { "sampler_refraction",          5 },
+    { "sampler_refraction_depth",    6 },
+    { "sampler_normal_and_gloss_2",  7 },
     { NULL, -1 },
 };
 
@@ -1377,39 +1560,44 @@ static const tPilotSampler s_fxDofBloomSamplers[] = {
 #define kPilotFxKindMask ( kPilotKindBit( kPilotVertexKind_DualTex ) | \
                            kPilotKindBit( kPilotVertexKind_FixedFunction ) )
 static tPilotMaterial s_materials[kPilotMaterial_Count] = {
-    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ", s_bumpColorBlendDualHQFragmentSource, s_bumpDualTintSamplers, true, true, false, true, kPilotBumpHQKindMask, s_bumpDualHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_MODULATE",           s_modulateFragmentSource,           s_dualSamplers,       false, false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_MULTIPLY",           s_multiplyFragmentSource,           s_dualSamplers,       true,  false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_COLORBLEND_DUAL",    s_colorBlendDualFragmentSource,     s_dualTintSamplers,   true,  true,  false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_ADDGLOW",            s_addGlowFragmentSource,            s_addGlowSamplers,    true,  false, true,  false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_ALPHADETAIL",        s_alphaDetailFragmentSource,        s_dualSamplers,       true,  false, false, false, false, kPilotKindBit( kPilotVertexKind_DualTex ), s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL", s_bumpColorBlendDualFragmentSource, s_bumpDualTintSamplers, true, true, false, true, false, kPilotBumpKindMask, s_bumpDualVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ", s_bumpColorBlendDualHQFragmentSource, s_bumpDualTintSamplers, true, true, false, true, false, kPilotBumpHQKindMask, s_bumpDualHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // the model-space bump material (the water-surface fallback); pairs with
     // the bump.vp (DIFFUSE) and bump_rgb.vp (PRELIT) vertex variants through
     // the model-space bump vertex shader, mode-switched by g_Prelit
-    { 0, "BLENDMODE_BUMPMAP_MULTIPLY", s_bumpMultiplyFragmentSource, s_bumpMultiplySamplers, true, false, false, false, kPilotBumpModelKindMask, s_bumpModelVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "BLENDMODE_BUMPMAP_MULTIPLY", s_bumpMultiplyFragmentSource, s_bumpMultiplySamplers, true, false, false, false, false, kPilotBumpModelKindMask, s_bumpModelVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // the fancy-water material (variant 0: refraction only); pairs with the
+    // bump_dual_multi (FAUX_MULTI) static vertex variant, and consumes the
+    // bump lighting constant set plus the water/multitex mirrors
+    // (usesBumpConstants covers ambient/diffuse/gloss/specular1)
+    { 0, "BLENDMODE_WATER", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // effects/post-processing materials (see the sources above for the
     // per-pass math); they pair with the dualtex vertex kind because the 2D
     // rendering setup force-binds the DRAWMODE_SPRITE vertex variant
-    { 0, "FX_SHRINK_EXTEND",         s_fxShrinkExtendFragmentSource,      s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_HBLUR",                 s_fxHBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_VBLUR",                 s_fxVBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_TONEMAP",               s_fxTonemapFragmentSource,           s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SHRINK2",               s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SHRINK2DOF",            s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SHRINK4",               s_fxShrink4FragmentSource,           s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SHRINK4LUM",            s_fxShrink4LumFragmentSource,        s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SHRINK4EXP",            s_fxShrink4ExpFragmentSource,        s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_LIGHTADAPTATION",       s_fxLightAdaptationFragmentSource,   s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TimeStep ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_LOG",                   s_fxLogFragmentSource,               s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_BRIGHTPASS",            s_fxBrightpassFragmentSource,        s_fxTex01Samplers,    false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_TONEMAP2",              s_fxTonemap2FragmentSource,          s_fxTex012Samplers,   false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_TONEMAP2_DESATURATE",   s_fxTonemap2DesatFragmentSource,     s_fxTex012Samplers,   false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_DOF_FINAL",             s_fxDofFinalFragmentSource,          s_fxDofSamplers,      false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_DOF_FINAL_DESATURATE",  s_fxDofFinalDesatFragmentSource,     s_fxDofSamplers,      false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_DOF_BLOOM_FINAL",       s_fxDofBloomFinalFragmentSource,     s_fxDofBloomSamplers, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_DOF_BLOOM_FINAL_DESATURATE", s_fxDofBloomFinalDesatFragmentSource, s_fxDofBloomSamplers, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
-    { 0, "FX_SIMPLE_DESATURATE",     s_fxSimpleDesaturateFragmentSource,  s_fxTex0Samplers,     false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK_EXTEND",         s_fxShrinkExtendFragmentSource,      s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_HBLUR",                 s_fxHBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_VBLUR",                 s_fxVBlurFragmentSource,             s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP",               s_fxTonemapFragmentSource,           s_fxTex01Samplers,    false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK2",               s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK2DOF",            s_fxShrinkPlainFragmentSource,       s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4",               s_fxShrink4FragmentSource,           s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4LUM",            s_fxShrink4LumFragmentSource,        s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SHRINK4EXP",            s_fxShrink4ExpFragmentSource,        s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_LIGHTADAPTATION",       s_fxLightAdaptationFragmentSource,   s_fxTex01Samplers,    false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TimeStep ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_LOG",                   s_fxLogFragmentSource,               s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_TextTransform ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_BRIGHTPASS",            s_fxBrightpassFragmentSource,        s_fxTex01Samplers,    false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP2",              s_fxTonemap2FragmentSource,          s_fxTex012Samplers,   false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_TONEMAP2_DESATURATE",   s_fxTonemap2DesatFragmentSource,     s_fxTex012Samplers,   false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_FINAL",             s_fxDofFinalFragmentSource,          s_fxDofSamplers,      false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_FINAL_DESATURATE",  s_fxDofFinalDesatFragmentSource,     s_fxDofSamplers,      false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_BLOOM_FINAL",       s_fxDofBloomFinalFragmentSource,     s_fxDofBloomSamplers, false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_DOF_BLOOM_FINAL_DESATURATE", s_fxDofBloomFinalDesatFragmentSource, s_fxDofBloomSamplers, false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_ExpectedLum ) | kFxBit( kPilotFxConst_DofParam2 ) | kFxBit( kPilotFxConst_DofProject ) | kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    { 0, "FX_SIMPLE_DESATURATE",     s_fxSimpleDesaturateFragmentSource,  s_fxTex0Samplers,     false, false, false, false, false, kPilotFxKindMask, s_pilotVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, kFxBit( kPilotFxConst_DesaturateParam ), { -1, -1, -1, -1, -1, -1 }, false, false, false },
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
@@ -1438,6 +1626,11 @@ static GLfloat                s_diffuseVPMirror[4] = { 0.0f, 0.0f, 0.0f, 1.0f };
 static GLfloat                s_fxConstMirrors[kPilotFxConst_Count][4]; // ARB local params default to 0
 static GLfloat                s_boneMatrixMirror[kPilotMaxBoneVec4s][4];
 static GLuint                s_boneMatrixMirrorCount = 0;
+// water/multitex fragment constant mirrors (env registers, engine pushes
+// them per draw before use — zero defaults match the fx mirror precedent)
+#define kPilotMaxScrollScaleVec4s 10    // g_ScrollScaleArrFP[10] (TEXLAYER_MAX_SCROLLABLE)
+static GLfloat                s_waterConstMirrors[kPilotWaterConst_Count][4];
+static GLfloat                s_scrollScaleMirror[kPilotMaxScrollScaleVec4s][4];
 
 static GLuint pilotCompileShader( GLenum type, const char* source, const char* descr )
 {
@@ -1498,6 +1691,19 @@ static GLuint pilotGetBumpModelVertexShader( void )
     if ( ! s_bumpModelVertexShader )
         s_bumpModelVertexShaderFailed = true;
     return s_bumpModelVertexShader;
+}
+
+static GLuint s_bumpMultiVertexShader = 0;    // shared by the water program (bump_dual_multi)
+static bool s_bumpMultiVertexShaderFailed = false;
+
+static GLuint pilotGetBumpMultiVertexShader( void )
+{
+    if ( s_bumpMultiVertexShader || s_bumpMultiVertexShaderFailed )
+        return s_bumpMultiVertexShader;
+    s_bumpMultiVertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_bumpMultiVertexSource, "bump_dual_multi vertex shader" );
+    if ( ! s_bumpMultiVertexShader )
+        s_bumpMultiVertexShaderFailed = true;
+    return s_bumpMultiVertexShader;
 }
 
 static GLuint s_ffVertexShader = 0;
@@ -1603,8 +1809,10 @@ static bool pilotInit( int material )
     bool isBumpLQ = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
     bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
     bool isBumpModel = ( m->vertexKindMask & kPilotBumpModelKindMask ) != 0;
+    bool isBumpMulti = ( m->vertexKindMask & kPilotBumpMultiKindMask ) != 0;
     GLuint vertexShader = isBumpHQ ? pilotGetBumpHQVertexShader()
                       : isBumpModel ? pilotGetBumpModelVertexShader()
+                      : isBumpMulti ? pilotGetBumpMultiVertexShader()
                       : isBumpLQ ? pilotGetBumpVertexShader()
                                  : pilotGetVertexShader();
     GLuint fragmentShader;
@@ -1633,6 +1841,11 @@ static bool pilotInit( int material )
     {
         __glewBindAttribLocation( m->program, 7, "attr_tangent" );
         __glewBindAttribLocation( m->program, 11, "attr_prelit_color" );
+    }
+    if ( isBumpMulti )
+    {
+        // static geometry only: no bone attributes, no prelit color
+        __glewBindAttribLocation( m->program, 7, "attr_tangent" );
     }
 
     fragmentShader = pilotCompileShader( GL_FRAGMENT_SHADER, m->fragmentSource, m->name );
@@ -1693,6 +1906,22 @@ static bool pilotInit( int material )
         m->locDiffuseVP = __glewGetUniformLocation( m->program, "g_DiffuseParameterVP" );
         m->locPrelit = __glewGetUniformLocation( m->program, "g_Prelit" );
     }
+    if ( isBumpMulti )
+    {
+        m->locLightDir = __glewGetUniformLocation( m->program, "g_LightDirVP" );
+    }
+    if ( m->usesWaterConstants )
+    {
+        // the water fragment consumes the bump lighting constants through
+        // usesBumpConstants plus its own mirror set; the scroll/scale array
+        // is one uniform location covering all ten layers
+        m->locConstColor0FP = __glewGetUniformLocation( m->program, "g_ConstColor0FP" );
+        m->locConstColor1FP = __glewGetUniformLocation( m->program, "g_ConstColor1FP" );
+        m->locWaterRefractTransform = __glewGetUniformLocation( m->program, "g_WaterRefractionTransformFP" );
+        m->locWaterRefractParams = __glewGetUniformLocation( m->program, "g_WaterRefractionParamsFP" );
+        m->locBumpMultiFlags = __glewGetUniformLocation( m->program, "g_BumpMultiFlagsFP" );
+        m->locScrollScaleArr = __glewGetUniformLocation( m->program, "g_ScrollScaleArrFP[0]" );
+    }
     if ( m->usesBumpConstants )
     {
         m->locAmbient = __glewGetUniformLocation( m->program, "g_AmbientColorFP" );
@@ -1722,12 +1951,16 @@ static bool pilotInit( int material )
                 m->locFx[c] = -1;
         }
     }
-    if (( ! isBumpLQ && ! isBumpHQ && ! isBumpModel && (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ))) ||
+    if (( ! isBumpLQ && ! isBumpHQ && ! isBumpModel && ! isBumpMulti && (( m->locReflectionParam < 0 ) || ( m->locVertexLitMode < 0 ))) ||
         ( isBumpLQ && (( m->locLightDir < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
         ( isBumpHQ && (( m->locLightDirFP < 0 ) || ( m->locSkinned < 0 ) || ( m->locBoneMatrices < 0 ))) ||
         ( isBumpModel && (( m->locLightDir < 0 ) || ( m->locSpecular1 < 0 ) || ( m->locTexScroll0 < 0 ) ||
                           ( m->locTexScroll1 < 0 ) || ( m->locAmbientVP < 0 ) || ( m->locDiffuseVP < 0 ) ||
                           ( m->locPrelit < 0 ))) ||
+        ( isBumpMulti && ( m->locLightDir < 0 )) ||
+        ( m->usesWaterConstants && (( m->locConstColor0FP < 0 ) || ( m->locConstColor1FP < 0 ) ||
+                                    ( m->locWaterRefractTransform < 0 ) || ( m->locWaterRefractParams < 0 ) ||
+                                    ( m->locBumpMultiFlags < 0 ) || ( m->locScrollScaleArr < 0 ))) ||
         ( m->usesEnv0 && ( m->locEnv0 < 0 )) ||
         ( m->usesEnv1 && ( m->locEnv1 < 0 )) ||
         ( m->usesGlowParam && ( m->locGlowParam < 0 )) ||
@@ -1825,6 +2058,7 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
         case kPilotVertexKind_BumpDualHQ: return "bump_dual HQ";
         case kPilotVertexKind_BumpNormals: return "bump (model-space)";
         case kPilotVertexKind_BumpRGBS: return "bump_rgb (model-space)";
+        case kPilotVertexKind_BumpMulti: return "bump_dual_multi";
         case kPilotVertexKind_FixedFunction: return "fixed-function";
         default: return "dualtex";
     }
@@ -1884,6 +2118,15 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
         if ( m->locPrelit >= 0 )
             __glewUniform1i( m->locPrelit,
                 ( entry->kind == kPilotVertexKind_BumpRGBS ) ? 1 : 0 );
+        if ( m->usesWaterConstants )
+        {
+            __glewUniform4fv( m->locConstColor0FP, 1, s_waterConstMirrors[kPilotWaterConst_ConstColor0] );
+            __glewUniform4fv( m->locConstColor1FP, 1, s_waterConstMirrors[kPilotWaterConst_ConstColor1] );
+            __glewUniform4fv( m->locWaterRefractTransform, 1, s_waterConstMirrors[kPilotWaterConst_RefractionTransform] );
+            __glewUniform4fv( m->locWaterRefractParams, 1, s_waterConstMirrors[kPilotWaterConst_RefractionParams] );
+            __glewUniform4fv( m->locBumpMultiFlags, 1, s_waterConstMirrors[kPilotWaterConst_BumpMultiFlags] );
+            __glewUniform4fv( m->locScrollScaleArr, kPilotMaxScrollScaleVec4s, &s_scrollScaleMirror[0][0] );
+        }
         if (( ! m->usesBumpConstants ) && ( m->locSpecular1 >= 0 ))
             __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
         if ( m->usesBumpConstants )
@@ -1908,7 +2151,7 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
     m->activeFF = useFF;
     {
         m->activationLogged = true;
-        if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask | kPilotBumpModelKindMask ))
+        if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask | kPilotBumpModelKindMask | kPilotBumpMultiKindMask ))
             printf( "GLSL pilot: %s active (%s vertex variant)\n", m->name,
                 pilotVertexKindName( entry->kind ) );
         else if ( entry->kind == kPilotVertexKind_FixedFunction )
@@ -2234,6 +2477,49 @@ void rt_glslpilot_onAmbientDiffuseParam( int which, const GLfloat* vec4 )
     memcpy( mirror, vec4, sizeof( s_ambientVPMirror ) );
     if (( s_activeMaterial >= 0 ) && ( loc >= 0 ))
         __glewUniform4fv( loc, 1, mirror );
+}
+
+// Water/multitex fragment constants (waterConstSlot is a tPilotWaterConstId):
+// the material tint colors and multi-selector flags pushed by
+// setupBumpMultiPixelShader (rt_model.c) and the refraction transform/skew
+// parameters pushed per draw by rt_water.c. Same always-mirror contract.
+void rt_glslpilot_onWaterParam( int waterConstSlot, const GLfloat* vec4 )
+{
+    GLint loc = -1;
+    if (( waterConstSlot < 0 ) || ( waterConstSlot >= kPilotWaterConst_Count ))
+        return;
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        switch ( waterConstSlot )
+        {
+            case kPilotWaterConst_ConstColor0:        loc = m->locConstColor0FP; break;
+            case kPilotWaterConst_ConstColor1:        loc = m->locConstColor1FP; break;
+            case kPilotWaterConst_RefractionTransform: loc = m->locWaterRefractTransform; break;
+            case kPilotWaterConst_RefractionParams:   loc = m->locWaterRefractParams; break;
+            case kPilotWaterConst_BumpMultiFlags:     loc = m->locBumpMultiFlags; break;
+            default: break;
+        }
+    }
+    memcpy( s_waterConstMirrors[waterConstSlot], vec4, sizeof( s_waterConstMirrors[0] ) );
+    if (( s_activeMaterial >= 0 ) && ( loc >= 0 ))
+        __glewUniform4fv( loc, 1, s_waterConstMirrors[waterConstSlot] );
+}
+
+// g_ScrollScaleArrFP: the whole per-layer scroll/scale array is pushed in
+// one call by setupBumpMultiPixelShader (rt_model.c); mirror all ten vec4s
+// and forward them to the active program in one upload.
+void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s )
+{
+    if ( nNumVec4s > kPilotMaxScrollScaleVec4s )
+        nNumVec4s = kPilotMaxScrollScaleVec4s;
+    memcpy( s_scrollScaleMirror, vec4Arr, nNumVec4s * sizeof( GLfloat ) * 4 );
+    if ( s_activeMaterial >= 0 )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( m->locScrollScaleArr >= 0 )
+            __glewUniform4fv( m->locScrollScaleArr, nNumVec4s, &s_scrollScaleMirror[0][0] );
+    }
 }
 
 void rt_glslpilot_resetPrograms( void )

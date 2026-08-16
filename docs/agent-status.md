@@ -960,3 +960,133 @@ bumpmapColorblendDual (LQ+HQ), effects family (19 programs),
 **bumpmapMultiply**. Unverified port: addGlow (no binding view
 known). Gated: water (118, GFXF_MULTITEX startup ordering), multi9
 (120, mission-instance capture path).
+
+## The GFXF_MULTITEX "startup ordering" was a shadow-registry self-lock — 2026-08-16
+
+The earlier "DRAWMODE_BUMPMAP_MULTITEX vertex program load ordering clears
+GFXF_MULTITEX" theory is disproven: all three FAUX_MULTI vertex variants
+compile cleanly offline and in-engine (FEATTRACE: InitVPs.load-results
+multiOkay=1 in every instrumented run; no `Shader Compilation failure`
+lines). The real mechanism, localized with new FEATTRACE startup
+diagnostics (`rdrSetChipOptions` begin/end, `InitFPs` compile-loop
+begin/end + `disableVariantFeature`, `InitVPs` load results, the
+registry load, and every `gfxApplySettings` call):
+
+1. The client does NOT read the Windows registry for graphics settings.
+   `RegistryReader`/`regfile.c` route all settings through a file-backed
+   shadow registry under `bin/registry-keys/hkey_current_user/software/
+   cryptic/coh/`. (The real `HKCU\SOFTWARE\Cryptic\CoH` values are never
+   consulted; reading them from PowerShell misleads the investigation.)
+2. On every clean exit, `saveAutoResumeInfoToRegistry` persists
+   `shaderDetail = shaderDetailFromFeatures(rdr_caps.features)` and
+   `useWater = game_state.waterMode`. One historical run that lost
+   GFXF_MULTITEX/WATER for any transient reason therefore wrote
+   `shaderdetail=0` (SHADERDETAIL_GF4MODE: water on, multitex OFF) and
+   `usewater=0` into the shadow registry.
+3. Every subsequent startup then applies 0/0 (FEATTRACE:
+   `registry-load shaderDetail=0 useWater=0`; `enableMask[water=1
+   multi=0] disableMask[multi=1]`), water texopts take their fallback
+   (bumpmapMultiply, fragment 84), and the clean exit re-saves 0/0 —
+   a self-reinforcing loop. This also explains the "one early
+   exploratory run bound true water": it ran before the first poisoned
+   save. It was never timing-dependent.
+
+With `shaderdetail=3` and `usewater=2` written into the shadow registry,
+one capture binds `BLENDMODE_WATER` variant 0 (fragment 116) on the
+Founders Falls ocean model deterministically, and `capture.water
+state=2 waterFeature=1 multiFeature=1`. `agent/capture.ps1` now pins
+both shadow-registry values before every client launch so a poisoned
+save can never silently degrade capture coverage again.
+
+Consequence for multi9: with GFXF_MULTITEX alive, all
+TEXOPT_TREAT_AS_MULTITEX textures (not just fancy water) bind
+BLENDMODE_MULTI on static maps — fragments 120/121/136/137/152 bound in
+the FoundersCanal view. The earlier "multi9 is mission-instance-only"
+conclusion was an artifact of the disabled feature bit; multi9 now has
+deterministic static-map coverage and needs no mission-instance capture
+path.
+
+The FEATTRACE diagnostics are intentionally unconditional (a handful of
+printf lines): the silent settings->feature-bit persistence is exactly
+what made this investigation hard, and disableVariantFeature prints are
+the only visibility into silent feature strips.
+
+## GLSL pilot: water (fragment 116) — 2026-08-16
+
+The fancy-water material (waterfp.cg variant 0: refraction only —
+waterMode=2/WATER_MED, no planar reflection or shadowmap bits) is ported
+and harness-verified on `FoundersCanal_01`. Water variant ids:
+water[0]=116 (ported; binds at waterMode>=WATER_LOW with multitex on),
+water[2]=117 (shadowmap), water[8]=118 (BMB_PLANAR_REFLECTION — binds at
+waterMode>=WATER_HIGH; the earlier docs' "118 is the fancy-water
+fragment" mislabeled the variant), water[10]=119.
+
+The vertex pairing is `DRAWMODE_BUMPMAP_MULTITEX` ("bump_dual_multi":
+SKIN=0 LIGHT_SPACE=VIEW VERTEX_LIT=PRELIT_WHITE TC_XFORM=NONE
+PIXEL_LIT=BUMP_ALL REFLECT=FAUX_MULTI), new pilot kind
+`kPilotVertexKind_BumpMulti`. TEXCOORD0 carries (uv0, faux spheremap
+reflection uv) computed with calc_faux_reflection_uv; the vertex color
+is the constant white of PRELIT_WHITE; the LQ tangent-space
+light/view interpolants match the bump_dual family. The
+USE_CUBEMAP/USE_SHADOWMAP TEX3/TEX4 interpolants the Cg variant always
+emits are dead in the water fragment pairing and omitted.
+
+The fragment replicates the Cg math faithfully: dual scrolling normal
+maps (scroll_scale layers 0/1/2/7 from g_ScrollScaleArrFP) averaged into
+one tangent-space normal; base color 2*vertexColor*multiply1*base1
+tinted by mix(ConstColor1, ConstColor0, NdotV)*base1.a;
+apply_lighting_no_gloss; the two-tap depth-clamped refraction skew
+(ARB-faithful, including the second tap at the skewed coordinate);
+refraction blend by g_GlossParamFP.w; gloss by
+calc_lighting_factors/apply_lighting_gloss_only with glossConst =
+g_GlossParamFP.x; fog; alpha g_Env0FP.a optionally * base1.a. The
+selector bits (faux-reflect uv for multiply1, water alpha) use the Cg
+isBitSet frac idiom on g_BumpMultiFlagsFP.x. fragment_pos is
+gl_FragCoord (the WPOS semantic).
+
+New mirrors: g_ConstColor0FP/g_ConstColor1FP (ENV3/4),
+g_WaterRefractionTransformFP (ENV7), g_WaterRefractionParamsFP (ENV22),
+g_BumpMultiFlagsFP (ENV10), and the g_ScrollScaleArrFP[10] array
+(ENV12-21), hooked in WCW_SetCgShaderParamArray4fv; the existing bump
+lighting + g_Env0FP mirrors are reused. The reflection-variant constants
+(ENV6/23/24) are not mirrored yet — they belong to the unported
+water[8]=118 variant.
+
+### Verification (same-window A/B, storm then calm)
+
+- Build PASS (`agent/logs/build-Release-x86-20260816-180801.log`
+  compile-clean; server-copy steps fail while the shard holds bin/, the
+  client binary copies and is the artifact that matters during capture
+  iteration).
+- Activation: 1803 `BLENDMODE_WATER active (bump_dual_multi vertex
+  variant)` lines in one FoundersCanal capture; the usual benign one-time
+  decline + startup-race coverage lines.
+- A storm front over Founders Falls made the sky actively unstable
+  during the first attempts: two ARB captures six minutes apart differed
+  by 18.5% (sky bands 20-29%, near-field stable). In that window the
+  tight ARB-vs-pilot pair measured 8.0% whole-image but only 4.15% in
+  the water/foreground bands — below the 6.08% the two ARB captures
+  measured against each other in the same bands, i.e. within
+  environmental noise.
+- After the sky settled, fresh baseline adoption
+  (`regression-20260816-181923.json`) + two consecutive pilot suites:
+  **FoundersCanal_01 PASS both metrics twice** — changedPercent
+  1.56/1.43 (threshold 6), meanDelta 1.99/1.85 (threshold 3)
+  (`regression-20260816-182210.json`, `regression-20260816-182510.json`).
+- Atlas shots in both pilot suites: changedPercent 0.00-1.51 (threshold
+  6; East and North each pixel-identical under tolerance in one run) —
+  the REGRESSED verdicts are solely the documented day-shot exposure-lock
+  meanDelta noise floor (5.3-8.3 uniform, this generation's profile
+  matches the 2026-08-16 morning sessions). changedPercent is green and
+  consistent across both runs.
+
+### Remaining material coverage
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs),
+bumpmapMultiply, **water (variant 0, fragment 116)**. Unverified port:
+addGlow (no binding view known). Unported with deterministic static
+coverage now: **multi9 (fragments 120-183; 120/121/136/137/152 bound in
+the FoundersCanal view)** and water variants 117/118/119 (shadowmap /
+planar-reflection pairings; 118 needs waterMode>=WATER_HIGH pinned in
+the shadow registry to bind).

@@ -31,6 +31,9 @@ typedef enum ePilotMaterial {
     kPilotMaterial_BumpColorBlendDualHQ, // bumpmapColorblendDualfp.cg (BIT_HIGH_QUALITY)
     kPilotMaterial_BumpMultiply,    // bumpmapMultiplyfp.cg (variant 0; the model-space
                                     // bump material water surfaces fall back to)
+    kPilotMaterial_Water,           // waterfp.cg (variant 0, refraction only; the
+                                    // fancy-water material static-map water surfaces
+                                    // bind once GFXF_MULTITEX survives startup)
     // effects/ post-processing family (rt_effects.c fullscreen quads; they
     // pair with the DRAWMODE_SPRITE dualtex vertex variant that the 2D
     // rendering setup force-binds). SHADER_SUNFLAREADAPTATION and
@@ -85,6 +88,8 @@ typedef enum ePilotVertexKind {
     kPilotVertexKind_SkinBumpHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED]
     kPilotVertexKind_BumpNormals,   // vp_master_vp.cg "bump.vp" (model space, VERTEX_LIT=DIFFUSE)
     kPilotVertexKind_BumpRGBS,      // vp_master_vp.cg "bump_rgb.vp" (model space, VERTEX_LIT=PRELIT)
+    kPilotVertexKind_BumpMulti,     // vp_master_vp.cg "bump_dual_multi" (REFLECT=FAUX_MULTI,
+                                    // static geometry; the water/multitex pairing)
     kPilotVertexKind_FixedFunction, // no vertex program (pbuffer effects passes)
 } tPilotVertexKind;
 
@@ -162,6 +167,28 @@ void rt_glslpilot_onBoneMatrixParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
 // g_AmbientParameterVP, 1 = g_DiffuseParameterVP.
 void rt_glslpilot_onTexScrollParam( int texScrollIndex, const GLfloat* vec4 );
 void rt_glslpilot_onAmbientDiffuseParam( int which, const GLfloat* vec4 );
+
+// Mirrors for the water/multitex fragment constants (consumed by
+// kPilotMaterial_Water): the two material tint colors (g_ConstColor0FP /
+// g_ConstColor1FP, TIE(ENV3)/TIE(ENV4), pushed by setupBumpMultiPixelShader
+// from rt_model.c), the refraction screen->texture transform and skew
+// parameters (TIE(ENV7)/TIE(ENV22), pushed per draw by rt_water.c), and the
+// multi-material selector bits (g_BumpMultiFlagsFP, TIE(ENV10): bit0 = use
+// the faux reflection uv for multiply1, bit3 = respect the water alpha). The
+// scroll/scale array (g_ScrollScaleArrFP, TIE(ENV12..21), one vec4 per
+// scrollable tex layer: xy = scroll offset, zw = uv scale) is mirrored as a
+// whole array. Same always-mirror contract as the other constants.
+typedef enum ePilotWaterConst {
+    kPilotWaterConst_ConstColor0 = 0,
+    kPilotWaterConst_ConstColor1,
+    kPilotWaterConst_RefractionTransform,
+    kPilotWaterConst_RefractionParams,
+    kPilotWaterConst_BumpMultiFlags,
+    kPilotWaterConst_Count
+} tPilotWaterConstId;
+
+void rt_glslpilot_onWaterParam( int waterConstSlot, const GLfloat* vec4 );
+void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
 
 // Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
 // did not handle. Logs each distinct fragment program id once (per process)
