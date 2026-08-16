@@ -2564,6 +2564,26 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onBoneMatrixParam( vec4Arr, nNumVec4s );
     }
+    // model-space bump (bumpmapMultiply) vertex constants: texcoord scrolls
+    // and the per-vertex diffuse lighting terms pushed by drawLoopBump and
+    // the bumpmapMultiply draw paths in rt_model.c; same always-mirror
+    // contract as the constants above
+    if ( id == kShaderParam_TexScroll0VP )
+    {
+        rt_glslpilot_onTexScrollParam( 0, vec4Arr );
+    }
+    if ( id == kShaderParam_TexScroll1VP )
+    {
+        rt_glslpilot_onTexScrollParam( 1, vec4Arr );
+    }
+    if ( id == kShaderParam_AmbientParameterVP )
+    {
+        rt_glslpilot_onAmbientDiffuseParam( 0, vec4Arr );
+    }
+    if ( id == kShaderParam_DiffuseParameterVP )
+    {
+        rt_glslpilot_onAmbientDiffuseParam( 1, vec4Arr );
+    }
 
     #if RT_SUPPORT_ARB_SHADER_PATH
     if ( ! rt_cgGetCgShaderMode() )

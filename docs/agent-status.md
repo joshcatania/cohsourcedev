@@ -860,3 +860,103 @@ covers alphaDetail for a future re-verify if ever needed).
 Unported with deterministic coverage: **bumpmapMultiply (84)** — next.
 Gated: water (118, GFXF_MULTITEX startup ordering), multi9 (120,
 mission-instance capture path).
+
+## GLSL pilot: bumpmapMultiply (fragment 84) — 2026-08-16
+
+The model-space bump material is ported and harness-verified on
+`FoundersCanal_01` (the water-surface fallback view). This is the
+first material whose VERTEX path differs structurally from the
+bump-dual family: `bump.vp`/`bump_rgb.vp` are the
+`LIGHT_SPACE=MODEL` variants of `vp_master_vp.cg`.
+
+### What the model-space path actually does (verified against cgc ARB)
+
+Compiled both variants offline (`3rdparty/cg/bin/cgc.exe -profile
+arbvp1 -DSKIN=0 -DLIGHT_SPACE=MODEL -DVERTEX_LIT=DIFFUSE|PRELIT
+-DTC_XFORM=TC_OFFSET -DPIXEL_LIT=BUMP_SPEC -DREFLECT=NONE`) and
+decoded the ARB:
+
+- `g_LightDirVP` for these draws is a model-space light POSITION
+  (rt_model.c transforms the sun — or the dummy (0,5000,0) ambient
+  light — into model space); the vertex shader derives the light
+  direction per vertex: `normalize(LightDirVP.xyz - position)`.
+- The model-space normal and tangent are used RAW — the Cg does NOT
+  normalize them for LIGHT_SPACE=MODEL (unlike the view-space
+  bump_dual variants); the non-orthonormal basis is what shipped.
+- `calc_tangent_space_light_and_position` receives the VIEW-space
+  position against that model-space basis: `view_ts` =
+  -(dot(pos_vs, tangent), dot(pos_vs, binormal), dot(normal, pos)) —
+  a mixed-space expression that is mathematically inconsistent but is
+  what the shipped ARB computes; the port replicates it faithfully.
+- Vertex color: DIFFUSE variant computes
+  `saturate(dot(raw_normal, light)) * DiffuseParamVP + AmbientParamVP`
+  (vec4, both pushed by drawLoopBump with w=1); PRELIT variant reads
+  ATTR11 (baked instance lighting, bound by rt_model.c for the
+  ambient-group RGBS path) and multiplies by 4.
+- TC_XFORM=TC_OFFSET: uv0/uv1 get the `tex_scrolls` offsets
+  (g_TexScroll0/1VP).
+- `g_ViewerPositionVP` is dead code in both variants (compiler
+  eliminates it; confirmed by the `: 0` usage flag in the ARB header)
+  — not declared in the port.
+
+The fragment (bumpmapMultiplyfp.cg variant 0) is vertex-lit with per
+pixel bumped SPECULAR only: `(base*blend).rgb * vcolor * 8 +
+saturate(spec)`, alpha keeps `base.a*blend.a * g_Env0FP.a`. The cgc
+ARB confirms the ambient/diffuse/gloss fragment constants are DEAD in
+this variant (only env5 specular1 and env8 env0 are read), the
+specular dot is saturated BEFORE the pow, and the vertex color
+multiplies rgb only.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_BumpMultiply` with its own
+  fragment source and a model-space bump vertex source covering both
+  engine variants behind a `g_Prelit` uniform (0 = bump.vp/DIFFUSE
+  DRAWMODE_BUMPMAP_NORMALS, 1 = bump_rgb.vp/PRELIT
+  DRAWMODE_BUMPMAP_RGBS on ATTR11) — same pattern as the skinning
+  switch. New vertex kinds `BumpNormals`/`BumpRGBS`; five new
+  uniform locations per material (texscroll x2, ambient/diffuse VP,
+  prelit switch; every table row gained the five `-1` initializers —
+  MSVC C2078 discipline); kPilotMaxVertexEntries 12 -> 16.
+- `wcw_statemgmt.c`: kShaderParam_TexScroll0/1VP and
+  kShaderParam_Ambient/DiffuseParameterVP hooked into the mirror
+  dispatch.
+- `rt_shaderMgr.c`: registers
+  `g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_MULTIPLY][0]`
+  (id 84) and the DRAWMODE_BUMPMAP_NORMALS/RGBS vertex programs
+  (bump.vp id 230 this run).
+- `g_LightDirVP`/`g_Specular1ColorAndExponentFP` reuse the existing
+  mirrors (the lightdir mirror is shared; the material keeps its own
+  uniform location).
+
+### Verification (fresh generation, warm shard)
+
+- Build PASS 29.5 s (`agent/logs/build-Release-x86-20260816-170126.log`).
+- Pilot run 1 (`regression-20260816-170850.json`): changedPercent
+  **1.41** (threshold 6), meanDelta 3.86 — the documented day-shot
+  exposure-lock noise (this shard generation's control noise floor
+  measured higher than the morning window).
+- Pilot run 2 (`regression-20260816-171020.json`): changedPercent
+  **0.59**, meanDelta **1.50** — full PASS on both metrics.
+- Client log evidence: 1769-1789 `BLENDMODE_BUMPMAP_MULTIPLY active
+  (bump (model-space) vertex variant)` activations per capture;
+  fragment target bumpMultiply=84 registered; vertex program 230
+  registered as bump (model-space). One benign one-time coverage
+  line ("unported fragment program 84") from a bind that raced the
+  startup registration order, and the usual one-time decline lines
+  (fragment 84 briefly tracked against vertex 225 before the vertex
+  re-bind recovered the pairing — ARB draws those, identical to
+  control).
+- Atlas suite re-run with the restructured material table
+  (`regression-20260816-171120.json`): changedPercent 0.19-2.17 —
+  same profile as the pre-port morning runs (0.15-3.19); all prior
+  materials activate exactly as before. meanDelta 3.3-7.1 matches the
+  documented Atlas noise floor.
+
+### Remaining material coverage
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs),
+**bumpmapMultiply**. Unverified port: addGlow (no binding view
+known). Gated: water (118, GFXF_MULTITEX startup ordering), multi9
+(120, mission-instance capture path).

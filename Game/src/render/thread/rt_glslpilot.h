@@ -29,6 +29,8 @@ typedef enum ePilotMaterial {
     kPilotMaterial_AlphaDetail,     // alphaDetailfp.cg
     kPilotMaterial_BumpColorBlendDual, // bumpmapColorblendDualfp.cg (variant 0)
     kPilotMaterial_BumpColorBlendDualHQ, // bumpmapColorblendDualfp.cg (BIT_HIGH_QUALITY)
+    kPilotMaterial_BumpMultiply,    // bumpmapMultiplyfp.cg (variant 0; the model-space
+                                    // bump material water surfaces fall back to)
     // effects/ post-processing family (rt_effects.c fullscreen quads; they
     // pair with the DRAWMODE_SPRITE dualtex vertex variant that the 2D
     // rendering setup force-binds). SHADER_SUNFLAREADAPTATION and
@@ -81,6 +83,8 @@ typedef enum ePilotVertexKind {
     kPilotVertexKind_SkinBump,
     kPilotVertexKind_BumpDualHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX]
     kPilotVertexKind_SkinBumpHQ,    // shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED]
+    kPilotVertexKind_BumpNormals,   // vp_master_vp.cg "bump.vp" (model space, VERTEX_LIT=DIFFUSE)
+    kPilotVertexKind_BumpRGBS,      // vp_master_vp.cg "bump_rgb.vp" (model space, VERTEX_LIT=PRELIT)
     kPilotVertexKind_FixedFunction, // no vertex program (pbuffer effects passes)
 } tPilotVertexKind;
 
@@ -145,6 +149,19 @@ void rt_glslpilot_onDiffuseColorParam( const GLfloat* vec4 );
 void rt_glslpilot_onGlossParam( const GLfloat* vec4 );
 void rt_glslpilot_onSpecular1Param( const GLfloat* vec4 );
 void rt_glslpilot_onBoneMatrixParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
+
+// Mirrors for the model-space bump (bumpmapMultiply) vertex constants:
+// g_TexScroll0VP/g_TexScroll1VP are the TC_OFFSET texcoord scrolls
+// (kShaderParam_TexScroll0/1VP, rt_model.c tex_scrolls); g_AmbientParameterVP
+// and g_DiffuseParameterVP are the per-vertex diffuse lighting terms pushed
+// by drawLoopBump (kShaderParam_Ambient/DiffuseParameterVP). g_LightDirVP for
+// these draws is a model-space light POSITION (the engine transforms the
+// sun/dummy light into model space); the existing onLightDirParam mirror
+// carries it. Same always-mirror contract as the other constants.
+// texScroll index 0 = g_TexScroll0VP, 1 = g_TexScroll1VP; which 0 =
+// g_AmbientParameterVP, 1 = g_DiffuseParameterVP.
+void rt_glslpilot_onTexScrollParam( int texScrollIndex, const GLfloat* vec4 );
+void rt_glslpilot_onAmbientDiffuseParam( int which, const GLfloat* vec4 );
 
 // Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
 // did not handle. Logs each distinct fragment program id once (per process)

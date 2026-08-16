@@ -997,6 +997,7 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AlphaDetail, g_shaderMgrFragmentProgramVariants[BLENDMODE_ALPHADETAIL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDualHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpMultiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_MULTIPLY][0] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1281,6 +1282,13 @@ void shaderMgr_InitVPs(void)
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBump, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDualHQ, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBumpHQ, 0 );
+    // the model-space bump variants that pair with bumpmapMultiply (the
+    // water-surface fallback material): bump.vp (outdoor, VERTEX_LIT=DIFFUSE)
+    // and bump_rgb.vp (ambient-group instances, VERTEX_LIT=PRELIT on ATTR11);
+    // the pilot's model-space bump vertex shader covers both behind its
+    // g_Prelit switch
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_NORMALS], kPilotVertexKind_BumpNormals, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_RGBS], kPilotVertexKind_BumpRGBS, 0 );
     // id 0 pairs the effects materials with the fixed-function vertex path
     // (the pbuffer post-processing passes run with vertex programs disabled)
     rt_glslpilot_addVertexProgram( 0, kPilotVertexKind_FixedFunction, 0 );
