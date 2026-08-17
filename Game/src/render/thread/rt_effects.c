@@ -1259,6 +1259,7 @@ void finalPass(PBuffer *pbFrameBuffer, PBuffer *pbBrightPass, bool doBloom, bool
     Vec4 dof_project = {rdr_view_state.projectionMatrix[3][3], rdr_view_state.projectionMatrix[3][2],
         rdr_view_state.projectionMatrix[2][3]*2.f, rdr_view_state.projectionMatrix[2][2]*2.f};
     Vec4 expectedLum;
+    Vec4 presentation_param = {game_state.modernPresentation ? 1.0f : 0.0f, 0, 0, 0};
     Vec4 desatureate_param = {rdr_view_state.desaturateWeight, 0, 0, 0};
 
     rdrBeginMarker(__FUNCTION__);
@@ -1310,6 +1311,9 @@ void finalPass(PBuffer *pbFrameBuffer, PBuffer *pbBrightPass, bool doBloom, bool
 
     if (doBloom) {
         WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_Effects_ExpectedLumFP, expectedLum);
+        if (game_state.glslPilot) {
+            rt_glslpilot_onEffectsParam(kPilotFxConst_Presentation, presentation_param);
+        }
     }
     if (doDOF) {
         WCW_SetCgShaderParam4fv(kShaderPgmType_FRAGMENT, kShaderParam_Effects_DofParam2FP, dof_param2);

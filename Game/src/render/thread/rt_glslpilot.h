@@ -86,6 +86,7 @@ typedef enum ePilotFxConst {
     kPilotFxConst_DofParam2,            // g_Effects_DofParam2FP
     kPilotFxConst_DofProject,           // g_Effects_DofProjectFP
     kPilotFxConst_DesaturateParam,      // g_Effects_DesaturateParamFP
+    kPilotFxConst_Presentation,         // g_Effects_PresentationFP
     kPilotFxConst_Count
 } tPilotFxConstId;
 
