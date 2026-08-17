@@ -2034,11 +2034,11 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     // sibling. usesBumpConstants covers the shared lighting constants; the
     // multi9 mirrors carry the selector flags, scroll/scale array, glow params
     // and (dual-material variants) the material-2 tints + specular2.
-    { 0, "BLENDMODE_MULTI", s_multi9FullFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, true, -1, -1 },
-    { 0, "BLENDMODE_MULTI HQ", s_multi9FullHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, true, -1, -1 },
-    { 0, "BLENDMODE_MULTI single", s_multi9SingleFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
-    { 0, "BLENDMODE_MULTI single HQ", s_multi9SingleHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
-    { 0, "BLENDMODE_MULTI building", s_multi9BuildingFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
+    { 0, "BLENDMODE_MULTI", s_multi9FullFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, true, true, -1, -1 },
+    { 0, "BLENDMODE_MULTI HQ", s_multi9FullHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, true, true, -1, -1 },
+    { 0, "BLENDMODE_MULTI single", s_multi9SingleFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, true, false, -1, -1 },
+    { 0, "BLENDMODE_MULTI single HQ", s_multi9SingleHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, true, false, -1, -1 },
+    { 0, "BLENDMODE_MULTI building", s_multi9BuildingFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, true, false, -1, -1 },
     // effects/post-processing materials (see the sources above for the
     // per-pass math); they pair with the dualtex vertex kind because the 2D
     // rendering setup force-binds the DRAWMODE_SPRITE vertex variant
@@ -3135,5 +3135,14 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
             (int)s_materials[kPilotMaterial_BumpColorBlendDualHQ].arbFragmentId,
             (int)s_materials[kPilotMaterial_BumpMultiply].arbFragmentId,
             s_vertexEntryCount );
+        if ( material == kPilotMaterial_Multi9Building )
+        {
+            printf( "GLSL pilot: Multi9 targets full=%d fullHQ=%d single=%d singleHQ=%d building=%d\n",
+                (int)s_materials[kPilotMaterial_Multi9Full].arbFragmentId,
+                (int)s_materials[kPilotMaterial_Multi9FullHQ].arbFragmentId,
+                (int)s_materials[kPilotMaterial_Multi9Single].arbFragmentId,
+                (int)s_materials[kPilotMaterial_Multi9SingleHQ].arbFragmentId,
+                (int)s_materials[kPilotMaterial_Multi9Building].arbFragmentId );
+        }
     }
 }
