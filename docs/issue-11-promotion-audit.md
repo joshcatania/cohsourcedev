@@ -43,8 +43,10 @@ The post-build runs used pilot mode and the existing ARB fallback. Telemetry
 deduplicates fragment/vertex pairs and reports symbolic blend family,
 `BMB_*` permutation, vertex program/kind, and classification.
 
-Observed: 124 distinct fallback pairs across the Atlas day suite, Talos,
-Founders high settings, and Atlas night. All 124 were:
+Observed: 124 logged fallback-pair events, representing 34 unique symbolic
+pair identities across the Atlas day suite, Talos, Founders high settings,
+and Atlas night. The telemetry deduplicates within each client process. All
+observed identities were:
 
 ### Bucket B — expected or bounded fallback
 
