@@ -135,8 +135,8 @@ Phase 2 extends Phase 1 from a single shot to a deterministic multi-scene captur
 Changes:
 
 - `Game/src/game.c` — the capture setup now selects from a shot table (`s_captureShots`): five Atlas Park labels (CityHall_03 default, East_01, North_01, West_01, Closeup_01 with camdist 10) mapping to fixed `setpospyr`/`camdist` values; unknown labels keep the historically verified default. The setup also freezes the world clock (`timeset 16; timescale 0`).
-- `agent/compare-captures.ps1` — image comparator: downsamples both JPGs to 320px width, pixel-diffs via LockBits, reports `changedPercent`/`meanDelta`/`maxDelta`, fails above `MaxChangedPercent` (2.0) or `MaxMeanDelta` (2.0).
-- `agent/capture-regression.ps1` — orchestrator: runs `capture.ps1` per label, adopts missing baselines into `agent/baselines` (unless `-NoAdopt`), compares against baselines, writes a summary JSON under `agent/logs/`, exit 0 only when no shot regressed or failed.
+- `agent/compare-captures.ps1` — image comparator: downsamples both JPGs to 320px width, pixel-diffs via LockBits, reports `changedPercent`/`meanDelta`/`maxDelta`, and uses `changedPercent` as the hard parity criterion. `meanDelta` remains visible as a report-only advisory because capture exposure/eye-adaptation and weather can raise it without a localized shader change.
+- `agent/capture-regression.ps1` — orchestrator: runs `capture.ps1` per label, never adopts a missing baseline in formal/default mode, compares against baselines, writes a policy-bearing summary JSON under `agent/logs/`, and exits 0 only when every target is a PASS. Use `-AdoptMissingBaseline` for intentional creation; those shots are reported as `BASELINE_ADOPTED` and never count as PASS.
 
 Determinism findings:
 

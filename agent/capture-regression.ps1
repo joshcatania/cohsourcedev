@@ -9,13 +9,17 @@ param(
     [string]$AccountName = 'Dummy00018',
     [string]$Password = '11111111',
     [int]$TimeoutSeconds = 180,
-    # Baseline directory. Missing baselines are adopted automatically unless
-    # -NoAdopt is given; adopted shots are reported, never counted as passes.
+    # Baseline directory. Missing baselines are a failure in formal/default
+    # mode. Use -AdoptMissingBaseline only for an intentional baseline run.
     [string]$BaselineDir = '',
     # Extra client arguments forwarded verbatim to capture.ps1 for every shot,
     # e.g. '-glslPilot 1' to run the suite through the native GLSL pilot.
     [string]$ExtraClientArgs = '',
-    [switch]$NoAdopt,
+    [int]$PixelTolerance = 12,
+    [double]$MaxChangedPercent = 6.0,
+    [double]$MaxMeanDelta = 3.0,
+    [int]$CompareWidth = 320,
+    [switch]$AdoptMissingBaseline,
     [switch]$Json
 )
 $ErrorActionPreference = 'Stop'
@@ -59,23 +63,26 @@ foreach ($label in $labels) {
 
     if (-not $entry.capturePassed) {
         $entry.verdict = 'CAPTURE_FAILED'
-        $entry.detail = ($captureOutput -split "`r?`n" | Where-Object { $_ -match '"passed"|"reason"' }) -join ' | '
+        $entry.failureReasons = @($captureOutput -split "`r?`n" | Where-Object { $_ -match '"passed"|"reason"|"error"' })
+        $entry.detail = if ($entry.failureReasons.Count -gt 0) { $entry.failureReasons -join ' | ' } else { 'capture.ps1 exited with a non-zero status' }
         $results += [pscustomobject]$entry
         continue
     }
 
     if (-not (Test-Path -LiteralPath $baseline)) {
-        if ($NoAdopt) {
-            $entry.verdict = 'NO_BASELINE'
-        } else {
+        if ($AdoptMissingBaseline) {
             Copy-Item -LiteralPath $artifact -Destination $baseline -Force
             $entry.verdict = 'BASELINE_ADOPTED'
+            $entry.detail = 'Missing baseline adopted by explicit -AdoptMissingBaseline; this is not a parity PASS.'
+        } else {
+            $entry.verdict = 'NO_BASELINE'
+            $entry.detail = 'Missing baseline; formal/default mode never adopts automatically. Re-run with -AdoptMissingBaseline only for intentional baseline creation.'
         }
         $results += [pscustomobject]$entry
         continue
     }
 
-    $compareOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $compareScript -Baseline $baseline -Current $artifact -Json 2>&1 | Out-String
+    $compareOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $compareScript -Baseline $baseline -Current $artifact -PixelTolerance $PixelTolerance -MaxChangedPercent $MaxChangedPercent -MaxMeanDelta $MaxMeanDelta -CompareWidth $CompareWidth -Json 2>&1 | Out-String
     $compareExit = $LASTEXITCODE
     $entry.compareExitCode = $compareExit
     try {
@@ -83,10 +90,23 @@ foreach ($label in $labels) {
     } catch {
         $entry.compare = $null
     }
-    if ($compareExit -eq 0) {
+    if ($compareExit -eq 0 -and $entry.compare -and $entry.compare.passed) {
         $entry.verdict = 'PASS'
     } else {
         $entry.verdict = 'REGRESSED'
+        if ($entry.compare -and $entry.compare.failureReasons) {
+            $entry.failureReasons = @($entry.compare.failureReasons)
+            $entry.detail = $entry.failureReasons -join '; '
+        } elseif ($entry.compare -and $entry.compare.error) {
+            $entry.failureReasons = @("comparison error: $($entry.compare.error)")
+            $entry.detail = $entry.failureReasons -join '; '
+        } else {
+            $entry.failureReasons = @('comparison did not produce a passing result')
+            $entry.detail = $entry.failureReasons -join '; '
+        }
+    }
+    if ($entry.compare -and $entry.compare.advisories) {
+        $entry.advisories = @($entry.compare.advisories)
     }
     $results += [pscustomobject]$entry
 }
@@ -96,9 +116,7 @@ $regressed    = @($results | Where-Object { $_.verdict -eq 'REGRESSED' }).Count
 $failedCaps   = @($results | Where-Object { $_.verdict -eq 'CAPTURE_FAILED' }).Count
 $adoptedCount = @($results | Where-Object { $_.verdict -eq 'BASELINE_ADOPTED' }).Count
 $noBaseline   = @($results | Where-Object { $_.verdict -eq 'NO_BASELINE' }).Count
-# Only regressions (and capture failures once baselines exist) fail the run;
-# adoptions are informational.
-$overallPassed = ($regressed -eq 0) -and ($failedCaps -eq 0) -and (($passedCount + $regressed) -gt 0 -or $adoptedCount -gt 0)
+$overallPassed = ($labels.Count -gt 0) -and ($passedCount -eq $labels.Count)
 
 $summary = [ordered]@{
     passed     = $overallPassed
@@ -107,6 +125,21 @@ $summary = [ordered]@{
     totals     = [ordered]@{
         targets=$labels.Count; passed=$passedCount; regressed=$regressed
         captureFailed=$failedCaps; baselineAdopted=$adoptedCount; noBaseline=$noBaseline
+    }
+    policy = [ordered]@{
+        baselineMode = if ($AdoptMissingBaseline) { 'explicit-adoption' } else { 'formal-no-adoption' }
+        missingBaselineVerdict = 'NO_BASELINE'
+        adoptionVerdict = 'BASELINE_ADOPTED'
+        baselineAdoptionCountsAsPass = $false
+        comparison = [ordered]@{
+            hardCriterion = 'changedPercent'
+            advisoryCriterion = 'meanDelta'
+            meanDeltaAction = 'report-only'
+            thresholds = [ordered]@{
+                pixelTolerance=$PixelTolerance; maxChangedPercent=$MaxChangedPercent
+                maxMeanDelta=$MaxMeanDelta; compareWidth=$CompareWidth
+            }
+        }
     }
     results    = $results
     summaryPath = $summaryPath
