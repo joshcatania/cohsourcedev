@@ -34,6 +34,17 @@ typedef enum ePilotMaterial {
     kPilotMaterial_Water,           // waterfp.cg (variant 0, refraction only; the
                                     // fancy-water material static-map water surfaces
                                     // bind once GFXF_MULTITEX survives startup)
+    // multi9fp.cg ('BLENDMODE_MULTI', the multi material): the five variants
+    // that bind on static maps with shaderDetail=3 and no cubemap/shadowmap
+    // support — the dual-material full modes, the single-material modes, and
+    // the building mode. Pair with the static FAUX_MULTI vertex variants
+    // (PRELIT_WHITE); the RGBS (baked-lighting) vertex pairing and the
+    // cubemap/planar/shadow variants are not ported.
+    kPilotMaterial_Multi9Full,          // multi9fp.cg variant 0 (dual material)
+    kPilotMaterial_Multi9FullHQ,        // multi9fp.cg BIT_HIGH_QUALITY (dual material)
+    kPilotMaterial_Multi9Single,        // multi9fp.cg BIT_SINGLE_MATERIAL
+    kPilotMaterial_Multi9SingleHQ,      // multi9fp.cg BIT_HIGH_QUALITY|BIT_SINGLE_MATERIAL
+    kPilotMaterial_Multi9Building,      // multi9fp.cg BIT_BUILDING
     // effects/ post-processing family (rt_effects.c fullscreen quads; they
     // pair with the DRAWMODE_SPRITE dualtex vertex variant that the 2D
     // rendering setup force-binds). SHADER_SUNFLAREADAPTATION and
@@ -90,6 +101,8 @@ typedef enum ePilotVertexKind {
     kPilotVertexKind_BumpRGBS,      // vp_master_vp.cg "bump_rgb.vp" (model space, VERTEX_LIT=PRELIT)
     kPilotVertexKind_BumpMulti,     // vp_master_vp.cg "bump_dual_multi" (REFLECT=FAUX_MULTI,
                                     // static geometry; the water/multitex pairing)
+    kPilotVertexKind_BumpMultiHQ,   // vp_master_vp.cg "bump_dual_multi" BIT_HIGH_QUALITY
+                                    // (tangent/normal/position interpolants + faux uv)
     kPilotVertexKind_FixedFunction, // no vertex program (pbuffer effects passes)
 } tPilotVertexKind;
 
@@ -189,6 +202,16 @@ typedef enum ePilotWaterConst {
 
 void rt_glslpilot_onWaterParam( int waterConstSlot, const GLfloat* vec4 );
 void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
+
+// Mirrors for the multi9 (BLENDMODE_MULTI) fragment constants:
+// g_Specular2ColorAndExponentFP (TIE(ENV6), the material-2 specular, pushed
+// by setupSpecularColor for non-single-material MULTI draws) and
+// g_MiscParamFP (TIE(ENV7), the multi9 'lights on' addglow threshold/seed,
+// pushed by setupBumpMultiPixelShader; shares its ENV slot number with the
+// water refraction transform but is a distinct shader param). Same
+// always-mirror contract as the other constants.
+void rt_glslpilot_onSpecular2Param( const GLfloat* vec4 );
+void rt_glslpilot_onMiscParam( const GLfloat* vec4 );
 
 // Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
 // did not handle. Logs each distinct fragment program id once (per process)

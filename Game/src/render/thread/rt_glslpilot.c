@@ -833,6 +833,430 @@ static const char s_waterFragmentSource[] =
 "    gl_FragColor = vec4( out_color, alpha );\n"
 "}\n";
 
+// vp_master_vp.cg "bump_dual_multi" compiled with BIT_HIGH_QUALITY: same
+// FAUX_MULTI static pairing as the LQ variant (constant-white vertex color,
+// (uv0, faux spheremap uv) on TEXCOORD0), but like the HQ bump_dual variant
+// the tangent (binormal sign in w), normal and position pass through as
+// interpolants — the HQ multi9 fragment builds the tangent basis per pixel
+// and reads g_LightDirFP instead of a vertex-interpolated light vector.
+static const char s_bumpMultiHQVertexSource[] =
+"#version 120\n"
+"\n"
+"attribute vec4 attr_tangent;      // generic vertex attribute 7 (see rt_model.c)\n"
+"\n"
+"varying vec3 vNormalVs;           // OUT.normal_vs (TEXCOORD2 in the Cg program)\n"
+"varying vec4 vTangentVs;          // OUT.tangent_vs (TEXCOORD1); .w = binormal sign\n"
+"varying vec3 vPositionVs;         // OUT.position_vs (TEXCOORD3)\n"
+"varying vec4 vUv0Faux;            // OUT.uv0_uv1 (TEXCOORD0); zw = faux reflection uv\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec3 position_vs = ( gl_ModelViewMatrix * gl_Vertex ).xyz;\n"
+"    vec3 normal = normalize( mat3( gl_ModelViewMatrix ) * gl_Normal );\n"
+"    vec3 tangent = normalize( mat3( gl_ModelViewMatrix ) * attr_tangent.xyz );\n"
+"    gl_Position = gl_ProjectionMatrix * vec4( position_vs, 1.0 );\n"
+"\n"
+"    // fog coordinate: eye-radial distance (vp_master_vp.cg)\n"
+"    gl_FogFragCoord = sqrt( dot( position_vs, position_vs ) + 1e-16 );\n"
+"\n"
+"    // VERTEX_LIT == PRELIT_WHITE: constant vertex color\n"
+"    gl_FrontColor = vec4( 1.0 );\n"
+"\n"
+"    // calc_faux_reflection_uv: legacy sphere-map uv from the view-space\n"
+"    // normal and the incident (position) vector\n"
+"    vec3 rr = reflect( position_vs, normal );\n"
+"    vec3 ro = normalize( rr + vec3( 0.0, 0.0, 1.0 ) );\n"
+"    vUv0Faux = vec4( gl_MultiTexCoord0.xy, 0.5 * ro.xy + 0.5 );\n"
+"\n"
+"    vNormalVs = normal;\n"
+"    vTangentVs = vec4( tangent, sign( attr_tangent.w ) );\n"
+"    vPositionVs = position_vs;\n"
+"}\n";
+
+// ---------------------------------------------------------------------------
+// multi9 (BLENDMODE_MULTI) fragment variants: the dual-material 'new style'
+// material. Five variants are ported — the ones that bind on static maps
+// without cubemap/shadowmap support: variant 0 (dual material LQ),
+// BIT_HIGH_QUALITY (dual material, per-pixel tangent basis), and the same two
+// for BIT_SINGLE_MATERIAL, plus BIT_BUILDING. The shared math replicates the
+// functions.cgh helpers (calc_dual_tint/calc_old_tint for the material-1
+// g_Env0/1 tint and the material-2 g_ConstColor0/1 tint, mix_material_colors
+// driven by the g_GlossParamFP.z/.w mask-blend selectors, has_glow with
+// g_MiscParamFP, per-material calc_lighting_factors/apply_lighting with
+// glossConst .x (material 1) / .y (material 2) and the specular1/specular2
+// constants). The RGBS (baked instance lighting) vertex pairing, the cubemap/
+// planar-reflection/shadow variants and the skinned multitex draws stay on
+// the ARB path (the pilot declines their vertex programs).
+// ---------------------------------------------------------------------------
+
+// shared declarations/helpers for the multi9 fragment variants; the bodies
+// below append their main() to this preamble
+#define MULTI9_FP_HELPERS \
+"uniform sampler2D sampler_base_1;              // TEXUNIT0\n" \
+"uniform sampler2D sampler_multiply_1;          // TEXUNIT1\n" \
+"uniform sampler2D sampler_normal_and_gloss_1;  // TEXUNIT2\n" \
+"uniform sampler2D sampler_dual_1;              // TEXUNIT3\n" \
+"uniform sampler2D sampler_mask;                // TEXUNIT4\n" \
+"uniform sampler2D sampler_base_2;              // TEXUNIT5\n" \
+"uniform sampler2D sampler_multiply_2;          // TEXUNIT6\n" \
+"uniform sampler2D sampler_normal_and_gloss_2;  // TEXUNIT7\n" \
+"uniform sampler2D sampler_dual_2;              // TEXUNIT8\n" \
+"uniform sampler2D sampler_glow;                // TEXUNIT9\n" \
+"uniform sampler2D sampler_glow_mask;           // TEXUNIT15\n" \
+"uniform vec4 g_Env0FP;                         // TIE(ENV8), material 1 tint 0\n" \
+"uniform vec4 g_Env1FP;                         // TIE(ENV9), material 1 tint 1\n" \
+"uniform vec4 g_AmbientColorFP;                 // TIE(ENV0), setupBumpPixelShader ambient*2\n" \
+"uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n" \
+"uniform vec4 g_GlossParamFP;                   // TIE(ENV2); .x/.y gloss consts, .z/.w mask blend\n" \
+"uniform vec4 g_Specular1ColorAndExponentFP;    // TIE(ENV5), material 1 spec color + exponent\n" \
+"uniform vec4 g_Specular2ColorAndExponentFP;    // TIE(ENV6), material 2 spec color + exponent\n" \
+"uniform vec4 g_ConstColor0FP;                  // TIE(ENV3), material 2 tint 0\n" \
+"uniform vec4 g_ConstColor1FP;                  // TIE(ENV4), material 2 tint 1\n" \
+"uniform vec4 g_MiscParamFP;                    // TIE(ENV7); .x glow threshold, .y seed\n" \
+"uniform vec4 g_BumpMultiFlagsFP;               // TIE(ENV10); .x/.y selector bits\n" \
+"uniform vec4 g_ScrollScaleArrFP[10];           // TIE(ENV12..21); xy scroll, zw scale per layer\n" \
+"\n" \
+"varying vec4 vUv0Faux;            // IN.uv0_uv1; zw = faux spheremap reflection uv\n" \
+"\n" \
+"// isBitSet idiom from functions.cgh (integer-valued float bits)\n" \
+"bool isBitSet( float bits, float bit )\n" \
+"{\n" \
+"    return fract( bits / ( bit * 2.0 ) ) >= 0.5;\n" \
+"}\n" \
+"\n" \
+"// scroll_scale from functions.cgh: uv * scale + scroll\n" \
+"vec2 scrollScale( int layer, vec2 uv )\n" \
+"{\n" \
+"    return uv * g_ScrollScaleArrFP[layer].zw + g_ScrollScaleArrFP[layer].xy;\n" \
+"}\n" \
+"\n" \
+"// map_color_to_normal: expand [0,1] to [-1,1] and renormalize; the alpha\n" \
+"// channel piggybacks the gloss map\n" \
+"vec4 mapColorToNormal( vec4 t )\n" \
+"{\n" \
+"    t.xyz = normalize( t.xyz * 2.0 - 1.0 );\n" \
+"    return t;\n" \
+"}\n" \
+"\n" \
+"// calc_dual_tint: lerp between the two tint colors by the dual texture,\n" \
+"// mask back toward white by base alpha, modulate by base\n" \
+"vec4 calcDualTint( vec4 c0, vec4 c1, vec4 tex0, vec4 tex1 )\n" \
+"{\n" \
+"    vec4 d;\n" \
+"    d.rgb = mix( c1.rgb, c0.rgb, tex1.rgb );\n" \
+"    d.rgb = mix( d.rgb, vec3( 1.0 ), tex0.a );\n" \
+"    d.rgb *= tex0.rgb;\n" \
+"    d.a = tex1.a * c0.a;\n" \
+"    return d;\n" \
+"}\n" \
+"\n" \
+"// calc_old_tint: lerp from the tint color by base alpha; alpha from tint\n" \
+"vec4 calcOldTint( vec4 color, vec4 tex )\n" \
+"{\n" \
+"    return vec4( mix( color.rgb, tex.rgb, tex.a ), color.a );\n" \
+"}\n" \
+"\n" \
+"// has_glow with g_MiscParamFP: each 1x1 tile of the base texture shares one\n" \
+"// 128x128 glow-mask texel; glow fires when mask < threshold\n" \
+"bool hasGlow( vec2 uv )\n" \
+"{\n" \
+"    vec2 maskUv = ( floor( uv ) * 0.0078125 ) + g_MiscParamFP.yw;\n" \
+"    return texture2D( sampler_glow_mask, maskUv ).r < g_MiscParamFP.x;\n" \
+"}\n" \
+"\n" \
+"// add_glow_multi: glow texture on the scroll-scaled uv, optionally tinted\n" \
+"// by g_Env1FP.rgb, added to material 1 or 2 as the flags direct\n" \
+"void addGlowMulti( vec2 uv0, inout vec4 color1, inout vec4 color2 )\n" \
+"{\n" \
+"    if ( hasGlow( uv0 ) )\n" \
+"    {\n" \
+"        vec3 texAddGlow = texture2D( sampler_glow, scrollScale( 9, uv0 ) ).rgb;\n" \
+"        if ( isBitSet( g_BumpMultiFlagsFP.x, 16.0 ) )\n" \
+"            texAddGlow *= g_Env1FP.rgb;\n" \
+"        if ( isBitSet( g_BumpMultiFlagsFP.x, 4.0 ) )\n" \
+"            color2.rgb += texAddGlow;\n" \
+"        else\n" \
+"            color1.rgb += texAddGlow;\n" \
+"    }\n" \
+"}\n" \
+"\n" \
+"// mix_material_colors: the mask texture blends the two materials; the\n" \
+"// g_GlossParamFP.z selector lerps the mask toward its alpha channel and\n" \
+"// g_GlossParamFP.w gates the mask entirely (1 = mask, 0 = material 1)\n" \
+"vec4 mixMaterialColors( vec4 mixmask, vec4 color1, vec4 color2 )\n" \
+"{\n" \
+"    vec4 lerpValue = mix( mixmask, vec4( mixmask.a ), g_GlossParamFP.z );\n" \
+"    lerpValue = mix( vec4( 1.0 ), lerpValue, g_GlossParamFP.w );\n" \
+"    return mix( color2, color1, lerpValue );\n" \
+"}\n" \
+"\n" \
+"// calc_lighting_factors + apply_lighting for one sub-material: (1, NdotL,\n" \
+"// gloss-masked specular) against the shared ambient/diffuse and the\n" \
+"// sub-material specular constant and gloss constant\n" \
+"vec3 applyMultiLighting( vec3 color_in, vec4 normal_gloss, vec3 light_ts, vec3 half_ts,\n" \
+"                         vec4 spec_color_exp, float glossConst )\n" \
+"{\n" \
+"    float specular = pow( clamp( dot( normal_gloss.xyz, half_ts ), 0.0, 1.0 ),\n" \
+"                          spec_color_exp.a ) * normal_gloss.w;\n" \
+"    vec3 diffuse = clamp( dot( normal_gloss.xyz, light_ts ), 0.0, 1.0 ) * g_DiffuseColorFP.rgb;\n" \
+"    vec3 gloss = clamp( specular * glossConst * spec_color_exp.rgb, 0.0, 1.0 );\n" \
+"    return color_in * ( g_AmbientColorFP.rgb + diffuse ) + gloss;\n" \
+"}\n"
+
+// multi9fp.cg, variant 0 (MULTI_FULL, no HQ/cubemap/shadow): both
+// sub-materials are dual-tinted, multiplied, vertex-colored and lit with
+// their own specular/gloss, addglow is applied to either, and the mask
+// texture blends the result.
+static const char s_multi9FullFragmentSource[] =
+"#version 120\n"
+"\n"
+MULTI9_FP_HELPERS
+"varying vec3 vLightTs;\n"
+"varying vec3 vViewTs;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = vUv0Faux.xy;\n"
+"    vec2 uv_reflect = vUv0Faux.zw;\n"
+"    vec2 uv_mult1 = isBitSet( g_BumpMultiFlagsFP.x, 1.0 ) ? uv_reflect : uv0;\n"
+"    vec2 uv_mult2 = isBitSet( g_BumpMultiFlagsFP.x, 2.0 ) ? uv_reflect : uv0;\n"
+"    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n"
+"\n"
+"    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
+"\n"
+"    vec4 n1 = mapColorToNormal( texture2D( sampler_normal_and_gloss_1, scrollScale( 2, uv0 ) ) );\n"
+"    vec4 n2 = mapColorToNormal( texture2D( sampler_normal_and_gloss_2, scrollScale( 7, uv0 ) ) );\n"
+"\n"
+"    // material 1: dual tint (g_Env0/1), multiply, vertex color, lighting\n"
+"    vec4 texBase1 = texture2D( sampler_base_1, scrollScale( 0, uv0 ) );\n"
+"    vec4 color1 = oldTint ? calcOldTint( g_Env0FP, texBase1 )\n"
+"        : calcDualTint( g_Env0FP, g_Env1FP, texBase1,\n"
+"                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n"
+"    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
+"    color1.rgb *= gl_Color.rgb;\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
+"\n"
+"    // material 2: dual tint (g_ConstColor0/1), multiply, vertex color, its\n"
+"    // own specular/gloss\n"
+"    vec4 texBase2 = texture2D( sampler_base_2, scrollScale( 5, uv0 ) );\n"
+"    vec4 color2 = oldTint ? calcOldTint( g_ConstColor0FP, texBase2 )\n"
+"        : calcDualTint( g_ConstColor0FP, g_ConstColor1FP, texBase2,\n"
+"                        texture2D( sampler_dual_2, scrollScale( 8, uv0 ) ) );\n"
+"    color2 *= texture2D( sampler_multiply_2, scrollScale( 6, uv_mult2 ) );\n"
+"    color2.rgb *= gl_Color.rgb;\n"
+"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, half_ts,\n"
+"                                     g_Specular2ColorAndExponentFP, g_GlossParamFP.y );\n"
+"\n"
+"    addGlowMulti( uv0, color1, color2 );\n"
+"\n"
+"    vec4 out_color = mixMaterialColors( texture2D( sampler_mask, scrollScale( 4, uv0 ) ),\n"
+"                                        color1, color2 );\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
+// multi9fp.cg, BIT_HIGH_QUALITY (MULTI_FULL): identical material math, but
+// the tangent-space basis and lighting vectors are built per pixel from the
+// HQ vertex interpolants and the light direction comes from the g_LightDirFP
+// fragment constant (light_ts renormalized after the basis change, half_ts
+// deliberately not — matches the Cg/ARB specular response).
+static const char s_multi9FullHQFragmentSource[] =
+"#version 120\n"
+"\n"
+MULTI9_FP_HELPERS
+"uniform vec4 g_LightDirFP;                    // TIE(ENV11), view-space light dir (HQ only)\n"
+"\n"
+"varying vec3 vNormalVs;\n"
+"varying vec4 vTangentVs;\n"
+"varying vec3 vPositionVs;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = vUv0Faux.xy;\n"
+"    vec2 uv_reflect = vUv0Faux.zw;\n"
+"    vec2 uv_mult1 = isBitSet( g_BumpMultiFlagsFP.x, 1.0 ) ? uv_reflect : uv0;\n"
+"    vec2 uv_mult2 = isBitSet( g_BumpMultiFlagsFP.x, 2.0 ) ? uv_reflect : uv0;\n"
+"    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n"
+"\n"
+"    // populate_lighting_vectors_hq (see the HQ bump dual fragment)\n"
+"    vec3 normal_vs = normalize( vNormalVs );\n"
+"    vec3 tangent_vs = normalize( vTangentVs.xyz );\n"
+"    vec3 binormal_vs = cross( tangent_vs, normal_vs ) * vTangentVs.w;\n"
+"    vec3 light_vs = g_LightDirFP.xyz;\n"
+"    vec3 u_to_eye = normalize( -vPositionVs );\n"
+"    vec3 light_ts = normalize( vec3( dot( light_vs, tangent_vs ),\n"
+"                                     dot( light_vs, binormal_vs ),\n"
+"                                     dot( light_vs, normal_vs ) ) );\n"
+"    vec3 h_vs = normalize( u_to_eye + light_vs );\n"
+"    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
+"                         dot( h_vs, binormal_vs ),\n"
+"                         dot( h_vs, normal_vs ) );\n"
+"\n"
+"    vec4 n1 = mapColorToNormal( texture2D( sampler_normal_and_gloss_1, scrollScale( 2, uv0 ) ) );\n"
+"    vec4 n2 = mapColorToNormal( texture2D( sampler_normal_and_gloss_2, scrollScale( 7, uv0 ) ) );\n"
+"\n"
+"    vec4 texBase1 = texture2D( sampler_base_1, scrollScale( 0, uv0 ) );\n"
+"    vec4 color1 = oldTint ? calcOldTint( g_Env0FP, texBase1 )\n"
+"        : calcDualTint( g_Env0FP, g_Env1FP, texBase1,\n"
+"                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n"
+"    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
+"    color1.rgb *= gl_Color.rgb;\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
+"\n"
+"    vec4 texBase2 = texture2D( sampler_base_2, scrollScale( 5, uv0 ) );\n"
+"    vec4 color2 = oldTint ? calcOldTint( g_ConstColor0FP, texBase2 )\n"
+"        : calcDualTint( g_ConstColor0FP, g_ConstColor1FP, texBase2,\n"
+"                        texture2D( sampler_dual_2, scrollScale( 8, uv0 ) ) );\n"
+"    color2 *= texture2D( sampler_multiply_2, scrollScale( 6, uv_mult2 ) );\n"
+"    color2.rgb *= gl_Color.rgb;\n"
+"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, half_ts,\n"
+"                                     g_Specular2ColorAndExponentFP, g_GlossParamFP.y );\n"
+"\n"
+"    addGlowMulti( uv0, color1, color2 );\n"
+"\n"
+"    vec4 out_color = mixMaterialColors( texture2D( sampler_mask, scrollScale( 4, uv0 ) ),\n"
+"                                        color1, color2 );\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
+// multi9fp.cg, BIT_SINGLE_MATERIAL (and its BIT_HIGH_QUALITY sibling): only
+// sub-material 1 is calculated (dual tint, multiply, lighting) plus the
+// addglow; no mask texture, no material 2. The LQ and HQ variants differ only
+// in the lighting-vector setup, so they share a body macro.
+#define MULTI9_SINGLE_BODY( LIGHTING_SETUP ) \
+"void main()\n" \
+"{\n" \
+"    vec2 uv0 = vUv0Faux.xy;\n" \
+"    vec2 uv_reflect = vUv0Faux.zw;\n" \
+"    vec2 uv_mult1 = isBitSet( g_BumpMultiFlagsFP.x, 1.0 ) ? uv_reflect : uv0;\n" \
+"    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n" \
+"\n" \
+LIGHTING_SETUP \
+"\n" \
+"    vec4 n1 = mapColorToNormal( texture2D( sampler_normal_and_gloss_1, scrollScale( 2, uv0 ) ) );\n" \
+"\n" \
+"    // material 1: dual tint (g_Env0/1), multiply, vertex color, lighting\n" \
+"    vec4 texBase1 = texture2D( sampler_base_1, scrollScale( 0, uv0 ) );\n" \
+"    vec4 out_color = oldTint ? calcOldTint( g_Env0FP, texBase1 )\n" \
+"        : calcDualTint( g_Env0FP, g_Env1FP, texBase1,\n" \
+"                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n" \
+"    out_color *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n" \
+"    out_color.rgb *= gl_Color.rgb;\n" \
+"    out_color.rgb = applyMultiLighting( out_color.rgb, n1, light_ts, half_ts,\n" \
+"                                        g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n" \
+"\n" \
+"    // add_glow (single-material flavor): same mask/glow uvs and tint as\n" \
+"    // add_glow_multi but applied straight to the result\n" \
+"    if ( hasGlow( uv0 ) )\n" \
+"    {\n" \
+"        vec3 texAddGlow = texture2D( sampler_glow, scrollScale( 9, uv0 ) ).rgb;\n" \
+"        if ( isBitSet( g_BumpMultiFlagsFP.x, 16.0 ) )\n" \
+"            texAddGlow *= g_Env1FP.rgb;\n" \
+"        out_color.rgb += texAddGlow;\n" \
+"    }\n" \
+"\n" \
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n" \
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n" \
+"\n" \
+"    gl_FragColor = out_color;\n" \
+"}\n"
+
+static const char s_multi9SingleFragmentSource[] =
+"#version 120\n"
+"\n"
+MULTI9_FP_HELPERS
+"varying vec3 vLightTs;\n"
+"varying vec3 vViewTs;\n"
+"\n"
+MULTI9_SINGLE_BODY(
+"    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n" );
+
+static const char s_multi9SingleHQFragmentSource[] =
+"#version 120\n"
+"\n"
+MULTI9_FP_HELPERS
+"uniform vec4 g_LightDirFP;                    // TIE(ENV11), view-space light dir (HQ only)\n"
+"\n"
+"varying vec3 vNormalVs;\n"
+"varying vec4 vTangentVs;\n"
+"varying vec3 vPositionVs;\n"
+"\n"
+MULTI9_SINGLE_BODY(
+"    // populate_lighting_vectors_hq (see the HQ bump dual fragment)\n"
+"    vec3 normal_vs = normalize( vNormalVs );\n"
+"    vec3 tangent_vs = normalize( vTangentVs.xyz );\n"
+"    vec3 binormal_vs = cross( tangent_vs, normal_vs ) * vTangentVs.w;\n"
+"    vec3 light_vs = g_LightDirFP.xyz;\n"
+"    vec3 u_to_eye = normalize( -vPositionVs );\n"
+"    vec3 light_ts = normalize( vec3( dot( light_vs, tangent_vs ),\n"
+"                                     dot( light_vs, binormal_vs ),\n"
+"                                     dot( light_vs, normal_vs ) ) );\n"
+"    vec3 h_vs = normalize( u_to_eye + light_vs );\n"
+"    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
+"                         dot( h_vs, binormal_vs ),\n"
+"                         dot( h_vs, normal_vs ) );\n" );
+
+// multi9fp.cg, BIT_BUILDING: material 1 is calculated and lit as usual (but
+// without scroll/scale on its base/dual/mask uvs), and material 2 is just
+// material 1's color multiplied by the multiply-2 texture (no material-2
+// lighting); the unscrolled mask blends the two. Low-quality only (the
+// HQ|BUILDING variant is not known to bind on static maps).
+static const char s_multi9BuildingFragmentSource[] =
+"#version 120\n"
+"\n"
+MULTI9_FP_HELPERS
+"varying vec3 vLightTs;\n"
+"varying vec3 vViewTs;\n"
+"\n"
+"void main()\n"
+"{\n"
+"    vec2 uv0 = vUv0Faux.xy;\n"
+"    vec2 uv_reflect = vUv0Faux.zw;\n"
+"    vec2 uv_mult1 = isBitSet( g_BumpMultiFlagsFP.x, 1.0 ) ? uv_reflect : uv0;\n"
+"    vec2 uv_mult2 = isBitSet( g_BumpMultiFlagsFP.x, 2.0 ) ? uv_reflect : uv0;\n"
+"    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n"
+"\n"
+"    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
+"\n"
+"    // building variant: normal map and base/dual uvs unscrolled\n"
+"    vec4 n1 = mapColorToNormal( texture2D( sampler_normal_and_gloss_1, uv0 ) );\n"
+"\n"
+"    vec4 texBase1 = texture2D( sampler_base_1, uv0 );\n"
+"    vec4 color1 = oldTint ? calcOldTint( g_Env0FP, texBase1 )\n"
+"        : calcDualTint( g_Env0FP, g_Env1FP, texBase1,\n"
+"                        texture2D( sampler_dual_1, uv0 ) );\n"
+"    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
+"    color1.rgb *= gl_Color.rgb;\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
+"\n"
+"    // material 2 is material 1's lit color times the multiply-2 texture\n"
+"    vec4 color2 = color1 * texture2D( sampler_multiply_2, scrollScale( 6, uv_mult2 ) );\n"
+"\n"
+"    addGlowMulti( uv0, color1, color2 );\n"
+"\n"
+"    vec4 out_color = mixMaterialColors( texture2D( sampler_mask, uv0 ),\n"
+"                                        color1, color2 );\n"
+"\n"
+"    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
+"    out_color.rgb = mix( gl_Fog.color.rgb, out_color.rgb, fogAmount );\n"
+"\n"
+"    gl_FragColor = out_color;\n"
+"}\n";
+
+
 // ---------------------------------------------------------------------------
 // effects/ post-processing family (rt_effects.c). Fullscreen quads drawn
 // under the 2D rendering setup, which force-binds the DRAWMODE_SPRITE
@@ -1450,6 +1874,16 @@ typedef struct tPilotMaterial
     bool                failed;
     bool                activationLogged;    // one-time activation evidence for logs
     bool                declineLogged;        // one-time unregistered-vertex diagnostic
+    // multi9 (BLENDMODE_MULTI) constants: the selector flags, scroll/scale
+    // array and 'lights on' glow params all five variants consume, plus the
+    // material-2 set (tint colors + specular2) the dual-material variants
+    // consume. Appended fields so the existing positional initializers stay
+    // valid; the location fields are assigned by pilotInit before any push
+    // (guarded by usesMultiConstants, which only the multi9 materials set).
+    bool                usesMultiConstants;
+    bool                usesMultiMat2;        // material-2 tints + specular2
+    GLint                locSpecular2;        // g_Specular2ColorAndExponentFP (multi9 fragment)
+    GLint                locMiscParam;        // g_MiscParamFP (multi9 fragment)
 } tPilotMaterial;
 
 #define kPilotKindBit( kind ) ( 1u << (kind) )
@@ -1460,6 +1894,7 @@ typedef struct tPilotMaterial
 #define kPilotBumpModelKindMask ( kPilotKindBit( kPilotVertexKind_BumpNormals ) | \
                                   kPilotKindBit( kPilotVertexKind_BumpRGBS ) )
 #define kPilotBumpMultiKindMask ( kPilotKindBit( kPilotVertexKind_BumpMulti ) )
+#define kPilotBumpMultiHQKindMask ( kPilotKindBit( kPilotVertexKind_BumpMultiHQ ) )
 
 #define kPilotMaxVertexEntries 16
 
@@ -1510,6 +1945,23 @@ static const tPilotSampler s_waterSamplers[] = {
     { "sampler_refraction",          5 },
     { "sampler_refraction_depth",    6 },
     { "sampler_normal_and_gloss_2",  7 },
+    { NULL, -1 },
+};
+
+// multi9 sampler/unit map (names mirror multi9fp.cg; unit 15 is the
+// non-standard glow-mask texture layer)
+static const tPilotSampler s_multi9Samplers[] = {
+    { "sampler_base_1",              0 },
+    { "sampler_multiply_1",          1 },
+    { "sampler_normal_and_gloss_1",  2 },
+    { "sampler_dual_1",              3 },
+    { "sampler_mask",                4 },
+    { "sampler_base_2",              5 },
+    { "sampler_multiply_2",          6 },
+    { "sampler_normal_and_gloss_2",  7 },
+    { "sampler_dual_2",              8 },
+    { "sampler_glow",                9 },
+    { "sampler_glow_mask",           15 },
     { NULL, -1 },
 };
 
@@ -1576,6 +2028,17 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     // bump lighting constant set plus the water/multitex mirrors
     // (usesBumpConstants covers ambient/diffuse/gloss/specular1)
     { 0, "BLENDMODE_WATER", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // multi9 (BLENDMODE_MULTI): the five static-map variants; the LQ variants
+    // pair with the PRELIT_WHITE FAUX_MULTI vertex variant (the RGBS baked-
+    // lighting pairing stays on ARB), the HQ variants with its BIT_HIGH_QUALITY
+    // sibling. usesBumpConstants covers the shared lighting constants; the
+    // multi9 mirrors carry the selector flags, scroll/scale array, glow params
+    // and (dual-material variants) the material-2 tints + specular2.
+    { 0, "BLENDMODE_MULTI", s_multi9FullFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, true, -1, -1 },
+    { 0, "BLENDMODE_MULTI HQ", s_multi9FullHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, true, -1, -1 },
+    { 0, "BLENDMODE_MULTI single", s_multi9SingleFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
+    { 0, "BLENDMODE_MULTI single HQ", s_multi9SingleHQFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiHQKindMask, s_bumpMultiHQVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
+    { 0, "BLENDMODE_MULTI building", s_multi9BuildingFragmentSource, s_multi9Samplers, true, true, false, true, false, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false, false, false, false, false, true, false, -1, -1 },
     // effects/post-processing materials (see the sources above for the
     // per-pass math); they pair with the dualtex vertex kind because the 2D
     // rendering setup force-binds the DRAWMODE_SPRITE vertex variant
@@ -1631,6 +2094,12 @@ static GLuint                s_boneMatrixMirrorCount = 0;
 #define kPilotMaxScrollScaleVec4s 10    // g_ScrollScaleArrFP[10] (TEXLAYER_MAX_SCROLLABLE)
 static GLfloat                s_waterConstMirrors[kPilotWaterConst_Count][4];
 static GLfloat                s_scrollScaleMirror[kPilotMaxScrollScaleVec4s][4];
+// multi9 fragment constant mirrors (g_Specular2ColorAndExponentFP /
+// g_MiscParamFP; see the header) — the material-2 tint colors and the
+// selector flags/scroll array reuse the water mirrors above, since the
+// engine pushes them from the same setupBumpMultiPixelShader path
+static GLfloat                s_specular2Mirror[4] = { 1.0f, 1.0f, 1.0f, 8.0f };
+static GLfloat                s_miscParamMirror[4] = { 1.0f, 0.0f, 0.0f, 0.0f };
 
 static GLuint pilotCompileShader( GLenum type, const char* source, const char* descr )
 {
@@ -1704,6 +2173,19 @@ static GLuint pilotGetBumpMultiVertexShader( void )
     if ( ! s_bumpMultiVertexShader )
         s_bumpMultiVertexShaderFailed = true;
     return s_bumpMultiVertexShader;
+}
+
+static GLuint s_bumpMultiHQVertexShader = 0;    // shared by the HQ multi9 programs
+static bool s_bumpMultiHQVertexShaderFailed = false;
+
+static GLuint pilotGetBumpMultiHQVertexShader( void )
+{
+    if ( s_bumpMultiHQVertexShader || s_bumpMultiHQVertexShaderFailed )
+        return s_bumpMultiHQVertexShader;
+    s_bumpMultiHQVertexShader = pilotCompileShader( GL_VERTEX_SHADER, s_bumpMultiHQVertexSource, "bump_dual_multi HQ vertex shader" );
+    if ( ! s_bumpMultiHQVertexShader )
+        s_bumpMultiHQVertexShaderFailed = true;
+    return s_bumpMultiHQVertexShader;
 }
 
 static GLuint s_ffVertexShader = 0;
@@ -1810,8 +2292,10 @@ static bool pilotInit( int material )
     bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
     bool isBumpModel = ( m->vertexKindMask & kPilotBumpModelKindMask ) != 0;
     bool isBumpMulti = ( m->vertexKindMask & kPilotBumpMultiKindMask ) != 0;
+    bool isBumpMultiHQ = ( m->vertexKindMask & kPilotBumpMultiHQKindMask ) != 0;
     GLuint vertexShader = isBumpHQ ? pilotGetBumpHQVertexShader()
                       : isBumpModel ? pilotGetBumpModelVertexShader()
+                      : isBumpMultiHQ ? pilotGetBumpMultiHQVertexShader()
                       : isBumpMulti ? pilotGetBumpMultiVertexShader()
                       : isBumpLQ ? pilotGetBumpVertexShader()
                                  : pilotGetVertexShader();
@@ -1842,7 +2326,7 @@ static bool pilotInit( int material )
         __glewBindAttribLocation( m->program, 7, "attr_tangent" );
         __glewBindAttribLocation( m->program, 11, "attr_prelit_color" );
     }
-    if ( isBumpMulti )
+    if ( isBumpMulti || isBumpMultiHQ )
     {
         // static geometry only: no bone attributes, no prelit color
         __glewBindAttribLocation( m->program, 7, "attr_tangent" );
@@ -1910,6 +2394,27 @@ static bool pilotInit( int material )
     {
         m->locLightDir = __glewGetUniformLocation( m->program, "g_LightDirVP" );
     }
+    if ( isBumpMultiHQ )
+    {
+        // the HQ multi9 fragment reads g_LightDirFP instead of the
+        // vertex-interpolated light vector
+        m->locLightDirFP = __glewGetUniformLocation( m->program, "g_LightDirFP" );
+    }
+    if ( m->usesMultiConstants )
+    {
+        // the multi9 mirrors: selector flags, scroll/scale array and the
+        // 'lights on' glow params for all five variants, plus the material-2
+        // tint colors and specular2 for the dual-material variants
+        m->locBumpMultiFlags = __glewGetUniformLocation( m->program, "g_BumpMultiFlagsFP" );
+        m->locScrollScaleArr = __glewGetUniformLocation( m->program, "g_ScrollScaleArrFP[0]" );
+        m->locMiscParam = __glewGetUniformLocation( m->program, "g_MiscParamFP" );
+        if ( m->usesMultiMat2 )
+        {
+            m->locConstColor0FP = __glewGetUniformLocation( m->program, "g_ConstColor0FP" );
+            m->locConstColor1FP = __glewGetUniformLocation( m->program, "g_ConstColor1FP" );
+            m->locSpecular2 = __glewGetUniformLocation( m->program, "g_Specular2ColorAndExponentFP" );
+        }
+    }
     if ( m->usesWaterConstants )
     {
         // the water fragment consumes the bump lighting constants through
@@ -1958,6 +2463,11 @@ static bool pilotInit( int material )
                           ( m->locTexScroll1 < 0 ) || ( m->locAmbientVP < 0 ) || ( m->locDiffuseVP < 0 ) ||
                           ( m->locPrelit < 0 ))) ||
         ( isBumpMulti && ( m->locLightDir < 0 )) ||
+        ( isBumpMultiHQ && ( m->locLightDirFP < 0 )) ||
+        ( m->usesMultiConstants && (( m->locBumpMultiFlags < 0 ) || ( m->locScrollScaleArr < 0 ) ||
+                                    ( m->locMiscParam < 0 ))) ||
+        ( m->usesMultiMat2 && (( m->locConstColor0FP < 0 ) || ( m->locConstColor1FP < 0 ) ||
+                              ( m->locSpecular2 < 0 ))) ||
         ( m->usesWaterConstants && (( m->locConstColor0FP < 0 ) || ( m->locConstColor1FP < 0 ) ||
                                     ( m->locWaterRefractTransform < 0 ) || ( m->locWaterRefractParams < 0 ) ||
                                     ( m->locBumpMultiFlags < 0 ) || ( m->locScrollScaleArr < 0 ))) ||
@@ -2059,6 +2569,7 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
         case kPilotVertexKind_BumpNormals: return "bump (model-space)";
         case kPilotVertexKind_BumpRGBS: return "bump_rgb (model-space)";
         case kPilotVertexKind_BumpMulti: return "bump_dual_multi";
+        case kPilotVertexKind_BumpMultiHQ: return "bump_dual_multi HQ";
         case kPilotVertexKind_FixedFunction: return "fixed-function";
         default: return "dualtex";
     }
@@ -2127,6 +2638,19 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
             __glewUniform4fv( m->locBumpMultiFlags, 1, s_waterConstMirrors[kPilotWaterConst_BumpMultiFlags] );
             __glewUniform4fv( m->locScrollScaleArr, kPilotMaxScrollScaleVec4s, &s_scrollScaleMirror[0][0] );
         }
+        if ( m->usesMultiConstants )
+        {
+            if ( m->locConstColor0FP >= 0 )
+                __glewUniform4fv( m->locConstColor0FP, 1, s_waterConstMirrors[kPilotWaterConst_ConstColor0] );
+            if ( m->locConstColor1FP >= 0 )
+                __glewUniform4fv( m->locConstColor1FP, 1, s_waterConstMirrors[kPilotWaterConst_ConstColor1] );
+            __glewUniform4fv( m->locBumpMultiFlags, 1, s_waterConstMirrors[kPilotWaterConst_BumpMultiFlags] );
+            __glewUniform4fv( m->locScrollScaleArr, kPilotMaxScrollScaleVec4s, &s_scrollScaleMirror[0][0] );
+            if ( m->locSpecular2 >= 0 )
+                __glewUniform4fv( m->locSpecular2, 1, s_specular2Mirror );
+            if ( m->locMiscParam >= 0 )
+                __glewUniform4fv( m->locMiscParam, 1, s_miscParamMirror );
+        }
         if (( ! m->usesBumpConstants ) && ( m->locSpecular1 >= 0 ))
             __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
         if ( m->usesBumpConstants )
@@ -2151,7 +2675,8 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
     m->activeFF = useFF;
     {
         m->activationLogged = true;
-        if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask | kPilotBumpModelKindMask | kPilotBumpMultiKindMask ))
+        if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask | kPilotBumpModelKindMask |
+                                   kPilotBumpMultiKindMask | kPilotBumpMultiHQKindMask ))
             printf( "GLSL pilot: %s active (%s vertex variant)\n", m->name,
                 pilotVertexKindName( entry->kind ) );
         else if ( entry->kind == kPilotVertexKind_FixedFunction )
@@ -2520,6 +3045,23 @@ void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s )
         if ( m->locScrollScaleArr >= 0 )
             __glewUniform4fv( m->locScrollScaleArr, nNumVec4s, &s_scrollScaleMirror[0][0] );
     }
+}
+
+// multi9 fragment constants (same always-mirror contract): the material-2
+// specular (setupSpecularColor, dual-material MULTI draws only) and the
+// 'lights on' addglow threshold/seed (setupBumpMultiPixelShader)
+void rt_glslpilot_onSpecular2Param( const GLfloat* vec4 )
+{
+    memcpy( s_specular2Mirror, vec4, sizeof( s_specular2Mirror ) );
+    if (( s_activeMaterial >= 0 ) && ( s_materials[s_activeMaterial].locSpecular2 >= 0 ))
+        __glewUniform4fv( s_materials[s_activeMaterial].locSpecular2, 1, s_specular2Mirror );
+}
+
+void rt_glslpilot_onMiscParam( const GLfloat* vec4 )
+{
+    memcpy( s_miscParamMirror, vec4, sizeof( s_miscParamMirror ) );
+    if (( s_activeMaterial >= 0 ) && ( s_materials[s_activeMaterial].locMiscParam >= 0 ))
+        __glewUniform4fv( s_materials[s_activeMaterial].locMiscParam, 1, s_miscParamMirror );
 }
 
 void rt_glslpilot_resetPrograms( void )

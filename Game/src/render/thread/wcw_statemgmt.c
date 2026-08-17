@@ -2612,6 +2612,16 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onScrollScaleParam( vec4Arr, nNumVec4s );
     }
+    // multi9 (BLENDMODE_MULTI) fragment constants: the material-2 specular
+    // and the 'lights on' addglow threshold/seed; same always-mirror contract
+    if ( id == kShaderParam_Specular2ColorAndExponentFP )
+    {
+        rt_glslpilot_onSpecular2Param( vec4Arr );
+    }
+    if ( id == kShaderParam_MiscParamFP )
+    {
+        rt_glslpilot_onMiscParam( vec4Arr );
+    }
 
     #if RT_SUPPORT_ARB_SHADER_PATH
     if ( ! rt_cgGetCgShaderMode() )

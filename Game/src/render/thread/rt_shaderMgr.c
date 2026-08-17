@@ -1024,6 +1024,15 @@ void shaderMgr_InitFPs(void)
     // water variant 0 (BMB_DEFAULT: refraction, no planar reflection / shadow);
     // only present in the variant table when GFXF_WATER survives startup
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Water, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][0] );
+    // multi9: the five static-map variants that bind with shaderDetail=3 and
+    // no cubemap/shadowmap support — full, full HQ, single, single HQ,
+    // building. The remaining variants (cubemap/planar/shadow/reduced) stay
+    // on the ARB path.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Full, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9FullHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_HIGH_QUALITY] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Single, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_SINGLE_MATERIAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9SingleHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_HIGH_QUALITY | BMB_SINGLE_MATERIAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Building, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_BUILDING] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1318,9 +1327,12 @@ void shaderMgr_InitVPs(void)
     // g_Prelit switch
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_NORMALS], kPilotVertexKind_BumpNormals, 0 );
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_RGBS], kPilotVertexKind_BumpRGBS, 0 );
-    // the static FAUX_MULTI variant the water material (and unported multi9)
-    // pairs with: bump_dual_multi, VERTEX_LIT=PRELIT_WHITE (constant color)
+    // the static FAUX_MULTI variant the water material and the multi9 pilot
+    // materials pair with: bump_dual_multi, VERTEX_LIT=PRELIT_WHITE (constant
+    // color); its BIT_HIGH_QUALITY sibling feeds the HQ multi9 variants (the
+    // RGBS baked-lighting and skinned multitex pairings stay on ARB)
     rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_MULTITEX], kPilotVertexKind_BumpMulti, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_MULTITEX], kPilotVertexKind_BumpMultiHQ, 0 );
     // id 0 pairs the effects materials with the fixed-function vertex path
     // (the pbuffer post-processing passes run with vertex programs disabled)
     rt_glslpilot_addVertexProgram( 0, kPilotVertexKind_FixedFunction, 0 );
