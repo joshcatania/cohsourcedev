@@ -26,7 +26,10 @@
 
 #include "render/thread/ogl.h"
 #include "render/thread/rt_glslpilot.h"
+#include "render/thread/rt_shaderMgr.h"
+#include "render/thread/rt_effects.h"
 #include "cmdparse/cmdgame.h"
+#include <stdio.h>
 #include <string.h>
 
 // ogl.h #undef's the GLEW macro names for GL 2.0 shader entry points as a
@@ -2821,6 +2824,138 @@ static const char* pilotVertexKindName( tPilotVertexKind kind )
     }
 }
 
+static const char* pilotDrawModeName( DrawModeType drawMode )
+{
+    switch ( drawMode )
+    {
+        case DRAWMODE_SPRITE: return "DRAWMODE_SPRITE";
+        case DRAWMODE_DUALTEX: return "DRAWMODE_DUALTEX";
+        case DRAWMODE_COLORONLY: return "DRAWMODE_COLORONLY";
+        case DRAWMODE_DUALTEX_NORMALS: return "DRAWMODE_DUALTEX_NORMALS";
+        case DRAWMODE_DUALTEX_LIT_PP: return "DRAWMODE_DUALTEX_LIT_PP";
+        case DRAWMODE_FILL: return "DRAWMODE_FILL";
+        case DRAWMODE_BUMPMAP_SKINNED: return "DRAWMODE_BUMPMAP_SKINNED";
+        case DRAWMODE_HW_SKINNED: return "DRAWMODE_HW_SKINNED";
+        case DRAWMODE_BUMPMAP_NORMALS: return "DRAWMODE_BUMPMAP_NORMALS";
+        case DRAWMODE_BUMPMAP_NORMALS_PP: return "DRAWMODE_BUMPMAP_NORMALS_PP";
+        case DRAWMODE_BUMPMAP_DUALTEX: return "DRAWMODE_BUMPMAP_DUALTEX";
+        case DRAWMODE_BUMPMAP_RGBS: return "DRAWMODE_BUMPMAP_RGBS";
+        case DRAWMODE_BUMPMAP_MULTITEX: return "DRAWMODE_BUMPMAP_MULTITEX";
+        case DRAWMODE_BUMPMAP_MULTITEX_RGBS: return "DRAWMODE_BUMPMAP_MULTITEX_RGBS";
+        case DRAWMODE_BUMPMAP_SKINNED_MULTITEX: return "DRAWMODE_BUMPMAP_SKINNED_MULTITEX";
+        case DRAWMODE_DEPTH_ONLY: return "DRAWMODE_DEPTH_ONLY";
+        case DRAWMODE_DEPTHALPHA_ONLY: return "DRAWMODE_DEPTHALPHA_ONLY";
+        case DRAWMODE_DEPTH_SKINNED: return "DRAWMODE_DEPTH_SKINNED";
+        default: return "DRAWMODE_UNKNOWN";
+    }
+}
+
+static void pilotAppendBmbName( char* buffer, size_t bufferSize, const char* name, bool* first )
+{
+    if ( !*first )
+        strcat_s( buffer, bufferSize, "|" );
+    strcat_s( buffer, bufferSize, name );
+    *first = false;
+}
+
+static void pilotFormatBmb( int bmb, char* buffer, size_t bufferSize )
+{
+    bool first = true;
+    buffer[0] = '\0';
+    if ( !bmb )
+    {
+        strcpy_s( buffer, bufferSize, "BMB_DEFAULT" );
+        return;
+    }
+    if ( bmb & BMB_HIGH_QUALITY )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_HIGH_QUALITY", &first );
+    if ( bmb & BMB_SHADOWMAP )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_SHADOWMAP", &first );
+    if ( bmb & BMB_CUBEMAP )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_CUBEMAP", &first );
+    if ( bmb & BMB_PLANAR_REFLECTION )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_PLANAR_REFLECTION", &first );
+    if ( bmb & BMB_SINGLE_MATERIAL )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_SINGLE_MATERIAL", &first );
+    if ( bmb & BMB_BUILDING )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_BUILDING", &first );
+#ifndef FINAL
+    if ( bmb & BMB_DEBUG )
+        pilotAppendBmbName( buffer, bufferSize, "BMB_DEBUG", &first );
+#endif
+    if ( first )
+        sprintf_s( buffer, bufferSize, "BMB_UNKNOWN_0x%X", bmb );
+}
+
+static bool pilotDescribeFragmentProgram( GLuint fragmentPgmId, char* buffer, size_t bufferSize )
+{
+    int shader;
+    int bmb;
+    char bmbName[160];
+    char effectPath[256];
+
+    for ( shader = 0; shader < BLENDMODE_NUMENTRIES; ++shader )
+    {
+        for ( bmb = 0; bmb < BMB_VARIANT_COUNT; ++bmb )
+        {
+            if ( g_shaderMgrFragmentProgramVariants[shader][bmb] == (int)fragmentPgmId )
+            {
+                pilotFormatBmb( bmb, bmbName, sizeof( bmbName ) );
+                sprintf_s( buffer, bufferSize, "BlendModeShader=%s variant=%s",
+                    blend_mode_names[shader], bmbName );
+                return true;
+            }
+        }
+    }
+
+    for ( shader = 0; getSpecialShaderName( shader, effectPath, sizeof( effectPath ), NULL, NULL ); ++shader )
+    {
+        if ( shaderEffectsPrograms[shader] == (int)fragmentPgmId )
+        {
+            sprintf_s( buffer, bufferSize, "EffectShader[%d]=%s", shader, effectPath );
+            return true;
+        }
+    }
+
+    strcpy_s( buffer, bufferSize, "unknown-fragment" );
+    return false;
+}
+
+static void pilotDescribeVertexProgram( GLuint vertexPgmId, char* buffer, size_t bufferSize )
+{
+    int entryIndex = pilotFindVertexEntry( vertexPgmId );
+    int drawMode;
+
+    if ( vertexPgmId == 0 )
+    {
+        strcpy_s( buffer, bufferSize, "vertex=0 kind=fixed-function" );
+        return;
+    }
+    if ( entryIndex >= 0 )
+    {
+        sprintf_s( buffer, bufferSize, "vertex=%d kind=%s litMode=%d",
+            (int)vertexPgmId, pilotVertexKindName( s_vertexEntries[entryIndex].kind ),
+            s_vertexEntries[entryIndex].vertexLitMode );
+        return;
+    }
+    for ( drawMode = 0; drawMode < DRAWMODE_NUMENTRIES; ++drawMode )
+    {
+        if ( shaderMgrVertexPrograms[drawMode] == (int)vertexPgmId )
+        {
+            sprintf_s( buffer, bufferSize, "vertex=%d drawMode=%s quality=LQ pilot-unregistered",
+                (int)vertexPgmId, pilotDrawModeName( (DrawModeType)drawMode ) );
+            return;
+        }
+        if ( shaderMgrVertexProgramsHQ[drawMode] == (int)vertexPgmId )
+        {
+            sprintf_s( buffer, bufferSize, "vertex=%d drawMode=%s quality=HQ pilot-unregistered",
+                (int)vertexPgmId, pilotDrawModeName( (DrawModeType)drawMode ) );
+            return;
+        }
+    }
+    sprintf_s( buffer, bufferSize, "vertex=%d kind=unregistered", (int)vertexPgmId );
+}
+
 static bool pilotActivate( int material, const tPilotVertexEntry* entry )
 {
     tPilotMaterial* m = &s_materials[material];
@@ -3049,24 +3184,39 @@ bool rt_glslpilot_isActive( void )
     return s_activeMaterial >= 0;
 }
 
-void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId )
+void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId, GLuint vertexPgmId )
 {
-    // one-time-per-id coverage map: with the pilot on, the client log ends
-    // up enumerating every material that still renders through ARB/Cg
-    static GLuint seenIds[32];
+    typedef struct tPilotFragmentFallback {
+        GLuint fragmentPgmId;
+        GLuint vertexPgmId;
+    } tPilotFragmentFallback;
+    static tPilotFragmentFallback seen[128];
     static int seenCount = 0;
+    char fragmentDescription[256];
+    char vertexDescription[192];
+    int material;
     int i;
 
     if ( ! game_state.glslPilot || ( ! fragmentPgmId ) || ( fragmentPgmId == 0xFFFFFFFF ) )
         return;
     for ( i = 0; i < seenCount; i++ )
     {
-        if ( seenIds[i] == fragmentPgmId )
+        if (( seen[i].fragmentPgmId == fragmentPgmId ) &&
+            ( seen[i].vertexPgmId == vertexPgmId ))
             return;
     }
-    if ( seenCount < (int)( sizeof( seenIds ) / sizeof( seenIds[0] ) ) )
-        seenIds[seenCount++] = fragmentPgmId;
-    printf( "GLSL pilot: coverage: unported fragment program %d bound\n", (int)fragmentPgmId );
+    if ( seenCount >= (int)( sizeof( seen ) / sizeof( seen[0] ) ) )
+        return;
+    seen[seenCount].fragmentPgmId = fragmentPgmId;
+    seen[seenCount].vertexPgmId = vertexPgmId;
+    seenCount++;
+    material = pilotFindMaterial( fragmentPgmId );
+    pilotDescribeFragmentProgram( fragmentPgmId, fragmentDescription, sizeof( fragmentDescription ) );
+    pilotDescribeVertexProgram( vertexPgmId, vertexDescription, sizeof( vertexDescription ) );
+    printf( "GLSL pilot: coverage: fallback %s (arbFragment=%d) %s; classification=%s\n",
+        fragmentDescription, (int)fragmentPgmId, vertexDescription,
+        ( material >= 0 ) ? "pilot-target-declined-on-vertex-pairing"
+                          : "unported-fragment-variant" );
 }
 
 void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragmentPgmId )
@@ -3075,7 +3225,10 @@ void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragment
         GLuint vertexPgmId;
         GLuint logicalFragmentPgmId;
     } tPilotFallbackDiagnostic;
-    static tPilotFallbackDiagnostic seen[64];
+    static tPilotFallbackDiagnostic seen[128];
+    char fragmentDescription[256];
+    char vertexDescription[192];
+    int material;
     static int seenCount = 0;
     int i;
 
@@ -3087,15 +3240,19 @@ void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragment
             ( seen[i].logicalFragmentPgmId == logicalFragmentPgmId ))
             return;
     }
-    if ( seenCount < (int)( sizeof( seen ) / sizeof( seen[0] ) ) )
-    {
-        seen[seenCount].vertexPgmId = vertexPgmId;
-        seen[seenCount].logicalFragmentPgmId = logicalFragmentPgmId;
-        seenCount++;
-    }
-    printf( "GLSL pilot: fallback to ARB vertex %d with logical fragment %d; "
+    if ( seenCount >= (int)( sizeof( seen ) / sizeof( seen[0] ) ) )
+        return;
+    seen[seenCount].vertexPgmId = vertexPgmId;
+    seen[seenCount].logicalFragmentPgmId = logicalFragmentPgmId;
+    seenCount++;
+    material = pilotFindMaterial( logicalFragmentPgmId );
+    pilotDescribeFragmentProgram( logicalFragmentPgmId, fragmentDescription, sizeof( fragmentDescription ) );
+    pilotDescribeVertexProgram( vertexPgmId, vertexDescription, sizeof( vertexDescription ) );
+    printf( "GLSL pilot: fallback pair: %s (logicalFragment=%d) %s; classification=%s; "
             "legacy fragment request is synchronized; final prep will bind before draw\n",
-            (int)vertexPgmId, (int)logicalFragmentPgmId );
+            fragmentDescription, (int)logicalFragmentPgmId, vertexDescription,
+            ( material >= 0 ) ? "pilot-target-declined-on-vertex-pairing"
+                              : "unported-fragment-with-legacy-vertex-pairing" );
 }
 
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 )

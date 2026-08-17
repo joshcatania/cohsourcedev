@@ -2311,7 +2311,7 @@ void WCW_BindFragmentProgram(GLuint id)
         if ( !pilotHandled )
         {
             // coverage diagnostic: record materials still on the ARB/Cg path
-            rt_glslpilot_noteUnportedFragmentBind( id );
+            rt_glslpilot_noteUnportedFragmentBind( id, boundVertexProgram );
         }
 
         // Keep the legacy fragment binding truthful even while glUseProgram()

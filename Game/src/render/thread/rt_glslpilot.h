@@ -238,10 +238,11 @@ void rt_glslpilot_onSpecular2Param( const GLfloat* vec4 );
 void rt_glslpilot_onMiscParam( const GLfloat* vec4 );
 
 // Coverage diagnostic: called by WCW_BindFragmentProgram for binds the pilot
-// did not handle. Logs each distinct fragment program id once (per process)
-// so a capture's client log enumerates which materials still render through
-// the ARB/Cg path. No-ops unless the pilot switch is on.
-void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId );
+// did not handle. Logs each distinct fragment/vertex pair once (per process)
+// with symbolic fragment and vertex descriptions, so a capture's client log
+// distinguishes a declined pairing from a genuinely unported fragment.
+// No-ops unless the pilot switch is on.
+void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId, GLuint vertexPgmId );
 
 // Pilot-gated fallback diagnostic: called after an unsupported vertex pairing
 // deactivates GLSL and the legacy vertex bind has completed. Logs the engine's
