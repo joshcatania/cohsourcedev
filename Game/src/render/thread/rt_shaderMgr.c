@@ -1033,6 +1033,9 @@ void shaderMgr_InitFPs(void)
     // water BIT_PLANAR_REFLECTION: this is intentionally separate from the
     // combined BMB_SHADOWMAP | BMB_PLANAR_REFLECTION permutation.
     rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterPlanar, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_PLANAR_REFLECTION] );
+    // water combined shadow + planar reflection: resolve the generated target
+    // from the symbolic bitmask rather than a historical program number.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterShadowPlanar, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_SHADOWMAP | BMB_PLANAR_REFLECTION] );
     // multi9: the five static-map variants that bind with shaderDetail=3 and
     // no cubemap/shadowmap support — full, full HQ, single, single HQ,
     // building. The remaining variants (cubemap/planar/shadow/reduced) stay

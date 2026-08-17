@@ -2231,9 +2231,13 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     // cascaded-shadow uniforms and activates the shadow branch.
     { 0, "BLENDMODE_WATER_SHADOW", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // the same material with BIT_PLANAR_REFLECTION. It deliberately has no
-    // shadow block: the combined planar+shadow permutation is outside issue
-    // #9. The static bump_dual_multi vertex pairing is unchanged.
+    // shadow block: the combined planar+shadow permutation is registered as
+    // a separate row below. The static bump_dual_multi vertex pairing is
+    // unchanged.
     { 0, "BLENDMODE_WATER_PLANAR", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // composition of the verified shadow and planar variants; both existing
+    // state blocks are enabled by pilotInit for this row
+    { 0, "BLENDMODE_WATER_SHADOW_PLANAR", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // multi9 (BLENDMODE_MULTI): the five static-map variants; the LQ variants
     // pair with the PRELIT_WHITE FAUX_MULTI vertex variant (the RGBS baked-
     // lighting pairing stays on ARB), the HQ variants with its BIT_HIGH_QUALITY
@@ -2495,9 +2499,11 @@ static bool pilotInitFF( int material )
 static bool pilotInit( int material )
 {
     tPilotMaterial* m = &s_materials[material];
-    if ( material == kPilotMaterial_WaterShadow )
+    if (( material == kPilotMaterial_WaterShadow ) ||
+        ( material == kPilotMaterial_WaterShadowPlanar ))
         m->usesShadowConstants = true;
-    if ( material == kPilotMaterial_WaterPlanar )
+    if (( material == kPilotMaterial_WaterPlanar ) ||
+        ( material == kPilotMaterial_WaterShadowPlanar ))
         m->usesWaterReflectionConstants = true;
     bool isBumpLQ = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
     bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
@@ -2933,7 +2939,9 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
     s_activeMaterial = material;
     m->activeFF = useFF;
     {
-        if (( material == kPilotMaterial_WaterPlanar ) && ( ! m->activationLogged ))
+        if (( ( material == kPilotMaterial_WaterPlanar ) ||
+              ( material == kPilotMaterial_WaterShadowPlanar )) &&
+            ( ! m->activationLogged ))
             printf( "GLSL pilot: %s runtime fragment=%d vertex=%d kind=%s\n",
                 m->name, (int)m->arbFragmentId, (int)entry->pgmId,
                 pilotVertexKindName( entry->kind ) );
@@ -3423,7 +3431,7 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d water=%d waterShadow=%d waterPlanar=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d water=%d waterShadow=%d waterPlanar=%d waterShadowPlanar=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
@@ -3435,6 +3443,7 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
             (int)s_materials[kPilotMaterial_Water].arbFragmentId,
             (int)s_materials[kPilotMaterial_WaterShadow].arbFragmentId,
             (int)s_materials[kPilotMaterial_WaterPlanar].arbFragmentId,
+            (int)s_materials[kPilotMaterial_WaterShadowPlanar].arbFragmentId,
             s_vertexEntryCount );
         if ( material == kPilotMaterial_Multi9Building )
         {

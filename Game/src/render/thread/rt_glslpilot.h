@@ -38,6 +38,7 @@ typedef enum ePilotMaterial {
                                     // material plus the cascaded shadow-map lookup)
     kPilotMaterial_WaterPlanar,     // waterfp.cg BIT_PLANAR_REFLECTION (water
                                     // reflection pbuffer plus the shipped Fresnel blend)
+    kPilotMaterial_WaterShadowPlanar, // waterfp.cg BMB_SHADOWMAP | BMB_PLANAR_REFLECTION
     // multi9fp.cg ('BLENDMODE_MULTI', the multi material): the five variants
     // that bind on static maps with shaderDetail=3 and no cubemap/shadowmap
     // support — the dual-material full modes, the single-material modes, and
