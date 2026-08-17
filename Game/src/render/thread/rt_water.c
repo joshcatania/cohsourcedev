@@ -320,7 +320,9 @@ void modelDrawWater( RdrModel *draw, U8 * rgbs, RdrTexList *texlist)
         if (!s_noted)
         {
             s_noted = true;
-            printf("WATERTRACE: modelDrawWater first entry\n");
+            printf("WATERTRACE: modelDrawWater first entry blendBits=%d planarPbuffer=%d\n",
+                   draw->blend_mode.blend_bits,
+                   water_params.water_reflection_pbuffer ? 1 : 0);
         }
     }
 

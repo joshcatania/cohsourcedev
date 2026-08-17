@@ -2609,6 +2609,18 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onWaterParam( kPilotWaterConst_RefractionParams, vec4Arr );
     }
+    if ( id == kShaderParam_WaterReflectionTransformFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ReflectionTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterReflectionParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ReflectionParams, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterFresnelParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_FresnelParams, vec4Arr );
+    }
     if ( id == kShaderParam_BumpMultiFlagsFP )
     {
         rt_glslpilot_onWaterParam( kPilotWaterConst_BumpMultiFlags, vec4Arr );

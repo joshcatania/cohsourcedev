@@ -735,6 +735,7 @@ static const char s_waterFragmentSource[] =
 "uniform sampler2D sampler_base_1;              // TEXUNIT0\n"
 "uniform sampler2D sampler_multiply_1;          // TEXUNIT1\n"
 "uniform sampler2D sampler_normal_and_gloss_1;  // TEXUNIT2\n"
+"uniform sampler2D sampler_reflection;           // TEXUNIT3 (water reflection pbuffer)\n"
 "uniform sampler2D sampler_refraction;          // TEXUNIT5 (rt_water.c pbuffer)\n"
 "uniform sampler2D sampler_refraction_depth;    // TEXUNIT6 (depth for the skew clamp)\n"
 "uniform sampler2D sampler_normal_and_gloss_2;  // TEXUNIT7\n"
@@ -748,6 +749,9 @@ static const char s_waterFragmentSource[] =
 "uniform vec4 g_ConstColor1FP;                  // TIE(ENV4), material tint color 1\n"
 "uniform vec4 g_WaterRefractionTransformFP;     // TIE(ENV7); .xy = 1/refraction texture size\n"
 "uniform vec4 g_WaterRefractionParamsFP;        // TIE(ENV22); skew normal/depth scale, min skew\n"
+"uniform vec4 g_WaterReflectionTransformFP;      // TIE(ENV6); .xy = 1/screen size\n"
+"uniform vec4 g_WaterReflectionParamsFP;         // TIE(ENV23); .x = skew, .y = reflectivity\n"
+"uniform vec4 g_WaterFresnelParamsFP;            // TIE(ENV24); bias, scale, power\n"
 "uniform vec4 g_BumpMultiFlagsFP;               // TIE(ENV10); bit0 = reflect uv, bit3 = alpha water\n"
 "uniform vec4 g_ScrollScaleArrFP[10];           // TIE(ENV12..21); xy scroll, zw scale per layer\n"
 "uniform bool g_UseShadowMap;                   // pilot target selector\n"
@@ -760,6 +764,7 @@ static const char s_waterFragmentSource[] =
 "uniform vec4 g_ShadowSplitsFP;                 // TIE(ENV49)\n"
 "uniform vec4 g_ShadowParams2FP;                // TIE(ENV50)\n"
 "uniform vec4 g_ShadowParams3FP;                // TIE(ENV51)\n"
+"uniform bool g_UsePlanarReflection;            // pilot target selector\n"
 "\n"
 "varying vec3 vLightTs;\n"
 "varying vec3 vViewTs;\n"
@@ -967,8 +972,32 @@ static const char s_waterFragmentSource[] =
 "\n"
 "    // refraction blend, then apply_lighting_gloss_only\n"
 "    out_color = mix( out_color, refracted, g_GlossParamFP.w );\n"
-"    out_color += clamp( light_factors.z * g_GlossParamFP.x\n"
-"                       * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"    vec3 gloss = clamp( light_factors.z * g_GlossParamFP.x\n"
+"                        * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"    if ( g_UsePlanarReflection )\n"
+"    {\n"
+"        // waterfp.cg BIT_PLANAR_REFLECTION: WPOS screen uv, Y-flipped for\n"
+"        // the reflection pbuffer, then normal skew in screen pixels.\n"
+"        vec2 reflectionTexCoord = gl_FragCoord.xy * g_WaterReflectionTransformFP.xy;\n"
+"        reflectionTexCoord.y = ( reflectionTexCoord.y * -1.0 ) + 1.0;\n"
+"        reflectionTexCoord += skewFromNormal * g_WaterReflectionParamsFP.x;\n"
+"        vec3 reflection = texture2D( sampler_reflection, reflectionTexCoord ).rgb;\n"
+"\n"
+"        // calc_reflectivity_hq(view_ts, normal_ts, fresnel):\n"
+"        // saturate(bias + scale * pow(1 - saturate(NdotV), power)).\n"
+"        float fresnelTerm = clamp( g_WaterFresnelParamsFP.x\n"
+"                                   + g_WaterFresnelParamsFP.y\n"
+"                                   * pow( 1.0 - clamp( dot( view_ts, normal_ts.xyz ), 0.0, 1.0 ),\n"
+"                                          g_WaterFresnelParamsFP.z ), 0.0, 1.0 );\n"
+"        vec3 reflectionGloss = ( 1.0 - gloss )\n"
+"                              * ( g_WaterReflectionParamsFP.y * fresnelTerm );\n"
+"        out_color = mix( out_color, reflection, reflectionGloss );\n"
+"        out_color += gloss;\n"
+"    }\n"
+"    else\n"
+"    {\n"
+"        out_color += gloss;\n"
+"    }\n"
 "\n"
 "    // calc_fogged_color (same GL fog state as the other materials)\n"
 "    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
@@ -2043,6 +2072,14 @@ typedef struct tPilotMaterial
     GLint               locShadowSplits;
     GLint               locShadowParams2;
     GLint               locShadowParams3;
+    // water BIT_PLANAR_REFLECTION constants. Appended so the existing
+    // positional material initializers remain valid; the planar row enables
+    // this block in pilotInit before resolving its locations.
+    bool                usesWaterReflectionConstants;
+    GLint               locWaterReflectionTransform;
+    GLint               locWaterReflectionParams;
+    GLint               locWaterFresnelParams;
+    GLint               locUsePlanarReflection;
 } tPilotMaterial;
 
 #define kPilotKindBit( kind ) ( 1u << (kind) )
@@ -2094,13 +2131,14 @@ static const tPilotSampler s_bumpMultiplySamplers[] = {
     { NULL, -1 },
 };
 
-// water sampler/unit map (names mirror waterfp.cg; units 5/6 are the
-// refraction pbuffer color/depth bound by rt_water.c, unit 7 the second
-// scrolling normal map)
+// water sampler/unit map (names mirror waterfp.cg; unit 3 is the water
+// reflection pbuffer, units 5/6 are the refraction pbuffer color/depth bound
+// by rt_water.c, and unit 7 is the second scrolling normal map)
 static const tPilotSampler s_waterSamplers[] = {
     { "sampler_base_1",              0 },
     { "sampler_multiply_1",          1 },
     { "sampler_normal_and_gloss_1",  2 },
+    { "sampler_reflection",           3 },
     { "sampler_refraction",          5 },
     { "sampler_refraction_depth",    6 },
     { "sampler_normal_and_gloss_2",  7 },
@@ -2192,6 +2230,10 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     // water/refraction constants; pilotInit additionally resolves the
     // cascaded-shadow uniforms and activates the shadow branch.
     { 0, "BLENDMODE_WATER_SHADOW", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // the same material with BIT_PLANAR_REFLECTION. It deliberately has no
+    // shadow block: the combined planar+shadow permutation is outside issue
+    // #9. The static bump_dual_multi vertex pairing is unchanged.
+    { 0, "BLENDMODE_WATER_PLANAR", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // multi9 (BLENDMODE_MULTI): the five static-map variants; the LQ variants
     // pair with the PRELIT_WHITE FAUX_MULTI vertex variant (the RGBS baked-
     // lighting pairing stays on ARB), the HQ variants with its BIT_HIGH_QUALITY
@@ -2455,6 +2497,8 @@ static bool pilotInit( int material )
     tPilotMaterial* m = &s_materials[material];
     if ( material == kPilotMaterial_WaterShadow )
         m->usesShadowConstants = true;
+    if ( material == kPilotMaterial_WaterPlanar )
+        m->usesWaterReflectionConstants = true;
     bool isBumpLQ = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
     bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
     bool isBumpModel = ( m->vertexKindMask & kPilotBumpModelKindMask ) != 0;
@@ -2593,6 +2637,13 @@ static bool pilotInit( int material )
         m->locWaterRefractParams = __glewGetUniformLocation( m->program, "g_WaterRefractionParamsFP" );
         m->locBumpMultiFlags = __glewGetUniformLocation( m->program, "g_BumpMultiFlagsFP" );
         m->locScrollScaleArr = __glewGetUniformLocation( m->program, "g_ScrollScaleArrFP[0]" );
+        if ( m->usesWaterReflectionConstants )
+        {
+            m->locWaterReflectionTransform = __glewGetUniformLocation( m->program, "g_WaterReflectionTransformFP" );
+            m->locWaterReflectionParams = __glewGetUniformLocation( m->program, "g_WaterReflectionParamsFP" );
+            m->locWaterFresnelParams = __glewGetUniformLocation( m->program, "g_WaterFresnelParamsFP" );
+            m->locUsePlanarReflection = __glewGetUniformLocation( m->program, "g_UsePlanarReflection" );
+        }
     }
     if ( m->usesShadowConstants )
     {
@@ -2651,6 +2702,10 @@ static bool pilotInit( int material )
         ( m->usesWaterConstants && (( m->locConstColor0FP < 0 ) || ( m->locConstColor1FP < 0 ) ||
                                     ( m->locWaterRefractTransform < 0 ) || ( m->locWaterRefractParams < 0 ) ||
                                     ( m->locBumpMultiFlags < 0 ) || ( m->locScrollScaleArr < 0 ))) ||
+        ( m->usesWaterReflectionConstants && (( m->locWaterReflectionTransform < 0 ) ||
+                                              ( m->locWaterReflectionParams < 0 ) ||
+                                              ( m->locWaterFresnelParams < 0 ) ||
+                                              ( m->locUsePlanarReflection < 0 ))) ||
         ( m->usesShadowConstants && (( m->locUseShadowMap < 0 ) || ( m->locShadowFilterMode < 0 ) ||
                                      ( m->locShadowMap[0] < 0 ) || ( m->locShadowMap[1] < 0 ) ||
                                      ( m->locShadowMap[2] < 0 ) || ( m->locShadowMap[3] < 0 ) ||
@@ -2822,6 +2877,13 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
             __glewUniform4fv( m->locWaterRefractParams, 1, s_waterConstMirrors[kPilotWaterConst_RefractionParams] );
             __glewUniform4fv( m->locBumpMultiFlags, 1, s_waterConstMirrors[kPilotWaterConst_BumpMultiFlags] );
             __glewUniform4fv( m->locScrollScaleArr, kPilotMaxScrollScaleVec4s, &s_scrollScaleMirror[0][0] );
+            if ( m->usesWaterReflectionConstants )
+            {
+                __glewUniform4fv( m->locWaterReflectionTransform, 1, s_waterConstMirrors[kPilotWaterConst_ReflectionTransform] );
+                __glewUniform4fv( m->locWaterReflectionParams, 1, s_waterConstMirrors[kPilotWaterConst_ReflectionParams] );
+                __glewUniform4fv( m->locWaterFresnelParams, 1, s_waterConstMirrors[kPilotWaterConst_FresnelParams] );
+                __glewUniform1i( m->locUsePlanarReflection, 1 );
+            }
         }
         if ( m->usesShadowConstants )
         {
@@ -2871,6 +2933,10 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
     s_activeMaterial = material;
     m->activeFF = useFF;
     {
+        if (( material == kPilotMaterial_WaterPlanar ) && ( ! m->activationLogged ))
+            printf( "GLSL pilot: %s runtime fragment=%d vertex=%d kind=%s\n",
+                m->name, (int)m->arbFragmentId, (int)entry->pgmId,
+                pilotVertexKindName( entry->kind ) );
         m->activationLogged = true;
         if ( m->vertexKindMask & ( kPilotBumpKindMask | kPilotBumpHQKindMask | kPilotBumpModelKindMask |
                                    kPilotBumpMultiKindMask | kPilotBumpMultiHQKindMask ))
@@ -3249,6 +3315,9 @@ void rt_glslpilot_onWaterParam( int waterConstSlot, const GLfloat* vec4 )
             case kPilotWaterConst_RefractionTransform: loc = m->locWaterRefractTransform; break;
             case kPilotWaterConst_RefractionParams:   loc = m->locWaterRefractParams; break;
             case kPilotWaterConst_BumpMultiFlags:     loc = m->locBumpMultiFlags; break;
+            case kPilotWaterConst_ReflectionTransform: loc = m->locWaterReflectionTransform; break;
+            case kPilotWaterConst_ReflectionParams:   loc = m->locWaterReflectionParams; break;
+            case kPilotWaterConst_FresnelParams:      loc = m->locWaterFresnelParams; break;
             default: break;
         }
     }
@@ -3354,7 +3423,7 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d water=%d waterShadow=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d water=%d waterShadow=%d waterPlanar=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
@@ -3365,6 +3434,7 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
             (int)s_materials[kPilotMaterial_BumpMultiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_Water].arbFragmentId,
             (int)s_materials[kPilotMaterial_WaterShadow].arbFragmentId,
+            (int)s_materials[kPilotMaterial_WaterPlanar].arbFragmentId,
             s_vertexEntryCount );
         if ( material == kPilotMaterial_Multi9Building )
         {

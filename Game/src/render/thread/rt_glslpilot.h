@@ -36,6 +36,8 @@ typedef enum ePilotMaterial {
                                     // bind once GFXF_MULTITEX survives startup)
     kPilotMaterial_WaterShadow,     // waterfp.cg BIT_SHADOWMAP (same refraction
                                     // material plus the cascaded shadow-map lookup)
+    kPilotMaterial_WaterPlanar,     // waterfp.cg BIT_PLANAR_REFLECTION (water
+                                    // reflection pbuffer plus the shipped Fresnel blend)
     // multi9fp.cg ('BLENDMODE_MULTI', the multi material): the five variants
     // that bind on static maps with shaderDetail=3 and no cubemap/shadowmap
     // support — the dual-material full modes, the single-material modes, and
@@ -199,6 +201,9 @@ typedef enum ePilotWaterConst {
     kPilotWaterConst_RefractionTransform,
     kPilotWaterConst_RefractionParams,
     kPilotWaterConst_BumpMultiFlags,
+    kPilotWaterConst_ReflectionTransform,
+    kPilotWaterConst_ReflectionParams,
+    kPilotWaterConst_FresnelParams,
     kPilotWaterConst_Count
 } tPilotWaterConstId;
 

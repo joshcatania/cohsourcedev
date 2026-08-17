@@ -775,16 +775,19 @@ static bool isVariantSupported( int shader, int bmb )
 // startup diagnostics (water port investigation; see docs/agent-status.md).
 static void traceFeatureState(const char *where)
 {
-    printf("FEATTRACE: %s allowed[water=%d multi=%d multiDual=%d bump=%d] features[water=%d multi=%d bump=%d] waterMode=%d\n",
+    printf("FEATTRACE: %s allowed[water=%d multi=%d multiDual=%d bump=%d cubemap=%d] features[water=%d multi=%d bump=%d cubemap=%d] waterMode=%d reflectionEnable=%d\n",
            where,
            (rdr_caps.allowed_features & GFXF_WATER) ? 1 : 0,
            (rdr_caps.allowed_features & GFXF_MULTITEX) ? 1 : 0,
            (rdr_caps.allowed_features & GFXF_MULTITEX_DUAL) ? 1 : 0,
            (rdr_caps.allowed_features & GFXF_BUMPMAPS) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_CUBEMAP) ? 1 : 0,
            (rdr_caps.features & GFXF_WATER) ? 1 : 0,
            (rdr_caps.features & GFXF_MULTITEX) ? 1 : 0,
            (rdr_caps.features & GFXF_BUMPMAPS) ? 1 : 0,
-           game_state.waterMode);
+           (rdr_caps.features & GFXF_CUBEMAP) ? 1 : 0,
+           game_state.waterMode,
+           game_state.reflectionEnable);
 }
 
 // If compilation fails then disable problem feature variations
@@ -1027,6 +1030,9 @@ void shaderMgr_InitFPs(void)
     // water BIT_SHADOWMAP: resolve the generated program symbolically so the
     // pilot follows shader reloads and feature-dependent program ids.
     rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterShadow, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_SHADOWMAP] );
+    // water BIT_PLANAR_REFLECTION: this is intentionally separate from the
+    // combined BMB_SHADOWMAP | BMB_PLANAR_REFLECTION permutation.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterPlanar, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_PLANAR_REFLECTION] );
     // multi9: the five static-map variants that bind with shaderDetail=3 and
     // no cubemap/shadowmap support — full, full HQ, single, single HQ,
     // building. The remaining variants (cubemap/planar/shadow/reduced) stay
