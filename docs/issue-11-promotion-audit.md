@@ -23,11 +23,11 @@ the hybrid mode.
 
 | Family | Pilot coverage | Vertex pairing | Status / intentional boundary |
 | --- | --- | --- | --- |
-| Modulate, multiply, color-blend dual, add-glow, alpha-detail | `BMB_DEFAULT` | dualtex | Formally verified where covered; add-glow is runtime-observed in the audit but still lacks a dedicated visual baseline. |
+| Modulate, multiply, color-blend dual, add-glow, alpha-detail | `BMB_DEFAULT` | dualtex | Formally verified where covered. AddGlow has a dedicated Talos parity baseline: two same-control runs passed at 0.0000% and 2.3994% changed pixels, with 487/491 activations and 0 declines; see [issue #8 evidence](https://github.com/joshcatania/cohsourcedev/issues/8#issuecomment-5315268516). |
 | Bump color-blend dual | `BMB_DEFAULT`, `BMB_HIGH_QUALITY` | bump-dual and skinned-bump, including HQ | Formally verified in the preflight suite. Other vertex families stay on synchronized ARB fallback. |
 | Bump multiply | `BMB_DEFAULT` | model-space bump / RGBS model-space variants | Formally verified; unrelated pairings remain ARB. |
-| Water | default, shadow, planar, and combined shadow+planar | bump-dual-multi LQ/HQ | Formally verified, including the high-settings Founders canal run. Unsupported water/vertex pairings are intentional ARB declines. |
-| Multi9 | default, HQ, single, single-HQ, building | static bump-dual-multi LQ/HQ | Static-map coverage is verified. RGBS/baked-lighting, skinned multitex, and other reflection/shadow/cubemap combinations remain intentional ARB coverage. |
+| Water | default, shadow, planar, and combined shadow+planar | `kPilotBumpMultiKindMask` only: static `bump_dual_multi` LQ | Formally verified, including the high-settings Founders canal run. The water rows do not use `kPilotBumpMultiHQKindMask`; unsupported water/vertex pairings are intentional ARB declines. |
+| Multi9 | default, single, building; Full HQ and Single HQ targets are implemented but unverified in the static pairing | static `bump_dual_multi` LQ for verified rows; static HQ pairing is `kPilotBumpMultiHQKindMask` | Founders static-map coverage verified Full LQ, Single LQ, and Building. Full HQ and Single HQ reached fragments 121/137 only through skinned-multitex vertex 255 and declined to ARB; the intended static HQ vertex 253 was not reached. See [issue #5 evidence](https://github.com/joshcatania/cohsourcedev/issues/5#issuecomment-5311477268). RGBS/baked-lighting, skinned multitex, and other reflection/shadow/cubemap combinations remain intentional ARB coverage. |
 | Effects/post-processing | registered effect IDs, fixed-function pbuffer pairing, sprite dualtex final composite | fixed-function and sprite dualtex | The verified effects chain is ported. Sunflare adaptation and performance-test special effects remain intentionally unported. |
 | Sunflare material family | no native GLSL target | legacy path | Not observed in the bounded representative suite; no promotion claim is made for it. Targeted follow-up is only needed if normal-gameplay telemetry shows it materially. |
 
@@ -45,8 +45,54 @@ deduplicates fragment/vertex pairs and reports symbolic blend family,
 
 Observed: 124 logged fallback-pair events, representing 34 unique symbolic
 pair identities across the Atlas day suite, Talos, Founders high settings,
-and Atlas night. The telemetry deduplicates within each client process. All
-observed identities were:
+and Atlas night. The telemetry deduplicates within each client process. The
+34 identities below are the complete `fallback pair` stream; every row was
+classified as `pilot-target-declined-on-vertex-pairing`, and the legacy
+fragment request was synchronized before draw. The separate fragment-bind
+coverage stream also recorded six reset/disable bookkeeping identities,
+including `vertex=-1`; those are Bucket C state records, not rendered
+material pair identities, and are therefore excluded from the 34-row count.
+
+| Fragment family / `BMB_*` | Vertex identity / kind / draw mode | Classification | Scenes observed | Bucket |
+| --- | --- | --- | --- | --- |
+| AddGlow / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Founders canal | B |
+| AddGlow / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night, Founders canal | B |
+| Bump ColorBlendDual / `BMB_DEFAULT` | 223 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Founders canal | B |
+| Bump ColorBlendDual / `BMB_DEFAULT` | 227 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night | B |
+| Bump ColorBlendDual / `BMB_DEFAULT` | 229 / `DRAWMODE_HW_SKINNED` LQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall | B |
+| Bump ColorBlendDual / `BMB_DEFAULT` | 236 / `DRAWMODE_BUMPMAP_SKINNED_MULTITEX` LQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal | B |
+| Bump ColorBlendDual / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 223 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night, Talos | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Founders canal, Talos | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 227 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal, Talos | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night, Founders canal, Talos | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 229 / `DRAWMODE_HW_SKINNED` LQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 236 / `DRAWMODE_BUMPMAP_SKINNED_MULTITEX` LQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night | B |
+| Bump ColorBlendDual / `BMB_HIGH_QUALITY` | 255 / `DRAWMODE_BUMPMAP_SKINNED_MULTITEX` HQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal, Talos | B |
+| Bump Multiply / `BMB_DEFAULT` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Talos | B |
+| Bump Multiply / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Founders canal, Talos | B |
+| Bump Multiply / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Founders canal, Talos | B |
+| ColorBlendDual / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas night, Founders canal | B |
+| ColorBlendDual / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Founders canal, Talos | B |
+| Modulate / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas East/North/West, Atlas night, Founders canal | B |
+| Modulate / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Atlas City Hall/North, Atlas night, Founders canal | B |
+| Multi9 / `BMB_BUILDING` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night, Founders canal | B |
+| Multi9 / `BMB_DEFAULT` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas East, Atlas night | B |
+| Multi9 / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night | B |
+| Multi9 / `BMB_DEFAULT` | 229 / `DRAWMODE_HW_SKINNED` LQ | pilot-target-declined-on-vertex-pairing | Atlas night | B |
+| Multi9 / `BMB_DEFAULT` | 236 / `DRAWMODE_BUMPMAP_SKINNED_MULTITEX` LQ | pilot-target-declined-on-vertex-pairing | Founders canal | B |
+| Multi9 / `BMB_DEFAULT` | 255 / `DRAWMODE_BUMPMAP_SKINNED_MULTITEX` HQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North, Atlas night, Founders canal | B |
+| Multi9 / `BMB_SINGLE_MATERIAL` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas East/North, Atlas night, Founders canal | B |
+| Multi9 / `BMB_SINGLE_MATERIAL` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Founders canal | B |
+| Multiply / `BMB_DEFAULT` | 228 / `skin_bump` | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal, Talos | B |
+| Multiply / `BMB_DEFAULT` | 229 / `DRAWMODE_HW_SKINNED` LQ | pilot-target-declined-on-vertex-pairing | Atlas City Hall | B |
+| Multiply / `BMB_DEFAULT` | 247 / `skin_bump HQ` | pilot-target-declined-on-vertex-pairing | Atlas City Hall/East/North/West, Atlas night, Founders canal, Talos | B |
+| Water / `BMB_DEFAULT` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Atlas City Hall, Atlas night, Talos | B |
+| Water / `BMB_PLANAR_REFLECTION` | 224 / dualtex lit 5 | pilot-target-declined-on-vertex-pairing | Founders canal | B |
+
+No genuinely unported rendered fragment was observed in the 34-row
+inventory; Bucket C remains limited to the uncharacterized bookkeeping and
+intentionally out-of-scope families described below.
 
 ### Bucket B — expected or bounded fallback
 
