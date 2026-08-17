@@ -1259,7 +1259,8 @@ void finalPass(PBuffer *pbFrameBuffer, PBuffer *pbBrightPass, bool doBloom, bool
     Vec4 dof_project = {rdr_view_state.projectionMatrix[3][3], rdr_view_state.projectionMatrix[3][2],
         rdr_view_state.projectionMatrix[2][3]*2.f, rdr_view_state.projectionMatrix[2][2]*2.f};
     Vec4 expectedLum;
-    Vec4 presentation_param = {game_state.modernPresentation ? 1.0f : 0.0f, 0, 0, 0};
+    Vec4 presentation_param = {game_state.modernPresentation ? 1.0f : 0.0f,
+        game_state.modernBloom ? 1.0f : 0.0f, 0, 0};
     Vec4 desatureate_param = {rdr_view_state.desaturateWeight, 0, 0, 0};
 
     rdrBeginMarker(__FUNCTION__);
