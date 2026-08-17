@@ -2823,7 +2823,7 @@ void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragment
         seenCount++;
     }
     printf( "GLSL pilot: fallback to ARB vertex %d with logical fragment %d; "
-            "legacy fragment bind was refreshed\n",
+            "legacy fragment request is synchronized; final prep will bind before draw\n",
             (int)vertexPgmId, (int)logicalFragmentPgmId );
 }
 

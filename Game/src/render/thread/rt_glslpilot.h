@@ -221,8 +221,9 @@ void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId );
 
 // Pilot-gated fallback diagnostic: called after an unsupported vertex pairing
 // deactivates GLSL and the legacy vertex bind has completed. Logs the engine's
-// logical fragment id and the state-manager's legacy-bind guarantee, once per
-// distinct pairing, so fallback state coherence is visible in capture logs.
+// logical fragment id and the state-manager's synchronized legacy fragment
+// request, once per distinct pairing, so fallback state coherence is visible
+// in capture logs.
 void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragmentPgmId );
 
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
