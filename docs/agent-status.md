@@ -86,10 +86,10 @@ The v145 compatibility fixes are limited to legacy Crypto++ compiler branches, t
 ```text
 // AuthServer 127.0.0.1 2104
 UseFakeAuth 1
-UseQueueServer 1
+UseQueueServer 0
 ```
 
-Use `agent/set-directdb-mode.ps1 -Disable` to restore the checked-in AuthServer directive and `UseFakeAuth 0` when working on AuthServer integration. The optional `cohauth` and `cohacc` databases are not required for the primary loop. The TestClient `-db` path now bypasses the legacy AccountServer availability guard for local development, while preserving the normal guard for other modes.
+Direct-DB mode disables queue admission and the QueueServer launch block so `-db 127.0.0.1` receives the player list directly and DbServer owns UDP 7000. Use `agent/set-directdb-mode.ps1 -Disable` to restore the AuthServer directive, `UseFakeAuth 0`, `UseQueueServer 1`, and the QueueServer launch block when working on AuthServer integration. The optional `cohauth` and `cohacc` databases are not required for the primary loop. The TestClient `-db` path now bypasses the legacy AccountServer availability guard for local development, while preserving the normal guard for other modes.
 
 ## Known limitations
 
