@@ -1314,7 +1314,7 @@ Cmd game_cmds[] =
     { 0, "useCg", CMD_TOGGLE_USECG, {{ CMDINT(tmp_int)}}, CMDF_HIDEPRINT,
                         "Use Cg shaders instead of ARB" },
     { 0, "glslPilot", 0, {{ CMDINT(game_state.glslPilot) }}, CMDF_HIDEPRINT,
-                        "Render BLENDMODE_MODULATE through the native GLSL pilot program (development experiment; set at startup)" },
+                        "Use native GLSL for supported pairings; 0 selects the legacy ARB/Cg fallback" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -6162,6 +6162,9 @@ void gameStateInit()
     game_state.useFBOs = 1;
     
     game_state.useCg = 1;
+    // Native GLSL is the default for supported pairings.  -glslPilot 0
+    // remains the explicit legacy ARB/Cg control and escape hatch.
+    game_state.glslPilot = 1;
     if (game_state.safemode)
     {
         // Disable shader cache in safe mode

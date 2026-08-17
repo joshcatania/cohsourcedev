@@ -9,7 +9,8 @@ param(
     # 0 = no Cg (precompiled ARB programs), 1 = Cg->ARB assembly (default),
     # 2 = Cg->GLSL. Passed to the client as -useCg.
     [int]$CgMode = -1,
-    # Extra client arguments appended verbatim, e.g. '-glslPilot 1'
+    # Extra client arguments appended verbatim, e.g. '-glslPilot 0' for a
+    # legacy ARB/Cg control capture. Omit the flag for the default hybrid mode.
     [string]$ExtraClientArgs = '',
     [switch]$Json
 )

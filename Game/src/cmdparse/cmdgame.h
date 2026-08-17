@@ -234,7 +234,7 @@ typedef struct GameState
     int        usePBuffers;
     int        useFBOs;
     int        useCg;
-    int        glslPilot;    // render BLENDMODE_MODULATE via the native GLSL pilot program
+    int        glslPilot;    // native GLSL default-on; 0 selects the legacy ARB/Cg fallback
     int        shaderCache;
     int        shaderInitLogging;
     int        shaderOptimizationOverride;

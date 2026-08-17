@@ -12,8 +12,9 @@ param(
     # Baseline directory. Missing baselines are a failure in formal/default
     # mode. Use -AdoptMissingBaseline only for an intentional baseline run.
     [string]$BaselineDir = '',
-    # Extra client arguments forwarded verbatim to capture.ps1 for every shot,
-    # e.g. '-glslPilot 1' to run the suite through the native GLSL pilot.
+    # Extra client arguments forwarded verbatim to capture.ps1 for every shot.
+    # Omit -glslPilot for the default hybrid suite; use '-glslPilot 0' for an
+    # explicit legacy ARB/Cg control suite.
     [string]$ExtraClientArgs = '',
     [int]$PixelTolerance = 12,
     [double]$MaxChangedPercent = 6.0,

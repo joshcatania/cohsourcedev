@@ -1,10 +1,44 @@
 # Autonomous Agent Status
 
-Last verified: 2026-08-15 (America/Chicago)
+Last verified: 2026-08-17 (America/Chicago)
 
 ## Current milestone
 
 Phase 0 and Phase 1 are both complete and verified on the current Windows development machine. The direct-DbServer path reaches login, resumes or creates a reproducible development character, enters a MapServer, and exits with machine-readable evidence. The deterministic graphical capture now produces a real image of Atlas Plaza with fixed camera and hidden UI, reports machine-readable results, and exits Ouroboros cleanly — verified twice consecutively.
+
+## Current renderer policy — hybrid native GLSL default-on (2026-08-17)
+
+The normal renderer launch uses native GLSL for supported fragment/vertex
+pairings and retains synchronized Cg->ARB as the intentional fallback
+(`useCg 1`). No GLSL argument is required for the default mode. Use
+`-glslPilot 0` for a legacy-only control/escape-hatch capture;
+`-glslPilot 1` remains accepted for compatibility. The issue #11 corrected
+promotion audit is the authoritative fallback inventory and found no
+bucket-A blocker for this hybrid policy. ARB/Cg remains in the renderer and
+must not be removed as part of this milestone.
+
+Promotion evidence from the 2026-08-17 build: `Release|x86` passed with the
+v145 compatibility fallback (`agent/logs/build-Release-x86-20260817-091218.log`),
+and direct-DB smoke passed for `Dummy00001` both on login and on the staged
+character/map path (`agent/logs/smoke-directdb-20260817-092546.json` and
+`agent/logs/smoke-directdb-20260817-092552.json`). A no-flag Atlas capture
+logged native GLSL activations for the supported materials/effects, while the
+same target with `-glslPilot 0` logged no GLSL-pilot activations and exited
+cleanly. The stable City Hall A/B comparison changed 1.6102% of sampled
+pixels (mean delta 6.5199, report-only exposure advisory); same-window day
+comparisons for East/North/West changed 4.9382%/4.3697%/1.1282%.
+
+The four-shot default suite and the explicit legacy control suite completed;
+the default City Hall baseline sample was a known weather/exposure outlier,
+so the isolated stable A/B result above is the promotion sample and no
+threshold was changed. Night, Talos, and high-feature Founders captures also
+exited cleanly in both modes. The high-feature Founders run recorded
+`water state=4`, `waterFeature=1`, and `multiFeature=1`, with default native
+GLSL activation for Multi9/water/effects; the `-glslPilot 0` control emitted
+no GLSL-pilot activation. Talos AddGlow remains covered by the accepted issue
+#8 audit (487/491 activations, 0 declines, with same-control changed pixels of
+0.0000% and 2.3994%); the current arrival view is account/map-state sensitive
+and was not used to manufacture a new AddGlow sample.
 
 ## Verified ladder
 
@@ -157,7 +191,7 @@ The first renderer investigation ran under the regression harness with the follo
 
 Shader-path map (all evidence from live runs):
 
-- Default: `game_state.useCg = 1` — Cg compiles the shipped `.cgfx`/`.cg` sources to ARB assembly (`CG_PROFILE_ARBFP1/ARBVP1`). This is the only fully working shader path; all Phase 1/2 captures used it.
+- Default fallback: `game_state.useCg = 1` — Cg compiles the shipped `.cgfx`/`.cg` sources to ARB assembly (`CG_PROFILE_ARBFP1/ARBVP1`). The normal renderer is now hybrid: native GLSL is default-on for supported pairings, with this Cg->ARB path retained for synchronized fallback. All Phase 1/2 captures used the legacy-only path before issue #12.
 - `useCg 0`: loads precompiled ARB programs (`shaders/arb/*.fp`) without the Cg runtime.
 - `useCg 2` (Cg->GLSL): **broken**. Live run (`-useCg 2`, capture JSON `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-124346*`): every CgFX shader fails with `CG ERROR: "The program could not load"` at `-profile glslf`, followed by fallback error shaders; the resulting image differs from baseline at 100% of pixels (meanDelta 149). Reaching GLSL therefore requires porting shader sources, not just flipping the mode.
 - Legacy branches for `R200` (ATI_fragment_shader), `NV1X/NV2X` (register combiners), and `TEX_ENV_COMBINE` are selected from `rdr_caps.chip` in `rt_state.c`/`wcw_statemgmt.c` but cannot activate on modern drivers because those GL extensions no longer exist. They are deletion candidates, not runtime risks.
@@ -226,8 +260,8 @@ Shader sources live in `bin/piggs/misc.pigg`; extract with
   every shader reload (ids regenerate). GLSL entry points are the raw GLEW
   pointers (`__glewUseProgram` etc.) because `ogl.h` `#undef`s the macro names
   as a "do not use" policy for the fixed pipelines.
-- Enabled at startup with `-glslPilot 1` (new `game_state.glslPilot`, registered
-  as the `glslPilot` console command; command-line passthrough works because
+- Historical pilot enablement (before issue #12) used `-glslPilot 1` (new `game_state.glslPilot`, registered
+  as the `glslPilot` console command; it is now default-on, while command-line passthrough works because
   argument parsing precedes renderer init). `agent/capture.ps1` gained
   `-ExtraClientArgs` to pass it.
 
@@ -465,7 +499,7 @@ Fifth material ported and the coverage question systematized.
 - New coverage diagnostic: `WCW_BindFragmentProgram` calls
   `rt_glslpilot_noteUnportedFragmentBind(id)` for binds the pilot did not
   handle; each distinct fragment program id is logged once per process
-  (only when `-glslPilot 1`). A capture's client log now enumerates every
+  (when native GLSL is enabled by default or with `-glslPilot 1`). A capture's client log now enumerates every
   material still rendering through ARB/Cg.
 
 ### Coverage map (AtlasPlaza_East_01, pilot on)
