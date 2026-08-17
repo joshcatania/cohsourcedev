@@ -219,6 +219,12 @@ void rt_glslpilot_onMiscParam( const GLfloat* vec4 );
 // the ARB/Cg path. No-ops unless the pilot switch is on.
 void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId );
 
+// Pilot-gated fallback diagnostic: called after an unsupported vertex pairing
+// deactivates GLSL and the legacy vertex bind has completed. Logs the engine's
+// logical fragment id and the state-manager's legacy-bind guarantee, once per
+// distinct pairing, so fallback state coherence is visible in capture logs.
+void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragmentPgmId );
+
 // Program registration from rt_shaderMgr.c. vertexLitMode uses the
 // variants.cgh values (VERT_COLOR=1, FF_LIT_GL=4, FF_UNLIT_GL=5; NONE=0 for
 // the bump_dual variant, which has no vertex-lit mode); only registered

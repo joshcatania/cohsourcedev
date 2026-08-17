@@ -2798,6 +2798,35 @@ void rt_glslpilot_noteUnportedFragmentBind( GLuint fragmentPgmId )
     printf( "GLSL pilot: coverage: unported fragment program %d bound\n", (int)fragmentPgmId );
 }
 
+void rt_glslpilot_noteVertexFallback( GLuint vertexPgmId, GLuint logicalFragmentPgmId )
+{
+    typedef struct tPilotFallbackDiagnostic {
+        GLuint vertexPgmId;
+        GLuint logicalFragmentPgmId;
+    } tPilotFallbackDiagnostic;
+    static tPilotFallbackDiagnostic seen[64];
+    static int seenCount = 0;
+    int i;
+
+    if ( ! game_state.glslPilot || ( logicalFragmentPgmId == 0xFFFFFFFF ) )
+        return;
+    for ( i = 0; i < seenCount; i++ )
+    {
+        if (( seen[i].vertexPgmId == vertexPgmId ) &&
+            ( seen[i].logicalFragmentPgmId == logicalFragmentPgmId ))
+            return;
+    }
+    if ( seenCount < (int)( sizeof( seen ) / sizeof( seen[0] ) ) )
+    {
+        seen[seenCount].vertexPgmId = vertexPgmId;
+        seen[seenCount].logicalFragmentPgmId = logicalFragmentPgmId;
+        seenCount++;
+    }
+    printf( "GLSL pilot: fallback to ARB vertex %d with logical fragment %d; "
+            "legacy fragment bind was refreshed\n",
+            (int)vertexPgmId, (int)logicalFragmentPgmId );
+}
+
 void rt_glslpilot_onReflectionParam( const GLfloat* vec4 )
 {
     // always mirror, active or not: the value must be correct whenever the

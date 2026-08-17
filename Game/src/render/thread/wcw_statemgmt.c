@@ -2190,6 +2190,7 @@ void WCW_BindVertexProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ " : %s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundVertexProgram)
     {
+        bool pilotWasActive = rt_glslpilot_isActive();
         // The engine's program binds are state-cached, so the pilot watches
         // this path too; the ARB vertex program bound below only acts as
         // state tracking while the pilot's GLSL program is in use.
@@ -2210,6 +2211,8 @@ void WCW_BindVertexProgram(GLuint id)
             }
         }
         boundVertexProgram = id;        
+        if ( pilotWasActive && !rt_glslpilot_isActive() )
+            rt_glslpilot_noteVertexFallback( id, boundFragmentProgram );
         // Don't do "sOpenGLShaderParamDirtyFlags = kOpenGLDirtyBit_ALL" here; wait until the
         // shader has been set up and the values fed to it.
     }
@@ -2304,15 +2307,17 @@ void WCW_BindFragmentProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ ":%s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundFragmentProgram)
     {
-        if ( rt_glslpilot_tryBindFragment( id, boundVertexProgram ) )
+        bool pilotHandled = rt_glslpilot_tryBindFragment( id, boundVertexProgram );
+        if ( !pilotHandled )
         {
-            // the GLSL pilot handled this bind and its program object now
-            // overrides the bound ARB fragment (and vertex) program
-            boundFragmentProgram = id;
-            return;
+            // coverage diagnostic: record materials still on the ARB/Cg path
+            rt_glslpilot_noteUnportedFragmentBind( id );
         }
-        // coverage diagnostic: record materials still on the ARB/Cg path
-        rt_glslpilot_noteUnportedFragmentBind( id );
+
+        // Keep the legacy fragment binding truthful even while glUseProgram()
+        // overrides it. A later unsupported vertex bind can deactivate the
+        // pilot without issuing another fragment bind because the engine's
+        // boundFragmentProgram cache still names this id.
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             if ( rt_cgGetCgShaderMode() )
