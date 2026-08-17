@@ -34,6 +34,8 @@ typedef enum ePilotMaterial {
     kPilotMaterial_Water,           // waterfp.cg (variant 0, refraction only; the
                                     // fancy-water material static-map water surfaces
                                     // bind once GFXF_MULTITEX survives startup)
+    kPilotMaterial_WaterShadow,     // waterfp.cg BIT_SHADOWMAP (same refraction
+                                    // material plus the cascaded shadow-map lookup)
     // multi9fp.cg ('BLENDMODE_MULTI', the multi material): the five variants
     // that bind on static maps with shaderDetail=3 and no cubemap/shadowmap
     // support — the dual-material full modes, the single-material modes, and
@@ -200,8 +202,24 @@ typedef enum ePilotWaterConst {
     kPilotWaterConst_Count
 } tPilotWaterConstId;
 
+// Shadow-map fragment constants mirror the existing Cg ENV32..ENV51
+// assignments in wcw_statemgmt.c. Matrix slots receive four vec4 rows;
+// parameter/split slots receive one vec4.
+typedef enum ePilotShadowConst {
+    kPilotShadowConst_Map1 = 0,
+    kPilotShadowConst_Map2,
+    kPilotShadowConst_Map3,
+    kPilotShadowConst_Map4,
+    kPilotShadowConst_Params,
+    kPilotShadowConst_Splits,
+    kPilotShadowConst_Params2,
+    kPilotShadowConst_Params3,
+    kPilotShadowConst_Count
+} tPilotShadowConstId;
+
 void rt_glslpilot_onWaterParam( int waterConstSlot, const GLfloat* vec4 );
 void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s );
+void rt_glslpilot_onShadowParam( int shadowConstSlot, const GLfloat* vec4Arr, GLuint nNumVec4s );
 
 // Mirrors for the multi9 (BLENDMODE_MULTI) fragment constants:
 // g_Specular2ColorAndExponentFP (TIE(ENV6), the material-2 specular, pushed

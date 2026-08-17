@@ -1024,6 +1024,9 @@ void shaderMgr_InitFPs(void)
     // water variant 0 (BMB_DEFAULT: refraction, no planar reflection / shadow);
     // only present in the variant table when GFXF_WATER survives startup
     rt_glslpilot_setFragmentTarget( kPilotMaterial_Water, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][0] );
+    // water BIT_SHADOWMAP: resolve the generated program symbolically so the
+    // pilot follows shader reloads and feature-dependent program ids.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterShadow, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_SHADOWMAP] );
     // multi9: the five static-map variants that bind with shaderDetail=3 and
     // no cubemap/shadowmap support — full, full HQ, single, single HQ,
     // building. The remaining variants (cubemap/planar/shadow/reduced) stay

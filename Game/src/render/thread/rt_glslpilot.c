@@ -685,6 +685,7 @@ static const char s_bumpMultiVertexSource[] =
 "\n"
 "varying vec3 vLightTs;            // OUT.light_ts (TEXCOORD2 in the Cg program)\n"
 "varying vec3 vViewTs;             // OUT.view_ts (TEXCOORD1); = -position in tangent space\n"
+"varying vec3 vPositionVs;         // OUT.position_vs (TEXCOORD3); shadow CSM input\n"
 "varying vec4 vUv0Faux;            // OUT.uv0_uv1 (TEXCOORD0); zw = faux reflection uv\n"
 "\n"
 "void main()\n"
@@ -712,6 +713,7 @@ static const char s_bumpMultiVertexSource[] =
 "    vLightTs = vec3( dot( light_vs, tangent ), dot( light_vs, binormal ), dot( light_vs, normal ) );\n"
 "    vec3 position_ts = vec3( dot( position_vs, tangent ), dot( position_vs, binormal ), dot( position_vs, normal ) );\n"
 "    vViewTs = -position_ts;\n"
+"    vPositionVs = position_vs;\n"
 "}\n";
 
 // waterfp.cg, variant 0 (no BIT_PLANAR_REFLECTION / BIT_SHADOWMAP / HQ):
@@ -736,6 +738,7 @@ static const char s_waterFragmentSource[] =
 "uniform sampler2D sampler_refraction;          // TEXUNIT5 (rt_water.c pbuffer)\n"
 "uniform sampler2D sampler_refraction_depth;    // TEXUNIT6 (depth for the skew clamp)\n"
 "uniform sampler2D sampler_normal_and_gloss_2;  // TEXUNIT7\n"
+"uniform sampler2DShadow sampler_shadow;        // TEXUNIT11 (shadow atlas)\n"
 "uniform vec4 g_Env0FP;                         // TIE(ENV8); .a = water alpha\n"
 "uniform vec4 g_AmbientColorFP;                 // TIE(ENV0), setupBumpPixelShader ambient*2\n"
 "uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n"
@@ -747,9 +750,20 @@ static const char s_waterFragmentSource[] =
 "uniform vec4 g_WaterRefractionParamsFP;        // TIE(ENV22); skew normal/depth scale, min skew\n"
 "uniform vec4 g_BumpMultiFlagsFP;               // TIE(ENV10); bit0 = reflect uv, bit3 = alpha water\n"
 "uniform vec4 g_ScrollScaleArrFP[10];           // TIE(ENV12..21); xy scroll, zw scale per layer\n"
+"uniform bool g_UseShadowMap;                   // pilot target selector\n"
+"uniform int g_ShadowFilterMode;                // NONE/FAST=1, MEDIUM=2, HIGH=3\n"
+"uniform vec4 g_ShadowMap1MatrixFP[4];           // TIE(ENV32..35)\n"
+"uniform vec4 g_ShadowMap2MatrixFP[4];           // TIE(ENV36..39)\n"
+"uniform vec4 g_ShadowMap3MatrixFP[4];           // TIE(ENV40..43)\n"
+"uniform vec4 g_ShadowMap4MatrixFP[4];           // TIE(ENV44..47)\n"
+"uniform vec4 g_ShadowParamsFP;                 // TIE(ENV48)\n"
+"uniform vec4 g_ShadowSplitsFP;                 // TIE(ENV49)\n"
+"uniform vec4 g_ShadowParams2FP;                // TIE(ENV50)\n"
+"uniform vec4 g_ShadowParams3FP;                // TIE(ENV51)\n"
 "\n"
 "varying vec3 vLightTs;\n"
 "varying vec3 vViewTs;\n"
+"varying vec3 vPositionVs;\n"
 "varying vec4 vUv0Faux;\n"
 "\n"
 "// isBitSet idiom from functions.cgh (integer-valued float bits)\n"
@@ -762,6 +776,135 @@ static const char s_waterFragmentSource[] =
 "vec2 scrollScale( int layer, vec2 uv )\n"
 "{\n"
 "    return uv * g_ScrollScaleArrFP[layer].zw + g_ScrollScaleArrFP[layer].xy;\n"
+"}\n"
+
+"// The Cg wrapper uploads each shadow matrix as four row vec4s and the\n"
+"// legacy source intentionally uses mul(position, matrix). Dotting against\n"
+"// those rows reproduces that row-vector multiply without relying on GLSL\n"
+"// matrix packing rules.\n"
+"vec4 shadowCoord1( vec3 p )\n"
+"{\n"
+"    vec4 q = vec4( p, 1.0 );\n"
+"    return vec4( dot( q, g_ShadowMap1MatrixFP[0] ), dot( q, g_ShadowMap1MatrixFP[1] ),\n"
+"                 dot( q, g_ShadowMap1MatrixFP[2] ), dot( q, g_ShadowMap1MatrixFP[3] ) );\n"
+"}\n"
+"vec4 shadowCoord2( vec3 p )\n"
+"{\n"
+"    vec4 q = vec4( p, 1.0 );\n"
+"    return vec4( dot( q, g_ShadowMap2MatrixFP[0] ), dot( q, g_ShadowMap2MatrixFP[1] ),\n"
+"                 dot( q, g_ShadowMap2MatrixFP[2] ), dot( q, g_ShadowMap2MatrixFP[3] ) );\n"
+"}\n"
+"vec4 shadowCoord3( vec3 p )\n"
+"{\n"
+"    vec4 q = vec4( p, 1.0 );\n"
+"    return vec4( dot( q, g_ShadowMap3MatrixFP[0] ), dot( q, g_ShadowMap3MatrixFP[1] ),\n"
+"                 dot( q, g_ShadowMap3MatrixFP[2] ), dot( q, g_ShadowMap3MatrixFP[3] ) );\n"
+"}\n"
+"vec4 shadowCoord4( vec3 p )\n"
+"{\n"
+"    vec4 q = vec4( p, 1.0 );\n"
+"    return vec4( dot( q, g_ShadowMap4MatrixFP[0] ), dot( q, g_ShadowMap4MatrixFP[1] ),\n"
+"                 dot( q, g_ShadowMap4MatrixFP[2] ), dot( q, g_ShadowMap4MatrixFP[3] ) );\n"
+"}\n"
+"\n"
+"float shadowLookup( vec4 coord, vec2 offset )\n"
+"{\n"
+"    vec4 sampleCoord = vec4( coord.xy + offset * g_ShadowParams2FP.w * coord.w, coord.z, coord.w );\n"
+"    return shadow2DProj( sampler_shadow, sampleCoord ).x;\n"
+"}\n"
+"\n"
+"float shadowPcf2x2( vec4 coord, vec2 fragmentXY )\n"
+"{\n"
+"    vec2 offset = step( vec2( 0.25 ), fract( fragmentXY * 0.5 ) );\n"
+"    offset.y += offset.x;\n"
+"    if ( offset.y > 1.1 ) offset.y = 0.0;\n"
+"    float result = shadowLookup( coord, offset + vec2( -1.5, 0.5 ) );\n"
+"    result += shadowLookup( coord, offset + vec2( 0.5, 0.5 ) );\n"
+"    result += shadowLookup( coord, offset + vec2( -1.5, -1.5 ) );\n"
+"    result += shadowLookup( coord, offset + vec2( 0.5, -1.5 ) );\n"
+"    return result * 0.25;\n"
+"}\n"
+"\n"
+"float shadowPcf4x4( vec4 coord )\n"
+"{\n"
+"    float result = 0.0;\n"
+"    for ( int y = 0; y < 4; y++ )\n"
+"        for ( int x = 0; x < 4; x++ )\n"
+"            result += shadowLookup( coord, vec2( float(x) - 1.5, float(y) - 1.5 ) );\n"
+"    return result * 0.0625;\n"
+"}\n"
+"\n"
+"float shadowFiltered( vec4 coord, vec2 fragmentXY )\n"
+"{\n"
+"    if ( g_ShadowFilterMode == 3 ) return shadowPcf4x4( coord );\n"
+"    if ( g_ShadowFilterMode == 2 ) return shadowPcf2x2( coord, fragmentXY );\n"
+"    return shadowLookup( coord, vec2( 0.0 ) );\n"
+"}\n"
+"\n"
+"float shadowApplyFade( float z, float lightAmount )\n"
+"{\n"
+"    float shadowStrength = clamp( ( g_ShadowParams2FP.x - z ) * g_ShadowParams2FP.y, 0.0, 1.0 );\n"
+"    return mix( 1.0, lightAmount, shadowStrength );\n"
+"}\n"
+"\n"
+"float shadowPlain( vec3 positionVS, vec2 fragmentXY )\n"
+"{\n"
+"    vec4 coord;\n"
+"    float zEye = abs( positionVS.z );\n"
+"    if ( zEye <= g_ShadowSplitsFP.x ) coord = shadowCoord1( positionVS );\n"
+"    else if ( zEye <= g_ShadowSplitsFP.y ) coord = shadowCoord2( positionVS );\n"
+"    else if ( zEye <= g_ShadowSplitsFP.z ) coord = shadowCoord3( positionVS );\n"
+"    else if ( zEye <= g_ShadowSplitsFP.w ) coord = shadowCoord4( positionVS );\n"
+"    else return 1.0;\n"
+"    return shadowApplyFade( zEye, shadowFiltered( coord, fragmentXY ) );\n"
+"}\n"
+"\n"
+"float shadowBlend( vec4 coordA, vec4 coordB, float factor )\n"
+"{\n"
+"    float result = 0.0;\n"
+"    for ( int y = 0; y < 4; y++ )\n"
+"    {\n"
+"        vec4 coord = ( float(y) < factor * 4.0 ) ? coordB : coordA;\n"
+"        for ( int x = 0; x < 4; x++ )\n"
+"            result += shadowLookup( coord, vec2( float(x) - 1.5, float(y) - 1.5 ) );\n"
+"    }\n"
+"    return result * 0.0625;\n"
+"}\n"
+"\n"
+"float shadowCsmBlend( vec3 positionVS )\n"
+"{\n"
+"    vec4 coord1 = shadowCoord1( positionVS );\n"
+"    vec4 coord2 = shadowCoord2( positionVS );\n"
+"    vec4 coord3 = shadowCoord3( positionVS );\n"
+"    vec4 coord4 = shadowCoord4( positionVS );\n"
+"    vec4 coordA = coord4;\n"
+"    vec4 coordB = coord4;\n"
+"    float zEye = abs( positionVS.z );\n"
+"    float nextSplit = g_ShadowSplitsFP.w;\n"
+"    float blendDelta = 0.0;\n"
+"    if ( zEye <= g_ShadowSplitsFP.x ) { coordA = coord1; coordB = coord2; nextSplit = g_ShadowSplitsFP.x; blendDelta = g_ShadowParams3FP.y; }\n"
+"    else if ( zEye <= g_ShadowSplitsFP.y ) { coordA = coord2; coordB = coord3; nextSplit = g_ShadowSplitsFP.y; blendDelta = g_ShadowParams3FP.z; }\n"
+"    else if ( zEye <= g_ShadowSplitsFP.z ) { coordA = coord3; coordB = coord4; nextSplit = g_ShadowSplitsFP.z; blendDelta = g_ShadowParams3FP.w; }\n"
+"    else if ( zEye <= g_ShadowSplitsFP.w ) { coordA = coord4; coordB = coord4; }\n"
+"    else return 1.0;\n"
+"    float blendNext = ( blendDelta > 0.0 ) ? 1.0 - clamp( ( nextSplit - zEye ) / blendDelta, 0.0, 1.0 ) : 0.0;\n"
+"    return shadowApplyFade( zEye, shadowBlend( coordA, coordB, blendNext ) );\n"
+"}\n"
+"\n"
+"float shadowCsm( vec3 positionVS, vec2 fragmentXY )\n"
+"{\n"
+"    if ( g_ShadowFilterMode == 3 ) return shadowCsmBlend( positionVS );\n"
+"    return shadowPlain( positionVS, fragmentXY );\n"
+"}\n"
+"\n"
+"vec3 shadowLightFactors( vec3 lightFactors, float rawFactor )\n"
+"{\n"
+"    float diffuseReduction = clamp( lightFactors.y, g_ShadowParams2FP.z, 1.0 );\n"
+"    float adjusted = clamp( rawFactor * diffuseReduction, 0.0, 1.0 );\n"
+"    vec3 shadowFactors = vec3( clamp( adjusted, g_ShadowParamsFP.x, 1.0 ),\n"
+"                               clamp( adjusted, g_ShadowParamsFP.y, 1.0 ),\n"
+"                               clamp( rawFactor, g_ShadowParamsFP.z, 1.0 ) );\n"
+"    return lightFactors * shadowFactors;\n"
 "}\n"
 "\n"
 "void main()\n"
@@ -791,6 +934,9 @@ static const char s_waterFragmentSource[] =
 "    float n_dot_l = clamp( dot( normal_ts.xyz, light_ts ), 0.0, 1.0 );\n"
 "    float specular = pow( clamp( dot( normal_ts.xyz, half_ts ), 0.0, 1.0 ),\n"
 "                          g_Specular1ColorAndExponentFP.a ) * normal_ts.w;\n"
+"    vec3 light_factors = vec3( 1.0, n_dot_l, specular );\n"
+"    if ( g_UseShadowMap )\n"
+"        light_factors = shadowLightFactors( light_factors, shadowCsm( vPositionVs, gl_FragCoord.xy ) );\n"
 "\n"
 "    // base color: 2 * vertexColor(=1) * multiply1 * base1\n"
 "    vec3 out_color = 2.0 * gl_Color.rgb * texMultiply1.rgb * texBase1.rgb;\n"
@@ -816,11 +962,13 @@ static const char s_waterFragmentSource[] =
 "    out_color = out_color * surfaceColor * texBase1.a;\n"
 "\n"
 "    // apply_lighting_no_gloss\n"
-"    out_color = out_color * ( g_AmbientColorFP.rgb + n_dot_l * g_DiffuseColorFP.rgb );\n"
+"    out_color = out_color * ( light_factors.x * g_AmbientColorFP.rgb\n"
+"                              + light_factors.y * g_DiffuseColorFP.rgb );\n"
 "\n"
 "    // refraction blend, then apply_lighting_gloss_only\n"
 "    out_color = mix( out_color, refracted, g_GlossParamFP.w );\n"
-"    out_color += clamp( specular * g_GlossParamFP.x * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"    out_color += clamp( light_factors.z * g_GlossParamFP.x\n"
+"                       * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
 "\n"
 "    // calc_fogged_color (same GL fog state as the other materials)\n"
 "    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
@@ -1884,6 +2032,17 @@ typedef struct tPilotMaterial
     bool                usesMultiMat2;        // material-2 tints + specular2
     GLint                locSpecular2;        // g_Specular2ColorAndExponentFP (multi9 fragment)
     GLint                locMiscParam;        // g_MiscParamFP (multi9 fragment)
+    // water BIT_SHADOWMAP constants. Appended so the existing positional
+    // initializers remain valid; the shadow-water row enables this block in
+    // pilotInit before resolving its locations.
+    bool                usesShadowConstants;
+    GLint               locUseShadowMap;
+    GLint               locShadowFilterMode;
+    GLint               locShadowMap[4];
+    GLint               locShadowParams;
+    GLint               locShadowSplits;
+    GLint               locShadowParams2;
+    GLint               locShadowParams3;
 } tPilotMaterial;
 
 #define kPilotKindBit( kind ) ( 1u << (kind) )
@@ -1945,6 +2104,7 @@ static const tPilotSampler s_waterSamplers[] = {
     { "sampler_refraction",          5 },
     { "sampler_refraction_depth",    6 },
     { "sampler_normal_and_gloss_2",  7 },
+    { "sampler_shadow",              11 },
     { NULL, -1 },
 };
 
@@ -2028,6 +2188,10 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
     // bump lighting constant set plus the water/multitex mirrors
     // (usesBumpConstants covers ambient/diffuse/gloss/specular1)
     { 0, "BLENDMODE_WATER", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
+    // the same material with BIT_SHADOWMAP. It shares the vertex program and
+    // water/refraction constants; pilotInit additionally resolves the
+    // cascaded-shadow uniforms and activates the shadow branch.
+    { 0, "BLENDMODE_WATER_SHADOW", s_waterFragmentSource, s_waterSamplers, true, false, false, true, true, kPilotBumpMultiKindMask, s_bumpMultiVertexSource, 0, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 0, { -1, -1, -1, -1, -1, -1 }, false, false, false },
     // multi9 (BLENDMODE_MULTI): the five static-map variants; the LQ variants
     // pair with the PRELIT_WHITE FAUX_MULTI vertex variant (the RGBS baked-
     // lighting pairing stays on ARB), the HQ variants with its BIT_HIGH_QUALITY
@@ -2094,6 +2258,7 @@ static GLuint                s_boneMatrixMirrorCount = 0;
 #define kPilotMaxScrollScaleVec4s 10    // g_ScrollScaleArrFP[10] (TEXLAYER_MAX_SCROLLABLE)
 static GLfloat                s_waterConstMirrors[kPilotWaterConst_Count][4];
 static GLfloat                s_scrollScaleMirror[kPilotMaxScrollScaleVec4s][4];
+static GLfloat                s_shadowConstMirrors[kPilotShadowConst_Count][4][4];
 // multi9 fragment constant mirrors (g_Specular2ColorAndExponentFP /
 // g_MiscParamFP; see the header) — the material-2 tint colors and the
 // selector flags/scroll array reuse the water mirrors above, since the
@@ -2288,6 +2453,8 @@ static bool pilotInitFF( int material )
 static bool pilotInit( int material )
 {
     tPilotMaterial* m = &s_materials[material];
+    if ( material == kPilotMaterial_WaterShadow )
+        m->usesShadowConstants = true;
     bool isBumpLQ = ( m->vertexKindMask & kPilotBumpKindMask ) != 0;
     bool isBumpHQ = ( m->vertexKindMask & kPilotBumpHQKindMask ) != 0;
     bool isBumpModel = ( m->vertexKindMask & kPilotBumpModelKindMask ) != 0;
@@ -2427,6 +2594,19 @@ static bool pilotInit( int material )
         m->locBumpMultiFlags = __glewGetUniformLocation( m->program, "g_BumpMultiFlagsFP" );
         m->locScrollScaleArr = __glewGetUniformLocation( m->program, "g_ScrollScaleArrFP[0]" );
     }
+    if ( m->usesShadowConstants )
+    {
+        m->locUseShadowMap = __glewGetUniformLocation( m->program, "g_UseShadowMap" );
+        m->locShadowFilterMode = __glewGetUniformLocation( m->program, "g_ShadowFilterMode" );
+        m->locShadowMap[0] = __glewGetUniformLocation( m->program, "g_ShadowMap1MatrixFP[0]" );
+        m->locShadowMap[1] = __glewGetUniformLocation( m->program, "g_ShadowMap2MatrixFP[0]" );
+        m->locShadowMap[2] = __glewGetUniformLocation( m->program, "g_ShadowMap3MatrixFP[0]" );
+        m->locShadowMap[3] = __glewGetUniformLocation( m->program, "g_ShadowMap4MatrixFP[0]" );
+        m->locShadowParams = __glewGetUniformLocation( m->program, "g_ShadowParamsFP" );
+        m->locShadowSplits = __glewGetUniformLocation( m->program, "g_ShadowSplitsFP" );
+        m->locShadowParams2 = __glewGetUniformLocation( m->program, "g_ShadowParams2FP" );
+        m->locShadowParams3 = __glewGetUniformLocation( m->program, "g_ShadowParams3FP" );
+    }
     if ( m->usesBumpConstants )
     {
         m->locAmbient = __glewGetUniformLocation( m->program, "g_AmbientColorFP" );
@@ -2471,6 +2651,11 @@ static bool pilotInit( int material )
         ( m->usesWaterConstants && (( m->locConstColor0FP < 0 ) || ( m->locConstColor1FP < 0 ) ||
                                     ( m->locWaterRefractTransform < 0 ) || ( m->locWaterRefractParams < 0 ) ||
                                     ( m->locBumpMultiFlags < 0 ) || ( m->locScrollScaleArr < 0 ))) ||
+        ( m->usesShadowConstants && (( m->locUseShadowMap < 0 ) || ( m->locShadowFilterMode < 0 ) ||
+                                     ( m->locShadowMap[0] < 0 ) || ( m->locShadowMap[1] < 0 ) ||
+                                     ( m->locShadowMap[2] < 0 ) || ( m->locShadowMap[3] < 0 ) ||
+                                     ( m->locShadowParams < 0 ) || ( m->locShadowSplits < 0 ) ||
+                                     ( m->locShadowParams2 < 0 ) || ( m->locShadowParams3 < 0 ))) ||
         ( m->usesEnv0 && ( m->locEnv0 < 0 )) ||
         ( m->usesEnv1 && ( m->locEnv1 < 0 )) ||
         ( m->usesGlowParam && ( m->locGlowParam < 0 )) ||
@@ -2637,6 +2822,18 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
             __glewUniform4fv( m->locWaterRefractParams, 1, s_waterConstMirrors[kPilotWaterConst_RefractionParams] );
             __glewUniform4fv( m->locBumpMultiFlags, 1, s_waterConstMirrors[kPilotWaterConst_BumpMultiFlags] );
             __glewUniform4fv( m->locScrollScaleArr, kPilotMaxScrollScaleVec4s, &s_scrollScaleMirror[0][0] );
+        }
+        if ( m->usesShadowConstants )
+        {
+            int shadowMap;
+            __glewUniform1i( m->locUseShadowMap, 1 );
+            __glewUniform1i( m->locShadowFilterMode, (int)game_state.shadowShaderSelection );
+            for ( shadowMap = 0; shadowMap < 4; shadowMap++ )
+                __glewUniform4fv( m->locShadowMap[shadowMap], 4, &s_shadowConstMirrors[shadowMap][0][0] );
+            __glewUniform4fv( m->locShadowParams, 1, &s_shadowConstMirrors[kPilotShadowConst_Params][0][0] );
+            __glewUniform4fv( m->locShadowSplits, 1, &s_shadowConstMirrors[kPilotShadowConst_Splits][0][0] );
+            __glewUniform4fv( m->locShadowParams2, 1, &s_shadowConstMirrors[kPilotShadowConst_Params2][0][0] );
+            __glewUniform4fv( m->locShadowParams3, 1, &s_shadowConstMirrors[kPilotShadowConst_Params3][0][0] );
         }
         if ( m->usesMultiConstants )
         {
@@ -3076,6 +3273,38 @@ void rt_glslpilot_onScrollScaleParam( const GLfloat* vec4Arr, GLuint nNumVec4s )
     }
 }
 
+// Shadow-map fragment constants: rt_shadowmap.c pushes the four cascade
+// matrices and the four scalar parameter blocks through the same Cg constant
+// setter used by the legacy program. Keep a full mirror so activation order
+// cannot lose a value, then forward the matching array to the active shadow
+// water program.
+void rt_glslpilot_onShadowParam( int shadowConstSlot, const GLfloat* vec4Arr, GLuint nNumVec4s )
+{
+    GLint loc = -1;
+    if (( shadowConstSlot < 0 ) || ( shadowConstSlot >= kPilotShadowConst_Count ))
+        return;
+    if ( nNumVec4s > 4 )
+        nNumVec4s = 4;
+    memcpy( s_shadowConstMirrors[shadowConstSlot], vec4Arr,
+        nNumVec4s * sizeof( s_shadowConstMirrors[shadowConstSlot][0] ) );
+    if (( s_activeMaterial >= 0 ) && s_materials[s_activeMaterial].usesShadowConstants )
+    {
+        tPilotMaterial* m = &s_materials[s_activeMaterial];
+        if ( shadowConstSlot <= kPilotShadowConst_Map4 )
+            loc = m->locShadowMap[shadowConstSlot];
+        else if ( shadowConstSlot == kPilotShadowConst_Params )
+            loc = m->locShadowParams;
+        else if ( shadowConstSlot == kPilotShadowConst_Splits )
+            loc = m->locShadowSplits;
+        else if ( shadowConstSlot == kPilotShadowConst_Params2 )
+            loc = m->locShadowParams2;
+        else if ( shadowConstSlot == kPilotShadowConst_Params3 )
+            loc = m->locShadowParams3;
+        if ( loc >= 0 )
+            __glewUniform4fv( loc, nNumVec4s, &s_shadowConstMirrors[shadowConstSlot][0][0] );
+    }
+}
+
 // multi9 fragment constants (same always-mirror contract): the material-2
 // specular (setupSpecularColor, dual-material MULTI draws only) and the
 // 'lights on' addglow threshold/seed (setupBumpMultiPixelShader)
@@ -3125,7 +3354,7 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
     s_materials[material].arbFragmentId = fragmentPgmId;
     if ( game_state.glslPilot )
     {
-        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d, %d registered vertex programs\n",
+        printf( "GLSL pilot: fragment targets modulate=%d multiply=%d colorBlendDual=%d addGlow=%d alphaDetail=%d bumpColorBlendDual=%d bumpColorBlendDualHQ=%d bumpMultiply=%d water=%d waterShadow=%d, %d registered vertex programs\n",
             (int)s_materials[kPilotMaterial_Modulate].arbFragmentId,
             (int)s_materials[kPilotMaterial_Multiply].arbFragmentId,
             (int)s_materials[kPilotMaterial_ColorBlendDual].arbFragmentId,
@@ -3134,6 +3363,8 @@ void rt_glslpilot_setFragmentTarget( tPilotMaterialId material, GLuint fragmentP
             (int)s_materials[kPilotMaterial_BumpColorBlendDual].arbFragmentId,
             (int)s_materials[kPilotMaterial_BumpColorBlendDualHQ].arbFragmentId,
             (int)s_materials[kPilotMaterial_BumpMultiply].arbFragmentId,
+            (int)s_materials[kPilotMaterial_Water].arbFragmentId,
+            (int)s_materials[kPilotMaterial_WaterShadow].arbFragmentId,
             s_vertexEntryCount );
         if ( material == kPilotMaterial_Multi9Building )
         {

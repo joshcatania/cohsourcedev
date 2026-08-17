@@ -2617,6 +2617,41 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     {
         rt_glslpilot_onScrollScaleParam( vec4Arr, nNumVec4s );
     }
+    // cascaded shadow-map constants: matrices are four vec4 rows, the
+    // remaining ENV blocks are single vec4 values. These are the exact
+    // program-local assignments consumed by waterfp.cg BIT_SHADOWMAP.
+    if ( id == kShaderParam_ShadowMap1MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map1, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap2MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map2, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap3MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map3, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap4MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map4, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParamsFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowSplitsFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Splits, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParams2FP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params2, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParams3FP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params3, vec4Arr, nNumVec4s );
+    }
     // multi9 (BLENDMODE_MULTI) fragment constants: the material-2 specular
     // and the 'lights on' addglow threshold/seed; same always-mirror contract
     if ( id == kShaderParam_Specular2ColorAndExponentFP )
