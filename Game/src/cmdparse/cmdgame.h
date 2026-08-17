@@ -235,6 +235,8 @@ typedef struct GameState
     int        useFBOs;
     int        useCg;
     int        glslPilot;    // native GLSL default-on; 0 selects the legacy ARB/Cg fallback
+    int        modernPresentation; // opt-in filmic tone mapping in native GLSL final passes
+    int        modernBloom; // opt-in soft-knee bloom composite in native GLSL final passes
     int        shaderCache;
     int        shaderInitLogging;
     int        shaderOptimizationOverride;

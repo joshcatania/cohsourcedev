@@ -1315,6 +1315,10 @@ Cmd game_cmds[] =
                         "Use Cg shaders instead of ARB" },
     { 0, "glslPilot", 0, {{ CMDINT(game_state.glslPilot) }}, CMDF_HIDEPRINT,
                         "Use native GLSL for supported pairings; 0 selects the legacy ARB/Cg fallback" },
+    { 0, "modernPresentation", 0, {{ CMDINT(game_state.modernPresentation) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in filmic presentation curve in native GLSL final passes" },
+    { 0, "modernBloom", 0, {{ CMDINT(game_state.modernBloom) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in soft-knee bloom composite in native GLSL final passes" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -6165,6 +6169,12 @@ void gameStateInit()
     // Native GLSL is the default for supported pairings.  -glslPilot 0
     // remains the explicit legacy ARB/Cg control and escape hatch.
     game_state.glslPilot = 1;
+    // Keep the first visual-modernization experiment opt-in. -modernPresentation
+    // 1 or the runtime command modernPresentation 1 enables it explicitly.
+    game_state.modernPresentation = 0;
+    // Keep Modern Bloom v1 opt-in and default-off. The existing presentation
+    // vector carries this as .y through the native GLSL effects mirror.
+    game_state.modernBloom = 0;
     if (game_state.safemode)
     {
         // Disable shader cache in safe mode
