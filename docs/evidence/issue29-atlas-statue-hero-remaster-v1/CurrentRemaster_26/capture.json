@@ -1,0 +1,235 @@
+{
+  "passed": true,
+  "reason": "Deterministic capture completed and Ouroboros exited cleanly",
+  "target": "AtlasHero_Statue_01",
+  "accountName": "Dummy00009",
+  "exitCode": 0,
+  "timedOut": false,
+  "screenshot": "D:\\github\\cohsourcedev\\agent\\captures\\AtlasHero_Statue_01.jpg",
+  "pid": 26964,
+  "commandLine": "\"D:\\github\\cohsourcedev\\bin\\Ouroboros.exe\"  -db 127.0.0.1 -authname Dummy00009 -password 11111111 -noverify -quicklogin 1 -noversioncheck -capture AtlasHero_Statue_01 -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0 -modernMaterials 1 -modernLighting 1 -modernPresentation 0 -modernBloom 0  ",
+  "workingDirectory": "D:\\github\\cohsourcedev\\bin",
+  "processSnapshot": {
+    "pid": 26964,
+    "executablePath": "D:\\github\\cohsourcedev\\bin\\Ouroboros.exe",
+    "commandLine": "\"D:\\github\\cohsourcedev\\bin\\Ouroboros.exe\"  -db 127.0.0.1 -authname Dummy00009 -password 11111111 -noverify -quicklogin 1 -noversioncheck -capture AtlasHero_Statue_01 -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0 -modernMaterials 1 -modernLighting 1 -modernPresentation 0 -modernBloom 0  ",
+    "parentProcessId": 7624,
+    "creationDate": "2026-08-18T15:34:58.072159-05:00",
+    "workingDirectory": "D:\\github\\cohsourcedev\\bin",
+    "processStartTime": "2026-08-18T15:34:58.0721593-05:00",
+    "responding": true,
+    "workingSetBytes": 803020800,
+    "threadCount": 19
+  },
+  "dumpPath": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.dmp",
+  "dumpMetadata": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.dmp.json",
+  "dumpSucceeded": false,
+  "dumpError": "",
+  "dumpStkOutput": "",
+  "tracePath": "D:\\github\\cohsourcedev\\bin\\logs\\ouroboros-startup-26964.trace",
+  "lastTraceMarker": "2026-08-18T15:35:15.546 pid=26964 tid=11356 marker=capture.quit.request",
+  "traceTail": [
+    "2026-08-18T15:35:01.404 pid=26964 tid=11356 marker=network.comm-init.complete",
+    "2026-08-18T15:35:05.481 pid=26964 tid=11356 marker=data-load.complete",
+    "2026-08-18T15:35:05.482 pid=26964 tid=11356 marker=data-load.call.complete",
+    "2026-08-18T15:35:05.482 pid=26964 tid=11356 marker=game.before-loop.begin",
+    "2026-08-18T15:35:05.482 pid=26964 tid=11356 marker=login.quick.begin",
+    "2026-08-18T15:35:05.483 pid=26964 tid=11356 marker=login.auth.request",
+    "2026-08-18T15:35:05.483 pid=26964 tid=11356 marker=auth.login.begin",
+    "2026-08-18T15:35:05.484 pid=26964 tid=11356 marker=auth.login.direct-db.synthesis.begin",
+    "2026-08-18T15:35:05.488 pid=26964 tid=11356 marker=auth.login.direct-db.synthesis.complete",
+    "2026-08-18T15:35:05.527 pid=26964 tid=11356 marker=login.auth.complete",
+    "2026-08-18T15:35:05.529 pid=26964 tid=11356 marker=login.db.request",
+    "2026-08-18T15:35:05.530 pid=26964 tid=11356 marker=login.dbconnect.call.begin",
+    "2026-08-18T15:35:05.530 pid=26964 tid=11356 marker=db.login.begin",
+    "2026-08-18T15:35:05.535 pid=26964 tid=11356 marker=db.socket.connected",
+    "2026-08-18T15:35:05.556 pid=26964 tid=11356 marker=db.login.request-sent",
+    "2026-08-18T15:35:05.610 pid=26964 tid=11356 marker=db.login.response.players",
+    "2026-08-18T15:35:05.610 pid=26964 tid=11356 marker=login.dbconnect.call.complete",
+    "2026-08-18T15:35:05.610 pid=26964 tid=11356 marker=login.db.complete",
+    "2026-08-18T15:35:05.611 pid=26964 tid=11356 marker=character.selection.resume.begin",
+    "2026-08-18T15:35:05.611 pid=26964 tid=11356 marker=character.choose.request",
+    "2026-08-18T15:35:05.757 pid=26964 tid=11356 marker=db.map-connect.packet",
+    "2026-08-18T15:35:05.757 pid=26964 tid=11356 marker=character.choose.map-connect.response",
+    "2026-08-18T15:35:05.758 pid=26964 tid=11356 marker=character.choose.complete",
+    "2026-08-18T15:35:05.758 pid=26964 tid=11356 marker=character.selection.resume.complete",
+    "2026-08-18T15:35:05.761 pid=26964 tid=11356 marker=map.handoff.resume.begin",
+    "2026-08-18T15:35:05.762 pid=26964 tid=11356 marker=map.connect.begin",
+    "2026-08-18T15:35:05.851 pid=26964 tid=11356 marker=map.connect.start.complete",
+    "2026-08-18T15:35:05.887 pid=26964 tid=11356 marker=map.shortcuts.complete",
+    "2026-08-18T15:35:05.887 pid=26964 tid=11356 marker=map.connection.resume.complete",
+    "2026-08-18T15:35:05.888 pid=26964 tid=11356 marker=map.scene.resume.request",
+    "2026-08-18T15:35:05.888 pid=26964 tid=11356 marker=map.scene.request",
+    "2026-08-18T15:35:12.609 pid=26964 tid=11356 marker=map.scene.groups.complete",
+    "2026-08-18T15:35:12.890 pid=26964 tid=11356 marker=map.scene.entities.complete",
+    "2026-08-18T15:35:13.120 pid=26964 tid=11356 marker=map.scene.complete",
+    "2026-08-18T15:35:13.121 pid=26964 tid=11356 marker=map.scene.resume.complete",
+    "2026-08-18T15:35:13.121 pid=26964 tid=11356 marker=login.quick.complete",
+    "2026-08-18T15:35:13.124 pid=26964 tid=11356 marker=game.before-loop.login-complete",
+    "2026-08-18T15:35:13.126 pid=26964 tid=11356 marker=game.before-loop.complete",
+    "2026-08-18T15:35:13.127 pid=26964 tid=11356 marker=game-loop.call.begin",
+    "2026-08-18T15:35:13.129 pid=26964 tid=11356 marker=game-loop.enter",
+    "2026-08-18T15:35:13.130 pid=26964 tid=11356 marker=game-loop.engine-update.begin",
+    "2026-08-18T15:35:13.181 pid=26964 tid=11356 marker=game-loop.engine-update.complete",
+    "2026-08-18T15:35:13.181 pid=26964 tid=11356 marker=capture.wait comm=1 player=1 camera=0 mode=3 menu=0",
+    "2026-08-18T15:35:13.436 pid=26964 tid=11356 marker=capture.readiness.ready",
+    "2026-08-18T15:35:13.436 pid=26964 tid=11356 marker=capture.water state=2 waterFeature=1 multiFeature=1",
+    "2026-08-18T15:35:13.437 pid=26964 tid=11356 marker=capture.camera.fixed pos=100.00 105.48 -650.00",
+    "2026-08-18T15:35:13.437 pid=26964 tid=11356 marker=capture.camera.state cam=100.00 111.75 -658.38 pyr=0.0000 3.1416 0.0000 target=-0.0000 3.1416 0.0000",
+    "2026-08-18T15:35:15.490 pid=26964 tid=11356 marker=capture.camera.screenshot-state cam=100.00 111.75 -678.96 pyr=0.0000 3.1416 0.0000 target=0.0000 3.1416 0.0000",
+    "2026-08-18T15:35:15.491 pid=26964 tid=11356 marker=capture.screenshot.request",
+    "2026-08-18T15:35:15.546 pid=26964 tid=11356 marker=capture.quit.request"
+  ],
+  "serverStatusPath": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.server.json",
+  "serverStatus": {
+    "serverMonitorRunning": true,
+    "observedServerProcessTypes": 15,
+    "processes": [
+      {
+        "name": "ServerMonitor",
+        "running": true,
+        "count": 1,
+        "pids": [
+          9900
+        ]
+      },
+      {
+        "name": "AuthServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          31248
+        ]
+      },
+      {
+        "name": "DbServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          24720
+        ]
+      },
+      {
+        "name": "Launcher",
+        "running": true,
+        "count": 1,
+        "pids": [
+          11292
+        ]
+      },
+      {
+        "name": "MapServer",
+        "running": true,
+        "count": 3,
+        "pids": [
+          2260,
+          9884,
+          26288
+        ]
+      },
+      {
+        "name": "AccountServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          19988
+        ]
+      },
+      {
+        "name": "ChatServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          3320
+        ]
+      },
+      {
+        "name": "AuctionServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          25680
+        ]
+      },
+      {
+        "name": "MissionServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          8800
+        ]
+      },
+      {
+        "name": "TurnstileServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          18184
+        ]
+      },
+      {
+        "name": "QueueServer",
+        "running": false,
+        "count": 0,
+        "pids": []
+      },
+      {
+        "name": "StatServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          31184
+        ]
+      },
+      {
+        "name": "ArenaServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          22568
+        ]
+      },
+      {
+        "name": "RaidServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          17828
+        ]
+      },
+      {
+        "name": "LogServer",
+        "running": true,
+        "count": 1,
+        "pids": [
+          31488
+        ]
+      },
+      {
+        "name": "BeaconServer",
+        "running": true,
+        "count": 2,
+        "pids": [
+          2080,
+          31876
+        ]
+      },
+      {
+        "name": "BeaconClient",
+        "running": true,
+        "count": 2,
+        "pids": [
+          10832,
+          29112
+        ]
+      }
+    ],
+    "readiness": "unknown",
+    "note": "Process presence is diagnostic only. MapServer may be started on demand through Launcher. Full readiness requires an application-level check such as agent/smoke.ps1."
+  },
+  "startedAt": "2026-08-18T15:34:57.8389116-05:00",
+  "finishedAt": "2026-08-18T15:35:20.4930726-05:00",
+  "stdout": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.stdout.log",
+  "stderr": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.stderr.log",
+  "result": "D:\\github\\cohsourcedev\\agent\\logs\\capture-AtlasHero_Statue_01-20260818-153457.json"
+}

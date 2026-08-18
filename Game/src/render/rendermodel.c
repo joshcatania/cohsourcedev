@@ -4,6 +4,7 @@
 #include "render/model_cache.h"
 #include "render/thread/ogl.h"
 #include <stdio.h>
+#include "seq/AutoLOD.h"
 #include "seq/tricks.h"
 #include <utilitieslib/utils/error.h>
 #include <utilitieslib/utils/memcheck.h>
@@ -29,6 +30,139 @@
 #include "render/cubemap.h"
 #include "render/rendershadowmap.h"
 #include "render/thread/rt_shadowmap.h"
+
+// Issue #20/#21 texture-pilot diagnostic. This is deliberately limited to
+// explicit capture targets and one line per distinct material bind so asset
+// inspection cannot turn into a whole-map texture catalog in ordinary runs.
+static const char *texturePilotLayerName(int layer)
+{
+    switch (layer)
+    {
+    xcase TEXLAYER_BASE:       return "BASE1";
+    xcase TEXLAYER_GENERIC:    return "MULTIPLY1";
+    xcase TEXLAYER_BUMPMAP1:   return "BUMPMAP1";
+    xcase TEXLAYER_DUALCOLOR1: return "DUALCOLOR1";
+    xcase TEXLAYER_MASK:       return "MASK";
+    xcase TEXLAYER_BASE2:      return "BASE2";
+    xcase TEXLAYER_MULTIPLY2:  return "MULTIPLY2";
+    xcase TEXLAYER_BUMPMAP2:   return "BUMPMAP2";
+    xcase TEXLAYER_DUALCOLOR2: return "DUALCOLOR2";
+    xcase TEXLAYER_ADDGLOW1:   return "ADDGLOW1";
+    xcase TEXLAYER_CUBEMAP:    return "CUBEMAP";
+    xdefault:                  return "UNKNOWN";
+    }
+}
+
+static int texturePilotTargetEnabled(void)
+{
+    if (!game_state.glslPilot || game_state.capture_state == 0 || game_state.capture_state == 3)
+        return 0;
+
+    if (stricmp(game_state.capture_target, "FoundersCanal_01") == 0)
+        return 1;
+
+    return strnicmp(game_state.capture_target, "AtlasPlaza_", 11) == 0 ||
+           strnicmp(game_state.capture_target, "AtlasHero_", 10) == 0;
+}
+
+static void texturePilotTraceGeometry(const ViewSortNode *vs)
+{
+    static Model *seen[128];
+    static int seen_count;
+    Model *model;
+    Model *source_model;
+    ModelLODInfo *lod_info;
+    Vec3 world_mid;
+    int i;
+    int lod_index = -1;
+    int lod_count = 0;
+    AutoLOD *lod = NULL;
+
+    if (!vs || !(model = vs->model))
+        return;
+
+    for (i = 0; i < seen_count; ++i)
+        if (seen[i] == model)
+            return;
+    if (seen_count >= ARRAY_SIZE(seen))
+        return;
+    seen[seen_count++] = model;
+
+    source_model = model->srcmodel ? model->srcmodel : model;
+    lod_info = source_model->lod_info ? source_model->lod_info : model->lod_info;
+    if (source_model->lod_models)
+    {
+        lod_count = eaSize(&source_model->lod_models);
+        for (i = 0; i < lod_count; ++i)
+        {
+            if (source_model->lod_models[i] && source_model->lod_models[i]->model == model)
+            {
+                lod_index = i;
+                break;
+            }
+        }
+    }
+    if (lod_info)
+    {
+        int metadata_count = eaSize(&lod_info->lods);
+        if (!lod_count)
+            lod_count = metadata_count;
+        if (lod_index >= 0 && lod_index < metadata_count)
+            lod = lod_info->lods[lod_index];
+    }
+
+    mulVecMat4(vs->mid, cam_info.inv_viewmat, world_mid);
+    printf("TEXTUREPILOT: geometry model=%s source=%s verts=%d tris=%d texCount=%d radius=%.3f boundsMin=(%.3f %.3f %.3f) boundsMax=(%.3f %.3f %.3f) worldMid=(%.3f %.3f %.3f) lodIndex=%d lodCount=%d lodNear=%.3f lodFar=%.3f lodError=%.3f lodModel=%s\n",
+           model->name ? model->name : "?", model->filename ? model->filename : "?",
+           model->vert_count, model->tri_count, model->tex_count, model->radius,
+           model->min[0], model->min[1], model->min[2],
+           model->max[0], model->max[1], model->max[2],
+           world_mid[0], world_mid[1], world_mid[2],
+           lod_index, lod_count, lod ? lod->lod_near : 0.0f,
+           lod ? lod->lod_far : 0.0f, lod ? lod->max_error : 0.0f,
+           lod && lod->lod_modelname ? lod->lod_modelname : "?");
+}
+
+static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind *bind,
+                                  const RdrTexList *texlist)
+{
+    static TexBind *seen[256];
+    static int seen_count;
+    int i;
+
+    if (!vs || !vs->model || !bind || !texlist || !texturePilotTargetEnabled())
+        return;
+
+    for (i = 0; i < seen_count; ++i)
+        if (seen[i] == bind)
+            return;
+    if (seen_count >= ARRAY_SIZE(seen))
+        return;
+    seen[seen_count++] = bind;
+
+    texturePilotTraceGeometry(vs);
+    printf("TEXTUREPILOT: bind=%s dirname=%s blendShader=%d blendBits=0x%x model=%s submesh=%d mid=(%.2f %.2f %.2f)\n",
+           bind->name ? bind->name : "?", bind->dirname ? bind->dirname : "?",
+           (int)texlist->blend_mode.shader, (unsigned)texlist->blend_mode.blend_bits,
+           vs->model->name ? vs->model->name : "?",
+           tex_index, vs->mid[0], vs->mid[1], vs->mid[2]);
+
+    for (i = 0; i < TEXLAYER_MAX_LAYERS; ++i)
+    {
+        BasicTexture *declared = bind->tex_layers[i];
+        BasicTexture *actual = declared && declared->actualTexture ? declared->actualTexture : declared;
+        if (actual)
+        {
+            printf("TEXTUREPILOT: layer=%s name=%s dirname=%s logical=%dx%d real=%dx%d flags=0x%x texopt=0x%x surface=0x%x gloss=%.4f fileBytes=%u mipBytes=%d actual=%s\n",
+                   texturePilotLayerName(i), actual->name ? actual->name : "?",
+                   actual->dirname ? actual->dirname : "?", actual->width, actual->height,
+                   actual->realWidth, actual->realHeight, (unsigned)actual->flags,
+                   (unsigned)actual->texopt_flags, (unsigned)actual->texopt_surface,
+                   actual->gloss, (unsigned)actual->file_bytes, actual->mipsize,
+                   actual == declared ? "same" : (declared && declared->name ? declared->name : "declared"));
+        }
+    }
+}
 
 void modelDrawGetCharacterLighting(GfxNode *node, Vec3 ambient, Vec3 diffuse, Vec3 lightdir)
 {
@@ -759,6 +893,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
             assert(tex_index!=-1);
             bind = vs->materials[tex_index];
             texlist = demandLoadTexturesInline2(bind, vs->shadowcaster, vs->use_fallback_material);
+            texturePilotTraceBind(vs, tex_index, bind, texlist);
             using_fallback_material |= bind->is_fallback_material;
 
             // set reflection blendbits and look for possible reflectors

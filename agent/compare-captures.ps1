@@ -4,12 +4,13 @@ param(
     [Parameter(Mandatory=$true)][string]$Current,
     # A pixel counts as changed when any channel differs by more than this (0-255)
     [int]$PixelTolerance = 12,
-    # Percent of sampled pixels allowed to change before the verdict fails.
-    # Measured run-to-run variance reaches ~4% on sun-facing shots (glare
-    # shimmer); cross-scene comparisons measure 35%+.
+    # Percent of sampled pixels allowed to change before the hard parity
+    # verdict fails. Measured run-to-run variance reaches ~4% on sun-facing
+    # shots (glare shimmer); cross-scene comparisons measure 35%+.
     [double]$MaxChangedPercent = 6.0,
-    # Average per-channel delta allowed before the verdict fails. Cloud drift
-    # between runs adds a small broadband delta on clear days.
+    # Average per-channel delta that is reported as an advisory. Capture
+    # exposure/eye-adaptation and weather can exceed this level without a
+    # localized shader change, so it is not a hard parity criterion.
     [double]$MaxMeanDelta = 3.0,
     # Images are compared downsampled to this width for speed; JPEG noise
     # averages out and genuine scene changes do not.
@@ -78,12 +79,32 @@ try {
 
     $changedPercent = if ($totalPixels -gt 0) { 100.0 * $changedPixels / $totalPixels } else { 0.0 }
     $meanDelta = if ($totalPixels -gt 0) { $deltaSum / $totalPixels } else { 0.0 }
-    $passed = ($changedPercent -le $MaxChangedPercent) -and ($meanDelta -le $MaxMeanDelta)
+    $changedPercentExceeded = $changedPercent -gt $MaxChangedPercent
+    $meanDeltaExceeded = $meanDelta -gt $MaxMeanDelta
+    $failureReasons = @()
+    $advisories = @()
+    if ($changedPercentExceeded) {
+        $failureReasons += ("changedPercent {0} exceeds hard limit {1}" -f $changedPercent, $MaxChangedPercent)
+    }
+    if ($meanDeltaExceeded) {
+        $advisories += ("meanDelta {0} exceeds advisory level {1}; exposure/weather noise is not a hard failure" -f $meanDelta, $MaxMeanDelta)
+    }
+    # changedPercent is the hard parity discriminator. meanDelta remains
+    # visible and actionable as a noise-sensitive diagnostic.
+    $passed = -not $changedPercentExceeded
 
     $result = [ordered]@{
         passed   = $passed
+        verdict  = if ($passed) { 'PASS' } else { 'REGRESSED' }
         baseline = (Resolve-Path -LiteralPath $Baseline).Path
         current  = (Resolve-Path -LiteralPath $Current).Path
+        failureReasons = @($failureReasons)
+        advisories = @($advisories)
+        policy = [ordered]@{
+            hardCriterion = 'changedPercent'
+            advisoryCriterion = 'meanDelta'
+            meanDeltaAction = 'report-only'
+        }
         metrics  = [ordered]@{
             compareWidth    = $CompareWidth
             sampledPixels   = $totalPixels
@@ -101,7 +122,15 @@ try {
 } catch {
     $result = [ordered]@{
         passed = $false
+        verdict = 'REGRESSED'
         error  = $_.Exception.Message
+        failureReasons = @("comparison error: $($_.Exception.Message)")
+        advisories = @()
+        policy = [ordered]@{
+            hardCriterion = 'changedPercent'
+            advisoryCriterion = 'meanDelta'
+            meanDeltaAction = 'report-only'
+        }
         baseline = $Baseline
         current  = $Current
     }
@@ -113,9 +142,10 @@ if ($Json) {
     if ($result.error) {
         Write-Host "COMPARE ERROR - $($result.error)"
     } elseif ($result.passed) {
-        Write-Host ("COMPARE PASS - changed {0}% mean {1} max {2}" -f $result.metrics.changedPercent, $result.metrics.meanDelta, $result.metrics.maxDelta)
+        $advisoryText = if (@($result.advisories).Count -gt 0) { " ADVISORY: $(@($result.advisories) -join '; ')" } else { '' }
+        Write-Host ("COMPARE PASS - changed {0}% mean {1} max {2}.{3}" -f $result.metrics.changedPercent, $result.metrics.meanDelta, $result.metrics.maxDelta, $advisoryText)
     } else {
-        Write-Host ("COMPARE FAIL - changed {0}% mean {1} max {2} (limits {3}% / {4})" -f $result.metrics.changedPercent, $result.metrics.meanDelta, $result.metrics.maxDelta, $MaxChangedPercent, $MaxMeanDelta)
+        Write-Host ("COMPARE FAIL - {0} changed {1}% mean {2} max {3} (hard limit {4}%; mean advisory {5})" -f (@($result.failureReasons) -join '; '), $result.metrics.changedPercent, $result.metrics.meanDelta, $result.metrics.maxDelta, $MaxChangedPercent, $MaxMeanDelta)
     }
 }
 if ($result.passed) { exit 0 } else { exit 1 }

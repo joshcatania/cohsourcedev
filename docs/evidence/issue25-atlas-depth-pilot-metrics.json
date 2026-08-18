@@ -1,0 +1,235 @@
+{
+  "issue": 25,
+  "baseCommit": "ea1e9414f839a5bb949aa826da4175d54dd47b5b",
+  "branch": "agent/atlas-depth-pilot",
+  "rendererArgs": [
+    "-glslPilot", "1",
+    "-modernMaterials", "1",
+    "-modernPresentation", "0",
+    "-modernBloom", "0"
+  ],
+  "captureHarness": {
+    "screen": "1280x720",
+    "mapTargets": [
+      "AtlasHero_CityHall_01",
+      "AtlasHero_East_01",
+      "AtlasHero_North_01",
+      "AtlasHero_West_01"
+    ],
+    "captureFlags": "-capture <target> -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0",
+    "forcedNonDepthSettings": {
+      "shaderdetail": 3,
+      "usewater": 2
+    }
+  },
+  "settingsLegend": {
+    "shadowmode": {
+      "0": "off",
+      "1": "stencil",
+      "2": "shadow map low",
+      "3": "shadow map medium",
+      "4": "shadow map high"
+    },
+    "shadowmapshader": {
+      "0": "none",
+      "1": "fast",
+      "2": "medium",
+      "3": "high quality"
+    },
+    "shadowmapsize": {
+      "0": 512,
+      "1": 1024,
+      "2": 2048
+    },
+    "shadowmapdistance": {
+      "-2": "off/current",
+      "0": "close",
+      "1": "middle",
+      "2": "far"
+    },
+    "ambientstrength": {
+      "0": "off",
+      "1": "low",
+      "2": "medium",
+      "3": "high",
+      "4": "ultra"
+    },
+    "ambientresolution": {
+      "0": "2/2/4",
+      "1": "2/2/2",
+      "2": "2/1/2 quality",
+      "3": "1/1/2 high quality",
+      "4": "1/1/1 super high quality"
+    },
+    "ambientblur": {
+      "0": "none",
+      "1": "2D fast",
+      "2": "gaussian",
+      "3": "bilateral",
+      "4": "gaussian depth",
+      "5": "bilateral depth",
+      "6": "trilateral"
+    }
+  },
+  "selectedStates": {
+    "current": {
+      "shadowmode": 1,
+      "shadowmapshader": 0,
+      "shadowmapsize": 0,
+      "shadowmapdistance": -2,
+      "ambientstrength": 3,
+      "ambientresolution": 2,
+      "ambientblur": 6
+    },
+    "shadowsOnlyWinner": {
+      "shadowmode": 4,
+      "shadowmapshader": 3,
+      "shadowmapsize": 1,
+      "shadowmapdistance": 1,
+      "ambientstrength": 0,
+      "ambientresolution": 2,
+      "ambientblur": 5
+    },
+    "aoOnlyWinner": {
+      "shadowmode": 0,
+      "shadowmapshader": 0,
+      "shadowmapsize": 0,
+      "shadowmapdistance": -2,
+      "ambientstrength": 3,
+      "ambientresolution": 3,
+      "ambientblur": 5
+    },
+    "combinedWinner": {
+      "shadowmode": 4,
+      "shadowmapshader": 3,
+      "shadowmapsize": 1,
+      "shadowmapdistance": 1,
+      "ambientstrength": 3,
+      "ambientresolution": 3,
+      "ambientblur": 5
+    }
+  },
+  "matrixCandidates": [
+    { "state": "shadows-low-close", "shadowmode": 2, "shadowmapshader": 1, "shadowmapsize": 0, "shadowmapdistance": 0, "result": "reject: visible aliasing and limited useful range" },
+    { "state": "shadows-medium-middle", "shadowmode": 3, "shadowmapshader": 2, "shadowmapsize": 1, "shadowmapdistance": 1, "result": "usable fallback: improved depth but softer/weaker than selected high mode" },
+    { "state": "shadows-high-middle-1024", "shadowmode": 4, "shadowmapshader": 3, "shadowmapsize": 1, "shadowmapdistance": 1, "result": "selected: best shadow detail/range balance" },
+    { "state": "shadows-high-far-2048", "shadowmode": 4, "shadowmapshader": 3, "shadowmapsize": 2, "shadowmapdistance": 2, "result": "reject: more aggressive/darker without proportional close-view gain" },
+    { "state": "ao-medium-quality-bilateral-depth", "ambientstrength": 2, "ambientresolution": 2, "ambientblur": 5, "result": "usable fallback: clean but too subtle" },
+    { "state": "ao-high-quality-gaussian-depth", "ambientstrength": 3, "ambientresolution": 3, "ambientblur": 4, "result": "usable: good contact depth, less controlled than bilateral depth" },
+    { "state": "ao-high-quality-bilateral-depth", "ambientstrength": 3, "ambientresolution": 3, "ambientblur": 5, "result": "selected: strongest clean contact-depth balance" },
+    { "state": "ao-high-quality-trilateral", "ambientstrength": 3, "ambientresolution": 3, "ambientblur": 6, "result": "reject: begins to over-darken crevices" },
+    { "state": "ao-ultra-super-trilateral", "ambientstrength": 4, "ambientresolution": 4, "ambientblur": 6, "result": "reject: over-processed/dark for little added structure" },
+    { "state": "combined-balanced", "shadowmode": 4, "shadowmapshader": 3, "shadowmapsize": 1, "shadowmapdistance": 1, "ambientstrength": 3, "ambientresolution": 2, "ambientblur": 5, "result": "usable: slightly cheaper but less local AO definition" },
+    { "state": "combined-high", "shadowmode": 4, "shadowmapshader": 3, "shadowmapsize": 1, "shadowmapdistance": 1, "ambientstrength": 3, "ambientresolution": 3, "ambientblur": 5, "result": "selected: best combined scene-wide balance" },
+    { "state": "combined-ultra", "shadowmode": 4, "shadowmapshader": 3, "shadowmapsize": 1, "shadowmapdistance": 1, "ambientstrength": 4, "ambientresolution": 4, "ambientblur": 6, "result": "reject: darker and less natural without enough added readability" }
+  ],
+  "performanceSamples": {
+    "method": "20 GPU samples and approximately 76-78 CPU samples during a deterministic capture; PresentMon emitted no frames for this legacy OpenGL client",
+    "current": { "cpuMeanPercentOfMachine": 9.29, "cpuMaxPercentOfMachine": 24.51, "gpuMeanPercent": 12.55, "gpuMaxPercent": 36.0, "cpuSampleCount": 77, "gpuSampleCount": 20, "evidenceDir": "docs/evidence/issue25-depth-pilot/matrix-current-perf9" },
+    "shadowsOnlyWinner": { "cpuMeanPercentOfMachine": 9.60, "cpuMaxPercentOfMachine": 23.93, "gpuMeanPercent": 13.65, "gpuMaxPercent": 40.0, "cpuSampleCount": 76, "gpuSampleCount": 20, "evidenceDir": "docs/evidence/issue25-depth-pilot/perf-shadows-winner" },
+    "aoOnlyWinner": { "cpuMeanPercentOfMachine": 9.46, "cpuMaxPercentOfMachine": 22.43, "gpuMeanPercent": 11.40, "gpuMaxPercent": 30.0, "cpuSampleCount": 78, "gpuSampleCount": 20, "evidenceDir": "docs/evidence/issue25-depth-pilot/perf-ao-winner" },
+    "combinedWinner": { "cpuMeanPercentOfMachine": 9.09, "cpuMaxPercentOfMachine": 21.79, "gpuMeanPercent": 14.35, "gpuMaxPercent": 39.0, "cpuSampleCount": 76, "gpuSampleCount": 20, "evidenceDir": "docs/evidence/issue25-depth-pilot/perf-combined-winner" }
+  },
+  "crossViewCaptures": [
+    { "view": "CityHall", "reference": "docs/evidence/issue25-depth-pilot/reference-cityhall/AtlasHero_CityHall_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/combined-winner-cityhall/AtlasHero_CityHall_01.jpg", "referencePassed": true, "winnerPassed": true },
+    { "view": "East", "reference": "docs/evidence/issue25-depth-pilot/reference-east/AtlasHero_East_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/combined-winner-east-final/AtlasHero_East_01.jpg", "referencePassed": true, "winnerPassed": true },
+    { "view": "North", "reference": "docs/evidence/issue25-depth-pilot/reference-north-clean/AtlasHero_North_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/combined-winner-north-final/AtlasHero_North_01.jpg", "referencePassed": true, "winnerPassed": true },
+    { "view": "West", "reference": "docs/evidence/issue25-depth-pilot/reference-west/AtlasHero_West_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/combined-winner-west/AtlasHero_West_01.jpg", "referencePassed": true, "winnerPassed": true }
+  ],
+  "stockUltraFollowup": {
+    "sourceResolution": {
+      "presetFunction": "Game/src/graphics/gfxSettings.c:gfxGetUltraAdvancedSettings",
+      "shadowResolutionFunction": "Game/src/UI/uiOptions.c:gfxUpdateShadowMapAdvanced",
+      "ambientResolutionFunction": "Game/src/UI/uiOptions.c:gfxUpdateAmbientAdvanced",
+      "expectedDepthProfile": {
+        "shadowmode": 4,
+        "shadowmapshader": 3,
+        "shadowmapsize": 1,
+        "shadowmapdistance": 2,
+        "ambientstrength": 3,
+        "ambientresolution": 2,
+        "ambientblur": 6
+      }
+    },
+    "runtimeObservation": {
+      "method": "Read the file-backed settings persisted by the client after a clean capture exit, before the helper restores the pre-run settings.",
+      "views": ["AtlasHero_CityHall_01", "AtlasHero_East_01", "AtlasHero_North_01", "AtlasHero_West_01"],
+      "observedSettingsMatchedRequested": true,
+      "observedSettings": {
+        "shadowmode": 4,
+        "shadowmapshader": 3,
+        "shadowmapsize": 1,
+        "shadowmapdistance": 2,
+        "ambientstrength": 3,
+        "ambientresolution": 2,
+        "ambientblur": 6,
+        "graphicsquality": "1.000000",
+        "shaderdetail": 3,
+        "usewater": 2
+      },
+      "settingsEvidence": [
+        "docs/evidence/issue25-depth-pilot/stock-ultra-cityhall/AtlasHero_CityHall_01.settings.json",
+        "docs/evidence/issue25-depth-pilot/stock-ultra-east/AtlasHero_East_01.settings.json",
+        "docs/evidence/issue25-depth-pilot/stock-ultra-north/AtlasHero_North_01.settings.json",
+        "docs/evidence/issue25-depth-pilot/stock-ultra-west/AtlasHero_West_01.settings.json"
+      ]
+    },
+    "nonDepthControls": {
+      "graphicsquality": "1.000000",
+      "shaderdetail": 3,
+      "usewater": 2,
+      "rendererArgs": ["-glslPilot", "1", "-modernMaterials", "1", "-modernPresentation", "0", "-modernBloom", "0"],
+      "screen": "1280x720"
+    },
+    "visualComparison": {
+      "contactSheet": "docs/evidence/issue25-atlas-depth-ultra-contact-sheet.jpg",
+      "cityHall": {
+        "stockUltra": "docs/evidence/issue25-depth-pilot/stock-ultra-cityhall/AtlasHero_CityHall_01.jpg",
+        "winner": "docs/evidence/issue25-depth-pilot/winner-cityhall-rerun/AtlasHero_CityHall_01.jpg",
+        "compareWidth": 320,
+        "pixelTolerance": 12,
+        "changedPercent": 13.9954,
+        "meanDelta": 8.3396,
+        "maxDelta": 115
+      },
+      "allViews": [
+        { "view": "CityHall", "stockUltra": "docs/evidence/issue25-depth-pilot/stock-ultra-cityhall/AtlasHero_CityHall_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/winner-cityhall-rerun/AtlasHero_CityHall_01.jpg", "changedPercent": 13.9954, "meanDelta": 8.3396, "maxDelta": 115 },
+        { "view": "East", "stockUltra": "docs/evidence/issue25-depth-pilot/stock-ultra-east/AtlasHero_East_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/winner-east-rerun/AtlasHero_East_01.jpg", "changedPercent": 32.0763, "meanDelta": 15.2292, "maxDelta": 230 },
+        { "view": "North", "stockUltra": "docs/evidence/issue25-depth-pilot/stock-ultra-north/AtlasHero_North_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/winner-north-rerun/AtlasHero_North_01.jpg", "changedPercent": 0.8828, "meanDelta": 1.3444, "maxDelta": 43 },
+        { "view": "West", "stockUltra": "docs/evidence/issue25-depth-pilot/stock-ultra-west/AtlasHero_West_01.jpg", "winner": "docs/evidence/issue25-depth-pilot/winner-west-rerun/AtlasHero_West_01.jpg", "changedPercent": 6.3912, "meanDelta": 3.4319, "maxDelta": 101 }
+      ],
+      "conclusion": "#25 mostly reproduces and rebalances Stock Ultra rather than visibly exceeding it: it trades Far shadow coverage and Trilateral AO for Middle shadow coverage and Bilateral Depth AO, with cleaner local contacts and less aggressive distant/crevice darkness in the strongest views."
+    },
+    "performanceComparison": {
+      "method": "Deterministic City Hall capture with MeasureFps enabled; 1280x720; same non-depth controls; PresentMon emitted no frame records for the legacy OpenGL client.",
+      "stockUltra": {
+        "cpuMeanPercentOfMachine": 9.08,
+        "cpuMaxPercentOfMachine": 23.03,
+        "gpuMeanPercent": 13.33,
+        "gpuMaxPercent": 33.0,
+        "cpuSampleCount": 81,
+        "gpuSampleCount": 21,
+        "evidenceDir": "docs/evidence/issue25-depth-pilot/stock-ultra-perf-cityhall"
+      },
+      "combinedWinner": {
+        "cpuMeanPercentOfMachine": 9.31,
+        "cpuMaxPercentOfMachine": 23.25,
+        "gpuMeanPercent": 22.29,
+        "gpuMaxPercent": 48.0,
+        "cpuSampleCount": 82,
+        "gpuSampleCount": 21,
+        "evidenceDir": "docs/evidence/issue25-depth-pilot/winner-perf-cityhall-rerun"
+      },
+      "deltaWinnerMinusStockUltra": {
+        "cpuMeanPercentagePoints": 0.23,
+        "gpuMeanPercentagePoints": 8.96
+      }
+    }
+  },
+  "durableArtifacts": {
+    "matrixContactSheet": "docs/evidence/issue25-atlas-depth-matrix.jpg",
+    "crossViewContactSheet": "docs/evidence/issue25-atlas-depth-contact-sheet.jpg",
+    "stockUltraContactSheet": "docs/evidence/issue25-atlas-depth-ultra-contact-sheet.jpg",
+    "candidateEvidence": "docs/evidence/issue25-depth-pilot/"
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "name": "shadows-high-far-2048",
+  "target": "AtlasHero_CityHall_01",
+  "requestedSettings": {
+    "shadowmode": 4,
+    "shadowmapshader": 3,
+    "shadowmapsize": 2,
+    "shadowmapdistance": 2,
+    "ambientstrength": 0,
+    "ambientresolution": 2,
+    "ambientblur": 5,
+    "shaderdetail": 3,
+    "usewater": 2
+  },
+  "capturePassed": true,
+  "captureExitCode": 0,
+  "screenshot": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.jpg",
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.capture.json",
+  "fps": null,
+  "presentMon": null,
+  "presentMonStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.presentmon.stdout.log",
+  "presentMonStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.presentmon.stderr.log",
+  "performance": {
+    "cpuSampleCount": 0,
+    "gpuSampleCount": 0,
+    "cpuMeanPercentOfMachine": null,
+    "cpuMaxPercentOfMachine": null,
+    "gpuMeanPercent": null,
+    "gpuMaxPercent": null,
+    "presentMon": null
+  },
+  "fpsSamples": [],
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\shadows-high-far-2048\\AtlasHero_CityHall_01.runner.stderr.log"
+}
