@@ -60,7 +60,8 @@ static int texturePilotTargetEnabled(void)
     if (stricmp(game_state.capture_target, "FoundersCanal_01") == 0)
         return 1;
 
-    return strnicmp(game_state.capture_target, "AtlasPlaza_", 11) == 0;
+    return strnicmp(game_state.capture_target, "AtlasPlaza_", 11) == 0 ||
+           strnicmp(game_state.capture_target, "AtlasHero_", 10) == 0;
 }
 
 static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind *bind,

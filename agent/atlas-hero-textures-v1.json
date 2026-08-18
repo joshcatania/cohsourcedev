@@ -16,16 +16,16 @@
   ],
   "discovery": {
     "capture_targets": [
-      "AtlasPlaza_CityHall_03",
-      "AtlasPlaza_East_01",
-      "AtlasPlaza_North_01",
-      "AtlasPlaza_West_01"
+      "AtlasHero_CityHall_01",
+      "AtlasHero_East_01",
+      "AtlasHero_North_01",
+      "AtlasHero_West_01"
     ],
     "runtime_source_logs": [
-      "agent/logs/capture-AtlasPlaza_CityHall_03-20260818-060702.stdout.log",
-      "agent/logs/capture-AtlasPlaza_East_01-20260818-060810.stdout.log",
-      "agent/logs/capture-AtlasPlaza_North_01-20260818-060848.stdout.log",
-      "agent/logs/capture-AtlasPlaza_West_01-20260818-060923.stdout.log"
+      "agent/logs/capture-AtlasHero_CityHall_01-20260818-070404.stdout.log",
+      "agent/logs/capture-AtlasHero_East_01-20260818-070146.stdout.log",
+      "agent/logs/capture-AtlasHero_North_01-20260818-070208.stdout.log",
+      "agent/logs/capture-AtlasHero_West_01-20260818-070231.stdout.log"
     ],
     "ranking_method": "distinct BASE1 bind observations across four valid Atlas directions; ties resolved by authored dimensions and visible gameplay coverage",
     "selected_groups": [

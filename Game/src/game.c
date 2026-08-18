@@ -2331,13 +2331,19 @@ typedef struct CaptureShot {
 // they are not part of the default regression suite. TalosArrive_01 keeps
 // the map-transfer arrival view as an authoring aid for Talos probes.
 static const CaptureShot s_captureShots[] = {
-    { "AtlasPlaza_CityHall_03", "500.00 120.00 -800.00 0.1220 0.0000 0.0000",  "30", 16, 1 },
-    { "AtlasPlaza_East_01",     "500.00 120.00 -800.00 0.1220 1.5778 0.0000",  "30", 16, 1 },
-    { "AtlasPlaza_North_01",    "500.00 120.00 -800.00 0.1220 3.1486 0.0000",  "30", 16, 1 },
-    { "AtlasPlaza_West_01",     "500.00 120.00 -800.00 0.1220 -1.5703 0.0000", "30", 16, 1 },
-    { "AtlasPlaza_Closeup_01",  "500.00 120.00 -800.00 0.1220 0.0000 0.0000",  "10", 16, 1 },
-    { "AtlasPlaza_NightEast_01","500.00 120.00 -800.00 0.1220 1.5778 0.0000",  "30", 0,  1 },
-    { "AtlasPlaza_NightCityHall_01","500.00 120.00 -800.00 0.1220 0.0000 0.0000", "30", 0, 1 },
+    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16, 1 },
+    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16, 1 },
+    { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0,  1 },
+    { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0, 1 },
+    // Issue #21 authoring views use the verified in-zone Atlas camera without
+    // redefining the established AtlasPlaza regression-shot identities.
+    { "AtlasHero_CityHall_01",  "500.00 120.00 -800.00 0.1220 0.0000 0.0000",  "30", 16, 1 },
+    { "AtlasHero_East_01",      "500.00 120.00 -800.00 0.1220 1.5778 0.0000",  "30", 16, 1 },
+    { "AtlasHero_North_01",     "500.00 120.00 -800.00 0.1220 3.1486 0.0000",  "30", 16, 1 },
+    { "AtlasHero_West_01",      "500.00 120.00 -800.00 0.1220 -1.5703 0.0000", "30", 16, 1 },
     // First non-Atlas regression shot: Founders Falls canals. Reaching map
     // 10 exercises the mapmove capture path, and the view deterministically
     // binds alphaDetail (fragment 68), the fancy-water material (fragment
