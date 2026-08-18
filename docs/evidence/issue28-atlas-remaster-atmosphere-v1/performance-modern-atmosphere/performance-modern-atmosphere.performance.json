@@ -1,0 +1,16 @@
+{
+  "name": "performance-modern-atmosphere",
+  "target": "AtlasHero_CityHall_01",
+  "modernLighting": true,
+  "modernAtmosphere": true,
+  "capturePassed": true,
+  "cpuSampleCount": 78,
+  "gpuSampleCount": 20,
+  "cpuMeanPercentOfMachine": 9.28,
+  "cpuMaxPercentOfMachine": 24.37,
+  "gpuMeanPercent": 9.2,
+  "gpuMaxPercent": 37.0,
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-modern-atmosphere\\AtlasHero_CityHall_01.capture.json",
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-modern-atmosphere\\performance-modern-atmosphere.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-modern-atmosphere\\performance-modern-atmosphere.runner.stderr.log"
+}

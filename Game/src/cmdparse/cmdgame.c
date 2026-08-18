@@ -1323,6 +1323,8 @@ Cmd game_cmds[] =
                         "Enable the opt-in modern material response for native GLSL Bump ColorBlendDual" },
     { 0, "modernLighting", 0, {{ CMDINT(game_state.modernLighting) }}, CMDF_HIDEPRINT,
                         "Enable the opt-in modern outdoor sun and sky lighting response" },
+    { 0, "modernAtmosphere", 0, {{ CMDINT(game_state.modernAtmosphere) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in modern outdoor aerial perspective response" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -6185,6 +6187,10 @@ void gameStateInit()
     // Keep the outdoor sun/sky response opt-in. The legacy renderer remains
     // an exact control when glslPilot is disabled.
     game_state.modernLighting = 0;
+    // Keep aerial perspective opt-in and scoped to the native GLSL outdoor
+    // path. The legacy renderer remains an exact control when glslPilot is
+    // disabled.
+    game_state.modernAtmosphere = 0;
     if (game_state.safemode)
     {
         // Disable shader cache in safe mode

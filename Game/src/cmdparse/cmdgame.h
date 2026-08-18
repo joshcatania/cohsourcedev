@@ -239,6 +239,7 @@ typedef struct GameState
     int        modernBloom; // opt-in soft-knee bloom composite in native GLSL final passes
     int        modernMaterials; // opt-in Bump ColorBlendDual lighting/specular response
     int        modernLighting; // opt-in outdoor sun/sky lighting response
+    int        modernAtmosphere; // opt-in outdoor aerial perspective response
     int        shaderCache;
     int        shaderInitLogging;
     int        shaderOptimizationOverride;

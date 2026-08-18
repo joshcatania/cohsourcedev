@@ -1,0 +1,16 @@
+{
+  "name": "performance-current-remaster",
+  "target": "AtlasHero_CityHall_01",
+  "modernLighting": true,
+  "modernAtmosphere": false,
+  "capturePassed": true,
+  "cpuSampleCount": 78,
+  "gpuSampleCount": 20,
+  "cpuMeanPercentOfMachine": 8.91,
+  "cpuMaxPercentOfMachine": 22.9,
+  "gpuMeanPercent": 8.8,
+  "gpuMaxPercent": 37.0,
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-current-remaster\\AtlasHero_CityHall_01.capture.json",
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-current-remaster\\performance-current-remaster.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue28-atlas-remaster-atmosphere-v1\\performance-current-remaster\\performance-current-remaster.runner.stderr.log"
+}

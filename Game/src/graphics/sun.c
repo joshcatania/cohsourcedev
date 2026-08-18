@@ -1648,15 +1648,53 @@ static void sunApplyModernLighting(SunLight IN OUT *sun)
     sun->no_angle_light[3] = 1.0f;
 }
 
+// Modern Atmosphere v1, first candidate: reshape the already-authored outdoor
+// fog state instead of introducing a second shader curve. Keep the near edge
+// no earlier than the existing authored onset, pull only the far edge inward,
+// and borrow authored background chroma only when the scene provides it.
+static void sunApplyModernAtmosphere(SunLight IN OUT *sun)
+{
+    const F32 far_scale = 0.82f;
+    const F32 near_fraction = 0.45f;
+    const F32 background_mix = 0.22f;
+    F32 source_near = sun->fogdist[0];
+    F32 source_far = sun->fogdist[1];
+    F32 atmosphere_far;
+    F32 atmosphere_near;
+    F32 background_luminance;
+
+    if (source_far <= source_near || source_far <= 0.0f)
+        return;
+
+    atmosphere_far = source_far * far_scale;
+    atmosphere_near = MAX(source_near, atmosphere_far * near_fraction);
+    if (atmosphere_near >= atmosphere_far)
+        return;
+
+    background_luminance = 0.2126f * sun->bg_color[0] +
+                           0.7152f * sun->bg_color[1] +
+                           0.0722f * sun->bg_color[2];
+    if (background_luminance > 0.001f)
+        blendVec3(sun->fogcolor, sun->bg_color, background_mix, sun->fogcolor);
+
+    sun->fogdist[0] = atmosphere_near;
+    sun->fogdist[1] = atmosphere_far;
+    skySetRenderValues(sun->fogdist, sun->fogcolor, sun);
+}
+
 static void sunApplyValuesWithModernLighting(const SkyWorkingValues IN *sky_work,
                                               SunLight IN OUT *sun,
                                               FogVals IN OUT *fog_final)
 {
-    if (game_state.glslPilot && game_state.modernLighting && !isIndoors())
+    if (game_state.glslPilot && !isIndoors() &&
+        (game_state.modernLighting || game_state.modernAtmosphere))
     {
         SkyWorkingValues modern_work = *sky_work;
-        sunApplyModernLighting(&modern_work.sun_work);
+        if (game_state.modernLighting)
+            sunApplyModernLighting(&modern_work.sun_work);
         sunApplyValues(&modern_work, sun, fog_final);
+        if (game_state.modernAtmosphere)
+            sunApplyModernAtmosphere(sun);
     }
     else
     {
