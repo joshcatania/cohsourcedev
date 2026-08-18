@@ -81,14 +81,39 @@ Only this pair was processed:
 
 The native GLSL material path samples `normal_gloss.xyz` as a signed normal and `normal_gloss.w` as gloss. Packaging was therefore performed in an isolated temporary workspace with standard RGB-normal/alpha-gloss DXT5 payloads; the stock `BUMPMAP` header metadata was restored afterward without applying a DXT5nm channel swizzle that would overwrite gloss alpha semantics.
 
-The upgraded loose files are:
+The upgraded files are generated into a caller-selected temporary output root; they are not committed under the live `bin/data` override path. The wrapper's current rerun produced:
 
 | File | Container bytes / TX2 payload bytes | SHA-256 |
 | --- | ---: | --- |
 | `Cubevan_side.texture` | 349,897 / 349,680 | `E10F0E7C3ECF6278F6B9058F932A3EF7B4B00B31CA2DAE8B842D3619EC1C3613` |
 | `carsheen_bump_02.texture` | 22,222 / 22,000 | `68F91388ABA8A3ECA10D54E5B5421C0E5D72B52E8F5A5A4E5C95186FDD72FDC4` |
 
-The files are two explicit loose overrides only; there is no batch converter or extracted asset dump in the change.
+The outputs are two explicit pilot files only; there is no batch converter or extracted asset dump in the change. The committed branch is stock-by-default: `bin/data/texture_library/NPCS/Vehicles/Car_Truck/Cubevan_side.texture` and `bin/data/texture_library/NPCS/Vehicles/Car_COMMON/carsheen_bump_02.texture` are absent until the install action explicitly copies generated output into place.
+
+The two TX2 payloads grow from 93,152 stock bytes to 371,680 pilot bytes (+278,528, about 3.99×). This is the on-disk compressed-payload proxy for the two-texture memory cost; no renderer or VRAM allocator was changed.
+
+## Reproducible wrapper and explicit state changes
+
+The committed wrapper is [agent/texture-pilot.ps1](../agent/texture-pilot.ps1), backed by [agent/texture_pilot.py](../agent/texture_pilot.py). It accepts the two locally extracted stock `.texture` files, extracts their DDS payloads, performs the same conservative base/normal-gloss transforms, invokes the existing GetTex/NVIDIA texture-tool path, restores the stock logical names and layer flags, and verifies the exact pilot hashes before returning success.
+
+After extracting only the two files to a local temporary directory with the existing pig tool:
+
+```powershell
+$stock = 'C:\path\to\extracted\texture_library'
+$pilot = Join-Path $env:TEMP 'coh-issue20-texture-pilot'
+
+.\agent\texture-pilot.ps1 -Action Generate `
+  -StockBase "$stock\NPCS\Vehicles\Car_Truck\Cubevan_side.texture" `
+  -StockNormalGloss "$stock\NPCS\Vehicles\Car_COMMON\carsheen_bump_02.texture" `
+  -OutputRoot $pilot
+
+.\agent\texture-pilot.ps1 -Action Install -OutputRoot $pilot
+# Run the pinned capture here; the runtime trace must report kind=loose.
+.\agent\texture-pilot.ps1 -Action Remove -OutputRoot $pilot
+# Run the pinned capture again; the runtime trace must report kind=pigg.
+```
+
+`Generate` writes only to the selected temporary output root. `Install` explicitly copies the two generated files into `bin/data/texture_library/...` and advances only their filesystem timestamps for the existing folder-cache precedence rule. `Remove` deletes exactly those two loose paths and leaves the packed stock files untouched. `Utilities/GetTex/src/gettex.c` now accepts the optional `COH_GETTEX_LOCK_PATH` environment variable used by the wrapper for a temporary writable lock; the default remains `c:\gettex.lock`.
 
 ## Visual and control evidence
 
@@ -98,18 +123,19 @@ The scoped `modernMaterials 0` guard passed in `agent/logs/capture-FoundersCanal
 
 The contact sheet shows the full scene and a fixed crop of the truck's right-hand body panel/wheel (`x=720..1278`, `y=50..619`) so the comparison is not dominated by the animated left door:
 
-![Issue #20 stock/upgraded contact sheet](/D:/github/cohsourcedev/docs/evidence/issue20-texture-contact-sheet.jpg)
+![Issue #20 stock/upgraded contact sheet](evidence/issue20-texture-contact-sheet.jpg)
 
-Metrics for this scene are recorded in [issue20-texture-metrics.json](/D:/github/cohsourcedev/docs/evidence/issue20-texture-metrics.json). The captures are intentionally treated as visual evidence, not pixel-regression baselines: weather, exposure convergence, and the truck's door animation vary between fresh client launches. The stable body-panel crop shows the upgraded run preserves the stock material response while adding only the intended higher-resolution base/normal detail.
+Metrics for this scene are recorded in [issue20-texture-metrics.json](evidence/issue20-texture-metrics.json). The captures are intentionally treated as visual evidence, not pixel-regression baselines: weather, exposure convergence, and the truck's door animation vary between fresh client launches. The stable body-panel crop shows the upgraded run preserves the stock material response while adding only the intended higher-resolution base/normal detail.
 
 ## Validation
 
 - `agent/doctor.ps1 -Json`: passed; the existing v142 probe warning remains non-blocking and the v145 fallback is the verified Release/x86 toolchain.
-- `agent/build.ps1 -Configuration Release -Platform x86`: passed in `agent/logs/build-Release-x86-20260818-045518.log` after adding the narrowly gated source-path/layer diagnostics. A first cold-shard smoke timed out as expected for the documented warm-up behavior; the bounded retry passed after warm-up.
-- Direct-DB character/map smoke: passed in `agent/logs/smoke-directdb-20260818-045942.json`.
+- `agent/build.ps1 -Configuration Release -Platform x86`: passed in `agent/logs/build-Release-x86-20260818-051655.log` after adding the wrapper's optional GetTex lock-path support; renderer/material behavior is unchanged.
+- Direct-DB character/map smoke: passed in `agent/logs/smoke-directdb-20260818-052528.json`.
+- Wrapper generation: reproduced both pilot hashes exactly and verified dimensions, base alpha `{0,255}`, 17 gloss-alpha values `93..109`, and normalized pre-package vectors.
 - Stock exact-byte loose gate: passed in `agent/logs/capture-FoundersCanal_01-20260818-042826.json`.
-- Upgraded `modernMaterials 1`: passed in `agent/logs/capture-FoundersCanal_01-20260818-044505.json`.
-- Upgraded `modernMaterials 0` guard: passed in `agent/logs/capture-FoundersCanal_01-20260818-045043.json`.
-- Stock restore to packed assets: passed in `agent/logs/capture-FoundersCanal_01-20260818-045116.json`.
+- Clean wrapper install + upgraded `modernMaterials 1`: passed in `agent/logs/capture-FoundersCanal_01-20260818-053330.json`; both selected files traced as `kind=loose`.
+- Stock restore after wrapper removal: passed in `agent/logs/capture-FoundersCanal_01-20260818-053409.json`; both selected files traced as `kind=pigg`.
+- The prior upgraded `modernMaterials 0` guard remains in `agent/logs/capture-FoundersCanal_01-20260818-045043.json`; the rerun generated byte-identical pilot files, so no visual/art result changed.
 
 The two source diagnostics in `Game/src/render/rendermodel.c` and `Game/src/render/tex.c` are strictly gated to the pinned target, capture state, GLSL pilot, and the two selected texture paths. They do not alter lookup, material selection, shader behavior, or runtime asset data.
