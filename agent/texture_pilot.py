@@ -1,4 +1,4 @@
-"""Reproduce the Issue #20 two-texture pilot from local stock .texture files."""
+"""Reproduce the accepted manifest-driven texture pilots from local stock files."""
 
 from __future__ import annotations
 
@@ -78,6 +78,22 @@ def make_base_to(image: Image.Image, size: tuple[int, int]) -> Image.Image:
 
 def make_base(image: Image.Image) -> Image.Image:
     return make_base_to(image, (512, 512))
+
+
+def make_base_restoration(image: Image.Image, size: tuple[int, int]) -> Image.Image:
+    """Apply a bounded same-resolution restoration without inventing artwork."""
+    if image.size != size:
+        raise ValueError(f"same-resolution restoration requires {image.size} == {size}")
+    rgb = image.convert("RGB").filter(
+        ImageFilter.UnsharpMask(radius=0.65, percent=8, threshold=5)
+    )
+    alpha = image.getchannel("A").copy()
+    return Image.merge("RGBA", (*rgb.split(), alpha))
+
+
+def make_mask_to(image: Image.Image, size: tuple[int, int]) -> Image.Image:
+    """Resize an authored mask by nearest-neighbor replication only."""
+    return image.convert("RGBA").resize(size, Image.Resampling.NEAREST)
 
 
 def make_normal_gloss_to(image: Image.Image, size: tuple[int, int]) -> tuple[Image.Image, dict]:
@@ -297,12 +313,44 @@ def _manifest_entries(manifest_path: Path) -> tuple[dict, list[dict]]:
     return spec, entries
 
 
-def _manifest_image(image: Image.Image, semantic: str, target: tuple[int, int]) -> tuple[Image.Image, dict]:
-    if semantic == "base":
-        output = make_base_to(image, target)
-        return output, {"input_alpha": alpha_values(image), "output_alpha": alpha_values(output)}
-    if semantic == "normal_gloss":
-        return make_normal_gloss_to(image, target)
+def _manifest_image(
+    image: Image.Image,
+    semantic: str,
+    target: tuple[int, int],
+    transform_mode: str = "upscale_2x",
+) -> tuple[Image.Image, dict]:
+    if transform_mode == "upscale_2x":
+        if semantic == "base":
+            output = make_base_to(image, target)
+            return output, {"input_alpha": alpha_values(image), "output_alpha": alpha_values(output)}
+        if semantic == "normal_gloss":
+            return make_normal_gloss_to(image, target)
+        if semantic == "mask":
+            output = make_mask_to(image, target)
+            return output, {"input_alpha": alpha_values(image), "output_alpha": alpha_values(output)}
+    elif transform_mode == "restore_same_resolution":
+        if target != image.size:
+            raise ValueError(f"restoration target must match source dimensions: {target} != {image.size}")
+        if semantic == "base":
+            output = make_base_restoration(image, target)
+            return output, {
+                "input_alpha": alpha_values(image),
+                "output_alpha": alpha_values(output),
+                "restoration": "unsharp-radius-0.65-percent-8-threshold-5",
+            }
+        if semantic == "normal_gloss":
+            output, metrics = make_normal_gloss_to(image, target)
+            metrics["restoration"] = "vector-renormalize-same-resolution"
+            return output, metrics
+        if semantic == "mask":
+            output = image.convert("RGBA").copy()
+            return output, {
+                "input_alpha": alpha_values(image),
+                "output_alpha": alpha_values(output),
+                "restoration": "exact-pixel-preserve",
+            }
+    else:
+        raise ValueError(f"unsupported manifest transform mode: {transform_mode}")
     raise ValueError(f"unsupported manifest semantic: {semantic}")
 
 
@@ -352,14 +400,21 @@ def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, 
 
         image = image_from_texture(info)
         target = tuple(entry["target_dimensions"])
+        transform_mode = entry.get("transform_mode", "upscale_2x")
         if any(not isinstance(value, int) or value <= 0 for value in target):
             raise ValueError(f"invalid target dimensions for {entry['id']}: {target}")
-        if target[0] != info["width"] * 2 or target[1] != info["height"] * 2:
-            raise ValueError(f"entry {entry['id']} is not a conservative 2x transform")
+        if transform_mode == "upscale_2x":
+            if target[0] != info["width"] * 2 or target[1] != info["height"] * 2:
+                raise ValueError(f"entry {entry['id']} is not a conservative 2x transform")
+        elif transform_mode == "restore_same_resolution":
+            if target != (info["width"], info["height"]):
+                raise ValueError(f"entry {entry['id']} restoration changes dimensions")
+        else:
+            raise ValueError(f"unsupported transform mode for {entry['id']}: {transform_mode}")
         if max(target) > 1024:
             raise ValueError(f"entry {entry['id']} exceeds the 1024-pixel pilot cap")
 
-        transformed, transform_metrics = _manifest_image(image, entry["semantic"], target)
+        transformed, transform_metrics = _manifest_image(image, entry["semantic"], target, transform_mode)
         package_relative = Path("texture_library") / "TexturePilotInputs" / f"{entry['id']}.tga"
         package_tga = package_root / package_relative
         write_tga(transformed, package_tga)
@@ -369,6 +424,7 @@ def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, 
             "install_path": entry["install_path"],
             "stored_name": entry["stored_name"],
             "semantic": entry["semantic"],
+            "transform_mode": transform_mode,
             "stock_sha256": stock_hash,
             "stock_dimensions": expected_dimensions,
             "stock_flags": info["flags"],
@@ -397,13 +453,20 @@ def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, 
             raise ValueError(f"generated flags changed for {entry['id']}")
         output_alpha = alpha_values(output_image)
         source_info = texture_info(stock_root / Path(entry["stock_path"]))
-        transformed, _ = _manifest_image(image_from_texture(source_info), entry["semantic"], tuple(entry["target_dimensions"]))
+        transformed, _ = _manifest_image(
+            image_from_texture(source_info),
+            entry["semantic"],
+            tuple(entry["target_dimensions"]),
+            entry.get("transform_mode", "upscale_2x"),
+        )
         alpha_codec = _alpha_codec_metrics(transformed, output_image)
         if (
             alpha_codec["mean_absolute_error"] > 1.0
             or alpha_codec["max_absolute_error"] > 16
-            or abs(alpha_codec["source_min"] - alpha_codec["output_min"]) > 2
-            or abs(alpha_codec["source_max"] - alpha_codec["output_max"]) > 2
+            or abs(alpha_codec["source_min"] - alpha_codec["output_min"])
+            > int(entry.get("alpha_range_tolerance", 2))
+            or abs(alpha_codec["source_max"] - alpha_codec["output_max"])
+            > int(entry.get("alpha_range_tolerance", 2))
         ):
             raise ValueError(f"alpha semantics changed for {entry['id']}: {alpha_codec}")
         generated.update({

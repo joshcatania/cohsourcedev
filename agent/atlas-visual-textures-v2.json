@@ -1,0 +1,328 @@
+{
+  "schema": "coh.texture-pilot.v1",
+  "name": "Atlas visual textures v2",
+  "description": "Five runtime-ranked City Hall material groups using conservative 2x processing or same-resolution restoration.",
+  "stock_by_default": true,
+  "max_output_dimension": 1024,
+  "packed_sources": [
+    {
+      "path": "bin/piggs/stage2c.pigg",
+      "sha256": "9BDA185DBFFCF626FE0925636692F004CA54A427121AF7FF507A4106ADF91FA1"
+    },
+    {
+      "path": "bin/piggs/stage3g.pigg",
+      "sha256": "F632BEC74AA4F34F2C314DD1C986722A87EE31A11E6A42CF24EB58889295D90E"
+    }
+  ],
+  "discovery": {
+    "capture_targets": [
+      "AtlasHero_CityHall_01",
+      "AtlasHero_East_01",
+      "AtlasHero_North_01",
+      "AtlasHero_West_01"
+    ],
+    "runtime_source_logs": [
+      "agent/logs/capture-AtlasHero_CityHall_01-20260818-070404.stdout.log",
+      "agent/logs/capture-AtlasHero_East_01-20260818-070146.stdout.log",
+      "agent/logs/capture-AtlasHero_North_01-20260818-070208.stdout.log",
+      "agent/logs/capture-AtlasHero_West_01-20260818-070231.stdout.log"
+    ],
+    "ranking_method": "runtime BASE1/BUMPMAP1 observations across four dedicated AtlasHero views, then near-camera model position and visible screen coverage; source softness/compression and safe treatment broke ties",
+    "selected_groups": [
+      {
+        "id": "cityhall-concrete-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_model": "AP_Plaza_Main submesh 0",
+        "runtime_dimensions": "1024x1024 base + 1024x1024 normal/gloss",
+        "treatment": "restore_same_resolution",
+        "reason": "Dominant close City Hall stairs/facade concrete; already at the cap but visibly soft, so restoration preserves dimensions and authored identity."
+      },
+      {
+        "id": "cityhall-details-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_model": "AP_Plaza_Main submesh 6",
+        "runtime_dimensions": "512x512 base + normal/gloss + mask",
+        "treatment": "upscale_2x",
+        "reason": "Close facade detail assembly carries the City Hall doorway/window/trim shapes and has enough source information for a useful 2x pass."
+      },
+      {
+        "id": "cityhall-dome-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_model": "AP_CityHall_Makeover_01 submesh 1",
+        "runtime_dimensions": "512x512 base + normal/gloss",
+        "treatment": "upscale_2x",
+        "reason": "Large named dome/radial relief remains visible above the stairs in the City Hall approach; the normal source contains stable authored ribs."
+      },
+      {
+        "id": "cityhall-plaque-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_model": "AP_CityHall_Makeover_01 submesh 11",
+        "runtime_dimensions": "512x128 base + normal/gloss",
+        "treatment": "upscale_2x",
+        "reason": "The readable PARAGON CITY HALL world plaque is a high-salience named surface; 2x improves letter and border stability without redrawing it."
+      },
+      {
+        "id": "cityhall-border-02",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_model": "AP_Plaza_Main submesh 3",
+        "runtime_dimensions": "256x128 base + normal/gloss",
+        "treatment": "upscale_2x",
+        "reason": "Remaining close architectural moulding, separate from the accepted #21 Border_01 group, is undersized and edge-soft on the same City Hall mass."
+      }
+    ],
+    "rejected_candidates": [
+      {
+        "name": "Plaza_Concrete_Wall_FoundationStained_01_D",
+        "runtime_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Wall_FoundationStained_01_D.texture",
+        "runtime_dimensions": "1024x512 base",
+        "views_observed": 4,
+        "reason": "Already at the cap, but the loaded model is far from the dedicated authoring camera and the visible return was below the selected City Hall mass; deferred for a closer wall view."
+      },
+      {
+        "name": "AP_CityHall_Border_03_D",
+        "runtime_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_03_D.texture",
+        "runtime_dimensions": "512x128 base + 512x128 normal/gloss",
+        "views_observed": 4,
+        "reason": "Valid 2x candidate, but the narrow trim has lower visible area than Border_02 and the selected facade/detail groups."
+      },
+      {
+        "name": "AP_CityHall_Pillar_01_D",
+        "runtime_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Pillar_01_D.texture",
+        "runtime_dimensions": "128x512 base + 128x512 normal/gloss",
+        "views_observed": 4,
+        "reason": "Technically safe 2x, but the narrow columns occupy less stable screen area than the selected dome and details."
+      },
+      {
+        "name": "AP_CityHall_Gold_D",
+        "runtime_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Gold_D.texture",
+        "runtime_dimensions": "256x256 base + 128x128 normal/gloss",
+        "views_observed": 4,
+        "reason": "Small rail/trim contribution; a 2x pass is safe but not a top useful-distance return."
+      },
+      {
+        "name": "AP_CityHall_Marble_D",
+        "runtime_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Marble_D.texture",
+        "runtime_dimensions": "256x256 base + 128x128 normal/gloss",
+        "views_observed": 4,
+        "reason": "Small decorative contribution; deferred behind the broad concrete, dome and plaque surfaces."
+      },
+      {
+        "name": "street_sidewalk1",
+        "runtime_path": "texture_library/WORLD/streets/STREETS/street_sidewalk1.texture",
+        "runtime_dimensions": "512x512 base + 256x256 dcoarse_sidewalk multiplier",
+        "views_observed": 4,
+        "reason": "Repeated world material, but the dedicated City Hall views are dominated by the already-accepted plaza tile family and do not expose a stable close sidewalk sample."
+      },
+      {
+        "name": "Clean_PKlot",
+        "runtime_path": "texture_library/WORLD/streets/block_filler/Clean_PKlot.texture",
+        "runtime_dimensions": "256x256 base + 256x256 asphalt multiplier",
+        "views_observed": 4,
+        "reason": "Road filler is reused but is a distant/fallback surface in these views; defer to a street-focused authoring shot."
+      },
+      {
+        "name": "kiosk_plate01 / kiosk_metal",
+        "runtime_path": "texture_library/WORLD/streets/elements/kiosks/",
+        "runtime_dimensions": "512x512 plate + 64x128 metal",
+        "views_observed": 4,
+        "reason": "Named prop telemetry is present, but the kiosk is not a stable near-camera subject in the current four views; do not spend one of the bounded groups on it yet."
+      },
+      {
+        "name": "prk_bench01 / prk_bench02",
+        "runtime_path": "texture_library/WORLD/Common_Decor/Kirk_Batch02/",
+        "runtime_dimensions": "256x64 + 256x256 base layers",
+        "views_observed": 4,
+        "reason": "Useful reusable prop family, but the bench instances are smaller/farther than the selected City Hall facade surfaces in the supplied authoring views."
+      },
+      {
+        "name": "ironfence3",
+        "runtime_path": "texture_library/WORLD/streets/elements/fence/ironfence3.texture",
+        "runtime_dimensions": "128x512 alpha base",
+        "views_observed": 4,
+        "reason": "Alpha-heavy fence is geometry/repetition dominated here; upscaling risks shimmer without a stable large screen sample."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "cityhall-concrete-01-d",
+      "group": "cityhall-concrete-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_D.dds",
+      "semantic": "base",
+      "transform_mode": "restore_same_resolution",
+      "alpha_policy": "exact-preserve",
+      "stock_dimensions": [1024, 1024],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "CE650604DEC1BF3CAFD28BB521FA3C23C2E4C4264D80D9B2B946261E997AB5F9",
+      "expected_output_sha256": "8ADE03028583747A39C1A23D163B114700A419DF6A14714899D68A3BBFC955E0"
+    },
+    {
+      "id": "cityhall-concrete-01-ns",
+      "group": "cityhall-concrete-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Concrete_01_NS.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "restore_same_resolution",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "alpha_range_tolerance": 4,
+      "stock_dimensions": [1024, 1024],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "28CE1C6261D9FBEAB45486400CB59689249FF896D395838653A72E2A81E0A411",
+      "expected_output_sha256": "7CEAB88F45F1757F4F08DCBDEBB92EDE0BAADA3B510E089C8A73DDF5FEA6C3AF"
+    },
+    {
+      "id": "cityhall-details-01-d",
+      "group": "cityhall-details-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01.dds",
+      "semantic": "base",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "CABBB5C2F6EFEED02E7B2B0FDEF391454B0288684C427A99812F643200BBF5D2",
+      "expected_output_sha256": "46E7D164244198AA9588BBE7DB31BBD800B3C397119305EEAD9B97BA4DD96DA2"
+    },
+    {
+      "id": "cityhall-details-01-ns",
+      "group": "cityhall-details-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_NS.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "alpha_range_tolerance": 4,
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "54FBC6525CAEBCF6C89080A09AD36EE873B895527F649B148BAAC148CA8AB960",
+      "expected_output_sha256": "A6CB572A6FA1E980FE6222541CCFDE35618B2AFE8038BC565EF2AE13888E0AAD"
+    },
+    {
+      "id": "cityhall-details-01-mask",
+      "group": "cityhall-details-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_M.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_M.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Details_01_M.dds",
+      "semantic": "mask",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "40474E95DCD2AEC7771C30B0482A6D028FC690E8ABE43845890A482EDC404040",
+      "expected_output_sha256": "FCD9244F296398AD139E352CBF7D6A437361B61FF8124E3195D9B2AE31BD6957"
+    },
+    {
+      "id": "cityhall-dome-01-d",
+      "group": "cityhall-dome-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01.dds",
+      "semantic": "base",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "525C5E862F966C58A194F5BDF918E1C51294FE1DEAC1479C742129D7947474F7",
+      "expected_output_sha256": "BF421C47286E80DE2BBDDC6F8D94E442EB6317B7A97007B1797EB5DD4C0EF9E0"
+    },
+    {
+      "id": "cityhall-dome-01-ns",
+      "group": "cityhall-dome-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Dome_01_NS.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "alpha_range_tolerance": 4,
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "57A11B2DDF07EAB077701374E4AE735A995FF0F8F22BECFA56BB04C140F6E6B0",
+      "expected_output_sha256": "1F28D54B6DEFF55F7786CB5309FCB9C26CFAF70A19656511A809B1312F99D901"
+    },
+    {
+      "id": "cityhall-plaque-01-d",
+      "group": "cityhall-plaque-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_01_D.dds",
+      "semantic": "base",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 128],
+      "target_dimensions": [1024, 256],
+      "stock_flags": "0x0",
+      "stock_sha256": "833E21916C7A8BEEB2CD1FAF191C132AC7CB1DA8A972A7147A0748F8E1E44085",
+      "expected_output_sha256": "E1ECE17E867BD9D4F9CD4346485B4A34667EB40BC9E329AF631B987F6957AF8C"
+    },
+    {
+      "id": "cityhall-plaque-01-ns",
+      "group": "cityhall-plaque-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Plaque_NS.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "alpha_range_tolerance": 4,
+      "stock_dimensions": [512, 128],
+      "target_dimensions": [1024, 256],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "6283A70EBF380BEF3A87F4C15DFC58908FC860BFFF8ACABDC3EE4242F52CB765",
+      "expected_output_sha256": "972E10CE37F52A9E22FFE0AEF737798491D0151946D91E7E7729FB13F30E5D5F"
+    },
+    {
+      "id": "cityhall-border-02-d",
+      "group": "cityhall-border-02",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_D.dds",
+      "semantic": "base",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [256, 128],
+      "target_dimensions": [512, 256],
+      "stock_flags": "0x0",
+      "stock_sha256": "726EE47E726807D5932173BB8FF67F1EEC8769480BD46A20BAC52A721E12B95E",
+      "expected_output_sha256": "EE62F9706F495A3C17C844E484171D3BDE6D0281646ACF07EFB4E4465F51C628"
+    },
+    {
+      "id": "cityhall-border-02-ns",
+      "group": "cityhall-border-02",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_02_NS.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "upscale_2x",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "alpha_range_tolerance": 4,
+      "stock_dimensions": [256, 128],
+      "target_dimensions": [512, 256],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "1F60D4D094578590CF9CDBAF6F100AD4B33274D7614897BFA0E19787A7359A26",
+      "expected_output_sha256": "956585DB5DB87C46108ECE55E627A486CC73EEFFA2757974FB2B3B8BF3954F48"
+    }
+  ]
+}

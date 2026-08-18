@@ -1,0 +1,104 @@
+{
+  "issue": 23,
+  "base_commit": "21670743151bfd59038e6dcde565834a9e95e4d2",
+  "branch": "agent/atlas-visual-textures-v2",
+  "capture_resolution": "1256x696",
+  "capture_targets": [
+    "AtlasHero_CityHall_01",
+    "AtlasHero_East_01",
+    "AtlasHero_North_01",
+    "AtlasHero_West_01"
+  ],
+  "full_frame_comparison": {
+    "baseline": "packed stock textures",
+    "candidate": "manifest-selected v2 loose overrides",
+    "pixel_tolerance": 12,
+    "compare_width": 320,
+    "rows": [
+      {
+        "target": "AtlasHero_CityHall_01",
+        "changed_percent": 1.4795,
+        "mean_delta": 1.7046,
+        "max_delta": 106
+      },
+      {
+        "target": "AtlasHero_East_01",
+        "changed_percent": 2.4823,
+        "mean_delta": 3.2414,
+        "max_delta": 152
+      },
+      {
+        "target": "AtlasHero_North_01",
+        "changed_percent": 0.3849,
+        "mean_delta": 1.1576,
+        "max_delta": 83
+      },
+      {
+        "target": "AtlasHero_West_01",
+        "changed_percent": 0.4926,
+        "mean_delta": 1.1135,
+        "max_delta": 69
+      }
+    ]
+  },
+  "named_surface_observations": [
+    {
+      "surface": "AP_CityHall_Concrete_01_D/NS",
+      "view": "AtlasHero_CityHall_01",
+      "treatment": "restore_same_resolution",
+      "observation": "Stair and plaza concrete seams read cleaner without changing the 1024px source footprint."
+    },
+    {
+      "surface": "AP_CityHall_Dome_01/NS",
+      "view": "AtlasHero_CityHall_01",
+      "treatment": "upscale_2x",
+      "observation": "The dome ribs and radial separators retain their authored relief with visibly crisper edges."
+    },
+    {
+      "surface": "AP_CityHall_Plaque_01_D/NS",
+      "view": "AtlasHero_CityHall_01",
+      "treatment": "upscale_2x",
+      "observation": "PARAGON CITY HALL lettering and the plaque edge are more legible at the established gameplay distance."
+    },
+    {
+      "surface": "AP_CityHall_Details_01/NS/M",
+      "view": "AtlasHero_CityHall_01",
+      "treatment": "upscale_2x",
+      "observation": "Door, window, and arch relief are less soft while the mask remains nearest-neighbor exact."
+    },
+    {
+      "surface": "AP_CityHall_Border_02/NS",
+      "view": "AtlasHero_CityHall_01",
+      "treatment": "upscale_2x",
+      "observation": "The low-resolution architectural trim holds a cleaner highlight and silhouette."
+    }
+  ],
+  "controls": {
+    "manifest_entries": 11,
+    "selected_groups": 5,
+    "max_output_dimension": 1024,
+    "generated_output_bytes": 7606111,
+    "generated_output_sha256s_match_manifest": true,
+    "v2_generation_repeatable": true,
+    "v1_manifest_regeneration_passed": true,
+    "modernMaterials_0_capture_passed": true,
+    "restore_removed_all_selected_loose_overrides": true,
+    "formal_regression": {
+      "passed": true,
+      "targets": 4,
+      "baseline_adopted": 0,
+      "account": "Dummy00018",
+      "mode": "formal-no-adoption",
+      "hard_limit_changed_percent": 6.0,
+      "observed_changed_percent": {
+        "AtlasPlaza_CityHall_03": 0.5544,
+        "AtlasPlaza_East_01": 0.023,
+        "AtlasPlaza_North_01": 0.0,
+        "AtlasPlaza_West_01": 4.7581
+      }
+    },
+    "native_release_x86_build": true,
+    "direct_db_character_map_smoke_passed": true
+  },
+  "contact_sheet": "issue23-atlas-visual-textures-v2-contact-sheet.jpg"
+}
