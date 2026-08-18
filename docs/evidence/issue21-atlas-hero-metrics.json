@@ -1,0 +1,72 @@
+{
+  "targets": {
+    "AtlasPlaza_CityHall_03": {
+      "description": "City Hall approach / plaza paving",
+      "stock_mean_rgb": 103.73163794628694,
+      "pilot_mean_rgb": 102.39422229238353,
+      "mean_absolute_rgb_delta": 7.005653323815799,
+      "changed_percent_threshold_3": 60.48747620616444,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasPlaza_East_01": {
+      "description": "East wall / bridge / plaza paving",
+      "stock_mean_rgb": 99.45894419430412,
+      "pilot_mean_rgb": 97.06961755985064,
+      "mean_absolute_rgb_delta": 16.85407591453742,
+      "changed_percent_threshold_3": 81.76488487444176,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasPlaza_North_01": {
+      "description": "North wall / plaza paving",
+      "stock_mean_rgb": 108.12064351648486,
+      "pilot_mean_rgb": 107.48984224381971,
+      "mean_absolute_rgb_delta": 10.514380018058912,
+      "changed_percent_threshold_3": 67.7563785782268,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasPlaza_West_01": {
+      "description": "West plaza / City Hall facade",
+      "stock_mean_rgb": 103.89716105986285,
+      "pilot_mean_rgb": 105.30458283000219,
+      "mean_absolute_rgb_delta": 11.536783210703565,
+      "changed_percent_threshold_3": 65.93397668204113,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    }
+  },
+  "selected_groups": [
+    "plaza-concrete-trims02",
+    "atlas-asphalt-01",
+    "cityhall-border-01",
+    "cityhall-tiles-01",
+    "deco03-concrete-01"
+  ],
+  "entry_count": 13
+}

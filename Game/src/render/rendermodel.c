@@ -30,9 +30,9 @@
 #include "render/rendershadowmap.h"
 #include "render/thread/rt_shadowmap.h"
 
-// Issue #20 pilot diagnostic.  This is deliberately limited to the pinned
-// Founders capture and one line per distinct MULTI bind so asset inspection
-// cannot turn into a whole-map texture catalog in ordinary runs.
+// Issue #20/#21 texture-pilot diagnostic. This is deliberately limited to
+// explicit capture targets and one line per distinct material bind so asset
+// inspection cannot turn into a whole-map texture catalog in ordinary runs.
 static const char *texturePilotLayerName(int layer)
 {
     switch (layer)
@@ -52,17 +52,25 @@ static const char *texturePilotLayerName(int layer)
     }
 }
 
-static void texturePilotTraceMultiBind(const ViewSortNode *vs, int tex_index, TexBind *bind,
-                                       const RdrTexList *texlist)
+static int texturePilotTargetEnabled(void)
+{
+    if (!game_state.glslPilot || game_state.capture_state == 0 || game_state.capture_state == 3)
+        return 0;
+
+    if (stricmp(game_state.capture_target, "FoundersCanal_01") == 0)
+        return 1;
+
+    return strnicmp(game_state.capture_target, "AtlasPlaza_", 11) == 0;
+}
+
+static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind *bind,
+                                  const RdrTexList *texlist)
 {
     static TexBind *seen[256];
     static int seen_count;
     int i;
 
-    if (!vs || !vs->model || !bind || !texlist || !game_state.glslPilot ||
-        game_state.capture_state == 0 || game_state.capture_state == 3 ||
-        stricmp(game_state.capture_target, "FoundersCanal_01") != 0 ||
-        texlist->blend_mode.shader != BLENDMODE_MULTI)
+    if (!vs || !vs->model || !bind || !texlist || !texturePilotTargetEnabled())
         return;
 
     for (i = 0; i < seen_count; ++i)
@@ -72,9 +80,10 @@ static void texturePilotTraceMultiBind(const ViewSortNode *vs, int tex_index, Te
         return;
     seen[seen_count++] = bind;
 
-    printf("TEXTUREPILOT: bind=%s dirname=%s blend=MULTI bits=0x%x model=%s submesh=%d mid=(%.2f %.2f %.2f)\n",
+    printf("TEXTUREPILOT: bind=%s dirname=%s blendShader=%d blendBits=0x%x model=%s submesh=%d mid=(%.2f %.2f %.2f)\n",
            bind->name ? bind->name : "?", bind->dirname ? bind->dirname : "?",
-           (unsigned)texlist->blend_mode.blend_bits, vs->model->name ? vs->model->name : "?",
+           (int)texlist->blend_mode.shader, (unsigned)texlist->blend_mode.blend_bits,
+           vs->model->name ? vs->model->name : "?",
            tex_index, vs->mid[0], vs->mid[1], vs->mid[2]);
 
     for (i = 0; i < TEXLAYER_MAX_LAYERS; ++i)
@@ -823,7 +832,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
             assert(tex_index!=-1);
             bind = vs->materials[tex_index];
             texlist = demandLoadTexturesInline2(bind, vs->shadowcaster, vs->use_fallback_material);
-            texturePilotTraceMultiBind(vs, tex_index, bind, texlist);
+            texturePilotTraceBind(vs, tex_index, bind, texlist);
             using_fallback_material |= bind->is_fallback_material;
 
             // set reflection blendbits and look for possible reflectors

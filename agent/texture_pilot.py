@@ -69,28 +69,30 @@ def alpha_values(image: Image.Image) -> list[int]:
     return sorted(int(value) for value in np.unique(np.asarray(image, dtype=np.uint8)[:, :, 3]))
 
 
-def make_base(image: Image.Image) -> Image.Image:
-    rgb = image.convert("RGB").resize((512, 512), Image.Resampling.LANCZOS)
+def make_base_to(image: Image.Image, size: tuple[int, int]) -> Image.Image:
+    rgb = image.convert("RGB").resize(size, Image.Resampling.LANCZOS)
     rgb = rgb.filter(ImageFilter.UnsharpMask(radius=0.6, percent=12, threshold=3))
-    alpha = image.getchannel("A").resize((512, 512), Image.Resampling.NEAREST)
+    alpha = image.getchannel("A").resize(size, Image.Resampling.NEAREST)
     return Image.merge("RGBA", (*rgb.split(), alpha))
 
 
-def make_normal_gloss(image: Image.Image) -> tuple[Image.Image, dict]:
+def make_base(image: Image.Image) -> Image.Image:
+    return make_base_to(image, (512, 512))
+
+
+def make_normal_gloss_to(image: Image.Image, size: tuple[int, int]) -> tuple[Image.Image, dict]:
     source = np.asarray(image, dtype=np.uint8)
     encoded = source[:, :, :3].astype(np.float32)
     vectors = encoded / 127.5 - 1.0
-    resized = np.empty((128, 128, 3), dtype=np.float32)
+    resized = np.empty((size[1], size[0], 3), dtype=np.float32)
     for channel in range(3):
         component = Image.fromarray(vectors[:, :, channel], mode="F")
-        resized[:, :, channel] = np.asarray(
-            component.resize((128, 128), Image.Resampling.LANCZOS), dtype=np.float32
-        )
+        resized[:, :, channel] = np.asarray(component.resize(size, Image.Resampling.LANCZOS), dtype=np.float32)
     lengths = np.linalg.norm(resized, axis=2, keepdims=True)
     lengths = np.maximum(lengths, np.finfo(np.float32).eps)
     normalized = resized / lengths
     out_rgb = np.clip((normalized * 0.5 + 0.5) * 255.0, 0.0, 255.0).astype(np.uint8)
-    alpha = image.getchannel("A").resize((128, 128), Image.Resampling.NEAREST)
+    alpha = image.getchannel("A").resize(size, Image.Resampling.NEAREST)
     output = Image.fromarray(np.dstack((out_rgb, np.asarray(alpha, dtype=np.uint8))), mode="RGBA")
     return output, {
         "input_alpha": alpha_values(image),
@@ -98,6 +100,10 @@ def make_normal_gloss(image: Image.Image) -> tuple[Image.Image, dict]:
         "vector_length_min": float(np.linalg.norm(normalized, axis=2).min()),
         "vector_length_max": float(np.linalg.norm(normalized, axis=2).max()),
     }
+
+
+def make_normal_gloss(image: Image.Image) -> tuple[Image.Image, dict]:
+    return make_normal_gloss_to(image, (128, 128))
 
 
 def write_tga(image: Image.Image, path: Path) -> None:
@@ -113,7 +119,12 @@ def patch_container(path: Path, expected_name: str, expected_flags: int) -> None
     if stored_name.startswith("./"):
         del data[32:34]
         header_size -= 2
-        struct.pack_into("<I", data, 0, header_size)
+        name_end -= 2
+    expected_bytes = expected_name.encode("ascii") + b"\0"
+    old_name_length = name_end - 32 + 1
+    data[32:name_end + 1] = expected_bytes
+    header_size += len(expected_bytes) - old_name_length
+    struct.pack_into("<I", data, 0, header_size)
     struct.pack_into("<I", data, 16, expected_flags)
     path.write_bytes(data)
     info = texture_info(path)
@@ -267,23 +278,254 @@ def remove(repo_root: Path) -> None:
     print("packed stock behavior restored; no pigg was modified")
 
 
+def _manifest_int(value: object) -> int:
+    if isinstance(value, int):
+        return value
+    return int(str(value), 0)
+
+
+def _manifest_entries(manifest_path: Path) -> tuple[dict, list[dict]]:
+    spec = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if spec.get("schema") != "coh.texture-pilot.v1":
+        raise ValueError(f"unsupported texture pilot manifest schema: {spec.get('schema')}")
+    entries = spec.get("entries")
+    if not isinstance(entries, list) or not entries:
+        raise ValueError("manifest must contain a non-empty entries list")
+    ids = [entry.get("id") for entry in entries]
+    if any(not item for item in ids) or len(set(ids)) != len(ids):
+        raise ValueError("manifest entry ids must be unique and non-empty")
+    return spec, entries
+
+
+def _manifest_image(image: Image.Image, semantic: str, target: tuple[int, int]) -> tuple[Image.Image, dict]:
+    if semantic == "base":
+        output = make_base_to(image, target)
+        return output, {"input_alpha": alpha_values(image), "output_alpha": alpha_values(output)}
+    if semantic == "normal_gloss":
+        return make_normal_gloss_to(image, target)
+    raise ValueError(f"unsupported manifest semantic: {semantic}")
+
+
+def _alpha_codec_metrics(source: Image.Image, output: Image.Image) -> dict:
+    source_alpha = np.asarray(source.getchannel("A"), dtype=np.int16)
+    output_alpha = np.asarray(output.getchannel("A"), dtype=np.int16)
+    if source_alpha.shape != output_alpha.shape:
+        raise ValueError("alpha comparison dimensions do not match")
+    difference = output_alpha - source_alpha
+    return {
+        "source_min": int(source_alpha.min()),
+        "source_max": int(source_alpha.max()),
+        "output_min": int(output_alpha.min()),
+        "output_max": int(output_alpha.max()),
+        "mean_absolute_error": float(np.abs(difference).mean()),
+        "max_absolute_error": int(np.abs(difference).max()),
+    }
+
+
+def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, gettex: Path) -> dict:
+    spec, entries = _manifest_entries(manifest_path.resolve())
+    stock_root = stock_root.resolve()
+    output_root = output_root.resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    package_root = output_root / "_package"
+    if package_root.exists():
+        shutil.rmtree(package_root)
+    package_root.mkdir(parents=True)
+
+    generated_entries = []
+    for entry in entries:
+        stock_relative = Path(entry["stock_path"])
+        stock_path = stock_root / stock_relative
+        if not stock_path.exists():
+            raise FileNotFoundError(f"manifest stock input is missing: {stock_path}")
+        stock_hash = sha256(stock_path)
+        if stock_hash != entry["stock_sha256"].upper():
+            raise ValueError(f"stock hash mismatch for {stock_path}: {stock_hash}")
+        info = texture_info(stock_path)
+        if info["name"] != entry["stored_name"]:
+            raise ValueError(f"stored name mismatch for {stock_path}: {info['name']} != {entry['stored_name']}")
+        expected_dimensions = [info["width"], info["height"]]
+        if expected_dimensions != entry["stock_dimensions"]:
+            raise ValueError(f"stock dimensions mismatch for {stock_path}: {expected_dimensions}")
+        if info["flags"] != _manifest_int(entry["stock_flags"]):
+            raise ValueError(f"stock flags mismatch for {stock_path}: 0x{info['flags']:x}")
+
+        image = image_from_texture(info)
+        target = tuple(entry["target_dimensions"])
+        if any(not isinstance(value, int) or value <= 0 for value in target):
+            raise ValueError(f"invalid target dimensions for {entry['id']}: {target}")
+        if target[0] != info["width"] * 2 or target[1] != info["height"] * 2:
+            raise ValueError(f"entry {entry['id']} is not a conservative 2x transform")
+        if max(target) > 1024:
+            raise ValueError(f"entry {entry['id']} exceeds the 1024-pixel pilot cap")
+
+        transformed, transform_metrics = _manifest_image(image, entry["semantic"], target)
+        package_relative = Path("texture_library") / "TexturePilotInputs" / f"{entry['id']}.tga"
+        package_tga = package_root / package_relative
+        write_tga(transformed, package_tga)
+        generated_entries.append({
+            "id": entry["id"],
+            "stock_path": entry["stock_path"],
+            "install_path": entry["install_path"],
+            "stored_name": entry["stored_name"],
+            "semantic": entry["semantic"],
+            "stock_sha256": stock_hash,
+            "stock_dimensions": expected_dimensions,
+            "stock_flags": info["flags"],
+            "target_dimensions": list(target),
+            "transform": transform_metrics,
+            "package_relative": str(package_relative).replace("\\", "/"),
+        })
+
+    package_with_gettex(package_root, gettex.resolve())
+    for generated in generated_entries:
+        entry = next(item for item in entries if item["id"] == generated["id"])
+        generated_path = package_root / Path(generated["package_relative"]).with_suffix(".texture")
+        if not generated_path.exists():
+            raise FileNotFoundError(f"GetTex did not produce {generated_path}")
+        patch_container(generated_path, entry["stored_name"], _manifest_int(entry["stock_flags"]))
+        output_path = output_root / Path(entry["install_path"])
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(generated_path, output_path)
+        output_info = texture_info(output_path)
+        output_image = image_from_texture(output_info)
+        if [output_info["width"], output_info["height"]] != entry["target_dimensions"]:
+            raise ValueError(f"generated dimensions mismatch for {entry['id']}")
+        if output_info["name"] != entry["stored_name"]:
+            raise ValueError(f"generated stored name mismatch for {entry['id']}")
+        if output_info["flags"] != _manifest_int(entry["stock_flags"]):
+            raise ValueError(f"generated flags changed for {entry['id']}")
+        output_alpha = alpha_values(output_image)
+        source_info = texture_info(stock_root / Path(entry["stock_path"]))
+        transformed, _ = _manifest_image(image_from_texture(source_info), entry["semantic"], tuple(entry["target_dimensions"]))
+        alpha_codec = _alpha_codec_metrics(transformed, output_image)
+        if (
+            alpha_codec["mean_absolute_error"] > 1.0
+            or alpha_codec["max_absolute_error"] > 16
+            or abs(alpha_codec["source_min"] - alpha_codec["output_min"]) > 2
+            or abs(alpha_codec["source_max"] - alpha_codec["output_max"]) > 2
+        ):
+            raise ValueError(f"alpha semantics changed for {entry['id']}: {alpha_codec}")
+        generated.update({
+            "output_sha256": sha256(output_path),
+            "output_bytes": output_path.stat().st_size,
+            "output_dimensions": [output_info["width"], output_info["height"]],
+            "output_flags": output_info["flags"],
+            "output_alpha": output_alpha,
+            "alpha_codec": alpha_codec,
+        })
+        expected_output_hash = entry.get("expected_output_sha256")
+        if expected_output_hash and generated["output_sha256"] != expected_output_hash.upper():
+            raise ValueError(f"expected output hash mismatch for {entry['id']}: {generated['output_sha256']}")
+
+    result = dict(spec)
+    result["generated_by"] = "agent/texture_pilot.py"
+    result["generated_entries"] = generated_entries
+    (output_root / "manifest.json").write_text(json.dumps(result, indent=2) + "\n", encoding="utf-8")
+    print(json.dumps(result, indent=2))
+    return result
+
+
+def _generated_manifest(output_root: Path, manifest_path: Path) -> tuple[dict, dict]:
+    spec, entries = _manifest_entries(manifest_path.resolve())
+    generated_path = output_root.resolve() / "manifest.json"
+    if not generated_path.exists():
+        raise FileNotFoundError(f"generate first; missing {generated_path}")
+    generated = json.loads(generated_path.read_text(encoding="utf-8"))
+    if [item.get("id") for item in generated.get("generated_entries", [])] != [item["id"] for item in entries]:
+        raise ValueError("generated manifest entries do not match the source manifest")
+    for entry, output in zip(entries, generated["generated_entries"]):
+        output_path = output_root / Path(entry["install_path"])
+        if not output_path.exists():
+            raise FileNotFoundError(f"generated output is missing: {output_path}")
+        actual = sha256(output_path)
+        if actual != output["output_sha256"]:
+            raise ValueError(f"generated output hash mismatch for {entry['id']}: {actual}")
+        expected = entry.get("expected_output_sha256")
+        if expected and actual != expected.upper():
+            raise ValueError(f"source manifest output hash mismatch for {entry['id']}: {actual}")
+    return spec, generated
+
+
+def install_manifest(manifest_path: Path, output_root: Path, repo_root: Path) -> None:
+    spec, generated = _generated_manifest(output_root, manifest_path)
+    destinations = []
+    for entry, output in zip(spec["entries"], generated["generated_entries"]):
+        source = output_root.resolve() / Path(entry["install_path"])
+        destination = repo_root.resolve() / "bin" / "data" / Path(entry["install_path"])
+        if destination.exists() and sha256(destination) != output["output_sha256"]:
+            raise ValueError(f"refusing to overwrite unrelated loose file: {destination}")
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination)
+        destinations.append(destination)
+    future = __import__("datetime").datetime.now().timestamp() + 7200
+    for destination in destinations:
+        os.utime(destination, (future, future))
+    print(f"installed {len(destinations)} manifest-selected loose Atlas texture overrides")
+
+
+def remove_manifest(manifest_path: Path, repo_root: Path) -> None:
+    spec, _ = _manifest_entries(manifest_path.resolve())
+    removed = 0
+    for entry in spec["entries"]:
+        destination = repo_root.resolve() / "bin" / "data" / Path(entry["install_path"])
+        if not destination.exists():
+            continue
+        expected = entry.get("expected_output_sha256")
+        if not expected or sha256(destination) != expected.upper():
+            raise ValueError(f"refusing to remove unrelated loose file: {destination}")
+        destination.unlink()
+        removed += 1
+    print(f"removed {removed} manifest-selected loose Atlas texture overrides")
+
+
+def restore_manifest(manifest_path: Path, repo_root: Path) -> None:
+    spec, _ = _manifest_entries(manifest_path.resolve())
+    remove_manifest(manifest_path, repo_root)
+    for archive in spec.get("packed_sources", []):
+        path = repo_root.resolve() / Path(archive["path"])
+        if not path.exists():
+            raise FileNotFoundError(f"packed stock source is missing: {path}")
+        actual = sha256(path)
+        if actual != archive["sha256"].upper():
+            raise ValueError(f"packed stock source changed: {path}")
+    print("packed stock behavior restored; selected loose paths are absent and packed sources match the manifest")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=("generate", "install", "remove"))
+    parser.add_argument("action", choices=("generate", "install", "remove", "restore"))
+    parser.add_argument("--manifest", type=Path)
+    parser.add_argument("--stock-root", type=Path)
     parser.add_argument("--stock-base", type=Path)
     parser.add_argument("--stock-normal-gloss", type=Path)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--repo-root", type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument("--gettex", type=Path)
     args = parser.parse_args()
+    if args.manifest:
+        manifest_path = args.manifest.resolve()
+        if args.action == "generate":
+            if not args.stock_root or not args.gettex:
+                parser.error("manifest generate requires --stock-root and --gettex")
+            generate_manifest(manifest_path, args.stock_root, args.output_root, args.gettex)
+        elif args.action == "install":
+            install_manifest(manifest_path, args.output_root, args.repo_root)
+        elif args.action == "restore":
+            restore_manifest(manifest_path, args.repo_root)
+        else:
+            remove_manifest(manifest_path, args.repo_root)
+        return 0
     if args.action == "generate":
         if not args.stock_base or not args.stock_normal_gloss or not args.gettex:
             parser.error("generate requires --stock-base, --stock-normal-gloss and --gettex")
         generate(args.stock_base, args.stock_normal_gloss, args.output_root, args.gettex)
     elif args.action == "install":
         install(args.output_root.resolve(), args.repo_root.resolve())
-    else:
+    elif args.action == "remove":
         remove(args.repo_root.resolve())
+    else:
+        parser.error("restore requires --manifest")
     return 0
 
 
