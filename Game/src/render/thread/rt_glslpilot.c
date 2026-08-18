@@ -1246,16 +1246,20 @@ static const char s_bumpMultiHQVertexSource[] =
 "        float roughness = clamp( sqrt( 2.0 / ( legacyExponent + 2.0 ) ), 0.40, 0.90 );\n" \
 "        float lobeExponent = clamp( ( 2.0 / ( roughness * roughness ) ) - 2.0, 1.0, 128.0 );\n" \
 "        float glossStrength = clamp( normal_gloss.w * max( glossConst, 0.0 ), 0.0, 1.0 );\n" \
+"        // Keep authored zero gloss exactly matte while preserving useful\n" \
+"        // response on the truck's mid/high-gloss painted and metal regions.\n" \
+"        float matteGuard = smoothstep( 0.08, 0.20, glossStrength );\n" \
+"        float glossResponse = sqrt( glossStrength ) * matteGuard;\n" \
 "        float n_dot_l = clamp( dot( normal_gloss.xyz, light_ts ), 0.0, 1.0 );\n" \
 "        float n_dot_v = clamp( dot( normal_gloss.xyz, view_ts ), 0.0, 1.0 );\n" \
 "        vec3 modernHalf = normalize( view_ts + light_ts );\n" \
 "        float n_dot_h = clamp( dot( normal_gloss.xyz, modernHalf ), 0.0, 1.0 );\n" \
 "        float normalizedLobe = pow( n_dot_h, lobeExponent ) * ( ( lobeExponent + 2.0 ) * 0.15915494 );\n" \
 "        vec3 authoredSpecular = clamp( spec_color_exp.rgb, 0.0, 1.0 );\n" \
-"        vec3 f0 = mix( vec3( 0.04 ), authoredSpecular, clamp( 0.35 + 0.65 * glossStrength, 0.0, 1.0 ) );\n" \
+"        vec3 f0 = clamp( authoredSpecular * ( 0.04 + 0.16 * glossResponse ) * glossResponse, 0.0, 0.75 );\n" \
 "        float fresnelFactor = pow( 1.0 - n_dot_v, 5.0 ) * 0.35;\n" \
 "        vec3 fresnel = mix( f0, vec3( 1.0 ), fresnelFactor );\n" \
-"        float specularEnergy = clamp( normalizedLobe * ( 0.42 + 0.58 * glossStrength ) * n_dot_l, 0.0, 1.0 );\n" \
+"        float specularEnergy = clamp( normalizedLobe * ( 0.70 + 0.30 * glossResponse ) * glossResponse * n_dot_l, 0.0, 1.0 );\n" \
 "        gloss = fresnel * specularEnergy;\n" \
 "    }\n" \
 "    return color_in * ( g_AmbientColorFP.rgb + diffuse ) + gloss;\n" \

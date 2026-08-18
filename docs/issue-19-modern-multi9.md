@@ -2,101 +2,133 @@
 
 ## Scope
 
-This change starts from `7c92e98f00075419bf17c1a4e122891fd908c5b4` on
-`agent/glsl-modern-world-materials` and extends the existing opt-in
-`modernMaterials` switch to the five existing GLSL Multi9 fragment rows:
+This follow-up keeps the original issue #19 boundary: the opt-in
+`modernMaterials` switch is extended only to the five existing native-GLSL
+Multi9 fragment rows:
 
 - Full LQ and Full HQ
 - Single LQ and Single HQ
 - Building
 
-No new shader pairing, sampler, material texture, water, shadow,
-post-processing, Bump Multiply, or fallback support was added. The existing
-Multi9 material constants remain the source of the response: normal RGB,
-gloss alpha/constants, authored specular RGB/exponent, ambient/diffuse, and
-the existing tint/mask/add-glow/selector/scroll inputs.
+No shader pairing, sampler, material texture, water, shadow, post-processing,
+Bump Multiply, fallback, mask, tint, selector, scroll, scale, or add-glow
+behavior was changed. The existing Multi9 data remains authoritative:
+normal RGB, gloss alpha/constants, authored specular RGB/exponent, and the
+existing ambient/diffuse inputs.
 
-## Implementation
+## Final material response
 
-`Game/src/render/thread/rt_glslpilot.c` keeps the pre-existing Multi9 lighting
-equations as the base path. The new branch is selected only when the existing
-`g_ModernMaterialParamsFP.x` mirror is `1`:
+`Game/src/render/thread/rt_glslpilot.c` preserves the original helper equations
+before the existing `modernMaterials` branch. With `modernMaterials 0`, the
+legacy Multi9 output and legacy half-vector remain unchanged.
 
-- derives a bounded roughness/lobe width from the authored exponent;
-- uses the existing tangent-space view vector for a normalized half-vector;
-- applies a view-aware Fresnel/specular response using the authored specular
-  color and gloss product;
-- leaves authored diffuse lighting intact after visual iteration so the
-  improvement reads as material response rather than global darkening;
-- preserves the existing material topology: Full lights materials 1 and 2
-  independently, Single lights material 1, and Building lights material 1
-  before its existing multiply-2 derivation.
+For `modernMaterials 1`, each sub-material uses:
 
-With `modernMaterials 0`, the old Multi9 helper equations and old half-vector
-expression remain the active output path. The #17 Bump ColorBlendDual source
-and behavior were not changed by this issue.
+```text
+glossStrength = clamp(normalGloss.a * max(glossConstant, 0), 0, 1)
+matteGuard    = smoothstep(0.08, 0.20, glossStrength)
+glossResponse = sqrt(glossStrength) * matteGuard
 
-The existing HQ rows are wired to the same opt-in uniform, but the existing
-static HQ pairing remains unverified as scoped by issue #5; no HQ pairing was
-introduced or broadened here.
+roughness    = clamp(sqrt(2 / (legacyExponent + 2)), 0.40, 0.90)
+lobeExponent = clamp(2 / roughness^2 - 2, 1, 128)
+NoL          = saturate(dot(N, L))
+NoV          = saturate(dot(N, V))
+NoH          = saturate(dot(N, normalize(V + L)))
+D            = pow(NoH, lobeExponent) * (lobeExponent + 2) / pi
+
+F0 = clamp(authoredSpecularRGB
+           * (0.04 + 0.16 * glossResponse)
+           * glossResponse, 0, 0.75)
+F  = mix(F0, 1, pow(1 - NoV, 5) * 0.35)
+E  = clamp(D * (0.70 + 0.30 * glossResponse)
+           * glossResponse * NoL, 0, 1)
+gloss = F * E
+result = colorIn * (ambient + diffuse) + gloss
+```
+
+The bounded square-root remap preserves useful response on the truck's
+mid/high-gloss painted and metal regions. The single bounded matte guard
+ramps the response from zero at authored gloss `0.08` to full response at
+`0.20`; therefore authored zero gloss has `glossResponse = 0`, `F0 = 0`,
+`E = 0`, and exactly zero modern specular. The guard also prevents a low-gloss
+material from gaining an artificial wet highlight. No diffuse/global-lighting
+term is modified by this follow-up.
+
+Full evaluates material 1 and material 2 independently before the existing
+mask composition. Single evaluates material 1 only. Building lights material 1
+then preserves the existing multiply-2 derivation for material 2.
+
+The #17 Bump ColorBlendDual branch was not changed. Its accepted math remains
+outside this Multi9-only tuning hunk.
 
 ## Visual evidence
 
-The confirmed scene is `FoundersCanal_01` on map 10, which exercises the
-verified static `bump_dual_multi` LQ rows. The final A/B used the repository's
-temporary `capture_override.txt` camera pin (`4494.28 0 992.15 0.25 0.7854 0`)
-and was removed after capture. Both runs froze the world at time 16 and
-reported `waterFeature=1 multiFeature=1`.
+The confirmed scene is `FoundersCanal_01` on map 10. The final A/B used the
+same temporary pinned camera override as the original issue evidence:
 
-The final clean captures are:
+```text
+4494.28 0.00 992.15 0.2500 0.7854 0.0000
+```
 
-- `agent/logs/capture-FoundersCanal_01-20260817-205611.json` —
-  `-glslPilot 1 -modernMaterials 0`
-- `agent/logs/capture-FoundersCanal_01-20260817-205641.json` —
-  `-glslPilot 1 -modernMaterials 1`
+The override was removed after capture. Both runs used
+`modernPresentation 0`, `modernBloom 0`, frozen time 16, and reported
+`waterFeature=1 multiFeature=1`. The modern-on log confirms the verified
+Full LQ, Single LQ, and Building LQ rows compiled/activated through the
+existing `bump_dual_multi` vertex variant. Full HQ and Single HQ remain
+implementation-consistent but runtime-unverified in their intended static HQ
+pairing, as required by issue #5.
 
-The modern-on log records compilation and activation of all three verified
-LQ rows: `BLENDMODE_MULTI`, `BLENDMODE_MULTI single`, and
-`BLENDMODE_MULTI building`, each using the `bump_dual_multi` vertex variant.
+Named surfaces in the same pinned case:
 
-The visible target is the foreground truck's static side panel and wheel.
-The modern-on crop is visibly brighter/less purple, with stronger panel-seam
-relief and a clearer wheel-rim response. The moving truck door and player idle
-phase are excluded from the stable crop; they are scene animation, not
-material evidence. The reviewer contact sheet is committed at
-`docs/evidence/issue-19-modern-multi9-contact-sheet.jpg`.
+- Matte/low-gloss guard: the foreground painted truck side panel remains broad
+  and subdued under modern-on, with no isolated wet/plastic highlight.
+- Visible improvement: the same side panel has clearer seam/normal relief and
+  a less purple response.
+- Glossy contrast: the wheel rim gains a clearer edge response while the tire
+  remains matte.
 
-For the stable panel/wheel crop, modern-on versus modern-off measured:
+The updated reviewer contact sheet is
+[`docs/evidence/issue-19-modern-multi9-contact-sheet.jpg`](evidence/issue-19-modern-multi9-contact-sheet.jpg).
 
-| Region | Mean RGB delta | Pixels with channel delta > 5 |
-| --- | ---: | ---: |
-| Side panel | 8.9808 | 99.00% |
-| Wheel | 12.5292 | 94.30% |
+For the stable pinned crops, modern-on versus modern-off measured:
 
-These are evidence metrics for the pinned A/B, not the regression-harness
-thresholds.
+| Region | Mean RGB delta | Channels with delta > 5 | Observation |
+| --- | ---: | ---: | --- |
+| Painted side panel / matte guard | 8.1083 | 64.34% | Broad subdued lift; no wet spot/coating |
+| Wheel | 23.1132 | 82.89% | Stronger readable rim response; tire stays matte |
+
+These are informational A/B metrics, not regression thresholds.
 
 ## Validation
 
-- `agent/doctor.ps1` — READY; the documented v142 probe warning remains, and
+- `agent/doctor.ps1` — READY; the documented v142 probe warning remains and
   the tested v145 fallback is used.
-- `agent/build.ps1 -Configuration Release -Platform x86` — PASS after the
-  final shader edit; log:
-  `agent/logs/build-Release-x86-20260817-210200.log`.
+- `agent/build.ps1 -Configuration Release -Platform x86` — PASS in 24.3s;
+  log: `agent/logs/build-Release-x86-20260817-212355.log`.
 - `agent/smoke.ps1 -ExerciseCharacter -AccountName Dummy00009` — PASS after
-  the final build; character creation and MapServer entry verified in
-  148.9 seconds on a freshly restarted shard; log:
-  `agent/logs/smoke-directdb-20260817-210425.json`.
-- `agent/capture-regression.ps1` with the default hybrid renderer and
-  `-modernMaterials 0` — 4/4 PASS, 0 regressions; summary:
-  `agent/logs/regression-20260817-204710.json`. Changed-percent results were
-  0.0000%, 0.0388%, 1.5343%, and 2.2228%; mean-delta advisories are the
-  documented exposure/weather noise policy.
+  fresh-shard warm-up; character creation and MapServer entry verified in
+  14.1s; log: `agent/logs/smoke-directdb-20260817-212835.json`.
+- `modernMaterials 0` reference regression — 4/4 PASS, 0 regressions under
+  the unchanged policy; changed-percent values were 2.0198%, 0.0636%, 0%,
+  and 1.5643%; mean-delta advisories remain report-only exposure/weather
+  noise; summary: `agent/logs/regression-20260817-213541.json`.
+- Founders modern-off reference — PASS, pinned camera and
+  `waterFeature=1 multiFeature=1`; log:
+  `agent/logs/capture-FoundersCanal_01-20260817-212900.json`.
+- Founders modern-on evidence — PASS, pinned camera, verified Full/Single/
+  Building LQ activation, and clean exit; log:
+  `agent/logs/capture-FoundersCanal_01-20260817-213254.json`.
 - Explicit legacy control
-  `-glslPilot 0 -modernMaterials 1` — PASS and clean exit; log:
-  `agent/logs/capture-FoundersCanal_01-20260817-205857.json`.
-- #17 character guard: `AtlasPlaza_Closeup_01` with
-  `-glslPilot 1 -modernMaterials 0` — PASS and clean exit; the log shows the
-  existing `BLENDMODE_BUMPMAP_COLORBLEND_DUAL`/HQ skin and bump variants
-  still active:
-  `agent/logs/capture-AtlasPlaza_Closeup_01-20260817-204623.json`.
+  `-glslPilot 0 -modernMaterials 1` — PASS with clean exit and no native
+  GLSL material path; log:
+  `agent/logs/capture-FoundersCanal_01-20260817-213435.json`.
+- #17 character guard — `AtlasPlaza_Closeup_01` with
+  `-glslPilot 1 -modernMaterials 0` — PASS; the log shows the existing
+  Bump ColorBlendDual variants active; log:
+  `agent/logs/capture-AtlasPlaza_Closeup_01-20260817-213502.json`.
+
+The added response uses only existing inputs and adds no texture sample or
+render pass. The shared helper adds a bounded `sqrt`/`smoothstep` remap and
+the associated scalar/vector gating per lit sub-material; the exact response
+is opt-in and the legacy path remains untouched. The final implementation SHA
+is posted in the issue completion comment after push.
