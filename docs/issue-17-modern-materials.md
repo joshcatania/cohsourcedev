@@ -57,7 +57,7 @@ uploaded only for these two programs.
 
 ## Visual observations
 
-The day and character rows show a localized change in costume response: the
+The character row shows a localized change in costume response: the
 modern branch produces a broader, Fresnel-weighted highlight/falloff response
 while retaining authored tint colors and normal-map detail. The low-light row
 remains intentionally restrained; its global sky/exposure differs between
@@ -65,11 +65,55 @@ process launches because the capture freeze locks eye adaptation at different
 convergence points. The close-up also has idle-animation phase variance, so it
 is visual evidence rather than a pixel-regression target.
 
-The day off/on comparator measured 49.22% changed pixels and meanDelta 26.76;
+The earlier day off/on comparator measured 49.22% changed pixels and meanDelta 26.76;
 the close-up measured 7.43% and meanDelta 8.09; and the low-light pair
 measured 48.71% and meanDelta 31.57. These are reported as visual A/B
 observations, not parity claims: the known capture exposure/weather and idle
 phase variance dominate the global metrics. All captures exited cleanly.
+
+## World/environment coverage follow-up
+
+The bounded search did not find a world surface with a material change as
+strong as the character response. The best reproducible non-character case is
+`FoundersCanal_01`, using only the foreground truck side panel, door hardware,
+panel rivets, tire tread, and wheel. The map is used as an environment probe;
+water is outside this evaluation and was not inspected or changed.
+
+Both runs used the same deterministic shot-table view (`map 10`, fixed
+camera/time setup, `timeset 16`, `timescale 0`) and explicitly launched with:
+
+```text
+-glslPilot 1 -modernMaterials 0|1 -modernPresentation 0 -modernBloom 0
+```
+
+The OFF run is recorded in
+`agent/logs/capture-FoundersCanal_01-20260817-193804.json` and the ON run in
+`agent/logs/capture-FoundersCanal_01-20260817-193923.json`; both exited cleanly.
+Their stdout telemetry registers vertex program 251 as `bump_dual HQ` and
+reports repeated
+`BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ active (bump_dual HQ vertex variant)`
+events in both runs (`...193804.stdout.log` and `...193923.stdout.log`).
+
+The full-frame OFF/ON comparison is 1.1758% changed pixels with meanDelta
+2.5865. Visual review of the truck surface is intentionally conservative:
+
+- Normal-map shape: panel rivets, door hardware, tire grooves, and wheel shape
+  remain readable, but ON does not produce a clear additional relief cue.
+- Highlight width/falloff: the panel highlight is effectively unchanged; only
+  sparse rim/underbody pixels move, with no robust lobe-width conclusion.
+- Tint preservation: the authored violet-gray truck tint is preserved.
+- Plastic/wet appearance: the truck and asphalt do not become artificially
+  plastic or wet; the water surface is not part of this test.
+
+This means the telemetry proves the canonical HQ pairing is active during the
+world capture, but the named truck surface does not show a material response
+that is materially distinguishable from the controlled OFF image. A fixed
+Talos arrival wall probe was also clean but measured 0.0% changed pixels. The
+bounded result is therefore that representative world coverage is effectively
+character-dominant for this opt-in response; no shader-math change is justified
+and the scope is not broadened into Multi9, textures, Bump Multiply, shadows,
+water, post-processing, or fallback work. The updated contact sheet keeps this
+world control beside the character evidence so the limitation is visible.
 
 ## Validation
 
