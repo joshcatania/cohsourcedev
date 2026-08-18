@@ -2190,6 +2190,7 @@ void WCW_BindVertexProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ " : %s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundVertexProgram)
     {
+        bool pilotWasActive = rt_glslpilot_isActive();
         // The engine's program binds are state-cached, so the pilot watches
         // this path too; the ARB vertex program bound below only acts as
         // state tracking while the pilot's GLSL program is in use.
@@ -2210,6 +2211,8 @@ void WCW_BindVertexProgram(GLuint id)
             }
         }
         boundVertexProgram = id;        
+        if ( pilotWasActive && !rt_glslpilot_isActive() )
+            rt_glslpilot_noteVertexFallback( id, boundFragmentProgram );
         // Don't do "sOpenGLShaderParamDirtyFlags = kOpenGLDirtyBit_ALL" here; wait until the
         // shader has been set up and the values fed to it.
     }
@@ -2304,15 +2307,17 @@ void WCW_BindFragmentProgram(GLuint id)
     rdrSetMarker(__FUNCTION__ ":%s [%d]", "", id ); // ParamTable_ShaderFileName(id), id);
     if(NO_STATEMANAGEMENT || id != boundFragmentProgram)
     {
-        if ( rt_glslpilot_tryBindFragment( id, boundVertexProgram ) )
+        bool pilotHandled = rt_glslpilot_tryBindFragment( id, boundVertexProgram );
+        if ( !pilotHandled )
         {
-            // the GLSL pilot handled this bind and its program object now
-            // overrides the bound ARB fragment (and vertex) program
-            boundFragmentProgram = id;
-            return;
+            // coverage diagnostic: record materials still on the ARB/Cg path
+            rt_glslpilot_noteUnportedFragmentBind( id, boundVertexProgram );
         }
-        // coverage diagnostic: record materials still on the ARB/Cg path
-        rt_glslpilot_noteUnportedFragmentBind( id );
+
+        // Keep the legacy fragment binding truthful even while glUseProgram()
+        // overrides it. A later unsupported vertex bind can deactivate the
+        // pilot without issuing another fragment bind because the engine's
+        // boundFragmentProgram cache still names this id.
         if(rdr_caps.chip & (ARBFP|GLSL))
         {
             if ( rt_cgGetCgShaderMode() )
@@ -2499,14 +2504,175 @@ void WCW_SetCgShaderParamArray4fv(tShaderProgramType target, ShaderParamId id, c
     // the GLSL pilot cannot read program env registers, so mirror the
     // engine-fed constants its shaders need. The glow param is pushed by
     // rt_tricks.c between the addglow bind and its draws; mirror it
-    // unconditionally like the env constants
+    // unconditionally like the env constants. The bump lighting constants
+    // are pushed by setupBumpPixelShader/setupSpecularColor and the bump
+    // draw paths (lightdir) right before the bump draws; same contract.
     if ( id == kShaderParam_GlowParamFP )
     {
         rt_glslpilot_onGlowParam( vec4Arr );
     }
-    if (( id == kShaderParam_ReflectionParamVP ) && rt_glslpilot_isActive() )
+    if ( id == kShaderParam_ReflectionParamVP )
     {
         rt_glslpilot_onReflectionParam( vec4Arr );
+    }
+    if ( id == kShaderParam_LightDirVP )
+    {
+        rt_glslpilot_onLightDirParam( vec4Arr );
+    }
+    if ( id == kShaderParam_LightDirFP )
+    {
+        rt_glslpilot_onLightDirFPParam( vec4Arr );
+    }
+    // effects/post-processing program-local constants (rt_effects.c); the
+    // GfxPerfTest params are not consumed by any ported shader
+    if ( id == kShaderParam_Effects_TextTransformFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_TextTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_ExpectedLumFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_ExpectedLum, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_TimeStepFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_TimeStep, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DofParam2FP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DofParam2, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DofProjectFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DofProject, vec4Arr );
+    }
+    if ( id == kShaderParam_Effects_DesaturateParamFP )
+    {
+        rt_glslpilot_onEffectsParam( kPilotFxConst_DesaturateParam, vec4Arr );
+    }
+    if ( id == kShaderParam_AmbientColorFP )
+    {
+        rt_glslpilot_onAmbientColorParam( vec4Arr );
+    }
+    if ( id == kShaderParam_DiffuseColorFP )
+    {
+        rt_glslpilot_onDiffuseColorParam( vec4Arr );
+    }
+    if ( id == kShaderParam_GlossParamFP )
+    {
+        rt_glslpilot_onGlossParam( vec4Arr );
+    }
+    if ( id == kShaderParam_Specular1ColorAndExponentFP )
+    {
+        rt_glslpilot_onSpecular1Param( vec4Arr );
+    }
+    if ( id == kShaderParam_BoneMatrixArrVP )
+    {
+        rt_glslpilot_onBoneMatrixParam( vec4Arr, nNumVec4s );
+    }
+    // model-space bump (bumpmapMultiply) vertex constants: texcoord scrolls
+    // and the per-vertex diffuse lighting terms pushed by drawLoopBump and
+    // the bumpmapMultiply draw paths in rt_model.c; same always-mirror
+    // contract as the constants above
+    if ( id == kShaderParam_TexScroll0VP )
+    {
+        rt_glslpilot_onTexScrollParam( 0, vec4Arr );
+    }
+    if ( id == kShaderParam_TexScroll1VP )
+    {
+        rt_glslpilot_onTexScrollParam( 1, vec4Arr );
+    }
+    if ( id == kShaderParam_AmbientParameterVP )
+    {
+        rt_glslpilot_onAmbientDiffuseParam( 0, vec4Arr );
+    }
+    if ( id == kShaderParam_DiffuseParameterVP )
+    {
+        rt_glslpilot_onAmbientDiffuseParam( 1, vec4Arr );
+    }
+    // water/multitex fragment constants: the tint colors, selector flags and
+    // per-layer scroll/scale array pushed by setupBumpMultiPixelShader
+    // (rt_model.c), and the refraction transform/skew parameters pushed per
+    // draw by rt_water.c; same always-mirror contract
+    if ( id == kShaderParam_ConstColor0FP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ConstColor0, vec4Arr );
+    }
+    if ( id == kShaderParam_ConstColor1FP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ConstColor1, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterRefractionTransformFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_RefractionTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterRefractionParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_RefractionParams, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterReflectionTransformFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ReflectionTransform, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterReflectionParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_ReflectionParams, vec4Arr );
+    }
+    if ( id == kShaderParam_WaterFresnelParamsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_FresnelParams, vec4Arr );
+    }
+    if ( id == kShaderParam_BumpMultiFlagsFP )
+    {
+        rt_glslpilot_onWaterParam( kPilotWaterConst_BumpMultiFlags, vec4Arr );
+    }
+    if ( id == kShaderParam_ScrollScaleArrFP )
+    {
+        rt_glslpilot_onScrollScaleParam( vec4Arr, nNumVec4s );
+    }
+    // cascaded shadow-map constants: matrices are four vec4 rows, the
+    // remaining ENV blocks are single vec4 values. These are the exact
+    // program-local assignments consumed by waterfp.cg BIT_SHADOWMAP.
+    if ( id == kShaderParam_ShadowMap1MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map1, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap2MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map2, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap3MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map3, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowMap4MatrixFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Map4, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParamsFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowSplitsFP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Splits, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParams2FP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params2, vec4Arr, nNumVec4s );
+    }
+    if ( id == kShaderParam_ShadowParams3FP )
+    {
+        rt_glslpilot_onShadowParam( kPilotShadowConst_Params3, vec4Arr, nNumVec4s );
+    }
+    // multi9 (BLENDMODE_MULTI) fragment constants: the material-2 specular
+    // and the 'lights on' addglow threshold/seed; same always-mirror contract
+    if ( id == kShaderParam_Specular2ColorAndExponentFP )
+    {
+        rt_glslpilot_onSpecular2Param( vec4Arr );
+    }
+    if ( id == kShaderParam_MiscParamFP )
+    {
+        rt_glslpilot_onMiscParam( vec4Arr );
     }
 
     #if RT_SUPPORT_ARB_SHADER_PATH

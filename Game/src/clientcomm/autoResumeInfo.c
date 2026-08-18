@@ -158,6 +158,10 @@ int getAutoResumeInfoFromRegistry(GfxSettings* gfxSettings, char* accountName, i
 
     gfxSettingsFixup(&gfxSettings_temp);
 
+    printf("FEATTRACE: registry-load shaderDetail=%d useWater=%d version=%d screenX=%d\n",
+           gfxSettings_temp.advanced.shaderDetail, gfxSettings_temp.advanced.useWater,
+           gfxSettings_temp.version, gfxSettings_temp.screenX);
+
     *gfxSettings = gfxSettings_temp;
 
     // Sanity checks and copying appropriate data

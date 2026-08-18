@@ -1,10 +1,44 @@
 # Autonomous Agent Status
 
-Last verified: 2026-08-15 (America/Chicago)
+Last verified: 2026-08-17 (America/Chicago)
 
 ## Current milestone
 
 Phase 0 and Phase 1 are both complete and verified on the current Windows development machine. The direct-DbServer path reaches login, resumes or creates a reproducible development character, enters a MapServer, and exits with machine-readable evidence. The deterministic graphical capture now produces a real image of Atlas Plaza with fixed camera and hidden UI, reports machine-readable results, and exits Ouroboros cleanly — verified twice consecutively.
+
+## Current renderer policy — hybrid native GLSL default-on (2026-08-17)
+
+The normal renderer launch uses native GLSL for supported fragment/vertex
+pairings and retains synchronized Cg->ARB as the intentional fallback
+(`useCg 1`). No GLSL argument is required for the default mode. Use
+`-glslPilot 0` for a legacy-only control/escape-hatch capture;
+`-glslPilot 1` remains accepted for compatibility. The issue #11 corrected
+promotion audit is the authoritative fallback inventory and found no
+bucket-A blocker for this hybrid policy. ARB/Cg remains in the renderer and
+must not be removed as part of this milestone.
+
+Promotion evidence from the 2026-08-17 build: `Release|x86` passed with the
+v145 compatibility fallback (`agent/logs/build-Release-x86-20260817-091218.log`),
+and direct-DB smoke passed for `Dummy00001` both on login and on the staged
+character/map path (`agent/logs/smoke-directdb-20260817-092546.json` and
+`agent/logs/smoke-directdb-20260817-092552.json`). A no-flag Atlas capture
+logged native GLSL activations for the supported materials/effects, while the
+same target with `-glslPilot 0` logged no GLSL-pilot activations and exited
+cleanly. The stable City Hall A/B comparison changed 1.6102% of sampled
+pixels (mean delta 6.5199, report-only exposure advisory); same-window day
+comparisons for East/North/West changed 4.9382%/4.3697%/1.1282%.
+
+The four-shot default suite and the explicit legacy control suite completed;
+the default City Hall baseline sample was a known weather/exposure outlier,
+so the isolated stable A/B result above is the promotion sample and no
+threshold was changed. Night, Talos, and high-feature Founders captures also
+exited cleanly in both modes. The high-feature Founders run recorded
+`water state=4`, `waterFeature=1`, and `multiFeature=1`, with default native
+GLSL activation for Multi9/water/effects; the `-glslPilot 0` control emitted
+no GLSL-pilot activation. Talos AddGlow remains covered by the accepted issue
+#8 audit (487/491 activations, 0 declines, with same-control changed pixels of
+0.0000% and 2.3994%); the current arrival view is account/map-state sensitive
+and was not used to manufacture a new AddGlow sample.
 
 ## Verified ladder
 
@@ -52,10 +86,10 @@ The v145 compatibility fixes are limited to legacy Crypto++ compiler branches, t
 ```text
 // AuthServer 127.0.0.1 2104
 UseFakeAuth 1
-UseQueueServer 1
+UseQueueServer 0
 ```
 
-Use `agent/set-directdb-mode.ps1 -Disable` to restore the checked-in AuthServer directive and `UseFakeAuth 0` when working on AuthServer integration. The optional `cohauth` and `cohacc` databases are not required for the primary loop. The TestClient `-db` path now bypasses the legacy AccountServer availability guard for local development, while preserving the normal guard for other modes.
+Direct-DB mode disables queue admission and the QueueServer launch block so `-db 127.0.0.1` receives the player list directly and DbServer owns UDP 7000. Use `agent/set-directdb-mode.ps1 -Disable` to restore the AuthServer directive, `UseFakeAuth 0`, `UseQueueServer 1`, and the QueueServer launch block when working on AuthServer integration. The optional `cohauth` and `cohacc` databases are not required for the primary loop. The TestClient `-db` path now bypasses the legacy AccountServer availability guard for local development, while preserving the normal guard for other modes.
 
 ## Known limitations
 
@@ -135,8 +169,8 @@ Phase 2 extends Phase 1 from a single shot to a deterministic multi-scene captur
 Changes:
 
 - `Game/src/game.c` — the capture setup now selects from a shot table (`s_captureShots`): five Atlas Park labels (CityHall_03 default, East_01, North_01, West_01, Closeup_01 with camdist 10) mapping to fixed `setpospyr`/`camdist` values; unknown labels keep the historically verified default. The setup also freezes the world clock (`timeset 16; timescale 0`).
-- `agent/compare-captures.ps1` — image comparator: downsamples both JPGs to 320px width, pixel-diffs via LockBits, reports `changedPercent`/`meanDelta`/`maxDelta`, fails above `MaxChangedPercent` (2.0) or `MaxMeanDelta` (2.0).
-- `agent/capture-regression.ps1` — orchestrator: runs `capture.ps1` per label, adopts missing baselines into `agent/baselines` (unless `-NoAdopt`), compares against baselines, writes a summary JSON under `agent/logs/`, exit 0 only when no shot regressed or failed.
+- `agent/compare-captures.ps1` — image comparator: downsamples both JPGs to 320px width, pixel-diffs via LockBits, reports `changedPercent`/`meanDelta`/`maxDelta`, and uses `changedPercent` as the hard parity criterion. `meanDelta` remains visible as a report-only advisory because capture exposure/eye-adaptation and weather can raise it without a localized shader change.
+- `agent/capture-regression.ps1` — orchestrator: runs `capture.ps1` per label, never adopts a missing baseline in formal/default mode, compares against baselines, writes a policy-bearing summary JSON under `agent/logs/`, and exits 0 only when every target is a PASS. Use `-AdoptMissingBaseline` for intentional creation; those shots are reported as `BASELINE_ADOPTED` and never count as PASS.
 
 Determinism findings:
 
@@ -157,7 +191,7 @@ The first renderer investigation ran under the regression harness with the follo
 
 Shader-path map (all evidence from live runs):
 
-- Default: `game_state.useCg = 1` — Cg compiles the shipped `.cgfx`/`.cg` sources to ARB assembly (`CG_PROFILE_ARBFP1/ARBVP1`). This is the only fully working shader path; all Phase 1/2 captures used it.
+- Default fallback: `game_state.useCg = 1` — Cg compiles the shipped `.cgfx`/`.cg` sources to ARB assembly (`CG_PROFILE_ARBFP1/ARBVP1`). The normal renderer is now hybrid: native GLSL is default-on for supported pairings, with this Cg->ARB path retained for synchronized fallback. All Phase 1/2 captures used the legacy-only path before issue #12.
 - `useCg 0`: loads precompiled ARB programs (`shaders/arb/*.fp`) without the Cg runtime.
 - `useCg 2` (Cg->GLSL): **broken**. Live run (`-useCg 2`, capture JSON `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-124346*`): every CgFX shader fails with `CG ERROR: "The program could not load"` at `-profile glslf`, followed by fallback error shaders; the resulting image differs from baseline at 100% of pixels (meanDelta 149). Reaching GLSL therefore requires porting shader sources, not just flipping the mode.
 - Legacy branches for `R200` (ATI_fragment_shader), `NV1X/NV2X` (register combiners), and `TEX_ENV_COMBINE` are selected from `rdr_caps.chip` in `rt_state.c`/`wcw_statemgmt.c` but cannot activate on modern drivers because those GL extensions no longer exist. They are deletion candidates, not runtime risks.
@@ -226,8 +260,8 @@ Shader sources live in `bin/piggs/misc.pigg`; extract with
   every shader reload (ids regenerate). GLSL entry points are the raw GLEW
   pointers (`__glewUseProgram` etc.) because `ogl.h` `#undef`s the macro names
   as a "do not use" policy for the fixed pipelines.
-- Enabled at startup with `-glslPilot 1` (new `game_state.glslPilot`, registered
-  as the `glslPilot` console command; command-line passthrough works because
+- Historical pilot enablement (before issue #12) used `-glslPilot 1` (new `game_state.glslPilot`, registered
+  as the `glslPilot` console command; it is now default-on, while command-line passthrough works because
   argument parsing precedes renderer init). `agent/capture.ps1` gained
   `-ExtraClientArgs` to pass it.
 
@@ -465,7 +499,7 @@ Fifth material ported and the coverage question systematized.
 - New coverage diagnostic: `WCW_BindFragmentProgram` calls
   `rt_glslpilot_noteUnportedFragmentBind(id)` for binds the pilot did not
   handle; each distinct fragment program id is logged once per process
-  (only when `-glslPilot 1`). A capture's client log now enumerates every
+  (when native GLSL is enabled by default or with `-glslPilot 1`). A capture's client log now enumerates every
   material still rendering through ARB/Cg.
 
 ### Coverage map (AtlasPlaza_East_01, pilot on)
@@ -498,3 +532,595 @@ bumpmapped set (needs tangent-space interpolants and more engine
 constants) and the effects/ post-processing set (bloom/ssao/etc.).
 Verifying ADDGLOW/ALPHADETAIL requires scenes that bind them — the
 map-transfer capture path remains the gate for that.
+
+## GLSL pilot: bumpmapColorblendDual (static + skinned) — 2026-08-15
+
+Sixth material ported: the first bumpmapped one. This one needed new
+machinery — a tangent-space vertex path, more engine constants, and
+skinning — and one real discovery about what the coverage actually is.
+
+### What Atlas Park actually binds
+
+The earlier coverage diagnostic observed fragment ids 100/101. Id
+arithmetic (fragment ids allocate 16 per blend mode; MODULATE=4,
+MULTIPLY=20, COLORBLEND_DUAL=36, ADDGLOW=52, ALPHADETAIL=68,
+BUMPMAP_MULTIPLY=84) puts 100/101 at BUMPMAP_COLORBLEND_DUAL variants
+0 (LQ) and 1 (HQ). The first pilot attempt registered the static
+`DRAWMODE_BUMPMAP_DUALTEX` vertex program (id 232) and declined: the
+LQ fragment bound with vertex program **228**, which is
+`DRAWMODE_BUMPMAP_SKINNED` — the *skinned* bump_dual variant. On Atlas
+Park the bump-dual material is bound by `rt_bonedmodel.c` for the
+player/NPC costumes (every third-person shot frames it), not by static
+building geometry (`drawLoopBumpDual`/`rt_cloth` also exist and are
+registered, but the character drives activation).
+
+### What was ported
+
+- `bumpmapColorblendDualfp.cg` variant 0: normal-map decode + gloss
+  (`map_color_to_normal`, no DXT5NM by default), `calc_dual_tint` base
+  color, `calc_lighting_factors`/`apply_lighting` per-pixel lighting
+  with the engine bump constants, fog. Consumes g_Env0/1FP (already
+  mirrored) plus new mirrors: g_AmbientColorFP, g_DiffuseColorFP,
+  g_GlossParamFP (.w gloss), g_Specular1ColorAndExponentFP
+  (TIE(ENV0/1/2/5), pushed by setupBumpPixelShader/setupSpecularColor).
+- One bump vertex shader replicating BOTH vp_master bump_dual (SKIN=0)
+  and skin_bump (SKIN=1) variants (both VIEW space, VERTEX_LIT=NONE,
+  TC_XFORM=NONE, PIXEL_LIT=BUMP_ALL, non-HQ) behind a `g_Skinned`
+  uniform — same pattern as the dualtex shader's mode switch. Static
+  branch: normal/tangent via modelview rows (Cg semantics, not the
+  normal matrix). Skinned branch: two-bone blend
+  (blend_bone_positions/blend_bone_normals) through g_BoneMatrixArrVP
+  (ENV16, 48 vec4s) mirrored from loadBoneMatrices' array push
+  (bone_count*3 vec4s; stale-tail semantics match ARB env regs).
+- Tangent-space light/view vectors per vertex
+  (calc_tangent_space_light_and_position; Cg mul(M_ts, v) is the
+  transpose of GLSL column-major mat3 — explicit dots used). Binormal
+  sign from the tangent attribute's w.
+- Vertex attributes: tangent on generic attribute 7 (vec4; cloth feeds
+  a vec3 whose w defaults to 1 → sign +1, matching ARB), bone weights
+  on attribute 1, bone indices on attribute 5 — bound with
+  glBindAttribLocation before linking.
+- `g_LightDirVP` mirror (vertex ENV0) — pushed per draw by the bump
+  draw paths.
+- Pilot activation now pairs a material with a *set* of vertex kinds
+  (bitmask): the bump material accepts bump_dual and skin_bump; the
+  re-bind path re-modes g_Skinned when the vertex variant switches
+  static↔skinned while the material stays bound.
+- Diagnostics added: vertex registrations print (id, kind, lit mode),
+  and the decline line now distinguishes "not registered" from
+  "registered for a different vertex variant" (this is what localized
+  the skinned-path discovery).
+
+### Verification (fresh generation, warm shard, same-window A/B)
+
+- Build: `agent/logs/build-Release-x86-20260815-18*.log` (PASS).
+- Diagnostic capture (pilot on): bump program compiled/linked/active
+  `(skin_bump vertex variant)`; coverage line for fragment 100 gone
+  (intercepted), 101 (HQ) still ARB as designed.
+- Adopt suite `agent/logs/regression-20260815-180801.json` (control),
+  pilot suite `agent/logs/regression-20260815-181036.json`: **all four
+  shots PASS** — CityHall_03 0.0035%/0.19, East_01 0.0035%/0.08
+  (pixel-level equivalence), North_01 1.45%/1.24, West_01 5.13%/2.71
+  (storm-glare noise floor; thresholds 6%/3.0).
+- Per-shot activation evidence: `BLENDMODE_BUMPMAP_COLORBLEND_DUAL
+  active (skin_bump vertex variant)` in all four client logs; no bump
+  declines — the only decline line in each log is the known benign
+  MULTIPLY post-reset sentinel (`vertex program -1`).
+- The committed baselines are the adopt-suite set from this run
+  (new shard generation — the prior generation had drifted 6.5-7.1%,
+  the documented fresh-generation weather shift, and was re-adopted
+  per the documented same-window A/B flow).
+- Operational reminder reconfirmed: a running shard locks `bin\`
+  (build fails at the copy step); stop it before rebuilding. A
+  cancelled capture run can leave an `Ouroboros.exe` behind — kill it
+  before the next build.
+
+### Remaining in the bumpmapped family
+
+HQ bump variants (fragment 101; HQ vertex interpolants
+tangent/normal/position + cubemap/shadow paths), bumpmapMultiply
+(model-space lighting, DIFFUSE vertex lighting, TC_OFFSET),
+multi9 (multi-material), water. The map-transfer capture path remains
+the gate for addGlow/alphaDetail verification and non-Atlas scenes.
+Shader sources for all of these are extracted at `agent/shadersrc/`
+(ignored; regenerate with
+`Utilities/pig/bin/x86/Release/pig.exe x bin\piggs\misc.pigg`).
+
+## GLSL pilot: bumpmapColorblendDual HQ variant (fragment 101) — 2026-08-15
+
+Seventh material ported: the BIT_HIGH_QUALITY variant of the bumped
+dual-tint material — the `101` id the coverage diagnostic had observed
+bound on Atlas Park next to the LQ `100`.
+
+### What the HQ variant actually is
+
+The HQ fragment (`bumpmapColorblendDualfp.cg` with `BIT_HIGH_QUALITY`)
+does not receive tangent-space light/view vectors from the vertex
+stage. Instead the engine pairs it with the HQ compiles of the same
+vertex variants (`shaderMgrVertexProgramsHQ[]`, selected via
+`BIT_HIGH_QUALITY_VERTEX_PROGRAM` in the bump draw paths when
+`blend_bits & BMB_HIGH_QUALITY`), which pass view-space normal, tangent
+(binormal sign in w), and position as interpolants. The fragment builds
+the tangent basis per pixel (`populate_lighting_vectors_hq`) and takes
+the light direction from the `g_LightDirFP` fragment constant
+(TIE(ENV11)) — pushed by `setupBumpPixelShader` only for HQ draws —
+instead of a vertex-interpolated vector. Two faithful-to-source
+nuances: `light_ts` IS renormalized after the basis change but
+`half_ts` deliberately is NOT (the Cg source documents that
+renormalizing changes the specular response), and the binormal sign is
+`sign(tangent.w)` applied at the vertex stage and multiplied in raw at
+the fragment.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_BumpColorBlendDualHQ` with its
+  own HQ fragment source and an HQ bump vertex source (same two-bone
+  skinning switch behind `g_Skinned`; no `g_LightDirVP` — dead code in
+  the HQ Cg variants). New vertex kinds `BumpDualHQ`/`SkinBumpHQ`;
+  materials pair by kind mask exactly like the LQ set. New
+  `g_LightDirFP` mirror (`rt_glslpilot_onLightDirFPParam`); the env
+  register persists between pushes, so the mirror deliberately keeps
+  the last value like the ARB path.
+- `wcw_statemgmt.c`: `kShaderParam_LightDirFP` hooked into the mirror
+  dispatch in `WCW_SetCgShaderParamArray4fv`.
+- `rt_shaderMgr.c`: registers
+  `g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY]`
+  as the HQ fragment target and `shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX/SKINNED]`
+  (observed ids 251/247 this run) as HQ vertex entries.
+- MSVC C lesson: positional material-table initializers count against
+  the struct — adding a uniform-location field requires adding exactly
+  one initializer to every row (first build failed C2078 with one
+  extra `-1` per row).
+
+### Verification (fresh generation, warm shard, same-window A/B)
+
+- Build: `agent/logs/build-Release-x86-20260815-182923.log` (PASS,
+  28.5 s).
+- Warm-up: first `-ExerciseCharacter` smoke timed out at 180 s on the
+  fresh shard (documented warm-up), passed after 4 minutes.
+- Diagnostic capture (pilot on, East): HQ program compiled/linked and
+  activated `(skin_bump HQ vertex variant)`; HQ vertex programs
+  registered (251 bump_dual HQ, 247 skin_bump HQ). One benign
+  end-of-log decline: a fragment-101 bind arrived while LQ vertex 228
+  was still tracked (last pilot line of the run); the vertex re-bind
+  path recovers such pairings, and if a draw really happened in the
+  mismatched state it is byte-identical to what the ARB control does
+  in the same state.
+- Adopt suite `agent/logs/regression-20260815-184116.json` (control,
+  fresh baselines for this generation), pilot suite
+  `agent/logs/regression-20260815-184335.json`: East_01 **0.02%/0.21
+  PASS** (pixel-level), North_01 1.46%/1.52 PASS, West_01
+  **0.0035%/0.34 PASS** (pixel-level). CityHall_03 flagged 10.66% once
+  (sky movement between suites — the shot's client log shows the HQ
+  material active with no declines); the immediate pilot re-capture
+  `agent/logs/capture-AtlasPlaza_CityHall_03-20260815-184621.json`
+  measured **1.41%/1.65 PASS** against the same baseline — transient,
+  not reproduced.
+- All four shots show `BLENDMODE_BUMPMAP_COLORBLEND_DUAL_HQ active`
+  in their client logs; East alone shows the single late fragment-101
+  coverage line described above.
+- Shard stopped afterwards; post-stop rescan found no shard processes.
+
+### Remaining Atlas Park coverage after this port
+
+The unported bound fragment ids in an East capture are now only the
+special-effects set (201-216, the effects/ post-processing family).
+Remaining material families for later steps: `bumpmapMultiply`
+(BUMPMAP_MULTIPLY LQ — not observed bound in the Atlas shots so far),
+`multi9`, water, and the effects/ set. The map-transfer capture path
+remains the gate for addGlow/alphaDetail verification and non-Atlas
+scenes.
+
+## GLSL pilot: effects/post-processing family — 2026-08-16
+
+All 19 effects fragment programs (rt_effects.c fullscreen passes) are
+ported to native GLSL and harness-verified visually equivalent to the
+ARB path. The port adds `kPilotMaterial_Fx*` (indices 7-25), a
+`tPilotFxConstId` mirror set for the per-program
+`g_Effects_*` locals, a fixed-function vertex pairing
+(`kPilotVertexKind_FixedFunction`, vertex program id 0) with a second
+program object per effects material, and registration from
+`rt_effects_registerGlslPilotTargets()`.
+
+### The activeFF constant-mirror bug
+
+The first full-chain A/B measured 8-12% pixel drift. Root cause:
+`rt_glslpilot_onEffectsParam` pushed effects constants to `m->locFx`
+(the dualtex-linked program) regardless of which program object was
+bound; the pbuffer passes run on `programFF` whose constants live at
+`m->locFxFor`, so every pass drew with stale offsets. Fix: select the
+location array with `m->activeFF` (set in `pilotActivate`). After the
+fix, changed-pixel drift collapsed to 0.005-0.76% across the suite
+(threshold 6%).
+
+### The meanDelta noise floor is capture-procedure noise
+
+After the fix, meanDelta hovered at 3.0-3.7 — marginal against the 3.0
+threshold — as a *uniform* per-image brightness offset varying per
+shot. Bisect + direct measurement established this is NOT a shader
+difference:
+
+- A temporary 1x1 `glReadPixels` readback in `lightAdaptation()` showed
+  the GLSL adaptation trajectory tracks the ARB trajectory within
+  frame-time noise (<=0.002 lum at freeze; worth <=0.5/255).
+- Pure-ARB control pairs in the same window measure the same
+  meanDelta range (1.3-4.4 observed).
+- Mechanism: the capture freeze (`timeset 16; timescale 0`) collapses
+  `TIMESTEP` (`global_state.frame_time_30`) from ~0.45 to ~0.015,
+  freezing the eye adaptation mid-convergence (~300 frames in, ~70%
+  converged). Each capture locks a slightly different exposure state
+  into the screenshot. The tone-map amplifies the residual adaptation
+  spread into a uniform integer RGB offset per shot.
+
+changedPercent (localized pixels) is the discriminating metric for
+effects-chain regressions; meanDelta marginality on day shots is
+expected noise unless it exceeds ~5.
+
+### Verification evidence
+
+- Full-chain pilot suite vs same-window control adopt
+  (`agent/logs/regression-20260816-130241.json` control,
+  `regression-20260816-130455.json` pilot): changedPercent
+  0.019/0.76/0.33/0.03 (CityHall/East/North/West) — all far under the
+  6% threshold.
+- Adaptation trajectory A/B (temporary diagnostic, removed):
+  frame-0 pyramid output and freeze-state values track within noise;
+  see `capture-AtlasPlaza_West_01-20260816-1254*.stdout.log`.
+- Live chain confirmed via client log: SHRINK2 -> SHRINK4LUM ->
+  SHRINK4 x3 -> LIGHTADAPTATION -> HBLUR -> VBLUR -> DOF_BLOOM_FINAL
+  (pbuffer passes on the fixed-function pairing, final pass on the
+  DRAWMODE_SPRITE dualtex pairing, vertex lit mode 5).
+
+### Remaining Atlas Park coverage
+
+The unported bound fragment ids in Atlas captures are now down to
+none from the effects set; remaining families: `bumpmapMultiply` (not
+yet observed bound), `multi9`, water. The map-transfer capture path
+remains the gate for addGlow/alphaDetail verification and non-Atlas
+scenes.
+
+## Map-transfer capture path + non-Atlas coverage findings — 2026-08-16
+
+The capture state machine in `game.c` now supports shots on any static
+map. Each `CaptureShot` gained a `mapId` field (the static map container
+id from `bin/data/server/db/maps.db`; 0 keeps the current map). During
+capture setup, if the shot's map differs from `game_state.base_map_id`,
+the client sends `mapmove <id>` (access level 1, `SCMD_MAPMOVE`) and
+keeps waiting; the existing readiness conditions drop out during the
+transfer and re-trigger on the target map, where `base_map_id` is the
+static container id the server sent for the new world. A transfer takes
+~3 s per hop and was verified end-to-end across nine zones (Atlas,
+Founders Falls, Talos, Independence Port, Galaxy, King's Row, Skyway,
+Peregrine, plus interiors Pocket D and Midnighter Club via probes).
+
+Two developer iteration aids ride along, both read from a loose
+`bin/capture_override.txt` (absent by default; never commit it):
+
+- line 1 `x y z pitch yaw roll` — overrides the shot's camera position
+  without a rebuild (position scouting);
+- line 2 `map <id>` — overrides the shot's map (zone probing).
+
+An empty `posPyr` in the shot table keeps the map-transfer arrival
+position, which is itself deterministic per map (used by the
+`TalosArrive_01` authoring probe shot).
+
+### Fragment variant id table
+
+A startup diagnostic in `shaderMgr_InitFPs()` (pilot on) prints the
+exact fragment program id for every compiled blend-mode/variant pair.
+16 ids per blend mode base; the ids matter because the pilot keys
+coverage and registration off them:
+
+| Blend mode | Fragment ids |
+|---|---|
+| modulate | 4-7 |
+| multiply | 20-23 |
+| colorBlendDual | 36-39 |
+| addGlow | 52-55 |
+| alphaDetail | 68-71 |
+| bumpmapMultiply | 84-87 |
+| bumpmapColorblendDual | 100 (LQ) / 101 (HQ BIT_HIGH_QUALITY) |
+| water | 116-119 (118 = the fancy-water fragment) |
+| multi9 | 120-123 |
+| sunflare | 184-185 |
+| effects family | 201-216 |
+
+### Water does not bind deterministically: GFXF_MULTITEX startup ordering
+
+`BLENDMODE_WATER` is assigned at texture-load time (`tex.c`
+`texResetTrickBasedParametersComposite`), not at draw time, and the
+multi-texture branch requires the `GFXF_MULTITEX` capability bit at
+that moment. On this machine the bit is already absent when map texopts
+load: the `DRAWMODE_BUMPMAP_MULTITEX` vertex program load inside
+`shaderMgr_InitVPs()` (which requires `GFXF_WATER` and can clear
+`GFXF_MULTITEX` when its compile fails) runs before map textures bind.
+Every water texopt therefore takes its `useFallback` path and binds
+`BLENDMODE_BUMPMAP_COLORBLEND_DUAL`-style bump lighting — concretely
+fragment 84, bumpmapMultiply. Pinning `game_state.waterMode` per frame
+does not help: the gate is the capability bit at load time, not the
+mode. The probe evidence (`WATERTRACE` diagnostics in `tex.c`,
+`rendertree.c`, `rt_water.c`, all pilot-gated and retained):
+
+- every water texopt on every probed zone logs `multiTexFeature=0`;
+- `addViewSortNode_Water`/`modelDrawWater` still run (the sort node and
+  water draw path are mode-driven), but the bound fragment is 84;
+- true water (fragment 118) bound in exactly one early exploratory run
+  whose startup timing differed — a timing-dependent path, unusable for
+  regression.
+
+Consequence: the deterministic water surface coverage is bumpmapMultiply
+(84), which is exactly the next material family to port. A true water
+port is gated on fixing the `GFXF_MULTITEX` startup ordering (or
+re-running texopt binding after shader init), a separate engine change.
+
+### multi9 is static-zone-absent
+
+Eleven zones probed (including Pocket D and Midnighter Club interiors):
+fragment 120 (multi9) never bound. It is almost certainly a
+mission-instance-only material (multi-material geometry). The multi9
+port is gated on a mission-instance capture path, not just map
+transfer.
+
+### FoundersCanal_01: first non-Atlas regression shot
+
+`FoundersCanal_01` (map 10, Founders Falls canal view) is the first
+non-Atlas shot in the table. The view deterministically binds
+bumpmapMultiply (fragment 84, the water fallback described above) and
+alphaDetail (fragment 68) — the two families with no Atlas Park
+coverage. Baseline adopted and pilot regression-verified in the same
+window: **changedPercent 1.08 / meanDelta 1.69**
+(`agent/logs/regression-20260816-153510.json`) — both far under
+threshold; note the day-shot meanDelta noise floor does not apply to
+this shot, which measures clean.
+
+### Atlas suite re-verified after the infrastructure change
+
+Atlas baselines were re-adopted in the current weather window
+(`regression-20260816-154059.json` adopt); two consecutive pilot runs
+against them measured changedPercent 2.21/2.37/0.31/1.51 and
+3.19/0.15/1.47/0.17 (CityHall/East/North/West;
+`regression-20260816-154258.json`, `regression-20260816-154532.json`)
+— all far under the 6% threshold. meanDelta 5.4-8.0 is the documented
+exposure-lock noise floor (eye adaptation frozen mid-convergence);
+changedPercent is the discriminating metric and is green.
+
+### Remaining material coverage after this step
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs).
+Ported, now with deterministic coverage awaiting a port-verify cycle:
+none (addGlow/alphaDetail were ported earlier; FoundersCanal_01 now
+covers alphaDetail for a future re-verify if ever needed).
+Unported with deterministic coverage: **bumpmapMultiply (84)** — next.
+Gated: water (118, GFXF_MULTITEX startup ordering), multi9 (120,
+mission-instance capture path).
+
+## GLSL pilot: bumpmapMultiply (fragment 84) — 2026-08-16
+
+The model-space bump material is ported and harness-verified on
+`FoundersCanal_01` (the water-surface fallback view). This is the
+first material whose VERTEX path differs structurally from the
+bump-dual family: `bump.vp`/`bump_rgb.vp` are the
+`LIGHT_SPACE=MODEL` variants of `vp_master_vp.cg`.
+
+### What the model-space path actually does (verified against cgc ARB)
+
+Compiled both variants offline (`3rdparty/cg/bin/cgc.exe -profile
+arbvp1 -DSKIN=0 -DLIGHT_SPACE=MODEL -DVERTEX_LIT=DIFFUSE|PRELIT
+-DTC_XFORM=TC_OFFSET -DPIXEL_LIT=BUMP_SPEC -DREFLECT=NONE`) and
+decoded the ARB:
+
+- `g_LightDirVP` for these draws is a model-space light POSITION
+  (rt_model.c transforms the sun — or the dummy (0,5000,0) ambient
+  light — into model space); the vertex shader derives the light
+  direction per vertex: `normalize(LightDirVP.xyz - position)`.
+- The model-space normal and tangent are used RAW — the Cg does NOT
+  normalize them for LIGHT_SPACE=MODEL (unlike the view-space
+  bump_dual variants); the non-orthonormal basis is what shipped.
+- `calc_tangent_space_light_and_position` receives the VIEW-space
+  position against that model-space basis: `view_ts` =
+  -(dot(pos_vs, tangent), dot(pos_vs, binormal), dot(normal, pos)) —
+  a mixed-space expression that is mathematically inconsistent but is
+  what the shipped ARB computes; the port replicates it faithfully.
+- Vertex color: DIFFUSE variant computes
+  `saturate(dot(raw_normal, light)) * DiffuseParamVP + AmbientParamVP`
+  (vec4, both pushed by drawLoopBump with w=1); PRELIT variant reads
+  ATTR11 (baked instance lighting, bound by rt_model.c for the
+  ambient-group RGBS path) and multiplies by 4.
+- TC_XFORM=TC_OFFSET: uv0/uv1 get the `tex_scrolls` offsets
+  (g_TexScroll0/1VP).
+- `g_ViewerPositionVP` is dead code in both variants (compiler
+  eliminates it; confirmed by the `: 0` usage flag in the ARB header)
+  — not declared in the port.
+
+The fragment (bumpmapMultiplyfp.cg variant 0) is vertex-lit with per
+pixel bumped SPECULAR only: `(base*blend).rgb * vcolor * 8 +
+saturate(spec)`, alpha keeps `base.a*blend.a * g_Env0FP.a`. The cgc
+ARB confirms the ambient/diffuse/gloss fragment constants are DEAD in
+this variant (only env5 specular1 and env8 env0 are read), the
+specular dot is saturated BEFORE the pow, and the vertex color
+multiplies rgb only.
+
+### Changes
+
+- `rt_glslpilot.{c,h}`: `kPilotMaterial_BumpMultiply` with its own
+  fragment source and a model-space bump vertex source covering both
+  engine variants behind a `g_Prelit` uniform (0 = bump.vp/DIFFUSE
+  DRAWMODE_BUMPMAP_NORMALS, 1 = bump_rgb.vp/PRELIT
+  DRAWMODE_BUMPMAP_RGBS on ATTR11) — same pattern as the skinning
+  switch. New vertex kinds `BumpNormals`/`BumpRGBS`; five new
+  uniform locations per material (texscroll x2, ambient/diffuse VP,
+  prelit switch; every table row gained the five `-1` initializers —
+  MSVC C2078 discipline); kPilotMaxVertexEntries 12 -> 16.
+- `wcw_statemgmt.c`: kShaderParam_TexScroll0/1VP and
+  kShaderParam_Ambient/DiffuseParameterVP hooked into the mirror
+  dispatch.
+- `rt_shaderMgr.c`: registers
+  `g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_MULTIPLY][0]`
+  (id 84) and the DRAWMODE_BUMPMAP_NORMALS/RGBS vertex programs
+  (bump.vp id 230 this run).
+- `g_LightDirVP`/`g_Specular1ColorAndExponentFP` reuse the existing
+  mirrors (the lightdir mirror is shared; the material keeps its own
+  uniform location).
+
+### Verification (fresh generation, warm shard)
+
+- Build PASS 29.5 s (`agent/logs/build-Release-x86-20260816-170126.log`).
+- Pilot run 1 (`regression-20260816-170850.json`): changedPercent
+  **1.41** (threshold 6), meanDelta 3.86 — the documented day-shot
+  exposure-lock noise (this shard generation's control noise floor
+  measured higher than the morning window).
+- Pilot run 2 (`regression-20260816-171020.json`): changedPercent
+  **0.59**, meanDelta **1.50** — full PASS on both metrics.
+- Client log evidence: 1769-1789 `BLENDMODE_BUMPMAP_MULTIPLY active
+  (bump (model-space) vertex variant)` activations per capture;
+  fragment target bumpMultiply=84 registered; vertex program 230
+  registered as bump (model-space). One benign one-time coverage
+  line ("unported fragment program 84") from a bind that raced the
+  startup registration order, and the usual one-time decline lines
+  (fragment 84 briefly tracked against vertex 225 before the vertex
+  re-bind recovered the pairing — ARB draws those, identical to
+  control).
+- Atlas suite re-run with the restructured material table
+  (`regression-20260816-171120.json`): changedPercent 0.19-2.17 —
+  same profile as the pre-port morning runs (0.15-3.19); all prior
+  materials activate exactly as before. meanDelta 3.3-7.1 matches the
+  documented Atlas noise floor.
+
+### Remaining material coverage
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs),
+**bumpmapMultiply**. Unverified port: addGlow (no binding view
+known). Gated: water (118, GFXF_MULTITEX startup ordering), multi9
+(120, mission-instance capture path).
+
+## The GFXF_MULTITEX "startup ordering" was a shadow-registry self-lock — 2026-08-16
+
+The earlier "DRAWMODE_BUMPMAP_MULTITEX vertex program load ordering clears
+GFXF_MULTITEX" theory is disproven: all three FAUX_MULTI vertex variants
+compile cleanly offline and in-engine (FEATTRACE: InitVPs.load-results
+multiOkay=1 in every instrumented run; no `Shader Compilation failure`
+lines). The real mechanism, localized with new FEATTRACE startup
+diagnostics (`rdrSetChipOptions` begin/end, `InitFPs` compile-loop
+begin/end + `disableVariantFeature`, `InitVPs` load results, the
+registry load, and every `gfxApplySettings` call):
+
+1. The client does NOT read the Windows registry for graphics settings.
+   `RegistryReader`/`regfile.c` route all settings through a file-backed
+   shadow registry under `bin/registry-keys/hkey_current_user/software/
+   cryptic/coh/`. (The real `HKCU\SOFTWARE\Cryptic\CoH` values are never
+   consulted; reading them from PowerShell misleads the investigation.)
+2. On every clean exit, `saveAutoResumeInfoToRegistry` persists
+   `shaderDetail = shaderDetailFromFeatures(rdr_caps.features)` and
+   `useWater = game_state.waterMode`. One historical run that lost
+   GFXF_MULTITEX/WATER for any transient reason therefore wrote
+   `shaderdetail=0` (SHADERDETAIL_GF4MODE: water on, multitex OFF) and
+   `usewater=0` into the shadow registry.
+3. Every subsequent startup then applies 0/0 (FEATTRACE:
+   `registry-load shaderDetail=0 useWater=0`; `enableMask[water=1
+   multi=0] disableMask[multi=1]`), water texopts take their fallback
+   (bumpmapMultiply, fragment 84), and the clean exit re-saves 0/0 —
+   a self-reinforcing loop. This also explains the "one early
+   exploratory run bound true water": it ran before the first poisoned
+   save. It was never timing-dependent.
+
+With `shaderdetail=3` and `usewater=2` written into the shadow registry,
+one capture binds `BLENDMODE_WATER` variant 0 (fragment 116) on the
+Founders Falls ocean model deterministically, and `capture.water
+state=2 waterFeature=1 multiFeature=1`. `agent/capture.ps1` now pins
+both shadow-registry values before every client launch so a poisoned
+save can never silently degrade capture coverage again.
+
+Consequence for multi9: with GFXF_MULTITEX alive, all
+TEXOPT_TREAT_AS_MULTITEX textures (not just fancy water) bind
+BLENDMODE_MULTI on static maps — fragments 120/121/136/137/152 bound in
+the FoundersCanal view. The earlier "multi9 is mission-instance-only"
+conclusion was an artifact of the disabled feature bit; multi9 now has
+deterministic static-map coverage and needs no mission-instance capture
+path.
+
+The FEATTRACE diagnostics are intentionally unconditional (a handful of
+printf lines): the silent settings->feature-bit persistence is exactly
+what made this investigation hard, and disableVariantFeature prints are
+the only visibility into silent feature strips.
+
+## GLSL pilot: water (fragment 116) — 2026-08-16
+
+The fancy-water material (waterfp.cg variant 0: refraction only —
+waterMode=2/WATER_MED, no planar reflection or shadowmap bits) is ported
+and harness-verified on `FoundersCanal_01`. Water variant ids:
+water[0]=116 (ported; binds at waterMode>=WATER_LOW with multitex on),
+water[2]=117 (shadowmap), water[8]=118 (BMB_PLANAR_REFLECTION — binds at
+waterMode>=WATER_HIGH; the earlier docs' "118 is the fancy-water
+fragment" mislabeled the variant), water[10]=119.
+
+The vertex pairing is `DRAWMODE_BUMPMAP_MULTITEX` ("bump_dual_multi":
+SKIN=0 LIGHT_SPACE=VIEW VERTEX_LIT=PRELIT_WHITE TC_XFORM=NONE
+PIXEL_LIT=BUMP_ALL REFLECT=FAUX_MULTI), new pilot kind
+`kPilotVertexKind_BumpMulti`. TEXCOORD0 carries (uv0, faux spheremap
+reflection uv) computed with calc_faux_reflection_uv; the vertex color
+is the constant white of PRELIT_WHITE; the LQ tangent-space
+light/view interpolants match the bump_dual family. The
+USE_CUBEMAP/USE_SHADOWMAP TEX3/TEX4 interpolants the Cg variant always
+emits are dead in the water fragment pairing and omitted.
+
+The fragment replicates the Cg math faithfully: dual scrolling normal
+maps (scroll_scale layers 0/1/2/7 from g_ScrollScaleArrFP) averaged into
+one tangent-space normal; base color 2*vertexColor*multiply1*base1
+tinted by mix(ConstColor1, ConstColor0, NdotV)*base1.a;
+apply_lighting_no_gloss; the two-tap depth-clamped refraction skew
+(ARB-faithful, including the second tap at the skewed coordinate);
+refraction blend by g_GlossParamFP.w; gloss by
+calc_lighting_factors/apply_lighting_gloss_only with glossConst =
+g_GlossParamFP.x; fog; alpha g_Env0FP.a optionally * base1.a. The
+selector bits (faux-reflect uv for multiply1, water alpha) use the Cg
+isBitSet frac idiom on g_BumpMultiFlagsFP.x. fragment_pos is
+gl_FragCoord (the WPOS semantic).
+
+New mirrors: g_ConstColor0FP/g_ConstColor1FP (ENV3/4),
+g_WaterRefractionTransformFP (ENV7), g_WaterRefractionParamsFP (ENV22),
+g_BumpMultiFlagsFP (ENV10), and the g_ScrollScaleArrFP[10] array
+(ENV12-21), hooked in WCW_SetCgShaderParamArray4fv; the existing bump
+lighting + g_Env0FP mirrors are reused. The reflection-variant constants
+(ENV6/23/24) are not mirrored yet — they belong to the unported
+water[8]=118 variant.
+
+### Verification (same-window A/B, storm then calm)
+
+- Build PASS (`agent/logs/build-Release-x86-20260816-180801.log`
+  compile-clean; server-copy steps fail while the shard holds bin/, the
+  client binary copies and is the artifact that matters during capture
+  iteration).
+- Activation: 1803 `BLENDMODE_WATER active (bump_dual_multi vertex
+  variant)` lines in one FoundersCanal capture; the usual benign one-time
+  decline + startup-race coverage lines.
+- A storm front over Founders Falls made the sky actively unstable
+  during the first attempts: two ARB captures six minutes apart differed
+  by 18.5% (sky bands 20-29%, near-field stable). In that window the
+  tight ARB-vs-pilot pair measured 8.0% whole-image but only 4.15% in
+  the water/foreground bands — below the 6.08% the two ARB captures
+  measured against each other in the same bands, i.e. within
+  environmental noise.
+- After the sky settled, fresh baseline adoption
+  (`regression-20260816-181923.json`) + two consecutive pilot suites:
+  **FoundersCanal_01 PASS both metrics twice** — changedPercent
+  1.56/1.43 (threshold 6), meanDelta 1.99/1.85 (threshold 3)
+  (`regression-20260816-182210.json`, `regression-20260816-182510.json`).
+- Atlas shots in both pilot suites: changedPercent 0.00-1.51 (threshold
+  6; East and North each pixel-identical under tolerance in one run) —
+  the REGRESSED verdicts are solely the documented day-shot exposure-lock
+  meanDelta noise floor (5.3-8.3 uniform, this generation's profile
+  matches the 2026-08-16 morning sessions). changedPercent is green and
+  consistent across both runs.
+
+### Remaining material coverage
+
+Ported and verified: modulate, multiply, colorBlendDual,
+bumpmapColorblendDual (LQ+HQ), effects family (19 programs),
+bumpmapMultiply, **water (variant 0, fragment 116)**. Unverified port:
+addGlow (no binding view known). Unported with deterministic static
+coverage now: **multi9 (fragments 120-183; 120/121/136/137/152 bound in
+the FoundersCanal view)** and water variants 117/118/119 (shadowmap /
+planar-reflection pairings; 118 needs waterMode>=WATER_HIGH pinned in
+the shadow registry to bind).

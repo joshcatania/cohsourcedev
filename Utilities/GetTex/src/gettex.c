@@ -2239,7 +2239,18 @@ int printTexInfo(const char *filename) {
 
 
 static FILE* gettex_lock_handle=NULL;
-static char *lockfilename = "c:\\gettex.lock";
+static char lockfilename[MAX_PATH] = "c:\\gettex.lock";
+
+static void configureGettexLockPath(void)
+{
+    const char *override_path = getenv("COH_GETTEX_LOCK_PATH");
+
+    if (override_path && override_path[0])
+    {
+        strncpy_s(lockfilename, ARRAY_SIZE(lockfilename), override_path, _TRUNCATE);
+    }
+}
+
 static void releaseGettexLock() {
     fclose(gettex_lock_handle);
     fileForceRemove(lockfilename);
@@ -2593,6 +2604,7 @@ int main(int argc,char **argv)
     EXCEPTION_HANDLER_BEGIN
 
     consoleInit(120, 500, 0);
+    configureGettexLockPath();
     ErrorfSetCallback( gettexErrorCallback );
     initLegacyToolFlagsTable();
 
