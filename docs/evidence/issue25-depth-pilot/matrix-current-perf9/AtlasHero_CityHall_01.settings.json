@@ -1,0 +1,35 @@
+{
+  "name": "matrix-current-perf9",
+  "target": "AtlasHero_CityHall_01",
+  "requestedSettings": {
+    "shadowmode": 1,
+    "shadowmapshader": 0,
+    "shadowmapsize": 0,
+    "shadowmapdistance": -2,
+    "ambientstrength": 3,
+    "ambientresolution": 2,
+    "ambientblur": 6,
+    "shaderdetail": 3,
+    "usewater": 2
+  },
+  "capturePassed": true,
+  "captureExitCode": 0,
+  "screenshot": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.jpg",
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.capture.json",
+  "fps": null,
+  "presentMon": null,
+  "presentMonStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.presentmon.stdout.log",
+  "presentMonStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.presentmon.stderr.log",
+  "performance": {
+    "cpuSampleCount": 77,
+    "gpuSampleCount": 20,
+    "cpuMeanPercentOfMachine": 9.29,
+    "cpuMaxPercentOfMachine": 24.51,
+    "gpuMeanPercent": 12.55,
+    "gpuMaxPercent": 36.0,
+    "presentMon": null
+  },
+  "fpsSamples": [],
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\matrix-current-perf9\\AtlasHero_CityHall_01.runner.stderr.log"
+}
