@@ -1,0 +1,15 @@
+{
+  "baseline": "phase-a-packed-window.jpg",
+  "current": "phase-a-loose-window.jpg",
+  "passed": true,
+  "verdict": "PASS",
+  "compareWidth": 320,
+  "sampledPixels": 56640,
+  "changedPixels": 50,
+  "changedPercent": 0.0883,
+  "meanDelta": 0.8363,
+  "maxDelta": 26,
+  "pixelTolerance": 12,
+  "maxChangedPercent": 6,
+  "interpretation": "Same-window packed and loose runtime images are visually identical; only derived reduction streams differ in the regenerated geo."
+}

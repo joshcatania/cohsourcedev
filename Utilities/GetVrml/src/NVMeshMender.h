@@ -89,7 +89,84 @@ MeshMender::DONT_FIX_CYLINDRICAL);
 #pragma warning( disable : 4786)
 #pragma warning( disable : 4100)
 
+#if defined(GETVRML) && !defined(CLIENT)
+// The offline GetVrml build only needs the small D3DXVECTOR3 surface used by
+// MeshMender.  Keep the legacy client build on the real DirectX header, but
+// let the current offline tool build on machines without the retired SDK.
+struct D3DXVECTOR3
+{
+    float x, y, z;
+
+    D3DXVECTOR3() : x(0.0f), y(0.0f), z(0.0f) {}
+    D3DXVECTOR3(float x_, float y_, float z_) : x(x_), y(y_), z(z_) {}
+
+    bool operator==(const D3DXVECTOR3& rhs) const
+    {
+        return x == rhs.x && y == rhs.y && z == rhs.z;
+    }
+
+    D3DXVECTOR3 operator+(const D3DXVECTOR3& rhs) const
+    {
+        return D3DXVECTOR3(x + rhs.x, y + rhs.y, z + rhs.z);
+    }
+
+    D3DXVECTOR3 operator-(const D3DXVECTOR3& rhs) const
+    {
+        return D3DXVECTOR3(x - rhs.x, y - rhs.y, z - rhs.z);
+    }
+
+    D3DXVECTOR3 operator-() const
+    {
+        return D3DXVECTOR3(-x, -y, -z);
+    }
+
+    D3DXVECTOR3& operator+=(const D3DXVECTOR3& rhs)
+    {
+        x += rhs.x;
+        y += rhs.y;
+        z += rhs.z;
+        return *this;
+    }
+
+    D3DXVECTOR3 operator*(float rhs) const
+    {
+        return D3DXVECTOR3(x * rhs, y * rhs, z * rhs);
+    }
+};
+
+static inline D3DXVECTOR3 operator*(float lhs, const D3DXVECTOR3& rhs)
+{
+    return rhs * lhs;
+}
+
+static inline float D3DXVec3Dot(const D3DXVECTOR3 *lhs, const D3DXVECTOR3 *rhs)
+{
+    return lhs->x * rhs->x + lhs->y * rhs->y + lhs->z * rhs->z;
+}
+
+static inline D3DXVECTOR3 *D3DXVec3Cross(D3DXVECTOR3 *out, const D3DXVECTOR3 *lhs, const D3DXVECTOR3 *rhs)
+{
+    out->x = lhs->y * rhs->z - lhs->z * rhs->y;
+    out->y = lhs->z * rhs->x - lhs->x * rhs->z;
+    out->z = lhs->x * rhs->y - lhs->y * rhs->x;
+    return out;
+}
+
+static inline float D3DXVec3Length(const D3DXVECTOR3 *value)
+{
+    return sqrtf(D3DXVec3Dot(value, value));
+}
+
+#define CONST const
+
+#define D3DFVF_XYZ 0
+#define D3DFVF_NORMAL 0
+#define D3DFVF_TEX3 0
+#define D3DFVF_TEXCOORDSIZE2(stage) 0
+#define D3DFVF_TEXCOORDSIZE3(stage) 0
+#else
 #include <d3dx9.h>
+#endif
 #include <map>
 #include <set>
 #include <vector>

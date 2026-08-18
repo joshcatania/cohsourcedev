@@ -1,0 +1,44 @@
+{
+  "schema": "coh.atlas-stock-regression-evidence.v1",
+  "state": "packed-stock",
+  "looseGeometryPresent": false,
+  "manifestSelectedLooseTextureCount": 0,
+  "command": ".\\agent\\capture-regression.ps1 -Json -AccountName Dummy00018 -TimeoutSeconds 180",
+  "thresholdsUnchanged": true,
+  "baselineAdopted": false,
+  "freshShardSmoke": {
+    "firstAttempt": "warmup-timeout",
+    "retry": "PASS",
+    "retryDurationSeconds": 99.4,
+    "characterCreated": true,
+    "mapConnected": true
+  },
+  "latestFormalRun": {
+    "summaryLog": "regression-20260818-184441.json",
+    "capturesCompleted": 4,
+    "captureFailures": 0,
+    "comparisonPasses": 1,
+    "comparisonFailures": 3,
+    "verdict": "environmental-drift",
+    "changedPercentByTarget": {
+      "AtlasPlaza_CityHall_03": 94.3468,
+      "AtlasPlaza_East_01": 27.7207,
+      "AtlasPlaza_North_01": 20.7980,
+      "AtlasPlaza_West_01": 5.6427
+    },
+    "meanDeltaByTarget": {
+      "AtlasPlaza_CityHall_03": 20.8132,
+      "AtlasPlaza_East_01": 12.8519,
+      "AtlasPlaza_North_01": 12.8982,
+      "AtlasPlaza_West_01": 8.2199
+    },
+    "reason": "The existing Atlas baselines were compared without threshold or baseline changes; the failed shots show broad sky/character-state drift, while every capture completed successfully."
+  },
+  "priorStockControl": {
+    "summaryLog": "regression-20260818-130923.json",
+    "verdict": "PASS",
+    "targets": 4,
+    "changedPercentRange": [0.1642, 2.5847],
+    "note": "Same repository stock control suite passed all four shots in a stable window; no Atlas loose geometry or texture override is active in either run."
+  }
+}

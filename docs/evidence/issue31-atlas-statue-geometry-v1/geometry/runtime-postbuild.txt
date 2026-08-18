@@ -1,0 +1,25 @@
+Final geometry post-build runtime capture
+==========================================
+
+Validation:
+  .\agent\build.ps1 -Configuration Release -Platform x86
+  .\agent\start-shard.ps1 -StartupWaitSeconds 60
+  .\agent\smoke.ps1 -ExerciseCharacter -AccountName Dummy00009 -TimeoutSeconds 90 -Json
+  .\agent\capture.ps1 -Target AtlasHero_Statue_01 -AccountName Dummy00009 -TimeoutSeconds 120 -Json
+
+Build:
+  BUILD PASS (Release/x86) - 17.7s
+  agent/logs/build-Release-x86-20260818-175831.log
+
+Smoke:
+  PASS; durationSeconds=1.95; testClientExitCode=0; characterCreated=true; mapConnected=true
+  agent/logs/smoke-directdb-20260818-181305.json
+
+Trace excerpts:
+  TEXTUREPILOT: geometry model=_H_M_Statue_Atlas_Giant ... verts=10482 tris=18432 texCount=2 ... lodCount=3
+  GEOMETRYPILOT: model=_H_M_Statue_Atlas_Giant ... kind=loose resolved=./data/object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=10482 tris=18432
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_Globe_01 ... submesh=0
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_01 ... submesh=1
+
+Image SHA256:
+  final-geometry-postbuild.jpg F1B38D8364886F43FFEEE59CFBE6DBD1EB720A02A57CA048A1D698771BF9BFC0

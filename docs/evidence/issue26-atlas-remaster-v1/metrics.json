@@ -1,0 +1,28 @@
+{
+  "issue": 26,
+  "base": "ba16c9170d624400767af7832e40e6b090aae8e9",
+  "branch": "agent/atlas-remaster-lighting-v1",
+  "capture": {
+    "resolution": "1280x720",
+    "profile": "Stock Ultra from issue #25",
+    "args": "-glslPilot 1 -modernMaterials 1 -modernPresentation 0 -modernBloom 0",
+    "pixelTolerance": 12,
+    "pairs": [
+      { "view": "CityHall", "changedPercent": 44.1879, "meanDelta": 12.6125, "maxDelta": 137 },
+      { "view": "East", "changedPercent": 38.3245, "meanDelta": 11.4518, "maxDelta": 117 },
+      { "view": "North", "changedPercent": 44.2090, "meanDelta": 11.2066, "maxDelta": 218 },
+      { "view": "West", "changedPercent": 63.6511, "meanDelta": 13.0260, "maxDelta": 81 }
+    ]
+  },
+  "legacyControl": {
+    "args": "-glslPilot 0 -modernMaterials 1 -modernPresentation 0 -modernBloom 0",
+    "modernLightingOffVsOnChangedPercent": 0.2595,
+    "meanDelta": 1.2509,
+    "maxDelta": 69
+  },
+  "performance": {
+    "stockUltra": { "cpuMeanPercentOfMachine": 8.96, "cpuMaxPercentOfMachine": 22.64, "gpuMeanPercent": 17.0, "gpuMaxPercent": 38.0 },
+    "modernLightingV1": { "cpuMeanPercentOfMachine": 9.0, "cpuMaxPercentOfMachine": 22.48, "gpuMeanPercent": 13.85, "gpuMaxPercent": 38.0 },
+    "presentMonFrameTimeCsv": false
+  }
+}

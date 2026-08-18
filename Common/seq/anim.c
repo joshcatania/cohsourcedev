@@ -42,6 +42,8 @@
 #include <utilitieslib/utils/strings_opt.h>
 #include <utilitieslib/utils/timing.h>
 
+extern int is_pigged_path(const char *path);
+
 #ifdef SERVER 
 #include "cmdparse/cmdserver.h"
 #include "group/groupfilelib.h"
@@ -1978,6 +1980,43 @@ void geoSetExistenceErrorReporting(int report_errors)
     anim_report_exist_errors = report_errors;
 }
 
+// Issue #31 Phase A uses one reversible loose .geo override.  The normal
+// production folder-cache mode intentionally prefers pigg entries, so a
+// filesystem file with the same name is otherwise invisible once the cache
+// has been populated.  Keep this escape hatch exact and narrow: it only
+// applies to the Atlas statue asset, and it falls back to the normal loader
+// when the loose file is absent.
+static int atlasStatueGeoName(const char *name)
+{
+    static const char suffix[] =
+        "object_library/City_Zones/Elements/Hero_Statues/"
+        "Male_Statue_Atlas/Male_Statue_Atlas.geo";
+    size_t name_len;
+    size_t suffix_len = sizeof(suffix) - 1;
+
+    if (!name)
+        return 0;
+
+    name_len = strlen(name);
+    return name_len >= suffix_len &&
+           stricmp(name + name_len - suffix_len, suffix) == 0;
+}
+
+static FILE *atlasStatueGeoOpenLoose(const char *name)
+{
+    char path[MAX_PATH];
+
+    if (!atlasStatueGeoName(name))
+        return NULL;
+
+    // fileLocateWrite always resolves to a filesystem path, even when the
+    // corresponding read lookup currently resolves to a pigg entry.
+    if (!fileLocateWrite(name, path) || is_pigged_path(path) || !fileExists(path))
+        return NULL;
+
+    return fopen(path, "rb");
+}
+
 //load_type:
 //LOAD_BACKGROUND = get headers and aps, then load data in background
 //LOAD_NOW      = get headers and aps, then load data immediately in this thread
@@ -2066,7 +2105,9 @@ GeoLoadData * geoLoad(const char * name_old, GeoLoadType load_type, GeoUseType u
     {
         PERFINFO_AUTO_START("loadAnimList", 1);
             //printf("loading gld: %s\n", name);
-            file = fileOpen(name, "rb");
+            file = atlasStatueGeoOpenLoose(name);
+            if (!file)
+                file = fileOpen(name, "rb");
                 
             /*if file doesn't exist, add it to the list of nonexistent file names (necessary because 
             player code often says "I don't know if this object exists, but if it does, I want to use it")*/

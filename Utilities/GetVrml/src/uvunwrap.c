@@ -1,3 +1,45 @@
+#ifdef GETVRML
+
+// The checked-in GetVrml command path never requests UV unwrapping for the
+// object-library conversion used by this pilot.  The historical implementation
+// depends on TAUCS/Fortran archives built with an obsolete CRT, so keep the
+// existing UVs unchanged in the offline tool and retain the API for the
+// dormant opt-in path.
+#include "uvunwrap.h"
+
+struct _Prim
+{
+    Vec2 st[3];
+};
+
+Prim *primCreate(Vec3 p0, Vec3 p1, Vec3 p2, Vec2 st0, Vec2 st1, Vec2 st2)
+{
+    Prim *p = calloc(1, sizeof(*p));
+    copyVec2(st0, p->st[0]);
+    copyVec2(st1, p->st[1]);
+    copyVec2(st2, p->st[2]);
+    return p;
+}
+
+void primGetTexCoords(Prim *p, Vec2 texcoord0, Vec2 texcoord1, Vec2 texcoord2)
+{
+    copyVec2(p->st[0], texcoord0);
+    copyVec2(p->st[1], texcoord1);
+    copyVec2(p->st[2], texcoord2);
+}
+
+void primDestroy(Prim *p)
+{
+    free(p);
+}
+
+float uvunwrap(Prim ***primitives)
+{
+    return 0.0f;
+}
+
+#else
+
 #include <utilitieslib/stdtypes.h>
 #include <utilitieslib/components/earray.h>
 #include <utilitieslib/utils/mathutil.h>
@@ -2338,6 +2380,8 @@ timerRecordEnd();
 
     return min_size;
 }
+
+#endif // GETVRML
 
 
 

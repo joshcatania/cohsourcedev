@@ -2319,21 +2319,43 @@ typedef struct CaptureShot {
     const char *camdist; // third-person camera distance
     int timeHour;        // world-clock hour to freeze at (16 = day default;
                          // night hours open the AddGlow window-lamp tricks)
+    int mapId;           // static map container id the shot lives on
+                         // (see bin/data/server/db/maps.db); 0 keeps whatever
+                         // map the client is already on
 } CaptureShot;
 
-// Deterministic capture shots. All current shots sit on the Atlas Park
-// static map (StaticMapId 1); other maps need a verified map-transfer
-// path before they can be captured deterministically. The Night* variants
-// exist to exercise night-only materials (AddGlow window glow); they are
-// not part of the default regression suite.
+// Deterministic capture shots. The AtlasPlaza shots sit on the Atlas Park
+// static map (StaticMapId 1); other maps are reached through the mapmove
+// server command (access level 1) before the camera is fixed. The Night*
+// variants exist to exercise night-only materials (AddGlow window glow);
+// they are not part of the default regression suite. TalosArrive_01 keeps
+// the map-transfer arrival view as an authoring aid for Talos probes.
 static const CaptureShot s_captureShots[] = {
-    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30", 16 },
-    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 16 },
-    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16 },
-    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16 },
-    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16 },
-    { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0  },
-    { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0 },
+    { "AtlasPlaza_CityHall_03", "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_East_01",     "-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16, 1 },
+    { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16, 1 },
+    { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16, 1 },
+    { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0,  1 },
+    { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0, 1 },
+    // Issue #21 authoring views use the verified in-zone Atlas camera without
+    // redefining the established AtlasPlaza regression-shot identities.
+    { "AtlasHero_CityHall_01",  "500.00 120.00 -800.00 0.1220 0.0000 0.0000",  "30", 16, 1 },
+    { "AtlasHero_East_01",      "500.00 120.00 -800.00 0.1220 1.5778 0.0000",  "30", 16, 1 },
+    { "AtlasHero_North_01",     "500.00 120.00 -800.00 0.1220 3.1486 0.0000",  "30", 16, 1 },
+    { "AtlasHero_West_01",      "500.00 120.00 -800.00 0.1220 -1.5703 0.0000", "30", 16, 1 },
+    // Issue #29 additive hero-asset authoring view. Keep the established
+    // AtlasPlaza and AtlasHero regression/authoring identities unchanged.
+    { "AtlasHero_Statue_01",    "100.00 120.00 -650.00 0.2000 0.0000 0.0000",  "30", 16, 1 },
+    // First non-Atlas regression shot: Founders Falls canals. Reaching map
+    // 10 exercises the mapmove capture path, and the view deterministically
+    // binds alphaDetail (fragment 68), the fancy-water material (fragment
+    // 116, once GFXF_MULTITEX survives startup — the shadow-registry pin in
+    // agent/capture.ps1 keeps it alive) and the multi9 family (fragments
+    // 120+) — coverage Atlas Park does not provide. See
+    // docs/agent-status.md for the water/multitex feature-state history.
+    { "FoundersCanal_01", "4497.49 60.00 991.49 0.2500 0.7854 0.0000", "30", 16, 10 },
+    { "TalosArrive_01", "", "30", 16, 8 },
 };
 
 static const CaptureShot *captureFindShot(const char *label)
@@ -2352,6 +2374,7 @@ static void game_processCapture(void)
     extern int glob_have_camera_pos;
     char command[512];
     static int lastCaptureBlock = -1;
+    static int captureMapmoveSent = 0;
 
     if (game_state.capture_state == 0 || game_state.capture_state == 3)
         return;
@@ -2382,23 +2405,115 @@ static void game_processCapture(void)
             lastCaptureBlock = 0;
         }
 
+        // If the shot lives on another static map, request the transfer and
+        // keep waiting: the readiness conditions above drop out during the
+        // map transfer and come back on the target map, where base_map_id
+        // is the static container id the server sent for the new world.
         if (game_state.capture_frame_count == 0)
         {
             const CaptureShot *shot = captureFindShot(game_state.capture_target);
+            int overrideMapId = 0;
+            char overrideMapLine[256] = "";
             // The label supplied to capture selects the shot; unknown labels
             // keep the historically verified default Atlas Plaza view.
+            // bin/capture_override.txt line 2 ("map <id>") overrides the
+            // shot's map for developer zone-probing without a rebuild.
+            {
+                FILE *overrideFile = fopen("capture_override.txt", "r");
+                if (overrideFile)
+                {
+                    char line[256];
+                    if (fgets(line, sizeof(line), overrideFile) &&
+                        fgets(overrideMapLine, sizeof(overrideMapLine), overrideFile))
+                    {
+                        char *newline = strchr(overrideMapLine, '\n');
+                        if (newline) *newline = '\0';
+                        if (_strnicmp(overrideMapLine, "map ", 4) == 0)
+                            overrideMapId = atoi(overrideMapLine + 4);
+                    }
+                    fclose(overrideFile);
+                }
+            }
+            {
+                int targetMapId = overrideMapId ? overrideMapId : shot->mapId;
+                if (targetMapId && game_state.base_map_id != targetMapId)
+                {
+                    if (!captureMapmoveSent)
+                    {
+                        captureMapmoveSent = 1;
+                        sprintf_s(SAFESTR(command), "mapmove %d", targetMapId);
+                        game_startupTracef("capture.mapmove.request map=%d cur=%d",
+                                           targetMapId, game_state.base_map_id);
+                        cmdParse(command);
+                    }
+                    return;
+                }
+            }
+            if (captureMapmoveSent)
+            {
+                captureMapmoveSent = 0;
+                game_startupTracef("capture.mapmove.arrived map=%d", game_state.base_map_id);
+            }
             cmdParse("hide_all");
             cmdParse("third 1");
             sprintf_s(SAFESTR(command), "camdist %s", shot->camdist);
             cmdParse(command);
-            sprintf_s(SAFESTR(command), "setpospyr %s", shot->posPyr);
-            cmdParse(command);
+            // Camera placement, first match wins:
+            // 1. bin/capture_override.txt — one line "x y z pitch yaw roll";
+            //    a developer iteration aid that retargets the camera without
+            //    a rebuild. Delete the file for table-driven captures.
+            // 2. The shot's posPyr — a setpospyr argument string.
+            // 3. An empty posPyr keeps the arrival position (map transfer
+            //    spawn), which is itself deterministic per map.
+            {
+                FILE *overrideFile = fopen("capture_override.txt", "r");
+                char overrideLine[256] = "";
+                if (overrideFile)
+                {
+                    if (fgets(overrideLine, sizeof(overrideLine), overrideFile))
+                    {
+                        char *newline = strchr(overrideLine, '\n');
+                        if (newline) *newline = '\0';
+                        if (overrideLine[0])
+                        {
+                            sprintf_s(SAFESTR(command), "setpospyr %s", overrideLine);
+                            cmdParse(command);
+                            game_startupTracef("capture.camera.override pos=%s", overrideLine);
+                        }
+                    }
+                    fclose(overrideFile);
+                }
+                else if (shot->posPyr && shot->posPyr[0])
+                {
+                    sprintf_s(SAFESTR(command), "setpospyr %s", shot->posPyr);
+                    cmdParse(command);
+                }
+            }
             // Freeze the world clock so lighting matches between runs. The
             // shot's hour selects day (16) or night-only material states.
             sprintf_s(SAFESTR(command), "timeset %d", shot->timeHour);
             cmdParse(command);
             cmdParse("timescale 0");
-            game_startupTrace("capture.camera.fixed");
+            // Diagnostic: water mode/feature state at capture time. The
+            // multi feature gate explains which materials the map's
+            // textures bound at load (see docs/agent-status.md).
+            game_startupTracef("capture.water state=%d waterFeature=%d multiFeature=%d",
+                               game_state.waterMode,
+                               (rdr_caps.features & GFXF_WATER) ? 1 : 0,
+                               (rdr_caps.features & GFXF_MULTITEX) ? 1 : 0);
+            if (playerPtr())
+            {
+                const F32 *pos = ENTPOS(playerPtr());
+                game_startupTracef("capture.camera.fixed pos=%.2f %.2f %.2f", pos[0], pos[1], pos[2]);
+            }
+            else
+            {
+                game_startupTrace("capture.camera.fixed");
+            }
+            game_startupTracef("capture.camera.state cam=%.2f %.2f %.2f pyr=%.4f %.4f %.4f target=%.4f %.4f %.4f",
+                               cam_info.cammat[3][0], cam_info.cammat[3][1], cam_info.cammat[3][2],
+                               cam_info.pyr[0], cam_info.pyr[1], cam_info.pyr[2],
+                               cam_info.targetPYR[0], cam_info.targetPYR[1], cam_info.targetPYR[2]);
             game_state.capture_frame_count = 1;
             return;
         }
@@ -2410,6 +2525,10 @@ static void game_processCapture(void)
         if (++game_state.capture_frame_count < 300)
             return;
 
+        game_startupTracef("capture.camera.screenshot-state cam=%.2f %.2f %.2f pyr=%.4f %.4f %.4f target=%.4f %.4f %.4f",
+                           cam_info.cammat[3][0], cam_info.cammat[3][1], cam_info.cammat[3][2],
+                           cam_info.pyr[0], cam_info.pyr[1], cam_info.pyr[2],
+                           cam_info.targetPYR[0], cam_info.targetPYR[1], cam_info.targetPYR[2]);
         sprintf_s(SAFESTR(command), "screenshottitle %s", game_state.capture_target);
         game_startupTrace("capture.screenshot.request");
         cmdParse(command);

@@ -1,0 +1,31 @@
+{
+  "schema": "coh.atlas-statue-geometry-pilot.v1",
+  "source": "agent\\work\\issue31-20260818\\source-stage3c\\object_library\\city_zones\\Elements\\Hero_Statues\\Male_Statue_Atlas\\Male_Statue_Atlas.wrl",
+  "sourceSha256": "691CCA0FB744623118234706366970A59293AF157EE63317E8748419ACC9234E",
+  "output": "agent\\work\\issue31-20260818\\final-geometry\\object_library\\city_zones\\Elements\\Hero_Statues\\Male_Statue_Atlas\\Male_Statue_Atlas.wrl",
+  "outputSha256": "27B3E07752A4394D3DF1FABA7F9D46DFCF0C70A0726636A5DE41E2ACDBDF8FD8",
+  "method": "normal-guided bounded edge recovery with 4-way triangle subdivision",
+  "textureAndMaterialPolicy": "material URLs and per-shape ownership copied; textures untouched",
+  "geometry": {
+    "model": "_H_M_Statue_Atlas_Giant",
+    "materialUrls": [
+      "X_Male_Statue_Atlas_Globe_01",
+      "X_Male_Statue_Atlas_01"
+    ],
+    "verticesBefore": 2955,
+    "verticesAfter": 10482,
+    "trianglesBefore": 4608,
+    "trianglesAfter": 18432,
+    "triangleMultiplier": 4,
+    "newEdgeVertices": 7527,
+    "normalGuidedEdgeDisplacement": {
+      "mean": 1.3119084181143226,
+      "max": 4.0,
+      "edgeFactor": 0.32,
+      "cap": 4.0,
+      "normalRecoveryGain": 4.0
+    },
+    "lodsUnchanged": true,
+    "seams": "per-material edge cache; original UV/normal seams remain anchors"
+  }
+}

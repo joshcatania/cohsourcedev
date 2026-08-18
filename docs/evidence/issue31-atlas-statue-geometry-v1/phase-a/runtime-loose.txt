@@ -1,0 +1,18 @@
+Phase A regenerated loose runtime capture
+===========================================
+
+Command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\agent\atlas-geometry-pilot.ps1 -Action Install -GeoPath <roundtrip.geo> -ExpectedHash 634FB0855B76E7CFDBD16ACD70B1E948CA04AB5761C7C22FC01B6BBAB6F4762D
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\agent\capture.ps1 -Target AtlasHero_Statue_01 -AccountName Dummy00009 -TimeoutSeconds 180 -Json
+
+Capture log:
+  agent/logs/capture-AtlasHero_Statue_01-20260818-175549.stdout.log
+
+Trace excerpts:
+  TEXTUREPILOT: geometry model=_H_M_Statue_Atlas_Giant source=object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=2955 tris=4608 texCount=2 radius=294.210 ... lodCount=3
+  GEOMETRYPILOT: model=_H_M_Statue_Atlas_Giant ... kind=loose resolved=./data/object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=2955 tris=4608
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_Globe_01 ... submesh=0
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_01 ... submesh=1
+
+Image SHA256:
+  phase-a-loose-window.jpg 7D42300DF92DA5F54ACA02B63BAA9780C65755753D7FFC4A2A2AFD645B641255
