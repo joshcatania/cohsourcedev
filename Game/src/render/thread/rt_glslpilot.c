@@ -418,6 +418,7 @@ static const char s_bumpColorBlendDualFragmentSource[] =
 "uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n"
 "uniform vec4 g_GlossParamFP;                   // TIE(ENV2), .w = glossConst\n"
 "uniform vec4 g_Specular1ColorAndExponentFP;    // TIE(ENV5), rgb spec color, a exponent\n"
+"uniform vec4 g_ModernMaterialParamsFP;         // .x = opt-in modern response\n"
 "\n"
 "varying vec3 vLightTs;\n"
 "varying vec3 vViewTs;\n"
@@ -430,6 +431,7 @@ static const char s_bumpColorBlendDualFragmentSource[] =
 "    // renormalize the interpolated lighting vectors (low-quality path);\n"
 "    // half vector = view + light, both in tangent space\n"
 "    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 view_ts = normalize( vViewTs );\n"
 "    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
 "\n"
 "    // map_color_to_normal: expand [0,1] to [-1,1] and renormalize; the\n"
@@ -456,8 +458,34 @@ static const char s_bumpColorBlendDualFragmentSource[] =
 "    // apply_lighting with get_default_light_properties\n"
 "    vec3 ambient = g_AmbientColorFP.rgb;\n"
 "    vec3 diffuse = clamp( n_dot_l, 0.0, 1.0 ) * g_DiffuseColorFP.rgb;\n"
-"    vec3 gloss = clamp( specular * g_GlossParamFP.w * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
-"    out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    vec3 gloss;\n"
+"    if ( g_ModernMaterialParamsFP.x > 0.5 )\n"
+"    {\n"
+"        // Normalized Blinn-Phong with Schlick Fresnel. The legacy exponent\n"
+"        // remains the lobe-width authoring clue; no new material texture is\n"
+"        // introduced, and the gloss mask/constant remain the strength.\n"
+"        float legacyExponent = clamp( g_Specular1ColorAndExponentFP.a, 1.0, 128.0 );\n"
+"        float roughness = clamp( sqrt( 2.0 / ( legacyExponent + 2.0 ) ), 0.18, 0.95 );\n"
+"        float lobeExponent = clamp( ( 2.0 / ( roughness * roughness ) ) - 2.0, 1.0, 128.0 );\n"
+"        float glossStrength = clamp( normal_gloss.w * max( g_GlossParamFP.w, 0.0 ), 0.0, 1.0 );\n"
+"        vec3 authoredSpecular = clamp( g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"        float n_dot_v = clamp( dot( normal_gloss.xyz, view_ts ), 0.0, 1.0 );\n"
+"        float n_dot_h_modern = clamp( dot( normal_gloss.xyz, normalize( view_ts + light_ts ) ), 0.0, 1.0 );\n"
+"        float fresnelFactor = pow( 1.0 - n_dot_v, 5.0 );\n"
+"        vec3 f0 = clamp( authoredSpecular * ( 0.04 + 0.16 * glossStrength ), 0.0, 0.75 );\n"
+"        vec3 fresnel = mix( f0, vec3( 1.0 ), fresnelFactor );\n"
+"        float normalizedLobe = pow( n_dot_h_modern, lobeExponent ) * ( ( lobeExponent + 2.0 ) * 0.15915494 );\n"
+"        float specularEnergy = clamp( normalizedLobe * 0.25 * glossStrength * clamp( n_dot_l, 0.0, 1.0 ), 0.0, 1.0 );\n"
+"        gloss = fresnel * specularEnergy;\n"
+"        float maxFresnel = max( fresnel.r, max( fresnel.g, fresnel.b ) );\n"
+"        diffuse *= clamp( 1.0 - maxFresnel * glossStrength * 0.5, 0.65, 1.0 );\n"
+"        out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    }\n"
+"    else\n"
+"    {\n"
+"        gloss = clamp( specular * g_GlossParamFP.w * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"        out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    }\n"
 "\n"
 "    // calc_fogged_color (same GL fog state as the other materials)\n"
 "    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
@@ -488,6 +516,7 @@ static const char s_bumpColorBlendDualHQFragmentSource[] =
 "uniform vec4 g_DiffuseColorFP;                 // TIE(ENV1), setupBumpPixelShader diffuse*4\n"
 "uniform vec4 g_GlossParamFP;                   // TIE(ENV2), .w = glossConst\n"
 "uniform vec4 g_Specular1ColorAndExponentFP;    // TIE(ENV5), rgb spec color, a exponent\n"
+"uniform vec4 g_ModernMaterialParamsFP;         // .x = opt-in modern response\n"
 "\n"
 "varying vec3 vNormalVs;\n"
 "varying vec4 vTangentVs;\n"
@@ -516,6 +545,9 @@ static const char s_bumpColorBlendDualHQFragmentSource[] =
 "    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
 "                         dot( h_vs, binormal_vs ),\n"
 "                         dot( h_vs, normal_vs ) );\n"
+"    vec3 view_ts = normalize( vec3( dot( u_to_eye, tangent_vs ),\n"
+"                                    dot( u_to_eye, binormal_vs ),\n"
+"                                    dot( u_to_eye, normal_vs ) ) );\n"
 "\n"
 "    // map_color_to_normal: expand [0,1] to [-1,1] and renormalize; the\n"
 "    // alpha channel piggybacks the gloss map\n"
@@ -541,8 +573,33 @@ static const char s_bumpColorBlendDualHQFragmentSource[] =
 "    // apply_lighting with get_default_light_properties\n"
 "    vec3 ambient = g_AmbientColorFP.rgb;\n"
 "    vec3 diffuse = clamp( n_dot_l, 0.0, 1.0 ) * g_DiffuseColorFP.rgb;\n"
-"    vec3 gloss = clamp( specular * g_GlossParamFP.w * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
-"    out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    vec3 gloss;\n"
+"    if ( g_ModernMaterialParamsFP.x > 0.5 )\n"
+"    {\n"
+"        // Match the LQ material model while reconstructing V/H from the\n"
+"        // HQ view-space position and tangent basis.\n"
+"        float legacyExponent = clamp( g_Specular1ColorAndExponentFP.a, 1.0, 128.0 );\n"
+"        float roughness = clamp( sqrt( 2.0 / ( legacyExponent + 2.0 ) ), 0.18, 0.95 );\n"
+"        float lobeExponent = clamp( ( 2.0 / ( roughness * roughness ) ) - 2.0, 1.0, 128.0 );\n"
+"        float glossStrength = clamp( normal_gloss.w * max( g_GlossParamFP.w, 0.0 ), 0.0, 1.0 );\n"
+"        vec3 authoredSpecular = clamp( g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"        float n_dot_v = clamp( dot( normal_gloss.xyz, view_ts ), 0.0, 1.0 );\n"
+"        float n_dot_h_modern = clamp( dot( normal_gloss.xyz, normalize( view_ts + light_ts ) ), 0.0, 1.0 );\n"
+"        float fresnelFactor = pow( 1.0 - n_dot_v, 5.0 );\n"
+"        vec3 f0 = clamp( authoredSpecular * ( 0.04 + 0.16 * glossStrength ), 0.0, 0.75 );\n"
+"        vec3 fresnel = mix( f0, vec3( 1.0 ), fresnelFactor );\n"
+"        float normalizedLobe = pow( n_dot_h_modern, lobeExponent ) * ( ( lobeExponent + 2.0 ) * 0.15915494 );\n"
+"        float specularEnergy = clamp( normalizedLobe * 0.25 * glossStrength * clamp( n_dot_l, 0.0, 1.0 ), 0.0, 1.0 );\n"
+"        gloss = fresnel * specularEnergy;\n"
+"        float maxFresnel = max( fresnel.r, max( fresnel.g, fresnel.b ) );\n"
+"        diffuse *= clamp( 1.0 - maxFresnel * glossStrength * 0.5, 0.65, 1.0 );\n"
+"        out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    }\n"
+"    else\n"
+"    {\n"
+"        gloss = clamp( specular * g_GlossParamFP.w * g_Specular1ColorAndExponentFP.rgb, 0.0, 1.0 );\n"
+"        out_color.rgb = out_color.rgb * ( ambient + diffuse ) + gloss;\n"
+"    }\n"
 "\n"
 "    // calc_fogged_color (same GL fog state as the other materials)\n"
 "    float fogAmount = clamp( gl_Fog.scale * ( gl_Fog.end - gl_FogFragCoord ), 0.0, 1.0 );\n"
@@ -2439,6 +2496,9 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
+// Only the two canonical Bump ColorBlendDual programs resolve this optional
+// response uniform; other material families keep the existing table untouched.
+static GLint                  s_modernMaterialParamLoc[kPilotMaterial_Count];
 static GLuint                s_vertexShader = 0;        // shared: one source serves the dualtex materials
 static bool                    s_vertexShaderFailed = false;
 static GLuint                s_bumpVertexShader = 0;    // shared by bump-material programs (static + skinned)
@@ -2837,6 +2897,9 @@ static bool pilotInit( int material )
         m->locGloss = __glewGetUniformLocation( m->program, "g_GlossParamFP" );
         m->locSpecular1 = __glewGetUniformLocation( m->program, "g_Specular1ColorAndExponentFP" );
     }
+    if (( material == kPilotMaterial_BumpColorBlendDual ) ||
+        ( material == kPilotMaterial_BumpColorBlendDualHQ ))
+        s_modernMaterialParamLoc[material] = __glewGetUniformLocation( m->program, "g_ModernMaterialParamsFP" );
     if ( m->fxConstMask )
     {
         // effects constants are per-program locals in the Cg sources;
@@ -2888,7 +2951,10 @@ static bool pilotInit( int material )
         ( m->usesEnv1 && ( m->locEnv1 < 0 )) ||
         ( m->usesGlowParam && ( m->locGlowParam < 0 )) ||
         ( m->usesBumpConstants && (( m->locAmbient < 0 ) || ( m->locDiffuse < 0 ) ||
-                                    ( m->locGloss < 0 ) || ( m->locSpecular1 < 0 ))))
+                                    ( m->locGloss < 0 ) || ( m->locSpecular1 < 0 ))) ||
+        ((( material == kPilotMaterial_BumpColorBlendDual ) ||
+          ( material == kPilotMaterial_BumpColorBlendDualHQ )) &&
+         ( s_modernMaterialParamLoc[material] < 0 )))
     {
         printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
         m->failed = true;
@@ -3223,6 +3289,14 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
             __glewUniform4fv( m->locDiffuse, 1, s_diffuseMirror );
             __glewUniform4fv( m->locGloss, 1, s_glossMirror );
             __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
+        }
+        if (( material == kPilotMaterial_BumpColorBlendDual ) ||
+            ( material == kPilotMaterial_BumpColorBlendDualHQ ))
+        {
+            GLfloat modernMaterialParams[4] = {
+                game_state.modernMaterials ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f
+            };
+            __glewUniform4fv( s_modernMaterialParamLoc[material], 1, modernMaterialParams );
         }
     }
     if ( m->fxConstMask )

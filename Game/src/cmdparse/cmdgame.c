@@ -1319,6 +1319,8 @@ Cmd game_cmds[] =
                         "Enable the opt-in filmic presentation curve in native GLSL final passes" },
     { 0, "modernBloom", 0, {{ CMDINT(game_state.modernBloom) }}, CMDF_HIDEPRINT,
                         "Enable the opt-in soft-knee bloom composite in native GLSL final passes" },
+    { 0, "modernMaterials", 0, {{ CMDINT(game_state.modernMaterials) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in modern material response for native GLSL Bump ColorBlendDual" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -6175,6 +6177,9 @@ void gameStateInit()
     // Keep Modern Bloom v1 opt-in and default-off. The existing presentation
     // vector carries this as .y through the native GLSL effects mirror.
     game_state.modernBloom = 0;
+    // Keep the first material-lighting experiment opt-in and scoped to the
+    // native GLSL Bump ColorBlendDual LQ/HQ pilot programs.
+    game_state.modernMaterials = 0;
     if (game_state.safemode)
     {
         // Disable shader cache in safe mode
