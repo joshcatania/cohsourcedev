@@ -2,6 +2,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Name,
+    [string]$Profile = 'manual',
     [string]$Target = 'AtlasHero_CityHall_01',
     [string]$AccountName = 'Dummy00009',
     [int]$TimeoutSeconds = 180,
@@ -43,6 +44,7 @@ $settings = [ordered]@{
     ambientstrength = $AmbientStrength
     ambientresolution = $AmbientResolution
     ambientblur = $AmbientBlur
+    graphicsquality = '1.000000'
     shaderdetail = 3
     usewater = 2
 }
@@ -202,6 +204,25 @@ try {
         Copy-Item -LiteralPath $capture.screenshot -Destination $imageOutputPath -Force
     }
 
+    # The client persists the post-restriction settings through saveAutoResumeInfoToRegistry
+    # on clean exit. Read those values before the finally block restores the caller's profile;
+    # this is the runtime-resolved evidence, not just the values requested by this helper.
+    $observedSettings = [ordered]@{}
+    foreach ($key in $settings.Keys) {
+        $path = Join-Path $registryRoot $key
+        if (Test-Path -LiteralPath $path) {
+            $raw = (Get-Content -Raw -LiteralPath $path).Trim()
+            $parsedInt = 0
+            if ([int]::TryParse($raw, [Globalization.NumberStyles]::Integer, [Globalization.CultureInfo]::InvariantCulture, [ref]$parsedInt)) {
+                $observedSettings[$key] = $parsedInt
+            } else {
+                $observedSettings[$key] = $raw
+            }
+        } else {
+            $observedSettings[$key] = $null
+        }
+    }
+
     $fpsSummary = $null
     if ($fpsSamples.Count -gt 0) {
         $orderedFps = @($fpsSamples | Sort-Object)
@@ -225,8 +246,10 @@ try {
 
     $result = [ordered]@{
         name = $Name
+        profile = $Profile
         target = $Target
         requestedSettings = $settings
+        observedRuntimeSettings = $observedSettings
         capturePassed = ($captureExitCode -eq 0 -and $capture.passed)
         captureExitCode = $captureExitCode
         screenshot = $imageOutputPath

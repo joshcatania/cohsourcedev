@@ -80,6 +80,13 @@ $viewPairs = @(
     @{ View = 'West'; Reference = 'reference-west'; Winner = 'combined-winner-west'; File = 'AtlasHero_West_01.jpg' }
 )
 
+$ultraPairs = @(
+    @{ View = 'City Hall'; Ultra = 'stock-ultra-cityhall'; Winner = 'winner-cityhall-rerun'; File = 'AtlasHero_CityHall_01.jpg' },
+    @{ View = 'East'; Ultra = 'stock-ultra-east'; Winner = 'winner-east-rerun'; File = 'AtlasHero_East_01.jpg' },
+    @{ View = 'North'; Ultra = 'stock-ultra-north'; Winner = 'winner-north-rerun'; File = 'AtlasHero_North_01.jpg' },
+    @{ View = 'West'; Ultra = 'stock-ultra-west'; Winner = 'winner-west-rerun'; File = 'AtlasHero_West_01.jpg' }
+)
+
 $matrixTiles = $matrixNames | ForEach-Object {
     if (-not (Test-Path $_.Path)) { throw "Missing matrix image: $($_.Path)" }
     [pscustomobject]@{ Label = $_.Label; Path = (Resolve-Path $_.Path).Path }
@@ -92,8 +99,17 @@ $viewTiles = foreach ($pair in $viewPairs) {
     [pscustomobject]@{ Label = "$($pair.View) — current"; Path = (Resolve-Path $referencePath).Path }
     [pscustomobject]@{ Label = "$($pair.View) — combined winner"; Path = (Resolve-Path $winnerPath).Path }
 }
+$ultraTiles = foreach ($pair in $ultraPairs) {
+    $ultraPath = Join-Path $EvidenceRoot "$($pair.Ultra)\$($pair.File)"
+    $winnerPath = Join-Path $EvidenceRoot "$($pair.Winner)\$($pair.File)"
+    if (-not (Test-Path $ultraPath)) { throw "Missing Stock Ultra image: $ultraPath" }
+    if (-not (Test-Path $winnerPath)) { throw "Missing winner image: $winnerPath" }
+    [pscustomobject]@{ Label = "$($pair.View) — Stock Ultra"; Path = (Resolve-Path $ultraPath).Path }
+    [pscustomobject]@{ Label = "$($pair.View) — #25 winner"; Path = (Resolve-Path $winnerPath).Path }
+}
 
 New-ContactSheet -OutputPath (Join-Path $OutputRoot 'issue25-atlas-depth-matrix.jpg') -Tiles $matrixTiles
 New-ContactSheet -OutputPath (Join-Path $OutputRoot 'issue25-atlas-depth-contact-sheet.jpg') -Tiles $viewTiles -Columns 4
+New-ContactSheet -OutputPath (Join-Path $OutputRoot 'issue25-atlas-depth-ultra-contact-sheet.jpg') -Tiles $ultraTiles -Columns 4
 
-Write-Output "Wrote issue25-atlas-depth-matrix.jpg and issue25-atlas-depth-contact-sheet.jpg"
+Write-Output "Wrote issue25-atlas-depth-matrix.jpg, issue25-atlas-depth-contact-sheet.jpg, and issue25-atlas-depth-ultra-contact-sheet.jpg"
