@@ -1152,6 +1152,7 @@ static const char s_bumpMultiHQVertexSource[] =
 "uniform vec4 g_MiscParamFP;                    // TIE(ENV7); .x glow threshold, .y seed\n" \
 "uniform vec4 g_BumpMultiFlagsFP;               // TIE(ENV10); .x/.y selector bits\n" \
 "uniform vec4 g_ScrollScaleArrFP[10];           // TIE(ENV12..21); xy scroll, zw scale per layer\n" \
+"uniform vec4 g_ModernMaterialParamsFP;         // .x = opt-in modern response\n" \
 "\n" \
 "varying vec4 vUv0Faux;            // IN.uv0_uv1; zw = faux spheremap reflection uv\n" \
 "\n" \
@@ -1230,13 +1231,33 @@ static const char s_bumpMultiHQVertexSource[] =
 "// calc_lighting_factors + apply_lighting for one sub-material: (1, NdotL,\n" \
 "// gloss-masked specular) against the shared ambient/diffuse and the\n" \
 "// sub-material specular constant and gloss constant\n" \
-"vec3 applyMultiLighting( vec3 color_in, vec4 normal_gloss, vec3 light_ts, vec3 half_ts,\n" \
+"vec3 applyMultiLighting( vec3 color_in, vec4 normal_gloss, vec3 light_ts, vec3 view_ts, vec3 half_ts,\n" \
 "                         vec4 spec_color_exp, float glossConst )\n" \
 "{\n" \
 "    float specular = pow( clamp( dot( normal_gloss.xyz, half_ts ), 0.0, 1.0 ),\n" \
 "                          spec_color_exp.a ) * normal_gloss.w;\n" \
 "    vec3 diffuse = clamp( dot( normal_gloss.xyz, light_ts ), 0.0, 1.0 ) * g_DiffuseColorFP.rgb;\n" \
 "    vec3 gloss = clamp( specular * glossConst * spec_color_exp.rgb, 0.0, 1.0 );\n" \
+"    if ( g_ModernMaterialParamsFP.x > 0.5 )\n" \
+"    {\n" \
+"        // Multi9 keeps the authored exponent as the lobe-width clue, but\n" \
+"        // evaluates it as a normalized, view-aware world-material response.\n" \
+"        float legacyExponent = clamp( spec_color_exp.a, 1.0, 128.0 );\n" \
+"        float roughness = clamp( sqrt( 2.0 / ( legacyExponent + 2.0 ) ), 0.40, 0.90 );\n" \
+"        float lobeExponent = clamp( ( 2.0 / ( roughness * roughness ) ) - 2.0, 1.0, 128.0 );\n" \
+"        float glossStrength = clamp( normal_gloss.w * max( glossConst, 0.0 ), 0.0, 1.0 );\n" \
+"        float n_dot_l = clamp( dot( normal_gloss.xyz, light_ts ), 0.0, 1.0 );\n" \
+"        float n_dot_v = clamp( dot( normal_gloss.xyz, view_ts ), 0.0, 1.0 );\n" \
+"        vec3 modernHalf = normalize( view_ts + light_ts );\n" \
+"        float n_dot_h = clamp( dot( normal_gloss.xyz, modernHalf ), 0.0, 1.0 );\n" \
+"        float normalizedLobe = pow( n_dot_h, lobeExponent ) * ( ( lobeExponent + 2.0 ) * 0.15915494 );\n" \
+"        vec3 authoredSpecular = clamp( spec_color_exp.rgb, 0.0, 1.0 );\n" \
+"        vec3 f0 = mix( vec3( 0.04 ), authoredSpecular, clamp( 0.35 + 0.65 * glossStrength, 0.0, 1.0 ) );\n" \
+"        float fresnelFactor = pow( 1.0 - n_dot_v, 5.0 ) * 0.35;\n" \
+"        vec3 fresnel = mix( f0, vec3( 1.0 ), fresnelFactor );\n" \
+"        float specularEnergy = clamp( normalizedLobe * ( 0.42 + 0.58 * glossStrength ) * n_dot_l, 0.0, 1.0 );\n" \
+"        gloss = fresnel * specularEnergy;\n" \
+"    }\n" \
 "    return color_in * ( g_AmbientColorFP.rgb + diffuse ) + gloss;\n" \
 "}\n"
 
@@ -1260,6 +1281,7 @@ MULTI9_FP_HELPERS
 "    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n"
 "\n"
 "    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 view_ts = normalize( vViewTs );\n"
 "    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
 "\n"
 "    vec4 n1 = mapColorToNormal( texture2D( sampler_normal_and_gloss_1, scrollScale( 2, uv0 ) ) );\n"
@@ -1272,7 +1294,7 @@ MULTI9_FP_HELPERS
 "                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n"
 "    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
 "    color1.rgb *= gl_Color.rgb;\n"
-"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, view_ts, half_ts,\n"
 "                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
 "\n"
 "    // material 2: dual tint (g_ConstColor0/1), multiply, vertex color, its\n"
@@ -1283,7 +1305,7 @@ MULTI9_FP_HELPERS
 "                        texture2D( sampler_dual_2, scrollScale( 8, uv0 ) ) );\n"
 "    color2 *= texture2D( sampler_multiply_2, scrollScale( 6, uv_mult2 ) );\n"
 "    color2.rgb *= gl_Color.rgb;\n"
-"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, half_ts,\n"
+"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, view_ts, half_ts,\n"
 "                                     g_Specular2ColorAndExponentFP, g_GlossParamFP.y );\n"
 "\n"
 "    addGlowMulti( uv0, color1, color2 );\n"
@@ -1329,6 +1351,9 @@ MULTI9_FP_HELPERS
 "    vec3 light_ts = normalize( vec3( dot( light_vs, tangent_vs ),\n"
 "                                     dot( light_vs, binormal_vs ),\n"
 "                                     dot( light_vs, normal_vs ) ) );\n"
+"    vec3 view_ts = normalize( vec3( dot( u_to_eye, tangent_vs ),\n"
+"                                    dot( u_to_eye, binormal_vs ),\n"
+"                                    dot( u_to_eye, normal_vs ) ) );\n"
 "    vec3 h_vs = normalize( u_to_eye + light_vs );\n"
 "    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
 "                         dot( h_vs, binormal_vs ),\n"
@@ -1343,7 +1368,7 @@ MULTI9_FP_HELPERS
 "                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n"
 "    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
 "    color1.rgb *= gl_Color.rgb;\n"
-"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, view_ts, half_ts,\n"
 "                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
 "\n"
 "    vec4 texBase2 = texture2D( sampler_base_2, scrollScale( 5, uv0 ) );\n"
@@ -1352,7 +1377,7 @@ MULTI9_FP_HELPERS
 "                        texture2D( sampler_dual_2, scrollScale( 8, uv0 ) ) );\n"
 "    color2 *= texture2D( sampler_multiply_2, scrollScale( 6, uv_mult2 ) );\n"
 "    color2.rgb *= gl_Color.rgb;\n"
-"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, half_ts,\n"
+"    color2.rgb = applyMultiLighting( color2.rgb, n2, light_ts, view_ts, half_ts,\n"
 "                                     g_Specular2ColorAndExponentFP, g_GlossParamFP.y );\n"
 "\n"
 "    addGlowMulti( uv0, color1, color2 );\n"
@@ -1389,7 +1414,7 @@ LIGHTING_SETUP \
 "                        texture2D( sampler_dual_1, scrollScale( 3, uv0 ) ) );\n" \
 "    out_color *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n" \
 "    out_color.rgb *= gl_Color.rgb;\n" \
-"    out_color.rgb = applyMultiLighting( out_color.rgb, n1, light_ts, half_ts,\n" \
+"    out_color.rgb = applyMultiLighting( out_color.rgb, n1, light_ts, view_ts, half_ts,\n" \
 "                                        g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n" \
 "\n" \
 "    // add_glow (single-material flavor): same mask/glow uvs and tint as\n" \
@@ -1417,6 +1442,7 @@ MULTI9_FP_HELPERS
 "\n"
 MULTI9_SINGLE_BODY(
 "    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 view_ts = normalize( vViewTs );\n"
 "    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n" );
 
 static const char s_multi9SingleHQFragmentSource[] =
@@ -1439,6 +1465,9 @@ MULTI9_SINGLE_BODY(
 "    vec3 light_ts = normalize( vec3( dot( light_vs, tangent_vs ),\n"
 "                                     dot( light_vs, binormal_vs ),\n"
 "                                     dot( light_vs, normal_vs ) ) );\n"
+"    vec3 view_ts = normalize( vec3( dot( u_to_eye, tangent_vs ),\n"
+"                                    dot( u_to_eye, binormal_vs ),\n"
+"                                    dot( u_to_eye, normal_vs ) ) );\n"
 "    vec3 h_vs = normalize( u_to_eye + light_vs );\n"
 "    vec3 half_ts = vec3( dot( h_vs, tangent_vs ),\n"
 "                         dot( h_vs, binormal_vs ),\n"
@@ -1465,6 +1494,7 @@ MULTI9_FP_HELPERS
 "    bool oldTint = isBitSet( g_BumpMultiFlagsFP.y, 1.0 );\n"
 "\n"
 "    vec3 light_ts = normalize( vLightTs );\n"
+"    vec3 view_ts = normalize( vViewTs );\n"
 "    vec3 half_ts = normalize( normalize( vViewTs ) + light_ts );\n"
 "\n"
 "    // building variant: normal map and base/dual uvs unscrolled\n"
@@ -1476,7 +1506,7 @@ MULTI9_FP_HELPERS
 "                        texture2D( sampler_dual_1, uv0 ) );\n"
 "    color1 *= texture2D( sampler_multiply_1, scrollScale( 1, uv_mult1 ) );\n"
 "    color1.rgb *= gl_Color.rgb;\n"
-"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, half_ts,\n"
+"    color1.rgb = applyMultiLighting( color1.rgb, n1, light_ts, view_ts, half_ts,\n"
 "                                     g_Specular1ColorAndExponentFP, g_GlossParamFP.x );\n"
 "\n"
 "    // material 2 is material 1's lit color times the multiply-2 texture\n"
@@ -2304,6 +2334,23 @@ typedef struct tPilotMaterial
     GLint               locUsePlanarReflection;
 } tPilotMaterial;
 
+static bool pilotMaterialUsesModernResponse( int material )
+{
+    switch ( material )
+    {
+        case kPilotMaterial_BumpColorBlendDual:
+        case kPilotMaterial_BumpColorBlendDualHQ:
+        case kPilotMaterial_Multi9Full:
+        case kPilotMaterial_Multi9FullHQ:
+        case kPilotMaterial_Multi9Single:
+        case kPilotMaterial_Multi9SingleHQ:
+        case kPilotMaterial_Multi9Building:
+            return true;
+        default:
+            return false;
+    }
+}
+
 #define kPilotKindBit( kind ) ( 1u << (kind) )
 #define kPilotBumpKindMask ( kPilotKindBit( kPilotVertexKind_BumpDual ) | \
                              kPilotKindBit( kPilotVertexKind_SkinBump ) )
@@ -2496,8 +2543,9 @@ static tPilotMaterial s_materials[kPilotMaterial_Count] = {
 };
 
 static int                    s_activeMaterial = -1;    // -1 = pilot inactive
-// Only the two canonical Bump ColorBlendDual programs resolve this optional
-// response uniform; other material families keep the existing table untouched.
+// The canonical Bump ColorBlendDual pair and the five existing Multi9 rows
+// resolve this optional response uniform; other material families keep the
+// existing table untouched.
 static GLint                  s_modernMaterialParamLoc[kPilotMaterial_Count];
 static GLuint                s_vertexShader = 0;        // shared: one source serves the dualtex materials
 static bool                    s_vertexShaderFailed = false;
@@ -2897,8 +2945,7 @@ static bool pilotInit( int material )
         m->locGloss = __glewGetUniformLocation( m->program, "g_GlossParamFP" );
         m->locSpecular1 = __glewGetUniformLocation( m->program, "g_Specular1ColorAndExponentFP" );
     }
-    if (( material == kPilotMaterial_BumpColorBlendDual ) ||
-        ( material == kPilotMaterial_BumpColorBlendDualHQ ))
+    if ( pilotMaterialUsesModernResponse( material ) )
         s_modernMaterialParamLoc[material] = __glewGetUniformLocation( m->program, "g_ModernMaterialParamsFP" );
     if ( m->fxConstMask )
     {
@@ -2952,9 +2999,8 @@ static bool pilotInit( int material )
         ( m->usesGlowParam && ( m->locGlowParam < 0 )) ||
         ( m->usesBumpConstants && (( m->locAmbient < 0 ) || ( m->locDiffuse < 0 ) ||
                                     ( m->locGloss < 0 ) || ( m->locSpecular1 < 0 ))) ||
-        ((( material == kPilotMaterial_BumpColorBlendDual ) ||
-          ( material == kPilotMaterial_BumpColorBlendDualHQ )) &&
-         ( s_modernMaterialParamLoc[material] < 0 )))
+        ( pilotMaterialUsesModernResponse( material ) &&
+          ( s_modernMaterialParamLoc[material] < 0 )))
     {
         printf( "GLSL pilot: %s required uniforms optimized away or missing\n", m->name );
         m->failed = true;
@@ -3290,8 +3336,7 @@ static bool pilotActivate( int material, const tPilotVertexEntry* entry )
             __glewUniform4fv( m->locGloss, 1, s_glossMirror );
             __glewUniform4fv( m->locSpecular1, 1, s_specular1Mirror );
         }
-        if (( material == kPilotMaterial_BumpColorBlendDual ) ||
-            ( material == kPilotMaterial_BumpColorBlendDualHQ ))
+        if ( pilotMaterialUsesModernResponse( material ) )
         {
             GLfloat modernMaterialParams[4] = {
                 game_state.modernMaterials ? 1.0f : 0.0f, 0.0f, 0.0f, 0.0f
