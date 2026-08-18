@@ -1164,6 +1164,15 @@ void gfxApplySettings( GfxSettings * gfxSettings, int pastStartUp, bool onlyDyna
     //Has to come after windowSetSize
     game_state.maximized            = gfxSettings->maximized;
 
+    printf("FEATTRACE: gfxApplySettings shaderDetail=%d useWater=%d pastStartUp=%d filledIn=%d -> enable[water=%d multi=%d] disable[water=%d multi=%d] waterMode=%d\n",
+           gfxSettings->advanced.shaderDetail, gfxSettings->advanced.useWater,
+           pastStartUp, rdr_caps.filled_in ? 1 : 0,
+           (gfx_features_enable & GFXF_WATER) ? 1 : 0,
+           (gfx_features_enable & GFXF_MULTITEX) ? 1 : 0,
+           (gfx_features_disable & GFXF_WATER) ? 1 : 0,
+           (gfx_features_disable & GFXF_MULTITEX) ? 1 : 0,
+           game_state.waterMode);
+
     game_state.gfx_features_disable = gfx_features_disable;
     game_state.gfx_features_enable = gfx_features_enable;
 

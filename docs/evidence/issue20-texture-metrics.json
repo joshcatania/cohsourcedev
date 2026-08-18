@@ -1,0 +1,36 @@
+{
+  "cropBox": [
+    720,
+    50,
+    1279,
+    620
+  ],
+  "stockVsUpgradedFull": {
+    "width": 1256,
+    "height": 696,
+    "meanAbsRgb": 19.872,
+    "changedPercent_gt8": 93.805,
+    "maxAbsRgb": 251
+  },
+  "stockVsUpgradedTruckCrop": {
+    "width": 536,
+    "height": 570,
+    "meanAbsRgb": 25.04,
+    "changedPercent_gt8": 94.98,
+    "maxAbsRgb": 149
+  },
+  "upgradedModernOnVsOffTruckCrop": {
+    "width": 536,
+    "height": 570,
+    "meanAbsRgb": 11.337,
+    "changedPercent_gt8": 83.717,
+    "maxAbsRgb": 155
+  },
+  "restoredStockVsStockTruckCrop": {
+    "width": 536,
+    "height": 570,
+    "meanAbsRgb": 17.861,
+    "changedPercent_gt8": 95.422,
+    "maxAbsRgb": 176
+  }
+}

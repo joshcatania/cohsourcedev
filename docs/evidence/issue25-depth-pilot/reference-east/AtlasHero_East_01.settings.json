@@ -1,0 +1,35 @@
+{
+  "name": "reference-east",
+  "target": "AtlasHero_East_01",
+  "requestedSettings": {
+    "shadowmode": 1,
+    "shadowmapshader": 0,
+    "shadowmapsize": 0,
+    "shadowmapdistance": -2,
+    "ambientstrength": 3,
+    "ambientresolution": 2,
+    "ambientblur": 6,
+    "shaderdetail": 3,
+    "usewater": 2
+  },
+  "capturePassed": true,
+  "captureExitCode": 0,
+  "screenshot": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.jpg",
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.capture.json",
+  "fps": null,
+  "presentMon": null,
+  "presentMonStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.presentmon.stdout.log",
+  "presentMonStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.presentmon.stderr.log",
+  "performance": {
+    "cpuSampleCount": 0,
+    "gpuSampleCount": 0,
+    "cpuMeanPercentOfMachine": null,
+    "cpuMaxPercentOfMachine": null,
+    "gpuMeanPercent": null,
+    "gpuMaxPercent": null,
+    "presentMon": null
+  },
+  "fpsSamples": [],
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\reference-east\\AtlasHero_East_01.runner.stderr.log"
+}

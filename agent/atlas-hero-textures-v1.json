@@ -1,0 +1,280 @@
+{
+  "schema": "coh.texture-pilot.v1",
+  "name": "Atlas hero textures v1",
+  "description": "Five runtime-ranked Atlas world material groups for bounded conservative 2x texture processing.",
+  "stock_by_default": true,
+  "max_output_dimension": 1024,
+  "packed_sources": [
+    {
+      "path": "bin/piggs/stage2c.pigg",
+      "sha256": "9BDA185DBFFCF626FE0925636692F004CA54A427121AF7FF507A4106ADF91FA1"
+    },
+    {
+      "path": "bin/piggs/stage3g.pigg",
+      "sha256": "F632BEC74AA4F34F2C314DD1C986722A87EE31A11E6A42CF24EB58889295D90E"
+    }
+  ],
+  "discovery": {
+    "capture_targets": [
+      "AtlasHero_CityHall_01",
+      "AtlasHero_East_01",
+      "AtlasHero_North_01",
+      "AtlasHero_West_01"
+    ],
+    "runtime_source_logs": [
+      "agent/logs/capture-AtlasHero_CityHall_01-20260818-070404.stdout.log",
+      "agent/logs/capture-AtlasHero_East_01-20260818-070146.stdout.log",
+      "agent/logs/capture-AtlasHero_North_01-20260818-070208.stdout.log",
+      "agent/logs/capture-AtlasHero_West_01-20260818-070231.stdout.log"
+    ],
+    "ranking_method": "distinct BASE1 bind observations across four valid Atlas directions; ties resolved by authored dimensions and visible gameplay coverage",
+    "selected_groups": [
+      {
+        "id": "plaza-concrete-trims02",
+        "base_bind_observations": 8,
+        "views_observed": 4,
+        "runtime_dimensions": "512x256 base + 512x256 normal",
+        "reason": "Repeated near-plaza trim/wall material with authored normal data and useful close-to-player coverage."
+      },
+      {
+        "id": "atlas-asphalt-01",
+        "base_bind_observations": 7,
+        "views_observed": 4,
+        "runtime_dimensions": "512x512 base + 512x512 normal/detail layers",
+        "reason": "Repeated Atlas Park ground/road material visible at gameplay distance in all directions."
+      },
+      {
+        "id": "cityhall-border-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_dimensions": "512x256 base + 512x256 normal",
+        "reason": "Named City Hall architectural border with stable authored normal data."
+      },
+      {
+        "id": "cityhall-tiles-01",
+        "base_bind_observations": 4,
+        "views_observed": 4,
+        "runtime_dimensions": "512x512 base + 512x512 normal",
+        "reason": "Named City Hall/plaza tile surface, repeated in the captured Atlas environment."
+      },
+      {
+        "id": "deco03-concrete-01",
+        "base_bind_observations": 9,
+        "views_observed": 4,
+        "runtime_dimensions": "512x512 base + 512x512 normal/detail layers",
+        "reason": "Highest-reuse architectural material in the valid Atlas runtime traces; appears on multiple upgraded building facades."
+      }
+    ],
+    "rejected_candidates": [
+      {
+        "name": "AP_CityHall_Concrete_01_D/NS",
+        "runtime_dimensions": "1024x1024",
+        "reason": "Already at the bounded 1024px cap; no conservative 2x output is allowed."
+      },
+      {
+        "name": "Plaza_Concrete_Wall_FoundationStained_01_D",
+        "runtime_dimensions": "1024x512",
+        "reason": "Already at the bounded 1024px width cap; left stock."
+      },
+      {
+        "name": "Plaza_Grass_FreshCut_01_D/NS",
+        "runtime_dimensions": "1024x1024 base with 256x256 normal",
+        "reason": "The dominant base is already at cap and its small repeating normal would not be a useful hero improvement."
+      },
+      {
+        "name": "facad_bldng_* and other skyline LODs",
+        "runtime_dimensions": "32x32 through 128x128",
+        "reason": "Distant/tiny LOD surfaces; conservative 2x processing is not useful at gameplay distance."
+      }
+    ]
+  },
+  "entries": [
+    {
+      "id": "plaza-concrete-trims02-d",
+      "group": "plaza-concrete-trims02",
+      "stock_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_D.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 256],
+      "target_dimensions": [1024, 512],
+      "stock_flags": "0x0",
+      "stock_sha256": "DEA2FEAA094DCAC527BAD86A7A6119F37385BD715DFD4384663058A1F8B8026A",
+      "expected_output_sha256": "5F1B6910DA6B72E046230B4AEC21E7CDA8E1FFA23726BC56911B643FAD2E9599"
+    },
+    {
+      "id": "plaza-concrete-trims02-n",
+      "group": "plaza-concrete-trims02",
+      "stock_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_N.texture",
+      "install_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_N.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_Trims02_N.dds",
+      "semantic": "normal_gloss",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "stock_dimensions": [512, 256],
+      "target_dimensions": [1024, 512],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "1A967448E041F37D19CF086582D74BADF68E46156C106ED1AE0DA650571CED10",
+      "expected_output_sha256": "3965ADF29930DFDA6E134CEEAE7104E748158AEB39566C01028E69D3AC9A0125"
+    },
+    {
+      "id": "atlas-asphalt-01-d",
+      "group": "atlas-asphalt-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_D.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "EF2A1FA68697E19EA95AFF41E6E9806C9C8573E08002FB3F5C52F5269A9C33C8",
+      "expected_output_sha256": "02A7E59AA7DACAE3344E5945342D1A3FC60846AA5E4C8F49810F1668BAA1CDCD"
+    },
+    {
+      "id": "atlas-asphalt-01-ns",
+      "group": "atlas-asphalt-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_Asphalt_01_NS.dds",
+      "semantic": "normal_gloss",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "9E83A96567EA8F4EEA29B1026E2DC25E5E3288185CEF6F912740EA5B4A37FCC7",
+      "expected_output_sha256": "F5C8435C7C2A507B231AA761B6E3996F2436CFEAC979C5A3316C216E2E1EF8EC"
+    },
+    {
+      "id": "atlas-asphalt-01-grunge",
+      "group": "atlas-asphalt-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_ConcreteGrunge_01_d.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_ConcreteGrunge_01_d.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityBlocks/AP_ConcreteGrunge_01_d.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "305541139ECC57F584639611651D0F55FD2874E5E8ABF7E280BF74AB6779F557",
+      "expected_output_sha256": "6F4F1CFA97701159874E037EBD5329C3EE6BE5E64EA03314F57B477F107FF836"
+    },
+    {
+      "id": "atlas-asphalt-01-lined-slab",
+      "group": "atlas-asphalt-01",
+      "stock_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_LinedSlab_02_Z.texture",
+      "install_path": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_LinedSlab_02_Z.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Praetoria/Plaza/Surfaces/Plaza_Concrete_LinedSlab_02_Z.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "594E84C2C3DEF6EE7BF0C968D905A794A2F2786D18BAEB997006402AE8B17F82",
+      "expected_output_sha256": "2C24E2FDB0B8487C1043081B6256C059E81CFD5BA8C3E86D9BE6E6119400DC2B"
+    },
+    {
+      "id": "cityhall-border-01-d",
+      "group": "cityhall-border-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_D.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 256],
+      "target_dimensions": [1024, 512],
+      "stock_flags": "0x0",
+      "stock_sha256": "DB7E837731D3A104BD2D7FAF5BE9CED67B396157FD62B7D9CA69BBB8957E0688",
+      "expected_output_sha256": "BA3B4E98DDFFFC3624B89E7C099184FA8F1136AA2D905526C4D92D83732FB941"
+    },
+    {
+      "id": "cityhall-border-01-ns",
+      "group": "cityhall-border-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Border_01_NS.dds",
+      "semantic": "normal_gloss",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "stock_dimensions": [512, 256],
+      "target_dimensions": [1024, 512],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "D1E21413477589EA46DA49C92C948A2D0E43DEE1729031911E9EF9FEC54D3BC8",
+      "expected_output_sha256": "77BA0E0CF080B08D81E5CCB1E02A99D5CA7E960EC1605EEEA961D1C0A6BB4C58"
+    },
+    {
+      "id": "cityhall-tiles-01-d",
+      "group": "cityhall-tiles-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_D.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "CC1515DAE6D179139686FD0627177701A8EF78A1436193A53D715196DDD0DCB0",
+      "expected_output_sha256": "77A9E4092272786C2C3CD7F41FAE8C842CA5F3CA46CA588A9DD94AEAEFB6DEB2"
+    },
+    {
+      "id": "cityhall-tiles-01-ns",
+      "group": "cityhall-tiles-01",
+      "stock_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_NS.texture",
+      "install_path": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_NS.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Atlas_Park_makeover/CityHall/AP_CityHall_Tiles_01_NS.dds",
+      "semantic": "normal_gloss",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "E687C635EA483F3EEA1D69EBF7BA757FD3E56994DBF7B687ED3E32CF64ADA775",
+      "expected_output_sha256": "9F222DB4C4AACBA899CC9CE418646CA6EA301BD055BB82FAC3E11C8F37BC71C2"
+    },
+    {
+      "id": "deco03-concrete-01-b",
+      "group": "deco03-concrete-01",
+      "stock_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_b.texture",
+      "install_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_b.texture",
+      "stored_name": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_b.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "D3E620C963D4B8C1E92688F6D08BEA27950D70A3E0B89F06B87C2E9B74C78B71",
+      "expected_output_sha256": "BF74E02B292684D39C0262672C511289623D27A9AC43A76DDA2AD7DB4B12C726"
+    },
+    {
+      "id": "deco03-concrete-01-n",
+      "group": "deco03-concrete-01",
+      "stock_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_n.texture",
+      "install_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_n.texture",
+      "stored_name": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_concrete_01_n.dds",
+      "semantic": "normal_gloss",
+      "alpha_policy": "nearest-preserve",
+      "normal_policy": "vector-renormalize",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "3B8B23A1C8C886A5497A87AE9BCFB3D9836F1A7229E5DBD2BBBB1FBDBC26408B",
+      "expected_output_sha256": "4B49DA736F596FD9CE8DC3B57C7631387570CC3A28602A6CFC906C686612AC4F"
+    },
+    {
+      "id": "deco03-concrete-01-grime",
+      "group": "deco03-concrete-01",
+      "stock_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_grime_tt_01.texture",
+      "install_path": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_grime_tt_01.texture",
+      "stored_name": "texture_library/WORLD/buildings/UpgradedDeco/Deco03/deco_building_03_grime_tt_01.dds",
+      "semantic": "base",
+      "alpha_policy": "nearest-preserve",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "31EF0A4E091585B285B20A57283FDD23B4979D3278B2349A62C2C75ED12B7237",
+      "expected_output_sha256": "5CF852DA1E76D3A7B150EE9D89BFCC7916713B08D27374C9BD0678B38DD165C7"
+    }
+  ]
+}

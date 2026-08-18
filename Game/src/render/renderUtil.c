@@ -1622,6 +1622,16 @@ void rdrSetChipOptions()
     // (e.g. for skinned objects) and that we don't have a command line option to disable it ("no_nv_clip")
     rdr_caps.supports_vp_clip_planes_nv = rdr_caps.chip & NV4X && !game_state.no_nv_clip && !game_state.safemode && !IsUsingCider();
 
+    printf("FEATTRACE: rdrSetChipOptions.apply-begin allowed[water=%d multi=%d bump=%d] enableMask[water=%d multi=%d] disableMask[water=%d multi=%d] waterMode=%d\n",
+           (rdr_caps.allowed_features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_BUMPMAPS) ? 1 : 0,
+           (game_state.gfx_features_enable & GFXF_WATER) ? 1 : 0,
+           (game_state.gfx_features_enable & GFXF_MULTITEX) ? 1 : 0,
+           (game_state.gfx_features_disable & GFXF_WATER) ? 1 : 0,
+           (game_state.gfx_features_disable & GFXF_MULTITEX) ? 1 : 0,
+           game_state.waterMode);
+
     rdr_caps.features = rdr_caps.allowed_features; // Default everything on until we get a UI option
 
     // Off by default, because it's slower
@@ -1660,6 +1670,14 @@ void rdrSetChipOptions()
     else
         rdr_caps.use_fixedfunctionvp = 1;
 
+    printf("FEATTRACE: rdrSetChipOptions.apply-end allowed[water=%d multi=%d bump=%d] features[water=%d multi=%d bump=%d] waterMode=%d\n",
+           (rdr_caps.allowed_features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_BUMPMAPS) ? 1 : 0,
+           (rdr_caps.features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.features & GFXF_BUMPMAPS) ? 1 : 0,
+           game_state.waterMode);
 
     // Special hardware emulation and debugging
     if (game_state.useChipDebug)
