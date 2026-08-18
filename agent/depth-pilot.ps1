@@ -13,6 +13,7 @@ param(
     [int]$AmbientStrength = 0,
     [int]$AmbientResolution = 2,
     [int]$AmbientBlur = 5,
+    [switch]$ModernLighting,
     [switch]$MeasureFps,
     [switch]$Json
 )
@@ -76,7 +77,8 @@ try {
         Set-Content -LiteralPath (Join-Path $registryRoot $key) -Value ([string]$settings[$key]) -NoNewline
     }
 
-    $extraArgs = '-glslPilot 1 -modernMaterials 1 -modernPresentation 0 -modernBloom 0'
+    $modernLightingValue = if ($ModernLighting) { 1 } else { 0 }
+    $extraArgs = "-glslPilot 1 -modernMaterials 1 -modernPresentation 0 -modernBloom 0 -modernLighting $modernLightingValue"
     if ($MeasureFps) {
         $extraArgs += ' -showfps 2'
     }
