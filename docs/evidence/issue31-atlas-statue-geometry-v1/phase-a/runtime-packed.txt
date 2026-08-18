@@ -1,0 +1,17 @@
+Phase A packed runtime capture
+================================
+
+Command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\agent\capture.ps1 -Target AtlasHero_Statue_01 -AccountName Dummy00009 -TimeoutSeconds 180 -Json
+
+Capture log:
+  agent/logs/capture-AtlasHero_Statue_01-20260818-175514.stdout.log
+
+Trace excerpts:
+  TEXTUREPILOT: geometry model=_H_M_Statue_Atlas_Giant source=object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=2955 tris=4608 texCount=2 radius=294.210 ... lodCount=3
+  GEOMETRYPILOT: model=_H_M_Statue_Atlas_Giant ... kind=pigg resolved=./piggs/stage3c.pigg:/object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=2955 tris=4608
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_Globe_01 ... submesh=0
+  TEXTUREPILOT: bind=X_Male_Statue_Atlas_01 ... submesh=1
+
+Image SHA256:
+  phase-a-packed-window.jpg 5FCFD407DA824974444ED150DB05AA887BF784B9E806DB8ED8D008095625CF7A

@@ -13,6 +13,12 @@
 #include "tree.h"
 #include "geo.h"
 
+#ifdef GETVRML
+extern int atlas_roundtrip;
+#else
+#define atlas_roundtrip 0
+#endif
+
 typedef struct
 {
     int        vert_idxs[3];
@@ -80,6 +86,91 @@ static void simplifyMergeVrmlShapes(VrmlShape *shape,VrmlShape *simple)
     F32        *st=0;
     F32     weight[BONES_ON_DISK];
     int     k;
+
+    if (atlas_roundtrip)
+    {
+        int vert_offset = 0;
+        int norm_offset = 0;
+        int st_offset = 0;
+
+        // The exporter writes one full coordinate/normal/UV array per
+        // material run. Reuse an identical array on subsequent runs and
+        // retain the original index values instead of flattening every
+        // triangle corner into a new vertex.
+        if (shape->verts)
+        {
+            if (simple->verts && simple->vert_count == shape->vert_count &&
+                !memcmp(simple->verts, shape->verts, shape->vert_count * sizeof(Vec3)))
+            {
+                vert_offset = 0;
+            }
+            else
+            {
+                vert_offset = simple->vert_count;
+                simple->verts = realloc(simple->verts,
+                    (simple->vert_count + shape->vert_count) * sizeof(Vec3));
+                memcpy(&simple->verts[simple->vert_count], shape->verts,
+                    shape->vert_count * sizeof(Vec3));
+                simple->vert_count += shape->vert_count;
+            }
+        }
+
+        if (shape->norms)
+        {
+            if (simple->norms && simple->norm_count == shape->norm_count &&
+                !memcmp(simple->norms, shape->norms, shape->norm_count * sizeof(Vec3)))
+            {
+                norm_offset = 0;
+            }
+            else
+            {
+                norm_offset = simple->norm_count;
+                simple->norms = realloc(simple->norms,
+                    (simple->norm_count + shape->norm_count) * sizeof(Vec3));
+                memcpy(&simple->norms[simple->norm_count], shape->norms,
+                    shape->norm_count * sizeof(Vec3));
+                simple->norm_count += shape->norm_count;
+            }
+        }
+
+        if (shape->sts)
+        {
+            if (simple->sts && simple->st_count == shape->st_count &&
+                !memcmp(simple->sts, shape->sts, shape->st_count * sizeof(Vec2)))
+            {
+                st_offset = 0;
+            }
+            else
+            {
+                st_offset = simple->st_count;
+                simple->sts = realloc(simple->sts,
+                    (simple->st_count + shape->st_count) * sizeof(Vec2));
+                memcpy(&simple->sts[simple->st_count], shape->sts,
+                    shape->st_count * sizeof(Vec2));
+                simple->st_count += shape->st_count;
+            }
+        }
+
+        tc = simple->tri_count;
+        simple->tris = realloc(simple->tris,
+            (tc + shape->tri_count) * sizeof(TriIdx));
+        for (i = 0; i < shape->tri_count; i++)
+        {
+            for (j = 0; j < 3; j++)
+            {
+                simple->tris[tc + i].vert_idxs[j] = shape->tris[i].vert_idxs[j] + vert_offset;
+                simple->tris[tc + i].norm_idxs[j] = shape->tris[i].norm_idxs[j] + norm_offset;
+                simple->tris[tc + i].st_idxs[j] = shape->tris[i].st_idxs[j] + st_offset;
+            }
+            simple->tris[tc + i].tex_idx = shape->tris[i].tex_idx;
+        }
+        simple->tri_count += shape->tri_count;
+        simple->tex_idx = shape->tex_idx;
+        simple->numbones = shape->numbones;
+        for (i = 0; i < shape->numbones; i++)
+            strcpy(simple->bonelist[i], shape->bonelist[i]);
+        return;
+    }
 
     tc = simple->tri_count;
     maxverts = simple->vert_count + shape->tri_count * 3;
@@ -172,6 +263,47 @@ static void convertVrmlShapeToGMesh(BoneData *bones, GMesh *mesh, const VrmlShap
     if (shape->numbones)
         usage |= USE_BONEWEIGHTS;
     gmeshSetUsageBits(mesh, usage);
+
+    if (atlas_roundtrip && !shape->numbones)
+    {
+        int direct_indices = 1;
+
+        for (i = 0; i < shape->tri_count && direct_indices; i++)
+        {
+            int j;
+            for (j = 0; j < 3; j++)
+            {
+                if (shape->tris[i].vert_idxs[j] != shape->tris[i].norm_idxs[j] ||
+                    shape->tris[i].vert_idxs[j] != shape->tris[i].st_idxs[j])
+                {
+                    direct_indices = 0;
+                    break;
+                }
+            }
+        }
+
+        if (direct_indices)
+        {
+            gmeshSetUsageBits(mesh, usage | USE_NOMERGE);
+            gmeshSetVertCount(mesh, shape->vert_count);
+            if (mesh->positions && shape->verts)
+                memcpy(mesh->positions, shape->verts, shape->vert_count * sizeof(Vec3));
+            if (mesh->normals && shape->norms)
+                memcpy(mesh->normals, shape->norms, shape->norm_count * sizeof(Vec3));
+            if (mesh->tex1s && shape->sts)
+                memcpy(mesh->tex1s, shape->sts, shape->st_count * sizeof(Vec2));
+
+            gmeshSetTriCount(mesh, shape->tri_count);
+            for (i = 0; i < shape->tri_count; i++)
+            {
+                mesh->tris[i].idx[0] = shape->tris[i].vert_idxs[0];
+                mesh->tris[i].idx[1] = shape->tris[i].vert_idxs[1];
+                mesh->tris[i].idx[2] = shape->tris[i].vert_idxs[2];
+                mesh->tris[i].tex_id = shape->tris[i].tex_idx;
+            }
+            return;
+        }
+    }
 
     // calculate bone weights and matrix indices
     if (shape->numbones)

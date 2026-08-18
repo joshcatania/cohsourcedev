@@ -1,0 +1,154 @@
+{
+  "schema": "coh.texture-pilot.v1",
+  "name": "Atlas statue hero remaster v1",
+  "description": "Runtime-identified Atlas male statue material set. Uses source-guided albedo restoration and vector-aware surface restoration, capped at 1024px and installed only through the reversible loose override workflow.",
+  "stock_by_default": true,
+  "max_output_dimension": 1024,
+  "packed_sources": [
+    {
+      "path": "bin/piggs/stage2c.pigg",
+      "sha256": "9BDA185DBFFCF626FE0925636692F004CA54A427121AF7FF507A4106ADF91FA1"
+    },
+    {
+      "path": "bin/piggs/stage3g.pigg",
+      "sha256": "F632BEC74AA4F34F2C314DD1C986722A87EE31A11E6A42CF24EB58889295D90E"
+    }
+  ],
+  "discovery": {
+    "capture_target": "AtlasHero_Statue_01",
+    "runtime_source_log": "agent/logs/capture-AtlasHero_Statue_01-20260818-155949.stdout.log",
+    "model": "_H_M_Statue_Atlas_Giant",
+    "source_model": "object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo",
+    "selected_lod_geometry": {
+      "verts": 2955,
+      "tris": 4608,
+      "radius": 294.210,
+      "bounds_min": [-119.946, -0.544, -80.133],
+      "bounds_max": [61.035, 291.595, 100.294],
+      "lod_count_reported": 3
+    },
+    "secondary_observed_lod": {
+      "model": "_H_M_Statue_Atlas_Giant_LOD_01",
+      "verts": 1694,
+      "tris": 2442,
+      "radius": 297.847,
+      "bounds_min": [-120.434, -0.544, -80.232],
+      "bounds_max": [61.868, 295.772, 101.807],
+      "lod_count_reported": 2
+    },
+    "material_binds": [
+      "X_Male_Statue_Atlas_Globe_01",
+      "X_Male_Statue_Atlas_01"
+    ]
+  },
+  "entries": [
+    {
+      "id": "statue-globe-d",
+      "group": "atlas-statue-globe",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_D.dds",
+      "semantic": "base",
+      "transform_mode": "statue_hero_albedo",
+      "detail_source": "statue-globe-n",
+      "detail_strength": 18.0,
+      "albedo_contrast": 1.35,
+      "albedo_gain": 1.12,
+      "stock_dimensions": [512, 256],
+      "target_dimensions": [1024, 512],
+      "stock_flags": "0x2",
+      "stock_sha256": "A6D32C7D920598BDA51C771BD2681AF5C1283A20167E85784C17E3227CDEA718",
+      "expected_output_sha256": "16F227457BF582B570988E4B275693ECB93B6C0A19F8D76F1DEFDF9736704F34"
+    },
+    {
+      "id": "statue-globe-n",
+      "group": "atlas-statue-globe",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_N.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_N.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_N.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "statue_hero_normal",
+      "normal_strength": 1.45,
+      "stock_dimensions": [256, 128],
+      "target_dimensions": [512, 256],
+      "stock_flags": "0x18040002",
+      "stock_sha256": "AD720F9C55096D3CFED761F4583C3DAD13FFE5F3B45D2F51CC9AEEA5FF399D15",
+      "expected_output_sha256": "290C5CF7B46D5DF34D638DEED5D260146E950775BE3A06C433DA245F6AB5F947"
+    },
+    {
+      "id": "statue-globe-mk",
+      "group": "atlas-statue-globe",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_MK.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_MK.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_MK.dds",
+      "semantic": "mask",
+      "transform_mode": "statue_hero_mask",
+      "stock_dimensions": [256, 128],
+      "target_dimensions": [512, 256],
+      "stock_flags": "0x0",
+      "stock_sha256": "07694E25B1B18CC67533241544B89186DF41F0B208FC91A12CDC3F6F13DC2140",
+      "expected_output_sha256": "BEE753EA67ED12EAD2098A020136146C6CA6A3EBD4074B5D0064B381102AAA26"
+    },
+    {
+      "id": "statue-globe-m",
+      "group": "atlas-statue-globe",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_M.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_M.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Shared/Statue_Globe_02_M.dds",
+      "semantic": "base",
+      "transform_mode": "statue_hero_detail",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "DFA7D9A063BF7A0A39A6D541B80635DB967D2C05A53569DDC07B60683A8D90CF",
+      "expected_output_sha256": "155D64D31CF2C68E603B94135CCDD1B11BF16292077511F16C529DFD69B21D8D"
+    },
+    {
+      "id": "statue-body-d",
+      "group": "atlas-statue-body",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Statue_Globe_01_D.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Statue_Globe_01_D.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Male/Statue_Globe_01_D.dds",
+      "semantic": "base",
+      "transform_mode": "statue_hero_albedo",
+      "detail_source": "statue-body-n",
+      "detail_strength": 16.0,
+      "albedo_contrast": 1.25,
+      "albedo_gain": 1.10,
+      "stock_dimensions": [256, 256],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "12C0A44019A766D41BACF2D1F313A01E02E9398D8B12B80B6D136C14641FE01B",
+      "expected_output_sha256": "7E217ADC8E936AF6FF907289AEBE8E558D1ACD67CF06E98355E94AB90578F464"
+    },
+    {
+      "id": "statue-body-ao",
+      "group": "atlas-statue-body",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_AO.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_AO.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_AO.dds",
+      "semantic": "base",
+      "transform_mode": "statue_hero_detail",
+      "stock_dimensions": [512, 512],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x0",
+      "stock_sha256": "3895D914C2A1B8DC3D12517E5023EB5358F5A17409D73E19C378382BD359C205",
+      "expected_output_sha256": "20BDB65BEDD1EB050F74E855B2F5C628EABAB1EAFF01815C212E737E1BD9ED58"
+    },
+    {
+      "id": "statue-body-n",
+      "group": "atlas-statue-body",
+      "stock_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_N.texture",
+      "install_path": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_N.texture",
+      "stored_name": "texture_library/WORLD/city_zones/Hero_Statues/Male/Male_Statue_Atlas_N.dds",
+      "semantic": "normal_gloss",
+      "transform_mode": "statue_hero_normal",
+      "normal_strength": 1.20,
+      "stock_dimensions": [1024, 1024],
+      "target_dimensions": [1024, 1024],
+      "stock_flags": "0x18040000",
+      "stock_sha256": "BFE125F583A1C5706D946796180AE7FCC03455E5BE93073B121825E9F04780E9",
+      "expected_output_sha256": "2E4F5F52C0C41E06A69830EA5ADB425EF56D14CD79542310ED37A68EF116DDF5"
+    }
+  ]
+}

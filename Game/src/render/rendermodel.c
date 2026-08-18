@@ -31,6 +31,41 @@
 #include "render/rendershadowmap.h"
 #include "render/thread/rt_shadowmap.h"
 
+// Issue #31 Phase A diagnostic. This is restricted to the deterministic Atlas
+// statue capture and reports which resolved geometry asset supplied the model;
+// it does not alter model lookup or rendering.
+extern int is_pigged_path(const char *path);
+
+static void atlasGeometryPilotTrace(const Model *model)
+{
+    char resolved[MAX_PATH];
+    char loose_path[MAX_PATH];
+    const char *kind;
+
+    if (!model || !model->name || !model->filename ||
+        !game_state.glslPilot || game_state.capture_state == 0 || game_state.capture_state == 3 ||
+        stricmp(game_state.capture_target, "AtlasHero_Statue_01") != 0 ||
+        !strstri(model->name, "_H_M_Statue_Atlas"))
+        return;
+
+    if (fileLocateWrite(model->filename, loose_path) &&
+        !is_pigged_path(loose_path) && fileExists(loose_path))
+    {
+        strcpy_s(resolved, sizeof(resolved), loose_path);
+    }
+    else if (!fileLocateRead(model->filename, resolved))
+    {
+        printf("GEOMETRYPILOT: model=%s source=%s kind=NOT_FOUND resolved=NOT_FOUND\n",
+               model->name, model->filename);
+        return;
+    }
+
+    kind = is_pigged_path(resolved) ? "pigg" : "loose";
+    printf("GEOMETRYPILOT: model=%s source=%s kind=%s resolved=%s verts=%d tris=%d\n",
+           model->name, model->filename, kind, resolved,
+           model->vert_count, model->tri_count);
+}
+
 // Issue #20/#21 texture-pilot diagnostic. This is deliberately limited to
 // explicit capture targets and one line per distinct material bind so asset
 // inspection cannot turn into a whole-map texture catalog in ordinary runs.
@@ -121,6 +156,7 @@ static void texturePilotTraceGeometry(const ViewSortNode *vs)
            lod_index, lod_count, lod ? lod->lod_near : 0.0f,
            lod ? lod->lod_far : 0.0f, lod ? lod->max_error : 0.0f,
            lod && lod->lod_modelname ? lod->lod_modelname : "?");
+    atlasGeometryPilotTrace(model);
 }
 
 static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind *bind,

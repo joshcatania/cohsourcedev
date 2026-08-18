@@ -1,0 +1,15 @@
+{
+  "baseline": "#29 packed comparison",
+  "current": "#29 plus geometry comparison",
+  "passed": true,
+  "verdict": "PASS",
+  "compareWidth": 320,
+  "sampledPixels": 56640,
+  "changedPixels": 1200,
+  "changedPercent": 2.1186,
+  "meanDelta": 1.9906,
+  "maxDelta": 218,
+  "pixelTolerance": 12,
+  "maxChangedPercent": 6,
+  "interpretation": "The geometry change is localized to the statue while the same-window control remains within the harness limit."
+}
