@@ -4,6 +4,7 @@
 #include "render/model_cache.h"
 #include "render/thread/ogl.h"
 #include <stdio.h>
+#include "seq/AutoLOD.h"
 #include "seq/tricks.h"
 #include <utilitieslib/utils/error.h>
 #include <utilitieslib/utils/memcheck.h>
@@ -64,6 +65,64 @@ static int texturePilotTargetEnabled(void)
            strnicmp(game_state.capture_target, "AtlasHero_", 10) == 0;
 }
 
+static void texturePilotTraceGeometry(const ViewSortNode *vs)
+{
+    static Model *seen[128];
+    static int seen_count;
+    Model *model;
+    Model *source_model;
+    ModelLODInfo *lod_info;
+    Vec3 world_mid;
+    int i;
+    int lod_index = -1;
+    int lod_count = 0;
+    AutoLOD *lod = NULL;
+
+    if (!vs || !(model = vs->model))
+        return;
+
+    for (i = 0; i < seen_count; ++i)
+        if (seen[i] == model)
+            return;
+    if (seen_count >= ARRAY_SIZE(seen))
+        return;
+    seen[seen_count++] = model;
+
+    source_model = model->srcmodel ? model->srcmodel : model;
+    lod_info = source_model->lod_info ? source_model->lod_info : model->lod_info;
+    if (source_model->lod_models)
+    {
+        lod_count = eaSize(&source_model->lod_models);
+        for (i = 0; i < lod_count; ++i)
+        {
+            if (source_model->lod_models[i] && source_model->lod_models[i]->model == model)
+            {
+                lod_index = i;
+                break;
+            }
+        }
+    }
+    if (lod_info)
+    {
+        int metadata_count = eaSize(&lod_info->lods);
+        if (!lod_count)
+            lod_count = metadata_count;
+        if (lod_index >= 0 && lod_index < metadata_count)
+            lod = lod_info->lods[lod_index];
+    }
+
+    mulVecMat4(vs->mid, cam_info.inv_viewmat, world_mid);
+    printf("TEXTUREPILOT: geometry model=%s source=%s verts=%d tris=%d texCount=%d radius=%.3f boundsMin=(%.3f %.3f %.3f) boundsMax=(%.3f %.3f %.3f) worldMid=(%.3f %.3f %.3f) lodIndex=%d lodCount=%d lodNear=%.3f lodFar=%.3f lodError=%.3f lodModel=%s\n",
+           model->name ? model->name : "?", model->filename ? model->filename : "?",
+           model->vert_count, model->tri_count, model->tex_count, model->radius,
+           model->min[0], model->min[1], model->min[2],
+           model->max[0], model->max[1], model->max[2],
+           world_mid[0], world_mid[1], world_mid[2],
+           lod_index, lod_count, lod ? lod->lod_near : 0.0f,
+           lod ? lod->lod_far : 0.0f, lod ? lod->max_error : 0.0f,
+           lod && lod->lod_modelname ? lod->lod_modelname : "?");
+}
+
 static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind *bind,
                                   const RdrTexList *texlist)
 {
@@ -81,6 +140,7 @@ static void texturePilotTraceBind(const ViewSortNode *vs, int tex_index, TexBind
         return;
     seen[seen_count++] = bind;
 
+    texturePilotTraceGeometry(vs);
     printf("TEXTUREPILOT: bind=%s dirname=%s blendShader=%d blendBits=0x%x model=%s submesh=%d mid=(%.2f %.2f %.2f)\n",
            bind->name ? bind->name : "?", bind->dirname ? bind->dirname : "?",
            (int)texlist->blend_mode.shader, (unsigned)texlist->blend_mode.blend_bits,

@@ -2344,6 +2344,9 @@ static const CaptureShot s_captureShots[] = {
     { "AtlasHero_East_01",      "500.00 120.00 -800.00 0.1220 1.5778 0.0000",  "30", 16, 1 },
     { "AtlasHero_North_01",     "500.00 120.00 -800.00 0.1220 3.1486 0.0000",  "30", 16, 1 },
     { "AtlasHero_West_01",      "500.00 120.00 -800.00 0.1220 -1.5703 0.0000", "30", 16, 1 },
+    // Issue #29 additive hero-asset authoring view. Keep the established
+    // AtlasPlaza and AtlasHero regression/authoring identities unchanged.
+    { "AtlasHero_Statue_01",    "100.00 120.00 -650.00 0.2000 0.0000 0.0000",  "30", 16, 1 },
     // First non-Atlas regression shot: Founders Falls canals. Reaching map
     // 10 exercises the mapmove capture path, and the view deterministically
     // binds alphaDetail (fragment 68), the fancy-water material (fragment
@@ -2507,6 +2510,10 @@ static void game_processCapture(void)
             {
                 game_startupTrace("capture.camera.fixed");
             }
+            game_startupTracef("capture.camera.state cam=%.2f %.2f %.2f pyr=%.4f %.4f %.4f target=%.4f %.4f %.4f",
+                               cam_info.cammat[3][0], cam_info.cammat[3][1], cam_info.cammat[3][2],
+                               cam_info.pyr[0], cam_info.pyr[1], cam_info.pyr[2],
+                               cam_info.targetPYR[0], cam_info.targetPYR[1], cam_info.targetPYR[2]);
             game_state.capture_frame_count = 1;
             return;
         }
@@ -2518,6 +2525,10 @@ static void game_processCapture(void)
         if (++game_state.capture_frame_count < 300)
             return;
 
+        game_startupTracef("capture.camera.screenshot-state cam=%.2f %.2f %.2f pyr=%.4f %.4f %.4f target=%.4f %.4f %.4f",
+                           cam_info.cammat[3][0], cam_info.cammat[3][1], cam_info.cammat[3][2],
+                           cam_info.pyr[0], cam_info.pyr[1], cam_info.pyr[2],
+                           cam_info.targetPYR[0], cam_info.targetPYR[1], cam_info.targetPYR[2]);
         sprintf_s(SAFESTR(command), "screenshottitle %s", game_state.capture_target);
         game_startupTrace("capture.screenshot.request");
         cmdParse(command);

@@ -1,0 +1,17 @@
+Issue #29 additive capture: AtlasHero_Statue_01
+Source run: agent/logs/capture-AtlasHero_Statue_01-20260818-155949.stdout.log
+
+TEXTUREPILOT: geometry model=_H_M_Statue_Atlas_Giant source=object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo verts=2955 tris=4608 texCount=2 radius=294.210 boundsMin=(-119.946 -0.544 -80.133) boundsMax=(61.035 291.595 100.294) worldMid=(132.505 173.664 -312.919) lodIndex=-1 lodCount=3 lodNear=0.000 lodFar=0.000 lodError=0.000 lodModel=?
+TEXTUREPILOT: bind=X_Male_Statue_Atlas_Globe_01 dirname=TRICKS/HERO_STATUES.TXT blendShader=8 blendBits=0x0 model=_H_M_Statue_Atlas_Giant submesh=0 mid=(32.51 61.92 -345.59)
+TEXTUREPILOT: bind=X_Male_Statue_Atlas_01 dirname=TRICKS/HERO_STATUES.TXT blendShader=8 blendBits=0x4 model=_H_M_Statue_Atlas_Giant submesh=1 mid=(32.51 61.92 -345.59)
+
+Candidate loose-override bind dimensions (all actual=same):
+BASE1/BASE2 Statue_Globe_02_D 1024x512 flags=0x40 texopt=0x2
+BUMPMAP1/2 Statue_Globe_02_N 512x256 flags=0x41 texopt=0x18040002
+MASK Statue_Globe_02_MK 512x256 flags=0x40
+MULTIPLY2 Statue_Globe_02_M 1024x1024 flags=0x40
+BASE1/BASE2 Statue_Globe_01_D 1024x1024 flags=0x41
+MULTIPLY1 Male_Statue_Atlas_AO 1024x1024 flags=0x40
+BUMPMAP1/2 Male_Statue_Atlas_N 1024x1024 flags=0x41 texopt=0x18040000
+
+The same source model also emitted _H_M_Statue_Atlas_Giant_LOD_01 at 1694 verts / 2442 tris with lodCount=2 during the authoring probe. The runtime line reports lodIndex=-1 and zero thresholds, so the evidence records the selected draw and reported LOD count without claiming unresolved threshold/index metadata.

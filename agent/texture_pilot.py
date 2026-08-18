@@ -122,6 +122,108 @@ def make_normal_gloss(image: Image.Image) -> tuple[Image.Image, dict]:
     return make_normal_gloss_to(image, (128, 128))
 
 
+def make_statue_hero_albedo(
+    image: Image.Image,
+    target: tuple[int, int],
+    detail_image: Image.Image | None,
+    detail_strength: float,
+    albedo_contrast: float,
+    albedo_gain: float,
+) -> tuple[Image.Image, dict]:
+    """Restore an authored albedo using the statue's existing surface data.
+
+    The statue's diffuse layers are unusually small relative to the model. A
+    plain resize would only move the same blur to a larger container, so the
+    hero path combines a restrained albedo restoration with a low-amplitude
+    high-pass luminance cue derived from the already-authored normal/AO layer.
+    It does not synthesize new UV islands or invent color; alpha remains a
+    nearest-neighbor copy of the source.
+    """
+    source = image.convert("RGBA")
+    restored = make_base_to(source, target)
+    rgb = np.asarray(restored.convert("RGB"), dtype=np.float32)
+    if detail_image is None:
+        detail = source.convert("L")
+    else:
+        detail = detail_image.convert("L")
+    detail = detail.resize(target, Image.Resampling.LANCZOS)
+    detail = detail.filter(ImageFilter.GaussianBlur(radius=0.75))
+    detail_values = np.asarray(detail, dtype=np.float32)
+    low_values = np.asarray(detail.filter(ImageFilter.GaussianBlur(radius=2.25)), dtype=np.float32)
+    high_values = detail_values - low_values
+    detail_std = float(high_values.std())
+    if detail_std > 1e-4 and detail_strength:
+        cue = np.clip(high_values / detail_std * float(detail_strength), -24.0, 24.0)
+        rgb += cue[:, :, None]
+    rgb = 127.5 + (rgb - 127.5) * float(albedo_contrast)
+    rgb *= float(albedo_gain)
+    output_rgb = np.clip(rgb, 0.0, 255.0).astype(np.uint8)
+    output = Image.fromarray(
+        np.dstack((output_rgb, np.asarray(source.getchannel("A").resize(target, Image.Resampling.NEAREST)))),
+        mode="RGBA",
+    )
+    return output, {
+        "operation": "statue-hero-albedo-restoration",
+        "detail_strength": float(detail_strength),
+        "albedo_contrast": float(albedo_contrast),
+        "albedo_gain": float(albedo_gain),
+        "detail_highpass_std": detail_std,
+        "alpha_policy": "nearest-preserve",
+    }
+
+
+def make_statue_hero_normal(
+    image: Image.Image,
+    target: tuple[int, int],
+    normal_strength: float,
+) -> tuple[Image.Image, dict]:
+    """Resize/restore an authored normal while preserving its gloss alpha."""
+    source = np.asarray(image, dtype=np.uint8)
+    encoded = source[:, :, :3].astype(np.float32)
+    vectors = encoded / 127.5 - 1.0
+    resized = np.empty((target[1], target[0], 3), dtype=np.float32)
+    for channel in range(3):
+        component = Image.fromarray(vectors[:, :, channel], mode="F")
+        resized[:, :, channel] = np.asarray(component.resize(target, Image.Resampling.LANCZOS), dtype=np.float32)
+    lengths = np.linalg.norm(resized, axis=2, keepdims=True)
+    lengths = np.maximum(lengths, np.finfo(np.float32).eps)
+    normalized = resized / lengths
+    neutral = np.zeros_like(normalized)
+    neutral[:, :, 2] = 1.0
+    strengthened = neutral + (normalized - neutral) * float(normal_strength)
+    strengthened /= np.maximum(np.linalg.norm(strengthened, axis=2, keepdims=True), np.finfo(np.float32).eps)
+    out_rgb = np.clip((strengthened * 0.5 + 0.5) * 255.0, 0.0, 255.0).astype(np.uint8)
+    alpha = np.asarray(image.getchannel("A").resize(target, Image.Resampling.NEAREST), dtype=np.uint8)
+    output = Image.fromarray(np.dstack((out_rgb, alpha)), mode="RGBA")
+    return output, {
+        "operation": "statue-hero-vector-normal-restoration",
+        "normal_strength": float(normal_strength),
+        "gloss_alpha_policy": "nearest-preserve",
+        "vector_length_min": float(np.linalg.norm(strengthened, axis=2).min()),
+        "vector_length_max": float(np.linalg.norm(strengthened, axis=2).max()),
+    }
+
+
+def make_statue_hero_detail(
+    image: Image.Image,
+    target: tuple[int, int],
+) -> tuple[Image.Image, dict]:
+    """Restore authored material detail after resizing without inventing pixels."""
+    source = image.convert("RGBA")
+    restored = make_base_to(source, target)
+    sharpened = restored.convert("RGB").filter(ImageFilter.UnsharpMask(radius=1.05, percent=75, threshold=3))
+    output = Image.fromarray(
+        np.dstack((np.asarray(sharpened, dtype=np.uint8), np.asarray(source.getchannel("A").resize(target, Image.Resampling.NEAREST)))),
+        mode="RGBA",
+    )
+    return output, {
+        "operation": "statue-hero-detail-restoration",
+        "resize_filter": "lanczos",
+        "detail_filter": "unsharp-radius-1.05-percent-75-threshold-3",
+        "alpha_policy": "nearest-preserve",
+    }
+
+
 def write_tga(image: Image.Image, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     image.save(path, format="TGA")
@@ -318,6 +420,11 @@ def _manifest_image(
     semantic: str,
     target: tuple[int, int],
     transform_mode: str = "upscale_2x",
+    detail_image: Image.Image | None = None,
+    detail_strength: float = 0.0,
+    normal_strength: float = 1.0,
+    albedo_contrast: float = 1.0,
+    albedo_gain: float = 1.0,
 ) -> tuple[Image.Image, dict]:
     if transform_mode == "upscale_2x":
         if semantic == "base":
@@ -349,6 +456,33 @@ def _manifest_image(
                 "output_alpha": alpha_values(output),
                 "restoration": "exact-pixel-preserve",
             }
+    elif transform_mode == "statue_hero_albedo":
+        if semantic != "base":
+            raise ValueError("statue_hero_albedo requires base semantic")
+        return make_statue_hero_albedo(
+            image,
+            target,
+            detail_image,
+            detail_strength,
+            albedo_contrast,
+            albedo_gain,
+        )
+    elif transform_mode == "statue_hero_normal":
+        if semantic != "normal_gloss":
+            raise ValueError("statue_hero_normal requires normal_gloss semantic")
+        return make_statue_hero_normal(image, target, normal_strength)
+    elif transform_mode == "statue_hero_mask":
+        if semantic != "mask":
+            raise ValueError("statue_hero_mask requires mask semantic")
+        output = make_mask_to(image, target)
+        return output, {
+            "operation": "statue-hero-authored-mask-nearest",
+            "alpha_policy": "nearest-preserve",
+        }
+    elif transform_mode == "statue_hero_detail":
+        if semantic != "base":
+            raise ValueError("statue_hero_detail requires base semantic")
+        return make_statue_hero_detail(image, target)
     else:
         raise ValueError(f"unsupported manifest transform mode: {transform_mode}")
     raise ValueError(f"unsupported manifest semantic: {semantic}")
@@ -409,12 +543,38 @@ def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, 
         elif transform_mode == "restore_same_resolution":
             if target != (info["width"], info["height"]):
                 raise ValueError(f"entry {entry['id']} restoration changes dimensions")
+        elif transform_mode in (
+            "statue_hero_albedo",
+            "statue_hero_normal",
+            "statue_hero_mask",
+            "statue_hero_detail",
+        ):
+            if max(target) > 1024:
+                raise ValueError(f"entry {entry['id']} exceeds the 1024-pixel hero cap")
         else:
             raise ValueError(f"unsupported transform mode for {entry['id']}: {transform_mode}")
         if max(target) > 1024:
             raise ValueError(f"entry {entry['id']} exceeds the 1024-pixel pilot cap")
 
-        transformed, transform_metrics = _manifest_image(image, entry["semantic"], target, transform_mode)
+        detail_image = None
+        detail_source = entry.get("detail_source")
+        if detail_source:
+            detail_entry = next((item for item in entries if item.get("id") == detail_source), None)
+            if detail_entry is None:
+                raise ValueError(f"detail source is not present for {entry['id']}: {detail_source}")
+            detail_path = stock_root / Path(detail_entry["stock_path"])
+            detail_image = image_from_texture(texture_info(detail_path))
+        transformed, transform_metrics = _manifest_image(
+            image,
+            entry["semantic"],
+            target,
+            transform_mode,
+            detail_image=detail_image,
+            detail_strength=float(entry.get("detail_strength", 0.0)),
+            normal_strength=float(entry.get("normal_strength", 1.0)),
+            albedo_contrast=float(entry.get("albedo_contrast", 1.0)),
+            albedo_gain=float(entry.get("albedo_gain", 1.0)),
+        )
         package_relative = Path("texture_library") / "TexturePilotInputs" / f"{entry['id']}.tga"
         package_tga = package_root / package_relative
         write_tga(transformed, package_tga)
@@ -453,11 +613,24 @@ def generate_manifest(manifest_path: Path, stock_root: Path, output_root: Path, 
             raise ValueError(f"generated flags changed for {entry['id']}")
         output_alpha = alpha_values(output_image)
         source_info = texture_info(stock_root / Path(entry["stock_path"]))
+        detail_image = None
+        detail_source = entry.get("detail_source")
+        if detail_source:
+            detail_entry = next((item for item in entries if item.get("id") == detail_source), None)
+            if detail_entry is None:
+                raise ValueError(f"detail source is not present for {entry['id']}: {detail_source}")
+            detail_path = stock_root / Path(detail_entry["stock_path"])
+            detail_image = image_from_texture(texture_info(detail_path))
         transformed, _ = _manifest_image(
             image_from_texture(source_info),
             entry["semantic"],
             tuple(entry["target_dimensions"]),
             entry.get("transform_mode", "upscale_2x"),
+            detail_image=detail_image,
+            detail_strength=float(entry.get("detail_strength", 0.0)),
+            normal_strength=float(entry.get("normal_strength", 1.0)),
+            albedo_contrast=float(entry.get("albedo_contrast", 1.0)),
+            albedo_gain=float(entry.get("albedo_gain", 1.0)),
         )
         alpha_codec = _alpha_codec_metrics(transformed, output_image)
         if (
