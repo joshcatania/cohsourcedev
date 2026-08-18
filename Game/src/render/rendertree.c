@@ -913,9 +913,10 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
     Vec3 min_ws, max_ws;
     Mat4 matModelToWorld;
     F32 score;
+    static bool s_waterTraceNoted = false;
 
     assert(waterModel && (waterModel->flags & OBJ_FANCYWATER));
-    
+
     // Reset the blend mode if the water mode changed
     if ((game_state.waterMode >  WATER_OFF && waterModel->tex_binds[0]->bind_blend_mode.shader != BLENDMODE_WATER) ||
         (game_state.waterMode == WATER_OFF && waterModel->tex_binds[0]->bind_blend_mode.shader == BLENDMODE_WATER))
@@ -947,6 +948,14 @@ static INLINEDBG void addViewSortNode_Water(Model *waterModel, const Mat4 mat)
 
     // calculate the reflection score for this water model
     score = calculateQuadReflectionScore(eye_bounds[7], eye_bounds[6], eye_bounds[3], eye_bounds[2], true);
+
+    // One-shot diagnostic for the GLSL pilot water coverage investigation.
+    if (game_state.glslPilot && !s_waterTraceNoted)
+    {
+        s_waterTraceNoted = true;
+        printf("WATERTRACE: addViewSortNode_Water first entry model=%s waterMode=%d score=%e\n",
+               waterModel->name ? waterModel->name : "(null)", game_state.waterMode, score);
+    }
 
     // grab the water plane of the water model closest to the camera
     if (score > gfx_state.waterReflectionScore)

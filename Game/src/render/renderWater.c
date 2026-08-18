@@ -104,6 +104,9 @@ void rdrWaterGrabBuffer(bool doReflection)
     int wantHandles = 0;
     int wantDepthHandles = 0;
     static int recreate = 0;
+    static bool trace_initialized = false;
+    static void *last_water_reflection_pbuffer = NULL;
+    static bool last_do_reflection = false;
     int screen_width, screen_height, texture_width, texture_height;
 
     wantHandles = (game_state.waterMode > WATER_OFF) ? game_state.sliFBOs : 0;
@@ -177,6 +180,20 @@ void rdrWaterGrabBuffer(bool doReflection)
     water_params.screen_height = screen_height;
     water_params.water_reflection_pbuffer = (water_reflection_requested && doReflection) ? viewport_GetPBuffer(&water_reflection_viewport) : NULL;
     water_params.generic_reflection_pbuffer = (generic_reflection_requested && doReflection) ? viewport_GetPBuffer(&generic_reflection_viewport) : NULL;
+    if (game_state.glslPilot &&
+        (!trace_initialized ||
+         last_water_reflection_pbuffer != (void *)water_params.water_reflection_pbuffer ||
+         last_do_reflection != doReflection))
+    {
+        printf("WATERTRACE: water params mode=%d reflectionEnable=%d requested=%d doReflection=%d pbuffer=%p screen=%dx%d\n",
+               game_state.waterMode, game_state.reflectionEnable,
+               water_reflection_requested ? 1 : 0, doReflection ? 1 : 0,
+               (void *)water_params.water_reflection_pbuffer,
+               screen_width, screen_height);
+        trace_initialized = true;
+        last_water_reflection_pbuffer = (void *)water_params.water_reflection_pbuffer;
+        last_do_reflection = doReflection;
+    }
     rdrQueue(DRAWCMD_WATERSETPARAMS,&water_params,sizeof(water_params));
 }
 
@@ -517,6 +534,10 @@ void requestReflection(void)
 {
     static Vec4 s_lastframe_water_reflection_plane;
     static Vec4 s_lastframe_reflection_plane;
+    static bool trace_initialized = false;
+    static bool last_water_possible = false;
+    static bool last_do_water = false;
+    static bool last_requested = false;
 
     bool doGenericReflection = false;
     bool doWaterReflection = false;
@@ -665,6 +686,23 @@ void requestReflection(void)
 
     reflection_plane_params.generic_reflection_active = doGenericReflection;
     reflection_plane_params.water_reflection_active = doWaterReflection || doSimpleWaterReflection;
+
+    if (game_state.glslPilot &&
+        (!trace_initialized || last_water_possible != water_reflection_possible ||
+         last_do_water != (doWaterReflection || doSimpleWaterReflection) ||
+         last_requested != water_reflection_requested))
+    {
+        printf("WATERTRACE: reflection decision mode=%d reflectionEnable=%d candidate=%d doWater=%d simple=%d requested=%d separate=%d\n",
+               game_state.waterMode, game_state.reflectionEnable,
+               water_reflection_possible ? 1 : 0,
+               doWaterReflection ? 1 : 0, doSimpleWaterReflection ? 1 : 0,
+               water_reflection_requested ? 1 : 0,
+               game_state.separate_reflection_viewport ? 1 : 0);
+        trace_initialized = true;
+        last_water_possible = water_reflection_possible;
+        last_do_water = doWaterReflection || doSimpleWaterReflection;
+        last_requested = water_reflection_requested;
+    }
 
     gfx_state.reflectionCandidateScore = -FLT_MAX;
     gfx_state.waterReflectionScore = -FLT_MAX;

@@ -771,6 +771,25 @@ static bool isVariantSupported( int shader, int bmb )
     return true;
 }
 
+// One-line dump of the water/multitex capability bits for the FEATTRACE
+// startup diagnostics (water port investigation; see docs/agent-status.md).
+static void traceFeatureState(const char *where)
+{
+    printf("FEATTRACE: %s allowed[water=%d multi=%d multiDual=%d bump=%d cubemap=%d] features[water=%d multi=%d bump=%d cubemap=%d] waterMode=%d reflectionEnable=%d\n",
+           where,
+           (rdr_caps.allowed_features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_MULTITEX_DUAL) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_BUMPMAPS) ? 1 : 0,
+           (rdr_caps.allowed_features & GFXF_CUBEMAP) ? 1 : 0,
+           (rdr_caps.features & GFXF_WATER) ? 1 : 0,
+           (rdr_caps.features & GFXF_MULTITEX) ? 1 : 0,
+           (rdr_caps.features & GFXF_BUMPMAPS) ? 1 : 0,
+           (rdr_caps.features & GFXF_CUBEMAP) ? 1 : 0,
+           game_state.waterMode,
+           game_state.reflectionEnable);
+}
+
 // If compilation fails then disable problem feature variations
 // this will disable features for whatever bits are set, though
 // generally you would want to do it one bit at time as you
@@ -781,6 +800,9 @@ static bool isVariantSupported( int shader, int bmb )
 // failure as needed or desired.
 static void disableVariantFeature( int shader, int bmb )
 {
+    // Feature strips must never be silent: they gate downstream
+    // material selection (e.g. water texopts need GFXF_MULTITEX).
+    printf("FEATTRACE: disableVariantFeature shader=%d bmb=%d\n", shader, bmb);
     // MULTI has the most variations and the most can go wrong
     // with support for it
     if (shader == BLENDMODE_MULTI)
@@ -906,6 +928,7 @@ void shaderMgr_InitFPs(void)
     //****
     // Compile the shaders for each base material and its variations
     PERFINFO_AUTO_STOP_START("CompileShaderVariations", 1);
+    traceFeatureState("InitFPs.compile-loop.begin");
     for ( i_shader = 0; i_shader < BLENDMODE_NUMENTRIES; ++i_shader )
     {
         int bmb, bmb_prev = 0;
@@ -938,6 +961,26 @@ void shaderMgr_InitFPs(void)
     // Compile special effects shaders used by rt_effects
     PERFINFO_AUTO_STOP_START("loadProgram:specialEffects", 1);
     {
+        // exact id->(mode,variant) mapping for the pilot's coverage diagnostic
+        if ( game_state.glslPilot )
+        {
+            static const char* s_blendModeNames[BLENDMODE_NUMENTRIES] = {
+                "modulate", "multiply", "colorBlendDual", "addGlow", "alphaDetail",
+                "bumpmapMultiply", "bumpmapColorblendDual", "water", "multi9", "sunflare"
+            };
+            for ( i = 0; i < BLENDMODE_NUMENTRIES; ++i )
+            {
+                int bmb;
+                for ( bmb = 0; bmb < BMB_VARIANT_COUNT; ++bmb )
+                {
+                    if ( g_shaderMgrFragmentProgramVariants[i][bmb] )
+                    {
+                        printf( "GLSL pilot: fragment variant %s[%d] id %d\n",
+                                s_blendModeNames[i], bmb, g_shaderMgrFragmentProgramVariants[i][bmb] );
+                    }
+                }
+            }
+        }
         char shaderRelativePath[128];
         U32 compileFlags = 0;
         char* shaderExtraDefineSet = NULL;
@@ -945,18 +988,31 @@ void shaderMgr_InitFPs(void)
             if(shaderExtraDefineSet)
                 addDefineSet(shaderExtraDefineSet);
             loadProgram(
-                    compileFlags, 
-                    shaderRelativePath, 
-                    kShaderPgmType_FRAGMENT, 
+                    compileFlags,
+                    shaderRelativePath,
+                    kShaderPgmType_FRAGMENT,
                     ( bUseCG ) ? 0 : GL_FRAGMENT_PROGRAM_ARB,
                     shaderEffectsPrograms[i]
                 );
+            // exact id->name mapping for the pilot's coverage diagnostic
+            // (the ids are allocated in one contiguous batch, but the base
+            // depends on everything loaded before this pass; the per-index
+            // extra defines are listed in rt_effects.c's tables)
+            if ( game_state.glslPilot )
+            {
+                printf( "GLSL pilot: effects shader %d (%s) id %d\n", i,
+                    shaderRelativePath, shaderEffectsPrograms[i] );
+            }
         }
+        rt_effects_registerGlslPilotTargets();
     }
 
     // Disable features that failed to compile and load
     if (!executedOnce) // do not disable features on shader reload
+    {
         rdr_caps.features &= rdr_caps.allowed_features;
+        traceFeatureState("InitFPs.end");
+    }
 
     // the GLSL pilot renders these materials; ids are regenerated on every
     // shader reload so re-register after each compile pass
@@ -965,6 +1021,30 @@ void shaderMgr_InitFPs(void)
     rt_glslpilot_setFragmentTarget( kPilotMaterial_ColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_COLORBLEND_DUAL][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AddGlow, g_shaderMgrFragmentProgramVariants[BLENDMODE_ADDGLOW][0] );
     rt_glslpilot_setFragmentTarget( kPilotMaterial_AlphaDetail, g_shaderMgrFragmentProgramVariants[BLENDMODE_ALPHADETAIL][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDual, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpColorBlendDualHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_COLORBLEND_DUAL][BMB_HIGH_QUALITY] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_BumpMultiply, g_shaderMgrFragmentProgramVariants[BLENDMODE_BUMPMAP_MULTIPLY][0] );
+    // water variant 0 (BMB_DEFAULT: refraction, no planar reflection / shadow);
+    // only present in the variant table when GFXF_WATER survives startup
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Water, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][0] );
+    // water BIT_SHADOWMAP: resolve the generated program symbolically so the
+    // pilot follows shader reloads and feature-dependent program ids.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterShadow, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_SHADOWMAP] );
+    // water BIT_PLANAR_REFLECTION: this is intentionally separate from the
+    // combined BMB_SHADOWMAP | BMB_PLANAR_REFLECTION permutation.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterPlanar, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_PLANAR_REFLECTION] );
+    // water combined shadow + planar reflection: resolve the generated target
+    // from the symbolic bitmask rather than a historical program number.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_WaterShadowPlanar, g_shaderMgrFragmentProgramVariants[BLENDMODE_WATER][BMB_SHADOWMAP | BMB_PLANAR_REFLECTION] );
+    // multi9: the five static-map variants that bind with shaderDetail=3 and
+    // no cubemap/shadowmap support — full, full HQ, single, single HQ,
+    // building. The remaining variants (cubemap/planar/shadow/reduced) stay
+    // on the ARB path.
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Full, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][0] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9FullHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_HIGH_QUALITY] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Single, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_SINGLE_MATERIAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9SingleHQ, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_HIGH_QUALITY | BMB_SINGLE_MATERIAL] );
+    rt_glslpilot_setFragmentTarget( kPilotMaterial_Multi9Building, g_shaderMgrFragmentProgramVariants[BLENDMODE_MULTI][BMB_BUILDING] );
 
     executedOnce = 1;
     PERFINFO_AUTO_STOP();
@@ -1210,6 +1290,8 @@ void shaderMgr_InitVPs(void)
 
     if (!executedOnce) // do not disable features on shader reload
     {
+        printf("FEATTRACE: InitVPs.load-results multiOkay=%d multiHqOkay=%d hqOkay=%d waterOkay=%d\n",
+               multiOkay ? 1 : 0, multiHqOkay ? 1 : 0, hqOkay ? 1 : 0, waterOkay ? 1 : 0);
         if (!multiOkay)
             rdr_caps.allowed_features &= ~(GFXF_MULTITEX|GFXF_MULTITEX_DUAL|GFXF_MULTITEX_HQBUMP);
         if (!multiHqOkay)
@@ -1221,6 +1303,7 @@ void shaderMgr_InitVPs(void)
 
         // Disable features that failed to load
         rdr_caps.features &= rdr_caps.allowed_features;
+        traceFeatureState("InitVPs.end");
     }
 
     executedOnce = 1;
@@ -1228,18 +1311,43 @@ void shaderMgr_InitVPs(void)
     loadProgramCacheReset(false); // Destroy temporary caches
     PERFINFO_AUTO_STOP();
 
-    // Register the simple-material vertex variants the GLSL pilot replicates
-    // (from the sVertexProgramTbl rows using vp_master_vp.cg). The mode values
-    // are the variants.cgh VERTEX_LIT constants: FF_UNLIT_GL=5, FF_LIT_GL=4,
+    // Register the vertex variants the GLSL pilot replicates (from the
+    // sVertexProgramTbl rows using vp_master_vp.cg). The mode values are the
+    // variants.cgh VERTEX_LIT constants: FF_UNLIT_GL=5, FF_LIT_GL=4,
     // VERT_COLOR=1. All of these rows are SKIN=0 TC_XFORM=TC_MATRIX
-    // REFLECT=FAUX_0_1, which is what the pilot's vertex shader implements.
+    // REFLECT=FAUX_0_1, which is what the pilot's dualtex vertex shader
+    // implements. The bump_dual row (static geometry) and skin_bump row
+    // (boned models: player/NPC costumes) both feed the bumpColorBlendDual
+    // pilot material through its skinning-switch vertex shader; their HQ
+    // siblings (shaderMgrVertexProgramsHQ, same variants compiled with
+    // BIT_HIGH_QUALITY) feed the HQ pilot material.
     rt_glslpilot_resetPrograms();
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_COLORONLY], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_FILL], 5 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_NORMALS], 4 );
-    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], 1 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_SPRITE], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_COLORONLY], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_FILL], kPilotVertexKind_DualTex, 5 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_NORMALS], kPilotVertexKind_DualTex, 4 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_DUALTEX_LIT_PP], kPilotVertexKind_DualTex, 1 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDual, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBump, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_DUALTEX], kPilotVertexKind_BumpDualHQ, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_SKINNED], kPilotVertexKind_SkinBumpHQ, 0 );
+    // the model-space bump variants that pair with bumpmapMultiply (the
+    // water-surface fallback material): bump.vp (outdoor, VERTEX_LIT=DIFFUSE)
+    // and bump_rgb.vp (ambient-group instances, VERTEX_LIT=PRELIT on ATTR11);
+    // the pilot's model-space bump vertex shader covers both behind its
+    // g_Prelit switch
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_NORMALS], kPilotVertexKind_BumpNormals, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_RGBS], kPilotVertexKind_BumpRGBS, 0 );
+    // the static FAUX_MULTI variant the water material and the multi9 pilot
+    // materials pair with: bump_dual_multi, VERTEX_LIT=PRELIT_WHITE (constant
+    // color); its BIT_HIGH_QUALITY sibling feeds the HQ multi9 variants (the
+    // RGBS baked-lighting and skinned multitex pairings stay on ARB)
+    rt_glslpilot_addVertexProgram( shaderMgrVertexPrograms[DRAWMODE_BUMPMAP_MULTITEX], kPilotVertexKind_BumpMulti, 0 );
+    rt_glslpilot_addVertexProgram( shaderMgrVertexProgramsHQ[DRAWMODE_BUMPMAP_MULTITEX], kPilotVertexKind_BumpMultiHQ, 0 );
+    // id 0 pairs the effects materials with the fixed-function vertex path
+    // (the pbuffer post-processing passes run with vertex programs disabled)
+    rt_glslpilot_addVertexProgram( 0, kPilotVertexKind_FixedFunction, 0 );
 }
 
 

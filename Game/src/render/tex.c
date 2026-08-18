@@ -887,6 +887,26 @@ static void texResetTrickBasedParametersComposite(TexBind *bind, bool forceFallb
 
     if (texopt_flags & TEXOPT_MULTITEX || (texopt_flags & TEXOPT_TREAT_AS_MULTITEX && !supportsMultiTex && texopt->fallback.useFallback))
     {
+        // One-shot-per-texopt diagnostic for the GLSL pilot water coverage
+        // investigation: why does the fancy-water bind decision differ
+        // between runs?
+        if (game_state.glslPilot && (texopt->model_flags & OBJ_FANCYWATER))
+        {
+            static const char *s_lastNoted[8] = {0};
+            int slot;
+            bool seen = false;
+            for (slot = 0; slot < 8; slot++)
+            {
+                if (s_lastNoted[slot] && s_lastNoted[slot] == texopt->name) { seen = true; break; }
+                if (!s_lastNoted[slot]) { s_lastNoted[slot] = texopt->name; break; }
+            }
+            if (!seen)
+            {
+                printf("WATERTRACE: texbind %s multiTexFeature=%d waterMode=%d multitexFlag=%d\n",
+                       texopt->name ? texopt->name : "?", supportsMultiTex ? 1 : 0,
+                       game_state.waterMode, (texopt_flags & TEXOPT_MULTITEX) ? 1 : 0);
+            }
+        }
         bind->tex_layers[TEXLAYER_BASE1] = texFindVerify(texopt->blend_names[BLEND_BASE1], white_tex, "Base1", trickFileName, trickName);
         if ((rdr_caps.features & GFXF_BUMPMAPS))
             bind->tex_layers[TEXLAYER_BUMPMAP1] = texFindVerify(texopt->blend_names[BLEND_BUMPMAP1], dummy_bump_tex, "BumpMap1", trickFileName, trickName);
@@ -1221,6 +1241,35 @@ void texResetAnisotropic(void)
 static char *basefolder=NULL;
 static int tex_load_header_count;
 
+// Issue #20: keep the packed-vs-loose asset gate observable without changing
+// the normal texture lookup path.  The trace is limited to the pinned capture
+// and the two vehicle layers being piloted.
+extern int is_pigged_path(const char *path);
+
+static void texturePilotTraceResolvedSource(const char *filename)
+{
+    char resolved[MAX_PATH];
+    const char *source;
+
+    if (!game_state.glslPilot || game_state.capture_state == 0 || game_state.capture_state == 3 ||
+        stricmp(game_state.capture_target, "FoundersCanal_01") != 0 ||
+        (stricmp(filename, "texture_library/NPCS/Vehicles/Car_Truck/Cubevan_side.texture") != 0 &&
+         stricmp(filename, "texture_library/NPCS/Vehicles/Car_COMMON/carsheen_bump_02.texture") != 0))
+    {
+        return;
+    }
+
+    if (!fileLocateRead(filename, resolved))
+    {
+        printf("TEXTUREPILOT: source file=%s resolved=NOT_FOUND\n", filename);
+        return;
+    }
+
+    source = is_pigged_path(resolved) ? "pigg" : "loose";
+    printf("TEXTUREPILOT: resolve mode=%d dataDir=%s\n", (int)FolderCacheGetMode(), fileDataDir());
+    printf("TEXTUREPILOT: source file=%s kind=%s resolved=%s\n", filename, source, resolved);
+}
+
 // texFillInBind: called from main thread only at load time
 int texFillInBind(char *filename, BasicTexture *bind) {
     TextureFileHeader tfh;
@@ -1249,6 +1298,8 @@ int texFillInBind(char *filename, BasicTexture *bind) {
         Errorf("Error opening texture file '%s'!", filename);
         return 1;
     }
+
+    texturePilotTraceResolvedSource(filename);
 
     tex_load_header_count++;
 

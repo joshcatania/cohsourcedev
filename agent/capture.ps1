@@ -9,7 +9,8 @@ param(
     # 0 = no Cg (precompiled ARB programs), 1 = Cg->ARB assembly (default),
     # 2 = Cg->GLSL. Passed to the client as -useCg.
     [int]$CgMode = -1,
-    # Extra client arguments appended verbatim, e.g. '-glslPilot 1'
+    # Extra client arguments appended verbatim, e.g. '-glslPilot 0' for a
+    # legacy ARB/Cg control capture. Omit the flag for the default hybrid mode.
     [string]$ExtraClientArgs = '',
     [switch]$Json
 )
@@ -51,6 +52,15 @@ function Get-LastStartupTrace {
     $last = $lines | Where-Object { $_ -match 'marker=' } | Select-Object -Last 1
     return @{ path=$latest.FullName; lastMarker=$last; tail=$lines; exists=$true; lastWriteTimeUtc=$latest.LastWriteTimeUtc.ToString('o') }
 }
+function Clear-CaptureCrashPrompt {
+    param([string]$ShadowRegistryPath)
+    foreach ($name in @('gameprogressuserstring','gameprogressdialogtype')) {
+        $path = Join-Path $ShadowRegistryPath $name
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+}
 function Get-ProcessSnapshot {
     param([int]$ProcessId, [string]$WorkingDirectory)
     try {
@@ -88,6 +98,22 @@ try {
     $missing = @($requiredProcesses | Where-Object { -not (Get-Process -Name $_ -ErrorAction SilentlyContinue) })
     if ($missing.Count -gt 0) { throw "Required shard processes are missing: $($missing -join ', ')" }
     if (Get-Process -Name 'Ouroboros' -ErrorAction SilentlyContinue) { throw 'An Ouroboros.exe process is already running' }
+    # The client persists graphics settings in a file-backed "shadow registry"
+    # (bin/registry-keys/...) and re-saves them on every clean exit, deriving
+    # shaderDetail from the run's feature bits. A single run that lost
+    # GFXF_MULTITEX (e.g. a transient shader-load failure) therefore poisons
+    # shaderdetail=0 permanently, which silently degrades every later capture
+    # (water surfaces fall back to bumpmapMultiply; multi9 stops binding).
+    # Pin both values before each launch so captures are deterministic.
+    $shadowReg = Join-Path $binRoot 'registry-keys/hkey_current_user/software/cryptic/coh'
+    if (Test-Path -LiteralPath $shadowReg) {
+        Set-Content -LiteralPath (Join-Path $shadowReg 'shaderdetail') -Value '3' -NoNewline
+        Set-Content -LiteralPath (Join-Path $shadowReg 'usewater') -Value '2' -NoNewline
+        # A timed-out client leaves its crash-progress prompt in the shadow
+        # registry. Clear it before the next headless launch so checkForCrash
+        # cannot wait forever on an unseen modal dialog.
+        Clear-CaptureCrashPrompt -ShadowRegistryPath $shadowReg
+    }
     $before = @{}
     Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.FullName]=$_.LastWriteTimeUtc }
     $arguments = @('-db','127.0.0.1','-authname',$AccountName,'-password',$Password,'-noverify','-quicklogin','1','-noversioncheck','-capture',$Target,'-fullscreen','0','-screen',$Width.ToString(),$Height.ToString(),'-stopinactivedisplay','0')
@@ -135,6 +161,7 @@ try {
         Stop-Process -Id $ouroPid -Force -ErrorAction SilentlyContinue
         Stop-Process -Id $client.Id -Force -ErrorAction SilentlyContinue
         Start-Sleep -Milliseconds 800
+        Clear-CaptureCrashPrompt -ShadowRegistryPath $shadowReg
         $trace = Get-LastStartupTrace -BinRoot $binRoot -LogRoot $logRoot
         $serverStatus=$null
         try { if (Test-Path -LiteralPath $statusScript) { $serverStatus = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $statusScript -Json 2>$null | ConvertFrom-Json } } catch {}
@@ -155,7 +182,11 @@ try {
             $result = New-CaptureResult -Passed $isPass -Reason $(if ($isPass) {'Deterministic capture completed and Ouroboros exited cleanly'} else {'Capture produced an image but Ouroboros returned a non-zero exit code'}) -ExitCode $clientExitCode -TimedOut $false -ScreenshotPath $outputPath -ProcessId $ouroPid -CommandLine $commandLine -WorkingDirectory $binRoot -ProcessSnapshot $processSnapshot -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $serverStatusPath -ServerStatus $serverStatus
         }
     }
+    Clear-CaptureCrashPrompt -ShadowRegistryPath $shadowReg
 } catch {
+    if ($shadowReg -and (Test-Path -LiteralPath $shadowReg)) {
+        Clear-CaptureCrashPrompt -ShadowRegistryPath $shadowReg
+    }
     $trace = Get-LastStartupTrace -BinRoot $binRoot -LogRoot $logRoot
     $result = New-CaptureResult -Passed $false -Reason $_.Exception.Message -ExitCode 1 -TimedOut $false -ScreenshotPath '' -Pid 0 -CommandLine '' -WorkingDirectory $binRoot -ProcessSnapshot $null -DumpPath $dumpPath -DumpMetaPath $dumpMetaPath -DumpSucceeded $false -DumpError $null -DumpStkPath $null -TracePath $trace.path -LastTraceMarker $trace.lastMarker -TraceTail $trace.tail -ServerStatusPath $null -ServerStatus $null
 }
