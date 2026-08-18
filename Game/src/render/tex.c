@@ -1241,6 +1241,35 @@ void texResetAnisotropic(void)
 static char *basefolder=NULL;
 static int tex_load_header_count;
 
+// Issue #20: keep the packed-vs-loose asset gate observable without changing
+// the normal texture lookup path.  The trace is limited to the pinned capture
+// and the two vehicle layers being piloted.
+extern int is_pigged_path(const char *path);
+
+static void texturePilotTraceResolvedSource(const char *filename)
+{
+    char resolved[MAX_PATH];
+    const char *source;
+
+    if (!game_state.glslPilot || game_state.capture_state == 0 || game_state.capture_state == 3 ||
+        stricmp(game_state.capture_target, "FoundersCanal_01") != 0 ||
+        (stricmp(filename, "texture_library/NPCS/Vehicles/Car_Truck/Cubevan_side.texture") != 0 &&
+         stricmp(filename, "texture_library/NPCS/Vehicles/Car_COMMON/carsheen_bump_02.texture") != 0))
+    {
+        return;
+    }
+
+    if (!fileLocateRead(filename, resolved))
+    {
+        printf("TEXTUREPILOT: source file=%s resolved=NOT_FOUND\n", filename);
+        return;
+    }
+
+    source = is_pigged_path(resolved) ? "pigg" : "loose";
+    printf("TEXTUREPILOT: resolve mode=%d dataDir=%s\n", (int)FolderCacheGetMode(), fileDataDir());
+    printf("TEXTUREPILOT: source file=%s kind=%s resolved=%s\n", filename, source, resolved);
+}
+
 // texFillInBind: called from main thread only at load time
 int texFillInBind(char *filename, BasicTexture *bind) {
     TextureFileHeader tfh;
@@ -1269,6 +1298,8 @@ int texFillInBind(char *filename, BasicTexture *bind) {
         Errorf("Error opening texture file '%s'!", filename);
         return 1;
     }
+
+    texturePilotTraceResolvedSource(filename);
 
     tex_load_header_count++;
 

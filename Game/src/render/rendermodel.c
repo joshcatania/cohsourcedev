@@ -30,6 +30,70 @@
 #include "render/rendershadowmap.h"
 #include "render/thread/rt_shadowmap.h"
 
+// Issue #20 pilot diagnostic.  This is deliberately limited to the pinned
+// Founders capture and one line per distinct MULTI bind so asset inspection
+// cannot turn into a whole-map texture catalog in ordinary runs.
+static const char *texturePilotLayerName(int layer)
+{
+    switch (layer)
+    {
+    xcase TEXLAYER_BASE:       return "BASE1";
+    xcase TEXLAYER_GENERIC:    return "MULTIPLY1";
+    xcase TEXLAYER_BUMPMAP1:   return "BUMPMAP1";
+    xcase TEXLAYER_DUALCOLOR1: return "DUALCOLOR1";
+    xcase TEXLAYER_MASK:       return "MASK";
+    xcase TEXLAYER_BASE2:      return "BASE2";
+    xcase TEXLAYER_MULTIPLY2:  return "MULTIPLY2";
+    xcase TEXLAYER_BUMPMAP2:   return "BUMPMAP2";
+    xcase TEXLAYER_DUALCOLOR2: return "DUALCOLOR2";
+    xcase TEXLAYER_ADDGLOW1:   return "ADDGLOW1";
+    xcase TEXLAYER_CUBEMAP:    return "CUBEMAP";
+    xdefault:                  return "UNKNOWN";
+    }
+}
+
+static void texturePilotTraceMultiBind(const ViewSortNode *vs, int tex_index, TexBind *bind,
+                                       const RdrTexList *texlist)
+{
+    static TexBind *seen[256];
+    static int seen_count;
+    int i;
+
+    if (!vs || !vs->model || !bind || !texlist || !game_state.glslPilot ||
+        game_state.capture_state == 0 || game_state.capture_state == 3 ||
+        stricmp(game_state.capture_target, "FoundersCanal_01") != 0 ||
+        texlist->blend_mode.shader != BLENDMODE_MULTI)
+        return;
+
+    for (i = 0; i < seen_count; ++i)
+        if (seen[i] == bind)
+            return;
+    if (seen_count >= ARRAY_SIZE(seen))
+        return;
+    seen[seen_count++] = bind;
+
+    printf("TEXTUREPILOT: bind=%s dirname=%s blend=MULTI bits=0x%x model=%s submesh=%d mid=(%.2f %.2f %.2f)\n",
+           bind->name ? bind->name : "?", bind->dirname ? bind->dirname : "?",
+           (unsigned)texlist->blend_mode.blend_bits, vs->model->name ? vs->model->name : "?",
+           tex_index, vs->mid[0], vs->mid[1], vs->mid[2]);
+
+    for (i = 0; i < TEXLAYER_MAX_LAYERS; ++i)
+    {
+        BasicTexture *declared = bind->tex_layers[i];
+        BasicTexture *actual = declared && declared->actualTexture ? declared->actualTexture : declared;
+        if (actual)
+        {
+            printf("TEXTUREPILOT: layer=%s name=%s dirname=%s logical=%dx%d real=%dx%d flags=0x%x texopt=0x%x surface=0x%x gloss=%.4f fileBytes=%u mipBytes=%d actual=%s\n",
+                   texturePilotLayerName(i), actual->name ? actual->name : "?",
+                   actual->dirname ? actual->dirname : "?", actual->width, actual->height,
+                   actual->realWidth, actual->realHeight, (unsigned)actual->flags,
+                   (unsigned)actual->texopt_flags, (unsigned)actual->texopt_surface,
+                   actual->gloss, (unsigned)actual->file_bytes, actual->mipsize,
+                   actual == declared ? "same" : (declared && declared->name ? declared->name : "declared"));
+        }
+    }
+}
+
 void modelDrawGetCharacterLighting(GfxNode *node, Vec3 ambient, Vec3 diffuse, Vec3 lightdir)
 {
     SeqGfxData        *seqGfxData;
@@ -759,6 +823,7 @@ void modelDrawWorldModel( ViewSortNode *vs, BlendModeType blend_mode, int tex_in
             assert(tex_index!=-1);
             bind = vs->materials[tex_index];
             texlist = demandLoadTexturesInline2(bind, vs->shadowcaster, vs->use_fallback_material);
+            texturePilotTraceMultiBind(vs, tex_index, bind, texlist);
             using_fallback_material |= bind->is_fallback_material;
 
             // set reflection blendbits and look for possible reflectors
