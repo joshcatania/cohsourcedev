@@ -46,4 +46,4 @@ A/B.
 This is the stopping point requested by the issue: the limitation is artistic
 and source-topology-specific, not a reason to generalize the DCC pipeline.
 
-Final commit SHA: pending push.
+Final commit SHA: reported in the issue #34 comment after push.
