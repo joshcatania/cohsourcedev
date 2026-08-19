@@ -1596,6 +1596,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     motion->input.max_speed_scale    = controls->max_speed_scale;
     motion->input.max_jump_height    = pmotionGetMaxJumpHeight(e, controls);
     motion->input.stunned            = controls->server_state->stun;
+    motion->input.web_swing_enabled  = controls->server_state->web_swing;
 
     // Copy the BEFORE data.
 

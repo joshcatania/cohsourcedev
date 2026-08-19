@@ -212,6 +212,7 @@ int g_direct_db_mode = 0;
 int g_agent_smoke_map_connected = 0;
 char g_agent_smoke_status_path[MAX_PATH] = {0};
 int g_web_swing_smoke = 0;
+int g_web_swing_smoke_complete = 0;
 static void agentSmokeWriteStatus(int exit_code);
 
 static void webSwingSmokeLoop(void)
@@ -234,6 +235,7 @@ static void webSwingSmokeLoop(void)
         case 0:
             if (stage_frames++ == 0)
             {
+                printf("WEB_SWING_SMOKE pose=A position=(100.00 120.00 -650.00) yaw=0.0000\n");
                 commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
                 commAddInput("webswing 1");
             }
@@ -246,7 +248,7 @@ static void webSwingSmokeLoop(void)
             }
             if (stage_frames >= 8)
             {
-                printf("WEB_SWING_SMOKE phase=airborne_attach\n");
+                printf("WEB_SWING_SMOKE phase=pose_a_airborne_attach\n");
                 stage = 1;
                 stage_frames = 0;
             }
@@ -295,19 +297,79 @@ static void webSwingSmokeLoop(void)
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
-                commAddInput("webswing 0");
                 stage = 4;
                 stage_frames = 0;
             }
             break;
 
         case 4:
-            if (stage_frames++ >= 8)
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=B position=(110.00 120.00 -650.00) yaw=0.0000\n");
+                commAddInput("setpospyr 110.00 120.00 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_b_airborne_attach\n");
+                stage = 5;
+                stage_frames = 0;
+            }
+            break;
+
+        case 5:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 60)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_b_release\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                stage = 6;
+                stage_frames = 0;
+            }
+            break;
+
+        case 6:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=C position=(100.00 120.00 -650.00) yaw=1.5708\n");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 1.5708 0.0000");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_c_fallback_airborne_attach\n");
+                stage = 7;
+                stage_frames = 0;
+            }
+            break;
+
+        case 7:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 70)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                stage = 8;
+                stage_frames = 0;
+            }
+            break;
+
+        case 8:
+            if (stage_frames++ == 0)
+                commAddInput("webswing 0");
+            if (stage_frames >= 8)
             {
                 printf("WEB_SWING_SMOKE complete\n");
                 commSendQuitGame(0);
                 sendMessageToLauncher("QuitNow:");
+                g_web_swing_smoke_complete = 1;
                 agentSmokeWriteStatus(0);
+                logShutdownAndWait();
                 exit(0);
             }
             break;
@@ -329,6 +391,7 @@ static void agentSmokeWriteStatus(int exit_code)
     fprintf(status_file, "map_connected=%d\n", g_agent_smoke_map_connected);
     fprintf(status_file, "error=%d\n", err);
     fprintf(status_file, "exit_code=%d\n", exit_code);
+    fprintf(status_file, "webswing_smoke_complete=%d\n", g_web_swing_smoke_complete);
     if (playerPtr())
         fprintf(status_file, "character=%s\n", playerPtr()->name);
     fclose(status_file);

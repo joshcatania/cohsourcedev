@@ -19,12 +19,18 @@
 #endif
 #define DEFAULT_RADIUS 1.0f
 
-#define WEB_MAX_ANCHOR_DIST    80.0f
-#define WEB_MIN_ANCHOR_HEIGHT  10.0f
-#define WEB_MIN_ROPE_LENGTH    12.0f
-#define WEB_MAX_ROPE_LENGTH    70.0f
+#define WEB_MAX_ANCHOR_DIST    120.0f
+#define WEB_MIN_ANCHOR_HEIGHT  6.0f
+#define WEB_MIN_ROPE_LENGTH    8.0f
+#define WEB_MAX_ROPE_LENGTH    110.0f
 #define WEB_PUMP_ACCEL          0.025f
 #define WEB_MAX_SPEED           3.25f
+
+#if SERVER
+#define WEB_SWING_LOG_SIDE "SERVER"
+#else
+#define WEB_SWING_LOG_SIDE "CLIENT"
+#endif
 
 int coll_is_player; //Unused
 int landed_on_ground; //Anytime in the last DoPhysics did you hit the ground? (if so, do done fall)
@@ -114,9 +120,20 @@ static int collide(Vec3 start,Vec3 end,CollInfo *coll,F32 rad,U32 flags)
     return ret;
 }
 
-static int webSwingFindAnchor(Entity *e, Vec3 anchor)
+typedef struct WebSwingAnchorSearchStats
 {
-    static const F32 probe_weights[][3] =
+    int collision_ray_hits;
+    int height_rejects;
+    int distance_rejects;
+    int selected;
+    int used_fallback;
+    Vec3 selected_anchor;
+    F32 selected_rope_length;
+} WebSwingAnchorSearchStats;
+
+static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats *stats)
+{
+    static const F32 primary_probe_weights[][3] =
     {
         { 0.75f, 0.66f, 0.00f },
         { 0.50f, 0.87f, 0.00f },
@@ -124,58 +141,82 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor)
         { 0.65f, 0.70f, 0.25f },
         { 0.65f, 0.70f,-0.25f },
     };
+    static const F32 fallback_probe_weights[][3] =
+    {
+        { 0.85f, 0.85f,  0.00f },
+        { 0.45f, 0.75f,  0.65f },
+        { 0.45f, 0.75f, -0.65f },
+        { 0.70f, 0.70f,  0.35f },
+        { 0.70f, 0.70f, -0.35f },
+        { 0.05f, 0.995f, 0.00f },
+    };
     Vec3 start;
     Vec3 forward;
     Vec3 right;
     Vec3 best_anchor = {0};
     F32 best_score = -1e30f;
-    int i;
+    int pass;
+
+    memset(stats, 0, sizeof(*stats));
 
     copyVec3(ENTPOS(e), start);
     start[1] += 3.0f;
     copyVec3(ENTMAT(e)[2], forward);
     copyVec3(ENTMAT(e)[0], right);
 
-    for(i = 0; i < ARRAY_SIZE(probe_weights); ++i)
+    for(pass = 0; pass < 2 && best_score <= -1e29f; ++pass)
     {
-        Vec3 direction;
-        Vec3 end;
-        Vec3 delta;
-        Vec3 up = {0.0f, 1.0f, 0.0f};
-        CollInfo coll = {0};
-        F32 distance;
-        F32 height;
-        F32 alignment;
-        F32 score;
+        const F32 (*probe_weights)[3] = pass == 0 ? primary_probe_weights : fallback_probe_weights;
+        int probe_count = pass == 0 ? ARRAY_SIZE(primary_probe_weights) : ARRAY_SIZE(fallback_probe_weights);
+        int i;
 
-        scaleVec3(forward, probe_weights[i][0], direction);
-        scaleVec3(up, probe_weights[i][1], delta);
-        addVec3(direction, delta, direction);
-        scaleVec3(right, probe_weights[i][2], delta);
-        addVec3(direction, delta, direction);
-        if(!normalVec3(direction))
-            continue;
-
-        scaleVec3(direction, WEB_MAX_ANCHOR_DIST, delta);
-        addVec3(start, delta, end);
-
-        if(!collide(start, end, &coll, 0.0f, COLL_DISTFROMSTART | COLL_BOTHSIDES))
-            continue;
-
-        copyVec3(coll.mat[3], delta);
-        subVec3(delta, start, delta);
-        distance = normalVec3(delta);
-        height = coll.mat[3][1] - ENTPOSY(e);
-        alignment = dotVec3(delta, forward);
-
-        if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
-            continue;
-
-        score = height * 1.5f + alignment * 15.0f - distance * 0.25f;
-        if(score > best_score)
+        for(i = 0; i < probe_count; ++i)
         {
-            best_score = score;
-            copyVec3(coll.mat[3], best_anchor);
+            Vec3 direction;
+            Vec3 end;
+            Vec3 delta;
+            Vec3 up = {0.0f, 1.0f, 0.0f};
+            CollInfo coll = {0};
+            F32 distance;
+            F32 height;
+            F32 alignment;
+            F32 score;
+
+            scaleVec3(forward, probe_weights[i][0], direction);
+            scaleVec3(up, probe_weights[i][1], delta);
+            addVec3(direction, delta, direction);
+            scaleVec3(right, probe_weights[i][2], delta);
+            addVec3(direction, delta, direction);
+            if(!normalVec3(direction))
+                continue;
+
+            scaleVec3(direction, WEB_MAX_ANCHOR_DIST, delta);
+            addVec3(start, delta, end);
+
+            if(!collide(start, end, &coll, 0.0f, COLL_DISTFROMSTART | COLL_BOTHSIDES))
+                continue;
+
+            ++stats->collision_ray_hits;
+            copyVec3(coll.mat[3], delta);
+            subVec3(delta, start, delta);
+            distance = normalVec3(delta);
+            height = coll.mat[3][1] - ENTPOSY(e);
+            alignment = dotVec3(delta, forward);
+
+            if(distance < WEB_MIN_ROPE_LENGTH)
+                ++stats->distance_rejects;
+            if(height < WEB_MIN_ANCHOR_HEIGHT)
+                ++stats->height_rejects;
+            if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
+                continue;
+
+            score = height * 1.5f + alignment * 15.0f - distance * 0.25f;
+            if(score > best_score)
+            {
+                best_score = score;
+                copyVec3(coll.mat[3], best_anchor);
+                stats->used_fallback = pass != 0;
+            }
         }
     }
 
@@ -183,7 +224,51 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor)
         return 0;
 
     copyVec3(best_anchor, anchor);
+    stats->selected = 1;
+    copyVec3(best_anchor, stats->selected_anchor);
+    stats->selected_rope_length = distance3(ENTPOS(e), best_anchor);
     return 1;
+}
+
+static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats *stats)
+{
+    MotionState *motion = e->motion;
+    Vec3 forward;
+
+    copyVec3(ENTMAT(e)[2], forward);
+    if(stats->selected)
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->input.web_swing_enabled,
+                       motion->input.vel[1],
+                       motion->falling,
+                       motion->jumping,
+                       vecParamsXYZ(ENTPOS(e)),
+                       vecParamsXYZ(forward),
+                       stats->collision_ray_hits,
+                       stats->height_rejects,
+                       stats->distance_rejects,
+                       stats->used_fallback,
+                       vecParamsXYZ(stats->selected_anchor),
+                       stats->selected_rope_length);
+    }
+    else
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->input.web_swing_enabled,
+                       motion->input.vel[1],
+                       motion->falling,
+                       motion->jumping,
+                       vecParamsXYZ(ENTPOS(e)),
+                       vecParamsXYZ(forward),
+                       stats->collision_ray_hits,
+                       stats->height_rejects,
+                       stats->distance_rejects);
+    }
 }
 
 void entWorldWebSwingUpdateAttachment(Entity *e)
@@ -195,16 +280,19 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
     {
         if(motion->web_swing_attached)
         {
-            printf("WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            printf("WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+                   WEB_SWING_LOG_SIDE,
                    lengthVec3(motion->vel),
                    vecParamsXYZ(motion->web_swing_anchor),
                    vecParamsXYZ(motion->input.vel));
-            filelog_printf("webswing.log", "WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            filelog_printf("webswing.log", "WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+                           WEB_SWING_LOG_SIDE,
                            lengthVec3(motion->vel),
                            vecParamsXYZ(motion->web_swing_anchor),
                            vecParamsXYZ(motion->input.vel));
         }
         motion->web_swing_attached = 0;
+        motion->web_swing_diag_latched = 0;
         motion->web_swing_log_tick = 0;
         return;
     }
@@ -213,8 +301,17 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
     {
         Vec3 anchor;
         F32 rope_length;
+        WebSwingAnchorSearchStats search_stats;
+        int found_anchor;
 
-        if(webSwingFindAnchor(e, anchor))
+        found_anchor = webSwingFindAnchor(e, anchor, &search_stats);
+        if(!motion->web_swing_diag_latched)
+        {
+            motion->web_swing_diag_latched = 1;
+            webSwingLogAttachAttempt(e, &search_stats);
+        }
+
+        if(found_anchor)
         {
             motion->web_swing_attached = 1;
             copyVec3(anchor, motion->web_swing_anchor);
@@ -231,11 +328,13 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                 addVec3(motion->vel, impulse, motion->vel);
             }
 
-            printf("WEB_SWING attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+            printf("WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+                   WEB_SWING_LOG_SIDE,
                    vecParamsXYZ(motion->web_swing_anchor),
                    motion->web_swing_rope_length,
                    lengthVec3(motion->vel));
-            filelog_printf("webswing.log", "WEB_SWING attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+            filelog_printf("webswing.log", "WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+                           WEB_SWING_LOG_SIDE,
                            vecParamsXYZ(motion->web_swing_anchor),
                            motion->web_swing_rope_length,
                            lengthVec3(motion->vel));
@@ -296,10 +395,12 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     ++motion->web_swing_log_tick;
     if(motion->web_swing_log_tick >= 15)
     {
-        printf("WEB_SWING swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+        printf("WEB_SWING %s swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+               WEB_SWING_LOG_SIDE,
                lengthVec3(motion->vel), motion->web_swing_rope_length,
                vecParamsXYZ(motion->input.vel));
-        filelog_printf("webswing.log", "WEB_SWING swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+        filelog_printf("webswing.log", "WEB_SWING %s swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+                       WEB_SWING_LOG_SIDE,
                        lengthVec3(motion->vel), motion->web_swing_rope_length,
                        vecParamsXYZ(motion->input.vel));
         motion->web_swing_log_tick = 0;

@@ -1106,8 +1106,12 @@ void setWebSwing(Entity *e, int enabled)
                 state->web_swing = enabled;
             }
 
-            printf("WEB_SWING mode=%d\n", enabled);
-            filelog_printf("webswing.log", "WEB_SWING mode=%d\n", enabled);
+            printf("WEB_SWING SERVER mode=%d\n", enabled);
+            filelog_printf("webswing.log", "WEB_SWING SERVER mode=%d\n", enabled);
+            sendChatMsg(e,
+                        enabled ? "Web Swing enabled - hold Space while airborne near buildings."
+                                : "Web Swing disabled.",
+                        INFO_SVR_COM, 0);
         }
     }
 }
