@@ -158,6 +158,17 @@ try {
     if ($status['character'] -ne $CharacterName) { throw "Prepared character was '$($status['character'])', not '$CharacterName'." }
     if ($status['swing_test_prep_level'] -ne '50') { throw "TestClient reported XP-calculated level $($status['swing_test_prep_level']), not 50." }
     if ($status['swing_test_prep_fly_owned'] -ne '1') { throw 'TestClient did not confirm owned Fly from the loaded power dictionary.' }
+    $prepPower = $status['swing_test_prep_power']
+    $prepFallback = $status['swing_test_prep_fly_fallback']
+    if ($prepPower -eq 'Pool.Flight.Fly' -and $prepFallback -eq '0') {
+        Write-Host 'Resolved normal player Flight pool: Pool.Flight.Fly.'
+    } elseif ($prepPower -eq 'Mission_Maker_Movement.Flight.Fly' -and $prepFallback -eq '1') {
+        $fallbackReason = $status['swing_test_prep_fly_fallback_reason']
+        if (-not $fallbackReason) { $fallbackReason = 'TestClient did not provide a fallback reason.' }
+        Write-Host "NORMAL PLAYER FLIGHT UNAVAILABLE - explicit local-dev fallback: $fallbackReason" -ForegroundColor Yellow
+    } else {
+        throw "Unexpected loaded Fly resolution: power='$prepPower', fallback='$prepFallback'."
+    }
 
     # Keep the development character elevated across reconnects. This only
     # changes the requested local test character; it does not alter defaults.
@@ -176,7 +187,7 @@ try {
     if ($powerCountText.Count -gt 0) { [int]::TryParse($powerCountText[0].ToString().Trim(), [ref]$powerCount) | Out-Null }
     if ($powerCount -le 0) { throw 'No persisted dbo.Powers rows were found for SwingTest.' }
 
-    Write-Host "SwingTest ready: XP-calculated level 50, real Mission_Maker_Movement.Flight / Fly owned, AccessLevel 9 persisted."
+    Write-Host "SwingTest ready: XP-calculated level 50, $prepPower owned, AccessLevel 9 persisted."
     Write-Host "Prep stdout: $stdoutLog"
     Write-Host "Prep stderr: $stderrLog"
     Write-Host "Prep status: $statusLog"

@@ -26,6 +26,7 @@
 #define WEB_PENDULUM_ACCEL_DESCENT 0.095f
 #define WEB_PENDULUM_ACCEL_ASCENT  0.045f
 #define WEB_PENDULUM_ACCEL_APEX    0.015f
+#define WEB_FORWARD_TANGENT_ACCEL  0.025f
 #define WEB_STEER_ACCEL            0.040f
 #define WEB_ATTACH_FORWARD_IMPULSE 0.120f
 #define WEB_MAX_SPEED              4.50f
@@ -408,6 +409,7 @@ void entWorldWebSwingApplyConstraint(Entity *e)
 
     // A small forward-facing tangent bias gives a newly attached swing a
     // useful direction, while the existing tangent velocity remains primary.
+    // The sign correction prevents the assist from reversing earned momentum.
     copyVec3(forward, tangent_forward);
     scaleVec3(rope, dotVec3(tangent_forward, rope), projected);
     subVec3(tangent_forward, projected, tangent_forward);
@@ -431,11 +433,14 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     scaleVec3(tangent_direction, phase_accel * e->timestep, projected);
     addVec3(motion->vel, projected, motion->vel);
 
-    // W/A/D are steering input, not the source of swing motion.  Convert the
-    // local input into world space before projecting it onto the same tangent.
-    scaleVec3(right, motion->input.vel[0], input_world);
-    scaleVec3(forward, motion->input.vel[2], projected);
-    addVec3(input_world, projected, input_world);
+    scaleVec3(tangent_forward, WEB_FORWARD_TANGENT_ACCEL * e->timestep, projected);
+    addVec3(motion->vel, projected, motion->vel);
+
+    // motion->input.vel is already world-space here.  W/A/D are steering
+    // input, not the source of swing motion; remove vertical jump input and
+    // project the world-space steering vector directly onto the rope tangent.
+    copyVec3(motion->input.vel, input_world);
+    input_world[1] = 0.0f;
     scaleVec3(rope, dotVec3(input_world, rope), projected);
     subVec3(input_world, projected, tangent_input);
     if(normalVec3(tangent_input))
@@ -476,6 +481,17 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                        WEB_SWING_LOG_SIDE,
                        lengthVec3(motion->vel), motion->web_swing_rope_length,
                        vecParamsXYZ(motion->input.vel));
+        if(lengthVec3Squared(input_world) > 0.0001f)
+        {
+            printf("WEB_SWING %s steering forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f)\n",
+                   WEB_SWING_LOG_SIDE,
+                   vecParamsXYZ(forward), vecParamsXYZ(right),
+                   vecParamsXYZ(input_world), vecParamsXYZ(tangent_input));
+            filelog_printf("webswing.log", "WEB_SWING %s steering forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f)\n",
+                           WEB_SWING_LOG_SIDE,
+                           vecParamsXYZ(forward), vecParamsXYZ(right),
+                           vecParamsXYZ(input_world), vecParamsXYZ(tangent_input));
+        }
         motion->web_swing_log_tick = 0;
     }
 

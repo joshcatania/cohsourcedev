@@ -224,6 +224,9 @@ char g_swing_test_prep_target[256] = {0};
 int g_swing_test_prep_level = 0;
 int g_swing_test_prep_xp_level = 0;
 int g_swing_test_prep_fly_owned = 0;
+int g_swing_test_prep_fly_fallback = 0;
+char g_swing_test_prep_power[128] = {0};
+char g_swing_test_prep_fly_fallback_reason[256] = {0};
 static void agentSmokeWriteStatus(int exit_code);
 
 static void webSwingSmokeLoop(void)
@@ -248,7 +251,7 @@ static void webSwingSmokeLoop(void)
             {
                 printf("WEB_SWING_SMOKE pose=A position=(100.00 120.00 -650.00) yaw=0.0000\n");
                 commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
-                commAddInput("powexec_toggleoff Mission_Maker_Movement.Flight.Fly");
+                commAddInput("powexec_toggleoff Pool.Flight.Fly");
                 commAddInput("webswing 1");
             }
             if (stage_frames == 2)
@@ -268,7 +271,8 @@ static void webSwingSmokeLoop(void)
 
         case 1:
             updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
-            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 20 || stage_frames >= 70, timeGetTime());
             updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 20 && stage_frames < 45, timeGetTime());
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 45 && stage_frames < 70, timeGetTime());
             if (stage_frames == 0)
@@ -298,7 +302,8 @@ static void webSwingSmokeLoop(void)
 
         case 3:
             updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
-            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 20 || stage_frames >= 70, timeGetTime());
             updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 20 && stage_frames < 45, timeGetTime());
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 45 && stage_frames < 70, timeGetTime());
             if (stage_frames == 0)
@@ -338,6 +343,7 @@ static void webSwingSmokeLoop(void)
                 printf("WEB_SWING_SMOKE phase=pose_b_release\n");
                 updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
                 stage = 6;
                 stage_frames = 0;
             }
@@ -348,10 +354,11 @@ static void webSwingSmokeLoop(void)
             {
                 printf("WEB_SWING_SMOKE pose=C position=(100.00 120.00 -650.00) yaw=1.5708\n");
                 commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 1.5708 0.0000");
+                commAddInput("webswing 1");
             }
             if (stage_frames >= 8)
             {
-                printf("WEB_SWING_SMOKE phase=pose_c_fallback_airborne_attach\n");
+                printf("WEB_SWING_SMOKE phase=pose_c_yaw90_steering\n");
                 stage = 7;
                 stage_frames = 0;
             }
@@ -359,13 +366,18 @@ static void webSwingSmokeLoop(void)
 
         case 7:
             updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
-            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 20 || stage_frames >= 70, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 20 && stage_frames < 45, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 45 && stage_frames < 70, timeGetTime());
             if (stage_frames == 0)
                 doJump();
             if (stage_frames++ >= 70)
             {
                 updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
                 stage = 8;
                 stage_frames = 0;
             }
@@ -414,7 +426,7 @@ static void webSwingJumpSmokeLoop(void)
             {
                 // Keep a real Fly power owned by the character, but make the
                 // two jump measurements ground-jump measurements.
-                commAddInput("powexec_toggleoff Mission_Maker_Movement.Flight.Fly");
+                commAddInput("powexec_toggleoff Pool.Flight.Fly");
                 commAddInput("webswing 0");
                 commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
             }
@@ -569,10 +581,38 @@ static void swingTestPrepLoop(void)
         case 3:
             if (stage_frames == 1)
             {
-                // This is the loaded dictionary full name used by the
-                // existing CSR command; no movement flag is being faked.
-                printf("SWING_TEST_PREP command=powers_buypower_dev Mission_Maker_Movement Flight Fly\n");
-                commAddInput("powers_buypower_dev Mission_Maker_Movement Flight Fly");
+                const char *category = "Pool";
+                const char *set = "Flight";
+                const char *power = "Fly";
+                const BasePower *fly_base = powerdict_GetBasePowerByNameEx(
+                    &g_PowerDictionary, category, set, power, false);
+
+                // Resolve the normal player Flight pool from the loaded
+                // dictionary before using the existing CSR buy path. The
+                // Mission Maker path is retained only when this snapshot
+                // genuinely lacks Pool.Flight.Fly.
+                if (fly_base)
+                {
+                    strcpy(g_swing_test_prep_power, "Pool.Flight.Fly");
+                    printf("SWING_TEST_PREP resolve normal=Pool.Flight.Fly available=1\n");
+                }
+                else
+                {
+                    g_swing_test_prep_fly_fallback = 1;
+                    strcpy(g_swing_test_prep_power, "Mission_Maker_Movement.Flight.Fly");
+                    strcpy(g_swing_test_prep_fly_fallback_reason,
+                           "Loaded power dictionary has no Pool.Flight.Fly BasePower; using explicit local-dev Mission_Maker_Movement fallback.");
+                    category = "Mission_Maker_Movement";
+                    printf("SWING_TEST_PREP resolve normal=Pool.Flight.Fly available=0 fallback=Mission_Maker_Movement.Flight.Fly reason=%s\n",
+                           g_swing_test_prep_fly_fallback_reason);
+                }
+
+                printf("SWING_TEST_PREP command=powers_buypower_dev %s %s %s\n", category, set, power);
+                {
+                    char command[256];
+                    sprintf(command, "powers_buypower_dev %s %s %s", category, set, power);
+                    commAddInput(command);
+                }
             }
             if (stage_frames >= 25)
             {
@@ -597,8 +637,10 @@ static void swingTestPrepLoop(void)
         case 5:
             if (stage_frames >= 10)
             {
-                const BasePower *fly_base = powerdict_GetBasePowerByName(
-                    &g_PowerDictionary, "Mission_Maker_Movement", "Flight", "Fly");
+                const char *power_full_name = g_swing_test_prep_power[0] ?
+                    g_swing_test_prep_power : "Pool.Flight.Fly";
+                const BasePower *fly_base = powerdict_GetBasePowerByFullNameEx(
+                    &g_PowerDictionary, power_full_name, false);
 
                 g_swing_test_prep_level = playerPtr()->pchar ?
                     character_CalcExperienceLevel(playerPtr()->pchar) + 1 : 0;
@@ -607,8 +649,10 @@ static void swingTestPrepLoop(void)
                     character_OwnsPower(playerPtr()->pchar, fly_base) != NULL;
                 printf("SWING_TEST_PREP complete character=%s target=%s\n",
                        playerPtr()->name, g_swing_test_prep_target);
-                printf("SWING_TEST_PREP verify level=%d xp_level=%d fly_owned=%d full_name=Mission_Maker_Movement.Flight.Fly\n",
-                       g_swing_test_prep_level, g_swing_test_prep_xp_level, g_swing_test_prep_fly_owned);
+                printf("SWING_TEST_PREP verify level=%d xp_level=%d fly_owned=%d full_name=%s fallback=%d\n",
+                       g_swing_test_prep_level, g_swing_test_prep_xp_level,
+                       g_swing_test_prep_fly_owned, power_full_name,
+                       g_swing_test_prep_fly_fallback);
                 g_swing_test_prep_complete = 1;
                 agentSmokeWriteStatus(0);
                 commSendQuitGame(0);
@@ -643,8 +687,11 @@ static void agentSmokeWriteStatus(int exit_code)
     fprintf(status_file, "swing_test_prep_level=%d\n", g_swing_test_prep_level);
     fprintf(status_file, "swing_test_prep_xp_level=%d\n", g_swing_test_prep_xp_level);
     fprintf(status_file, "swing_test_prep_fly_owned=%d\n", g_swing_test_prep_fly_owned);
-    if (g_swing_test_prep_fly_owned)
-        fprintf(status_file, "swing_test_prep_power=Mission_Maker_Movement.Flight.Fly\n");
+    if (g_swing_test_prep_power[0])
+        fprintf(status_file, "swing_test_prep_power=%s\n", g_swing_test_prep_power);
+    fprintf(status_file, "swing_test_prep_fly_fallback=%d\n", g_swing_test_prep_fly_fallback);
+    if (g_swing_test_prep_fly_fallback_reason[0])
+        fprintf(status_file, "swing_test_prep_fly_fallback_reason=%s\n", g_swing_test_prep_fly_fallback_reason);
     if (g_swing_test_prep_target[0])
         fprintf(status_file, "swing_test_prep_target=%s\n", g_swing_test_prep_target);
     if (playerPtr())

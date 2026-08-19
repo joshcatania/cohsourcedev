@@ -167,6 +167,53 @@ $clientEnabledAttempts = @($clientAttempts | Where-Object { $_ -match 'web_swing
 $attachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) attach ' })
 $detachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) detach ' })
 $swingLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) swing ' })
+$detachSpeeds = @()
+foreach ($line in $detachLines) {
+    $detachMatch = [regex]::Match($line, 'detach speed=([-+0-9.eE]+)')
+    if ($detachMatch.Success) {
+        $detachSpeeds += [double]::Parse($detachMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+}
+$maxDetachSpeed = if ($detachSpeeds.Count -gt 0) { ($detachSpeeds | Measure-Object -Maximum).Maximum } else { 0.0 }
+$retainedMomentumDetachPass = $detachSpeeds.Count -ge 1 -and $maxDetachSpeed -gt 0.25
+$steeringLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER steering ' })
+$steeringEvidence = @{}
+foreach ($line in $steeringLines) {
+    $match = [regex]::Match($line, 'forward=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\) right=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\) input_world=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if (-not $match.Success) { continue }
+
+    $fx = [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $fz = [double]::Parse($match.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $rx = [double]::Parse($match.Groups[4].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $rz = [double]::Parse($match.Groups[6].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $ix = [double]::Parse($match.Groups[7].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $iz = [double]::Parse($match.Groups[9].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $inputLength = [math]::Sqrt($ix * $ix + $iz * $iz)
+    if ($inputLength -le 0.01) { continue }
+
+    $forwardDot = ($ix * $fx + $iz * $fz) / $inputLength
+    $rightDot = ($ix * $rx + $iz * $rz) / $inputLength
+    $yawBucket = if ([math]::Abs($fz) -gt 0.8 -and [math]::Abs($fx) -lt 0.2) {
+        'yaw0'
+    } elseif ([math]::Abs($fx) -gt 0.8 -and [math]::Abs($fz) -lt 0.2) {
+        'yaw90'
+    } else {
+        $null
+    }
+    if (-not $yawBucket) { continue }
+
+    $direction = if ($forwardDot -gt 0.75) { 'forward' }
+                 elseif ($rightDot -lt -0.75) { 'left' }
+                 elseif ($rightDot -gt 0.75) { 'right' }
+                 else { $null }
+    if ($direction) {
+        $key = "$yawBucket/$direction"
+        $steeringEvidence[$key] = 1
+    }
+}
+$requiredSteeringEvidence = @('yaw0/forward', 'yaw0/left', 'yaw0/right', 'yaw90/forward', 'yaw90/left', 'yaw90/right')
+$missingSteeringEvidence = @($requiredSteeringEvidence | Where-Object { -not $steeringEvidence.ContainsKey($_) })
+$steeringEvidencePass = $missingSteeringEvidence.Count -eq 0
 $fullSequence = $attachLines.Count -ge 2 -and $detachLines.Count -ge 1 -and $swingLines.Count -ge 1
 $combinedText = (($stdoutText, $stderrText) -join "`n")
 $statusWritten = Test-Path -LiteralPath $statusLog
@@ -175,11 +222,13 @@ $smokeComplete = $statusText -match 'webswing_smoke_complete=1'
 $clientDiagnosticsAvailable = $selectedClientAttempts.Count -ge 3 -and $clientEnabledAttempts.Count -ge 3
 $serverSequencePass = $smokeComplete -and
                       ($selectedServerAttempts.Count -ge 3) -and
-                      $fullSequence
+                      $fullSequence -and
+                      $retainedMomentumDetachPass
 $exitCodeValue = $null
 if (-not $timedOut) { try { $exitCodeValue = [int]$proc.ExitCode } catch {} }
 
 $passed = (-not $timedOut) -and ($exitCodeValue -eq 0) -and $serverSequencePass -and
+          $steeringEvidencePass -and
           (-not $RequireClientDiagnostics -or $clientDiagnosticsAvailable)
 $reason = $null
 if ($timedOut) {
@@ -192,6 +241,10 @@ if ($timedOut) {
     $reason = "Expected three selected server anchors (server=$($selectedServerAttempts.Count))."
 } elseif (-not $fullSequence) {
     $reason = "Full sequence evidence was incomplete (attach=$($attachLines.Count), swing=$($swingLines.Count), detach=$($detachLines.Count))."
+} elseif (-not $retainedMomentumDetachPass) {
+    $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
+} elseif (-not $steeringEvidencePass) {
+    $reason = "World-space W/A/D steering evidence was incomplete; missing: $($missingSteeringEvidence -join ', ')."
 } elseif ($RequireClientDiagnostics -and -not $clientDiagnosticsAvailable) {
     $reason = "Client diagnostics were required but unavailable (client=$($selectedClientAttempts.Count) selected, enabled=$($clientEnabledAttempts.Count))."
 } elseif (-not $clientDiagnosticsAvailable) {
@@ -217,7 +270,14 @@ $result = [pscustomobject]@{
     attachLines = $attachLines.Count
     swingLines = $swingLines.Count
     detachLines = $detachLines.Count
+    detachSpeeds = @($detachSpeeds | ForEach-Object { [math]::Round($_, 3) })
+    maxDetachSpeed = [math]::Round($maxDetachSpeed, 3)
+    retainedMomentumDetachPass = $retainedMomentumDetachPass
     fullSequence = $fullSequence
+    steeringLines = $steeringLines.Count
+    steeringEvidencePass = $steeringEvidencePass
+    steeringEvidence = @($steeringEvidence.Keys | Sort-Object)
+    missingSteeringEvidence = $missingSteeringEvidence
     poseAttempts = $clientAttempts
     stdoutLog = $stdoutLog
     stderrLog = $stderrLog

@@ -105,13 +105,16 @@ $offHeight = 0.0
 $onHeight = 0.0
 [double]::TryParse($status['webswing_jump_off_height'], [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$offHeight) | Out-Null
 [double]::TryParse($status['webswing_jump_on_height'], [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$onHeight) | Out-Null
+$minRatio = 1.4
+$maxRatio = 2.2
+$ratio = if ($offHeight -gt 0) { $onHeight / $offHeight } else { 0 }
 $passed = (-not $timedOut) -and $proc.ExitCode -eq 0 -and
           $status['webswing_jump_smoke_complete'] -eq '1' -and
-          $offHeight -gt 0 -and $onHeight -gt ($offHeight * 1.4)
+          $offHeight -gt 0 -and $ratio -ge $minRatio -and $ratio -le $maxRatio
 $reason = if ($timedOut) { "TestClient timed out after $TimeoutSeconds seconds." }
           elseif ($proc.ExitCode -ne 0) { "TestClient exited with code $($proc.ExitCode)." }
           elseif ($status['webswing_jump_smoke_complete'] -ne '1') { 'Jump smoke did not write its completion marker.' }
-          elseif ($offHeight -le 0 -or $onHeight -le ($offHeight * 1.4)) { "Expected ON height to exceed OFF by at least 40% (OFF=$offHeight, ON=$onHeight)." }
+          elseif ($offHeight -le 0 -or $ratio -lt $minRatio -or $ratio -gt $maxRatio) { "Expected ON/OFF height ratio in [$minRatio, $maxRatio] (OFF=$offHeight, ON=$onHeight, ratio=$([math]::Round($ratio, 3)))." }
           else { $null }
 
 Finish ([pscustomobject]@{
@@ -124,7 +127,9 @@ Finish ([pscustomobject]@{
     dbAddress = $DbAddress
     offHeight = [math]::Round($offHeight, 3)
     onHeight = [math]::Round($onHeight, 3)
-    ratio = if ($offHeight -gt 0) { [math]::Round($onHeight / $offHeight, 3) } else { 0 }
+    ratio = [math]::Round($ratio, 3)
+    minRatio = $minRatio
+    maxRatio = $maxRatio
     stdoutLog = $stdoutLog
     stderrLog = $stderrLog
     statusLog = $statusLog
