@@ -1087,6 +1087,31 @@ void setJumppack(Entity *e, int jumppack_on)
     }
 }
 
+void setWebSwing(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_swing != enabled)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_swing = enabled;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_swing = enabled;
+            }
+
+            printf("WEB_SWING mode=%d\n", enabled);
+            filelog_printf("webswing.log", "WEB_SWING mode=%d\n", enabled);
+        }
+    }
+}
+
 
 void setSpecialMovement(Entity *e, int attrib, int on)
 {

@@ -81,6 +81,7 @@ typedef struct MotionStateInput {
     U32                    no_ent_collision: 1;
     U32                    stunned            : 1;
     U32                    jump_released    : 1;
+    U32                    web_swing_enabled: 1;
 } MotionStateInput;
 
 typedef struct MotionState
@@ -121,6 +122,11 @@ typedef struct MotionState
     Vec3                prev_surf_normal;
     S32                    low_traction_steps_remaining;    // # of phys steps to force low traction.
     F32                    hitStumbleTractionLoss;
+
+    U32                    web_swing_attached : 1;
+    Vec3                   web_swing_anchor;
+    F32                    web_swing_rope_length;
+    U32                    web_swing_log_tick;
 
     EntityCapsule        capsule;
 

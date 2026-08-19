@@ -1831,6 +1831,8 @@ static void entWalk(Entity* e, const Mat3 control_mat)
         motion->jump_still_held = 0;
     }
     
+    entWorldWebSwingUpdateAttachment(e);
+
     // Check if I'm trying to jump.
 
     checkJump(e, &surf);

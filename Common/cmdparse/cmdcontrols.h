@@ -130,6 +130,7 @@ typedef struct ServerControlState
     U32                                hover_board                : 1;
     U32                                magic_carpet            : 1;
     U32                                parkour_run                : 1;
+    U32                                web_swing                : 1;
 } ServerControlState;
 
 

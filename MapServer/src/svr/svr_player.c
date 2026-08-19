@@ -1046,6 +1046,8 @@ static void svrUpdateMotionState(Entity* e, ControlState* controls)
         }
     }
 
+    motion->input.web_swing_enabled = scs->web_swing;
+
     if(motion->input.no_ent_collision != scs->no_ent_collision)
     {
         motion->input.no_ent_collision = scs->no_ent_collision;
@@ -2949,6 +2951,7 @@ int svrPlayerSendControlState(Packet* pak, Entity* e, NetLink* link, int full_st
         pktSendBits(pak, 1, scs->no_ent_collision);
 
         pktSendBits(pak, 1, scs->no_jump_repeat);
+        pktSendBits(pak, 1, scs->web_swing);
     }
     else
     {

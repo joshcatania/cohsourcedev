@@ -2332,6 +2332,7 @@ static void playerReceiveServerControlState(Packet *pak)
         server_state.no_ent_collision =            pktGetBits(pak,1);
 
         server_state.no_jump_repeat =            pktGetBits(pak, 1);
+        server_state.web_swing =                 pktGetBits(pak, 1);
 
         if(!oo_packet)
         {
@@ -2381,6 +2382,8 @@ static void playerReceiveServerControlState(Packet *pak)
             motion->input.no_ent_collision =    server_state.no_ent_collision;
             scs->no_ent_collision =                server_state.no_ent_collision;
             scs->no_jump_repeat =                server_state.no_jump_repeat;
+            scs->web_swing =                     server_state.web_swing;
+            motion->input.web_swing_enabled =    server_state.web_swing;
 
             if(motion->input.flying != scs->fly)
             {

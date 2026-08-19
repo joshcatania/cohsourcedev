@@ -1,6 +1,7 @@
 #include "entworldcoll.h"
 #include <string.h>
 #include <utilitieslib/utils/mathutil.h>
+#include <utilitieslib/utils/error.h>
 #include "entity/entity.h"
 #include "gridcoll/gridcoll.h"
 #include "varutils.h"
@@ -17,6 +18,13 @@
 #include "entity/entDebug.h"
 #endif
 #define DEFAULT_RADIUS 1.0f
+
+#define WEB_MAX_ANCHOR_DIST    80.0f
+#define WEB_MIN_ANCHOR_HEIGHT  10.0f
+#define WEB_MIN_ROPE_LENGTH    12.0f
+#define WEB_MAX_ROPE_LENGTH    70.0f
+#define WEB_PUMP_ACCEL          0.025f
+#define WEB_MAX_SPEED           3.25f
 
 int coll_is_player; //Unused
 int landed_on_ground; //Anytime in the last DoPhysics did you hit the ground? (if so, do done fall)
@@ -104,6 +112,203 @@ static int collide(Vec3 start,Vec3 end,CollInfo *coll,F32 rad,U32 flags)
     //}
 
     return ret;
+}
+
+static int webSwingFindAnchor(Entity *e, Vec3 anchor)
+{
+    static const F32 probe_weights[][3] =
+    {
+        { 0.75f, 0.66f, 0.00f },
+        { 0.50f, 0.87f, 0.00f },
+        { 0.90f, 0.44f, 0.00f },
+        { 0.65f, 0.70f, 0.25f },
+        { 0.65f, 0.70f,-0.25f },
+    };
+    Vec3 start;
+    Vec3 forward;
+    Vec3 right;
+    Vec3 best_anchor = {0};
+    F32 best_score = -1e30f;
+    int i;
+
+    copyVec3(ENTPOS(e), start);
+    start[1] += 3.0f;
+    copyVec3(ENTMAT(e)[2], forward);
+    copyVec3(ENTMAT(e)[0], right);
+
+    for(i = 0; i < ARRAY_SIZE(probe_weights); ++i)
+    {
+        Vec3 direction;
+        Vec3 end;
+        Vec3 delta;
+        Vec3 up = {0.0f, 1.0f, 0.0f};
+        CollInfo coll = {0};
+        F32 distance;
+        F32 height;
+        F32 alignment;
+        F32 score;
+
+        scaleVec3(forward, probe_weights[i][0], direction);
+        scaleVec3(up, probe_weights[i][1], delta);
+        addVec3(direction, delta, direction);
+        scaleVec3(right, probe_weights[i][2], delta);
+        addVec3(direction, delta, direction);
+        if(!normalVec3(direction))
+            continue;
+
+        scaleVec3(direction, WEB_MAX_ANCHOR_DIST, delta);
+        addVec3(start, delta, end);
+
+        if(!collide(start, end, &coll, 0.0f, COLL_DISTFROMSTART | COLL_BOTHSIDES))
+            continue;
+
+        copyVec3(coll.mat[3], delta);
+        subVec3(delta, start, delta);
+        distance = normalVec3(delta);
+        height = coll.mat[3][1] - ENTPOSY(e);
+        alignment = dotVec3(delta, forward);
+
+        if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
+            continue;
+
+        score = height * 1.5f + alignment * 15.0f - distance * 0.25f;
+        if(score > best_score)
+        {
+            best_score = score;
+            copyVec3(coll.mat[3], best_anchor);
+        }
+    }
+
+    if(best_score <= -1e29f)
+        return 0;
+
+    copyVec3(best_anchor, anchor);
+    return 1;
+}
+
+void entWorldWebSwingUpdateAttachment(Entity *e)
+{
+    MotionState *motion = e->motion;
+    int held = motion->input.web_swing_enabled;
+
+    if(!held)
+    {
+        if(motion->web_swing_attached)
+        {
+            printf("WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f)\n",
+                   lengthVec3(motion->vel),
+                   vecParamsXYZ(motion->web_swing_anchor));
+            filelog_printf("webswing.log", "WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f)\n",
+                           lengthVec3(motion->vel),
+                           vecParamsXYZ(motion->web_swing_anchor));
+        }
+        motion->web_swing_attached = 0;
+        motion->web_swing_log_tick = 0;
+        return;
+    }
+
+    if(!motion->web_swing_attached && (motion->falling || motion->jumping))
+    {
+        Vec3 anchor;
+        F32 rope_length;
+
+        if(webSwingFindAnchor(e, anchor))
+        {
+            motion->web_swing_attached = 1;
+            copyVec3(anchor, motion->web_swing_anchor);
+            rope_length = distance3(ENTPOS(e), anchor);
+            motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
+            motion->web_swing_log_tick = 0;
+            motion->jumping = 0;
+            motion->falling = 1;
+
+            if(lengthVec3Squared(motion->vel) < 0.01f)
+            {
+                Vec3 impulse;
+                scaleVec3(ENTMAT(e)[2], 0.05f, impulse);
+                addVec3(motion->vel, impulse, motion->vel);
+            }
+
+            printf("WEB_SWING attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+                   vecParamsXYZ(motion->web_swing_anchor),
+                   motion->web_swing_rope_length,
+                   lengthVec3(motion->vel));
+            filelog_printf("webswing.log", "WEB_SWING attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
+                           vecParamsXYZ(motion->web_swing_anchor),
+                           motion->web_swing_rope_length,
+                           lengthVec3(motion->vel));
+        }
+    }
+}
+
+void entWorldWebSwingApplyConstraint(Entity *e)
+{
+    MotionState *motion = e->motion;
+    Vec3 rope;
+    Vec3 tangent_input;
+    Vec3 projected;
+    Vec3 predicted;
+    Vec3 step;
+    F32 distance;
+    F32 speed;
+
+    if(!motion->web_swing_attached || e->timestep <= 0.0001f)
+        return;
+
+    // Pump only with horizontal movement input, projected onto the rope tangent.
+    subVec3(motion->last_pos, motion->web_swing_anchor, rope);
+    if(normalVec3(rope))
+    {
+        copyVec3(motion->input.vel, tangent_input);
+        tangent_input[1] = 0;
+        scaleVec3(rope, dotVec3(tangent_input, rope), projected);
+        subVec3(tangent_input, projected, tangent_input);
+        if(normalVec3(tangent_input))
+        {
+            scaleVec3(tangent_input, WEB_PUMP_ACCEL * e->timestep, projected);
+            addVec3(motion->vel, projected, motion->vel);
+        }
+    }
+
+    speed = lengthVec3(motion->vel);
+    if(speed > WEB_MAX_SPEED)
+        scaleVec3(motion->vel, WEB_MAX_SPEED / speed, motion->vel);
+
+    scaleVec3(motion->vel, e->timestep, step);
+    addVec3(motion->last_pos, step, predicted);
+    subVec3(predicted, motion->web_swing_anchor, rope);
+    distance = normalVec3(rope);
+
+    if(distance > motion->web_swing_rope_length)
+    {
+        scaleVec3(rope, motion->web_swing_rope_length, rope);
+        addVec3(motion->web_swing_anchor, rope, predicted);
+        subVec3(predicted, motion->last_pos, step);
+        scaleVec3(step, 1.0f / e->timestep, motion->vel);
+    }
+
+    speed = lengthVec3(motion->vel);
+    if(speed > WEB_MAX_SPEED)
+        scaleVec3(motion->vel, WEB_MAX_SPEED / speed, motion->vel);
+
+    ++motion->web_swing_log_tick;
+    if(motion->web_swing_log_tick >= 15)
+    {
+        printf("WEB_SWING swing speed=%.3f rope=%.2f\n",
+               lengthVec3(motion->vel), motion->web_swing_rope_length);
+        filelog_printf("webswing.log", "WEB_SWING swing speed=%.3f rope=%.2f\n",
+                       lengthVec3(motion->vel), motion->web_swing_rope_length);
+        motion->web_swing_log_tick = 0;
+    }
+
+#if CLIENT
+    {
+        Vec3 tether_start;
+        copyVec3(ENTPOS(e), tether_start);
+        tether_start[1] += 3.0f;
+        entDebugAddLine(tether_start, 0xffffffff, motion->web_swing_anchor, 0xff00ffff);
+    }
+#endif
 }
 
 F32 HeightAtLoc(const Vec3 vec, F32 radius, F32 dist)
@@ -1267,6 +1472,8 @@ void entWorldCollide(Entity* e, const Mat3 control_mat)
     {
         motion->vel[1] = motion->input.vel[1];
     }
+
+    entWorldWebSwingApplyConstraint(e);
 
     // Do entity collisions.
 

@@ -211,6 +211,88 @@ bool dontpause = false;
 int g_direct_db_mode = 0;
 int g_agent_smoke_map_connected = 0;
 char g_agent_smoke_status_path[MAX_PATH] = {0};
+int g_web_swing_smoke = 0;
+static void agentSmokeWriteStatus(int exit_code);
+
+static void webSwingSmokeLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+
+    if (!g_web_swing_smoke || !commConnected() || do_map_xfer)
+        return;
+
+    if (stage < 0)
+    {
+        stage = 0;
+        stage_frames = 0;
+        printf("WEB_SWING_SMOKE begin\n");
+    }
+
+    switch (stage)
+    {
+        case 0:
+            if (stage_frames++ == 0)
+            {
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                commAddInput("webswing 1");
+            }
+            if (stage_frames >= 8)
+            {
+                doJump();
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (stage_frames++ == 0)
+                doJump();
+            if (stage_frames >= 60)
+            {
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames++ >= 12)
+            {
+                commAddInput("webswing 1");
+                doJump();
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (stage_frames++ == 0)
+                doJump();
+            if (stage_frames >= 60)
+            {
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE complete\n");
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                agentSmokeWriteStatus(0);
+                exit(0);
+            }
+            break;
+    }
+}
 
 static void agentSmokeWriteStatus(int exit_code)
 {
@@ -471,6 +553,8 @@ void checkArgs(int argc, char **argv) {
             i++;
             strncpy(g_agent_smoke_status_path, argv[i], sizeof(g_agent_smoke_status_path) - 1);
             g_agent_smoke_status_path[sizeof(g_agent_smoke_status_path) - 1] = 0;
+        } else if (CMDEQ("-webswing-smoke")) {
+            g_web_swing_smoke = 1;
         } else if (CMDEQ("-auth")) {
             i++;
             strcpy(game_state.auth_address, argv[i]);
@@ -1043,6 +1127,7 @@ void mainloop() {
         }
 
         doMoverLoop();
+        webSwingSmokeLoop();
         if (g_testMode & TEST_CHAT) {
             chatterLoop();
         }

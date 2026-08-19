@@ -41,6 +41,7 @@ void setJumpHeight(Entity* e, float height);
 void setEntCollision(Entity *e, int set);
 void setEntNoSelectable(Entity *e, int set);
 void setNoJumpRepeat(Entity *e, int set);
+void setWebSwing(Entity *e, int enabled);
 void sendStats( Entity *attacker, Entity *victim, int stat_level );
 void modStateBits( Entity *e, EntMode mode_num, int timer, int on );
 int decModeTimer( Entity *e, EntMode mode_num );

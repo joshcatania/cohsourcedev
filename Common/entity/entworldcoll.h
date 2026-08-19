@@ -13,6 +13,8 @@ typedef struct Entity Entity;
 F32 HeightAtLoc(const Vec3 vec, F32 radius, F32 dist);
 F32 entHeight(Entity *e,F32 dist);
 void entWorldCollide(Entity* e, const Mat3 control_mat);
+void entWorldWebSwingUpdateAttachment(Entity* e);
+void entWorldWebSwingApplyConstraint(Entity* e);
 void entWorldGetSurface(Entity *e,SurfaceParams *surf);
 SurfaceParams *entWorldGetSurfaceModifier(Entity *e);
 void entWorldApplySurfMods(SurfaceParams *surf_mod,SurfaceParams *surf);

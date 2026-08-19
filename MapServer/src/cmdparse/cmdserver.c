@@ -1117,6 +1117,8 @@ Cmd server_cmds[] =
                             "Pop up the kiosk info for the nearest kiosk. (Assuming you're close enough.)" },
     { 0, "nojumprepeat",    SCMD_NOJUMPREPEAT, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                             "Disable jump auto-repeat" },
+    { 1, "webswing",        SCMD_WEBSWING, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
+                            "Enable or disable prototype web swinging" },
     { 9, "missionx",        SCMD_MISSIONX, {{0}}, CMDF_HIDEVARS,
                             "Assign yourself a random mission of a compatible status level. (Level 1-5 == Status Level 1, 6-10 == 2, etc)" },
     { 9, "missionxmap",        SCMD_MISSIONXMAP, {{0}}, CMDF_HIDEVARS,
@@ -5867,6 +5869,11 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             if(e)
             {
                 setNoJumpRepeat(e, tmp_int);
+            }
+        xcase SCMD_WEBSWING:
+            if(e)
+            {
+                setWebSwing(e, tmp_int != 0);
             }
         xcase SCMD_MISSIONX:
         {
