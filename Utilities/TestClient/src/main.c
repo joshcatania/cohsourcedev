@@ -453,6 +453,89 @@ static void webSwingSmokeLoop(void)
         case 12:
             if (stage_frames++ >= 8)
             {
+                printf("WEB_SWING_SMOKE pose=F facing_travel_45 yaw_setup=0.0000 input=right_then_yaw45\n");
+                commAddInput("yaw 0.0000");
+                stage = 13;
+                stage_frames = 0;
+            }
+            break;
+
+        case 13:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_f_establish_diagonal_momentum\n");
+                stage = 14;
+                stage_frames = 0;
+            }
+            break;
+
+        case 14:
+            if (stage_frames == 0)
+                doJump();
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 20, timeGetTime());
+            if (stage_frames == 20)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_f_enable_after_rightward_momentum_yaw45\n");
+                commAddInput("yaw 0.7854");
+                commAddInput("webswing 1");
+            }
+            if (stage_frames >= 80)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 15;
+                stage_frames = 0;
+            }
+            else
+                ++stage_frames;
+            break;
+
+        case 15:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE pose=G facing_travel_90 yaw_setup=0.0000 input=right\n");
+                commAddInput("yaw 0.0000");
+                stage = 16;
+                stage_frames = 0;
+            }
+            break;
+
+        case 16:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_g_establish_strafe_momentum\n");
+                stage = 17;
+                stage_frames = 0;
+            }
+            break;
+
+        case 17:
+            if (stage_frames == 0)
+                doJump();
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 20, timeGetTime());
+            if (stage_frames == 20)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_g_enable_after_rightward_momentum_yaw0\n");
+                commAddInput("webswing 1");
+            }
+            if (stage_frames >= 80)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 18;
+                stage_frames = 0;
+            }
+            else
+                ++stage_frames;
+            break;
+
+        case 18:
+            if (stage_frames++ >= 8)
+            {
                 printf("WEB_SWING_SMOKE complete\n");
                 commSendQuitGame(0);
                 sendMessageToLauncher("QuitNow:");
@@ -525,7 +608,9 @@ static void webSwingJumpSmokeLoop(void)
         case 2:
             if (stage_frames == 1)
             {
-                commAddInput("webswing 1");
+                // Mode 2 is a diagnostic-only launch measurement: it keeps
+                // the real Web Swing jump cap but suppresses anchor search.
+                commAddInput("webswing 2");
                 commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
             }
             if (stage_frames >= 30)

@@ -41,11 +41,27 @@ The sampled input records show the tangent steering/pumping phases: `(-1, 0, 0)`
 
 ## Review follow-up validation
 
-The review follow-up was validated on 2026-08-19 with the final `Release|x86` build on a warmed direct-DB shard. A fresh no-flight character (`Dummy00010`) exercised the deterministic Web Swing matrix:
+Sol review `4975850659` was addressed narrowly on 2026-08-19 from the existing Issue #36 head. The final locally verified `Release|x86` build passed with the v145 fallback:
 
-- 13 anchor selections from the 21-probe fan, 13 attachments, 13 detachments, and 551 swing samples.
-- Maximum observed detach speed was 4.500, demonstrating retained release momentum.
-- 13 constraint summaries recorded 1,117 soft corrections, 6 radial-bias corrections, 0 hard corrections, maximum radial correction 0.0302, and maximum velocity-direction delta 0.5646.
-- The headless TestClient has no renderer, so tether draw evidence remains a manual GUI checkpoint; the source path is once-per-displayed-frame and physics-free.
+`agent/logs/build-Release-x86-20260819-155450.log`
 
-Machine-readable results are in `agent/logs/webswing-smoke-20260819-140254.json`; the corresponding server evidence is in `agent/logs/webswing-smoke-20260819-140254.server-webswing.log`.
+The fresh direct-DB application smoke passed after the normal shard warm-up and reached MapServer:
+
+`agent/logs/smoke-directdb-20260819-155526.json`
+
+The deterministic Web Swing matrix used `Dummy00012` / `TEST04223` (level 50, `Pool.Flight.Fly`, access level 9) and passed:
+
+- 15 selected real collision anchors, 15 attachments, 15 detachments, and 601 swing samples.
+- 9 selected anchors used measured horizontal momentum; divergent facing/travel acquisition passed with 4 approximately-45-degree attempts and 2 approximately-90-degree attempts. The final server log records `travel_right` as the normalized world-up cross-product of travel, sign-aligned to entity-right.
+- Retained release momentum passed with maximum detach speed 3.128; yaw 0/90 forward, left, and right steering evidence all passed.
+- No hard corrections; 9,139 attached constraint samples; average velocity-direction delta 0.001199; maximum 0.6982; 6 samples (0.0657%) at or above the 0.300 direction-delta threshold; maximum consecutive large-delta run 1.
+- Outward radial velocity removal occurred on 666 samples (7.2874%), average removed magnitude 0.181244, maximum 3.2224; 67 samples (0.7331%) were at or above the 0.250 radial-velocity threshold.
+- The smoke gate allows an isolated entry-transition discontinuity but fails repeated held-swing evidence at more than 3 consecutive large direction deltas or more than 12.5% large-delta samples. This run passed, so the existing solver was preserved.
+
+Machine-readable results are in `agent/logs/webswing-smoke-20260819-160030.json`; the corresponding server evidence is in `agent/logs/webswing-smoke-20260819-160030.server-webswing.log`.
+
+The jump-height smoke also passed at the preserved `WEB_LAUNCH_JUMP_HEIGHT_SCALE=2.50`: OFF 11.203 ft, ON 17.188 ft, ratio 1.534x, matching the measured approximately-1.536x launch baseline. Evidence is in `agent/logs/jump-height-smoke-20260819-155931.json`. The launch diagnostic uses an internal `webswing 2` mode that keeps the real launch-height state but suppresses only anchor acquisition; normal `webswing 0/1` behavior is unchanged.
+
+Final constants: 150 ft anchor/search and rope cap; 6 ft minimum anchor height; 8 ft minimum rope; 2 ft probe start height; 0.75 ft rope slop; 0.35 bias gain; 0.75 ft/s bias cap; 4.50 ft/s maximum swing speed; 21 deterministic probes; 0.300 direction-delta threshold; 0.250 radial-velocity threshold.
+
+The client tether path remains once per displayed frame and physics-free. Headless TestClient has no renderer, so tether pixels remain a manual GUI checkpoint for Josh.

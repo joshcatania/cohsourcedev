@@ -128,6 +128,7 @@ typedef struct MotionState
     F32                    hitStumbleTractionLoss;
 
     U32                    web_swing_attached : 1;
+    U32                    web_swing_attachment_suppressed : 1;
     U32                    web_swing_diag_latched : 1;
     U32                    web_swing_state_diag_latched : 1;
     Vec3                   web_swing_anchor;
@@ -141,6 +142,14 @@ typedef struct MotionState
     F32                    web_swing_constraint_correction_sum;
     F32                    web_swing_constraint_max_correction;
     F32                    web_swing_constraint_max_velocity_dir_delta;
+    F32                    web_swing_constraint_velocity_dir_delta_sum;
+    U32                    web_swing_constraint_velocity_dir_delta_large_count;
+    U32                    web_swing_constraint_velocity_dir_delta_large_run;
+    U32                    web_swing_constraint_max_velocity_dir_delta_large_run;
+    U32                    web_swing_constraint_radial_velocity_removed_count;
+    U32                    web_swing_constraint_radial_velocity_large_count;
+    F32                    web_swing_constraint_radial_velocity_removed_sum;
+    F32                    web_swing_constraint_max_radial_velocity_removed;
 
     EntityCapsule        capsule;
 

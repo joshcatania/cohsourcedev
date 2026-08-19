@@ -5873,7 +5873,7 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
         xcase SCMD_WEBSWING:
             if(e)
             {
-                setWebSwing(e, tmp_int != 0);
+                setWebSwing(e, tmp_int);
             }
         xcase SCMD_MISSIONX:
         {

@@ -27,6 +27,8 @@
 #define WEB_ROPE_SLOP          0.75f
 #define WEB_ROPE_BIAS_GAIN     0.35f
 #define WEB_ROPE_BIAS_MAX_SPEED 0.75f
+#define WEB_SWING_DIRECTION_DELTA_THRESHOLD 0.30f
+#define WEB_SWING_RADIAL_VELOCITY_THRESHOLD 0.25f
 #define WEB_PENDULUM_ACCEL_DESCENT 0.095f
 #define WEB_PENDULUM_ACCEL_ASCENT  0.045f
 #define WEB_PENDULUM_ACCEL_APEX    0.015f
@@ -137,6 +139,11 @@ typedef struct WebSwingAnchorSearchStats
     int distance_rejects;
     int selected;
     int used_fallback;
+    int momentum_basis;
+    F32 facing_travel_dot;
+    Vec3 travel;
+    Vec3 travel_right;
+    Vec3 entity_right;
     Vec3 selected_anchor;
     F32 selected_rope_length;
 } WebSwingAnchorSearchStats;
@@ -175,7 +182,8 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     };
     Vec3 start;
     Vec3 forward;
-    Vec3 right;
+    Vec3 entity_right;
+    Vec3 travel_right;
     Vec3 momentum;
     Vec3 travel;
     Vec3 up = {0.0f, 1.0f, 0.0f};
@@ -189,14 +197,34 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     copyVec3(ENTPOS(e), start);
     start[1] += WEB_ANCHOR_START_HEIGHT;
     copyVec3(ENTMAT(e)[2], forward);
-    copyVec3(ENTMAT(e)[0], right);
+    forward[1] = 0.0f;
+    if(!normalVec3(forward))
+        return 0;
+    copyVec3(ENTMAT(e)[0], entity_right);
+    entity_right[1] = 0.0f;
+    if(!normalVec3(entity_right))
+        copyVec3(ENTMAT(e)[0], entity_right);
     copyVec3(e->motion->vel, momentum);
     momentum[1] = 0.0f;
-    has_momentum = normalVec3(momentum);
+    has_momentum = normalVec3(momentum) > 0.001f;
     copyVec3(has_momentum ? momentum : forward, travel);
-    travel[1] = 0.0f;
     if(!normalVec3(travel))
-        copyVec3(forward, travel);
+        return 0;
+
+    // The lateral fan must be perpendicular to the actual travel basis.  The
+    // entity-right vector is only used to keep the established left/right
+    // convention stable; it is not used to shape momentum-centered probes.
+    crossVec3(up, travel, travel_right);
+    if(!normalVec3(travel_right))
+        return 0;
+    if(dotVec3(travel_right, entity_right) < 0.0f)
+        scaleVec3(travel_right, -1.0f, travel_right);
+
+    stats->momentum_basis = has_momentum;
+    stats->facing_travel_dot = dotVec3(forward, travel);
+    copyVec3(travel, stats->travel);
+    copyVec3(travel_right, stats->travel_right);
+    copyVec3(entity_right, stats->entity_right);
 
     stats->probe_count = ARRAY_SIZE(probes);
     for(i = 0; i < ARRAY_SIZE(probes); ++i)
@@ -215,7 +243,7 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
         scaleVec3(travel, probes[i].forward, direction);
         scaleVec3(up, probes[i].up, delta);
         addVec3(direction, delta, direction);
-        scaleVec3(right, probes[i].side, delta);
+        scaleVec3(travel_right, probes[i].side, delta);
         addVec3(direction, delta, direction);
         if(!normalVec3(direction))
             continue;
@@ -276,7 +304,7 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
     if(stats->selected)
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -284,7 +312,12 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
-                        stats->probe_count,
+                       vecParamsXYZ(stats->travel),
+                       vecParamsXYZ(stats->travel_right),
+                       vecParamsXYZ(stats->entity_right),
+                       stats->momentum_basis,
+                       stats->facing_travel_dot,
+                       stats->probe_count,
                         stats->collision_ray_hits,
                        stats->height_rejects,
                        stats->distance_rejects,
@@ -295,7 +328,7 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
     else
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -303,11 +336,36 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
-                        stats->probe_count,
+                       vecParamsXYZ(stats->travel),
+                       vecParamsXYZ(stats->travel_right),
+                       vecParamsXYZ(stats->entity_right),
+                       stats->momentum_basis,
+                       stats->facing_travel_dot,
+                       stats->probe_count,
                         stats->collision_ray_hits,
                        stats->height_rejects,
                        stats->distance_rejects);
     }
+}
+
+static void webSwingResetConstraintMetrics(MotionState *motion)
+{
+    motion->web_swing_constraint_samples = 0;
+    motion->web_swing_constraint_soft_correction_count = 0;
+    motion->web_swing_constraint_correction_count = 0;
+    motion->web_swing_constraint_error_sum = 0.0f;
+    motion->web_swing_constraint_max_error = 0.0f;
+    motion->web_swing_constraint_correction_sum = 0.0f;
+    motion->web_swing_constraint_max_correction = 0.0f;
+    motion->web_swing_constraint_max_velocity_dir_delta = 0.0f;
+    motion->web_swing_constraint_velocity_dir_delta_sum = 0.0f;
+    motion->web_swing_constraint_velocity_dir_delta_large_count = 0;
+    motion->web_swing_constraint_velocity_dir_delta_large_run = 0;
+    motion->web_swing_constraint_max_velocity_dir_delta_large_run = 0;
+    motion->web_swing_constraint_radial_velocity_removed_count = 0;
+    motion->web_swing_constraint_radial_velocity_large_count = 0;
+    motion->web_swing_constraint_radial_velocity_removed_sum = 0.0f;
+    motion->web_swing_constraint_max_radial_velocity_removed = 0.0f;
 }
 
 void entWorldWebSwingUpdateAttachment(Entity *e)
@@ -329,7 +387,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                            lengthVec3(motion->vel),
                            vecParamsXYZ(motion->web_swing_anchor),
                            vecParamsXYZ(motion->input.vel));
-            filelog_printf("webswing.log", "WEB_SWING %s constraint_summary samples=%u soft_corrections=%u radial_corrections=%u hard_corrections=0 max_error=%.4f avg_error=%.4f max_radial_correction=%.4f avg_radial_correction=%.4f max_velocity_dir_delta=%.4f\n",
+            filelog_printf("webswing.log", "WEB_SWING %s constraint_summary samples=%u soft_corrections=%u radial_corrections=%u hard_corrections=0 max_error=%.4f avg_error=%.4f max_radial_correction=%.4f avg_radial_correction=%.4f max_velocity_dir_delta=%.4f avg_velocity_dir_delta=%.4f velocity_dir_delta_sum=%.4f velocity_dir_delta_large_count=%u velocity_dir_delta_large_pct=%.2f max_consecutive_velocity_dir_delta=%u radial_velocity_removed_count=%u radial_velocity_removed_pct=%.2f avg_radial_velocity_removed=%.4f max_radial_velocity_removed=%.4f radial_velocity_large_count=%u radial_velocity_large_pct=%.2f direction_delta_threshold=%.3f radial_velocity_threshold=%.3f\n",
                            WEB_SWING_LOG_SIDE,
                            motion->web_swing_constraint_samples,
                            motion->web_swing_constraint_soft_correction_count,
@@ -338,20 +396,26 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                            motion->web_swing_constraint_samples ? motion->web_swing_constraint_error_sum / motion->web_swing_constraint_samples : 0.0f,
                            motion->web_swing_constraint_max_correction,
                            motion->web_swing_constraint_correction_count ? motion->web_swing_constraint_correction_sum / motion->web_swing_constraint_correction_count : 0.0f,
-                           motion->web_swing_constraint_max_velocity_dir_delta);
+                           motion->web_swing_constraint_max_velocity_dir_delta,
+                           motion->web_swing_constraint_samples ? motion->web_swing_constraint_velocity_dir_delta_sum / motion->web_swing_constraint_samples : 0.0f,
+                           motion->web_swing_constraint_velocity_dir_delta_sum,
+                           motion->web_swing_constraint_velocity_dir_delta_large_count,
+                           motion->web_swing_constraint_samples ? 100.0f * motion->web_swing_constraint_velocity_dir_delta_large_count / motion->web_swing_constraint_samples : 0.0f,
+                           motion->web_swing_constraint_max_velocity_dir_delta_large_run,
+                           motion->web_swing_constraint_radial_velocity_removed_count,
+                           motion->web_swing_constraint_samples ? 100.0f * motion->web_swing_constraint_radial_velocity_removed_count / motion->web_swing_constraint_samples : 0.0f,
+                           motion->web_swing_constraint_radial_velocity_removed_count ? motion->web_swing_constraint_radial_velocity_removed_sum / motion->web_swing_constraint_radial_velocity_removed_count : 0.0f,
+                           motion->web_swing_constraint_max_radial_velocity_removed,
+                           motion->web_swing_constraint_radial_velocity_large_count,
+                           motion->web_swing_constraint_samples ? 100.0f * motion->web_swing_constraint_radial_velocity_large_count / motion->web_swing_constraint_samples : 0.0f,
+                           WEB_SWING_DIRECTION_DELTA_THRESHOLD,
+                           WEB_SWING_RADIAL_VELOCITY_THRESHOLD);
         }
         motion->web_swing_attached = 0;
         motion->web_swing_diag_latched = 0;
         motion->web_swing_state_diag_latched = 0;
         motion->web_swing_log_tick = 0;
-        motion->web_swing_constraint_samples = 0;
-        motion->web_swing_constraint_soft_correction_count = 0;
-        motion->web_swing_constraint_correction_count = 0;
-        motion->web_swing_constraint_error_sum = 0.0f;
-        motion->web_swing_constraint_max_error = 0.0f;
-        motion->web_swing_constraint_correction_sum = 0.0f;
-        motion->web_swing_constraint_max_correction = 0.0f;
-        motion->web_swing_constraint_max_velocity_dir_delta = 0.0f;
+        webSwingResetConstraintMetrics(motion);
         return;
     }
 
@@ -369,7 +433,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                        vecParamsXYZ(ENTPOS(e)));
     }
 
-    if(!motion->web_swing_attached && (motion->falling || motion->jumping))
+    if(!motion->web_swing_attachment_suppressed &&
+       !motion->web_swing_attached && (motion->falling || motion->jumping))
     {
         Vec3 anchor;
         F32 rope_length;
@@ -390,14 +455,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
             rope_length = distance3(ENTPOS(e), anchor);
             motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
             motion->web_swing_log_tick = 0;
-            motion->web_swing_constraint_samples = 0;
-            motion->web_swing_constraint_soft_correction_count = 0;
-            motion->web_swing_constraint_correction_count = 0;
-            motion->web_swing_constraint_error_sum = 0.0f;
-            motion->web_swing_constraint_max_error = 0.0f;
-            motion->web_swing_constraint_correction_sum = 0.0f;
-            motion->web_swing_constraint_max_correction = 0.0f;
-            motion->web_swing_constraint_max_velocity_dir_delta = 0.0f;
+            webSwingResetConstraintMetrics(motion);
             motion->jumping = 0;
             motion->falling = 1;
 
@@ -446,6 +504,7 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     F32 distance;
     F32 radial_error;
     F32 radial_velocity;
+    F32 radial_velocity_removed;
     F32 radial_correction;
     F32 velocity_dir_delta;
     F32 speed;
@@ -535,12 +594,14 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     distance = normalVec3(rope);
     radial_error = distance - motion->web_swing_rope_length;
     radial_velocity = dotVec3(velocity_before_constraint, rope);
+    radial_velocity_removed = 0.0f;
     radial_correction = 0.0f;
 
     // Keep the boundary forgiving: preserve tangential momentum and remove
     // only outward radial velocity while the predicted point is taut.
     if(distance >= motion->web_swing_rope_length - WEB_ROPE_SLOP && radial_velocity > 0.0f)
     {
+        radial_velocity_removed = radial_velocity;
         scaleVec3(rope, radial_velocity, projected);
         subVec3(motion->vel, projected, motion->vel);
         soft_correction_fired = 1;
@@ -570,6 +631,18 @@ void entWorldWebSwingApplyConstraint(Entity *e)
         velocity_dir_delta = 1.0f - MAX(-1.0f, MIN(1.0f, dotVec3(velocity_before_direction, velocity_after_direction)));
 
     ++motion->web_swing_constraint_samples;
+    motion->web_swing_constraint_velocity_dir_delta_sum += velocity_dir_delta;
+    if(velocity_dir_delta >= WEB_SWING_DIRECTION_DELTA_THRESHOLD)
+    {
+        ++motion->web_swing_constraint_velocity_dir_delta_large_count;
+        ++motion->web_swing_constraint_velocity_dir_delta_large_run;
+        motion->web_swing_constraint_max_velocity_dir_delta_large_run = MAX(motion->web_swing_constraint_max_velocity_dir_delta_large_run,
+                                                                              motion->web_swing_constraint_velocity_dir_delta_large_run);
+    }
+    else
+    {
+        motion->web_swing_constraint_velocity_dir_delta_large_run = 0;
+    }
     if(soft_correction_fired)
         ++motion->web_swing_constraint_soft_correction_count;
     if(radial_error > 0.0f)
@@ -584,6 +657,15 @@ void entWorldWebSwingApplyConstraint(Entity *e)
         motion->web_swing_constraint_max_correction = MAX(motion->web_swing_constraint_max_correction, radial_correction);
     }
     motion->web_swing_constraint_max_velocity_dir_delta = MAX(motion->web_swing_constraint_max_velocity_dir_delta, velocity_dir_delta);
+    if(radial_velocity_removed > 0.0f)
+    {
+        ++motion->web_swing_constraint_radial_velocity_removed_count;
+        motion->web_swing_constraint_radial_velocity_removed_sum += radial_velocity_removed;
+        motion->web_swing_constraint_max_radial_velocity_removed = MAX(motion->web_swing_constraint_max_radial_velocity_removed,
+                                                                        radial_velocity_removed);
+        if(radial_velocity_removed >= WEB_SWING_RADIAL_VELOCITY_THRESHOLD)
+            ++motion->web_swing_constraint_radial_velocity_large_count;
+    }
 
     speed = lengthVec3(motion->vel);
     if(speed > WEB_MAX_SPEED)
@@ -600,12 +682,13 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                        WEB_SWING_LOG_SIDE,
                        lengthVec3(motion->vel), motion->web_swing_rope_length,
                        vecParamsXYZ(motion->input.vel));
-        filelog_printf("webswing.log", "WEB_SWING %s constraint pre_distance=%.3f rope=%.3f radial_error=%.3f radial_velocity=%.3f vel_before=(%.3f %.3f %.3f) vel_after=(%.3f %.3f %.3f) hard_correction=%d soft_correction=%d radial_correction=%.4f velocity_dir_delta=%.4f\n",
+        filelog_printf("webswing.log", "WEB_SWING %s constraint pre_distance=%.3f rope=%.3f radial_error=%.3f radial_velocity=%.3f radial_velocity_removed=%.3f vel_before=(%.3f %.3f %.3f) vel_after=(%.3f %.3f %.3f) hard_correction=%d soft_correction=%d radial_correction=%.4f velocity_dir_delta=%.4f\n",
                        WEB_SWING_LOG_SIDE,
                        radial_error + motion->web_swing_rope_length,
                        motion->web_swing_rope_length,
                        radial_error,
                        radial_velocity,
+                       radial_velocity_removed,
                        vecParamsXYZ(velocity_before_constraint),
                        vecParamsXYZ(velocity_after_constraint),
                        hard_correction_fired,
