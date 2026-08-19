@@ -294,10 +294,12 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     ++motion->web_swing_log_tick;
     if(motion->web_swing_log_tick >= 15)
     {
-        printf("WEB_SWING swing speed=%.3f rope=%.2f\n",
-               lengthVec3(motion->vel), motion->web_swing_rope_length);
-        filelog_printf("webswing.log", "WEB_SWING swing speed=%.3f rope=%.2f\n",
-                       lengthVec3(motion->vel), motion->web_swing_rope_length);
+        printf("WEB_SWING swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+               lengthVec3(motion->vel), motion->web_swing_rope_length,
+               vecParamsXYZ(motion->input.vel));
+        filelog_printf("webswing.log", "WEB_SWING swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+                       lengthVec3(motion->vel), motion->web_swing_rope_length,
+                       vecParamsXYZ(motion->input.vel));
         motion->web_swing_log_tick = 0;
     }
 
