@@ -167,6 +167,41 @@ $clientEnabledAttempts = @($clientAttempts | Where-Object { $_ -match 'web_swing
 $attachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) attach ' })
 $detachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) detach ' })
 $swingLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) swing ' })
+$constraintSummaryLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) constraint_summary ' })
+$constraintFrameLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) constraint ' -and $_ -notmatch 'constraint_summary' })
+$tetherRenderLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING CLIENT tether_render ' })
+$constraintSummaries = @()
+$softCorrectionCount = 0
+$hardCorrectionCount = 0
+$maxRadialCorrection = 0.0
+$maxVelocityDirectionDelta = 0.0
+foreach ($line in $constraintSummaryLines) {
+    $summaryMatch = [regex]::Match($line, 'samples=(\d+) soft_corrections=(\d+) radial_corrections=(\d+) hard_corrections=(\d+) max_error=([-+0-9.eE]+) avg_error=([-+0-9.eE]+) max_radial_correction=([-+0-9.eE]+) avg_radial_correction=([-+0-9.eE]+) max_velocity_dir_delta=([-+0-9.eE]+)')
+    if (-not $summaryMatch.Success) { continue }
+    $softCorrections = [int]$summaryMatch.Groups[2].Value
+    $radialCorrections = [int]$summaryMatch.Groups[3].Value
+    $hardCorrections = [int]$summaryMatch.Groups[4].Value
+    $maxRadialCorrection = [math]::Max($maxRadialCorrection, [double]::Parse($summaryMatch.Groups[7].Value, [Globalization.CultureInfo]::InvariantCulture))
+    $maxVelocityDirectionDelta = [math]::Max($maxVelocityDirectionDelta, [double]::Parse($summaryMatch.Groups[9].Value, [Globalization.CultureInfo]::InvariantCulture))
+    $softCorrectionCount += $softCorrections
+    $hardCorrectionCount += $hardCorrections
+    $constraintSummaries += [pscustomobject]@{
+        samples = [int]$summaryMatch.Groups[1].Value
+        softCorrections = $softCorrections
+        radialCorrections = $radialCorrections
+        hardCorrections = $hardCorrections
+        maxError = [double]::Parse($summaryMatch.Groups[5].Value, [Globalization.CultureInfo]::InvariantCulture)
+        avgError = [double]::Parse($summaryMatch.Groups[6].Value, [Globalization.CultureInfo]::InvariantCulture)
+        maxRadialCorrection = [double]::Parse($summaryMatch.Groups[7].Value, [Globalization.CultureInfo]::InvariantCulture)
+        avgRadialCorrection = [double]::Parse($summaryMatch.Groups[8].Value, [Globalization.CultureInfo]::InvariantCulture)
+        maxVelocityDirectionDelta = [double]::Parse($summaryMatch.Groups[9].Value, [Globalization.CultureInfo]::InvariantCulture)
+    }
+}
+$constraintDiagnosticsPass = $constraintSummaries.Count -ge 5 -and $hardCorrectionCount -eq 0
+$anchorFanEvidencePass = $selectedServerAttempts.Count -ge 5 -and @($selectedServerAttempts | Where-Object {
+    $match = [regex]::Match($_, 'probes=(\d+)')
+    $match.Success -and [int]$match.Groups[1].Value -ge 15
+}).Count -ge 5
 $detachSpeeds = @()
 foreach ($line in $detachLines) {
     $detachMatch = [regex]::Match($line, 'detach speed=([-+0-9.eE]+)')
@@ -221,9 +256,11 @@ $statusText = if ($statusWritten) { Get-Content -Raw -LiteralPath $statusLog } e
 $smokeComplete = $statusText -match 'webswing_smoke_complete=1'
 $clientDiagnosticsAvailable = $selectedClientAttempts.Count -ge 3 -and $clientEnabledAttempts.Count -ge 3
 $serverSequencePass = $smokeComplete -and
-                      ($selectedServerAttempts.Count -ge 3) -and
+                      ($selectedServerAttempts.Count -ge 5) -and
                       $fullSequence -and
-                      $retainedMomentumDetachPass
+                      $retainedMomentumDetachPass -and
+                      $constraintDiagnosticsPass -and
+                      $anchorFanEvidencePass
 $exitCodeValue = $null
 if (-not $timedOut) { try { $exitCodeValue = [int]$proc.ExitCode } catch {} }
 
@@ -237,14 +274,18 @@ if ($timedOut) {
     $reason = "TestClient exited with code $exitCodeValue."
 } elseif (-not $smokeComplete) {
     $reason = 'The autonomous Web Swing driver did not write its completion marker.'
-} elseif ($selectedServerAttempts.Count -lt 3) {
-    $reason = "Expected three selected server anchors (server=$($selectedServerAttempts.Count))."
+} elseif ($selectedServerAttempts.Count -lt 5) {
+    $reason = "Expected five selected server anchors across the awkward-pose matrix (server=$($selectedServerAttempts.Count))."
 } elseif (-not $fullSequence) {
     $reason = "Full sequence evidence was incomplete (attach=$($attachLines.Count), swing=$($swingLines.Count), detach=$($detachLines.Count))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
     $reason = "World-space W/A/D steering evidence was incomplete; missing: $($missingSteeringEvidence -join ', ')."
+} elseif (-not $constraintDiagnosticsPass) {
+    $reason = "Soft constraint diagnostics were incomplete or reported hard corrections (summaries=$($constraintSummaries.Count), hard=$hardCorrectionCount)."
+} elseif (-not $anchorFanEvidencePass) {
+    $reason = "Broad anchor fan evidence was incomplete; expected five selected attempts with probes>=15."
 } elseif ($RequireClientDiagnostics -and -not $clientDiagnosticsAvailable) {
     $reason = "Client diagnostics were required but unavailable (client=$($selectedClientAttempts.Count) selected, enabled=$($clientEnabledAttempts.Count))."
 } elseif (-not $clientDiagnosticsAvailable) {
@@ -278,6 +319,16 @@ $result = [pscustomobject]@{
     steeringEvidencePass = $steeringEvidencePass
     steeringEvidence = @($steeringEvidence.Keys | Sort-Object)
     missingSteeringEvidence = $missingSteeringEvidence
+    constraintDiagnosticsPass = $constraintDiagnosticsPass
+    constraintSummaryCount = $constraintSummaries.Count
+    constraintSummaries = $constraintSummaries
+    softCorrectionCount = $softCorrectionCount
+    hardCorrectionCount = $hardCorrectionCount
+    maxRadialCorrection = [math]::Round($maxRadialCorrection, 4)
+    maxVelocityDirectionDelta = [math]::Round($maxVelocityDirectionDelta, 4)
+    anchorFanEvidencePass = $anchorFanEvidencePass
+    tetherRenderEvidenceAvailable = $tetherRenderLines.Count -gt 0
+    tetherRenderLines = $tetherRenderLines.Count
     poseAttempts = $clientAttempts
     stdoutLog = $stdoutLog
     stderrLog = $stderrLog

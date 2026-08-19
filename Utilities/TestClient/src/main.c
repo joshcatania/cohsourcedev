@@ -234,7 +234,8 @@ static void webSwingSmokeLoop(void)
     static int stage = -1;
     static int stage_frames = 0;
 
-    if (!g_web_swing_smoke || !commConnected() || do_map_xfer)
+    if (!g_web_swing_smoke || !commConnected() || do_map_xfer ||
+        !control_state.mapserver_responding || !playerPtr())
         return;
 
     if (stage < 0)
@@ -387,6 +388,70 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ == 0)
                 commAddInput("webswing 0");
             if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE pose=D between_buildings_diagonal position=(116.00 118.00 -662.00) yaw=0.7854\n");
+                commAddInput("setpospyr 116.00 118.00 -662.00 0.2800 0.7854 0.0000");
+                commAddInput("webswing 1");
+                stage = 9;
+                stage_frames = 0;
+            }
+            break;
+
+        case 9:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 18 && stage_frames < 42, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 42 && stage_frames < 66, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 70)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 10;
+                stage_frames = 0;
+            }
+            break;
+
+        case 10:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=E elevated_gap_entry position=(88.00 135.00 -635.00) yaw=-0.4500\n");
+                commAddInput("setpospyr 88.00 135.00 -635.00 0.1600 -0.4500 0.0000");
+                commAddInput("webswing 1");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_e_elevated_gap_attach\n");
+                stage = 11;
+                stage_frames = 0;
+            }
+            break;
+
+        case 11:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames < 18 || stage_frames >= 62, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 18 && stage_frames < 40, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 40 && stage_frames < 62, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 70)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 12;
+                stage_frames = 0;
+            }
+            break;
+
+        case 12:
+            if (stage_frames++ >= 8)
             {
                 printf("WEB_SWING_SMOKE complete\n");
                 commSendQuitGame(0);

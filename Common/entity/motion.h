@@ -129,9 +129,18 @@ typedef struct MotionState
 
     U32                    web_swing_attached : 1;
     U32                    web_swing_diag_latched : 1;
+    U32                    web_swing_state_diag_latched : 1;
     Vec3                   web_swing_anchor;
     F32                    web_swing_rope_length;
     U32                    web_swing_log_tick;
+    U32                    web_swing_constraint_samples;
+    U32                    web_swing_constraint_soft_correction_count;
+    U32                    web_swing_constraint_correction_count;
+    F32                    web_swing_constraint_error_sum;
+    F32                    web_swing_constraint_max_error;
+    F32                    web_swing_constraint_correction_sum;
+    F32                    web_swing_constraint_max_correction;
+    F32                    web_swing_constraint_max_velocity_dir_delta;
 
     EntityCapsule        capsule;
 

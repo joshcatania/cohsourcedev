@@ -56,6 +56,7 @@
 #include "render/rendershadow.h"
 #include "render/renderbonedmodel.h"
 #include "render/rendertree.h"
+#include "render/renderprim.h"
 #include <utilitieslib/components/Earray.h>
 #include "player/pmotion.h"
 #include "group/grouputil.h"
@@ -3201,6 +3202,46 @@ void entClientProcessVisibility()
 
     PERFINFO_AUTO_STOP();
 }
+
+#ifndef TEST_CLIENT
+void entClientDrawWebSwingTethers(void)
+{
+    static int last_render_frame = -1;
+    int i;
+    int attached_count = 0;
+
+    // gfxSetupStuffToDraw is reached by several auxiliary viewports.  The
+    // frame guard makes this prototype visual exactly once per displayed
+    // client frame, even if a caller is added or reordered later.
+    if(last_render_frame == global_state.global_frame_count)
+        return;
+    last_render_frame = global_state.global_frame_count;
+
+    for(i = 1; i < entities_max; ++i)
+    {
+        Entity *e;
+        Vec3 tether_start;
+
+        if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
+           !e->motion->web_swing_attached)
+            continue;
+
+        if(e->seq && e->seq->gfx_root)
+            copyVec3(e->seq->gfx_root->mat[3], tether_start);
+        else
+            copyVec3(ENTPOS(e), tether_start);
+        tether_start[1] += 3.0f;
+        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xe0ff70ff, 3.0f);
+        ++attached_count;
+    }
+
+    if(attached_count && (global_state.global_frame_count % 30) == 0)
+    {
+        filelog_printf("webswing.log", "WEB_SWING CLIENT tether_render frame=%d attached_players=%d tether_lines=%d once_per_frame=1\n",
+                       global_state.global_frame_count, attached_count, attached_count);
+    }
+}
+#endif
 
 Entity *entCreate(char * type)
 {

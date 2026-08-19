@@ -35,6 +35,7 @@ void entReset(void);
 void entResetNonPlayer(void);
 void entClientProcess(void);
 void entClientProcessVisibility(void);
+void entClientDrawWebSwingTethers(void);
 Entity *entCreate(char * type);
 void entSetAlpha( Entity * e, int alpha, int type );
 void changeBody(Entity * entity, const char * type);

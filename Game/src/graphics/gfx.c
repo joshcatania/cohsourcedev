@@ -719,6 +719,11 @@ static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world,
         {
             gfxTreeDrawNode(gfx_tree_root,cam_info.viewmat);
         }
+        if((gfx_state.mainViewport || viewport->renderPass == RENDERPASS_IMAGECAPTURE) &&
+           viewport->renderCharacters && viewport->renderLines)
+        {
+            entClientDrawWebSwingTethers();
+        }
         PERFINFO_AUTO_STOP();
     }
 

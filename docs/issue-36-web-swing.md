@@ -5,9 +5,9 @@ Implemented the preflight design without using `MOVETYPE_WIRE`.
 ## Runtime behavior
 
 - `/webswing 1` enables the mirrored web-swing control state; `/webswing 0` disables it.
-- While enabled, a falling or jumping player probes five forward/upward directions from chest height for a usable world collision anchor.
-- The selected anchor is constrained by a 12–70 ft rope, horizontal input pumps the tangent, and speed is capped at 3.25.
-- The tether is rendered client-side while attached.
+- While enabled, a falling or jumping player probes a deterministic 21-ray fan around momentum/travel, forward fallback, side directions, and upper/lower elevations from chest height for a usable world collision anchor. Every probe uses the real world collision query; the search and rope limits share a 150 ft cap.
+- The selected anchor uses momentum/travel and forward scoring with a forward fallback, then applies a smooth rope constraint that preserves tangent motion, W/A/D steering, forward tangent, and release momentum without hard projection or velocity reconstruction. Bounded correction metrics are logged at attach detach.
+- The tether is rendered client-side exactly once per displayed frame for each attached player and does not mutate physics state.
 - Attachment happens before `checkJump()`, and the rope constraint runs after the vertical physics/jump override and before candidate integration.
 
 ## Required runtime evidence
@@ -37,4 +37,15 @@ The sampled input records show the tangent steering/pumping phases: `(-1, 0, 0)`
 
 `Release|x86` passed with the repository’s v145 fallback on 2026-08-19. Full build output is recorded in:
 
-`agent/logs/build-Release-x86-20260819-054838.log`
+`agent/logs/build-Release-x86-20260819-135745.log`
+
+## Review follow-up validation
+
+The review follow-up was validated on 2026-08-19 with the final `Release|x86` build on a warmed direct-DB shard. A fresh no-flight character (`Dummy00010`) exercised the deterministic Web Swing matrix:
+
+- 13 anchor selections from the 21-probe fan, 13 attachments, 13 detachments, and 551 swing samples.
+- Maximum observed detach speed was 4.500, demonstrating retained release momentum.
+- 13 constraint summaries recorded 1,117 soft corrections, 6 radial-bias corrections, 0 hard corrections, maximum radial correction 0.0302, and maximum velocity-direction delta 0.5646.
+- The headless TestClient has no renderer, so tether draw evidence remains a manual GUI checkpoint; the source path is once-per-displayed-frame and physics-free.
+
+Machine-readable results are in `agent/logs/webswing-smoke-20260819-140254.json`; the corresponding server evidence is in `agent/logs/webswing-smoke-20260819-140254.server-webswing.log`.

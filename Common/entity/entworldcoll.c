@@ -19,10 +19,14 @@
 #endif
 #define DEFAULT_RADIUS 1.0f
 
-#define WEB_MAX_ANCHOR_DIST    120.0f
+#define WEB_MAX_ANCHOR_DIST    150.0f
 #define WEB_MIN_ANCHOR_HEIGHT  6.0f
 #define WEB_MIN_ROPE_LENGTH    8.0f
-#define WEB_MAX_ROPE_LENGTH    110.0f
+#define WEB_MAX_ROPE_LENGTH    150.0f
+#define WEB_ANCHOR_START_HEIGHT 2.0f
+#define WEB_ROPE_SLOP          0.75f
+#define WEB_ROPE_BIAS_GAIN     0.35f
+#define WEB_ROPE_BIAS_MAX_SPEED 0.75f
 #define WEB_PENDULUM_ACCEL_DESCENT 0.095f
 #define WEB_PENDULUM_ACCEL_ASCENT  0.045f
 #define WEB_PENDULUM_ACCEL_APEX    0.015f
@@ -127,6 +131,7 @@ static int collide(Vec3 start,Vec3 end,CollInfo *coll,F32 rad,U32 flags)
 
 typedef struct WebSwingAnchorSearchStats
 {
+    int probe_count;
     int collision_ray_hits;
     int height_rejects;
     int distance_rejects;
@@ -138,100 +143,117 @@ typedef struct WebSwingAnchorSearchStats
 
 static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats *stats)
 {
-    static const F32 primary_probe_weights[][3] =
+    typedef struct WebSwingProbe
     {
-        { 0.75f, 0.66f, 0.00f },
-        { 0.50f, 0.87f, 0.00f },
-        { 0.90f, 0.44f, 0.00f },
-        { 0.65f, 0.70f, 0.25f },
-        { 0.65f, 0.70f,-0.25f },
-    };
-    static const F32 fallback_probe_weights[][3] =
+        F32 forward;
+        F32 up;
+        F32 side;
+    } WebSwingProbe;
+    static const WebSwingProbe probes[] =
     {
-        { 0.85f, 0.85f,  0.00f },
-        { 0.45f, 0.75f,  0.65f },
-        { 0.45f, 0.75f, -0.65f },
-        { 0.70f, 0.70f,  0.35f },
-        { 0.70f, 0.70f, -0.35f },
-        { 0.05f, 0.995f, 0.00f },
+        { 1.00f, 0.20f,  0.00f },
+        { 0.95f, 0.40f,  0.45f },
+        { 0.95f, 0.40f, -0.45f },
+        { 0.85f, 0.70f,  0.85f },
+        { 0.85f, 0.70f, -0.85f },
+        { 0.70f, 1.00f,  1.20f },
+        { 0.70f, 1.00f, -1.20f },
+        { 0.35f, 1.25f,  1.50f },
+        { 0.35f, 1.25f, -1.50f },
+        { 0.00f, 1.40f,  1.70f },
+        { 0.00f, 1.40f, -1.70f },
+        {-0.25f, 1.20f,  1.60f },
+        {-0.25f, 1.20f, -1.60f },
+        {-0.25f, 0.75f,  1.40f },
+        {-0.25f, 0.75f, -1.40f },
+        { 0.00f, 0.00f,  2.00f },
+        { 0.00f, 0.00f, -2.00f },
+        {-0.35f, 0.00f,  1.80f },
+        {-0.35f, 0.00f, -1.80f },
+        {-0.55f, 0.35f,  1.70f },
+        {-0.55f, 0.35f, -1.70f },
     };
     Vec3 start;
     Vec3 forward;
     Vec3 right;
     Vec3 momentum;
+    Vec3 travel;
+    Vec3 up = {0.0f, 1.0f, 0.0f};
     Vec3 best_anchor = {0};
     F32 best_score = -1e30f;
-    int pass;
+    int has_momentum;
+    int i;
 
     memset(stats, 0, sizeof(*stats));
 
     copyVec3(ENTPOS(e), start);
-    start[1] += 3.0f;
+    start[1] += WEB_ANCHOR_START_HEIGHT;
     copyVec3(ENTMAT(e)[2], forward);
     copyVec3(ENTMAT(e)[0], right);
     copyVec3(e->motion->vel, momentum);
     momentum[1] = 0.0f;
-    normalVec3(momentum);
+    has_momentum = normalVec3(momentum);
+    copyVec3(has_momentum ? momentum : forward, travel);
+    travel[1] = 0.0f;
+    if(!normalVec3(travel))
+        copyVec3(forward, travel);
 
-    for(pass = 0; pass < 2 && best_score <= -1e29f; ++pass)
+    stats->probe_count = ARRAY_SIZE(probes);
+    for(i = 0; i < ARRAY_SIZE(probes); ++i)
     {
-        const F32 (*probe_weights)[3] = pass == 0 ? primary_probe_weights : fallback_probe_weights;
-        int probe_count = pass == 0 ? ARRAY_SIZE(primary_probe_weights) : ARRAY_SIZE(fallback_probe_weights);
-        int i;
+        Vec3 direction;
+        Vec3 end;
+        Vec3 delta;
+        CollInfo coll = {0};
+        F32 distance;
+        F32 height;
+        F32 travel_alignment;
+        F32 forward_alignment;
+        F32 momentum_alignment = 0.0f;
+        F32 score;
 
-        for(i = 0; i < probe_count; ++i)
+        scaleVec3(travel, probes[i].forward, direction);
+        scaleVec3(up, probes[i].up, delta);
+        addVec3(direction, delta, direction);
+        scaleVec3(right, probes[i].side, delta);
+        addVec3(direction, delta, direction);
+        if(!normalVec3(direction))
+            continue;
+
+        scaleVec3(direction, WEB_MAX_ANCHOR_DIST, delta);
+        addVec3(start, delta, end);
+
+        if(!collide(start, end, &coll, 0.0f, COLL_DISTFROMSTART | COLL_BOTHSIDES))
+            continue;
+
+        ++stats->collision_ray_hits;
+        copyVec3(coll.mat[3], delta);
+        subVec3(delta, start, delta);
+        distance = normalVec3(delta);
+        height = coll.mat[3][1] - ENTPOSY(e);
+        travel_alignment = dotVec3(delta, travel);
+        forward_alignment = dotVec3(delta, forward);
+
+        if(distance < WEB_MIN_ROPE_LENGTH)
+            ++stats->distance_rejects;
+        if(height < WEB_MIN_ANCHOR_HEIGHT)
+            ++stats->height_rejects;
+        if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
+            continue;
+
+        if(has_momentum)
+            momentum_alignment = dotVec3(delta, momentum);
+
+        // Prefer high, forward, momentum-aligned real collision geometry while
+        // still allowing the wide side/upper fan to rescue street-canyon shots.
+        score = height * 1.5f + travel_alignment * 18.0f +
+                forward_alignment * 7.0f + momentum_alignment * 24.0f -
+                distance * 0.20f;
+        if(score > best_score)
         {
-            Vec3 direction;
-            Vec3 end;
-            Vec3 delta;
-            Vec3 up = {0.0f, 1.0f, 0.0f};
-            CollInfo coll = {0};
-            F32 distance;
-            F32 height;
-            F32 alignment;
-            F32 momentum_alignment = 0.0f;
-            F32 score;
-
-            scaleVec3(forward, probe_weights[i][0], direction);
-            scaleVec3(up, probe_weights[i][1], delta);
-            addVec3(direction, delta, direction);
-            scaleVec3(right, probe_weights[i][2], delta);
-            addVec3(direction, delta, direction);
-            if(!normalVec3(direction))
-                continue;
-
-            scaleVec3(direction, WEB_MAX_ANCHOR_DIST, delta);
-            addVec3(start, delta, end);
-
-            if(!collide(start, end, &coll, 0.0f, COLL_DISTFROMSTART | COLL_BOTHSIDES))
-                continue;
-
-            ++stats->collision_ray_hits;
-            copyVec3(coll.mat[3], delta);
-            subVec3(delta, start, delta);
-            distance = normalVec3(delta);
-            height = coll.mat[3][1] - ENTPOSY(e);
-            alignment = dotVec3(delta, forward);
-
-            if(distance < WEB_MIN_ROPE_LENGTH)
-                ++stats->distance_rejects;
-            if(height < WEB_MIN_ANCHOR_HEIGHT)
-                ++stats->height_rejects;
-            if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
-                continue;
-
-            if(!vec3IsZero(momentum))
-                momentum_alignment = dotVec3(delta, momentum);
-
-            // Preserve the forward-facing behavior for a first shot, but make
-            // re-anchoring follow the direction the player is already carrying.
-            score = height * 1.5f + alignment * 15.0f + momentum_alignment * 22.0f - distance * 0.25f;
-            if(score > best_score)
-            {
-                best_score = score;
-                copyVec3(coll.mat[3], best_anchor);
-                stats->used_fallback = pass != 0;
-            }
+            best_score = score;
+            copyVec3(coll.mat[3], best_anchor);
+            stats->used_fallback = i >= 5;
         }
     }
 
@@ -254,7 +276,7 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
     if(stats->selected)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -262,7 +284,8 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
-                       stats->collision_ray_hits,
+                        stats->probe_count,
+                        stats->collision_ray_hits,
                        stats->height_rejects,
                        stats->distance_rejects,
                        stats->used_fallback,
@@ -272,7 +295,7 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
     else
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -280,7 +303,8 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
-                       stats->collision_ray_hits,
+                        stats->probe_count,
+                        stats->collision_ray_hits,
                        stats->height_rejects,
                        stats->distance_rejects);
     }
@@ -305,11 +329,44 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                            lengthVec3(motion->vel),
                            vecParamsXYZ(motion->web_swing_anchor),
                            vecParamsXYZ(motion->input.vel));
+            filelog_printf("webswing.log", "WEB_SWING %s constraint_summary samples=%u soft_corrections=%u radial_corrections=%u hard_corrections=0 max_error=%.4f avg_error=%.4f max_radial_correction=%.4f avg_radial_correction=%.4f max_velocity_dir_delta=%.4f\n",
+                           WEB_SWING_LOG_SIDE,
+                           motion->web_swing_constraint_samples,
+                           motion->web_swing_constraint_soft_correction_count,
+                           motion->web_swing_constraint_correction_count,
+                           motion->web_swing_constraint_max_error,
+                           motion->web_swing_constraint_samples ? motion->web_swing_constraint_error_sum / motion->web_swing_constraint_samples : 0.0f,
+                           motion->web_swing_constraint_max_correction,
+                           motion->web_swing_constraint_correction_count ? motion->web_swing_constraint_correction_sum / motion->web_swing_constraint_correction_count : 0.0f,
+                           motion->web_swing_constraint_max_velocity_dir_delta);
         }
         motion->web_swing_attached = 0;
         motion->web_swing_diag_latched = 0;
+        motion->web_swing_state_diag_latched = 0;
         motion->web_swing_log_tick = 0;
+        motion->web_swing_constraint_samples = 0;
+        motion->web_swing_constraint_soft_correction_count = 0;
+        motion->web_swing_constraint_correction_count = 0;
+        motion->web_swing_constraint_error_sum = 0.0f;
+        motion->web_swing_constraint_max_error = 0.0f;
+        motion->web_swing_constraint_correction_sum = 0.0f;
+        motion->web_swing_constraint_max_correction = 0.0f;
+        motion->web_swing_constraint_max_velocity_dir_delta = 0.0f;
         return;
+    }
+
+    if(!motion->web_swing_attached && !motion->web_swing_state_diag_latched)
+    {
+        motion->web_swing_state_diag_latched = 1;
+        filelog_printf("webswing.log", "WEB_SWING %s state web_swing_enabled=%d up=%.3f falling=%d jumping=%d flying=%d on_surf=%d pos=(%.2f %.2f %.2f)\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->input.web_swing_enabled,
+                       motion->input.vel[1],
+                       motion->falling,
+                       motion->jumping,
+                       motion->input.flying,
+                       motion->on_surf,
+                       vecParamsXYZ(ENTPOS(e)));
     }
 
     if(!motion->web_swing_attached && (motion->falling || motion->jumping))
@@ -333,6 +390,14 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
             rope_length = distance3(ENTPOS(e), anchor);
             motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
             motion->web_swing_log_tick = 0;
+            motion->web_swing_constraint_samples = 0;
+            motion->web_swing_constraint_soft_correction_count = 0;
+            motion->web_swing_constraint_correction_count = 0;
+            motion->web_swing_constraint_error_sum = 0.0f;
+            motion->web_swing_constraint_max_error = 0.0f;
+            motion->web_swing_constraint_correction_sum = 0.0f;
+            motion->web_swing_constraint_max_correction = 0.0f;
+            motion->web_swing_constraint_max_velocity_dir_delta = 0.0f;
             motion->jumping = 0;
             motion->falling = 1;
 
@@ -374,10 +439,20 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     Vec3 projected;
     Vec3 predicted;
     Vec3 step;
+    Vec3 velocity_before_constraint;
+    Vec3 velocity_after_constraint;
+    Vec3 velocity_before_direction;
+    Vec3 velocity_after_direction;
     F32 distance;
+    F32 radial_error;
+    F32 radial_velocity;
+    F32 radial_correction;
+    F32 velocity_dir_delta;
     F32 speed;
     F32 arc_height;
     F32 phase_accel;
+    int hard_correction_fired = 0;
+    int soft_correction_fired = 0;
 
     if(!motion->web_swing_attached || e->timestep <= 0.0001f)
         return;
@@ -453,18 +528,62 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     if(speed > WEB_MAX_SPEED)
         scaleVec3(motion->vel, WEB_MAX_SPEED / speed, motion->vel);
 
+    copyVec3(motion->vel, velocity_before_constraint);
     scaleVec3(motion->vel, e->timestep, step);
     addVec3(motion->last_pos, step, predicted);
     subVec3(predicted, motion->web_swing_anchor, rope);
     distance = normalVec3(rope);
+    radial_error = distance - motion->web_swing_rope_length;
+    radial_velocity = dotVec3(velocity_before_constraint, rope);
+    radial_correction = 0.0f;
 
-    if(distance > motion->web_swing_rope_length)
+    // Keep the boundary forgiving: preserve tangential momentum and remove
+    // only outward radial velocity while the predicted point is taut.
+    if(distance >= motion->web_swing_rope_length - WEB_ROPE_SLOP && radial_velocity > 0.0f)
     {
-        scaleVec3(rope, motion->web_swing_rope_length, rope);
-        addVec3(motion->web_swing_anchor, rope, predicted);
-        subVec3(predicted, motion->last_pos, step);
-        scaleVec3(step, 1.0f / e->timestep, motion->vel);
+        scaleVec3(rope, radial_velocity, projected);
+        subVec3(motion->vel, projected, motion->vel);
+        soft_correction_fired = 1;
     }
+
+    scaleVec3(motion->vel, e->timestep, step);
+    addVec3(motion->last_pos, step, predicted);
+    subVec3(predicted, motion->web_swing_anchor, rope);
+    distance = normalVec3(rope);
+    if(distance > motion->web_swing_rope_length + WEB_ROPE_SLOP)
+    {
+        F32 bias_distance = MIN(distance - motion->web_swing_rope_length - WEB_ROPE_SLOP,
+                                WEB_ROPE_BIAS_MAX_SPEED * e->timestep);
+        F32 bias_speed = MIN(bias_distance * WEB_ROPE_BIAS_GAIN / e->timestep,
+                             WEB_ROPE_BIAS_MAX_SPEED);
+        scaleVec3(rope, -bias_speed, projected);
+        addVec3(motion->vel, projected, motion->vel);
+        radial_correction = bias_speed * e->timestep;
+        soft_correction_fired = 1;
+    }
+
+    copyVec3(motion->vel, velocity_after_constraint);
+    velocity_dir_delta = 0.0f;
+    copyVec3(velocity_before_constraint, velocity_before_direction);
+    copyVec3(velocity_after_constraint, velocity_after_direction);
+    if(normalVec3(velocity_before_direction) && normalVec3(velocity_after_direction))
+        velocity_dir_delta = 1.0f - MAX(-1.0f, MIN(1.0f, dotVec3(velocity_before_direction, velocity_after_direction)));
+
+    ++motion->web_swing_constraint_samples;
+    if(soft_correction_fired)
+        ++motion->web_swing_constraint_soft_correction_count;
+    if(radial_error > 0.0f)
+    {
+        motion->web_swing_constraint_error_sum += radial_error;
+        motion->web_swing_constraint_max_error = MAX(motion->web_swing_constraint_max_error, radial_error);
+    }
+    if(radial_correction > 0.0f)
+    {
+        ++motion->web_swing_constraint_correction_count;
+        motion->web_swing_constraint_correction_sum += radial_correction;
+        motion->web_swing_constraint_max_correction = MAX(motion->web_swing_constraint_max_correction, radial_correction);
+    }
+    motion->web_swing_constraint_max_velocity_dir_delta = MAX(motion->web_swing_constraint_max_velocity_dir_delta, velocity_dir_delta);
 
     speed = lengthVec3(motion->vel);
     if(speed > WEB_MAX_SPEED)
@@ -481,6 +600,18 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                        WEB_SWING_LOG_SIDE,
                        lengthVec3(motion->vel), motion->web_swing_rope_length,
                        vecParamsXYZ(motion->input.vel));
+        filelog_printf("webswing.log", "WEB_SWING %s constraint pre_distance=%.3f rope=%.3f radial_error=%.3f radial_velocity=%.3f vel_before=(%.3f %.3f %.3f) vel_after=(%.3f %.3f %.3f) hard_correction=%d soft_correction=%d radial_correction=%.4f velocity_dir_delta=%.4f\n",
+                       WEB_SWING_LOG_SIDE,
+                       radial_error + motion->web_swing_rope_length,
+                       motion->web_swing_rope_length,
+                       radial_error,
+                       radial_velocity,
+                       vecParamsXYZ(velocity_before_constraint),
+                       vecParamsXYZ(velocity_after_constraint),
+                       hard_correction_fired,
+                       soft_correction_fired,
+                       radial_correction,
+                       velocity_dir_delta);
         if(lengthVec3Squared(input_world) > 0.0001f)
         {
             printf("WEB_SWING %s steering forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f)\n",
@@ -494,15 +625,6 @@ void entWorldWebSwingApplyConstraint(Entity *e)
         }
         motion->web_swing_log_tick = 0;
     }
-
-#if CLIENT
-    {
-        Vec3 tether_start;
-        copyVec3(ENTPOS(e), tether_start);
-        tether_start[1] += 3.0f;
-        drawLine3DWidth(tether_start, motion->web_swing_anchor, 0xe0ff70ff, 3.0f);
-    }
-#endif
 }
 
 F32 HeightAtLoc(const Vec3 vec, F32 radius, F32 dist)
