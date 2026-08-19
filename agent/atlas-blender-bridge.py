@@ -8,6 +8,8 @@ Commands:
   py -3 agent/atlas-blender-bridge.py extract --wrl <phase-a.wrl> --obj <atlas.obj>
   blender.exe --background --python agent/atlas-blender-bridge.py -- author \
       --obj <atlas.obj> --blend <atlas.blend> --edited-obj <atlas-edited.obj>
+  blender.exe --background <atlas-edited.blend> --python agent/atlas-blender-bridge.py -- export \
+      --edited-obj <atlas-edited.obj>
   py -3 agent/atlas-blender-bridge.py splice --wrl <phase-a.wrl> \
       --edited-obj <atlas-edited.obj> --out <edited.wrl>
 """
@@ -275,6 +277,78 @@ def splice(wrl_path: Path, edited_obj_path: Path, output_path: Path) -> None:
     output_path.write_text(result, encoding="utf-8")
 
 
+def blender_export(objects, edited_obj_path: Path, header: str) -> None:
+    import bpy
+
+    if len(objects) != 2:
+        raise ValueError(f"expected exactly two Atlas mesh objects, got {len(objects)}")
+
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    lines = [f"# {header}", "# evaluated Blender loop triangles with explicit UVs/normals"]
+    vertex_offset = 0
+    uv_offset = 0
+    normal_offset = 0
+    for obj in objects:
+        evaluated = obj.evaluated_get(depsgraph)
+        mesh = evaluated.to_mesh(preserve_all_data_layers=True, depsgraph=depsgraph)
+        try:
+            mesh.calc_loop_triangles()
+            uv_layer = mesh.uv_layers.active
+            if uv_layer is None:
+                raise ValueError(f"{obj.name} has no active UV layer")
+            material = obj.get("coh_material")
+            if not material:
+                if not obj.data.materials:
+                    raise ValueError(f"{obj.name} has no material")
+                material = obj.data.materials[0].name
+            lines.extend([f"o {obj.name}", f"usemtl {material}"])
+            lines.extend(
+                f"v {vertex.co.x:.9g} {vertex.co.y:.9g} {vertex.co.z:.9g}"
+                for vertex in mesh.vertices
+            )
+            lines.extend(
+                f"vt {uv_layer.data[loop.index].uv.x:.9g} {uv_layer.data[loop.index].uv.y:.9g}"
+                for loop in mesh.loops
+            )
+            lines.extend(
+                f"vn {loop.normal.x:.9g} {loop.normal.y:.9g} {loop.normal.z:.9g}"
+                for loop in mesh.loops
+            )
+            for triangle in mesh.loop_triangles:
+                fields = [
+                    f"{vertex + 1 + vertex_offset}/{loop + 1 + uv_offset}/{loop + 1 + normal_offset}"
+                    for vertex, loop in zip(triangle.vertices, triangle.loops)
+                ]
+                lines.append("f " + " ".join(fields))
+            vertex_offset += len(mesh.vertices)
+            uv_offset += len(mesh.loops)
+            normal_offset += len(mesh.loops)
+        finally:
+            evaluated.to_mesh_clear()
+    edited_obj_path.parent.mkdir(parents=True, exist_ok=True)
+    edited_obj_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    triangles = sum(1 for line in lines if line.startswith("f "))
+    print(f"ISSUE34_BLENDER: exported {edited_obj_path} objects=2 triangles={triangles}")
+
+
+def blender_scene_atlas_objects():
+    import bpy
+
+    objects = sorted(
+        (
+            obj
+            for obj in bpy.context.scene.objects
+            if obj.type == "MESH" and obj.name.startswith(MODEL + "_")
+        ),
+        key=lambda obj: obj.name,
+    )
+    if len(objects) != 2:
+        raise ValueError(
+            f"expected two mesh objects named {MODEL}_*, got {[obj.name for obj in objects]}"
+        )
+    return objects
+
+
 def blender_author(obj_path: Path, blend_path: Path, edited_obj_path: Path) -> None:
     import bpy
     from mathutils import Vector
@@ -318,33 +392,9 @@ def blender_author(obj_path: Path, blend_path: Path, edited_obj_path: Path) -> N
 
     bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))
 
-    # Export explicit per-loop UVs/normals. This avoids depending on Blender's
-    # optional OBJ exporter and keeps the splice deterministic and local.
-    lines = ["# Issue #33 edited by Blender 4.5.3", "# proof edit: Globe object scaled 1.10x about its own center"]
-    vertex_offset = 0
-    uv_offset = 0
-    normal_offset = 0
-    for obj in objects:
-        mesh = obj.data
-        mesh.update()
-        mesh.calc_loop_triangles()
-        lines.extend([f"o {obj.name}", f"usemtl {obj.data.materials[0].name}"])
-        lines.extend(f"v {vertex.co.x:.9g} {vertex.co.y:.9g} {vertex.co.z:.9g}" for vertex in mesh.vertices)
-        loop_uvs = [mesh.uv_layers.active.data[loop.index].uv for loop in mesh.loops]
-        lines.extend(f"vt {uv.x:.9g} {uv.y:.9g}" for uv in loop_uvs)
-        lines.extend(f"vn {loop.normal.x:.9g} {loop.normal.y:.9g} {loop.normal.z:.9g}" for loop in mesh.loops)
-        for polygon in mesh.polygons:
-            fields = []
-            for loop_index, vertex_index in zip(polygon.loop_indices, polygon.vertices):
-                fields.append(f"{vertex_index + 1 + vertex_offset}/{loop_index + 1 + uv_offset}/{loop_index + 1 + normal_offset}")
-            lines.append("f " + " ".join(fields))
-        vertex_offset += len(mesh.vertices)
-        uv_offset += len(mesh.loops)
-        normal_offset += len(mesh.loops)
-    edited_obj_path.parent.mkdir(parents=True, exist_ok=True)
-    edited_obj_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # Export through the same evaluated, triangulated path used by edited blends.
+    blender_export(objects, edited_obj_path, "Issue #33 edited by Blender 4.5.3")
     print(f"ISSUE33_BLENDER: saved {blend_path}")
-    print(f"ISSUE33_BLENDER: exported {edited_obj_path}")
     print("ISSUE33_BLENDER: proof edit Globe scale=1.10 center=local bounding-box centroid")
 
 
@@ -358,6 +408,8 @@ def main() -> None:
     author_parser.add_argument("--obj", type=Path, required=True)
     author_parser.add_argument("--blend", type=Path, required=True)
     author_parser.add_argument("--edited-obj", type=Path, required=True)
+    export_parser = sub.add_parser("export")
+    export_parser.add_argument("--edited-obj", type=Path, required=True)
     splice_parser = sub.add_parser("splice")
     splice_parser.add_argument("--wrl", type=Path, required=True)
     splice_parser.add_argument("--edited-obj", type=Path, required=True)
@@ -370,6 +422,8 @@ def main() -> None:
         print(f"ISSUE33_BRIDGE: extracted shapes=2 vertices={sum(len(shape.vertices) for shape in shapes)} triangles={sum(len(shape.faces) for shape in shapes)}")
     elif args.command == "author":
         blender_author(args.obj, args.blend, args.edited_obj)
+    elif args.command == "export":
+        blender_export(blender_scene_atlas_objects(), args.edited_obj, "Issue #34 edited Atlas high LOD")
     elif args.command == "splice":
         splice(args.wrl, args.edited_obj, args.out)
         print(f"ISSUE33_BRIDGE: spliced {args.out}")
