@@ -368,7 +368,7 @@ static void webSwingResetConstraintMetrics(MotionState *motion)
     motion->web_swing_constraint_max_radial_velocity_removed = 0.0f;
 }
 
-void entWorldWebSwingUpdateAttachment(Entity *e)
+void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
 {
     MotionState *motion = e->motion;
     int held = motion->input.web_swing_enabled && motion->input.vel[1] > 0.001f;
@@ -433,7 +433,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
                        vecParamsXYZ(ENTPOS(e)));
     }
 
-    if(!motion->web_swing_attachment_suppressed &&
+    if(!web_swing_test_no_attach &&
        !motion->web_swing_attached && (motion->falling || motion->jumping))
     {
         Vec3 anchor;

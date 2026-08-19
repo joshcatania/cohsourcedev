@@ -1671,7 +1671,7 @@ static int svrRunPhysicsStep(    Entity* e,
 
                 // Run the physics.
 
-                entMotion(e, unitmat);
+                entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
 
                 // Record motion AFTER physics.
 
@@ -2952,6 +2952,7 @@ int svrPlayerSendControlState(Packet* pak, Entity* e, NetLink* link, int full_st
 
         pktSendBits(pak, 1, scs->no_jump_repeat);
         pktSendBits(pak, 1, scs->web_swing);
+        pktSendBits(pak, 1, scs->web_swing_test_no_attach);
     }
     else
     {

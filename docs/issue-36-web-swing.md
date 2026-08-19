@@ -60,7 +60,7 @@ The deterministic Web Swing matrix used `Dummy00012` / `TEST04223` (level 50, `P
 
 Machine-readable results are in `agent/logs/webswing-smoke-20260819-160030.json`; the corresponding server evidence is in `agent/logs/webswing-smoke-20260819-160030.server-webswing.log`.
 
-The jump-height smoke also passed at the preserved `WEB_LAUNCH_JUMP_HEIGHT_SCALE=2.50`: OFF 11.203 ft, ON 17.188 ft, ratio 1.534x, matching the measured approximately-1.536x launch baseline. Evidence is in `agent/logs/jump-height-smoke-20260819-155931.json`. The launch diagnostic uses an internal `webswing 2` mode that keeps the real launch-height state but suppresses only anchor acquisition; normal `webswing 0/1` behavior is unchanged.
+The jump-height smoke also passed at the preserved `WEB_LAUNCH_JUMP_HEIGHT_SCALE=2.50`: OFF 11.203 ft, ON 17.188 ft, ratio 1.534x, matching the measured approximately-1.536x launch baseline. Evidence is in `agent/logs/jump-height-smoke-20260819-155931.json`. The launch diagnostic uses the hidden TestClient-only `webswing_test_no_attach` control bit, synchronized through ServerControlState on both client and server; normal `/webswing 0` and `/webswing 1` behavior is unchanged.
 
 Final constants: 150 ft anchor/search and rope cap; 6 ft minimum anchor height; 8 ft minimum rope; 2 ft probe start height; 0.75 ft rope slop; 0.35 bias gain; 0.75 ft/s bias cap; 4.50 ft/s maximum swing speed; 21 deterministic probes; 0.300 direction-delta threshold; 0.250 radial-velocity threshold.
 

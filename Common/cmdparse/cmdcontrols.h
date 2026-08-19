@@ -131,6 +131,9 @@ typedef struct ServerControlState
     U32                                magic_carpet            : 1;
     U32                                parkour_run                : 1;
     U32                                web_swing                : 1;
+    // TestClient-only diagnostic state. This is synchronized with the
+    // client prediction path and is never set by the player-facing command.
+    U32                                web_swing_test_no_attach : 1;
 } ServerControlState;
 
 

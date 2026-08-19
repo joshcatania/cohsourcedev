@@ -1795,7 +1795,7 @@ static void moveEntity(Entity *e)
     entUpdatePosInterpolated(e, new_pos);
 }
 
-static void entWalk(Entity* e, const Mat3 control_mat)
+static void entWalk(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach)
 {
     MotionState*    motion = e->motion;
     SurfaceParams*    surf_mod;
@@ -1831,7 +1831,7 @@ static void entWalk(Entity* e, const Mat3 control_mat)
         motion->jump_still_held = 0;
     }
     
-    entWorldWebSwingUpdateAttachment(e);
+    entWorldWebSwingUpdateAttachment(e, web_swing_test_no_attach);
 
     // Check if I'm trying to jump.
 
@@ -1962,7 +1962,7 @@ int velIsNearlyZero(Vec3 vel)
 }
 
 
-void entMotion(Entity* e, const Mat3 control_mat)
+void entMotion(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach)
 {
     MotionState* motion = e->motion;
     int moving;
@@ -2082,7 +2082,7 @@ void entMotion(Entity* e, const Mat3 control_mat)
             global_motion_state.noDetailCollisions = true;
 #endif
         PERFINFO_AUTO_START("entWalk", 1);
-            entWalk(e, control_mat);
+            entWalk(e, control_mat, web_swing_test_no_attach);
         PERFINFO_AUTO_STOP();
         zeroVec3(motion->input.vel);
 

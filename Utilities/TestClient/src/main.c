@@ -608,9 +608,10 @@ static void webSwingJumpSmokeLoop(void)
         case 2:
             if (stage_frames == 1)
             {
-                // Mode 2 is a diagnostic-only launch measurement: it keeps
-                // the real Web Swing jump cap but suppresses anchor search.
-                commAddInput("webswing 2");
+                // Test-only synchronized state keeps the real Web Swing jump
+                // cap while suppressing anchor search on both simulations.
+                commAddInput("webswing 1");
+                commAddInput("webswing_test_no_attach 1");
                 commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
             }
             if (stage_frames >= 30)
@@ -635,6 +636,7 @@ static void webSwingJumpSmokeLoop(void)
                 g_web_swing_jump_on_height = peak_y - start_y;
                 printf("WEB_SWING_JUMP_SMOKE result=on start_y=%.3f peak_y=%.3f height=%.3f\n",
                        start_y, peak_y, g_web_swing_jump_on_height);
+                commAddInput("webswing_test_no_attach 0");
                 commAddInput("webswing 0");
                 stage = 4;
                 stage_frames = 0;

@@ -1090,13 +1090,7 @@ void setJumppack(Entity *e, int jumppack_on)
 void setWebSwing(Entity *e, int enabled)
 {
     ClientLink *client = clientFromEnt(e);
-    // TestClient uses mode 2 only to measure launch height without an anchor;
-    // normal player-facing modes remain 0 (off) and 1 (attach enabled).
-    int attachment_suppressed = enabled == 2;
-    int enabled_bit = enabled != 0;
-
-    if(e->motion)
-        e->motion->web_swing_attachment_suppressed = attachment_suppressed;
+    int enabled_bit = enabled ? 1 : 0;
 
     if(client)
     {
@@ -1113,12 +1107,38 @@ void setWebSwing(Entity *e, int enabled)
                 state->web_swing = enabled_bit;
             }
 
-            printf("WEB_SWING SERVER mode=%d\n", enabled_bit);
-            filelog_printf("webswing.log", "WEB_SWING SERVER mode=%d\n", enabled_bit);
+            printf("WEB_SWING SERVER enabled=%d\n", enabled_bit);
+            filelog_printf("webswing.log", "WEB_SWING SERVER enabled=%d\n", enabled_bit);
             sendChatMsg(e,
                         enabled_bit ? "Web Swing enabled - hold Space while airborne near buildings."
                                 : "Web Swing disabled.",
                         INFO_SVR_COM, 0);
+        }
+    }
+}
+
+void setWebSwingTestNoAttach(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+    int enabled_bit = enabled ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_swing_test_no_attach != enabled_bit)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_swing_test_no_attach = enabled_bit;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_swing_test_no_attach = enabled_bit;
+            }
+
+            printf("WEB_SWING SERVER test_no_attach=%d\n", enabled_bit);
+            filelog_printf("webswing.log", "WEB_SWING SERVER test_no_attach=%d\n", enabled_bit);
         }
     }
 }

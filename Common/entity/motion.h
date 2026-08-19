@@ -128,7 +128,6 @@ typedef struct MotionState
     F32                    hitStumbleTractionLoss;
 
     U32                    web_swing_attached : 1;
-    U32                    web_swing_attachment_suppressed : 1;
     U32                    web_swing_diag_latched : 1;
     U32                    web_swing_state_diag_latched : 1;
     Vec3                   web_swing_anchor;
@@ -173,7 +172,7 @@ int velIsZero(Vec3 vel);
 int entCanSetPYR( Entity *e );
 int entCanSetInpVel( Entity *e );
 void entMoveNoColl(Entity *e);
-void entMotion(Entity* e, const Mat3 control_mat);
+void entMotion(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach);
 bool isEntCurrentlyCollidable( Entity * e );
 void setNoCollideOnTracker( DefTracker * tracker, int set );
 // End mkproto

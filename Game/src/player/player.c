@@ -1514,7 +1514,7 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
                         // Run the physics.
                         
                         e->timestep = 1;
-                        entMotion(e, unitmat);
+                        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
                         
                         // Record motion AFTER physics.
                         
@@ -1621,7 +1621,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     
     // Run the physics.
 
-    entMotion(e, unitmat);
+    entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
     
     // Record motion AFTER physics.
     
@@ -2024,7 +2024,7 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
         
         e->timestep = 1;
         global_motion_state.doNotSetAnimBits = 1;
-        entMotion(e, unitmat);
+        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
         global_motion_state.doNotSetAnimBits = 0;
         
         // Record motion AFTER physics.
@@ -2334,6 +2334,7 @@ static void playerReceiveServerControlState(Packet *pak)
 
         server_state.no_jump_repeat =            pktGetBits(pak, 1);
         server_state.web_swing =                 pktGetBits(pak, 1);
+        server_state.web_swing_test_no_attach =  pktGetBits(pak, 1);
 
         if(!oo_packet)
         {
@@ -2384,6 +2385,7 @@ static void playerReceiveServerControlState(Packet *pak)
             scs->no_ent_collision =                server_state.no_ent_collision;
             scs->no_jump_repeat =                server_state.no_jump_repeat;
             scs->web_swing =                     server_state.web_swing;
+            scs->web_swing_test_no_attach =     server_state.web_swing_test_no_attach;
             motion->input.web_swing_enabled =    server_state.web_swing;
 
             if(motion->input.flying != scs->fly)
@@ -2552,7 +2554,7 @@ static void repredictPhysicsSteps(ControlState* controls, ControlStateChange* cs
         
         e->timestep = 1;
         global_motion_state.doNotSetAnimBits = 1;
-        entMotion(e, unitmat);
+        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
         global_motion_state.doNotSetAnimBits = 0;
         
         // Record motion AFTER physics.
