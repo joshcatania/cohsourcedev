@@ -33,6 +33,7 @@
 #include <time.h>
 #include <process.h>
 #include "entity/character_base.h"
+#include "entity/powers.h"
 #include "entity/entclient.h"
 #include "entity/entVarUpdate.h"
 #include "gameComm/itemselect.h"
@@ -213,6 +214,16 @@ int g_agent_smoke_map_connected = 0;
 char g_agent_smoke_status_path[MAX_PATH] = {0};
 int g_web_swing_smoke = 0;
 int g_web_swing_smoke_complete = 0;
+int g_web_swing_jump_smoke = 0;
+int g_web_swing_jump_smoke_complete = 0;
+F32 g_web_swing_jump_off_height = 0.0f;
+F32 g_web_swing_jump_on_height = 0.0f;
+int g_swing_test_prep = 0;
+int g_swing_test_prep_complete = 0;
+char g_swing_test_prep_target[256] = {0};
+int g_swing_test_prep_level = 0;
+int g_swing_test_prep_xp_level = 0;
+int g_swing_test_prep_fly_owned = 0;
 static void agentSmokeWriteStatus(int exit_code);
 
 static void webSwingSmokeLoop(void)
@@ -237,6 +248,7 @@ static void webSwingSmokeLoop(void)
             {
                 printf("WEB_SWING_SMOKE pose=A position=(100.00 120.00 -650.00) yaw=0.0000\n");
                 commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                commAddInput("powexec_toggleoff Mission_Maker_Movement.Flight.Fly");
                 commAddInput("webswing 1");
             }
             if (stage_frames == 2)
@@ -376,6 +388,238 @@ static void webSwingSmokeLoop(void)
     }
 }
 
+static void webSwingJumpSmokeLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+    static F32 start_y = 0.0f;
+    static F32 peak_y = 0.0f;
+    Entity *player;
+
+    if (!g_web_swing_jump_smoke || !commConnected() || do_map_xfer || !(player = playerPtr()))
+        return;
+
+    if (stage < 0)
+    {
+        stage = 0;
+        stage_frames = 0;
+        printf("WEB_SWING_JUMP_SMOKE begin\n");
+    }
+
+    ++stage_frames;
+    switch (stage)
+    {
+        case 0:
+            if (stage_frames == 1)
+            {
+                // Keep a real Fly power owned by the character, but make the
+                // two jump measurements ground-jump measurements.
+                commAddInput("powexec_toggleoff Mission_Maker_Movement.Flight.Fly");
+                commAddInput("webswing 0");
+                commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 30)
+            {
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            if (stage_frames == 1)
+            {
+                start_y = peak_y = ENTPOSY(player);
+                doJump();
+            }
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (ENTPOSY(player) > peak_y)
+                peak_y = ENTPOSY(player);
+            if (stage_frames >= 90)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                g_web_swing_jump_off_height = peak_y - start_y;
+                printf("WEB_SWING_JUMP_SMOKE result=off start_y=%.3f peak_y=%.3f height=%.3f\n",
+                       start_y, peak_y, g_web_swing_jump_off_height);
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames == 1)
+            {
+                commAddInput("webswing 1");
+                commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 30)
+            {
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            if (stage_frames == 1)
+            {
+                start_y = peak_y = ENTPOSY(player);
+                doJump();
+            }
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (ENTPOSY(player) > peak_y)
+                peak_y = ENTPOSY(player);
+            if (stage_frames >= 90)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                g_web_swing_jump_on_height = peak_y - start_y;
+                printf("WEB_SWING_JUMP_SMOKE result=on start_y=%.3f peak_y=%.3f height=%.3f\n",
+                       start_y, peak_y, g_web_swing_jump_on_height);
+                commAddInput("webswing 0");
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames >= 10)
+            {
+                printf("WEB_SWING_JUMP_SMOKE complete off_height=%.3f on_height=%.3f\n",
+                       g_web_swing_jump_off_height, g_web_swing_jump_on_height);
+                g_web_swing_jump_smoke_complete = 1;
+                agentSmokeWriteStatus(0);
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                logShutdownAndWait();
+                exit(0);
+            }
+            break;
+    }
+}
+
+static void swingTestPrepLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+
+    if (!g_swing_test_prep || !commConnected() || do_map_xfer || !playerPtr())
+        return;
+
+    if (stage < 0)
+    {
+        stage = 0;
+        stage_frames = 0;
+        printf("SWING_TEST_PREP begin target=%s\n", g_swing_test_prep_target);
+    }
+
+    ++stage_frames;
+    switch (stage)
+    {
+        case 0:
+            if (stage_frames == 1)
+            {
+                // The direct-DB local shard accepts this development-only
+                // elevation, which unlocks the existing prep commands.
+                printf("SWING_TEST_PREP command=accesslevel 9\n");
+                commAddInput("accesslevel 9");
+            }
+            if (stage_frames >= 15)
+            {
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            if (stage_frames == 1)
+            {
+                char command[512];
+
+                if (stricmp(playerPtr()->name, g_swing_test_prep_target) != 0)
+                {
+                    printf("SWING_TEST_PREP command=playerrename old=%s new=%s\n",
+                           playerPtr()->name, g_swing_test_prep_target);
+                    sprintf(command, "playerrename \"%s\" \"%s\"",
+                            playerPtr()->name, g_swing_test_prep_target);
+                    commAddInput(command);
+                }
+                else
+                {
+                    printf("SWING_TEST_PREP rename=already_named\n");
+                }
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames == 1)
+            {
+                printf("SWING_TEST_PREP command=levelup_xp 50\n");
+                commAddInput("levelup_xp 50");
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            if (stage_frames == 1)
+            {
+                // This is the loaded dictionary full name used by the
+                // existing CSR command; no movement flag is being faked.
+                printf("SWING_TEST_PREP command=powers_buypower_dev Mission_Maker_Movement Flight Fly\n");
+                commAddInput("powers_buypower_dev Mission_Maker_Movement Flight Fly");
+            }
+            if (stage_frames >= 25)
+            {
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames == 1)
+            {
+                printf("SWING_TEST_PREP command=powers_info\n");
+                commAddInput("powers_info");
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 5;
+                stage_frames = 0;
+            }
+            break;
+
+        case 5:
+            if (stage_frames >= 10)
+            {
+                const BasePower *fly_base = powerdict_GetBasePowerByName(
+                    &g_PowerDictionary, "Mission_Maker_Movement", "Flight", "Fly");
+
+                g_swing_test_prep_level = playerPtr()->pchar ?
+                    character_CalcExperienceLevel(playerPtr()->pchar) + 1 : 0;
+                g_swing_test_prep_xp_level = g_swing_test_prep_level;
+                g_swing_test_prep_fly_owned = playerPtr()->pchar && fly_base &&
+                    character_OwnsPower(playerPtr()->pchar, fly_base) != NULL;
+                printf("SWING_TEST_PREP complete character=%s target=%s\n",
+                       playerPtr()->name, g_swing_test_prep_target);
+                printf("SWING_TEST_PREP verify level=%d xp_level=%d fly_owned=%d full_name=Mission_Maker_Movement.Flight.Fly\n",
+                       g_swing_test_prep_level, g_swing_test_prep_xp_level, g_swing_test_prep_fly_owned);
+                g_swing_test_prep_complete = 1;
+                agentSmokeWriteStatus(0);
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                logShutdownAndWait();
+                exit(0);
+            }
+            break;
+    }
+}
+
 static void agentSmokeWriteStatus(int exit_code)
 {
     FILE *status_file;
@@ -392,6 +636,17 @@ static void agentSmokeWriteStatus(int exit_code)
     fprintf(status_file, "error=%d\n", err);
     fprintf(status_file, "exit_code=%d\n", exit_code);
     fprintf(status_file, "webswing_smoke_complete=%d\n", g_web_swing_smoke_complete);
+    fprintf(status_file, "webswing_jump_smoke_complete=%d\n", g_web_swing_jump_smoke_complete);
+    fprintf(status_file, "webswing_jump_off_height=%.3f\n", g_web_swing_jump_off_height);
+    fprintf(status_file, "webswing_jump_on_height=%.3f\n", g_web_swing_jump_on_height);
+    fprintf(status_file, "swing_test_prep_complete=%d\n", g_swing_test_prep_complete);
+    fprintf(status_file, "swing_test_prep_level=%d\n", g_swing_test_prep_level);
+    fprintf(status_file, "swing_test_prep_xp_level=%d\n", g_swing_test_prep_xp_level);
+    fprintf(status_file, "swing_test_prep_fly_owned=%d\n", g_swing_test_prep_fly_owned);
+    if (g_swing_test_prep_fly_owned)
+        fprintf(status_file, "swing_test_prep_power=Mission_Maker_Movement.Flight.Fly\n");
+    if (g_swing_test_prep_target[0])
+        fprintf(status_file, "swing_test_prep_target=%s\n", g_swing_test_prep_target);
     if (playerPtr())
         fprintf(status_file, "character=%s\n", playerPtr()->name);
     fclose(status_file);
@@ -638,6 +893,16 @@ void checkArgs(int argc, char **argv) {
             g_agent_smoke_status_path[sizeof(g_agent_smoke_status_path) - 1] = 0;
         } else if (CMDEQ("-webswing-smoke")) {
             g_web_swing_smoke = 1;
+        } else if (CMDEQ("-webswing-jump-smoke")) {
+            g_web_swing_jump_smoke = 1;
+        } else if (CMDEQ("-swing-test-prep")) {
+            i++;
+            strncpy(g_swing_test_prep_target, argv[i], sizeof(g_swing_test_prep_target) - 1);
+            g_swing_test_prep_target[sizeof(g_swing_test_prep_target) - 1] = 0;
+            g_swing_test_prep = 1;
+            g_testMode = TEST_RESUME_CHAR | TEST_CREATE_CHAR | TEST_STAY_CONNECTED;
+            g_testMode2 = 0;
+            printf("Swing test prep enabled for %s; selecting an existing target when supplied.\n", g_swing_test_prep_target);
         } else if (CMDEQ("-auth")) {
             i++;
             strcpy(game_state.auth_address, argv[i]);
@@ -1210,7 +1475,9 @@ void mainloop() {
         }
 
         doMoverLoop();
+        webSwingJumpSmokeLoop();
         webSwingSmokeLoop();
+        swingTestPrepLoop();
         if (g_testMode & TEST_CHAT) {
             chatterLoop();
         }

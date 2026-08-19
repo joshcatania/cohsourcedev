@@ -11,6 +11,10 @@ typedef struct DefTracker DefTracker;
 #define NO_BOUNCE 0
 #define DO_BOUNCE 1
 
+// Web Swing mode gives a normal ground jump a stronger launch without
+// changing the ordinary jump when the mode is disabled.
+#define WEB_LAUNCH_JUMP_HEIGHT_SCALE 2.50f
+
 typedef struct GlobalMotionState {
     int        noEntCollisions;
     int        noDynamicCollisions;

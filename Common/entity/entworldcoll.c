@@ -15,7 +15,7 @@
 #include "entity/entsend.h"
 #else
 #include "graphics/font.h"
-#include "entity/entDebug.h"
+#include "render/renderprim.h"
 #endif
 #define DEFAULT_RADIUS 1.0f
 
@@ -23,8 +23,12 @@
 #define WEB_MIN_ANCHOR_HEIGHT  6.0f
 #define WEB_MIN_ROPE_LENGTH    8.0f
 #define WEB_MAX_ROPE_LENGTH    110.0f
-#define WEB_PUMP_ACCEL          0.025f
-#define WEB_MAX_SPEED           3.25f
+#define WEB_PENDULUM_ACCEL_DESCENT 0.095f
+#define WEB_PENDULUM_ACCEL_ASCENT  0.045f
+#define WEB_PENDULUM_ACCEL_APEX    0.015f
+#define WEB_STEER_ACCEL            0.040f
+#define WEB_ATTACH_FORWARD_IMPULSE 0.120f
+#define WEB_MAX_SPEED              4.50f
 
 #if SERVER
 #define WEB_SWING_LOG_SIDE "SERVER"
@@ -153,6 +157,7 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     Vec3 start;
     Vec3 forward;
     Vec3 right;
+    Vec3 momentum;
     Vec3 best_anchor = {0};
     F32 best_score = -1e30f;
     int pass;
@@ -163,6 +168,9 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     start[1] += 3.0f;
     copyVec3(ENTMAT(e)[2], forward);
     copyVec3(ENTMAT(e)[0], right);
+    copyVec3(e->motion->vel, momentum);
+    momentum[1] = 0.0f;
+    normalVec3(momentum);
 
     for(pass = 0; pass < 2 && best_score <= -1e29f; ++pass)
     {
@@ -180,6 +188,7 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
             F32 distance;
             F32 height;
             F32 alignment;
+            F32 momentum_alignment = 0.0f;
             F32 score;
 
             scaleVec3(forward, probe_weights[i][0], direction);
@@ -210,7 +219,12 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
             if(distance < WEB_MIN_ROPE_LENGTH || height < WEB_MIN_ANCHOR_HEIGHT)
                 continue;
 
-            score = height * 1.5f + alignment * 15.0f - distance * 0.25f;
+            if(!vec3IsZero(momentum))
+                momentum_alignment = dotVec3(delta, momentum);
+
+            // Preserve the forward-facing behavior for a first shot, but make
+            // re-anchoring follow the direction the player is already carrying.
+            score = height * 1.5f + alignment * 15.0f + momentum_alignment * 22.0f - distance * 0.25f;
             if(score > best_score)
             {
                 best_score = score;
@@ -324,7 +338,10 @@ void entWorldWebSwingUpdateAttachment(Entity *e)
             if(lengthVec3Squared(motion->vel) < 0.01f)
             {
                 Vec3 impulse;
-                scaleVec3(ENTMAT(e)[2], 0.05f, impulse);
+                copyVec3(ENTMAT(e)[2], impulse);
+                impulse[1] = 0.0f;
+                normalVec3(impulse);
+                scaleVec3(impulse, WEB_ATTACH_FORWARD_IMPULSE, impulse);
                 addVec3(motion->vel, impulse, motion->vel);
             }
 
@@ -346,29 +363,85 @@ void entWorldWebSwingApplyConstraint(Entity *e)
 {
     MotionState *motion = e->motion;
     Vec3 rope;
+    Vec3 tangent_velocity;
+    Vec3 tangent_direction;
+    Vec3 tangent_forward;
+    Vec3 input_world;
     Vec3 tangent_input;
+    Vec3 forward;
+    Vec3 right;
     Vec3 projected;
     Vec3 predicted;
     Vec3 step;
     F32 distance;
     F32 speed;
+    F32 arc_height;
+    F32 phase_accel;
 
     if(!motion->web_swing_attached || e->timestep <= 0.0001f)
         return;
 
-    // Pump only with horizontal movement input, projected onto the rope tangent.
     subVec3(motion->last_pos, motion->web_swing_anchor, rope);
-    if(normalVec3(rope))
+    if(!normalVec3(rope))
+        return;
+
+    // Carry existing tangential momentum first.  The assist direction never
+    // reverses that momentum just because the player is not pressing a key.
+    scaleVec3(rope, dotVec3(motion->vel, rope), projected);
+    subVec3(motion->vel, projected, tangent_velocity);
+    copyVec3(tangent_velocity, tangent_direction);
+    if(!normalVec3(tangent_direction))
     {
-        copyVec3(motion->input.vel, tangent_input);
-        tangent_input[1] = 0;
-        scaleVec3(rope, dotVec3(tangent_input, rope), projected);
-        subVec3(tangent_input, projected, tangent_input);
-        if(normalVec3(tangent_input))
-        {
-            scaleVec3(tangent_input, WEB_PUMP_ACCEL * e->timestep, projected);
-            addVec3(motion->vel, projected, motion->vel);
-        }
+        copyVec3(ENTMAT(e)[2], tangent_direction);
+        tangent_direction[1] = 0.0f;
+        scaleVec3(rope, dotVec3(tangent_direction, rope), projected);
+        subVec3(tangent_direction, projected, tangent_direction);
+        normalVec3(tangent_direction);
+    }
+
+    copyVec3(ENTMAT(e)[2], forward);
+    forward[1] = 0.0f;
+    normalVec3(forward);
+    copyVec3(ENTMAT(e)[0], right);
+    right[1] = 0.0f;
+    normalVec3(right);
+
+    // A small forward-facing tangent bias gives a newly attached swing a
+    // useful direction, while the existing tangent velocity remains primary.
+    copyVec3(forward, tangent_forward);
+    scaleVec3(rope, dotVec3(tangent_forward, rope), projected);
+    subVec3(tangent_forward, projected, tangent_forward);
+    if(normalVec3(tangent_forward) && dotVec3(tangent_forward, tangent_direction) < 0.0f)
+        scaleVec3(tangent_forward, -1.0f, tangent_forward);
+
+    arc_height = (ENTPOSY(e) - (motion->web_swing_anchor[1] - motion->web_swing_rope_length)) /
+                 MAX(motion->web_swing_rope_length, WEB_MIN_ROPE_LENGTH);
+    arc_height = MINMAX(arc_height, 0.0f, 1.0f);
+    if(arc_height < 0.55f)
+    {
+        phase_accel = WEB_PENDULUM_ACCEL_DESCENT +
+                      (WEB_PENDULUM_ACCEL_ASCENT - WEB_PENDULUM_ACCEL_DESCENT) * (arc_height / 0.55f);
+    }
+    else
+    {
+        phase_accel = WEB_PENDULUM_ACCEL_ASCENT +
+                      (WEB_PENDULUM_ACCEL_APEX - WEB_PENDULUM_ACCEL_ASCENT) * ((arc_height - 0.55f) / 0.45f);
+    }
+
+    scaleVec3(tangent_direction, phase_accel * e->timestep, projected);
+    addVec3(motion->vel, projected, motion->vel);
+
+    // W/A/D are steering input, not the source of swing motion.  Convert the
+    // local input into world space before projecting it onto the same tangent.
+    scaleVec3(right, motion->input.vel[0], input_world);
+    scaleVec3(forward, motion->input.vel[2], projected);
+    addVec3(input_world, projected, input_world);
+    scaleVec3(rope, dotVec3(input_world, rope), projected);
+    subVec3(input_world, projected, tangent_input);
+    if(normalVec3(tangent_input))
+    {
+        scaleVec3(tangent_input, WEB_STEER_ACCEL * e->timestep, projected);
+        addVec3(motion->vel, projected, motion->vel);
     }
 
     speed = lengthVec3(motion->vel);
@@ -411,7 +484,7 @@ void entWorldWebSwingApplyConstraint(Entity *e)
         Vec3 tether_start;
         copyVec3(ENTPOS(e), tether_start);
         tether_start[1] += 3.0f;
-        entDebugAddLine(tether_start, 0xffffffff, motion->web_swing_anchor, 0xff00ffff);
+        drawLine3DWidth(tether_start, motion->web_swing_anchor, 0xe0ff70ff, 3.0f);
     }
 #endif
 }

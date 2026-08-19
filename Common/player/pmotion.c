@@ -537,8 +537,12 @@ void pmotionSetVel(Entity *e,ControlState *controls, F32 inp_vel_scale)
 F32 pmotionGetMaxJumpHeight(Entity* e, ControlState* controls)
 {
     #define STANDARD_JUMP_HEIGHT (4.0)
-    
-    return STANDARD_JUMP_HEIGHT * controls->server_state->jump_height;
+    F32 max_jump_height = STANDARD_JUMP_HEIGHT * controls->server_state->jump_height;
+
+    if (controls->server_state->web_swing)
+        max_jump_height *= WEB_LAUNCH_JUMP_HEIGHT_SCALE;
+
+    return max_jump_height;
 }
 
 #include "gridcoll/gridcoll.h"
