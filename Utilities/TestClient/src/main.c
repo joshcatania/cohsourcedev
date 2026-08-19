@@ -235,24 +235,25 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ == 0)
             {
                 commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
-                commAddInput("webswing 0");
+                commAddInput("webswing 1");
             }
             if (stage_frames == 2)
             {
                 printf("WEB_SWING_SMOKE phase=ground_jump\n");
                 doJump();
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
             }
             if (stage_frames >= 8)
             {
                 printf("WEB_SWING_SMOKE phase=airborne_attach\n");
-                commAddInput("webswing 1");
                 stage = 1;
                 stage_frames = 0;
             }
             break;
 
         case 1:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
             updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
             updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 20 && stage_frames < 45, timeGetTime());
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 45 && stage_frames < 70, timeGetTime());
@@ -261,10 +262,10 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ >= 90)
             {
                 printf("WEB_SWING_SMOKE phase=release\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
-                commAddInput("webswing 0");
                 stage = 2;
                 stage_frames = 0;
             }
@@ -274,14 +275,15 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ >= 12)
             {
                 printf("WEB_SWING_SMOKE phase=reattach\n");
-                commAddInput("webswing 1");
                 doJump();
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
                 stage = 3;
                 stage_frames = 0;
             }
             break;
 
         case 3:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
             updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
             updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 20 && stage_frames < 45, timeGetTime());
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 45 && stage_frames < 70, timeGetTime());
@@ -289,6 +291,7 @@ static void webSwingSmokeLoop(void)
                 doJump();
             if (stage_frames++ >= 90)
             {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());

@@ -12,31 +12,29 @@ Implemented the preflight design without using `MOVETYPE_WIRE`.
 
 ## Required runtime evidence
 
-Collected on 2026-08-19 on the locally verified Release/x86 shard in Atlas Park with the deterministic TestClient driver (`-webswing-smoke`). The driver exercised a normal ground jump, airborne attach, forward/left/right tangent input, release, and reattachment without OS keyboard automation. Durable server evidence is in:
+Collected on 2026-08-19 on the locally verified Release/x86 shard in Atlas Park with the deterministic TestClient driver (`-webswing-smoke`). The driver exercised a normal ground jump, held UP/Space for airborne attach and tethering, released UP/Space, then held it again for reattachment, with forward/left/right tangent input and no OS keyboard automation. Durable server evidence is in:
 
 `bin/logs/mapserver/webswing.log`
 
-The observed sequence for TestClient PID 29880 includes:
+The observed sequence for TestClient PID 19932 includes:
 
 ```text
 WEB_SWING mode=1
-WEB_SWING attach anchor=(100.00 154.76 -623.84) rope=54.84 speed=1.000
-WEB_SWING swing speed=1.078 rope=54.84 input=(-1.00 0.00 0.00)
-WEB_SWING swing speed=1.243 rope=54.84 input=(0.76 0.00 0.00)
+WEB_SWING attach anchor=(100.00 153.61 -621.97) rope=46.73 speed=0.352
+WEB_SWING swing speed=0.840 rope=46.73 input=(-1.00 0.00 0.00)
+WEB_SWING swing speed=1.337 rope=46.73 input=(1.00 0.00 0.00)
+WEB_SWING detach speed=0.028 anchor=(100.00 153.61 -621.97) input=(0.00 0.00 0.20)
+WEB_SWING attach anchor=(110.84 142.94 -604.34) rope=34.30 speed=0.345
+WEB_SWING swing speed=1.123 rope=34.30 input=(1.00 0.00 0.00)
+WEB_SWING swing speed=1.273 rope=34.30 input=(1.00 0.00 0.00)
 WEB_SWING mode=0
-WEB_SWING detach speed=0.003 anchor=(100.00 154.76 -623.84)
-WEB_SWING mode=1
-WEB_SWING attach anchor=(121.78 142.33 -601.55) rope=30.54 speed=0.480
-WEB_SWING swing speed=1.100 rope=30.54 input=(1.00 0.00 0.00)
-WEB_SWING swing speed=1.193 rope=30.54 input=(1.00 0.00 0.00)
-WEB_SWING mode=0
-WEB_SWING detach speed=0.271 anchor=(121.78 142.33 -601.55)
+WEB_SWING detach speed=0.119 anchor=(110.84 142.94 -604.34) input=(0.00 0.00 0.20)
 ```
 
-The sampled input records show the tangent steering/pumping phases: `(-1, 0, 0)` and `(1, 0, 0)` for left/right steering, with forward held in the intervening samples. The second release retained nonzero momentum (`0.271`), and the first attachment was followed by a new anchor attachment. The debug tether remains rendered from the attached entity to the selected anchor.
+The sampled input records show the tangent steering/pumping phases: `(-1, 0, 0)` and `(1, 0, 0)` for left/right steering, with forward held in the intervening samples. UP/Space release detached with nonzero retained speed (`0.028`, followed by `0.119` on the second swing), and the first attachment was followed by a new anchor attachment. The debug tether remains rendered from the attached entity to the selected anchor.
 
 ## Build
 
 `Release|x86` passed with the repository’s v145 fallback on 2026-08-19. Full build output is recorded in:
 
-`agent/logs/build-Release-x86-20260819-054001.log`
+`agent/logs/build-Release-x86-20260819-054838.log`

@@ -189,18 +189,20 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor)
 void entWorldWebSwingUpdateAttachment(Entity *e)
 {
     MotionState *motion = e->motion;
-    int held = motion->input.web_swing_enabled;
+    int held = motion->input.web_swing_enabled && motion->input.vel[1] > 0.001f;
 
     if(!held)
     {
         if(motion->web_swing_attached)
         {
-            printf("WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f)\n",
+            printf("WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                    lengthVec3(motion->vel),
-                   vecParamsXYZ(motion->web_swing_anchor));
-            filelog_printf("webswing.log", "WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f)\n",
+                   vecParamsXYZ(motion->web_swing_anchor),
+                   vecParamsXYZ(motion->input.vel));
+            filelog_printf("webswing.log", "WEB_SWING detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                            lengthVec3(motion->vel),
-                           vecParamsXYZ(motion->web_swing_anchor));
+                           vecParamsXYZ(motion->web_swing_anchor),
+                           vecParamsXYZ(motion->input.vel));
         }
         motion->web_swing_attached = 0;
         motion->web_swing_log_tick = 0;
