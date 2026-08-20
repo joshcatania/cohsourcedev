@@ -13,6 +13,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $configPath = Join-Path $repoRoot 'bin\data\server\db\servers.cfg'
 $loadBalancePath = Join-Path $repoRoot 'bin\data\server\db\loadBalanceShardSpecific.cfg'
+$baselinePath = Join-Path $PSScriptRoot 'shard-profile-baseline.json'
 $stateDir = Join-Path $PSScriptRoot 'work'
 $statePath = Join-Path $stateDir 'shard-profile-state.json'
 
@@ -20,6 +21,9 @@ if (-not $Status -and -not $Profile) { throw 'Choose -Profile FastDev, -Profile 
 if ($Status -and $Profile) { throw 'Choose either -Status or -Profile, not both.' }
 if (-not (Test-Path -LiteralPath $configPath)) { throw "DbServer config not found: $configPath" }
 if (-not (Test-Path -LiteralPath $loadBalancePath)) { throw "Shard load-balance config not found: $loadBalancePath" }
+if (-not (Test-Path -LiteralPath $baselinePath)) { throw "Tracked shard-profile baseline not found: $baselinePath" }
+$baseline = Get-Content -Raw -LiteralPath $baselinePath | ConvertFrom-Json
+if ($baseline.version -ne 1) { throw "Unsupported shard-profile baseline version in $baselinePath." }
 
 function Get-Text([string]$Path) { return [System.IO.File]::ReadAllText($Path) }
 function Get-Sha256([string]$Path) {
@@ -29,6 +33,9 @@ function Get-Sha256([string]$Path) {
 }
 function Write-ExactText([string]$Path, [string]$Text) {
     $utf8 = New-Object System.Text.UTF8Encoding($false)
+    # Regex replacements can otherwise drop the CR from a matched CRLF line.
+    # Keep the repository's canonical Windows config bytes stable across runs.
+    $Text = [regex]::Replace($Text, "`r?`n", "`r`n")
     [System.IO.File]::WriteAllText($Path, $Text, $utf8)
 }
 function Get-LineEnding([string]$Text) { if ($Text.Contains("`r`n")) { return "`r`n" } return "`n" }
@@ -77,6 +84,14 @@ function Set-ServerBlock([string]$Text, [string]$AppName, [bool]$Enabled) {
 }
 
 function Get-BlockActive([string]$Text, [string]$AppName) { return (Get-ServerBlock $Text $AppName).active }
+function Apply-TextFixes([string]$Text, [string]$Profile) {
+    foreach ($fix in @($baseline.loadBalanceTextFixes)) {
+        $from = if ($Profile -eq 'Full') { $fix.fastDev } else { $fix.full }
+        $to = if ($Profile -eq 'Full') { $fix.full } else { $fix.fastDev }
+        if ($Text.Contains($from)) { $Text = $Text.Replace($from, $to) }
+    }
+    return $Text
+}
 function Get-DirectiveValue([string]$Text, [string]$Name) {
     $matches = [regex]::Matches($Text, "(?im)^\s*$([regex]::Escape($Name))\s+([0-9]+)\s*(?://.*)?$")
     if ($matches.Count -ne 1) { throw "Expected exactly one active $Name directive, found $($matches.Count)." }
@@ -129,6 +144,8 @@ $beforeConfigSha = Get-Sha256 $configPath
 $beforeLoadSha = Get-Sha256 $loadBalancePath
 $beforeProfile = Get-ProfileClassification $beforeConfigText $beforeLoadText
 $state = if (Test-Path -LiteralPath $statePath) { Get-Content -Raw -LiteralPath $statePath | ConvertFrom-Json } else { $null }
+$baselineCurrent = (($beforeConfigSha -eq $baseline.configSha256.$beforeProfile) -and
+    ($beforeLoadSha -eq $baseline.loadBalanceSha256.$beforeProfile))
 
 if ($Status) {
     $statusResult = [pscustomobject]@{
@@ -159,6 +176,9 @@ if ($null -ne $state) {
         throw "Refusing profile change: configuration differs from the guarded Full/FastDev hashes in $statePath. Inspect manual edits before retrying."
     }
 }
+elseif (-not $baselineCurrent) {
+    throw "Refusing profile change: no guarded state exists and the current $beforeProfile configuration does not match the tracked baseline. Inspect manual edits before retrying."
+}
 
 if ($Profile -eq $beforeProfile -and $Profile -eq 'Full') {
     $changed = $false
@@ -185,6 +205,7 @@ if ($Profile -eq $beforeProfile -and $Profile -eq 'Full') {
         $afterLoadText = Set-ServerBlock $afterLoadText $name (-not $fast)
     }
     $afterLoadText = Set-ServerBlock $afterLoadText 'ChatServer' (-not ($fast -and $DisableChatServer))
+    $afterLoadText = Apply-TextFixes $afterLoadText $Profile
 
     Write-ExactText $configPath $afterConfigText
     Write-ExactText $loadBalancePath $afterLoadText
@@ -201,8 +222,8 @@ $afterProfile = Get-ProfileClassification $afterConfigTextFinal $afterLoadTextFi
 
 if ($Profile -eq 'FastDev') {
     New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
-    $fullConfigSha = if ($beforeProfile -eq 'Full' -and $beforeConfigSha -ne $afterConfigSha) { $beforeConfigSha } elseif ($state) { $state.fullConfigSha } else { throw 'Could not establish the guarded Full config hash.' }
-    $fullLoadSha = if ($beforeProfile -eq 'Full' -and $beforeLoadSha -ne $afterLoadSha) { $beforeLoadSha } elseif ($state) { $state.fullLoadBalanceSha } else { throw 'Could not establish the guarded Full load-balance hash.' }
+    $fullConfigSha = if ($beforeProfile -eq 'Full' -and $beforeConfigSha -ne $afterConfigSha) { $beforeConfigSha } elseif ($state) { $state.fullConfigSha } else { $baseline.configSha256.Full }
+    $fullLoadSha = if ($beforeProfile -eq 'Full' -and $beforeLoadSha -ne $afterLoadSha) { $beforeLoadSha } elseif ($state) { $state.fullLoadBalanceSha } else { $baseline.loadBalanceSha256.Full }
     $newState = [pscustomobject]@{
         fullConfigSha = $fullConfigSha
         fullLoadBalanceSha = $fullLoadSha
@@ -213,9 +234,23 @@ if ($Profile -eq 'FastDev') {
         updatedAtUtc = [DateTime]::UtcNow.ToString('o')
     }
     $newState | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $statePath -Encoding UTF8
-} elseif ($Profile -eq 'Full' -and $state) {
-    if ($afterConfigSha -ne $state.fullConfigSha -or $afterLoadSha -ne $state.fullLoadBalanceSha) {
+} elseif ($Profile -eq 'Full') {
+    $expectedFullConfigSha = if ($state) { $state.fullConfigSha } else { $baseline.configSha256.Full }
+    $expectedFullLoadSha = if ($state) { $state.fullLoadBalanceSha } else { $baseline.loadBalanceSha256.Full }
+    if ($afterConfigSha -ne $expectedFullConfigSha -or $afterLoadSha -ne $expectedFullLoadSha) {
         throw "Full restore did not reproduce the guarded original configuration exactly. Refusing to continue; inspect $configPath and $loadBalancePath."
+    }
+    if (-not $state) {
+        New-Item -ItemType Directory -Force -Path $stateDir | Out-Null
+        [pscustomobject]@{
+            fullConfigSha = $baseline.configSha256.Full
+            fullLoadBalanceSha = $baseline.loadBalanceSha256.Full
+            fastConfigSha = $baseline.configSha256.FastDev
+            fastLoadBalanceSha = $baseline.loadBalanceSha256.FastDev
+            fastTsrMode = 'Off'
+            fastChatDisabled = $false
+            updatedAtUtc = [DateTime]::UtcNow.ToString('o')
+        } | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $statePath -Encoding UTF8
     }
 }
 

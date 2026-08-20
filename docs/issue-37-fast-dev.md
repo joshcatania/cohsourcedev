@@ -20,8 +20,10 @@ ServerMonitor/DbServer/Launcher process observations are recorded separately.
 | FastDev, TSR off, Chat disabled | 1 | 248.58s | `agent/logs/benchmark-shard-startup-FastDev-20260820-062117.json` |
 
 The selected FastDev median is effectively unchanged from Full: 0.10s slower,
-or -0.04%. The development-loop improvement is warm reuse: `PLAY-COH` leaves a
-healthy compatible shard in place and only launches the client. TSR is disabled
+or -0.04%. FastDev does not currently reduce cold MapServer startup time. Its
+value is reduced process load plus warm-shard reuse: `PLAY-COH` leaves a healthy
+compatible shard in place and only launches the client, avoiding unnecessary
+full rebuild/restart cycles. TSR is disabled
 because its measured first-map result was 47.57s slower than the TSR-off FastDev
 median. ChatServer remains enabled: its disabled variant passed headless map
 entry, but the normal GUI/chat path was not accepted on that narrower evidence.
