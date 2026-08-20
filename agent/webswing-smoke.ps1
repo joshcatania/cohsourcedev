@@ -4,6 +4,7 @@ param(
     [string]$AccountName = 'Dummy00009',
     [int]$TimeoutSeconds = 180,
     [switch]$RequireClientDiagnostics,
+    [switch]$RequireAnimationPhases,
     [switch]$Json
 )
 
@@ -163,6 +164,15 @@ foreach ($definition in $webswingLogDefinitions) {
 $webswingText = $webswingTextParts -join "`n"
 
 $webswingLines = @($webswingText -split "`r?`n" | Where-Object { $_ -match 'WEB_SWING' })
+$animationPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) anim_phase=' })
+$animationPhases = @($animationPhaseLines | ForEach-Object {
+    $phaseMatch = [regex]::Match($_, 'anim_phase=([A-Z_]+)')
+    if ($phaseMatch.Success) { $phaseMatch.Groups[1].Value }
+} | Sort-Object -Unique)
+$animationPhaseEvidencePass = $animationPhases.Count -ge 3 -and
+                              $animationPhases -contains 'AIRBORNE' -and
+                              $animationPhases -contains 'DESCEND' -and
+                              ($animationPhases -contains 'BOTTOM' -or $animationPhases -contains 'ASCEND')
 $clientAttempts = @($webswingLines | Where-Object { $_ -match 'WEB_SWING CLIENT attach_attempt' })
 $serverAttempts = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER attach_attempt' })
 $selectedClientAttempts = @($clientAttempts | Where-Object { $_ -match 'selected=1' })
@@ -347,6 +357,7 @@ if (-not $timedOut) { try { $exitCodeValue = [int]$proc.ExitCode } catch {} }
 
 $passed = (-not $timedOut) -and ($exitCodeValue -eq 0) -and $serverSequencePass -and
           $steeringEvidencePass -and
+          (-not $RequireAnimationPhases -or $animationPhaseEvidencePass) -and
           (-not $RequireClientDiagnostics -or $clientDiagnosticsAvailable)
 $reason = $null
 if ($timedOut) {
@@ -371,6 +382,8 @@ if ($timedOut) {
     $reason = "Broad anchor fan evidence was incomplete; expected five selected attempts with probes>=15."
 } elseif (-not $divergentAnchorEvidencePass) {
     $reason = "Facing/travel-divergent anchor evidence was incomplete; expected selected momentum attempts near 45 and 90 degrees."
+} elseif ($RequireAnimationPhases -and -not $animationPhaseEvidencePass) {
+    $reason = "Animation phase evidence was incomplete; expected AIRBORNE, DESCEND, and BOTTOM or ASCEND (phases=$($animationPhases -join ', '))."
 } elseif ($RequireClientDiagnostics -and -not $clientDiagnosticsAvailable) {
     $reason = "Client diagnostics were required but unavailable (client=$($selectedClientAttempts.Count) selected, enabled=$($clientEnabledAttempts.Count))."
 } elseif (-not $clientDiagnosticsAvailable) {
@@ -393,6 +406,10 @@ $result = [pscustomobject]@{
     clientEnabledAttempts = $clientEnabledAttempts.Count
     clientDiagnosticsAvailable = $clientDiagnosticsAvailable
     requireClientDiagnostics = [bool]$RequireClientDiagnostics
+    requireAnimationPhases = [bool]$RequireAnimationPhases
+    animationPhaseLines = $animationPhaseLines.Count
+    animationPhases = $animationPhases
+    animationPhaseEvidencePass = $animationPhaseEvidencePass
     attachLines = $attachLines.Count
     swingLines = $swingLines.Count
     detachLines = $detachLines.Count

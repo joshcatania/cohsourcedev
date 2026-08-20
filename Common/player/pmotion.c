@@ -155,6 +155,174 @@ void pmotionUpdateControlsPostPhysics(ControlState* controls, int curTime)
     controls->dir_key.affected_last_frame = 0;
 }
 
+typedef enum WebSwingAnimPhase
+{
+    WEBSWING_ANIM_PHASE_NONE = 0,
+    WEBSWING_ANIM_PHASE_AIRBORNE,
+    WEBSWING_ANIM_PHASE_ATTACHED,
+    WEBSWING_ANIM_PHASE_DESCEND,
+    WEBSWING_ANIM_PHASE_BOTTOM,
+    WEBSWING_ANIM_PHASE_ASCEND,
+} WebSwingAnimPhase;
+
+static const char *pmotionWebSwingAnimPhaseName(WebSwingAnimPhase phase)
+{
+    switch (phase)
+    {
+        case WEBSWING_ANIM_PHASE_AIRBORNE: return "AIRBORNE";
+        case WEBSWING_ANIM_PHASE_ATTACHED: return "ATTACHED";
+        case WEBSWING_ANIM_PHASE_DESCEND:  return "DESCEND";
+        case WEBSWING_ANIM_PHASE_BOTTOM:   return "BOTTOM";
+        case WEBSWING_ANIM_PHASE_ASCEND:   return "ASCEND";
+        default:                           return "NONE";
+    }
+}
+
+static const char *pmotionWebSwingAnimSide(void)
+{
+#if SERVER
+    return "SERVER";
+#else
+    return "CLIENT";
+#endif
+}
+
+static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *motion,
+                                                       F32 *bottom_fraction, F32 *tangent_speed)
+{
+    Vec3 rope;
+    Vec3 rope_direction;
+    Vec3 radial_velocity;
+    Vec3 tangent_velocity;
+    F32 rope_distance;
+    F32 rope_length;
+    F32 radial_speed;
+    F32 vertical_speed;
+
+    *bottom_fraction = 0.0f;
+    *tangent_speed = 0.0f;
+
+    if (!motion->input.web_swing_enabled)
+        return WEBSWING_ANIM_PHASE_NONE;
+
+    if (!motion->web_swing_attached)
+        return WEBSWING_ANIM_PHASE_AIRBORNE;
+
+    rope_length = MAX(motion->web_swing_rope_length, 0.001f);
+    *bottom_fraction = MINMAX((motion->web_swing_anchor[1] - ENTPOSY(e)) / rope_length, 0.0f, 1.0f);
+
+    subVec3(ENTPOS(e), motion->web_swing_anchor, rope);
+    rope_distance = lengthVec3(rope);
+    copyVec3(motion->vel, tangent_velocity);
+
+    if (rope_distance > 0.001f)
+    {
+        scaleVec3(rope, 1.0f / rope_distance, rope_direction);
+        radial_speed = dotVec3(tangent_velocity, rope_direction);
+        scaleVec3(rope_direction, radial_speed, radial_velocity);
+        subVec3(tangent_velocity, radial_velocity, tangent_velocity);
+    }
+
+    *tangent_speed = lengthVec3(tangent_velocity);
+    vertical_speed = motion->vel[1];
+
+    // Keep the low-point and direction thresholds apart so small deterministic
+    // velocity changes do not make the selected move chatter at a transition.
+    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_BOTTOM &&
+        *bottom_fraction >= 0.48f && fabs(vertical_speed) < 0.90f && *tangent_speed >= 0.15f)
+    {
+        return WEBSWING_ANIM_PHASE_BOTTOM;
+    }
+
+    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_DESCEND &&
+        vertical_speed < -0.15f && *bottom_fraction < 0.82f)
+    {
+        return WEBSWING_ANIM_PHASE_DESCEND;
+    }
+
+    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_ASCEND &&
+        vertical_speed > 0.15f && *bottom_fraction < 0.82f)
+    {
+        return WEBSWING_ANIM_PHASE_ASCEND;
+    }
+
+    if (*bottom_fraction >= 0.62f && fabs(vertical_speed) <= 0.65f && *tangent_speed >= 0.20f)
+        return WEBSWING_ANIM_PHASE_BOTTOM;
+
+    if (vertical_speed <= -0.35f)
+        return WEBSWING_ANIM_PHASE_DESCEND;
+
+    if (vertical_speed >= 0.35f)
+        return WEBSWING_ANIM_PHASE_ASCEND;
+
+    return WEBSWING_ANIM_PHASE_ATTACHED;
+}
+
+static void pmotionSetWebSwingAnimState(Entity *e)
+{
+    static const char *state_names[] = {
+        "WEBSWING_AIRBORNE",
+        "WEBSWING_ATTACHED",
+        "WEBSWING_DESCEND",
+        "WEBSWING_BOTTOM",
+        "WEBSWING_ASCEND",
+    };
+    int state_bits[ARRAY_SIZE(state_names)];
+    int i;
+    int resolved_count = 0;
+    F32 bottom_fraction;
+    F32 tangent_speed;
+    WebSwingAnimPhase phase;
+
+    for (i = 0; i < ARRAY_SIZE(state_names); ++i)
+    {
+        state_bits[i] = seqGetStateNumberFromName(state_names[i]);
+        if (state_bits[i] >= 0)
+        {
+            seqSetState(e->seq->state, 0, state_bits[i]);
+            ++resolved_count;
+        }
+    }
+
+    // The animation data is optional. If the state bits are not installed,
+    // leave the normal sequencer state machine completely unchanged.
+    if (!resolved_count)
+        return;
+
+    phase = pmotionGetWebSwingAnimPhase(e, e->motion, &bottom_fraction, &tangent_speed);
+
+    if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+        seqSetState(e->seq->state, 1, state_bits[0]);
+    else if (phase == WEBSWING_ANIM_PHASE_ATTACHED && state_bits[1] >= 0)
+        seqSetState(e->seq->state, 1, state_bits[1]);
+    else if (phase == WEBSWING_ANIM_PHASE_DESCEND && state_bits[1] >= 0 && state_bits[2] >= 0)
+    {
+        seqSetState(e->seq->state, 1, state_bits[1]);
+        seqSetState(e->seq->state, 1, state_bits[2]);
+    }
+    else if (phase == WEBSWING_ANIM_PHASE_BOTTOM && state_bits[1] >= 0 && state_bits[3] >= 0)
+    {
+        seqSetState(e->seq->state, 1, state_bits[1]);
+        seqSetState(e->seq->state, 1, state_bits[3]);
+    }
+    else if (phase == WEBSWING_ANIM_PHASE_ASCEND && state_bits[1] >= 0 && state_bits[4] >= 0)
+    {
+        seqSetState(e->seq->state, 1, state_bits[1]);
+        seqSetState(e->seq->state, 1, state_bits[4]);
+    }
+
+    if (phase != e->motion->web_swing_anim_phase)
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s anim_phase=%s attached=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       pmotionWebSwingAnimSide(), pmotionWebSwingAnimPhaseName(phase),
+                       e->motion->web_swing_attached, e->motion->input.web_swing_enabled,
+                       bottom_fraction, tangent_speed, e->motion->vel[1],
+                       vecParamsXYZ(e->motion->web_swing_anchor), e->motion->web_swing_rope_length);
+        e->motion->web_swing_anim_phase = phase;
+    }
+}
+
 void pmotionSetState(Entity* e, ControlState* controls)
 {
     S32                    input_ms[3]; // Millisecond input differentials in each direction.
@@ -205,6 +373,8 @@ void pmotionSetState(Entity* e, ControlState* controls)
     {
         SET_BIT(STATE_HEADPAIN);
     }
+
+    pmotionSetWebSwingAnimState(e);
 
     // If I'm not in control of my character, then don't set
     //   any of the bits that are directly based on input controls.

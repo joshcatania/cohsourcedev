@@ -1,0 +1,5 @@
+StateBit WEBSWING_AIRBORNE Predictable
+StateBit WEBSWING_ATTACHED Predictable
+StateBit WEBSWING_DESCEND Predictable
+StateBit WEBSWING_BOTTOM Predictable
+StateBit WEBSWING_ASCEND Predictable

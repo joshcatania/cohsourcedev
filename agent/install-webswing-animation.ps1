@@ -1,0 +1,178 @@
+[CmdletBinding()]
+param(
+    [ValidateSet('Status', 'Install', 'Remove')]
+    [string]$Action = 'Status',
+    [string]$PlayerSourcePath,
+    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot)
+)
+
+$ErrorActionPreference = 'Stop'
+
+$root = (Resolve-Path -LiteralPath $RepositoryRoot).Path
+$animationRoot = Join-Path $root 'agent\webswing-animation'
+$trackedInclude = Join-Path $animationRoot 'webswing.inc'
+$trackedStateBits = Join-Path $animationRoot 'webswing.statebits'
+$runtimeRoot = Join-Path $root 'bin\data\sequencers'
+$runtimeInclude = Join-Path $runtimeRoot 'cohsourcedev_webswing.inc'
+$runtimeStateBits = Join-Path $runtimeRoot 'cohsourcedev_webswing.statebits'
+$runtimePlayer = Join-Path $runtimeRoot 'player.txt'
+$backupPlayer = Join-Path $runtimeRoot 'player.txt.cohsourcedev-webswing.bak'
+$sentinelBegin = '// BEGIN COHSOURCEDEV WEBSWING ANIMATION'
+$sentinelEnd = '// END COHSOURCEDEV WEBSWING ANIMATION'
+$includeLine = 'include cohsourcedev_webswing.inc'
+
+function Get-Sha256([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+}
+
+function Write-Utf8NoBom([string]$Path, [string]$Text) {
+    $encoding = New-Object System.Text.UTF8Encoding($false)
+    [System.IO.File]::WriteAllText($Path, $Text, $encoding)
+}
+
+function Find-RawPlayerSource {
+    param([string]$ExplicitPath)
+
+    if ($ExplicitPath) {
+        $resolved = (Resolve-Path -LiteralPath $ExplicitPath -ErrorAction Stop).Path
+        if (-not (Test-Path -LiteralPath $resolved -PathType Leaf)) {
+            throw "Player source does not exist: $resolved"
+        }
+        return $resolved
+    }
+
+    $looseCandidates = @(
+        (Join-Path $root 'bin\data\sequencers\player.txt'),
+        (Join-Path $root 'bin\sequencers\player.txt')
+    )
+    foreach ($candidate in $looseCandidates) {
+        if (Test-Path -LiteralPath $candidate -PathType Leaf) {
+            return (Resolve-Path -LiteralPath $candidate).Path
+        }
+    }
+
+    $pigExeCandidates = @(
+        (Join-Path $root 'Utilities\pig\bin\x86\Release\pig.exe'),
+        (Join-Path $root 'bin\pig.exe')
+    )
+    $pigExe = $pigExeCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
+    $pigg = Join-Path $root 'bin\piggs\bin.pigg'
+    if ($pigExe -and (Test-Path -LiteralPath $pigg -PathType Leaf)) {
+        $temp = Join-Path ([System.IO.Path]::GetTempPath()) ("coh-webswing-player-{0}" -f $PID)
+        New-Item -ItemType Directory -Path $temp -Force | Out-Null
+        try {
+            Push-Location $temp
+            try {
+                & $pigExe xy $pigg | Out-Null
+            }
+            finally {
+                Pop-Location
+            }
+            $extracted = Get-ChildItem -LiteralPath $temp -Recurse -File -Filter 'player.txt' -ErrorAction SilentlyContinue | Select-Object -First 1
+            if ($extracted) {
+                $stableCopy = Join-Path ([System.IO.Path]::GetTempPath()) ("coh-webswing-player-source-{0}.txt" -f $PID)
+                Copy-Item -LiteralPath $extracted.FullName -Destination $stableCopy -Force
+                return $stableCopy
+            }
+        }
+        finally {
+            if (Test-Path -LiteralPath $temp -PathType Container) {
+                Remove-Item -LiteralPath $temp -Recurse -Force
+            }
+        }
+    }
+
+    throw 'No raw sequencers/player.txt was found in the loose data or local piggs. The checked-in piggs contain compiled sequencers.bin only; refusing to synthesize or replace the player sequencer. Supply -PlayerSourcePath with an exact runtime dump/source when available.'
+}
+
+function Get-Status {
+    $marker = Test-Path -LiteralPath $runtimePlayer -PathType Leaf
+    $content = if ($marker) { [System.IO.File]::ReadAllText($runtimePlayer) } else { '' }
+    [pscustomobject]@{
+        installed = ($content.Contains($sentinelBegin) -and $content.Contains($includeLine) -and $content.Contains($sentinelEnd))
+        playerPath = $runtimePlayer
+        playerPresent = (Test-Path -LiteralPath $runtimePlayer -PathType Leaf)
+        backupPresent = (Test-Path -LiteralPath $backupPlayer -PathType Leaf)
+        includePresent = (Test-Path -LiteralPath $runtimeInclude -PathType Leaf)
+        stateBitsPresent = (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf)
+        includeSha256 = Get-Sha256 $runtimeInclude
+        stateBitsSha256 = Get-Sha256 $runtimeStateBits
+        trackedIncludeSha256 = Get-Sha256 $trackedInclude
+        trackedStateBitsSha256 = Get-Sha256 $trackedStateBits
+    } | ConvertTo-Json -Depth 3
+}
+
+if ($Action -eq 'Status') {
+    Get-Status
+    exit 0
+}
+
+if (-not (Test-Path -LiteralPath $trackedInclude -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $trackedStateBits -PathType Leaf)) {
+    throw 'Tracked Web Swing animation data is incomplete.'
+}
+
+if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
+    New-Item -ItemType Directory -Path $runtimeRoot -Force | Out-Null
+}
+
+if ($Action -eq 'Install') {
+    $playerSource = Find-RawPlayerSource -ExplicitPath $PlayerSourcePath
+    $sourceText = [System.IO.File]::ReadAllText($playerSource)
+    $alreadyInstalled = $sourceText.Contains($sentinelBegin) -and $sourceText.Contains($includeLine) -and $sourceText.Contains($sentinelEnd)
+
+    if (-not $alreadyInstalled) {
+        if ($sourceText -notmatch '(?m)^\s*SeqEnd\s*$') {
+            throw "The resolved player source has no SeqEnd marker: $playerSource"
+        }
+        if ((Test-Path -LiteralPath $runtimePlayer -PathType Leaf) -and
+            ((Resolve-Path -LiteralPath $playerSource).Path -ne (Resolve-Path -LiteralPath $runtimePlayer).Path)) {
+            throw "Loose player source already exists without the Web Swing sentinel; refusing to overwrite it: $runtimePlayer"
+        }
+        $sourceText = [regex]::Replace($sourceText, '(?m)^\s*SeqEnd\s*$', "$sentinelBegin`r`n$includeLine`r`n$sentinelEnd`r`nSeqEnd", 1)
+        Copy-Item -LiteralPath $playerSource -Destination $backupPlayer -Force
+        Write-Utf8NoBom $runtimePlayer $sourceText
+    }
+    elseif (-not (Test-Path -LiteralPath $backupPlayer -PathType Leaf)) {
+        throw "The Web Swing sentinel is present but its protected player backup is missing: $backupPlayer"
+    }
+
+    Copy-Item -LiteralPath $trackedInclude -Destination $runtimeInclude -Force
+    Copy-Item -LiteralPath $trackedStateBits -Destination $runtimeStateBits -Force
+    Get-Status
+    exit 0
+}
+
+if ($Action -eq 'Remove') {
+    $currentIncludeHash = Get-Sha256 $runtimeInclude
+    $currentStateBitsHash = Get-Sha256 $runtimeStateBits
+    if ($currentIncludeHash -and $currentIncludeHash -ne (Get-Sha256 $trackedInclude)) {
+        throw "Refusing to remove modified runtime include: $runtimeInclude"
+    }
+    if ($currentStateBitsHash -and $currentStateBitsHash -ne (Get-Sha256 $trackedStateBits)) {
+        throw "Refusing to remove modified runtime state bits: $runtimeStateBits"
+    }
+
+    if (Test-Path -LiteralPath $runtimePlayer -PathType Leaf) {
+        $currentText = [System.IO.File]::ReadAllText($runtimePlayer)
+        if ($currentText.Contains($sentinelBegin) -or $currentText.Contains($sentinelEnd) -or $currentText.Contains($includeLine)) {
+            if (-not (Test-Path -LiteralPath $backupPlayer -PathType Leaf)) {
+                throw "Refusing to remove an unprotected Web Swing player override: $runtimePlayer"
+            }
+            $backupText = [System.IO.File]::ReadAllText($backupPlayer)
+            $expectedInstalled = [regex]::Replace($backupText, '(?m)^\s*SeqEnd\s*$', "$sentinelBegin`r`n$includeLine`r`n$sentinelEnd`r`nSeqEnd", 1)
+            if ($currentText -cne $expectedInstalled) {
+                throw "The loose player source changed after install; refusing to restore over edits: $runtimePlayer"
+            }
+            Copy-Item -LiteralPath $backupPlayer -Destination $runtimePlayer -Force
+        }
+    }
+
+    foreach ($path in @($runtimeInclude, $runtimeStateBits, $backupPlayer)) {
+        if (Test-Path -LiteralPath $path -PathType Leaf) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+    Get-Status
+}
