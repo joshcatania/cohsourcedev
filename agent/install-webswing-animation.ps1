@@ -19,7 +19,8 @@ $runtimePlayer = Join-Path $runtimeRoot 'player.txt'
 $backupPlayer = Join-Path $runtimeRoot 'player.txt.cohsourcedev-webswing.bak'
 $sentinelBegin = '// BEGIN COHSOURCEDEV WEBSWING ANIMATION'
 $sentinelEnd = '// END COHSOURCEDEV WEBSWING ANIMATION'
-$includeLine = 'include cohsourcedev_webswing.inc'
+$includeLine = 'include sequencers/cohsourcedev_webswing.inc'
+$legacyIncludeLine = 'include cohsourcedev_webswing.inc'
 
 function Get-Sha256([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
@@ -120,9 +121,14 @@ if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
 if ($Action -eq 'Install') {
     $playerSource = Find-RawPlayerSource -ExplicitPath $PlayerSourcePath
     $sourceText = [System.IO.File]::ReadAllText($playerSource)
-    $alreadyInstalled = $sourceText.Contains($sentinelBegin) -and $sourceText.Contains($includeLine) -and $sourceText.Contains($sentinelEnd)
+    $hasSentinel = $sourceText.Contains($sentinelBegin) -and $sourceText.Contains($sentinelEnd)
+    $alreadyInstalled = $hasSentinel -and ($sourceText.Contains($includeLine) -or $sourceText.Contains($legacyIncludeLine))
 
-    if (-not $alreadyInstalled) {
+    if ($alreadyInstalled -and -not $sourceText.Contains($includeLine)) {
+        $sourceText = $sourceText.Replace($legacyIncludeLine, $includeLine)
+        Write-Utf8NoBom $runtimePlayer $sourceText
+    }
+    elseif (-not $alreadyInstalled) {
         if ($sourceText -notmatch '(?m)^\s*SeqEnd\s*$') {
             throw "The resolved player source has no SeqEnd marker: $playerSource"
         }

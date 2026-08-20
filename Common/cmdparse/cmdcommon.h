@@ -343,6 +343,7 @@ typedef struct GlobalState
 
     int        no_file_change_check_cmd_set; //Cmd turning off file change check is set
     int        no_file_change_check;            //above plus Client side per tick data change check
+    int        webswing_dev;                    //Client-only development launcher mode
 
     #if CLIENT
     U32        cur_timeGetTime;    

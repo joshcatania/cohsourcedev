@@ -11,13 +11,15 @@ param(
     [switch]$Full,
     [switch]$FullShard,
     [switch]$NoShardRestart,
-    [switch]$RestartFastShard
+    [switch]$RestartFastShard,
+    [switch]$WebSwingDev
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $binDir = Join-Path $repoRoot 'bin'
 $ouroboros = Join-Path $binDir 'Ouroboros.exe'
+$webSwingInstaller = Join-Path $PSScriptRoot 'install-webswing-animation.ps1'
 $directDbScript = Join-Path $PSScriptRoot 'set-directdb-mode.ps1'
 $profileScript = Join-Path $PSScriptRoot 'set-shard-profile.ps1'
 $startScript = Join-Path $PSScriptRoot 'start-shard.ps1'
@@ -68,8 +70,38 @@ function Invoke-JsonScript {
     catch { throw "Could not parse $(Split-Path -Leaf $Path) JSON output: $($output -join ' ')" }
 }
 
+function Ensure-WebSwingAnimationRuntime {
+    $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+    $includeSynchronized = $status.includePresent -and
+        ($status.includeSha256 -eq $status.trackedIncludeSha256)
+    $stateBitsSynchronized = $status.stateBitsPresent -and
+        ($status.stateBitsSha256 -eq $status.trackedStateBitsSha256)
+
+    if (-not $status.installed -or -not $includeSynchronized -or -not $stateBitsSynchronized) {
+        Write-Host 'Synchronizing tracked Web Swing animation data into loose runtime data...'
+        $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
+    } else {
+        Write-Host 'Web Swing animation runtime data is already synchronized.'
+    }
+
+    if (-not $status.installed -or
+        $status.includeSha256 -ne $status.trackedIncludeSha256 -or
+        $status.stateBitsSha256 -ne $status.trackedStateBitsSha256) {
+        throw 'Web Swing animation runtime data did not reach tracked hash parity.'
+    }
+}
+
 try {
-    if (-not (Test-Path -LiteralPath $ouroboros)) { throw "Ouroboros.exe was not found at $ouroboros. Build the client first." }
+    if (-not (Test-Path -LiteralPath $ouroboros)) {
+        throw "Ouroboros.exe was not found at $ouroboros. Build the client first."
+    }
+
+    $clientWorkingDirectory = $binDir
+    if ($WebSwingDev) {
+        Ensure-WebSwingAnimationRuntime
+        Write-Host "Web Swing development client: $ouroboros"
+        Write-Host 'Web Swing development mode: explicit loose sequencer override'
+    }
 
     $requestedProfile = if ($Full -or $FullShard) { 'Full' } else { $ShardProfile }
     Write-Host ("Starting local shard (profile {0})..." -f $requestedProfile)
@@ -129,7 +161,7 @@ try {
         Write-Host 'Readiness smoke skipped by request.'
     }
 
-    $existingClient = Get-Process -Name Ouroboros -ErrorAction SilentlyContinue | Select-Object -First 1
+    $existingClient = Get-Process -Name @('Ouroboros', 'Ouroboros_Debug') -ErrorAction SilentlyContinue | Select-Object -First 1
     if ($existingClient) {
         Write-Host "City of Heroes is already running (PID $($existingClient.Id)); leaving it alone."
         exit 0
@@ -137,7 +169,8 @@ try {
 
     Write-Host 'Launching City of Heroes...'
     $clientArgs = @('-db', '127.0.0.1', '-authname', $AccountName, '-password', $Password, '-noverify', '-quicklogin', '1', '-noversioncheck', '-fullscreen', '0', '-screen', '1280', '720', '-stopinactivedisplay', '0')
-    $client = Start-Process -FilePath $ouroboros -ArgumentList $clientArgs -WorkingDirectory $binDir -PassThru
+    if ($WebSwingDev) { $clientArgs += @('-webswingdev', '-nopopups') }
+    $client = Start-Process -FilePath $ouroboros -ArgumentList $clientArgs -WorkingDirectory $clientWorkingDirectory -PassThru
     Start-Sleep -Milliseconds 1500
     if (-not (Get-Process -Id $client.Id -ErrorAction SilentlyContinue)) {
         throw "Ouroboros.exe exited immediately after launch. Inspect the client/runtime logs under $binDir."

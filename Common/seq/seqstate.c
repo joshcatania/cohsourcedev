@@ -8,6 +8,7 @@
 #include "TriggeredMove.h"
 #include <utilitieslib/assert/assert.h>
 #include <utilitieslib/utils/error.h>
+#include "cmdparse/cmdcommon.h"
 
 static StaticDefineInt statebit_flags[] = 
 {
@@ -197,6 +198,7 @@ void seqLoadStateBits()
     int i;
     ParserLoadInfo pli;
     int flags = 0;
+    const char *persistfile = global_state.webswing_dev ? NULL : "seqstatebits.bin";
 
     //ParserLoadFilesShared("XXXXX.bin", NULL, "sequencers/statebits.statebits", "XXXXXXXX.bin", 
     //    PARSER_TRYPERSIST, ParseStateBitList, &fromDataStateBitList, sizeof(fromDataStateBitList), NULL, NULL, NULL, NULL, NULL);
@@ -211,7 +213,7 @@ void seqLoadStateBits()
 
     ParserLoadFiles("sequencers",
         ".statebits",
-        "seqstatebits.bin",
+        persistfile,
         flags,
         ParseStateBitList,
         &fromDataStateBitList,
@@ -325,6 +327,15 @@ void seqLoadStateBits()
         assert(strcmp(s_SortedStateBitList_Name[i - 1]->name, s_SortedStateBitList_Name[i]->name) != 0);
     }
 #endif // SORTED_STATEBIT_LIST
+
+    filelog_printf("webswing.log",
+                   "WEBSWING_ANIM statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d total=%d\n",
+                   seqGetStateNumberFromName("WEBSWING_AIRBORNE") >= 0,
+                   seqGetStateNumberFromName("WEBSWING_ATTACHED") >= 0,
+                   seqGetStateNumberFromName("WEBSWING_DESCEND") >= 0,
+                   seqGetStateNumberFromName("WEBSWING_BOTTOM") >= 0,
+                   seqGetStateNumberFromName("WEBSWING_ASCEND") >= 0,
+                   g_MaxUsedStates);
 }
 
 int seqGetStateNumberFromName( const char * name )

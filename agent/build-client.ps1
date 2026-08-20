@@ -52,13 +52,13 @@ if (-not (Test-Path -LiteralPath $solution)) {
     }) 2
 }
 
-$client = Get-Process -Name Ouroboros -ErrorAction SilentlyContinue
+$client = Get-Process -Name @('Ouroboros', 'Ouroboros_Debug') -ErrorAction SilentlyContinue
 if ($client) {
     $pids = (@($client | ForEach-Object { $_.Id }) -join ', ')
     Finish ([pscustomobject]@{
         success = $false; configuration = $Configuration; platform = $Platform
         durationSeconds = 0; exitCode = 3; log = $logPath
-        reason = "Ouroboros.exe is still running (PID $pids); close the client before updating bin\Ouroboros.exe."
+        reason = "A City of Heroes client is still running (PID $pids); close it before updating the client binaries."
     }) 3
 }
 
@@ -140,8 +140,9 @@ try {
         $outputRoot = Join-Path $repoRoot ("Game\bin\{0}\{1}" -f $(if ($Platform -eq 'x86') { 'x86' } else { 'x64' }), $Configuration)
         $clientExe = Join-Path $outputRoot 'Game.exe'
         $clientPdb = Join-Path $outputRoot 'Game.pdb'
-        $binExe = Join-Path $repoRoot 'bin\Ouroboros.exe'
-        $binPdb = Join-Path $repoRoot 'bin\Ouroboros.pdb'
+        $clientStem = if ($Configuration -eq 'Debug') { 'Ouroboros_Debug' } else { 'Ouroboros' }
+        $binExe = Join-Path $repoRoot ("bin\{0}.exe" -f $clientStem)
+        $binPdb = Join-Path $repoRoot ("bin\{0}.pdb" -f $clientStem)
         if (-not (Test-Path -LiteralPath $clientExe)) { throw "Game build succeeded but output is missing: $clientExe" }
         Copy-Item -LiteralPath $clientExe -Destination $binExe -Force
         if (Test-Path -LiteralPath $clientPdb) { Copy-Item -LiteralPath $clientPdb -Destination $binPdb -Force }

@@ -284,6 +284,18 @@ static void pmotionSetWebSwingAnimState(Entity *e)
         }
     }
 
+    {
+        static int logged_state_resolution;
+        if (!logged_state_resolution)
+        {
+            filelog_printf("webswing.log",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d\n",
+                           state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
+                           state_bits[3] >= 0, state_bits[4] >= 0);
+            logged_state_resolution = 1;
+        }
+    }
+
     // The animation data is optional. If the state bits are not installed,
     // leave the normal sequencer state machine completely unchanged.
     if (!resolved_count)
@@ -314,8 +326,13 @@ static void pmotionSetWebSwingAnimState(Entity *e)
     if (phase != e->motion->web_swing_anim_phase)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s anim_phase=%s attached=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       "WEB_SWING %s anim_phase=%s statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        pmotionWebSwingAnimSide(), pmotionWebSwingAnimPhaseName(phase),
+                       state_bits[0] >= 0 && TSTB(e->seq->state, state_bits[0]),
+                       state_bits[1] >= 0 && TSTB(e->seq->state, state_bits[1]),
+                       state_bits[2] >= 0 && TSTB(e->seq->state, state_bits[2]),
+                       state_bits[3] >= 0 && TSTB(e->seq->state, state_bits[3]),
+                       state_bits[4] >= 0 && TSTB(e->seq->state, state_bits[4]),
                        e->motion->web_swing_attached, e->motion->input.web_swing_enabled,
                        bottom_fraction, tangent_speed, e->motion->vel[1],
                        vecParamsXYZ(e->motion->web_swing_anchor), e->motion->web_swing_rope_length);

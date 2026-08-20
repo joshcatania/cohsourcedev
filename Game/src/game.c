@@ -1449,6 +1449,18 @@ void parseArgs0(int argc, char **argv)
             if (i == argc-1 || argv[i+1][0]!='0')
                 game_state.noPBuffers = 1;
         }
+        else if (CHECKARG("-nopopups"))
+        {
+            // This must be recognized before game_beforeParseArgs() performs
+            // the development-mode old-driver check.
+            g_win_ignore_popups = 1;
+            bSkipArgIfPresent = true;
+        }
+        else if (CHECKARG("-webswingdev"))
+        {
+            global_state.webswing_dev = 1;
+            bSkipArgIfPresent = true;
+        }
         else if (CHECKARG("-texwordeditor"))
         {
             estrPrintCharString(&game_state.texWordEdit, "1");
@@ -1735,7 +1747,7 @@ void game_beforeFolderCacheIgnore(int timer, int argc, char **argv)
 
 static void checkForCrash()
 {
-    if (!isDevelopmentMode() || forceCrashCheck)
+    if (forceCrashCheck || (!g_win_ignore_popups && !isDevelopmentMode()))
     {
         char progressUserString[100];
         PROGRESSDIALOGTYPE type = PROGRESSDIALOGTYPE_NONE;
@@ -1790,6 +1802,11 @@ void game_beforeParseArgs(int doLogging)
         SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 
     FolderCacheChooseMode();
+    if (global_state.webswing_dev)
+        FolderCacheSetMode(FOLDER_CACHE_MODE_I_LIKE_PIGS);
+    game_startupTracef("runtime.mode webSwingDev=%d devMode=%d productionMode=%d usingDevData=%d noFileCheck=%d folderCacheMode=%d",
+                       global_state.webswing_dev, isDevelopmentMode(), isProductionMode(), fileIsUsingDevData(),
+                       global_state.no_file_change_check, FolderCacheGetMode());
     FolderCacheEnableCallbacks(0);
     FolderCacheSetManualCallbackMode(1);
     sharedMemorySetMode(SMM_DISABLED);

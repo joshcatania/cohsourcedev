@@ -989,22 +989,62 @@ const TypeGfx * seqGetTypeGfx( const SeqInfo * info, const SeqMove * move, const
     return myTypeGfx;
 }
 
+static int seqWebSwingRawValuesSkipped;
+
+static int seqWebSwingParserErrorCallback(TokenizerHandle tok, const char *nexttoken, void *structptr)
+{
+    char *end;
+
+    if (nexttoken && nexttoken[0])
+    {
+        strtol(nexttoken, &end, 10);
+        if (end != nexttoken && *end == 0)
+        {
+            TokenizerGet(tok, 1, 1);
+            seqWebSwingRawValuesSkipped++;
+            return 1;
+        }
+    }
+
+    return ParserErrorCallback(tok, nexttoken, structptr);
+}
+
 //Load a single sequencer at run time  development only
 static SeqInfo * seqLoadSeqInfoDevelopment( char fname[] )
 {
     SeqInfo * seqInfo = 0;
     int         fileisgood = 0;
     TokenizerHandle tok;
+    char resolved_path[MAX_PATH];
+    char resolved_include_path[MAX_PATH];
 
+    if (fname && !stricmp(fname + 11, "player.txt"))
+    {
+        seqWebSwingRawValuesSkipped = 0;
+        filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_source path=%s resolved=%s include_resolved=%s\n",
+                       fname,
+                       fileLocateRead(fname, resolved_path) ? resolved_path : "missing",
+                       fileLocateRead("sequencers/cohsourcedev_webswing.inc", resolved_include_path) ? resolved_include_path : "missing");
+    }
     tok = TokenizerCreate(fname);
+    if (!tok && fname && !stricmp(fname + 11, "player.txt"))
+        filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_tokenizer=missing path=%s\n", fname);
     if (tok)
     {
         seqInfo = listAddNewMember(&seqGlobals.dev_seqInfosList, sizeof(SeqInfo));
         assert(seqInfo);
         listScrubMember(seqInfo, sizeof(*seqInfo));
-        fileisgood = TokenizerParseList(tok, ParseSeqInfo, seqInfo, TokenizerErrorCallback);
+        fileisgood = TokenizerParseList(tok, ParseSeqInfo, seqInfo,
+                                        (fname && !stricmp(fname + 11, "player.txt")) ?
+                                            seqWebSwingParserErrorCallback : TokenizerErrorCallback);
+        if (fname && !stricmp(fname + 11, "player.txt") && fileisgood)
+            filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_parse=ok raw_values_skipped=%d\n",
+                           seqWebSwingRawValuesSkipped);
         if( !fileisgood )
         {
+            if (fname && !stricmp(fname + 11, "player.txt"))
+                filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_parse=failed path=%s location=%s\n",
+                               fname, TokenizerGetFileAndLine(tok));
             listFreeMember( seqInfo, &seqGlobals.dev_seqInfosList );
             seqInfo = 0;
         }
@@ -1056,6 +1096,40 @@ static SeqInfo* seqGetDevSequencer(SeqInfo* seqInfo, const char* seqInfoNameClea
     }
     
     return seqInfo;
+}
+
+static int seqIsWebSwingPlayerSequencer(const char *seqInfoName)
+{
+    return seqInfoName && !stricmp(seqInfoName, "player.txt");
+}
+
+static void seqLogWebSwingPlayerData(const char *source, const SeqInfo *seqInfo)
+{
+    static int logged;
+    int airborne;
+    int attached;
+    int descend;
+    int bottom;
+    int ascend;
+    U16 move_index;
+
+    if (logged)
+        return;
+    logged = 1;
+
+    move_index = 0;
+    airborne = seqInfo && seqGetMoveIdxFromName("WEBSWING_AIRBORNE", seqInfo, &move_index);
+    attached = seqInfo && seqGetMoveIdxFromName("WEBSWING_ATTACHED", seqInfo, &move_index);
+    descend = seqInfo && seqGetMoveIdxFromName("WEBSWING_DESCEND", seqInfo, &move_index);
+    bottom = seqInfo && seqGetMoveIdxFromName("WEBSWING_BOTTOM", seqInfo, &move_index);
+    ascend = seqInfo && seqGetMoveIdxFromName("WEBSWING_ASCEND", seqInfo, &move_index);
+
+    filelog_printf("webswing.log",
+                   "WEBSWING_ANIM player_seq source=%s path=%s include_consumed=%d moves airborne=%d attached=%d descend=%d bottom=%d ascend=%d\n",
+                   source ? source : "none",
+                   seqInfo && seqInfo->name ? seqInfo->name : "none",
+                   airborne && attached && descend && bottom && ascend,
+                   airborne, attached, descend, bottom, ascend);
 }
 
 static void seqRemoveFromDevSequencers(const char* seqInfoNameCleanedUp)
@@ -1120,6 +1194,8 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
 {
     SeqInfo * seqInfo;
     char seqInfoNameCleanedUp[SEQ_MAX_PATH];
+    int dev_eligible = 0;
+    int dev_called = 0;
 
     writeConsole(OUTPUT_DEBUG, "\tReading %s", seqInfoName);
     PERFINFO_AUTO_START("top", 1);
@@ -1133,22 +1209,46 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             //End development only
         }
 
-        //So the game doesn't crash.
-        if( !seqInfo && isProductionMode() )
+        if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
         {
-            return findPlayerSequencer(seqInfoName);
+            int shared_memory = seqInfo && isSharedMemory(seqInfo);
+            dev_eligible = global_state.webswing_dev ||
+                (!global_state.no_file_change_check && isDevelopmentMode() && !shared_memory);
+            filelog_printf("webswing.log",
+                           "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d devEligible=%d\n",
+                           isDevelopmentMode(), global_state.no_file_change_check,
+                           seqInfo != NULL, shared_memory, global_state.webswing_dev, dev_eligible);
+        }
+
+        //So the game doesn't crash.
+        if( !seqInfo && isProductionMode() && !global_state.webswing_dev )
+        {
+            seqInfo = cpp_const_cast(SeqInfo*)(findPlayerSequencer(seqInfoName));
+            seqLogWebSwingPlayerData("compiled", seqInfo);
+            return seqInfo;
         }
 
     PERFINFO_AUTO_STOP_START("middle", 1);
 
-        if (!global_state.no_file_change_check && isDevelopmentMode() && !isSharedMemory(seqInfo))
+        if ((global_state.webswing_dev ||
+             (!global_state.no_file_change_check && isDevelopmentMode())) &&
+            !isSharedMemory(seqInfo))
         {
             // Get the local dev sequencer from the unbinned data, if necessary.
+            dev_called = seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp);
             seqInfo = seqGetDevSequencer(seqInfo, seqInfoNameCleanedUp, reloadForDev);
-            seqInitializePreLoad(seqInfo);
-            seqInitializePostLoad(seqInfo, loadType);
-            seqInitializeFinalLoad(seqInfo, false);
+            if (dev_called)
+                filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_load result=%s\n", seqInfo ? "loaded" : "missing");
+            if (seqInfo)
+            {
+                seqInitializePreLoad(seqInfo);
+                seqInitializePostLoad(seqInfo, loadType);
+                seqInitializeFinalLoad(seqInfo, false);
+            }
         }
+
+        if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
+            seqLogWebSwingPlayerData(dev_called ? "loose" : "compiled", seqInfo);
 
     PERFINFO_AUTO_STOP_START("middle2", 1);
 

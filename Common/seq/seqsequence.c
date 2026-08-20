@@ -634,6 +634,17 @@ void seqSetMove( SeqInst * seq, const SeqMove *newmove, int is_obvious )
 
     anim = &seq->animation;
 
+#ifdef CLIENT
+    if (newmove && seq->info && seq->info->name &&
+        !strnicmp(newmove->name, "WEBSWING_", 9) &&
+        strstri(seq->info->name, "player"))
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING ANIM selectedMove=%s devMode=%d sharedMemory=%d\n",
+                       newmove->name, isDevelopmentMode(), isSharedMemory(seq->info));
+    }
+#endif
+
     //A teeny bit clunky
     if( newmove )
     {
