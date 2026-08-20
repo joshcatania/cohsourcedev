@@ -5,7 +5,13 @@ param(
     [int]$ReadinessTimeoutSeconds = 300,
     [int]$SmokeTimeoutSeconds = 90,
     [int]$RetryDelaySeconds = 5,
-    [switch]$SkipReadinessSmoke
+    [switch]$SkipReadinessSmoke,
+    [ValidateSet('FastDev', 'Full')]
+    [string]$ShardProfile = 'FastDev',
+    [switch]$Full,
+    [switch]$FullShard,
+    [switch]$NoShardRestart,
+    [switch]$RestartFastShard
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,7 +19,9 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $binDir = Join-Path $repoRoot 'bin'
 $ouroboros = Join-Path $binDir 'Ouroboros.exe'
 $directDbScript = Join-Path $PSScriptRoot 'set-directdb-mode.ps1'
+$profileScript = Join-Path $PSScriptRoot 'set-shard-profile.ps1'
 $startScript = Join-Path $PSScriptRoot 'start-shard.ps1'
+$stopScript = Join-Path $PSScriptRoot 'stop-shard.ps1'
 $statusScript = Join-Path $PSScriptRoot 'status.ps1'
 $smokeScript = Join-Path $PSScriptRoot 'smoke.ps1'
 
@@ -32,25 +40,54 @@ function Get-ShardProcessState {
     }
 }
 
+function Test-ShardConfigChangedSinceStart {
+    $monitor = Get-Process -Name ServerMonitor -ErrorAction SilentlyContinue | Select-Object -First 1
+    if (-not $monitor) { return $false }
+    $startedUtc = $monitor.StartTime.ToUniversalTime()
+    foreach ($path in @(
+        (Join-Path $repoRoot 'bin\data\server\db\servers.cfg'),
+        (Join-Path $repoRoot 'bin\data\server\db\loadBalanceShardSpecific.cfg')
+    )) {
+        if ((Get-Item -LiteralPath $path).LastWriteTimeUtc -gt $startedUtc) { return $true }
+    }
+    return $false
+}
+
 function Show-StatusSnapshot {
     if (Test-Path -LiteralPath $statusScript) {
         & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $statusScript
     }
 }
 
+function Invoke-JsonScript {
+    param([string]$Path, [string[]]$Arguments)
+    $output = @(& powershell.exe -NoProfile -ExecutionPolicy Bypass -File $Path @Arguments 2>&1)
+    $exitCode = $LASTEXITCODE
+    if ($exitCode -ne 0) { throw "$(Split-Path -Leaf $Path) failed with exit code $exitCode. $($output -join ' ')" }
+    try { return (($output | ForEach-Object { $_.ToString() }) -join "`n" | ConvertFrom-Json) }
+    catch { throw "Could not parse $(Split-Path -Leaf $Path) JSON output: $($output -join ' ')" }
+}
+
 try {
     if (-not (Test-Path -LiteralPath $ouroboros)) { throw "Ouroboros.exe was not found at $ouroboros. Build the client first." }
 
-    Write-Host 'Starting local shard...'
+    $requestedProfile = if ($Full -or $FullShard) { 'Full' } else { $ShardProfile }
+    Write-Host ("Starting local shard (profile {0})..." -f $requestedProfile)
     $beforeMode = Get-ShardProcessState
-    $modeOutput = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $directDbScript -Enable 2>&1
-    $modeExit = $LASTEXITCODE
-    $modeOutput | ForEach-Object { if ($_ -match 'Mode:|No change|Restart') { Write-Host $_ } }
-    if ($modeExit -ne 0) { throw 'Could not enable direct-DB mode. See the mode configuration error above.' }
-
-    $modeChanged = [bool]($modeOutput -match 'Restart ServerMonitor')
-    if ($modeChanged -and $beforeMode.Healthy) {
-        throw 'Direct-DB mode was changed while the shard was already running. Stop and restart the local shard once, then run PLAY-COH.cmd again.'
+    $modeResult = Invoke-JsonScript -Path $directDbScript -Arguments @('-Enable', '-Json')
+    $profileResult = Invoke-JsonScript -Path $profileScript -Arguments @('-Profile', $requestedProfile, '-Json')
+    $modeChanged = [bool]$modeResult.changed
+    $profileChanged = [bool]$profileResult.changed
+    # A profile/configuration may have been changed by an explicit tooling
+    # command while the shard was running. File timestamps close that gap so
+    # the next normal PLAY-COH invocation self-heals instead of trusting a
+    # process family that was started with older directives.
+    $configChangedWhileRunning = Test-ShardConfigChangedSinceStart
+    $restartRequired = $modeChanged -or $profileChanged -or $configChangedWhileRunning -or $RestartFastShard
+    if ($restartRequired -and $beforeMode.Healthy) {
+        if ($NoShardRestart) { throw 'The requested profile/configuration differs from the running shard, but -NoShardRestart was specified. Use the matching profile or allow the disposable shard to restart.' }
+        Write-Host 'Profile or direct-DB configuration changed; restarting the disposable local shard automatically.'
+        Invoke-ExistingScript -Path $stopScript -Arguments @('-ForceProcessStop')
     }
 
     $state = Get-ShardProcessState

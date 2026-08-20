@@ -55,3 +55,4 @@ x64/
 
 # extracted shader sources (regenerable: pig.exe x bin/piggs/misc.pigg)
 /agent/shadersrc/
+/agent/work/

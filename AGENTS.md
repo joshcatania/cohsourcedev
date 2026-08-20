@@ -134,6 +134,51 @@ For a disposable local development shard only:
 
 The forced path now includes the known ServerMonitor children (`LogServer`, `BeaconServer`, and `BeaconClient`) and performs a bounded post-shutdown rescan so late-spawned children and exit races are reported accurately. Prefer replacing it with a verified graceful ServerMonitor control path once discovered.
 
+### 8. Normal fast-development loop and restart scope
+
+The normal local development profile is `FastDev`, and the first metric for any
+startup change is cold start to successful character/MapServer entry, not the
+time until ServerMonitor appears. `PLAY-COH.cmd` keeps a healthy compatible shard
+warm and launches only the client. If a direct-DB mode or shard-profile change is
+needed while the disposable shard is running, `agent/play-local.ps1` stops it with
+the verified forced-dev path, restarts it, waits for application readiness, and
+continues to the client automatically.
+
+Use the guarded profile switch when changing scope explicitly:
+
+```powershell
+.\agent\set-shard-profile.ps1 -Profile FastDev
+.\agent\set-shard-profile.ps1 -Profile Full
+.\agent\set-shard-profile.ps1 -Status
+```
+
+`FastDev` disables the optional Account, Auction, Arena, Mission, Raid, Stat,
+Turnstile, and LogServer launch blocks, disables stats/log/beacon/TSR startup,
+and retains ChatServer plus the normal MapServer. `Full` restores the original
+local configuration byte-for-byte. The switch is idempotent, does not edit
+piggs, and records guarded hashes under the ignored `agent/work/` directory;
+unexpected manual edits refuse a profile overwrite.
+
+Classify the work before choosing a restart:
+
+- Client-only or loose data changes (shaders, renderer, textures, UI, client FX,
+  and reloadable sequencer/animation data): keep the shard warm and rebuild or
+  relaunch only Ouroboros as needed.
+- Common, MapServer, or gameplay changes: rebuild and restart the FastDev shard
+  only when the changed binaries require it.
+- DB, server configuration, or infrastructure changes: cold-restart FastDev.
+- Full integration validation: select `Full` and cold-start the full profile.
+
+`REBUILD-AND-PLAY-COH.cmd` is restart-scope aware: its default is the client-only
+path, `REBUILD-AND-PLAY-COH.cmd --fast-shard` rebuilds and restarts FastDev, and
+`REBUILD-AND-PLAY-COH.cmd --full` rebuilds and runs the Full profile. Use
+`PLAY-COH.cmd --full` for a full-profile launch without rebuilding.
+
+Use `agent/benchmark-shard-startup.ps1` for comparable cold-start measurements;
+its `-Profile FastDev`/`-Profile Full` results end only when
+`smoke.ps1 -ExerciseCharacter` proves MapServer entry. `-TsrMode On|Off` and
+`-DisableChatServer` are available for bounded profile experiments.
+
 ## Current milestone status
 
 Phase 0 (local development loop), Phase 1 (deterministic graphical capture), and Phase 2 (multi-scene capture + regression harness) are all complete and verified on 2026-08-15:
