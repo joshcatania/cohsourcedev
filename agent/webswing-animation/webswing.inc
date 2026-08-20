@@ -15,6 +15,7 @@ Move WEBSWING_AIRBORNE
 		TEnd
 	Member "<WEBSWING_ANIM>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
 	Interrupts "<WEBSWING_ANIM>"
+	Requires WEBSWING_AIRBORNE
 	Flags Cycle
 MEnd
 
