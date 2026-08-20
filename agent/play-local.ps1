@@ -70,6 +70,53 @@ function Invoke-JsonScript {
     catch { throw "Could not parse $(Split-Path -Leaf $Path) JSON output: $($output -join ' ')" }
 }
 
+function Get-LocalWorkflowClients {
+    $expectedPaths = @($ouroboros, (Join-Path $binDir 'Ouroboros_Debug.exe')) |
+        Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } |
+        ForEach-Object { (Resolve-Path -LiteralPath $_).Path.ToLowerInvariant() }
+    $managed = @()
+    $unmanaged = @()
+
+    $processes = @(Get-CimInstance Win32_Process | Where-Object {
+        $_.Name -in @('Ouroboros.exe', 'Ouroboros_Debug.exe')
+    })
+    foreach ($process in $processes) {
+        if (-not $process.ExecutablePath) { continue }
+        $resolvedPath = try { [System.IO.Path]::GetFullPath($process.ExecutablePath).ToLowerInvariant() } catch { '' }
+        if ($resolvedPath -notin $expectedPaths) { continue }
+
+        $commandLine = [string]$process.CommandLine
+        $client = [pscustomobject]@{
+            Id = [int]$process.ProcessId
+            Path = $resolvedPath
+            CommandLine = $commandLine
+            WebSwingDev = [bool]($commandLine -match '(?i)(^|\s)-webswingdev(?:\s|$)')
+            DirectDbWorkflow = [bool]($commandLine -match '(?i)(^|\s)-db\s+127\.0\.0\.1(?:\s|$)')
+        }
+        if ($client.DirectDbWorkflow) { $managed += $client } else { $unmanaged += $client }
+    }
+
+    [pscustomobject]@{ Managed = @($managed); Unmanaged = @($unmanaged) }
+}
+
+function Stop-LocalWorkflowClients {
+    param([object[]]$Clients)
+    foreach ($client in @($Clients)) {
+        $process = Get-Process -Id $client.Id -ErrorAction SilentlyContinue
+        if (-not $process) { continue }
+        Write-Host "Restarting local City of Heroes client PID $($client.Id) for the requested runtime mode."
+        if ($process.MainWindowHandle -ne 0) { [void]$process.CloseMainWindow() }
+        $deadline = [DateTime]::UtcNow.AddSeconds(10)
+        do {
+            Start-Sleep -Milliseconds 250
+            $stillRunning = Get-Process -Id $client.Id -ErrorAction SilentlyContinue
+        } while ($stillRunning -and [DateTime]::UtcNow -lt $deadline)
+        if (Get-Process -Id $client.Id -ErrorAction SilentlyContinue) {
+            Stop-Process -Id $client.Id -Force
+        }
+    }
+}
+
 function Ensure-WebSwingAnimationRuntime {
     $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
     $includeSynchronized = $status.includePresent -and
@@ -77,18 +124,20 @@ function Ensure-WebSwingAnimationRuntime {
     $stateBitsSynchronized = $status.stateBitsPresent -and
         ($status.stateBitsSha256 -eq $status.trackedStateBitsSha256)
 
-    if (-not $status.installed -or -not $includeSynchronized -or -not $stateBitsSynchronized) {
+    if (-not $status.installed -or $status.playerSourceFormat -ne 'native' -or
+        -not $includeSynchronized -or -not $stateBitsSynchronized) {
         Write-Host 'Synchronizing tracked Web Swing animation data into loose runtime data...'
         $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
     } else {
         Write-Host 'Web Swing animation runtime data is already synchronized.'
     }
 
-    if (-not $status.installed -or
+    if (-not $status.installed -or $status.playerSourceFormat -ne 'native' -or
         $status.includeSha256 -ne $status.trackedIncludeSha256 -or
         $status.stateBitsSha256 -ne $status.trackedStateBitsSha256) {
         throw 'Web Swing animation runtime data did not reach tracked hash parity.'
     }
+    return $status
 }
 
 try {
@@ -96,8 +145,30 @@ try {
         throw "Ouroboros.exe was not found at $ouroboros. Build the client first."
     }
 
+    $clientInventory = Get-LocalWorkflowClients
+    if ($clientInventory.Unmanaged.Count -gt 0) {
+        $pids = $clientInventory.Unmanaged.Id -join ', '
+        throw "Found a local Ouroboros process not launched through the direct-DB workflow (PID $pids); refusing to manage or duplicate it."
+    }
+
+    $incompatibleClients = @($clientInventory.Managed | Where-Object { $_.WebSwingDev -ne [bool]$WebSwingDev })
+    if ($incompatibleClients.Count -gt 0) {
+        Stop-LocalWorkflowClients -Clients $incompatibleClients
+    }
+
     $clientWorkingDirectory = $binDir
     if ($WebSwingDev) {
+        $runtimeStatus = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+        $runtimeSynchronized = $runtimeStatus.installed -and $runtimeStatus.playerSourceFormat -eq 'native' -and
+            $runtimeStatus.includePresent -and $runtimeStatus.stateBitsPresent -and
+            $runtimeStatus.includeSha256 -eq $runtimeStatus.trackedIncludeSha256 -and
+            $runtimeStatus.stateBitsSha256 -eq $runtimeStatus.trackedStateBitsSha256
+        if (-not $runtimeSynchronized) {
+            $compatibleClients = @($clientInventory.Managed | Where-Object { $_.WebSwingDev })
+            if ($compatibleClients.Count -gt 0) {
+                Stop-LocalWorkflowClients -Clients $compatibleClients
+            }
+        }
         Ensure-WebSwingAnimationRuntime
         Write-Host "Web Swing development client: $ouroboros"
         Write-Host 'Web Swing development mode: explicit loose sequencer override'
@@ -161,9 +232,14 @@ try {
         Write-Host 'Readiness smoke skipped by request.'
     }
 
-    $existingClient = Get-Process -Name @('Ouroboros', 'Ouroboros_Debug') -ErrorAction SilentlyContinue | Select-Object -First 1
+    $clientInventory = Get-LocalWorkflowClients
+    if ($clientInventory.Unmanaged.Count -gt 0) {
+        $pids = $clientInventory.Unmanaged.Id -join ', '
+        throw "Found a local Ouroboros process not launched through the direct-DB workflow (PID $pids); refusing to manage or duplicate it."
+    }
+    $existingClient = @($clientInventory.Managed | Where-Object { $_.WebSwingDev -eq [bool]$WebSwingDev }) | Select-Object -First 1
     if ($existingClient) {
-        Write-Host "City of Heroes is already running (PID $($existingClient.Id)); leaving it alone."
+        Write-Host "City of Heroes is already running in the requested mode (PID $($existingClient.Id)); leaving the client and warm shard in place."
         exit 0
     }
 

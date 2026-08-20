@@ -24,12 +24,94 @@ $legacyIncludeLine = 'include cohsourcedev_webswing.inc'
 
 function Get-Sha256([string]$Path) {
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
-    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($sha256.ComputeHash([System.IO.File]::ReadAllBytes($Path)))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+    }
 }
 
 function Write-Utf8NoBom([string]$Path, [string]$Text) {
     $encoding = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($Path, $Text, $encoding)
+}
+
+function Convert-PlayerDumpToNativeSource {
+    param(
+        [Parameter(Mandatory = $true)][string]$Text,
+        [Parameter(Mandatory = $true)][string]$SourcePath
+    )
+
+    # The runtime extraction used for this branch is ParserWriteText output.
+    # ParseMoveP writes its unnamed SeqMoveRaw fields after the authored Flags
+    # field and before MEnd.  Those records are numeric-only lines; they are
+    # derived bin-time data, not native player source.  Remove only that exact
+    # region.  Any other content in the region is an input-format failure.
+    $integerLine = '^\s*-?\d+(?:\s*,\s*-?\d+)*\s*$'
+    $lines = $Text -split "`r?`n", -1
+    $output = New-Object 'System.Collections.Generic.List[string]'
+    $inMove = $false
+    $rawSection = $false
+    $moveName = $null
+    $rawRecordCount = 0
+
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+
+        if ($line -match '^\s*Move\s+(.+?)\s*$') {
+            if ($inMove) {
+                throw "Unexpected nested Move while materializing player source $SourcePath (move '$moveName', line $($i + 1))."
+            }
+            $inMove = $true
+            $rawSection = $false
+            $moveName = $Matches[1]
+            $output.Add($line)
+            continue
+        }
+
+        if ($inMove -and $line -match '^\s*MEnd\s*$') {
+            $output.Add($line)
+            $inMove = $false
+            $rawSection = $false
+            $moveName = $null
+            continue
+        }
+
+        if ($inMove -and $rawSection) {
+            if ([string]::IsNullOrWhiteSpace($line)) {
+                $output.Add($line)
+                continue
+            }
+            if ($line -notmatch $integerLine) {
+                throw "Unexpected non-numeric content in the ParseMoveP bin-time region of Move '$moveName' while materializing player source $SourcePath (line $($i + 1)). Expected only numeric records before MEnd."
+            }
+            $rawRecordCount++
+            continue
+        }
+
+        # ParserWriteText omits default-valued unnamed fields.  Consequently
+        # the raw region can begin after Flags, or after the last authored
+        # field when Flags itself is omitted.
+        if ($inMove -and $line -match $integerLine) {
+            $rawSection = $true
+            $rawRecordCount++
+            continue
+        }
+
+        $output.Add($line)
+    }
+
+    if ($inMove) {
+        throw "Player source ended inside Move '$moveName' without MEnd: $SourcePath"
+    }
+
+    [pscustomobject]@{
+        Text = ($output -join "`r`n")
+        Changed = ($rawRecordCount -gt 0)
+        RawRecordLinesRemoved = $rawRecordCount
+    }
 }
 
 function Find-RawPlayerSource {
@@ -90,10 +172,24 @@ function Find-RawPlayerSource {
 function Get-Status {
     $marker = Test-Path -LiteralPath $runtimePlayer -PathType Leaf
     $content = if ($marker) { [System.IO.File]::ReadAllText($runtimePlayer) } else { '' }
+    $playerSourceFormat = 'missing'
+    if ($marker) {
+        try {
+            $materialized = Convert-PlayerDumpToNativeSource -Text $content -SourcePath $runtimePlayer
+            $playerSourceFormat = if ($materialized.Changed) { 'runtime-dump' } else { 'native' }
+        }
+        catch {
+            $playerSourceFormat = 'invalid'
+        }
+    }
     [pscustomobject]@{
         installed = ($content.Contains($sentinelBegin) -and $content.Contains($includeLine) -and $content.Contains($sentinelEnd))
         playerPath = $runtimePlayer
         playerPresent = (Test-Path -LiteralPath $runtimePlayer -PathType Leaf)
+        playerSourceFormat = $playerSourceFormat
+        rawRecordLinesRemoved = if ($marker -and $playerSourceFormat -eq 'runtime-dump') {
+            try { (Convert-PlayerDumpToNativeSource -Text $content -SourcePath $runtimePlayer).RawRecordLinesRemoved } catch { 0 }
+        } else { 0 }
         backupPresent = (Test-Path -LiteralPath $backupPlayer -PathType Leaf)
         includePresent = (Test-Path -LiteralPath $runtimeInclude -PathType Leaf)
         stateBitsPresent = (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf)
@@ -121,14 +217,21 @@ if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
 if ($Action -eq 'Install') {
     $playerSource = Find-RawPlayerSource -ExplicitPath $PlayerSourcePath
     $sourceText = [System.IO.File]::ReadAllText($playerSource)
+    $materializedSource = Convert-PlayerDumpToNativeSource -Text $sourceText -SourcePath $playerSource
     $hasSentinel = $sourceText.Contains($sentinelBegin) -and $sourceText.Contains($sentinelEnd)
     $alreadyInstalled = $hasSentinel -and ($sourceText.Contains($includeLine) -or $sourceText.Contains($legacyIncludeLine))
 
     if ($alreadyInstalled -and -not $sourceText.Contains($includeLine)) {
         $sourceText = $sourceText.Replace($legacyIncludeLine, $includeLine)
+        $materializedSource = Convert-PlayerDumpToNativeSource -Text $sourceText -SourcePath $playerSource
+        $sourceText = $materializedSource.Text
         Write-Utf8NoBom $runtimePlayer $sourceText
     }
+    elseif ($alreadyInstalled -and $materializedSource.Changed) {
+        Write-Utf8NoBom $runtimePlayer $materializedSource.Text
+    }
     elseif (-not $alreadyInstalled) {
+        $sourceText = $materializedSource.Text
         if ($sourceText -notmatch '(?m)^\s*SeqEnd\s*$') {
             throw "The resolved player source has no SeqEnd marker: $playerSource"
         }
@@ -137,6 +240,8 @@ if ($Action -eq 'Install') {
             throw "Loose player source already exists without the Web Swing sentinel; refusing to overwrite it: $runtimePlayer"
         }
         $sourceText = [regex]::Replace($sourceText, '(?m)^\s*SeqEnd\s*$', "$sentinelBegin`r`n$includeLine`r`n$sentinelEnd`r`nSeqEnd", 1)
+        # Keep the exact extracted source as the protected restore copy.  On
+        # removal it is materialized only for comparison, then restored intact.
         Copy-Item -LiteralPath $playerSource -Destination $backupPlayer -Force
         Write-Utf8NoBom $runtimePlayer $sourceText
     }
@@ -167,7 +272,8 @@ if ($Action -eq 'Remove') {
                 throw "Refusing to remove an unprotected Web Swing player override: $runtimePlayer"
             }
             $backupText = [System.IO.File]::ReadAllText($backupPlayer)
-            $expectedInstalled = [regex]::Replace($backupText, '(?m)^\s*SeqEnd\s*$', "$sentinelBegin`r`n$includeLine`r`n$sentinelEnd`r`nSeqEnd", 1)
+            $materializedBackup = Convert-PlayerDumpToNativeSource -Text $backupText -SourcePath $backupPlayer
+            $expectedInstalled = [regex]::Replace($materializedBackup.Text, '(?m)^\s*SeqEnd\s*$', "$sentinelBegin`r`n$includeLine`r`n$sentinelEnd`r`nSeqEnd", 1)
             if ($currentText -cne $expectedInstalled) {
                 throw "The loose player source changed after install; refusing to restore over edits: $runtimePlayer"
             }
