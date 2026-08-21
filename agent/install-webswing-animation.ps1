@@ -50,12 +50,15 @@ function Convert-PlayerDumpToNativeSource {
     # derived bin-time data, not native player source.  Remove only that exact
     # region.  Any other content in the region is an input-format failure.
     $integerLine = '^\s*-?\d+(?:\s*,\s*-?\d+)*\s*$'
-    $lines = $Text -split "`r?`n", -1
+    # PowerShell uses 0, not -1, for an unlimited split count.  A -1 count
+    # leaves the CRLF dump as one line and silently bypasses all normalization.
+    $lines = $Text -split "`r?`n", 0
     $output = New-Object 'System.Collections.Generic.List[string]'
     $inMove = $false
     $rawSection = $false
     $moveName = $null
     $rawRecordCount = 0
+    $derivedMoveFlagCount = 0
 
     for ($i = 0; $i -lt $lines.Count; $i++) {
         $line = $lines[$i]
@@ -77,6 +80,24 @@ function Convert-PlayerDumpToNativeSource {
             $rawSection = $false
             $moveName = $null
             continue
+        }
+
+        if ($inMove -and $line -match '^(\s*Flags\s+)(.*)$') {
+            # ParserWriteText preserves derived move flags in the authored
+            # Flags line.  They must not be fed back into the source parser:
+            # SEQMOVE_COMPLEXCYCLE (16) is recomputed from CycleMove entries,
+            # and SEQMOVE_PREDICTABLE (2097152) is recomputed from Requires
+            # state bits.  The raw cycle records are removed below, so keeping
+            # either value would describe runtime data that is no longer
+            # present and can make seqStep divide by a zero cycle count.
+            $flagPrefix = $Matches[1]
+            $flagText = $Matches[2]
+            $flagTokens = @($flagText -split '\s*,\s*' | Where-Object { $_ -and $_ -notmatch '^\s*(?:16|2097152)\s*$' })
+            $removedFlags = @($flagText -split '\s*,\s*' | Where-Object { $_ -match '^\s*(?:16|2097152)\s*$' })
+            if ($removedFlags.Count -gt 0) {
+                $derivedMoveFlagCount += $removedFlags.Count
+                $line = $flagPrefix + ($flagTokens -join ', ')
+            }
         }
 
         if ($inMove -and $rawSection) {
@@ -109,8 +130,9 @@ function Convert-PlayerDumpToNativeSource {
 
     [pscustomobject]@{
         Text = ($output -join "`r`n")
-        Changed = ($rawRecordCount -gt 0)
+        Changed = ($rawRecordCount -gt 0 -or $derivedMoveFlagCount -gt 0)
         RawRecordLinesRemoved = $rawRecordCount
+        DerivedMoveFlagsRemoved = $derivedMoveFlagCount
     }
 }
 
