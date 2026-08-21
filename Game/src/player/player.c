@@ -1598,6 +1598,30 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     motion->input.stunned            = controls->server_state->stun;
     motion->input.web_swing_enabled  = controls->server_state->web_swing;
 
+    if (global_state.webswing_dev && e == controlledPlayerPtr())
+    {
+        static int logged;
+        static int last_server_web_swing = -1;
+        static int last_motion_web_swing_enabled = -1;
+        static Entity *last_player;
+
+        if (!logged || last_player != e ||
+            last_server_web_swing != controls->server_state->web_swing ||
+            last_motion_web_swing_enabled != motion->input.web_swing_enabled)
+        {
+            filelog_printf("webswing.log",
+                           "WEB_SWING CLIENT_PHYSICS player=%s db_id=%d svr_idx=%d webswing_dev=%d server_web_swing=%d motion_web_swing_enabled=%d attached=%d stored_phase=%d\n",
+                           e->namePtr ? e->namePtr : "<unnamed>", e->db_id, e->svr_idx,
+                           global_state.webswing_dev, controls->server_state->web_swing,
+                           motion->input.web_swing_enabled, motion->web_swing_attached,
+                           motion->web_swing_anim_phase);
+            logged = 1;
+            last_player = e;
+            last_server_web_swing = controls->server_state->web_swing;
+            last_motion_web_swing_enabled = motion->input.web_swing_enabled;
+        }
+    }
+
     // Copy the BEFORE data.
 
     csc->before.motion_state = *motion;

@@ -187,6 +187,53 @@ static const char *pmotionWebSwingAnimSide(void)
 #endif
 }
 
+#if CLIENT
+static void pmotionLogWebSwingClientStateBuild(Entity *e, int server_web_swing,
+                                                int resolved_count, WebSwingAnimPhase computed_phase,
+                                                F32 bottom_fraction, F32 tangent_speed)
+{
+    static int logged;
+    static int last_server_web_swing = -1;
+    static int last_motion_web_swing_enabled = -1;
+    static int last_attached = -1;
+    static WebSwingAnimPhase last_stored_phase = (WebSwingAnimPhase)-1;
+    static WebSwingAnimPhase last_computed_phase = (WebSwingAnimPhase)-1;
+    static int last_resolved_count = -1;
+    static Entity *last_player;
+    MotionState *motion = e->motion;
+
+    if (!global_state.webswing_dev || e != controlledPlayerPtr())
+        return;
+
+    if (!logged || last_player != e ||
+        last_server_web_swing != server_web_swing ||
+        last_motion_web_swing_enabled != motion->input.web_swing_enabled ||
+        last_attached != motion->web_swing_attached ||
+        last_stored_phase != motion->web_swing_anim_phase ||
+        last_computed_phase != computed_phase ||
+        last_resolved_count != resolved_count)
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING CLIENT_STATE_BUILD player=%s db_id=%d svr_idx=%d webswing_dev=%d server_web_swing=%d motion_web_swing_enabled=%d attached=%d stored_phase=%s computed_phase=%s statebits_resolved=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f\n",
+                       e->namePtr ? e->namePtr : "<unnamed>", e->db_id, e->svr_idx,
+                       global_state.webswing_dev, server_web_swing,
+                       motion->input.web_swing_enabled, motion->web_swing_attached,
+                       pmotionWebSwingAnimPhaseName(motion->web_swing_anim_phase),
+                       resolved_count ? pmotionWebSwingAnimPhaseName(computed_phase) : "UNRESOLVED",
+                       resolved_count, bottom_fraction, tangent_speed, motion->vel[1]);
+
+        logged = 1;
+        last_player = e;
+        last_server_web_swing = server_web_swing;
+        last_motion_web_swing_enabled = motion->input.web_swing_enabled;
+        last_attached = motion->web_swing_attached;
+        last_stored_phase = motion->web_swing_anim_phase;
+        last_computed_phase = computed_phase;
+        last_resolved_count = resolved_count;
+    }
+}
+#endif
+
 static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *motion,
                                                        F32 *bottom_fraction, F32 *tangent_speed)
 {
@@ -258,7 +305,7 @@ static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *mot
     return WEBSWING_ANIM_PHASE_ATTACHED;
 }
 
-static void pmotionSetWebSwingAnimState(Entity *e)
+static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 {
     static const char *state_names[] = {
         "WEBSWING_AIRBORNE",
@@ -273,6 +320,10 @@ static void pmotionSetWebSwingAnimState(Entity *e)
     F32 bottom_fraction;
     F32 tangent_speed;
     WebSwingAnimPhase phase;
+
+    phase = WEBSWING_ANIM_PHASE_NONE;
+    bottom_fraction = 0.0f;
+    tangent_speed = 0.0f;
 
     for (i = 0; i < ARRAY_SIZE(state_names); ++i)
     {
@@ -296,12 +347,24 @@ static void pmotionSetWebSwingAnimState(Entity *e)
         }
     }
 
+#if CLIENT
+    if (resolved_count)
+        phase = pmotionGetWebSwingAnimPhase(e, e->motion, &bottom_fraction, &tangent_speed);
+    pmotionLogWebSwingClientStateBuild(e, server_web_swing, resolved_count, phase,
+                                       bottom_fraction, tangent_speed);
+#else
     // The animation data is optional. If the state bits are not installed,
     // leave the normal sequencer state machine completely unchanged.
     if (!resolved_count)
         return;
 
     phase = pmotionGetWebSwingAnimPhase(e, e->motion, &bottom_fraction, &tangent_speed);
+#endif
+
+    // The animation data is optional. If the state bits are not installed,
+    // leave the normal sequencer state machine completely unchanged.
+    if (!resolved_count)
+        return;
 
     if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
         seqSetState(e->seq->state, 1, state_bits[0]);
@@ -391,7 +454,7 @@ void pmotionSetState(Entity* e, ControlState* controls)
         SET_BIT(STATE_HEADPAIN);
     }
 
-    pmotionSetWebSwingAnimState(e);
+    pmotionSetWebSwingAnimState(e, scs->web_swing);
 
     // If I'm not in control of my character, then don't set
     //   any of the bits that are directly based on input controls.
