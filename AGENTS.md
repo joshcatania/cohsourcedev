@@ -15,6 +15,7 @@ This repository contains a large Windows-native City of Heroes/OuroDev codebase.
 - TestClient supports `-db <address>`. In that mode its login code bypasses AuthServer and synthesizes a direct local DbServer target.
 - The checked-in DbServer configuration targets local SQL Server and contains initialization directives capable of creating the `cohdb` database.
 - AuthServer is a separate/optional integration layer for the primary local-development loop; its checked-in config expects a `cohauth` database and listens for game clients on TCP 2106 when fully initialized.
+- When the shared shard is owned by another concurrent agent (different worktree, drifted protocol), a fully isolated parallel shard can run from this worktree instead: set `COH_PORT_OFFSET` (all `comm_backend.h` ports shift by it, clamped to a valid band), then `agent/start-shard-parallel.ps1` / `agent/stop-shard-parallel.ps1` (own `cohgfx` SQL database, per-path process matching). The DbServer game-client listener is UDP 7000(+offset), so TCP port checks will not show it; a fresh database makes the first startup pass take ~25 minutes.
 
 ## Locally verified development baseline
 

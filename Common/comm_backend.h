@@ -1,6 +1,7 @@
 #ifndef _COMM_BACKEND
 #define _COMM_BACKEND
 
+#include <stdlib.h>
 #include <utilitieslib/network/netio.h>
 
 #define DBSERVER_PROTOCOL_VERSION            20110503    // DbServer<->Mapserver<->ServerMonitor protocol number
@@ -10,38 +11,68 @@
 #define DBSERVER_MISSION_PROTOCOL_VERSION    20090309    // DbServer<->MissionServer protocol number
 #define DBSERVER_QUEUE_PROTOCOL_VERSION    20100105    // DbServer<->QueueServer protocol number
 
+// Multi-shard local development: setting COH_PORT_OFFSET in the environment
+// shifts every default listen/connect port below by that amount, so two full
+// shards from different worktrees can run side by side on one machine (the
+// mapserver port scan starting at BASE_MAPSERVER_PORT follows the offset).
+// Unset or 0 keeps the historical single-shard ports exactly. Spawned server
+// processes receive the offset through normal environment inheritance.
+// The offset is clamped to [0, COH_MAX_PORT_OFFSET] so every derived port,
+// including the upward mapserver bind scan from 7001(+offset), stays inside
+// the valid 0-65535 TCP/UDP port range; agent/start-shard-parallel.ps1
+// rejects out-of-band offsets loudly before anything is spawned.
+#define COH_MAX_PORT_OFFSET    (65535 - 7001 - 512)    // 512 ports of mapserver scan headroom
+__pragma(warning(push))
+__pragma(warning(disable : 4996)) // getenv CRT-deprecation; read-once, constant per process
+static __inline int cohDefaultPortOffset(void)
+{
+    static int cached_offset = -1;
+    if (cached_offset == -1) {
+        const char *env = getenv("COH_PORT_OFFSET");
+        int offset = (env && *env) ? atoi(env) : 0;
+        if (offset < 0)
+            offset = 0;
+        if (offset > COH_MAX_PORT_OFFSET)
+            offset = COH_MAX_PORT_OFFSET;
+        cached_offset = offset;
+    }
+    return cached_offset;
+}
+__pragma(warning(pop))
+#define COH_PORT(p) ((p) + cohDefaultPortOffset())
+
 // add new ports up here, counting backwards
-#define DEFAULT_DBTURNSTILE_PORT                    6971    // dbserver listens for turnstile server
-#define DEFAULT_SVRMON_COMMAND_PORT                    6972    // ServerMonitor listens for command requests
-#define DEFAULT_QUEUESERVER_PORT                    6973
-#define DEFAULT_MISSIONSERVER_PORT                    6974
-#define DEFAULT_RELAYSERVER_PORT                    6975    // relayserver JSON-RPC
-#define DEFAULT_ACCOUNTSERVER_PORT                    6976    // accountserver
-#define DEFAULT_AUCTIONSERVER_HEROES_PORT            6977    // hero auction house
-#define DEFAULT_AUCTIONSERVER_VILLAINS_PORT            6978    // villains auction house
-#define DEFAULT_BEACONCLIENT_PORT                    6979    // dbserver server listens for beacon cilents
-#define DEFAULT_BEACONSERVER_PORT                    6980    // dbserver server listens for beacon servers
-#define DEFAULT_STATSERVER_PORT                        6981    // stat server listens
-#define DEFAULT_DBSTAT_PORT                            6982    // dbserver listens for stat server
-#define DEFAULT_ARENASERVER_PORT                    6983    // arena server listens
-#define DEFAULT_DBARENA_PORT                        6984    // dbserver listens for arena server
-#define DEFAULT_CHATMON_PORT                        6985    // chatsever listens for servermonitors
-#define DEFAULT_CHATSERVER_AUX_PORT                    6986    // mapserver connects to chatserver & sends reserved name list
-#define DEFAULT_PUBLICCHAT_PORT                        6987
-#define DEFAULT_CHATSERVER_PORT                        6988
-#define DEFAULT_LOG_PORT                            6989
-#define DEFAULT_SHARDMON_PORT                        6990    // ServerMonitor listens for ShardMonitors
-#define DEFAULT_CMDRELAY_PORT                        6991
-#define DEFAULT_DBCRASHMAP_PORT                        6992
-#define DEFAULT_SVRMON_LISTEN_PORT                    6993    // ServerMonitor listens for SNMP monitoring requests
-#define DEFAULT_UPDATESERVER_LISTEN_PORT            6993    // UpdateServer listens for SNMP monitoring requests
-#define DEFAULT_UPDATESERVER_PORT                    6994    // UpdateServer listens for CohUpdaters
-#define DEFAULT_MAPSERVER_PORT                        6995    // mapserver listens for game clients used for -localmapserver (editing / testing)
-#define DEFAULT_SVRMON_PORT                            6996    // dbserver listens for server monitors
-#define DEFAULT_DB_PORT                                6997    // dbserver listens for mapservers
-#define DEFAULT_DBLAUNCHER_PORT                        6998    // dbserver listens for launchers
-#define DEFAULT_LAUNCHER_PORT                        6999    // launcher listens for mapservers
-#define DEFAULT_DBGAMECLIENT_PORT                    7000    // dbserver listens for game clients - public mapserver ports follow this port number sequentially
+#define DEFAULT_DBTURNSTILE_PORT                    COH_PORT(6971)    // dbserver listens for turnstile server
+#define DEFAULT_SVRMON_COMMAND_PORT                    COH_PORT(6972)    // ServerMonitor listens for command requests
+#define DEFAULT_QUEUESERVER_PORT                    COH_PORT(6973)
+#define DEFAULT_MISSIONSERVER_PORT                    COH_PORT(6974)
+#define DEFAULT_RELAYSERVER_PORT                    COH_PORT(6975)    // relayserver JSON-RPC
+#define DEFAULT_ACCOUNTSERVER_PORT                    COH_PORT(6976)    // accountserver
+#define DEFAULT_AUCTIONSERVER_HEROES_PORT            COH_PORT(6977)    // hero auction house
+#define DEFAULT_AUCTIONSERVER_VILLAINS_PORT            COH_PORT(6978)    // villains auction house
+#define DEFAULT_BEACONCLIENT_PORT                    COH_PORT(6979)    // dbserver server listens for beacon cilents
+#define DEFAULT_BEACONSERVER_PORT                    COH_PORT(6980)    // dbserver server listens for beacon servers
+#define DEFAULT_STATSERVER_PORT                        COH_PORT(6981)    // stat server listens
+#define DEFAULT_DBSTAT_PORT                            COH_PORT(6982)    // dbserver listens for stat server
+#define DEFAULT_ARENASERVER_PORT                        COH_PORT(6983)    // arena server listens
+#define DEFAULT_DBARENA_PORT                            COH_PORT(6984)    // dbserver listens for arena server
+#define DEFAULT_CHATMON_PORT                        COH_PORT(6985)    // chatsever listens for servermonitors
+#define DEFAULT_CHATSERVER_AUX_PORT                    COH_PORT(6986)    // mapserver connects to chatserver & sends reserved name list
+#define DEFAULT_PUBLICCHAT_PORT                        COH_PORT(6987)
+#define DEFAULT_CHATSERVER_PORT                        COH_PORT(6988)
+#define DEFAULT_LOG_PORT                            COH_PORT(6989)
+#define DEFAULT_SHARDMON_PORT                        COH_PORT(6990)    // ServerMonitor listens for ShardMonitors
+#define DEFAULT_CMDRELAY_PORT                        COH_PORT(6991)
+#define DEFAULT_DBCRASHMAP_PORT                        COH_PORT(6992)
+#define DEFAULT_SVRMON_LISTEN_PORT                    COH_PORT(6993)    // ServerMonitor listens for SNMP monitoring requests
+#define DEFAULT_UPDATESERVER_LISTEN_PORT            COH_PORT(6993)    // UpdateServer listens for SNMP monitoring requests
+#define DEFAULT_UPDATESERVER_PORT                    COH_PORT(6994)    // UpdateServer listens for CohUpdaters
+#define DEFAULT_MAPSERVER_PORT                        COH_PORT(6995)    // mapserver listens for game clients used for -localmapserver (editing / testing)
+#define DEFAULT_SVRMON_PORT                            COH_PORT(6996)    // dbserver listens for server monitors
+#define DEFAULT_DB_PORT                                COH_PORT(6997)    // dbserver listens for mapservers
+#define DEFAULT_DBLAUNCHER_PORT                    COH_PORT(6998)    // dbserver listens for launchers
+#define DEFAULT_LAUNCHER_PORT                        COH_PORT(6999)    // launcher listens for mapservers
+#define DEFAULT_DBGAMECLIENT_PORT                    COH_PORT(7000)    // dbserver listens for game clients - public mapserver ports follow this port number sequentially
 #define BASE_MAPSERVER_PORT                            (DEFAULT_DBGAMECLIENT_PORT+1)
 
 typedef enum
