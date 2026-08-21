@@ -17,6 +17,11 @@
 // mapserver port scan starting at BASE_MAPSERVER_PORT follows the offset).
 // Unset or 0 keeps the historical single-shard ports exactly. Spawned server
 // processes receive the offset through normal environment inheritance.
+// The offset is clamped to [0, COH_MAX_PORT_OFFSET] so every derived port,
+// including the upward mapserver bind scan from 7001(+offset), stays inside
+// the valid 0-65535 TCP/UDP port range; agent/start-shard-parallel.ps1
+// rejects out-of-band offsets loudly before anything is spawned.
+#define COH_MAX_PORT_OFFSET    (65535 - 7001 - 512)    // 512 ports of mapserver scan headroom
 __pragma(warning(push))
 __pragma(warning(disable : 4996)) // getenv CRT-deprecation; read-once, constant per process
 static __inline int cohDefaultPortOffset(void)
@@ -24,7 +29,12 @@ static __inline int cohDefaultPortOffset(void)
     static int cached_offset = -1;
     if (cached_offset == -1) {
         const char *env = getenv("COH_PORT_OFFSET");
-        cached_offset = (env && *env) ? atoi(env) : 0;
+        int offset = (env && *env) ? atoi(env) : 0;
+        if (offset < 0)
+            offset = 0;
+        if (offset > COH_MAX_PORT_OFFSET)
+            offset = COH_MAX_PORT_OFFSET;
+        cached_offset = offset;
     }
     return cached_offset;
 }

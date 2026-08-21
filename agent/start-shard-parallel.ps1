@@ -13,7 +13,7 @@
 #   .\agent\start-shard-parallel.ps1 -StartupWaitSeconds 60
 [CmdletBinding()]
 param(
-    [ValidateRange(1, 60000)]
+    [ValidateRange(1, 65535)]
     [int]$PortOffset = 1000,
     [int]$StartupWaitSeconds = 45
 )
@@ -24,11 +24,21 @@ $workTag = Join-Path $repoRoot 'agent\work\parallel-shard'
 
 New-Item -ItemType Directory -Force -Path $workTag | Out-Null
 
-# Guard: the baseline ports must be free of OUR binaries only; another shard
-# may own the baseline band. We only refuse if something already listens in
-# our target band (offset applied).
+# Guard: validate the EFFECTIVE port band, not just the raw offset. The base
+# band is 6971-7000 and public mapserver ports continue upward from
+# 7001(+offset) via an unbounded bind scan, so the offset must leave room
+# below the 65535 TCP/UDP port ceiling (same bound as COH_MAX_PORT_OFFSET in
+# Common/comm_backend.h, which clamps defensively).
 $bandStart = 6971 + $PortOffset
 $bandEnd = 7001 + $PortOffset
+$mapPortHeadroom = 512
+$maxOffset = 65535 - 7001 - $mapPortHeadroom
+if ($PortOffset -gt $maxOffset) {
+    throw "PortOffset $PortOffset puts the effective band at $bandStart-$($bandEnd + $mapPortHeadroom) (mapserver scan headroom included) above the 65535 port ceiling. Use -PortOffset <= $maxOffset."
+}
+
+# Guard: the target band (offset applied) must be free. Another shard may own
+# the baseline band; we only refuse if something already listens in ours.
 $listeners = Get-NetTCPConnection -State Listen -ErrorAction SilentlyContinue |
     Where-Object { $_.LocalPort -ge $bandStart -and $_.LocalPort -le $bandEnd }
 if ($listeners) {
