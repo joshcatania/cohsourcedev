@@ -198,7 +198,11 @@ void seqLoadStateBits()
     int i;
     ParserLoadInfo pli;
     int flags = 0;
-    const char *persistfile = global_state.webswing_dev ? NULL : "seqstatebits.bin";
+    StateBitList webSwingStateBitList = { 0 };
+    const char *persistfile = "seqstatebits.bin";
+
+    filelog_printf("webswing.log", "WEBSWING_ANIM statebits_load begin mode=%s persist=%s\n",
+                   global_state.webswing_dev ? "WEBSWINGDEV" : "NORMAL", persistfile);
 
     //ParserLoadFilesShared("XXXXX.bin", NULL, "sequencers/statebits.statebits", "XXXXXXXX.bin", 
     //    PARSER_TRYPERSIST, ParseStateBitList, &fromDataStateBitList, sizeof(fromDataStateBitList), NULL, NULL, NULL, NULL, NULL);
@@ -221,6 +225,31 @@ void seqLoadStateBits()
         &pli,
         NULL);
 
+    filelog_printf("webswing.log", "WEBSWING_ANIM statebits_load stock_complete data_count=%d updated=%d\n",
+                   eaSize(&fromDataStateBitList.stateBits), pli.updated);
+
+    // Keep the normal compiled state-bit universe authoritative.  The
+    // WebSwingDev file lives outside sequencers/ so it cannot make
+    // ParserLoadFiles discard seqstatebits.bin and rebuild the universe from
+    // only the five overlay bits.
+    if (global_state.webswing_dev)
+    {
+        filelog_printf("webswing.log", "WEBSWING_ANIM statebits_load overlay_begin path=cohsourcedev_webswing.statebits\n");
+        ParserLoadFiles(NULL,
+            "cohsourcedev_webswing.statebits",
+            NULL,
+            PARSER_EXACTFILE | PARSER_OPTIONALFLAG,
+            ParseStateBitList,
+            &webSwingStateBitList,
+            NULL,
+            NULL,
+            NULL);
+
+        filelog_printf("webswing.log", "WEBSWING_ANIM statebits_load overlay_complete data_count=%d\n",
+                       eaSize(&webSwingStateBitList.stateBits));
+
+    }
+
     stateBitsMightBeRenumbered = stateBitsMightBeRenumbered || pli.updated;
 
     //TO DO: this
@@ -240,7 +269,8 @@ void seqLoadStateBits()
     {
         int addedBitNum, statesToAddCnt, i;
 
-        statesToAddCnt = eaSize( &fromDataStateBitList.stateBits );
+        statesToAddCnt = eaSize( &fromDataStateBitList.stateBits ) +
+            eaSize( &webSwingStateBitList.stateBits );
         addedBitNum = g_MaxUsedStates;
 
         for (i = 0; i < statesToAddCnt; i++)
@@ -248,9 +278,12 @@ void seqLoadStateBits()
             char *c;
             int j;
             bool isDuplicate = false;
+            StateBit *dataStateBit = i < eaSize(&fromDataStateBitList.stateBits) ?
+                fromDataStateBitList.stateBits[i] :
+                webSwingStateBitList.stateBits[i - eaSize(&fromDataStateBitList.stateBits)];
 
             // Convert all of the loaded strings to upper case
-            for (c = fromDataStateBitList.stateBits[i]->name; *c; c++)
+            for (c = dataStateBit->name; *c; c++)
             {
                 *c = toupper(*c);
             }
@@ -258,7 +291,7 @@ void seqLoadStateBits()
             // See if this state name has already been defined before adding this one (keep the first instance)
             for (j = 0; j < addedBitNum; j++)
             {
-                if (strcmp(fromDataStateBitList.stateBits[i]->name, stateBits[j].name) == 0)
+                if (strcmp(dataStateBit->name, stateBits[j].name) == 0)
                 {
                     isDuplicate = true;
                     break;
@@ -268,12 +301,12 @@ void seqLoadStateBits()
             
             if (isDuplicate)
             {
-                printf("Ignoring duplicate state bit %s\n", fromDataStateBitList.stateBits[i]->name);
+                printf("Ignoring duplicate state bit %s\n", dataStateBit->name);
             }
             else
             {
                 StateBit * statebit = &stateBits[ addedBitNum ];
-                *statebit = *fromDataStateBitList.stateBits[i];  //Struct copy
+                *statebit = *dataStateBit;  //Struct copy
                 statebit->bitNum = addedBitNum;
                 addedBitNum++;
                 if(addedBitNum >= MAXSTATES) {
@@ -329,13 +362,24 @@ void seqLoadStateBits()
 #endif // SORTED_STATEBIT_LIST
 
     filelog_printf("webswing.log",
-                   "WEBSWING_ANIM statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d total=%d\n",
+                   "WEBSWING_ANIM statebits mode=%s airborne=%d attached=%d descend=%d bottom=%d ascend=%d total=%d\n",
+                   global_state.webswing_dev ? "WEBSWINGDEV" : "NORMAL",
                    seqGetStateNumberFromName("WEBSWING_AIRBORNE") >= 0,
                    seqGetStateNumberFromName("WEBSWING_ATTACHED") >= 0,
                    seqGetStateNumberFromName("WEBSWING_DESCEND") >= 0,
                    seqGetStateNumberFromName("WEBSWING_BOTTOM") >= 0,
                    seqGetStateNumberFromName("WEBSWING_ASCEND") >= 0,
                    g_MaxUsedStates);
+
+    for (i = 0; i < g_MaxUsedStates; i++)
+    {
+        filelog_printf("webswing.log",
+                       "WEBSWING_ANIM statebit index=%d name=%s flags=%d predictable=%d\n",
+                       i,
+                       stateBits[i].name ? stateBits[i].name : "none",
+                       stateBits[i].flags,
+                       !!(stateBits[i].flags & STATEBIT_PREDICTABLE));
+    }
 }
 
 int seqGetStateNumberFromName( const char * name )

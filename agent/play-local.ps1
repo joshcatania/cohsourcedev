@@ -119,12 +119,14 @@ function Stop-LocalWorkflowClients {
 
 function Ensure-WebSwingAnimationRuntime {
     $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+    $overlaySynchronized = $status.overlayPresent -and
+        ($status.overlaySha256 -eq $status.trackedOverlaySha256)
     $includeSynchronized = $status.includePresent -and
         ($status.includeSha256 -eq $status.trackedIncludeSha256)
     $stateBitsSynchronized = $status.stateBitsPresent -and
         ($status.stateBitsSha256 -eq $status.trackedStateBitsSha256)
 
-    if (-not $status.installed -or $status.playerSourceFormat -ne 'native' -or
+    if (-not $status.installed -or -not $overlaySynchronized -or
         -not $includeSynchronized -or -not $stateBitsSynchronized) {
         Write-Host 'Synchronizing tracked Web Swing animation data into loose runtime data...'
         $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
@@ -132,7 +134,8 @@ function Ensure-WebSwingAnimationRuntime {
         Write-Host 'Web Swing animation runtime data is already synchronized.'
     }
 
-    if (-not $status.installed -or $status.playerSourceFormat -ne 'native' -or
+    if (-not $status.installed -or
+        $status.overlaySha256 -ne $status.trackedOverlaySha256 -or
         $status.includeSha256 -ne $status.trackedIncludeSha256 -or
         $status.stateBitsSha256 -ne $status.trackedStateBitsSha256) {
         throw 'Web Swing animation runtime data did not reach tracked hash parity.'
@@ -159,8 +162,10 @@ try {
     $clientWorkingDirectory = $binDir
     if ($WebSwingDev) {
         $runtimeStatus = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
-        $runtimeSynchronized = $runtimeStatus.installed -and $runtimeStatus.playerSourceFormat -eq 'native' -and
+        $runtimeSynchronized = $runtimeStatus.installed -and
+            $runtimeStatus.overlayPresent -and
             $runtimeStatus.includePresent -and $runtimeStatus.stateBitsPresent -and
+            $runtimeStatus.overlaySha256 -eq $runtimeStatus.trackedOverlaySha256 -and
             $runtimeStatus.includeSha256 -eq $runtimeStatus.trackedIncludeSha256 -and
             $runtimeStatus.stateBitsSha256 -eq $runtimeStatus.trackedStateBitsSha256
         if (-not $runtimeSynchronized) {
@@ -171,7 +176,7 @@ try {
         }
         Ensure-WebSwingAnimationRuntime
         Write-Host "Web Swing development client: $ouroboros"
-        Write-Host 'Web Swing development mode: explicit loose sequencer override'
+        Write-Host 'Web Swing development mode: compiled player plus private five-move overlay'
     }
 
     $requestedProfile = if ($Full -or $FullShard) { 'Full' } else { $ShardProfile }

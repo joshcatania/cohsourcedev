@@ -626,6 +626,51 @@ int getMoveFlags(SeqInst * seq, eMoveFlag flag)
     return (seq->animation.move->flags & flag);
 }
 
+#ifdef CLIENT
+static int seqWebSwingTransitionLogCount;
+
+static void seqLogWebSwingTransition(SeqInst *seq, const SeqMove *newmove, int is_obvious)
+{
+    Entity *controlledPlayer = controlledPlayerPtr();
+    const SeqMove *previousMove;
+    char current_bits[STATE_ARRAY_SIZE * 9 + 1];
+    size_t used = 0;
+    int i;
+
+    if (!controlledPlayer || controlledPlayer->seq != seq || !newmove ||
+        !seq->info || !seq->info->name || !strstri(seq->info->name, "player") ||
+        seq->animation.move == newmove || seqWebSwingTransitionLogCount >= 256)
+        return;
+
+    previousMove = seq->animation.move;
+    current_bits[0] = '\0';
+    for (i = 0; i < STATE_ARRAY_SIZE && used + 1 < sizeof(current_bits); i++)
+    {
+        int written = sprintf_s(current_bits + used, sizeof(current_bits) - used,
+                                "%s%08x", i ? "," : "", seq->state[i]);
+        if (written < 0)
+            break;
+        used += (size_t)written;
+    }
+
+    filelog_printf("webswing.log",
+                   "WEB_SWING ANIM transition selectedMove=%s previousMove=%s currentBits=%s flags=%d requiredCount=%u nextMoveCnt=%u nextMove=%u cycleMoveCnt=%u cycleMove=%u obvious=%d devMode=%d sharedMemory=%d\n",
+                   newmove->name ? newmove->name : "none",
+                   previousMove && previousMove->name ? previousMove->name : "none",
+                   current_bits,
+                   newmove->flags,
+                   newmove->raw.required.count,
+                   newmove->raw.nextMoveCnt,
+                   newmove->raw.nextMoveCnt ? newmove->raw.nextMove[0] : 0,
+                   newmove->raw.cycleMoveCnt,
+                   newmove->raw.cycleMoveCnt ? newmove->raw.cycleMove[0] : 0,
+                   is_obvious,
+                   isDevelopmentMode(),
+                   isSharedMemory(seq->info));
+    seqWebSwingTransitionLogCount++;
+}
+#endif
+
 void seqSetMove( SeqInst * seq, const SeqMove *newmove, int is_obvious )
 {
     F32 last_frame;
@@ -635,6 +680,8 @@ void seqSetMove( SeqInst * seq, const SeqMove *newmove, int is_obvious )
     anim = &seq->animation;
 
 #ifdef CLIENT
+    seqLogWebSwingTransition(seq, newmove, is_obvious);
+
     if (newmove && seq->info && seq->info->name &&
         !strnicmp(newmove->name, "WEBSWING_", 9) &&
         strstri(seq->info->name, "player"))

@@ -708,6 +708,74 @@ static void seqAttachAnimations( SeqInfo * seqInfo, int loadType )
     }
 }
 
+static void seqBuildInterruptBitArrays(SeqInfo * seqInfo)
+{
+    int i, j;
+    int totalIrqStrings;
+    int irqCnt;
+    int irqVal;
+    StashTable irqName_ht;
+    int numMoves = eaSize(&seqInfo->moves);
+
+    // The compiled player retains Member/Interrupts strings even though the
+    // other authored transition fields are folded into SeqMoveRaw.  Rebuild
+    // this derived namespace only on a private WebSwingDev copy so compiled
+    // data and the normal client remain untouched.
+    for (i = 0; i < numMoves; i++)
+    {
+        SeqMove *move = cpp_const_cast(SeqMove*)(seqInfo->moves[i]);
+        memset(move->raw.memberBitArray, 0, sizeof(move->raw.memberBitArray));
+        memset(move->raw.interruptsBitArray, 0, sizeof(move->raw.interruptsBitArray));
+    }
+
+    irqName_ht = stashTableCreateWithStringKeys(MAX_IRQ_ARRAY_SIZE * 32,
+                                                  StashDeepCopyKeys | StashCaseSensitive);
+
+    // Keep the original bit assignment order.  WebSwing moves are appended to
+    // the compiled move list, so this produces the same namespace for stock
+    // moves and the five overlay moves without reconstructing stock data.
+    totalIrqStrings = 1; // Skip zero so stashFindPointerReturnPointer can use 0 as failure.
+    for (i = 0; i < numMoves; i++)
+    {
+        SeqMove *move = cpp_const_cast(SeqMove*)(seqInfo->moves[i]);
+        irqCnt = eaSize(&move->interruptsStr);
+        for (j = 0; j < irqCnt; j++)
+        {
+            irqVal = (int)(intptr_t)stashFindPointerReturnPointer(irqName_ht, move->interruptsStr[j]);
+            if (!irqVal)
+            {
+                irqVal = totalIrqStrings++;
+                stashAddInt(irqName_ht, move->interruptsStr[j], irqVal, false);
+            }
+            SETB(move->raw.interruptsBitArray, irqVal);
+        }
+    }
+
+    if (totalIrqStrings >= MAX_IRQ_ARRAY_SIZE * 32)
+        FatalErrorf("Please ask a programmer to increase MAX_IRQ_ARRAY_SIZE");
+
+    for (i = 0; i < numMoves; i++)
+    {
+        int memberCnt;
+        int memberVal;
+        SeqMove *move = cpp_const_cast(SeqMove*)(seqInfo->moves[i]);
+
+        memberVal = (int)(intptr_t)stashFindPointerReturnPointer(irqName_ht, move->name);
+        if (memberVal)
+            SETB(move->raw.memberBitArray, memberVal);
+
+        memberCnt = eaSize(&move->memberStr);
+        for (j = 0; j < memberCnt; j++)
+        {
+            memberVal = (int)(intptr_t)stashFindPointerReturnPointer(irqName_ht, move->memberStr[j]);
+            if (memberVal)
+                SETB(move->raw.memberBitArray, memberVal);
+        }
+    }
+
+    stashTableDestroy(irqName_ht);
+}
+
 static void seqInitializePreLoad(SeqInfo * seqInfo)
 {
     int i, j, k, numMoves;
@@ -837,64 +905,9 @@ static void seqInitializePreLoad(SeqInfo * seqInfo)
     } // end for move
 
     //Fill out interruptsBitArray and memberBitArray
-    {
-        int totalIrqStrings, irqCnt, irqVal;
-        StashTable    irqName_ht;
-
-        //Check for collisions (may be an issue: no guarantee group names are exactly the same as the ones used in the moves
-        if( isDevelopmentMode() )
-            seqDebugHashCollision( seqInfo, SEQ_QUICKLOADMOVEHASH, seqInfo->name ); //Debug only
-
-        //Set up hash table for all strings used as interrupts
-        irqName_ht = stashTableCreateWithStringKeys(MAX_IRQ_ARRAY_SIZE*32, StashDeepCopyKeys | StashCaseSensitive );
-
-        //1. Build a hash table of all Move and Group Names used in any move->interruptsStr assigning each string a bit array position, 
-        //   And also Fill out each move's interruptsBitArray of interruptsStrs
-        totalIrqStrings = 1; //Skip zero on purpose so stashFindPointerReturnPointer return 0 can == 'failed to find'
-        
-        for( i = 0 ; i < numMoves ; i++ )
-        {
-            SeqMove *move = cpp_const_cast(SeqMove*)(seqInfo->moves[i]);
-            irqCnt = eaSize( &move->interruptsStr );
-            for( j = 0 ; j < irqCnt ; j++ )
-            {
-                irqVal = (int)(intptr_t)stashFindPointerReturnPointer( irqName_ht, move->interruptsStr[j] );
-                if( !irqVal )
-                {
-                    irqVal = totalIrqStrings++;
-                    //if( strstri(debug_filename, "player") ) { // test code for listing all interrupt strings used by player
-                    //    printf("%s: move \"%s\", interrupt \"%s\" (%d)\n", debug_filename, move->name, move->interruptsStr[j], totalIrqStrings);
-                    //}
-                    stashAddInt(irqName_ht, move->interruptsStr[j], irqVal, false);
-                }
-                SETB( move->raw.interruptsBitArray, irqVal );
-            }
-        }
-
-        if( totalIrqStrings >= MAX_IRQ_ARRAY_SIZE*32 )
-            FatalErrorf( "Please ask a programmer to increase MAX_IRQ_ARRAY_SIZE" ); //Not dynamic because it's checked so often I want the memory right here
-        
-        //2. Fill out each move's memberBit array with any of that move's name or memberStrs that some other move actually uses as an interruptStr
-        for( i = 0 ; i < numMoves ; i++ )
-        {
-            int memberCnt, memberVal; 
-            SeqMove *move = cpp_const_cast(SeqMove*)(seqInfo->moves[i]);
-
-            memberVal = (int)(intptr_t)stashFindPointerReturnPointer( irqName_ht, move->name );
-            if( memberVal ) //If no other move says it interrupts this move specifically, ignore
-                SETB( move->raw.memberBitArray, memberVal );
-
-            memberCnt = eaSize( &move->memberStr );
-            for( j = 0 ; j < memberCnt ; j++ )
-            {
-                memberVal = (int)(intptr_t)stashFindPointerReturnPointer( irqName_ht, move->memberStr[j] );
-                if( memberVal ) //If no other move refers to this group, ignore it (maybe tell Steve, it really shouldn't be here)
-                    SETB( move->raw.memberBitArray, memberVal );
-            }
-        }
-
-        stashTableDestroy( irqName_ht );
-    }
+    if( isDevelopmentMode() )
+        seqDebugHashCollision( seqInfo, SEQ_QUICKLOADMOVEHASH, seqInfo->name ); //Debug only
+    seqBuildInterruptBitArrays(seqInfo);
 
 }
 
@@ -991,6 +1004,12 @@ const TypeGfx * seqGetTypeGfx( const SeqInfo * info, const SeqMove * move, const
 
 static const SeqInfo *seqWebSwingLoosePlayerInfo;
 static char seqWebSwingLoosePlayerPath[MAX_PATH];
+static SeqInfo *seqWebSwingOverlayInfo;
+static SeqInfo *seqWebSwingOverlayPlayerInfo;
+static const SeqInfo *seqWebSwingOverlayCompiledInfo;
+static const SeqInfo *seqWebSwingLoggedCompiledInfo;
+static const SeqInfo *seqWebSwingLoggedOverlayInfo;
+static char seqWebSwingOverlayPath[MAX_PATH];
 
 //Load a single sequencer at run time  development only
 static SeqInfo * seqLoadSeqInfoDevelopment( char fname[] )
@@ -1102,6 +1121,107 @@ static int seqIsWebSwingLoosePlayerInfo(const SeqInfo *seqInfo)
     return seqInfo && seqInfo == seqWebSwingLoosePlayerInfo;
 }
 
+static int seqIsWebSwingOverlayPlayerInfo(const SeqInfo *seqInfo)
+{
+    return seqInfo && seqInfo == seqWebSwingOverlayPlayerInfo;
+}
+
+static void seqFormatU16Array(const U16 *values, int count, char *buffer, size_t buffer_size)
+{
+    int i;
+    size_t used = 0;
+
+    buffer[0] = '\0';
+    for (i = 0; i < count && used + 1 < buffer_size; i++)
+    {
+        int written = sprintf_s(buffer + used, buffer_size - used, "%s%u", i ? "," : "", values[i]);
+        if (written < 0)
+            break;
+        used += (size_t)written;
+    }
+}
+
+static void seqFormatSparseBits(const SparseBits *required, char *buffer, size_t buffer_size)
+{
+    int i;
+    size_t used = 0;
+
+    buffer[0] = '\0';
+    for (i = 0; i < (int)required->count && i < MAX_SPARSE_BITS && used + 1 < buffer_size; i++)
+    {
+        int written = sprintf_s(buffer + used, buffer_size - used, "%s%u", i ? "," : "", required->bits[i]);
+        if (written < 0)
+            break;
+        used += (size_t)written;
+    }
+}
+
+static void seqFormatU32Array(const U32 *values, int count, char *buffer, size_t buffer_size)
+{
+    int i;
+    size_t used = 0;
+
+    buffer[0] = '\0';
+    for (i = 0; i < count && used + 1 < buffer_size; i++)
+    {
+        int written = sprintf_s(buffer + used, buffer_size - used, "%s%08x", i ? "," : "", values[i]);
+        if (written < 0)
+            break;
+        used += (size_t)written;
+    }
+}
+
+static void seqLogWebSwingMoveSemantics(const char *source, const SeqInfo *seqInfo)
+{
+    static const char *const representative_moves[] =
+    {
+        "READY", "RUNCYCLE", "JUMPPRE", "JUMPUP", "JUMPFALL", "JUMPPOST", "RUNFALL", "PREFALL"
+    };
+    int i;
+
+    if (!seqInfo)
+        return;
+
+    for (i = 0; i < ARRAY_SIZE(representative_moves); i++)
+    {
+        U16 move_index = 0;
+        const SeqMove *move;
+        const TypeGfx *typeGfx;
+        char required_bits[128];
+        char next_moves[128];
+        char cycle_moves[128];
+        char member_bits[256];
+        char interrupt_bits[256];
+
+        if (!seqGetMoveIdxFromName(representative_moves[i], seqInfo, &move_index))
+            continue;
+
+        move = seqInfo->moves[move_index];
+        typeGfx = seqGetTypeGfx(seqInfo, move, "Male");
+        seqFormatSparseBits(&move->raw.required, SAFESTR(required_bits));
+        seqFormatU16Array(move->raw.nextMove, move->raw.nextMoveCnt, SAFESTR(next_moves));
+        seqFormatU16Array(move->raw.cycleMove, move->raw.cycleMoveCnt, SAFESTR(cycle_moves));
+        seqFormatU32Array(move->raw.memberBitArray, MAX_IRQ_ARRAY_SIZE, SAFESTR(member_bits));
+        seqFormatU32Array(move->raw.interruptsBitArray, MAX_IRQ_ARRAY_SIZE, SAFESTR(interrupt_bits));
+        filelog_printf("webswing.log",
+                       "WEBSWING_ANIM move_compare source=%s move=%s flags=%d raw_required_count=%u raw_required_bits=%s raw_nextMoveCnt=%u raw_nextMove=%s raw_cycleMoveCnt=%u raw_cycleMove=%s memberBitArray=%s interruptsBitArray=%s TypeGfx=%s AnimP=%s animTrack=%p\n",
+                       source ? source : "unknown",
+                       move->name ? move->name : "none",
+                       move->flags,
+                       move->raw.required.count,
+                       required_bits,
+                       move->raw.nextMoveCnt,
+                       next_moves,
+                       move->raw.cycleMoveCnt,
+                       cycle_moves,
+                       member_bits,
+                       interrupt_bits,
+                       typeGfx && typeGfx->type ? typeGfx->type : "none",
+                       typeGfx && typeGfx->animP && typeGfx->animP[0] ? typeGfx->animP[0]->name : "none",
+                       typeGfx ? typeGfx->animTrack : NULL);
+    }
+}
+
 static void seqLogWebSwingPlayerData(const char *source, const char *path, const SeqInfo *seqInfo)
 {
     int airborne;
@@ -1124,6 +1244,73 @@ static void seqLogWebSwingPlayerData(const char *source, const char *path, const
                    path ? path : "none",
                    airborne && attached && descend && bottom && ascend,
                    airborne, attached, descend, bottom, ascend);
+}
+
+static SeqInfo *seqBuildWebSwingPlayerInfo(const SeqInfo *compiledSeqInfo, int loadType)
+{
+    SeqInfo *overlayPlayerInfo;
+    int i;
+    int moveCount;
+
+    if (!compiledSeqInfo)
+        return NULL;
+
+    if (!seqWebSwingOverlayInfo)
+    {
+        seqWebSwingOverlayInfo = seqLoadSeqInfoDevelopment("sequencers/cohsourcedev_webswing.txt");
+        if (seqWebSwingOverlayInfo)
+        {
+            strcpy_s(SAFESTR(seqWebSwingOverlayPath), "sequencers/cohsourcedev_webswing.txt");
+        }
+    }
+
+    if (!seqWebSwingOverlayInfo)
+        return NULL;
+
+    if (seqWebSwingOverlayPlayerInfo && seqWebSwingOverlayCompiledInfo == compiledSeqInfo)
+        return seqWebSwingOverlayPlayerInfo;
+
+    overlayPlayerInfo = StructAllocRaw(sizeof(*overlayPlayerInfo));
+    if (!overlayPlayerInfo)
+        return NULL;
+    memset(overlayPlayerInfo, 0, sizeof(*overlayPlayerInfo));
+
+    // StructCopy performs a deep copy of the parser-owned arrays and strings,
+    // including the compiled SeqMoveRaw transition data.  The source SeqInfo
+    // is never mutated, so a shared-memory compiled player is not corrupted.
+    StructCopy(ParseSeqInfo, compiledSeqInfo, overlayPlayerInfo, 0, 0);
+    overlayPlayerInfo->name = allocAddString(compiledSeqInfo->name);
+    overlayPlayerInfo->next = NULL;
+    overlayPlayerInfo->prev = NULL;
+    overlayPlayerInfo->bits = NULL;
+    overlayPlayerInfo->initialized = 0;
+    overlayPlayerInfo->fileAge = 0;
+
+    moveCount = eaSize(&seqWebSwingOverlayInfo->moves);
+    for (i = 0; i < moveCount; i++)
+    {
+        SeqMove *overlayMove = StructAllocRaw(sizeof(*overlayMove));
+        if (!overlayMove)
+            return NULL;
+        memset(overlayMove, 0, sizeof(*overlayMove));
+        StructCopy(ParseMoveP, seqWebSwingOverlayInfo->moves[i], overlayMove, 0, 0);
+        eaPush(&overlayPlayerInfo->moves, overlayMove);
+    }
+
+    // Stock raw transitions remain authoritative.  Only indexes for the
+    // appended moves and the derived interrupt namespace are rebuilt.
+    for (i = 0; i < eaSize(&overlayPlayerInfo->moves); i++)
+    {
+        SeqMove *move = cpp_const_cast(SeqMove*)(overlayPlayerInfo->moves[i]);
+        move->raw.idx = (U16)i;
+    }
+    seqBuildInterruptBitArrays(overlayPlayerInfo);
+    seqInitializePostLoad(overlayPlayerInfo, loadType);
+    seqInitializeFinalLoad(overlayPlayerInfo, false);
+
+    seqWebSwingOverlayCompiledInfo = compiledSeqInfo;
+    seqWebSwingOverlayPlayerInfo = overlayPlayerInfo;
+    return overlayPlayerInfo;
 }
 
 static void seqRemoveFromDevSequencers(const char* seqInfoNameCleanedUp)
@@ -1219,13 +1406,19 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             normal_dev_eligible = !global_state.no_file_change_check &&
                 isDevelopmentMode() && !shared_memory;
             webswing_player_eligible = global_state.webswing_dev &&
-                !shared_memory;
+                seqInfo && !shared_memory;
             dev_eligible = normal_dev_eligible || webswing_player_eligible;
             filelog_printf("webswing.log",
                            "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d normal_dev_eligible=%d webswing_player_eligible=%d dev_eligible=%d\n",
                            isDevelopmentMode(), global_state.no_file_change_check,
                            seqInfo != NULL, shared_memory, global_state.webswing_dev,
                            normal_dev_eligible, webswing_player_eligible, dev_eligible);
+
+            if (compiled_seq_info && seqWebSwingLoggedCompiledInfo != compiled_seq_info)
+            {
+                seqLogWebSwingMoveSemantics("COMPILED", compiled_seq_info);
+                seqWebSwingLoggedCompiledInfo = compiled_seq_info;
+            }
         }
         else
         {
@@ -1245,7 +1438,21 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
 
     PERFINFO_AUTO_STOP_START("middle", 1);
 
-        if (dev_eligible)
+        if (webswing_player_eligible && seqInfo == compiled_seq_info)
+        {
+            SeqInfo *overlaySeqInfo;
+
+            // WebSwingDev is an additive overlay, never a replacement for the
+            // compiled player.  The overlay is built only in private memory.
+            overlaySeqInfo = seqBuildWebSwingPlayerInfo(compiled_seq_info, loadType);
+            if (overlaySeqInfo)
+                seqInfo = overlaySeqInfo;
+            else
+                seqInfo = cpp_const_cast(SeqInfo*)(compiled_seq_info);
+            filelog_printf("webswing.log", "WEBSWING_ANIM player_seq overlay_load result=%s\n",
+                           overlaySeqInfo ? "selected" : "failed_using_compiled_player");
+        }
+        else if (dev_eligible)
         {
             // Get the local dev sequencer from the unbinned data, if necessary.
             seqInfo = seqGetDevSequencer(seqInfo, seqInfoNameCleanedUp, reloadForDev);
@@ -1261,10 +1468,19 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
 
         if (is_webswing_player)
         {
-            const char *selected_source = seqInfo ? (seqIsWebSwingLoosePlayerInfo(seqInfo) ? "LOOSE" : "COMPILED") : "NONE";
-            const char *selected_path = seqIsWebSwingLoosePlayerInfo(seqInfo) ? seqWebSwingLoosePlayerPath :
-                (seqInfo == compiled_seq_info ? "compiled sequencers.bin" : "none");
+            const char *selected_source = seqInfo ?
+                (seqIsWebSwingOverlayPlayerInfo(seqInfo) ? "COMPILED_OVERLAY" :
+                 (seqIsWebSwingLoosePlayerInfo(seqInfo) ? "LOOSE" : "COMPILED")) : "NONE";
+            const char *selected_path = seqIsWebSwingOverlayPlayerInfo(seqInfo) ? seqWebSwingOverlayPath :
+                (seqIsWebSwingLoosePlayerInfo(seqInfo) ? seqWebSwingLoosePlayerPath :
+                 (seqInfo == compiled_seq_info ? "compiled sequencers.bin" : "none"));
             seqLogWebSwingPlayerData(selected_source, selected_path, seqInfo);
+            if (seqIsWebSwingOverlayPlayerInfo(seqInfo) &&
+                seqWebSwingLoggedOverlayInfo != seqInfo)
+            {
+                seqLogWebSwingMoveSemantics("COMPILED_OVERLAY", seqInfo);
+                seqWebSwingLoggedOverlayInfo = seqInfo;
+            }
         }
 
     PERFINFO_AUTO_STOP_START("middle2", 1);
