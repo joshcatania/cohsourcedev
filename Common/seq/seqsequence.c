@@ -29,6 +29,7 @@
 #include "graphics/FX/fx.h"
 #include "graphics/light.h"
 #include "entity/entclient.h" //so showstate will work
+#include "player/player.h"
 #include "comm_game.h"
 extern void BugReport(const char * desc, int mode);
 #endif
@@ -628,6 +629,162 @@ int getMoveFlags(SeqInst * seq, eMoveFlag flag)
 
 #ifdef CLIENT
 static int seqWebSwingTransitionLogCount;
+static int seqWebSwingInterruptLogCount;
+static const SeqInst *seqWebSwingInterruptLogSeq;
+static char seqWebSwingLastInterruptCandidate[64];
+static char seqWebSwingLastInterruptCurrent[64];
+static int seqWebSwingLastInterruptRequiresMet = -1;
+static int seqWebSwingLastInterruptOverlap = -1;
+static int seqWebSwingLastInterruptStateActive;
+
+static int seqIsWebSwingControlledPlayer(SeqInst *seq)
+{
+    Entity *controlledPlayer = controlledPlayerPtr();
+
+    return global_state.webswing_dev && controlledPlayer && controlledPlayer->seq == seq &&
+           seq && seq->info && seq->info->name &&
+           strstri(cpp_const_cast(char*)seq->info->name, "player");
+}
+
+static void seqResetWebSwingInterruptLogState(SeqInst *seq)
+{
+    if (seqWebSwingInterruptLogSeq == seq)
+        return;
+
+    seqWebSwingInterruptLogSeq = seq;
+    seqWebSwingLastInterruptCandidate[0] = '\0';
+    seqWebSwingLastInterruptCurrent[0] = '\0';
+    seqWebSwingLastInterruptRequiresMet = -1;
+    seqWebSwingLastInterruptOverlap = -1;
+    seqWebSwingLastInterruptStateActive = 0;
+}
+
+static void seqFormatWebSwingGroupList(const char **groups, int group_count,
+                                       char *buffer, size_t buffer_size)
+{
+    size_t used = 0;
+    int i;
+
+    if (!buffer_size)
+        return;
+
+    buffer[0] = '\0';
+    for (i = 0; groups && i < group_count; i++)
+    {
+        size_t group_length = strlen(groups[i]);
+        size_t separator_length = used ? 1 : 0;
+
+        if (used + separator_length + group_length + 1 > buffer_size)
+            break;
+
+        if (separator_length)
+            buffer[used++] = ',';
+        memcpy(buffer + used, groups[i], group_length);
+        used += group_length;
+        buffer[used] = '\0';
+    }
+
+    if (!buffer[0])
+        strcpy_s(buffer, buffer_size, "none");
+}
+
+static void seqFormatWebSwingBitArray(const U32 *bits, char *buffer, size_t buffer_size)
+{
+    size_t used = 0;
+    int i;
+
+    if (!buffer_size)
+        return;
+
+    buffer[0] = '\0';
+    for (i = 0; i < MAX_IRQ_ARRAY_SIZE; i++)
+    {
+        int written = sprintf_s(buffer + used, buffer_size - used, "%s%08x",
+                                 i ? "," : "", bits[i]);
+        if (written < 0 || (size_t)written >= buffer_size - used)
+            break;
+        used += (size_t)written;
+    }
+}
+
+static void seqLogWebSwingInterruptState(SeqInst *seq, int active)
+{
+    if (!seqIsWebSwingControlledPlayer(seq))
+        return;
+
+    seqResetWebSwingInterruptLogState(seq);
+    if ((active && !seqWebSwingLastInterruptStateActive) ||
+        (!active && seqWebSwingLastInterruptStateActive))
+    {
+        if (seqWebSwingInterruptLogCount < 256)
+        {
+            filelog_printf("webswing.log",
+                           "WEB_SWING ANIM interrupt_state active=%d current=%s\n",
+                           active,
+                           seq->animation.move && seq->animation.move->name ?
+                               seq->animation.move->name : "none");
+            seqWebSwingInterruptLogCount++;
+        }
+    }
+    seqWebSwingLastInterruptStateActive = active;
+}
+
+static void seqLogWebSwingInterruptCandidate(SeqInst *seq, const SeqMove *candidate,
+                                              const SeqMove *current, int requires_met,
+                                              int interrupt_overlap)
+{
+    char candidate_interrupts[256];
+    char current_members[256];
+    char candidate_bits[MAX_IRQ_ARRAY_SIZE * 9 + 1];
+    char current_bits[MAX_IRQ_ARRAY_SIZE * 9 + 1];
+
+    if (!candidate || !candidate->name || strnicmp(candidate->name, "WEBSWING_", 9) ||
+        !current || !seqIsWebSwingControlledPlayer(seq))
+        return;
+
+    seqResetWebSwingInterruptLogState(seq);
+    if (seqWebSwingInterruptLogCount >= 256 ||
+        (!stricmp(seqWebSwingLastInterruptCandidate, candidate->name) &&
+         !stricmp(seqWebSwingLastInterruptCurrent,
+                  current->name ? current->name : "none") &&
+         seqWebSwingLastInterruptRequiresMet == requires_met &&
+         seqWebSwingLastInterruptOverlap == interrupt_overlap))
+        return;
+
+    seqFormatWebSwingGroupList(candidate->interruptsStr,
+                               eaSizeUnsafe((void ***)&candidate->interruptsStr),
+                               candidate_interrupts,
+                               sizeof(candidate_interrupts));
+    seqFormatWebSwingGroupList(current->memberStr,
+                               eaSizeUnsafe((void ***)&current->memberStr),
+                               current_members,
+                               sizeof(current_members));
+    seqFormatWebSwingBitArray(candidate->raw.interruptsBitArray, candidate_bits,
+                              sizeof(candidate_bits));
+    seqFormatWebSwingBitArray(current->raw.memberBitArray, current_bits,
+                              sizeof(current_bits));
+
+    filelog_printf("webswing.log",
+                   "WEB_SWING ANIM interrupt_candidate candidate=%s current=%s requiresMet=%d candidatePriority=%d currentPriority=%d interruptOverlap=%d candidateInterruptGroups=%s currentMemberGroups=%s candidateInterruptBits=%s currentMemberBits=%s forceInterrupt=%d\n",
+                   candidate->name,
+                   current->name ? current->name : "none",
+                   requires_met,
+                   candidate->priority,
+                   current->priority,
+                   interrupt_overlap,
+                   candidate_interrupts,
+                   current_members,
+                   candidate_bits,
+                   current_bits,
+                   seq->forceInterrupt);
+    seqWebSwingInterruptLogCount++;
+    strcpy_s(seqWebSwingLastInterruptCandidate, sizeof(seqWebSwingLastInterruptCandidate),
+             candidate->name);
+    strcpy_s(seqWebSwingLastInterruptCurrent, sizeof(seqWebSwingLastInterruptCurrent),
+             current->name ? current->name : "none");
+    seqWebSwingLastInterruptRequiresMet = requires_met;
+    seqWebSwingLastInterruptOverlap = interrupt_overlap;
+}
 
 static void seqLogWebSwingTransition(SeqInst *seq, const SeqMove *newmove, int is_obvious)
 {
@@ -637,8 +794,9 @@ static void seqLogWebSwingTransition(SeqInst *seq, const SeqMove *newmove, int i
     size_t used = 0;
     int i;
 
-    if (!controlledPlayer || controlledPlayer->seq != seq || !newmove ||
-        !seq->info || !seq->info->name || !strstri(seq->info->name, "player") ||
+    if (!global_state.webswing_dev || !controlledPlayer || controlledPlayer->seq != seq || !newmove ||
+        !seq->info || !seq->info->name ||
+        !strstri(cpp_const_cast(char*)seq->info->name, "player") ||
         seq->animation.move == newmove || seqWebSwingTransitionLogCount >= 256)
         return;
 
@@ -682,13 +840,16 @@ void seqSetMove( SeqInst * seq, const SeqMove *newmove, int is_obvious )
 #ifdef CLIENT
     seqLogWebSwingTransition(seq, newmove, is_obvious);
 
-    if (newmove && seq->info && seq->info->name &&
+    if (global_state.webswing_dev && newmove && seq->info && seq->info->name &&
         !strnicmp(newmove->name, "WEBSWING_", 9) &&
-        strstri(seq->info->name, "player"))
+        strstri(cpp_const_cast(char*)seq->info->name, "player"))
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING ANIM selectedMove=%s devMode=%d sharedMemory=%d\n",
-                       newmove->name, isDevelopmentMode(), isSharedMemory(seq->info));
+                       "WEB_SWING ANIM selectedMove=%s previousMove=%s devMode=%d sharedMemory=%d\n",
+                       newmove->name,
+                       seq->animation.move && seq->animation.move->name ?
+                           seq->animation.move->name : "none",
+                       isDevelopmentMode(), isSharedMemory(seq->info));
     }
 #endif
 
@@ -990,6 +1151,10 @@ static const SeqMove * seqSearchInterrupts( SeqInst * seq, const SeqMove * currm
 
     const SeqBitInfo* bits = seq->info->bits;
 
+#ifdef CLIENT
+    int webSwingStateActive = 0;
+#endif
+
     allmoves    = seq->info->moves;
     allmovesSize = eaSize(&allmoves);
     newmove[0]    = 0;
@@ -1027,8 +1192,21 @@ static const SeqMove * seqSearchInterrupts( SeqInst * seq, const SeqMove * currm
 
                 move = seq->info->moves[eaiGet(&bitInfo->movesRemainingThatRequireMe, j)];
 
-                if( !seq->forceInterrupt && !seqAInterruptsB( move, currmove ) )
-                    continue;
+                {
+                    int interrupt_overlap = seqAInterruptsB(move, currmove);
+#ifdef CLIENT
+                    if (move->name && !strnicmp(move->name, "WEBSWING_", 9))
+                    {
+                        int requires_met = sparseRequiresMet(&move->raw.required, state);
+                        if (requires_met)
+                            webSwingStateActive = 1;
+                        seqLogWebSwingInterruptCandidate(seq, move, currmove,
+                                                         requires_met, interrupt_overlap);
+                    }
+#endif
+                    if (!seq->forceInterrupt && !interrupt_overlap)
+                        continue;
+                }
 
                 /////// Copy and paste from above 
                 if( !requiresThisBit || testSparseBit( &move->raw.required, requiresThisBit ) ) //hack for HIT bit
@@ -1055,6 +1233,10 @@ static const SeqMove * seqSearchInterrupts( SeqInst * seq, const SeqMove * currm
             }
         }
     }
+
+#ifdef CLIENT
+    seqLogWebSwingInterruptState(seq, webSwingStateActive);
+#endif
 
 #ifdef SERVER     //Debug Info
     if(server_state.check_jfd && TSTB( state, STATE_JUSTFUCKINDOIT )) //debug
