@@ -1,0 +1,49 @@
+﻿{
+    "label":  "remaster-final2",
+    "startedAt":  "2026-08-21T16:32:19.4878165-05:00",
+    "targets":  [
+                    "AtlasPlaza_CityHall_03",
+                    "AtlasPlaza_East_01",
+                    "AtlasPlaza_NightEast_01",
+                    "FoundersCanal_01"
+                ],
+    "settings":  {
+
+                 },
+    "extraArgs":  "",
+    "results":  [
+                    {
+                        "target":  "AtlasPlaza_CityHall_03",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\remaster-final2\\AtlasPlaza_CityHall_03.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_CityHall_03.jpg"
+                    },
+                    {
+                        "target":  "AtlasPlaza_East_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\remaster-final2\\AtlasPlaza_East_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_East_01.jpg"
+                    },
+                    {
+                        "target":  "AtlasPlaza_NightEast_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\remaster-final2\\AtlasPlaza_NightEast_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_NightEast_01.jpg"
+                    },
+                    {
+                        "target":  "FoundersCanal_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\remaster-final2\\FoundersCanal_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\FoundersCanal_01.jpg"
+                    }
+                ],
+    "finishedAt":  "2026-08-21T16:34:07.8467956-05:00"
+}

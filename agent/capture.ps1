@@ -97,18 +97,25 @@ try {
     $requiredProcesses = @('ServerMonitor','DBServer','Launcher')
     $missing = @($requiredProcesses | Where-Object { -not (Get-Process -Name $_ -ErrorAction SilentlyContinue) })
     if ($missing.Count -gt 0) { throw "Required shard processes are missing: $($missing -join ', ')" }
-    if (Get-Process -Name 'Ouroboros' -ErrorAction SilentlyContinue) { throw 'An Ouroboros.exe process is already running' }
+    # Refuse only if an Ouroboros launched from THIS worktree's bin is still
+    # running (it would share this bin's registry/screenshots). Another
+    # worktree's client on a parallel shard is intentionally allowed.
+    $ownOuro = Get-CimInstance Win32_Process -Filter "Name='Ouroboros.exe'" -ErrorAction SilentlyContinue |
+        Where-Object { $_.ExecutablePath -like "$binRoot*" }
+    if ($ownOuro) { throw "An Ouroboros.exe process from this worktree is already running (PID $($ownOuro.ProcessId))" }
     # The client persists graphics settings in a file-backed "shadow registry"
     # (bin/registry-keys/...) and re-saves them on every clean exit, deriving
     # shaderDetail from the run's feature bits. A single run that lost
     # GFXF_MULTITEX (e.g. a transient shader-load failure) therefore poisons
     # shaderdetail=0 permanently, which silently degrades every later capture
     # (water surfaces fall back to bumpmapMultiply; multi9 stops binding).
-    # Pin both values before each launch so captures are deterministic.
+    # The requested-vs-effective persistence separation now protects the
+    # saved preference, but keep pinning shaderdetail as defense in depth.
+    # usewater is left alone so preset-driven capture comparisons (e.g. the
+    # remaster profile's WATER_HIGH) are not silently downgraded to MED.
     $shadowReg = Join-Path $binRoot 'registry-keys/hkey_current_user/software/cryptic/coh'
     if (Test-Path -LiteralPath $shadowReg) {
         Set-Content -LiteralPath (Join-Path $shadowReg 'shaderdetail') -Value '3' -NoNewline
-        Set-Content -LiteralPath (Join-Path $shadowReg 'usewater') -Value '2' -NoNewline
         # A timed-out client leaves its crash-progress prompt in the shadow
         # registry. Clear it before the next headless launch so checkForCrash
         # cannot wait forever on an unseen modal dialog.

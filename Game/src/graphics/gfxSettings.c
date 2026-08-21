@@ -562,10 +562,13 @@ static void gfxGetPerformanceAdvancedSettings( GfxSettings * gfxSettings )
     gfxSettings->advanced.worldDetailLevel    *= 0.8;
     gfxSettings->advanced.useDesaturate = 1;
 
-    // Disable special features
+    // Disable special features (also undo the Remaster Profile composition
+    // inherited from the Recommended base: Performance stays lightweight)
     gfxSettings->advanced.useBloom=BLOOM_OFF;
     gfxSettings->advanced.useDOF=0;
     gfxSettings->advanced.useWater=WATER_OFF;
+    gfxSettings->advanced.shadowMode=SHADOW_STENCIL;
+    gfxSettings->advanced.ambient.option=AMBIENT_DISABLE;
     
     // disable all physics stuff
     gfxSettings->advanced.physicsQuality = 0;
@@ -627,8 +630,27 @@ static void gfxGetRecommendedAdvancedSettings( GfxSettings * gfxSettings )
     gfxSettings->advanced.cubemapMode = CUBEMAP_OFF;
     gfxSettings->advanced.ambient.option=AMBIENT_DISABLE;
 
-    // Default shadows to stencil shadows
-    gfxSettings->advanced.shadowMode        = SHADOW_STENCIL;
+    // Remaster Profile v1: on capable modern hardware (the same class that
+    // skips the weak-GPU adjustments in gfxAdjustRecommendedSettingsForHardware)
+    // the nominal defaults compose the measured remaster configuration instead
+    // of the 2009 recommended set: high-quality cascaded shadow maps at 1024px
+    // with 3 cascades, full-resolution SSAO with a bilateral-depth blur
+    // (issue #25 measured winner; roughly stock-Ultra depth quality at cleaner
+    // local contacts), and WATER_HIGH reflections. Weaker hardware keeps the
+    // legacy values; gfxSettingsApplyRestrictions() still clamps anything this
+    // launch's driver cannot do, and modernPresentation/modernBloom remain
+    // runtime-togglable flags.
+    if ( (rdr_caps.chip&DX10_CLASS) || ((rdr_caps.chip&GLSL) && (rdr_caps.chip&ARBFP)) )
+    {
+        gfxSettings->advanced.useWater=WATER_HIGH;
+        gfxSettings->advanced.shadowMode = SHADOW_SHADOWMAP_HIGH;
+        gfxSettings->advanced.ambient.option=AMBIENT_HIGH_QUALITY;
+    }
+    else
+    {
+        // Default shadows to stencil shadows
+        gfxSettings->advanced.shadowMode        = SHADOW_STENCIL;
+    }
 
     if (IsUsingWin9x())
         gfxSettings->advanced.colorMouseCursor=0;
@@ -645,6 +667,23 @@ static void gfxGetRecommendedAdvancedSettings( GfxSettings * gfxSettings )
 
     gfxUpdateAmbientAdvanced( gfxSettings );
     gfxUpdateShadowMapAdvanced( gfxSettings );
+
+    // Issue #25 winner details that the option-based preset expansion above
+    // does not express: 3 cascades (middle distance) instead of the High
+    // preset's 4, and the bilateral-depth AO blur instead of trilateral.
+    // trilateral over-darkens crevices; bilateral-depth keeps contact
+    // structure cleanest at the same strength.
+    if (gfxSettings->advanced.shadowMode == SHADOW_SHADOWMAP_HIGH)
+    {
+        gfxSettings->advanced.shadowMap.distance = SHADOWDISTANCE_MIDDLE;
+        gfxSettings->advanced.shadowMap.size = SHADOWMAPSIZE_MEDIUM;
+        gfxSettings->advanced.shadowMap.shader = SHADOWSHADER_HIGHQ;
+    }
+    if (gfxSettings->advanced.ambient.strength != AMBIENT_OFF)
+    {
+        gfxSettings->advanced.ambient.resolution = AMBIENT_RES_HIGH_QUALITY;
+        gfxSettings->advanced.ambient.blur = AMBIENT_BILATERAL_DEPTH;
+    }
 }
 
 // "Slow"/"Quality" Graphics Quality

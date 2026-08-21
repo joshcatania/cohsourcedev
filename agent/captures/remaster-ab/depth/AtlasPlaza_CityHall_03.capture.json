@@ -1,0 +1,243 @@
+﻿{
+    "passed":  true,
+    "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+    "target":  "AtlasPlaza_CityHall_03",
+    "accountName":  "Dummy00010",
+    "exitCode":  0,
+    "timedOut":  false,
+    "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_CityHall_03.jpg",
+    "pid":  30784,
+    "commandLine":  "\"D:\\github\\cohsourcedev\\bin\\Ouroboros.exe\" -db 127.0.0.1 -authname Dummy00018 -password 11111111 -noverify -quicklogin 1 -noversioncheck -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0 -webswingdev -nopopups",
+    "workingDirectory":  "D:\\github\\coh-graphics\\bin",
+    "processSnapshot":  {
+                            "pid":  30784,
+                            "executablePath":  "D:\\github\\cohsourcedev\\bin\\Ouroboros.exe",
+                            "commandLine":  "\"D:\\github\\cohsourcedev\\bin\\Ouroboros.exe\" -db 127.0.0.1 -authname Dummy00018 -password 11111111 -noverify -quicklogin 1 -noversioncheck -fullscreen 0 -screen 1280 720 -stopinactivedisplay 0 -webswingdev -nopopups",
+                            "parentProcessId":  16672,
+                            "creationDate":  "\/Date(1787344804479)\/",
+                            "workingDirectory":  "D:\\github\\coh-graphics\\bin",
+                            "processStartTime":  "2026-08-21T15:40:04.4796387-05:00",
+                            "responding":  true,
+                            "workingSetBytes":  924831744,
+                            "threadCount":  15
+                        },
+    "dumpPath":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.dmp",
+    "dumpMetadata":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.dmp.json",
+    "dumpSucceeded":  false,
+    "dumpError":  "",
+    "dumpStkOutput":  "",
+    "tracePath":  "D:\\github\\coh-graphics\\bin\\logs\\ouroboros-startup-32064.trace",
+    "lastTraceMarker":  "2026-08-21T15:44:58.067 pid=32064 tid=23984 marker=capture.quit.request",
+    "traceTail":  [
+                      "2026-08-21T15:44:43.669 pid=32064 tid=23984 marker=db.login.begin",
+                      "2026-08-21T15:44:43.674 pid=32064 tid=23984 marker=db.socket.connected",
+                      "2026-08-21T15:44:43.694 pid=32064 tid=23984 marker=db.login.request-sent",
+                      "2026-08-21T15:44:43.721 pid=32064 tid=23984 marker=db.login.response.players",
+                      "2026-08-21T15:44:43.721 pid=32064 tid=23984 marker=login.dbconnect.call.complete",
+                      "2026-08-21T15:44:43.722 pid=32064 tid=23984 marker=login.db.complete",
+                      "2026-08-21T15:44:43.722 pid=32064 tid=23984 marker=character.selection.resume.begin",
+                      "2026-08-21T15:44:43.723 pid=32064 tid=23984 marker=character.choose.request",
+                      "2026-08-21T15:44:43.774 pid=32064 tid=23984 marker=db.map-connect.packet",
+                      "2026-08-21T15:44:43.774 pid=32064 tid=23984 marker=character.choose.map-connect.response",
+                      "2026-08-21T15:44:43.775 pid=32064 tid=23984 marker=character.choose.complete",
+                      "2026-08-21T15:44:43.775 pid=32064 tid=23984 marker=character.selection.resume.complete",
+                      "2026-08-21T15:44:43.778 pid=32064 tid=23984 marker=map.handoff.resume.begin",
+                      "2026-08-21T15:44:43.780 pid=32064 tid=23984 marker=map.connect.begin",
+                      "2026-08-21T15:44:43.869 pid=32064 tid=23984 marker=map.connect.start.complete",
+                      "2026-08-21T15:44:43.905 pid=32064 tid=23984 marker=map.shortcuts.complete",
+                      "2026-08-21T15:44:43.905 pid=32064 tid=23984 marker=map.connection.resume.complete",
+                      "2026-08-21T15:44:43.906 pid=32064 tid=23984 marker=map.scene.resume.request",
+                      "2026-08-21T15:44:43.906 pid=32064 tid=23984 marker=map.scene.request",
+                      "2026-08-21T15:44:46.359 pid=32064 tid=23984 marker=map.scene.groups.complete",
+                      "2026-08-21T15:44:46.450 pid=32064 tid=23984 marker=map.scene.entities.complete",
+                      "2026-08-21T15:44:46.552 pid=32064 tid=23984 marker=map.scene.complete",
+                      "2026-08-21T15:44:46.553 pid=32064 tid=23984 marker=map.scene.resume.complete",
+                      "2026-08-21T15:44:46.553 pid=32064 tid=23984 marker=login.quick.complete",
+                      "2026-08-21T15:44:46.556 pid=32064 tid=23984 marker=game.before-loop.login-complete",
+                      "2026-08-21T15:44:46.558 pid=32064 tid=23984 marker=game.before-loop.complete",
+                      "2026-08-21T15:44:46.559 pid=32064 tid=23984 marker=game-loop.call.begin",
+                      "2026-08-21T15:44:46.561 pid=32064 tid=23984 marker=game-loop.enter",
+                      "2026-08-21T15:44:46.562 pid=32064 tid=23984 marker=game-loop.engine-update.begin",
+                      "2026-08-21T15:44:46.594 pid=32064 tid=23984 marker=game-loop.engine-update.complete",
+                      "2026-08-21T15:44:46.594 pid=32064 tid=23984 marker=capture.wait comm=1 player=1 camera=0 mode=3 menu=0",
+                      "2026-08-21T15:44:47.213 pid=32064 tid=23984 marker=capture.readiness.ready",
+                      "2026-08-21T15:44:47.214 pid=32064 tid=23984 marker=capture.mapmove.request map=1 cur=10",
+                      "2026-08-21T15:44:47.541 pid=32064 tid=23984 marker=capture.wait comm=1 player=1 camera=1 mode=3 menu=0",
+                      "2026-08-21T15:44:47.709 pid=32064 tid=23984 marker=db.map-connect.packet",
+                      "2026-08-21T15:44:47.742 pid=32064 tid=23984 marker=map.connect.begin",
+                      "2026-08-21T15:44:47.819 pid=32064 tid=23984 marker=map.connect.start.complete",
+                      "2026-08-21T15:44:47.855 pid=32064 tid=23984 marker=map.shortcuts.complete",
+                      "2026-08-21T15:44:48.369 pid=32064 tid=23984 marker=map.scene.request",
+                      "2026-08-21T15:44:55.222 pid=32064 tid=23984 marker=map.scene.groups.complete",
+                      "2026-08-21T15:44:55.545 pid=32064 tid=23984 marker=map.scene.entities.complete",
+                      "2026-08-21T15:44:55.862 pid=32064 tid=23984 marker=map.scene.complete",
+                      "2026-08-21T15:44:56.043 pid=32064 tid=23984 marker=capture.readiness.ready",
+                      "2026-08-21T15:44:56.044 pid=32064 tid=23984 marker=capture.mapmove.arrived map=1",
+                      "2026-08-21T15:44:56.045 pid=32064 tid=23984 marker=capture.water state=2 waterFeature=1 multiFeature=1",
+                      "2026-08-21T15:44:56.045 pid=32064 tid=23984 marker=capture.camera.fixed pos=-964.59 5.22 -834.76",
+                      "2026-08-21T15:44:56.045 pid=32064 tid=23984 marker=capture.camera.state cam=-964.59 11.14 -837.31 pyr=0.0000 3.1416 0.0000 target=-0.0000 3.1416 0.0000",
+                      "2026-08-21T15:44:58.026 pid=32064 tid=23984 marker=capture.camera.screenshot-state cam=-5504.50 -152.00 -1954.93 pyr=0.0000 -3.1346 0.0000 target=-0.0000 -3.1346 0.0000",
+                      "2026-08-21T15:44:58.026 pid=32064 tid=23984 marker=capture.screenshot.request",
+                      "2026-08-21T15:44:58.067 pid=32064 tid=23984 marker=capture.quit.request"
+                  ],
+    "serverStatusPath":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.server.json",
+    "serverStatus":  {
+                         "serverMonitorRunning":  true,
+                         "observedServerProcessTypes":  15,
+                         "processes":  [
+                                           {
+                                               "name":  "ServerMonitor",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            6096
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "AuthServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            10388
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "DbServer",
+                                               "running":  true,
+                                               "count":  2,
+                                               "pids":  [
+                                                            20332,
+                                                            20848
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "Launcher",
+                                               "running":  true,
+                                               "count":  2,
+                                               "pids":  [
+                                                            26984,
+                                                            34712
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "MapServer",
+                                               "running":  true,
+                                               "count":  7,
+                                               "pids":  [
+                                                            6244,
+                                                            10360,
+                                                            17144,
+                                                            17624,
+                                                            18556,
+                                                            28664,
+                                                            34520
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "AccountServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            17180
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "ChatServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            21576
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "AuctionServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            10528
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "MissionServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            16888
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "TurnstileServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            21896
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "QueueServer",
+                                               "running":  false,
+                                               "count":  0,
+                                               "pids":  [
+
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "StatServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            27884
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "ArenaServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            34512
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "RaidServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            33812
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "LogServer",
+                                               "running":  true,
+                                               "count":  1,
+                                               "pids":  [
+                                                            17744
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "BeaconServer",
+                                               "running":  true,
+                                               "count":  2,
+                                               "pids":  [
+                                                            5304,
+                                                            25596
+                                                        ]
+                                           },
+                                           {
+                                               "name":  "BeaconClient",
+                                               "running":  true,
+                                               "count":  2,
+                                               "pids":  [
+                                                            22608,
+                                                            33236
+                                                        ]
+                                           }
+                                       ],
+                         "readiness":  "unknown",
+                         "note":  "Process presence is diagnostic only. MapServer may be started on demand through Launcher. Full readiness requires an application-level check such as agent/smoke.ps1."
+                     },
+    "startedAt":  "2026-08-21T15:44:33.3506315-05:00",
+    "finishedAt":  "2026-08-21T15:45:02.8544734-05:00",
+    "stdout":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.stdout.log",
+    "stderr":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.stderr.log",
+    "result":  "D:\\github\\coh-graphics\\agent\\logs\\capture-AtlasPlaza_CityHall_03-20260821-154433.json"
+}

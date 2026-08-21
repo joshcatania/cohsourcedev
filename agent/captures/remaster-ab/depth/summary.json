@@ -1,0 +1,55 @@
+﻿{
+    "label":  "depth",
+    "startedAt":  "2026-08-21T15:44:33.0544230-05:00",
+    "targets":  [
+                    "AtlasPlaza_CityHall_03",
+                    "AtlasPlaza_East_01",
+                    "AtlasPlaza_NightEast_01",
+                    "FoundersCanal_01"
+                ],
+    "settings":  {
+                     "shadowmode":  4,
+                     "shadowmapshader":  3,
+                     "shadowmapsize":  1,
+                     "shadowmapdistance":  1,
+                     "ambientstrength":  3,
+                     "ambientresolution":  3,
+                     "ambientblur":  5
+                 },
+    "extraArgs":  "-modernPresentation 0 -modernBloom 0",
+    "results":  [
+                    {
+                        "target":  "AtlasPlaza_CityHall_03",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\depth\\AtlasPlaza_CityHall_03.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_CityHall_03.jpg"
+                    },
+                    {
+                        "target":  "AtlasPlaza_East_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\depth\\AtlasPlaza_East_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_East_01.jpg"
+                    },
+                    {
+                        "target":  "AtlasPlaza_NightEast_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\depth\\AtlasPlaza_NightEast_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\AtlasPlaza_NightEast_01.jpg"
+                    },
+                    {
+                        "target":  "FoundersCanal_01",
+                        "passed":  true,
+                        "reason":  "Deterministic capture completed and Ouroboros exited cleanly",
+                        "exitCode":  0,
+                        "screenshot":  "D:\\github\\coh-graphics\\agent\\captures\\remaster-ab\\depth\\FoundersCanal_01.jpg",
+                        "screenshotOrig":  "D:\\github\\coh-graphics\\agent\\captures\\FoundersCanal_01.jpg"
+                    }
+                ],
+    "finishedAt":  "2026-08-21T15:46:19.5449060-05:00"
+}
