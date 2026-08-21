@@ -24,6 +24,7 @@
 #include "processanim.h"
 #include "process_animx.h"
 #include "process_skelx.h"
+#include "runtimeanim.h"
 #include "seq/animtrack.h"
 #include "cmdparse/cmdcommon.h"
 #include <utilitieslib/utils/FolderCache.h>
@@ -903,6 +904,67 @@ static void BatchConvertLegacySourceFolders( char* startPath )
     }
 }
 
+static SkeletonAnimTrack *loadPackedRuntimeAnimation(const char *animationName)
+{
+    SkeletonAnimTrack *animation;
+
+    animation = animGetAnimTrack(animationName, LOAD_ALL,
+                                 "GetAnimation2 packed runtime inspection");
+    if (!animation)
+    {
+        printf("Could not load packed runtime animation: %s\n", animationName);
+        return NULL;
+    }
+
+    printf("Loaded %s: length %.3f, tracks %d, base %s\n",
+           animation->name, animation->length, animation->bone_track_count,
+           animation->baseAnimName[0] ? animation->baseAnimName : "<none>");
+    return animation;
+}
+
+static bool compileExplicitANIMX(const char *sourceAnimX, const char *sourceSKELX,
+                                 const char *animationName, const char *baseAnimationName,
+                                 const char *targetPath)
+{
+    Node *skeletonRoot;
+    SkeletonAnimTrack *animation;
+    bool succeeded = false;
+
+    skeletonRoot = LoadSkeletonSKELX((char *)sourceSKELX);
+    if (!skeletonRoot)
+    {
+        printf("Could not load source skeleton: %s\n", sourceSKELX);
+        return false;
+    }
+
+    animation = calloc(1, sizeof(*animation));
+    if (!animation)
+    {
+        treeFree();
+        return false;
+    }
+
+    strcpy_s(animation->name, sizeof(animation->name), animationName);
+    strcpy_s(animation->baseAnimName, sizeof(animation->baseAnimName), baseAnimationName);
+    outputResetVars();
+
+    printf("Compiling %s against %s\n", sourceAnimX, sourceSKELX);
+    if (animConvert_ANIMX_To_AnimTrack(animation, (char *)sourceAnimX, skeletonRoot))
+    {
+        outputAnimTrackToAnimFile(animation, (char *)targetPath);
+        printf("Wrote runtime animation: %s\n", targetPath);
+        succeeded = true;
+    }
+    else
+    {
+        printf("ANIMX conversion failed: %s\n", sourceAnimX);
+    }
+
+    free(animation);
+    treeFree();
+    return succeeded;
+}
+
 static void usage(void)
 {
     printf(
@@ -941,6 +1003,9 @@ static void usage(void)
         "                     files, .SKELX and .ANIMX, placed in the destination.\n"
         "                     These files can be fed back as source assets or imported to MAX.\n"
         "                     DEVELOPMENT IN PROGRESS - DO NOT USE!\n"
+        "-runtime-rig <name> <prefix>  Inspect a packed runtime animation and write <prefix>.json and <prefix>.SKELX.\n"
+        "-runtime-animx <name> <path>  Export a packed runtime animation back to ANIMX world transforms.\n"
+        "-compile-animx <animx> <skelx> <name> <base> <target>  Compile explicit source files to a runtime .anim.\n"
         "-batch_src         Start at the current working directory and convert old .WRL associated .anim\n"
         "                     files to the new source animation formats: .SKELX and .ANIMX.\n"
         "                     Don't use this command unless you are aware of the files it will overwrite.\n"
@@ -962,6 +1027,7 @@ int main(int argc,char **argv)
     bool    no_pig = false;
     bool    bMonitorMode = false;
     bool    bMonitorMode_DoPreScan = false;
+    bool    bRuntimeAssetMode = false;
     char    cwd[256];
 
     EXCEPTION_HANDLER_BEGIN
@@ -1059,9 +1125,18 @@ int main(int argc,char **argv)
         no_pig = true;
     }
 
+    bRuntimeAssetMode = (argc > 1 &&
+                         (strcmp(argv[1], "-runtime-rig") == 0 ||
+                          strcmp(argv[1], "-runtime-animx") == 0));
+
     if (no_pig)
     {
         FolderCacheSetMode(FOLDER_CACHE_MODE_FILESYSTEM_ONLY);
+    }
+    else if (bRuntimeAssetMode)
+    {
+        /* Runtime inspection intentionally reads packed assets that are not loose in bin/data. */
+        FolderCacheSetMode(FOLDER_CACHE_MODE_I_LIKE_PIGS);
     }
     else
     {
@@ -1073,6 +1148,40 @@ int main(int argc,char **argv)
     _getcwd(cwd, 128);
 
     treeInit();
+
+    if (argc == 4 && strcmp(argv[1], "-runtime-rig") == 0)
+    {
+        char reportPath[MAX_PATH];
+        char skeletonPath[MAX_PATH];
+        SkeletonAnimTrack *animation = loadPackedRuntimeAnimation(argv[2]);
+        bool succeeded = false;
+
+        if (animation)
+        {
+            sprintf_s(reportPath, sizeof(reportPath), "%s.json", argv[3]);
+            sprintf_s(skeletonPath, sizeof(skeletonPath), "%s.SKELX", argv[3]);
+            succeeded = runtimeAnimWriteReport(animation, reportPath) &&
+                        runtimeAnimWriteSKELX(animation, skeletonPath);
+            printf("Runtime inspection %s: %s\n", succeeded ? "wrote" : "failed", argv[3]);
+        }
+        treeFree();
+        exit(succeeded ? 0 : 1);
+    }
+
+    if (argc == 4 && strcmp(argv[1], "-runtime-animx") == 0)
+    {
+        SkeletonAnimTrack *animation = loadPackedRuntimeAnimation(argv[2]);
+        bool succeeded = animation && runtimeAnimWriteANIMX(animation, argv[3]);
+        printf("Runtime ANIMX export %s: %s\n", succeeded ? "wrote" : "failed", argv[3]);
+        treeFree();
+        exit(succeeded ? 0 : 1);
+    }
+
+    if (argc == 7 && strcmp(argv[1], "-compile-animx") == 0)
+    {
+        bool succeeded = compileExplicitANIMX(argv[2], argv[3], argv[4], argv[5], argv[6]);
+        exit(succeeded ? 0 : 1);
+    }
     
     if (bMonitorMode)
     {
