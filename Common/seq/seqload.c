@@ -1196,11 +1196,13 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
     char seqInfoNameCleanedUp[SEQ_MAX_PATH];
     int normal_dev_eligible;
     int webswing_player_eligible;
+    int is_webswing_player;
     int dev_eligible = 0;
 
     writeConsole(OUTPUT_DEBUG, "\tReading %s", seqInfoName);
     PERFINFO_AUTO_START("top", 1);
         seqCleanSeqFileName(SAFESTR(seqInfoNameCleanedUp), seqInfoName);
+        is_webswing_player = seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp);
         seqInfo = cpp_const_cast(SeqInfo*)(findSequencerByName(seqInfoNameCleanedUp));
         compiled_seq_info = seqInfo;
         if( seqInfo )
@@ -1211,7 +1213,7 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             //End development only
         }
 
-        if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
+        if (is_webswing_player)
         {
             int shared_memory = seqInfo && isSharedMemory(seqInfo);
             normal_dev_eligible = !global_state.no_file_change_check &&
@@ -1233,7 +1235,8 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
         }
 
         //So the game doesn't crash.
-        if( !seqInfo && isProductionMode() && !global_state.webswing_dev )
+        if( !seqInfo && isProductionMode() &&
+            !(global_state.webswing_dev && is_webswing_player) )
         {
             seqInfo = cpp_const_cast(SeqInfo*)(findPlayerSequencer(seqInfoName));
             seqLogWebSwingPlayerData("COMPILED", "compiled sequencers.bin", seqInfo);
@@ -1246,7 +1249,7 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
         {
             // Get the local dev sequencer from the unbinned data, if necessary.
             seqInfo = seqGetDevSequencer(seqInfo, seqInfoNameCleanedUp, reloadForDev);
-            if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
+            if (is_webswing_player)
                 filelog_printf("webswing.log", "WEBSWING_ANIM player_seq dev_load result=%s\n", seqInfo ? "selected" : "failed_no_valid_sequencer");
             if (seqInfo)
             {
@@ -1256,7 +1259,7 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             }
         }
 
-        if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
+        if (is_webswing_player)
         {
             const char *selected_source = seqInfo ? (seqIsWebSwingLoosePlayerInfo(seqInfo) ? "LOOSE" : "COMPILED") : "NONE";
             const char *selected_path = seqIsWebSwingLoosePlayerInfo(seqInfo) ? seqWebSwingLoosePlayerPath :
