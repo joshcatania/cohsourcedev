@@ -1124,3 +1124,35 @@ coverage now: **multi9 (fragments 120-183; 120/121/136/137/152 bound in
 the FoundersCanal view)** and water variants 117/118/119 (shadowmap /
 planar-reflection pairings; 118 needs waterMode>=WATER_HIGH pinned in
 the shadow registry to bind).
+
+## Remaster Profile v1 (2026-08-21, `agent/remaster-profile-v1`)
+
+Verified on this worktree with an isolated parallel shard (all evidence and
+methodology in `docs/remaster-profile-v1.md`):
+
+- `Common/comm_backend.h` ports shift by `COH_PORT_OFFSET` (env, default 0
+  unchanged); `agent/start-shard-parallel.ps1` / `stop-shard-parallel.ps1`
+  run a second full shard from this worktree beside another agent's shard
+  (per-path process matching, own `cohgfx` database, offset port band).
+  The parallel shard coexisted with the shared ServerMonitor/DbServer/
+  Launcher/MapServers from `D:\github\cohsourcedev` for the whole session
+  with no interference. Note: DbServer's game-client listener is UDP 7000
+  (+offset), invisible to TCP port checks; a fresh `cohgfx` database makes
+  the first static-map startup pass take ~25 minutes once.
+- Graphics settings persistence now separates user-requested quality from
+  capability-restricted effective settings; the documented
+  GFXF_MULTITEX-loss poisoning class and a `-useFBOs 0` degraded launch no
+  longer overwrite saved preferences (three-gate verification passed).
+- Remaster Profile v1 defaults on capable hardware (`DX10_CLASS || (GLSL &&
+  ARBFP)`): shadow maps HIGHQ/1024/3-cascades, SSAO strength HIGH /
+  resolution HQ / bilateral-depth blur (issue #25 winner), WATER_HIGH,
+  modernPresentation=1 + modernBloom=1 (issue #13/#16). Weaker hardware,
+  Performance/Minimum/safe mode keep legacy values. Capture A/B:
+  22.6-69.6% changed pixels across the four required scenes, no clipping
+  pathologies, paired steady-state GPU utilization 1.13x stock.
+- Known issues surfaced (not this milestone's scope): an intermittent
+  map-entry entity race (`entrecv.c:216/227`, `tricks.c:814`) that fails
+  ~25% of rapid back-to-back capture sessions on any shard, and cross-branch
+  wire drift (SCMD/ServerControlState enum insertions plus loose sequencer
+  data on `agent/issue-36-web-swing`) that deterministically crashes this
+  branch's clients against that server build.

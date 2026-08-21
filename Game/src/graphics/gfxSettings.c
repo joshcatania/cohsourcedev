@@ -247,6 +247,15 @@ void gfxGetWindowSettings( GfxSettings * gfxSettings )
 
 void gfxGetSettings( GfxSettings * gfxSettings )
 {
+    // Capability-sensitive quality fields are read back from the user's
+    // REQUESTED settings store instead of the current runtime state when it
+    // is available. The runtime values can be temporarily degraded by
+    // capability restrictions (gfxSettingsApplyRestrictions) or by a launch
+    // that lost render features; deriving settings from that state and
+    // re-applying them used to permanently overwrite the saved preference.
+    const GfxSettings * requested = globalGfxSettingsForNextTime.filledIn
+        ? &globalGfxSettingsForNextTime : NULL;
+
     gfxSettings->advanced.mipLevel            = game_state.mipLevel;
     gfxSettings->advanced.entityMipLevel    = game_state.entityMipLevel;
     gfxSettings->advanced.texLodBias        = game_state.texLodBias;
@@ -257,7 +266,7 @@ void gfxGetSettings( GfxSettings * gfxSettings )
     gfxSettings->antialiasing                = game_state.antialiasing;
     gfxSettings->fieldOfView                = game_state.fov_1st;
 
-    gfxSettings->advanced.shadowMode        = game_state.shadowMode;
+    gfxSettings->advanced.shadowMode        = requested ? requested->advanced.shadowMode : game_state.shadowMode;
     gfxSettings->advanced.shadowMap.showAdvanced    = game_state.shadowMapShowAdvanced;
     gfxSettings->advanced.shadowMap.shader            = game_state.shadowShaderSelection;
     gfxSettings->advanced.shadowMap.distance        = game_state.shadowmap_num_cascades - 2;        // map 2->close, 3->middle, 4->far
@@ -268,7 +277,7 @@ void gfxGetSettings( GfxSettings * gfxSettings )
     else
         gfxSettings->advanced.shadowMap.size        = SHADOWMAPSIZE_SMALL;
 
-    gfxSettings->advanced.cubemapMode        = game_state.cubemapMode;
+    gfxSettings->advanced.cubemapMode        = requested ? requested->advanced.cubemapMode : game_state.cubemapMode;
 #if NOVODEX
     gfxSettings->advanced.ageiaOn            = nx_state.hardware;
     gfxSettings->advanced.physicsQuality    = nx_state.physicsQuality;
@@ -300,16 +309,19 @@ void gfxGetSettings( GfxSettings * gfxSettings )
     gfxSettings->renderScaleX = game_state.renderScaleX;
     gfxSettings->renderScaleY = game_state.renderScaleY;
 
-    gfxSettings->advanced.shaderDetail = shaderDetailFromFeatures(rdr_caps.features);
+    gfxSettings->advanced.shaderDetail = requested ? requested->advanced.shaderDetail
+                                                   : shaderDetailFromFeatures(rdr_caps.features);
 
-    gfxSettings->advanced.useWater = game_state.waterMode;
+    gfxSettings->advanced.useWater = requested ? requested->advanced.useWater : game_state.waterMode;
 
     if (game_state.reflectionEnable & 2)
         gfxSettings->advanced.buildingPlanarReflections = 1;
     else
         gfxSettings->advanced.buildingPlanarReflections = 0;
 
-    if (rdr_caps.features & GFXF_BLOOM) {
+    if (requested) {
+        gfxSettings->advanced.useBloom = requested->advanced.useBloom;
+    } else if (rdr_caps.features & GFXF_BLOOM) {
         if (game_state.bloomScale==0)
             gfxSettings->advanced.useBloom = BLOOM_OFF;
         else if (game_state.bloomScale<3)
@@ -321,21 +333,26 @@ void gfxGetSettings( GfxSettings * gfxSettings )
 
     gfxSettings->advanced.bloomMagnitude = game_state.bloomWeight;
 
-    if (rdr_caps.features & GFXF_DOF)
+    if (requested)
+        gfxSettings->advanced.useDOF = requested->advanced.useDOF;
+    else if (rdr_caps.features & GFXF_DOF)
         gfxSettings->advanced.useDOF = 1;
-    else 
+    else
         gfxSettings->advanced.useDOF = 0;
 
-    if (rdr_caps.features & GFXF_DESATURATE)
+    if (requested)
+        gfxSettings->advanced.useDesaturate = requested->advanced.useDesaturate;
+    else if (rdr_caps.features & GFXF_DESATURATE)
         gfxSettings->advanced.useDesaturate = 1;
-    else 
+    else
         gfxSettings->advanced.useDesaturate = 0;
 
     gfxSettings->advanced.dofMagnitude = game_state.dofWeight;
 
-    gfxSettings->advanced.ambient.strength = (rdr_caps.features & GFXF_AMBIENT) ? game_state.ambientStrength : AMBIENT_OFF;
-    gfxSettings->advanced.ambient.resolution = game_state.ambientResolution;
-    gfxSettings->advanced.ambient.blur = game_state.ambientBlur;
+    gfxSettings->advanced.ambient.strength = requested ? requested->advanced.ambient.strength
+        : (rdr_caps.features & GFXF_AMBIENT) ? game_state.ambientStrength : AMBIENT_OFF;
+    gfxSettings->advanced.ambient.resolution = requested ? requested->advanced.ambient.resolution : game_state.ambientResolution;
+    gfxSettings->advanced.ambient.blur = requested ? requested->advanced.ambient.blur : game_state.ambientBlur;
     gfxSettings->advanced.ambient.showAdvanced = game_state.ambientShowAdvanced;
     gfxSettings->advanced.ambient.optionScale = game_state.ambientOptionScale;
 
@@ -344,7 +361,11 @@ void gfxGetSettings( GfxSettings * gfxSettings )
     gfxSettings->filledIn = true;
     gfxSettings->version = GFXSETTINGS_VERSION;
 
-    gfxSettingsApplyRestrictions(gfxSettings);
+    // Note: no gfxSettingsApplyRestrictions() here. Every apply path
+    // (gfxApplySettings) performs the restriction itself; doing it here as
+    // well would clamp the requested-quality values this function just
+    // preserved, letting a degraded session overwrite saved preferences
+    // through the options UI.
 }
 
 void gfxGetSettingsForNextTime( GfxSettings * gfxSettings )
@@ -541,10 +562,13 @@ static void gfxGetPerformanceAdvancedSettings( GfxSettings * gfxSettings )
     gfxSettings->advanced.worldDetailLevel    *= 0.8;
     gfxSettings->advanced.useDesaturate = 1;
 
-    // Disable special features
+    // Disable special features (also undo the Remaster Profile composition
+    // inherited from the Recommended base: Performance stays lightweight)
     gfxSettings->advanced.useBloom=BLOOM_OFF;
     gfxSettings->advanced.useDOF=0;
     gfxSettings->advanced.useWater=WATER_OFF;
+    gfxSettings->advanced.shadowMode=SHADOW_STENCIL;
+    gfxSettings->advanced.ambient.option=AMBIENT_DISABLE;
     
     // disable all physics stuff
     gfxSettings->advanced.physicsQuality = 0;
@@ -606,6 +630,28 @@ static void gfxGetRecommendedAdvancedSettings( GfxSettings * gfxSettings )
     gfxSettings->advanced.cubemapMode = CUBEMAP_OFF;
     gfxSettings->advanced.ambient.option=AMBIENT_DISABLE;
 
+    // Remaster Profile v1: on capable modern hardware (the same class that
+    // skips the weak-GPU adjustments in gfxAdjustRecommendedSettingsForHardware)
+    // the nominal defaults compose the measured remaster configuration instead
+    // of the 2009 recommended set: high-quality cascaded shadow maps at 1024px
+    // with 3 cascades, full-resolution SSAO with a bilateral-depth blur
+    // (issue #25 measured winner; roughly stock-Ultra depth quality at cleaner
+    // local contacts), and WATER_HIGH reflections. Weaker hardware keeps the
+    // legacy values; gfxSettingsApplyRestrictions() still clamps anything this
+    // launch's driver cannot do, and modernPresentation/modernBloom remain
+    // runtime-togglable flags.
+    if ( (rdr_caps.chip&DX10_CLASS) || ((rdr_caps.chip&GLSL) && (rdr_caps.chip&ARBFP)) )
+    {
+        gfxSettings->advanced.useWater=WATER_HIGH;
+        gfxSettings->advanced.shadowMode = SHADOW_SHADOWMAP_HIGH;
+        gfxSettings->advanced.ambient.option=AMBIENT_HIGH_QUALITY;
+    }
+    else
+    {
+        // Default shadows to stencil shadows
+        gfxSettings->advanced.shadowMode        = SHADOW_STENCIL;
+    }
+
     if (IsUsingWin9x())
         gfxSettings->advanced.colorMouseCursor=0;
     else
@@ -614,9 +660,6 @@ static void gfxGetRecommendedAdvancedSettings( GfxSettings * gfxSettings )
     if (game_state.noVBOs)
         gfxSettings->advanced.enableVBOs=0;
 
-    // Default shadows to stencil shadows
-    gfxSettings->advanced.shadowMode        = SHADOW_STENCIL;
-
     // inherit this from other settings
     gfxSettings->advanced.useDesaturate = (gfxSettings->advanced.useBloom || gfxSettings->advanced.useDOF);
 
@@ -624,6 +667,23 @@ static void gfxGetRecommendedAdvancedSettings( GfxSettings * gfxSettings )
 
     gfxUpdateAmbientAdvanced( gfxSettings );
     gfxUpdateShadowMapAdvanced( gfxSettings );
+
+    // Issue #25 winner details that the option-based preset expansion above
+    // does not express: 3 cascades (middle distance) instead of the High
+    // preset's 4, and the bilateral-depth AO blur instead of trilateral.
+    // trilateral over-darkens crevices; bilateral-depth keeps contact
+    // structure cleanest at the same strength.
+    if (gfxSettings->advanced.shadowMode == SHADOW_SHADOWMAP_HIGH)
+    {
+        gfxSettings->advanced.shadowMap.distance = SHADOWDISTANCE_MIDDLE;
+        gfxSettings->advanced.shadowMap.size = SHADOWMAPSIZE_MEDIUM;
+        gfxSettings->advanced.shadowMap.shader = SHADOWSHADER_HIGHQ;
+    }
+    if (gfxSettings->advanced.ambient.strength != AMBIENT_OFF)
+    {
+        gfxSettings->advanced.ambient.resolution = AMBIENT_RES_HIGH_QUALITY;
+        gfxSettings->advanced.ambient.blur = AMBIENT_BILATERAL_DEPTH;
+    }
 }
 
 // "Slow"/"Quality" Graphics Quality
@@ -852,16 +912,24 @@ void gfxApplySettings( GfxSettings * gfxSettings, int pastStartUp, bool onlyDyna
 
     assert(gfxSettings->filledIn);
 
-    gfxSettingsApplyRestrictions(gfxSettings);
+    // Keep an unclamped copy of what was requested: gfxSettingsApplyRestrictions()
+    // demotes the effective settings for THIS launch's capabilities, and saving
+    // the demoted values would permanently overwrite the user's quality
+    // preference after one temporarily degraded launch.
+    {
+        GfxSettings requested = *gfxSettings;
+        gfxSettingsApplyRestrictions(gfxSettings);
+        requested.version = GFXSETTINGS_VERSION;
+
+        //This is what I want to save to the registry
+        if (!onlyDynamic)
+            globalGfxSettingsForNextTime = requested;
+    }
+    saveAutoResumeInfoToRegistry();
 
     currMipLevel = game_state.actualMipLevel; //Don't bother resetting textures if you didn't change miplevel
     currEntityMipLevel = game_state.entityMipLevel;
     currTexAniso = game_state.texAnisotropic;
-
-    //This is what I want to save to the registry
-    if (!onlyDynamic)
-        globalGfxSettingsForNextTime = *gfxSettings;
-    saveAutoResumeInfoToRegistry();
 
     if (!onlyDynamic)
     {

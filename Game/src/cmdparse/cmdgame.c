@@ -6173,12 +6173,13 @@ void gameStateInit()
     // Native GLSL is the default for supported pairings.  -glslPilot 0
     // remains the explicit legacy ARB/Cg control and escape hatch.
     game_state.glslPilot = 1;
-    // Keep the first visual-modernization experiment opt-in. -modernPresentation
-    // 1 or the runtime command modernPresentation 1 enables it explicitly.
-    game_state.modernPresentation = 0;
-    // Keep Modern Bloom v1 opt-in and default-off. The existing presentation
-    // vector carries this as .y through the native GLSL effects mirror.
-    game_state.modernBloom = 0;
+    // Remaster Profile v1: the filmic presentation curve and the soft-knee
+    // bloom composite are the default presentation on the native GLSL path
+    // (issue #13/#16 A/B verdicts; stock-path parity verified when both are
+    // off). -modernPresentation 0 / -modernBloom 0 remain the explicit
+    // controls for the previous presentation.
+    game_state.modernPresentation = 1;
+    game_state.modernBloom = 1;
     // Keep the first material-lighting experiment opt-in and scoped to the
     // native GLSL Bump ColorBlendDual LQ/HQ pilot programs.
     game_state.modernMaterials = 0;

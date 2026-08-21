@@ -136,8 +136,13 @@ int getAutoResumeInfoFromRegistry(GfxSettings* gfxSettings, char* accountName, i
     if (gfxSettings_temp.slowUglyScale != -1)
         isFirstRunSinceSlowUglySlider = false;
 
-    gfxSettings_temp = *gfxSettings; // Fill in defaults 
-    gfxSettings_temp.version = 0;
+    gfxSettings_temp = *gfxSettings; // Fill in defaults
+    // Keep the defaults' settings version: a registry with no version key
+    // (clean first run) must not run the legacy version-4 "upgrade", which
+    // would force shadowMode down to SHADOW_SHADOWMAP_LOW and overwrite the
+    // current defaults. A registry saved by an older build still supplies
+    // its own lower version key below and is migrated as before.
+    gfxSettings_temp.version = GFXSETTINGS_VERSION;
 
     ParserLoadFromRegistry(regGetAppKey(), autoResumeRegInfoSafe, NULL);
     ParserLoadFromRegistry(regGetAppKey(), autoResumeRegInfo, NULL);
