@@ -1194,6 +1194,8 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
     SeqInfo * seqInfo;
     const SeqInfo *compiled_seq_info;
     char seqInfoNameCleanedUp[SEQ_MAX_PATH];
+    int normal_dev_eligible;
+    int webswing_player_eligible;
     int dev_eligible = 0;
 
     writeConsole(OUTPUT_DEBUG, "\tReading %s", seqInfoName);
@@ -1212,13 +1214,22 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
         if (seqIsWebSwingPlayerSequencer(seqInfoNameCleanedUp))
         {
             int shared_memory = seqInfo && isSharedMemory(seqInfo);
-            dev_eligible = (global_state.webswing_dev ||
-                (!global_state.no_file_change_check && isDevelopmentMode())) &&
-                (!seqInfo || !shared_memory);
+            normal_dev_eligible = !global_state.no_file_change_check &&
+                isDevelopmentMode() && !shared_memory;
+            webswing_player_eligible = global_state.webswing_dev &&
+                !shared_memory;
+            dev_eligible = normal_dev_eligible || webswing_player_eligible;
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d loadEligible=%d\n",
+                           "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d normal_dev_eligible=%d webswing_player_eligible=%d dev_eligible=%d\n",
                            isDevelopmentMode(), global_state.no_file_change_check,
-                           seqInfo != NULL, shared_memory, global_state.webswing_dev, dev_eligible);
+                           seqInfo != NULL, shared_memory, global_state.webswing_dev,
+                           normal_dev_eligible, webswing_player_eligible, dev_eligible);
+        }
+        else
+        {
+            normal_dev_eligible = !global_state.no_file_change_check &&
+                isDevelopmentMode() && (!seqInfo || !isSharedMemory(seqInfo));
+            dev_eligible = normal_dev_eligible;
         }
 
         //So the game doesn't crash.
