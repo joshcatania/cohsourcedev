@@ -22,6 +22,8 @@ $trackedStateBits = Join-Path $animationRoot 'webswing.statebits'
 $trackedCanaryOverlay = Join-Path $animationRoot 'webswing-canary.txt'
 $trackedCanaryStateBits = Join-Path $animationRoot 'webswing-canary.statebits'
 $trackedCanaryInclude = Join-Path $root 'agent\animation\canary-sequencer.inc'
+$trackedCanaryAnimation = Join-Path $root 'agent\animation\runtime\player_library\animations\male\COHSOURCEDEV_RETARGET_SWING_FULL.anim'
+$expectedCanaryAnimation = $trackedCanaryAnimation
 $trackedAnimationRoot = Join-Path $root 'agent\animation\runtime\player_library\animations'
 $trackedAnimationManifest = Join-Path $root 'agent\animation\runtime\webswing-animations.json'
 $runtimeRoot = Join-Path $root 'bin\data\sequencers'
@@ -65,8 +67,8 @@ function Get-AnimationManifest {
         throw "Tracked Web Swing animation manifest is invalid: $trackedAnimationManifest ($($_.Exception.Message))"
     }
     $entries = @($manifest.animations)
-    if ($entries.Count -ne 10) {
-        throw "Expected exactly 10 tracked Web Swing animation entries, found $($entries.Count)."
+    if ($entries.Count -ne 12) {
+        throw "Expected exactly 12 tracked Web Swing animation entries, found $($entries.Count)."
     }
     return $entries
 }
@@ -353,7 +355,7 @@ function Get-Status {
         (Get-Sha256 $runtimeOverlay) -eq (Get-Sha256 $trackedOverlay) -and
         (Get-Sha256 $runtimeStateBits) -eq (Get-Sha256 $trackedStateBits) -and
         $animationState.runtimeValid)
-    $canaryAssetPath = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_CUSTOM_CANARY.anim'
+    $canaryAssetPath = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_RETARGET_SWING_FULL.anim'
     $canaryModeInstalled = ((Test-Path -LiteralPath $runtimeOverlay -PathType Leaf) -and
         (Test-Path -LiteralPath $runtimeInclude -PathType Leaf) -and
         (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) -and
@@ -364,7 +366,7 @@ function Get-Status {
         (Get-Sha256 $runtimeCanaryInclude) -eq (Get-Sha256 $trackedCanaryInclude) -and
         $animationState.runtimeValid -and
         (Test-Path -LiteralPath $canaryAssetPath -PathType Leaf) -and
-        (Get-Item -LiteralPath $canaryAssetPath).Length -gt 0)
+        (Get-Sha256 $canaryAssetPath) -eq (Get-Sha256 $expectedCanaryAnimation))
     [pscustomobject]@{
         installed = if ($IncludeCanary) { $canaryModeInstalled } else { $normalModeInstalled }
         normalModeInstalled = $normalModeInstalled
@@ -386,6 +388,7 @@ function Get-Status {
         canaryAssetPath = $canaryAssetPath
         canaryAssetPresent = (Test-Path -LiteralPath $canaryAssetPath -PathType Leaf)
         canaryAssetSha256 = Get-Sha256 $canaryAssetPath
+        trackedCanaryAssetSha256 = Get-Sha256 $expectedCanaryAnimation
         includeSha256 = Get-Sha256 $runtimeInclude
         overlaySha256 = Get-Sha256 $runtimeOverlay
         stateBitsSha256 = Get-Sha256 $runtimeStateBits
@@ -412,27 +415,22 @@ if (-not (Test-Path -LiteralPath $trackedOverlay -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedStateBits -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedCanaryOverlay -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedCanaryStateBits -PathType Leaf) -or
-    -not (Test-Path -LiteralPath $trackedCanaryInclude -PathType Leaf)) {
+    -not (Test-Path -LiteralPath $trackedCanaryInclude -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $trackedCanaryAnimation -PathType Leaf)) {
     throw 'Tracked Web Swing animation data is incomplete.'
 }
 
 if ($IncludeCanary) {
-    $canaryRuntimeAsset = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_CUSTOM_CANARY.anim'
-    if ($CanaryAnimationPath) {
-        $resolvedCanary = (Resolve-Path -LiteralPath $CanaryAnimationPath -ErrorAction Stop).Path
-        if (-not (Test-Path -LiteralPath $resolvedCanary -PathType Leaf)) {
-            throw "Canary animation asset does not exist: $resolvedCanary"
-        }
-        $canaryDirectory = Split-Path -Parent $canaryRuntimeAsset
-        if (-not (Test-Path -LiteralPath $canaryDirectory -PathType Container)) {
-            New-Item -ItemType Directory -Path $canaryDirectory -Force | Out-Null
-        }
-        Copy-Item -LiteralPath $resolvedCanary -Destination $canaryRuntimeAsset -Force
+    $canaryRuntimeAsset = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_RETARGET_SWING_FULL.anim'
+    $resolvedCanary = if ($CanaryAnimationPath) {
+        (Resolve-Path -LiteralPath $CanaryAnimationPath -ErrorAction Stop).Path
+    } else {
+        $trackedCanaryAnimation
     }
-    if (-not (Test-Path -LiteralPath $canaryRuntimeAsset -PathType Leaf) -or
-        (Get-Item -LiteralPath $canaryRuntimeAsset).Length -le 0) {
-        throw "Explicit canary mode requires an audition asset at $canaryRuntimeAsset; supply -CanaryAnimationPath."
+    if (-not (Test-Path -LiteralPath $resolvedCanary -PathType Leaf)) {
+        throw "Canary animation asset does not exist: $resolvedCanary"
     }
+    $expectedCanaryAnimation = $resolvedCanary
 }
 
 if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
@@ -455,6 +453,9 @@ if ($Action -eq 'Install') {
         Remove-CanaryRuntimeInclude
     }
     Copy-AnimationAssets | Out-Null
+    if ($IncludeCanary -and $CanaryAnimationPath) {
+        Copy-Item -LiteralPath $resolvedCanary -Destination $canaryRuntimeAsset -Force
+    }
     Get-Status
     exit 0
 }

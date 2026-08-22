@@ -167,6 +167,8 @@ def parse_args():
         default=2,
         help="Number of source frames on either side of --frame for the short post-audition proof",
     )
+    parser.add_argument("--source-start-frame", type=int)
+    parser.add_argument("--source-end-frame", type=int)
     parser.add_argument("--no-kbs", action="store_true", help="Do not invoke the installed KBS-DEV retarget operator")
     return parser.parse_args(argv)
 
@@ -800,6 +802,79 @@ def set_target_segment(target, rest_world, name, desired_direction, roll_referen
     return metrics
 
 
+def current_coh_world_rotation(target, name):
+    """Return the game-frame world rotation using CoH's local*parent order."""
+    bone = target.data.bones[name]
+    local = target.pose.bones[name].rotation_quaternion.normalized()
+    if bone.parent is None:
+        return local
+    return local @ current_coh_world_rotation(target, bone.parent.name)
+
+
+def source_quat_to_game(source_rotation):
+    source_rotation = source_rotation.normalized()
+    angle = source_rotation.angle
+    if angle <= 1.0e-7:
+        return Quaternion((1.0, 0.0, 0.0, 0.0))
+    axis = source_rotation.axis.normalized()
+    return Quaternion((axis.x, -axis.z, axis.y), angle)
+
+
+def game_quat_to_source_rotation(game_rotation):
+    game_rotation = game_rotation.normalized()
+    angle = game_rotation.angle
+    if angle <= 1.0e-7:
+        return Quaternion((1.0, 0.0, 0.0, 0.0))
+    axis = game_rotation.axis.normalized()
+    return Quaternion((axis.x, axis.z, -axis.y), angle)
+
+
+def source_position_to_game(source_position):
+    return Vector((-source_position.x, source_position.z, -source_position.y))
+
+
+def game_position_to_source(game_position):
+    return Vector((-game_position.x, -game_position.z, game_position.y))
+
+
+def set_target_runtime_segment(target, rest_world, name, desired_direction, roll_reference, child=None):
+    """Author one local quaternion for CoH's native FK convention."""
+    desired_direction = Vector(desired_direction)
+    if desired_direction.length <= 1.0e-6:
+        raise ValueError(f"{name} has a zero desired segment direction")
+    desired_direction.normalize()
+    rest_matrix = target.data.bones[name].matrix_local.copy()
+    if child is None and name not in COH_CHILD:
+        rest_seg = target.data.bones[name].tail_local - target.data.bones[name].head_local
+    else:
+        rest_seg = target_segment(rest_world, name, child)
+    desired = pose_matrix_for_segment(
+        rest_matrix, rest_seg, Vector((0.0, 0.0, 0.0)),
+        desired_direction, Vector(roll_reference),
+    )
+    desired_source_world = desired.to_3x3().to_quaternion().normalized()
+    # CoH stores the inverse Hamilton quaternion used by Blender's
+    # column-vector matrices (the original MAX pipeline was row-vector based).
+    desired_world = source_quat_to_game(desired_source_world).inverted()
+    bone = target.data.bones[name]
+    parent_world = (
+        current_coh_world_rotation(target, bone.parent.name)
+        if bone.parent is not None else Quaternion((1.0, 0.0, 0.0, 0.0))
+    )
+    local = (desired_world @ parent_world.inverted()).normalized()
+    pose_bone = target.pose.bones[name]
+    pose_bone.rotation_mode = "QUATERNION"
+    pose_bone.location = (0.0, 0.0, 0.0)
+    pose_bone.rotation_quaternion = local
+    pose_bone.scale = (1.0, 1.0, 1.0)
+    bpy.context.view_layer.update()
+    actual_world = current_coh_world_rotation(target, name)
+    world_error = math.degrees(actual_world.rotation_difference(desired_world).angle)
+    if world_error > 1.0e-4:
+        raise ValueError(f"{name} CoH FK world rotation error is {world_error:.9g} degrees")
+    return {"locationMagnitude": 0.0, "scaleError": 0.0, "worldErrorDegrees": world_error}
+
+
 def common_control_semantics(control):
     def p(name, tail=False):
         return control_common_point(control, name, tail)
@@ -877,31 +952,31 @@ def transfer_control_to_coh(target, rest_world, control):
     semantics = common_control_semantics(control)
     torso = semantics["torso"]
     metrics = []
-    metrics.append({"bone": "HIPS", **set_target_segment(target, rest_world, "HIPS", torso["hipsDirection"], torso["pelvisNormal"])})
-    metrics.append({"bone": "WAIST", **set_target_segment(target, rest_world, "WAIST", torso["waistDirection"], torso["waistRoll"])})
-    metrics.append({"bone": "CHEST", **set_target_segment(target, rest_world, "CHEST", torso["chestDirection"], torso["chestRoll"])})
+    metrics.append({"bone": "HIPS", **set_target_runtime_segment(target, rest_world, "HIPS", torso["hipsDirection"], torso["pelvisNormal"])})
+    metrics.append({"bone": "WAIST", **set_target_runtime_segment(target, rest_world, "WAIST", torso["waistDirection"], torso["waistRoll"])})
+    metrics.append({"bone": "CHEST", **set_target_runtime_segment(target, rest_world, "CHEST", torso["chestDirection"], torso["chestRoll"])})
 
     for side in ("r", "l"):
         arm = semantics[f"arm_{side}"]
         suffix = "R" if side == "r" else "L"
-        metrics.append({"bone": f"COL_{suffix}", **set_target_segment(target, rest_world, f"COL_{suffix}", arm["clavicle"], arm["planeNormal"])})
-        metrics.append({"bone": f"UARM{suffix}", **set_target_segment(target, rest_world, f"UARM{suffix}", arm["upperDirection"], arm["planeNormal"])})
-        metrics.append({"bone": f"LARM{suffix}", **set_target_segment(target, rest_world, f"LARM{suffix}", arm["lowerDirection"], arm["planeNormal"])})
+        metrics.append({"bone": f"COL_{suffix}", **set_target_runtime_segment(target, rest_world, f"COL_{suffix}", arm["clavicle"], arm["planeNormal"])})
+        metrics.append({"bone": f"UARM{suffix}", **set_target_runtime_segment(target, rest_world, f"UARM{suffix}", arm["upperDirection"], arm["planeNormal"])})
+        metrics.append({"bone": f"LARM{suffix}", **set_target_runtime_segment(target, rest_world, f"LARM{suffix}", arm["lowerDirection"], arm["planeNormal"])})
         hand_roll = arm["handUp"]
         if abs(hand_roll.dot(arm["handDirection"])) > 0.95:
             hand_roll = arm["planeNormal"]
-        metrics.append({"bone": f"HAND{suffix}", **set_target_segment(target, rest_world, f"HAND{suffix}", arm["handDirection"], hand_roll)})
+        metrics.append({"bone": f"HAND{suffix}", **set_target_runtime_segment(target, rest_world, f"HAND{suffix}", arm["handDirection"], hand_roll)})
 
         leg = semantics[f"leg_{side}"]
-        metrics.append({"bone": f"ULEG{suffix}", **set_target_segment(target, rest_world, f"ULEG{suffix}", leg["thighDirection"], leg["planeNormal"])})
-        metrics.append({"bone": f"LLEG{suffix}", **set_target_segment(target, rest_world, f"LLEG{suffix}", leg["shinDirection"], leg["planeNormal"])})
-        metrics.append({"bone": f"FOOT{suffix}", **set_target_segment(target, rest_world, f"FOOT{suffix}", leg["footDirection"], leg["planeNormal"])})
+        metrics.append({"bone": f"ULEG{suffix}", **set_target_runtime_segment(target, rest_world, f"ULEG{suffix}", leg["thighDirection"], leg["planeNormal"])})
+        metrics.append({"bone": f"LLEG{suffix}", **set_target_runtime_segment(target, rest_world, f"LLEG{suffix}", leg["shinDirection"], leg["planeNormal"])})
+        metrics.append({"bone": f"FOOT{suffix}", **set_target_runtime_segment(target, rest_world, f"FOOT{suffix}", leg["footDirection"], leg["planeNormal"])})
         # The toe is a terminal bone.  It receives the source foot direction;
         # no independent toe translation or scale is permitted.
-        metrics.append({"bone": f"TOE{suffix}", **set_target_segment(target, rest_world, f"TOE{suffix}", leg["footDirection"], leg["planeNormal"])})
+        metrics.append({"bone": f"TOE{suffix}", **set_target_runtime_segment(target, rest_world, f"TOE{suffix}", leg["footDirection"], leg["planeNormal"])})
 
-    metrics.append({"bone": "NECK", **set_target_segment(target, rest_world, "NECK", torso["neckDirection"], torso["neckRoll"])})
-    metrics.append({"bone": "HEAD", **set_target_segment(target, rest_world, "HEAD", torso["headDirection"], torso["headRoll"])})
+    metrics.append({"bone": "NECK", **set_target_runtime_segment(target, rest_world, "NECK", torso["neckDirection"], torso["neckRoll"])})
+    metrics.append({"bone": "HEAD", **set_target_runtime_segment(target, rest_world, "HEAD", torso["headDirection"], torso["headRoll"])})
     bpy.context.view_layer.update()
 
     failures = []
@@ -970,12 +1045,28 @@ def create_proof_action(target, frame, proof_frames):
     return action
 
 
-def create_neighbor_action(source, control, target, rest_world, center_frame, radius):
-    """Bake a short neighboring source-frame window after the one-frame gate."""
+def create_neighbor_action(
+    source, control, target, rest_world, center_frame, radius,
+    source_start_frame=None, source_end_frame=None,
+):
+    """Bake a bounded source-frame window after the one-frame gate."""
     scene = bpy.context.scene
-    source_frames = list(range(center_frame - radius, center_frame + radius + 1))
+    if source_start_frame is not None or source_end_frame is not None:
+        if source_start_frame is None or source_end_frame is None:
+            raise ValueError("Both source frame bounds must be supplied")
+        source_frames = list(range(source_start_frame, source_end_frame + 1))
+    else:
+        source_frames = list(range(center_frame - radius, center_frame + radius + 1))
     if source_frames[0] < 1:
-        raise ValueError("Neighbor proof would sample before Mixamo frame 1")
+        raise ValueError("Retarget window would sample before Mixamo frame 1")
+    source_action = source.animation_data.action if source.animation_data else None
+    if source_action is None:
+        raise ValueError("Mixamo source has no active action")
+    source_last_frame = int(source_action.frame_range[1])
+    if source_frames[-1] > source_last_frame:
+        raise ValueError(
+            f"Retarget window ends at {source_frames[-1]}, past source frame {source_last_frame}"
+        )
 
     frame_records = []
     for source_frame in source_frames:
@@ -1173,27 +1264,35 @@ def semantic_proxy_points(obj, kind):
         points = [p(name) for name in names if name in obj.pose.bones]
         return segments, points
 
-    # The exact CoH export representation intentionally keeps every
-    # runtime child origin at its bind-space location while storing only
-    # local rotation channels.  Blender's PoseBone.matrix therefore is not
-    # the right visual proxy for the eventual skinned hierarchy here.  Build
-    # the same parent-first FK chain from matrix_basis and the reconstructed
-    # rest matrices instead.
-    pose_matrices = {}
+    # The exact CoH export representation keeps every local child offset at
+    # its bind value and composes quaternions as local*parent.  Blender uses
+    # parent*local, so reconstruct the native runtime hierarchy explicitly.
+    pose_rotations = {}
+    pose_positions = {}
     pending = list(obj.data.bones)
     while pending:
         progressed = False
         for bone in list(pending):
-            if bone.parent is not None and bone.parent.name not in pose_matrices:
+            if bone.parent is not None and bone.parent.name not in pose_rotations:
                 continue
-            rest_matrix = bone.matrix_local.copy()
+            local_rotation = obj.pose.bones[bone.name].rotation_quaternion.normalized()
             if bone.parent is None:
-                pose_matrix = rest_matrix @ obj.pose.bones[bone.name].matrix_basis
+                world_rotation = local_rotation
+                world_position = source_position_to_game(bone.matrix_local.translation)
             else:
-                parent_rest = bone.parent.matrix_local.copy()
-                local_rest = parent_rest.inverted() @ rest_matrix
-                pose_matrix = pose_matrices[bone.parent.name] @ local_rest @ obj.pose.bones[bone.name].matrix_basis
-            pose_matrices[bone.name] = pose_matrix
+                parent_rotation = pose_rotations[bone.parent.name]
+                parent_position = pose_positions[bone.parent.name]
+                local_position = source_position_to_game(
+                    bone.parent.matrix_local.to_3x3().inverted() @ (
+                        bone.matrix_local.translation - bone.parent.matrix_local.translation
+                    )
+                )
+                world_rotation = local_rotation @ parent_rotation
+                world_position = parent_position + (
+                    parent_rotation.inverted() @ local_position
+                )
+            pose_rotations[bone.name] = world_rotation
+            pose_positions[bone.name] = world_position
             pending.remove(bone)
             progressed = True
         if not progressed:
@@ -1202,15 +1301,21 @@ def semantic_proxy_points(obj, kind):
     def p(name, tail=False):
         if tail:
             bone = obj.data.bones[name]
-            local_tail = bone.tail_local
             # Synthetic Blender tails are only used for terminal markers.
-            local_point = pose_matrices[name] @ local_tail
+            local_point = game_position_to_source(
+                pose_positions[name] + (
+                    pose_rotations[name].inverted() @ source_position_to_game(
+                        bone.tail_local - bone.head_local
+                    )
+                )
+            )
         else:
-            local_point = pose_matrices[name].translation
+            local_point = game_position_to_source(pose_positions[name])
         return obj.matrix_world @ local_point
 
     def b(name):
-        return obj.matrix_world.to_3x3() @ pose_matrices[name].to_3x3()
+        source_rotation = game_quat_to_source_rotation(pose_rotations[name]).inverted()
+        return obj.matrix_world.to_3x3() @ source_rotation.to_matrix()
 
     segments = []
     for name, child in COH_CHILD.items():
@@ -1384,6 +1489,7 @@ def main():
     exact = create_exact_armature(report, bones, by_id, rest_world)
     exact.name = "CoH_Male_Exact_Export_Rig"
     exact.data.name = "CoH_Male_Exact_Export_Rig"
+    exact["coh_export_fk"] = "runtime-local-bind-translation"
     exact.hide_render = True
     # Keep the armature evaluated.  Hiding it from the viewport causes
     # PoseBone.matrix to remain at rest in Blender's dependency graph, which
@@ -1461,6 +1567,7 @@ def main():
 
     proof_action, neighbor_report = create_neighbor_action(
         source, control, exact, rest_world, args.frame, args.neighbor_radius,
+        args.source_start_frame, args.source_end_frame,
     )
     blend_path = args.output_dir / "COHSOURCEDEV_RETARGET_POSE_PROOF.blend"
     bpy.ops.wm.save_as_mainfile(filepath=str(blend_path))

@@ -152,7 +152,9 @@ foreach ($definition in $webswingLogDefinitions) {
         Copy-Item -LiteralPath $definition.Source -Destination $definition.Capture -Force
         $webswingAllText = Get-Content -Raw -LiteralPath $definition.Source
         $webswingBefore = $webswingTextBefore[$definition.Source]
-        if ($webswingBefore -and $webswingAllText.StartsWith($webswingBefore)) {
+        if ($webswingBefore -and
+            $webswingAllText.Length -ge $webswingBefore.Length -and
+            $webswingAllText.StartsWith($webswingBefore)) {
             $webswingTextParts += $webswingAllText.Substring($webswingBefore.Length)
         } else {
             $webswingTextParts += $webswingAllText

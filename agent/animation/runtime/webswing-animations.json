@@ -1,7 +1,23 @@
 {
-  "version": 2,
-  "generator": "agent/animation/create_webswing_animation.py -> blender_export_animx.py -> GetAnimation2 -compile-animx",
+  "version": 3,
+  "generator": "create_webswing_animation.py or prove_mixamo_anatomical_pose.py -> blender_export_animx.py -> GetAnimation2 -compile-animx",
   "animations": [
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_POSE_PROOF",
+      "frames": 5,
+      "file": "male/COHSOURCEDEV_RETARGET_POSE_PROOF.anim",
+      "bytes": 2881,
+      "sha256": "0cdf71228cbf3d2349120d4ae1636ec6392131b2d320608bdc1dea0656982aa5"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_SWING_FULL",
+      "frames": 60,
+      "file": "male/COHSOURCEDEV_RETARGET_SWING_FULL.anim",
+      "bytes": 9066,
+      "sha256": "2a674b086d7fa916530002ead55451fdf28fd9780a9efee23205eed4b66d388e"
+    },
     {
       "type": "MALE",
       "logical": "COHSOURCEDEV_WEBSWING_STRETCH",

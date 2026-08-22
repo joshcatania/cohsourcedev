@@ -132,7 +132,8 @@ function Ensure-WebSwingAnimationRuntime {
         ($status.stateBitsSha256 -eq $expectedStateBitsHash)
     $canaryIncludeSynchronized = (-not $WebSwingCanary) -or ($status.canaryIncludePresent -and
         ($status.canaryIncludeSha256 -eq $status.trackedCanaryIncludeSha256) -and
-        $status.canaryAssetPresent)
+        $status.canaryAssetPresent -and
+        ($status.canaryAssetSha256 -eq $status.trackedCanaryAssetSha256))
 
     if (-not $status.installed -or -not $overlaySynchronized -or
         -not $includeSynchronized -or -not $stateBitsSynchronized -or
@@ -192,7 +193,8 @@ try {
             $runtimeStatus.animationAssetsRuntimeValid -and
             ((-not $WebSwingCanary) -or ($runtimeStatus.canaryIncludePresent -and
                 $runtimeStatus.canaryIncludeSha256 -eq $runtimeStatus.trackedCanaryIncludeSha256 -and
-                $runtimeStatus.canaryAssetPresent))
+                $runtimeStatus.canaryAssetPresent -and
+                $runtimeStatus.canaryAssetSha256 -eq $runtimeStatus.trackedCanaryAssetSha256))
         if (-not $runtimeSynchronized) {
             $compatibleClients = @($clientInventory.Managed | Where-Object { $_.WebSwingDev })
             if ($compatibleClients.Count -gt 0) {
@@ -277,6 +279,7 @@ try {
     Write-Host 'Launching City of Heroes...'
     $clientArgs = @('-db', '127.0.0.1', '-authname', $AccountName, '-password', $Password, '-noverify', '-quicklogin', '1', '-noversioncheck', '-fullscreen', '0', '-screen', '1280', '720', '-stopinactivedisplay', '0')
     if ($WebSwingDev) { $clientArgs += @('-webswingdev', '-nopopups') }
+    if ($WebSwingCanary) { $clientArgs += @('-animcanary', '1') }
     $client = Start-Process -FilePath $ouroboros -ArgumentList $clientArgs -WorkingDirectory $clientWorkingDirectory -PassThru
     Start-Sleep -Milliseconds 1500
     if (-not (Get-Process -Id $client.Id -ErrorAction SilentlyContinue)) {

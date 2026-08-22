@@ -1,6 +1,36 @@
 # Autonomous Agent Status
 
-Last verified: 2026-08-17 (America/Chicago)
+Last verified: 2026-08-22 (America/Chicago)
+
+## Issue 36 Mixamo Swinging transfer — 2026-08-22
+
+The rotation-only Mixamo-to-CoH Male transfer is now proven at three gates:
+source frame 30 as a static pose, frames 28–32 as real neighboring motion, and
+the complete source action at frames 1–60. All 68 stock Male bones and their
+parent graph are preserved; compiled positions stay at bind translation and
+target scales remain unchanged. The full runtime clip is
+`MALE/COHSOURCEDEV_RETARGET_SWING_FULL` (9,066 bytes, SHA-256
+`2A674B086D7FA916530002EAD55451FDF28FD9780A9EFEE23205EED4B66D388E`).
+
+The existing developer canary selected both the static proof and full clip on
+an actual `TypeGfx=male` character. Static and mid-clip screenshots plus source
+and CoH-runtime-FK references are committed under
+`docs/evidence/issue36-mixamo-retarget/`. The detailed implementation and
+validation record is in `docs/issue-36-animation-pipeline.md`.
+
+Actual Web Swing integration is intentionally not claimed. Two warmed-shard
+`-RequireAnimationPhases` attempts exited TestClient cleanly but selected no
+anchors, so the tentative Male attached-state mapping was reverted. The full
+clip remains isolated behind the developer canary; Web Swing physics and the
+known V2 gameplay animation mapping are unchanged.
+
+The final complete `Release|x86` solution build passed with the verified v145
+fallback in 260.7 seconds. Full log:
+`agent/logs/build-Release-x86-20260822-174027.log`.
+The restarted shard then passed direct-DB character creation and MapServer
+entry in 61.1 seconds with TestClient exit code 0 after the expected initial
+fresh-shard warm-up attempt. Result:
+`agent/logs/smoke-directdb-20260822-174840.json`.
 
 ## Current milestone
 

@@ -2364,6 +2364,11 @@ static const CaptureShot s_captureShots[] = {
     { "AtlasPlaza_North_01",    "-5504.30 -16.00 -1926.04 0.1632 3.1486 0.0000",  "30", 16, 1 },
     { "AtlasPlaza_West_01",     "-5504.30 -16.00 -1926.04 0.1632 -1.5703 0.0000", "30", 16, 1 },
     { "AtlasPlaza_Closeup_01",  "-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000",  "10", 16, 1 },
+    // Full-body animation audition views. These keep the proof close enough
+    // to judge hands and limb roll while retaining hips, knees, and feet.
+    { "AtlasPlaza_AnimFront_01", "-5504.30 -16.00 -1926.04 0.0900 0.0070 0.0000",  "18", 16, 1 },
+    { "AtlasPlaza_AnimThreeQuarter_01", "-5504.30 -16.00 -1926.04 0.0900 0.7924 0.0000", "18", 16, 1 },
+    { "AtlasPlaza_AnimSide_01",  "-5504.30 -16.00 -1926.04 0.0900 1.5778 0.0000",  "18", 16, 1 },
     { "AtlasPlaza_NightEast_01","-5504.30 -16.00 -1926.04 0.1632 1.5778 0.0000",  "30", 0,  1 },
     { "AtlasPlaza_NightCityHall_01","-5504.30 -16.00 -1926.04 0.1632 0.0070 0.0000", "30", 0, 1 },
     // Issue #21 authoring views use the verified in-zone Atlas camera without
@@ -2550,7 +2555,11 @@ static void game_processCapture(void)
         // sun, and fog systems interpolate toward the new state for a few
         // seconds, so the first capture after a mapserver restart would
         // otherwise catch a mid-transition image.
-        if (++game_state.capture_frame_count < 300)
+        // Canary captures judge a moving player rather than the environment.
+        // Capture after one second so gravity cannot carry an airborne source
+        // pose away from the close authoring camera. Normal regression shots
+        // retain the established five-second lighting settle.
+        if (++game_state.capture_frame_count < (g_cohsourcedev_anim_canary ? 60 : 300))
             return;
 
         game_startupTracef("capture.camera.screenshot-state cam=%.2f %.2f %.2f pyr=%.4f %.4f %.4f target=%.4f %.4f %.4f",

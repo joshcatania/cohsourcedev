@@ -1,5 +1,70 @@
 # Issue 36 — Animation authoring pipeline proof
 
+## Mixamo Swinging transfer gate — 2026-08-22
+
+The one-pose-first transfer gate now passes on the actual CoH Male runtime
+skin. The source is `swinginganimations/Swinging.fbx`, action
+`Armature|mixamo.com|Layer0`, frame 30 at 30 fps. The FBX and all other files
+under `swinginganimations/` remain untracked.
+
+The decisive fix was at the exporter/runtime boundary. CoH evaluates a stored
+local quaternion with its inverse Hamilton rotation and composes child world
+rotations as `local * parent`. The legacy ANIMX/MAX source frame is therefore
+not Blender's ordinary column-vector pose convention. The exporter now has an
+explicit `runtime-local-bind-translation` contract: the retargeter authors
+game-frame local rotations, the exporter reconstructs native CoH FK using the
+stock bind translations, and only then converts world transforms to ANIMX.
+This removed the earlier 2.74765-unit child-translation error.
+
+The transfer preserved all 68 Male identifiers and their parent graph. Every
+compiled position track has one bind-position key. Target pose locations and
+scales remain unchanged; only local rotations vary. Validation progressed in
+the required order:
+
+| Gate | Frames | Source-to-control | Control-to-CoH | Runtime result |
+| --- | ---: | --- | --- | --- |
+| Static pose | 30 | pass | pass | actual Male skin pass |
+| Neighbor motion | 28–32 | max joint error `2.9898e-6`, max segment error `0 deg` | max translation/scale error `0` | 21 compiled rotation tracks contain six keys |
+| Full action | 1–60 | max joint error `3.0638e-6`, max segment error `0 deg` | max translation/scale error `0` | actual Male skin visibly changes pose |
+
+The corrected static asset is 2,881 bytes with SHA-256
+`0CDF71228CBF3D2349120D4AE1636EC6392131B2D320608BDC1DEA0656982AA5`.
+The full asset is 9,066 bytes with SHA-256
+`2A674B086D7FA916530002EAD55451FDF28FD9780A9EFEE23205EED4B66D388E`.
+It has 68 tracks: 47 constant rotation tracks, one 59-key rotation track, and
+20 61-key rotation tracks. Its source frame range is exactly 1–60.
+
+The committed visual evidence is in
+[`docs/evidence/issue36-mixamo-retarget`](evidence/issue36-mixamo-retarget/README.md).
+Full reports and intermediate outputs remain locally under
+`agent/work/issue36-mixamo-runtimefk-v3-20260822/` and
+`agent/work/issue36-mixamo-full60-20260822/`.
+
+`COHSOURCEDEV_CUSTOM_CANARY` is a legitimate developer-only sequencer move and
+now selects `MALE/COHSOURCEDEV_RETARGET_SWING_FULL`. No renderer deformation
+or draw-time skeleton substitution is used. A tentative mapping to the exact
+Male `WEBSWING_ATTACHED` phase was deliberately reverted: two warmed-shard
+smoke attempts completed TestClient cleanly but selected zero anchors, so they
+could not prove attach/swing/detach or the gameplay transition. The known
+`COHSOURCEDEV_WEBSWING_STRETCH_V2` gameplay mapping remains unchanged. The new
+clip is runtime-proven, but is not claimed as actual Web Swing integration.
+
+The smoke harness itself now tolerates server-log rollover between its initial
+snapshot and suffix extraction. The two honest non-integration results are:
+
+- `agent/logs/webswing-smoke-20260822-172954.json`
+- `agent/logs/webswing-smoke-20260822-173414.json`
+
+After the runtime auditions, the disposable shard was stopped with
+`agent/stop-shard.ps1 -ForceProcessStop` to release its server binaries. The
+complete `Release|x86` solution build then passed in 260.7 seconds using the
+verified v145 fallback; log:
+`agent/logs/build-Release-x86-20260822-174027.log`.
+After restart, the first character smoke absorbed the documented fresh-shard
+warm-up. The immediate follow-up passed direct-DB character creation and
+MapServer entry in 61.1 seconds with TestClient exit code 0:
+`agent/logs/smoke-directdb-20260822-174840.json`.
+
 Verified on 2026-08-21 from branch `agent/issue-36-web-swing` at
 `8c7372d958dea0a457be050fe4495a7113d90b11`.
 
