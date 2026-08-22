@@ -265,6 +265,17 @@ void parseArgs(int argc,char **argv)
             i += 2;
             continue;
         }
+        if (stricmp(argv[i], "-animcanary") == 0 && i + 1 < argc)
+        {
+            // WebSwingDev-only startup diagnostic.  The normal command parser
+            // rejects this access-level-9 command before login; assign the
+            // client-side flag here so the sequencer can inject the authored
+            // canary after the player entity exists.
+            g_cohsourcedev_anim_canary = atoi(argv[i + 1]) != 0;
+            game_startupTracef("animcanary.argument=%d", g_cohsourcedev_anim_canary);
+            i += 2;
+            continue;
+        }
         if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
         {
             Strncpyt(commandLinePassword, argv[i + 1]);
