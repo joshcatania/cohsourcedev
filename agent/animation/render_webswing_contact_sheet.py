@@ -75,7 +75,78 @@ def origin(armature, name):
     return armature.pose.bones[name].matrix.translation.copy()
 
 
-def add_limb(armature, prefix, material, joint_radius=0.055, segment_radius=0.045):
+def source_pose_matrix(armature, name):
+    """Return the reconstructed CoH/source-frame pose used by the exporter."""
+    rest = armature.data.bones[name].matrix_local.copy()
+    pose = armature.pose.bones[name].matrix.copy()
+    delta = rest.inverted_safe() @ pose
+    return rest @ delta
+
+
+def add_axis_gizmo(name, location, frame, axis_materials, length=0.22):
+    """Render local X/Y/Z rods at a joint so axial roll is inspectable."""
+    basis = frame.to_3x3()
+    for axis_index, axis in enumerate((Vector((1.0, 0.0, 0.0)),
+                                       Vector((0.0, 1.0, 0.0)),
+                                       Vector((0.0, 0.0, 1.0)))):
+        direction = basis @ axis
+        direction.normalize()
+        add_segment(
+            f"{name}_axis_{axis_index}",
+            location,
+            location + direction * length,
+            0.011,
+            axis_materials[axis_index],
+        )
+
+
+def add_asymmetric_fin(name, start, end, frame, material):
+    """Add a triangular, non-circular cross-section aligned to one bone."""
+    segment = end - start
+    if segment.length <= 1.0e-5:
+        return None
+    axis = segment.normalized()
+    fin_direction = frame.to_3x3() @ Vector((0.0, 0.0, 1.0))
+    fin_direction -= axis * fin_direction.dot(axis)
+    if fin_direction.length <= 1.0e-5:
+        fin_direction = frame.to_3x3() @ Vector((1.0, 0.0, 0.0))
+        fin_direction -= axis * fin_direction.dot(axis)
+    if fin_direction.length <= 1.0e-5:
+        return None
+    fin_direction.normalize()
+    thickness_direction = axis.cross(fin_direction)
+    thickness_direction.normalize()
+
+    center = start + segment * 0.56
+    half_length = min(segment.length * 0.18, 0.14)
+    fin_width = min(segment.length * 0.24, 0.16)
+    thickness = 0.014
+    points = [
+        center - axis * half_length + thickness_direction * thickness,
+        center + axis * half_length + thickness_direction * thickness,
+        center + fin_direction * fin_width + thickness_direction * thickness,
+        center - axis * half_length - thickness_direction * thickness,
+        center + axis * half_length - thickness_direction * thickness,
+        center + fin_direction * fin_width - thickness_direction * thickness,
+    ]
+    faces = [
+        (0, 1, 2),
+        (5, 4, 3),
+        (0, 3, 4, 1),
+        (1, 4, 5, 2),
+        (2, 5, 3, 0),
+    ]
+    mesh = bpy.data.meshes.new(f"{name}_mesh")
+    mesh.from_pydata(points, [], faces)
+    mesh.update()
+    object_ = bpy.data.objects.new(name, mesh)
+    bpy.context.collection.objects.link(object_)
+    object_.data.materials.append(material)
+    return object_
+
+
+def add_limb(armature, prefix, material, fin_material, axis_materials,
+             joint_radius=0.055, segment_radius=0.045):
     names = [f"UARM{prefix}", f"LARM{prefix}", f"HAND{prefix}"]
     points = [origin(armature, name) for name in names]
     collar = origin(armature, f"COL_{prefix}")
@@ -84,6 +155,27 @@ def add_limb(armature, prefix, material, joint_radius=0.055, segment_radius=0.04
     add_segment(f"LARM{prefix}", points[1], points[2], segment_radius * 0.9, material)
     for index, point in enumerate(points):
         add_sphere(f"{prefix}_joint_{index}", point, joint_radius, material)
+
+    marker_name = f"WEP{prefix}"
+    marker = origin(armature, marker_name)
+    visual_points = [collar, *points, marker]
+    visual_bones = [f"COL_{prefix}", f"UARM{prefix}", f"LARM{prefix}", f"HAND{prefix}"]
+    for index, bone_name in enumerate(visual_bones):
+        frame = source_pose_matrix(armature, bone_name)
+        add_axis_gizmo(
+            f"{bone_name}_gizmo",
+            visual_points[index],
+            frame,
+            axis_materials,
+        )
+        add_asymmetric_fin(
+            f"{bone_name}_roll_fin",
+            visual_points[index],
+            visual_points[index + 1],
+            frame,
+            fin_material,
+        )
+    add_sphere(f"{marker_name}_marker", marker, joint_radius * 0.72, fin_material)
     return points
 
 
@@ -101,6 +193,13 @@ def build_proxy(armature):
     body_dark = make_material("body_dark", (0.04, 0.09, 0.25), metallic=0.1)
     right_arm = make_material("tether_arm", (0.95, 0.16, 0.07), metallic=0.05)
     left_arm = make_material("free_arm", (0.96, 0.55, 0.08), metallic=0.05)
+    right_fin = make_material("tether_arm_roll_fin", (1.0, 0.82, 0.05), metallic=0.15, roughness=0.4)
+    left_fin = make_material("free_arm_roll_fin", (0.10, 0.95, 0.92), metallic=0.15, roughness=0.4)
+    axis_materials = (
+        make_material("axis_x", (0.95, 0.05, 0.05), metallic=0.1, roughness=0.4),
+        make_material("axis_y", (0.08, 0.95, 0.15), metallic=0.1, roughness=0.4),
+        make_material("axis_z", (0.08, 0.35, 1.0), metallic=0.1, roughness=0.4),
+    )
     head_material = make_material("head", (0.85, 0.44, 0.22), roughness=0.65)
     tether_material = make_material("tether", (0.95, 0.04, 0.75), metallic=0.25, roughness=0.35)
 
@@ -116,8 +215,8 @@ def build_proxy(armature):
     add_segment("neck", chest, neck, 0.09, body_dark)
     add_sphere("head", head, 0.24, head_material, scale=(0.85, 0.85, 1.15))
 
-    right_points = add_limb(armature, "R", right_arm)
-    left_points = add_limb(armature, "L", left_arm)
+    right_points = add_limb(armature, "R", right_arm, right_fin, axis_materials)
+    left_points = add_limb(armature, "L", left_arm, left_fin, axis_materials)
     add_leg(armature, "R", body)
     add_leg(armature, "L", body)
 
@@ -130,7 +229,7 @@ def build_proxy(armature):
         marker_direction = Vector((0.0, 0.0, 1.0))
     marker_direction.normalize()
     tether_end = hand + marker_direction * 0.95
-    add_segment("implied_tether", hand, tether_end, 0.018, tether_material)
+    add_segment("implied_tether", marker, tether_end, 0.018, tether_material)
     add_sphere("tether_anchor", tether_end, 0.045, tether_material)
 
 

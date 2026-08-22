@@ -10,7 +10,9 @@ only path from this authoring source to a runtime .anim file.
 negative control.  The default ``v2`` path is intentionally narrow: it
 currently authors only Male STRETCH through a geometric two-bone reach solve.
 It does not use Blender IK on the reconstructed export bones; their edit tails
-are synthetic and are not anatomical segment lengths.
+are synthetic and are not anatomical segment lengths.  V2 converts each
+desired pose-space orientation back through the parent/rest hierarchy and
+rejects any authored arm location or scale channel that is not rotation-only.
 """
 
 from __future__ import annotations
@@ -33,6 +35,15 @@ AUTHORED_BONES = [
     "ULEGL", "LLEGL", "FOOTL",
     "NECK", "HEAD",
 ]
+
+ARM_BONES = {
+    "R": ("COL_R", "UARMR", "LARMR", "HANDR"),
+    "L": ("COL_L", "UARML", "LARML", "HANDL"),
+}
+
+ROTATION_ONLY_LOCATION_TOLERANCE = 1.0e-5
+ROTATION_ONLY_SCALE_TOLERANCE = 1.0e-5
+REACH_VALIDATION_TOLERANCE = 2.0e-3
 
 ACTION_SPECS = {
     "stretch": {
@@ -247,7 +258,7 @@ def rotation_between(source, target, max_angle=None):
     return Quaternion(axis, angle)
 
 
-def pose_matrix_for_segment(rest_matrix, rest_segment, target_head, target_segment, up_reference):
+def pose_matrix_for_segment(rest_matrix, rest_segment, target_head, target_segment, roll_reference):
     """Map a real rest-pose joint segment onto a target pose-space segment.
 
     This deliberately uses the reconstructed CoH child-origin vector rather
@@ -259,7 +270,7 @@ def pose_matrix_for_segment(rest_matrix, rest_segment, target_head, target_segme
     if abs(rest_up.normalized().dot(rest_direction)) > 0.98:
         rest_up = rest_matrix.to_3x3() @ Vector((1.0, 0.0, 0.0))
     rest_basis = stable_basis(rest_direction, rest_up)
-    target_basis = stable_basis(target_segment, up_reference)
+    target_basis = stable_basis(target_segment, roll_reference)
     delta_rotation = target_basis @ rest_basis.inverted()
     target_rotation = delta_rotation @ rest_matrix.to_3x3()
     result = target_rotation.to_4x4()
@@ -275,11 +286,65 @@ def pose_origin(armature_object, name):
     return armature_object.pose.bones[name].matrix.translation.copy()
 
 
-def set_pose_matrix(armature_object, name, matrix):
+def parent_pose_matrices(armature_object, name):
+    """Return the evaluated parent pose and its rest matrix for conversion."""
+    bone = armature_object.data.bones[name]
+    if bone.parent is None:
+        return Matrix.Identity(4), Matrix.Identity(4)
+    parent_pose = armature_object.pose.bones[bone.parent.name].matrix.copy()
+    parent_rest = bone.parent.matrix_local.copy()
+    return parent_pose, parent_rest
+
+
+def pose_to_local_basis(armature_object, name, pose_matrix):
+    """Convert an armature-space pose matrix to Blender's local pose basis."""
+    bone = armature_object.data.bones[name]
+    parent_pose, parent_rest = parent_pose_matrices(armature_object, name)
+    return bone.convert_local_to_pose(
+        pose_matrix,
+        bone.matrix_local,
+        parent_matrix=parent_pose,
+        parent_matrix_local=parent_rest,
+        invert=True,
+    )
+
+
+def set_pose_matrix_rotation_only(armature_object, name, pose_matrix):
+    """Apply an armature-space target using only a local quaternion channel.
+
+    Assigning ``PoseBone.matrix`` directly is allowed to synthesize local
+    location channels when the requested child origin is not already implied
+    by its parent's rotation.  The desired target is therefore converted back
+    through Blender's parent/rest pose relation first.  The local basis is
+    checked before its rotation is assigned; the caller's hard gate then
+    checks the evaluated channels again after the complete arm is solved.
+    """
     pose_bone = armature_object.pose.bones[name]
+    local_basis = pose_to_local_basis(armature_object, name, pose_matrix)
+    local_location = local_basis.translation.copy()
+    local_scale = local_basis.to_3x3().to_scale()
+    location_error = local_location.length
+    scale_error = max(abs(value - 1.0) for value in local_scale)
+    if location_error > ROTATION_ONLY_LOCATION_TOLERANCE:
+        raise ValueError(
+            f"{name} pose target requires local translation "
+            f"{location_error:.9g}; target head is not parent-implied"
+        )
+    if scale_error > ROTATION_ONLY_SCALE_TOLERANCE:
+        raise ValueError(
+            f"{name} pose target requires local scale error "
+            f"{scale_error:.9g}; rotation-only conversion is invalid"
+        )
+
     pose_bone.rotation_mode = "QUATERNION"
-    pose_bone.matrix = matrix
-    return pose_bone
+    pose_bone.location = (0.0, 0.0, 0.0)
+    pose_bone.rotation_quaternion = local_basis.to_3x3().to_quaternion()
+    pose_bone.scale = (1.0, 1.0, 1.0)
+    bpy.context.view_layer.update()
+    return {
+        "locationMagnitude": location_error,
+        "scaleError": scale_error,
+    }
 
 
 def rotate_current_pose_bone(armature_object, name, axis, angle):
@@ -288,7 +353,7 @@ def rotate_current_pose_bone(armature_object, name, axis, angle):
     current = pose_bone.matrix.copy()
     pivot = current.translation.copy()
     delta = Matrix.Translation(pivot) @ Matrix.Rotation(angle, 4, axis) @ Matrix.Translation(-pivot)
-    return set_pose_matrix(armature_object, name, delta @ current)
+    return set_pose_matrix_rotation_only(armature_object, name, delta @ current)
 
 
 def clamp_target_to_reach(shoulder, target, upper_length, lower_length, fallback_direction):
@@ -354,6 +419,56 @@ def arm_names(side):
     }
 
 
+def derive_roll_reference(upper_direction, lower_direction, pole_direction, previous):
+    """Derive one continuous roll normal from the solved elbow plane.
+
+    The pole direction is the anatomical bend direction.  Its cross product
+    with the solved upper-arm direction is the normal of the complete limb
+    plane, so the upper arm and forearm share one roll reference instead of
+    each independently using a global up axis.  The previous keyframe only
+    resolves the sign ambiguity at a nearly straight or poorly conditioned
+    pose; it is never the source of the limb plane.
+    """
+    plane_normal = upper_direction.cross(lower_direction)
+    if plane_normal.length <= 1.0e-6:
+        plane_normal = pole_direction.cross(upper_direction)
+    if plane_normal.length <= 1.0e-6:
+        plane_normal = pole_direction.copy()
+    if plane_normal.length <= 1.0e-6:
+        raise ValueError("Could not construct a stable solved arm roll reference")
+    plane_normal.normalize()
+    if previous is not None and plane_normal.dot(previous) < 0.0:
+        plane_normal.negate()
+    return plane_normal
+
+
+def derive_hand_orientation(forearm_direction, tether_direction, roll_reference, up_hint=None):
+    """Build a stable wrist frame from forearm, tether, and elbow-plane data."""
+    tether = tether_direction.copy()
+    if tether.length <= 1.0e-6:
+        tether = forearm_direction.copy()
+    tether.normalize()
+
+    # The hand points predominantly along the implied tether, while a small
+    # forearm contribution prevents a visibly broken wrist at the attachment.
+    hand_forward = (tether * 0.78 + forearm_direction * 0.22)
+    if hand_forward.length <= 1.0e-6:
+        hand_forward = tether
+    hand_forward.normalize()
+
+    hand_up = roll_reference - hand_forward * roll_reference.dot(hand_forward)
+    if hand_up.length <= 1.0e-6 and up_hint is not None:
+        hand_up = up_hint - hand_forward * up_hint.dot(hand_forward)
+    if hand_up.length <= 1.0e-6:
+        hand_up = forearm_direction.cross(hand_forward)
+    if hand_up.length <= 1.0e-6:
+        hand_up = Vector((0.0, 0.0, 1.0))
+    hand_up.normalize()
+    if hand_up.dot(roll_reference) < 0.0:
+        hand_up.negate()
+    return hand_forward, hand_up
+
+
 def pose_reach_arm(
     armature_object,
     rest_world,
@@ -362,13 +477,16 @@ def pose_reach_arm(
     elbow_pole,
     shoulder_weight=0.0,
     hand_orientation=None,
+    previous_roll_reference=None,
 ):
     """Place one arm from semantic targets rather than local Euler angles.
 
     ``hand_target`` and ``elbow_pole`` are object/pose-space points.  The
     shoulder weight is deliberately bounded and only affects a small
     clavicle-opening adjustment before the two-bone solve.  ``hand_orientation``
-    is an optional ``(forward, up)`` pair in pose space for the palm/wrist.
+    is an optional ``(tether_direction, up_hint)`` pair in pose space for the
+    palm/wrist.  The final hand frame is derived from that direction, the
+    solved forearm, and the common elbow-plane normal.
     """
     names = arm_names(side)
     upper = names["upper"]
@@ -395,7 +513,7 @@ def pose_reach_arm(
             pivot = collar_head
             collar_matrix = collar_bone.matrix.copy()
             collar_delta = Matrix.Translation(pivot) @ delta.to_matrix().to_4x4() @ Matrix.Translation(-pivot)
-            set_pose_matrix(armature_object, collar, collar_delta @ collar_matrix)
+            set_pose_matrix_rotation_only(armature_object, collar, collar_delta @ collar_matrix)
             bpy.context.view_layer.update()
 
     shoulder = pose_origin(armature_object, upper)
@@ -410,39 +528,70 @@ def pose_reach_arm(
         shoulder, target, upper_length, lower_length, elbow_pole, fallback_pole,
     )
 
+    upper_direction = (elbow - shoulder).normalized()
+    lower_direction = (target - elbow).normalized()
+    roll_reference = derive_roll_reference(
+        upper_direction,
+        lower_direction,
+        pole_direction,
+        previous_roll_reference,
+    )
+
     rest_upper_matrix = armature_object.data.bones[upper].matrix_local.copy()
     rest_lower_matrix = armature_object.data.bones[lower].matrix_local.copy()
     rest_hand_matrix = armature_object.data.bones[hand].matrix_local.copy()
     rest_upper_segment = rest_origin(rest_world, lower) - rest_origin(rest_world, upper)
     rest_lower_segment = rest_origin(rest_world, hand) - rest_origin(rest_world, lower)
-    set_pose_matrix(
+    set_pose_matrix_rotation_only(
         armature_object,
         upper,
-        pose_matrix_for_segment(rest_upper_matrix, rest_upper_segment, shoulder, elbow - shoulder, Vector((0.0, 0.0, 1.0))),
+        pose_matrix_for_segment(
+            rest_upper_matrix,
+            rest_upper_segment,
+            shoulder,
+            elbow - shoulder,
+            roll_reference,
+        ),
     )
     bpy.context.view_layer.update()
-    set_pose_matrix(
+    set_pose_matrix_rotation_only(
         armature_object,
         lower,
-        pose_matrix_for_segment(rest_lower_matrix, rest_lower_segment, elbow, target - elbow, Vector((0.0, 0.0, 1.0))),
+        pose_matrix_for_segment(
+            rest_lower_matrix,
+            rest_lower_segment,
+            elbow,
+            target - elbow,
+            roll_reference,
+        ),
     )
     bpy.context.view_layer.update()
 
     if hand_orientation is None:
-        hand_forward = (target - elbow).normalized()
-        hand_up = Vector((0.0, 0.0, 1.0))
+        tether_direction = lower_direction
+        up_hint = None
     else:
-        hand_forward, hand_up = hand_orientation
-        hand_forward = hand_forward.normalized()
-        hand_up = hand_up.normalized()
+        tether_direction, up_hint = hand_orientation
+    hand_forward, hand_up = derive_hand_orientation(
+        lower_direction,
+        tether_direction,
+        roll_reference,
+        up_hint,
+    )
     if marker in rest_world:
         rest_hand_segment = rest_origin(rest_world, marker) - rest_origin(rest_world, hand)
     else:
         rest_hand_segment = rest_lower_segment
-    set_pose_matrix(
+    set_pose_matrix_rotation_only(
         armature_object,
         hand,
-        pose_matrix_for_segment(rest_hand_matrix, rest_hand_segment, target, hand_forward, hand_up),
+        pose_matrix_for_segment(
+            rest_hand_matrix,
+            rest_hand_segment,
+            target,
+            hand_forward,
+            hand_up,
+        ),
     )
     bpy.context.view_layer.update()
 
@@ -452,6 +601,11 @@ def pose_reach_arm(
         "elbow": tuple(elbow),
         "hand": tuple(target),
         "pole": tuple(pole_direction),
+        "rollReference": tuple(roll_reference),
+        "upperDirection": tuple(upper_direction),
+        "lowerDirection": tuple(lower_direction),
+        "handForward": tuple(hand_forward),
+        "handUp": tuple(hand_up),
         "upperLength": upper_length,
         "lowerLength": lower_length,
         "requestedDistance": requested_distance,
@@ -599,22 +753,21 @@ V2_CANDIDATES = {
 def reset_authored_pose(armature_object):
     """Reset keyed bones to the reconstructed rest pose before each key."""
     for bone_name in AUTHORED_BONES:
-        set_pose_matrix(
-            armature_object,
-            bone_name,
-            armature_object.data.bones[bone_name].matrix_local.copy(),
-        )
+        pose_bone = armature_object.pose.bones[bone_name]
+        pose_bone.rotation_mode = "QUATERNION"
+        pose_bone.location = (0.0, 0.0, 0.0)
+        pose_bone.rotation_quaternion = (1.0, 0.0, 0.0, 0.0)
+        pose_bone.scale = (1.0, 1.0, 1.0)
     bpy.context.view_layer.update()
 
 
 def keyframe_current_pose(armature_object, frame):
-    """Key the local pose channels produced by the evaluated pose matrices."""
+    """Key the validated local quaternion/location/scale channels."""
     for bone_name in AUTHORED_BONES:
         pose_bone = armature_object.pose.bones[bone_name]
         pose_bone.rotation_mode = "QUATERNION"
-        # matrix assignment can produce non-zero local locations for a solved
-        # child.  Key all transform channels; rotation-only keying would lose
-        # the geometric hand/elbow placement on export.
+        # Location and scale are deliberately keyed as zero/identity so the
+        # ANIMX source records the proven rotation-only contract explicitly.
         pose_bone.keyframe_insert(data_path="location", frame=frame, group=bone_name)
         pose_bone.keyframe_insert(data_path="rotation_quaternion", frame=frame, group=bone_name)
         pose_bone.keyframe_insert(data_path="scale", frame=frame, group=bone_name)
@@ -631,13 +784,66 @@ def validate_reach_pose(armature_object, metrics):
                    Vector(metrics["elbow"])).length
     hand_error = (pose_origin(armature_object, names["hand"]) -
                   Vector(metrics["hand"])).length
-    tolerance = 2.0e-3
-    if abs(upper_actual - metrics["upperLength"]) > tolerance:
+    validation = {
+        "upperLengthError": abs(upper_actual - metrics["upperLength"]),
+        "forearmLengthError": abs(lower_actual - metrics["lowerLength"]),
+        "elbowTargetError": elbow_error,
+        "handTargetError": hand_error,
+    }
+    metrics["validation"] = validation
+    print(
+        "WEBSWING_REACH "
+        f"side={metrics['side']} "
+        f"upperLengthError={validation['upperLengthError']:.9g} "
+        f"forearmLengthError={validation['forearmLengthError']:.9g} "
+        f"elbowTargetError={elbow_error:.9g} "
+        f"handTargetError={hand_error:.9g}"
+    )
+    if abs(upper_actual - metrics["upperLength"]) > REACH_VALIDATION_TOLERANCE:
         raise ValueError(f"{metrics['side']} upper-arm origin length drifted during solve")
-    if abs(lower_actual - metrics["lowerLength"]) > tolerance:
+    if abs(lower_actual - metrics["lowerLength"]) > REACH_VALIDATION_TOLERANCE:
         raise ValueError(f"{metrics['side']} forearm origin length drifted during solve")
-    if elbow_error > tolerance or hand_error > tolerance:
+    if elbow_error > REACH_VALIDATION_TOLERANCE or hand_error > REACH_VALIDATION_TOLERANCE:
         raise ValueError(f"{metrics['side']} evaluated joint origins missed the reach target")
+
+
+def validate_rotation_only_pose(armature_object, frame):
+    """Report and hard-fail if any authored arm channel cheats with TRS."""
+    frame_report = {"frame": frame, "right": {}, "left": {}}
+    failures = []
+    for side, bone_names in ARM_BONES.items():
+        side_key = "right" if side == "R" else "left"
+        for bone_name in bone_names:
+            pose_bone = armature_object.pose.bones[bone_name]
+            location_magnitude = pose_bone.location.length
+            scale_error = max(abs(value - 1.0) for value in pose_bone.scale)
+            item = {
+                "locationMagnitude": location_magnitude,
+                "scaleError": scale_error,
+            }
+            frame_report[side_key][bone_name] = item
+            print(
+                "WEBSWING_ROTATION_ONLY "
+                f"frame={frame} side={side_key} bone={bone_name} "
+                f"locationMagnitude={location_magnitude:.9g} "
+                f"scaleError={scale_error:.9g}"
+            )
+            if location_magnitude > ROTATION_ONLY_LOCATION_TOLERANCE:
+                failures.append(
+                    f"{bone_name} location {location_magnitude:.9g} "
+                    f"> {ROTATION_ONLY_LOCATION_TOLERANCE:.9g}"
+                )
+            if scale_error > ROTATION_ONLY_SCALE_TOLERANCE:
+                failures.append(
+                    f"{bone_name} scale error {scale_error:.9g} "
+                    f"> {ROTATION_ONLY_SCALE_TOLERANCE:.9g}"
+                )
+    if failures:
+        raise ValueError(
+            f"Rotation-only arm validation failed at frame {frame}: "
+            + "; ".join(failures)
+        )
+    return frame_report
 
 
 def semantic_stretch_targets(armature_object, candidate, profile):
@@ -680,6 +886,8 @@ def author_keyframes_v2(armature_object, rest_world, action_name, candidate):
     armature_object.animation_data.action = action
 
     metrics = []
+    rotation_only_metrics = []
+    previous_roll_reference = {"R": None, "L": None}
     for frame, profile in zip(spec["keyframes"], spec["profiles"]):
         scene.frame_set(frame)
         reset_authored_pose(armature_object)
@@ -705,7 +913,9 @@ def author_keyframes_v2(armature_object, rest_world, action_name, candidate):
             targets["rightPole"],
             shoulder_weight=0.35,
             hand_orientation=targets["rightHandOrientation"],
+            previous_roll_reference=previous_roll_reference["R"],
         )
+        previous_roll_reference["R"] = Vector(right_metrics["rollReference"])
         left_metrics = pose_reach_arm(
             armature_object,
             rest_world,
@@ -714,9 +924,12 @@ def author_keyframes_v2(armature_object, rest_world, action_name, candidate):
             targets["leftPole"],
             shoulder_weight=0.20,
             hand_orientation=targets["leftHandOrientation"],
+            previous_roll_reference=previous_roll_reference["L"],
         )
+        previous_roll_reference["L"] = Vector(left_metrics["rollReference"])
         validate_reach_pose(armature_object, right_metrics)
         validate_reach_pose(armature_object, left_metrics)
+        rotation_only_metrics.append(validate_rotation_only_pose(armature_object, frame))
         keyframe_current_pose(armature_object, frame)
         metrics.append({"frame": frame, "profile": profile, "right": right_metrics, "left": left_metrics})
 
@@ -745,6 +958,10 @@ def author_keyframes_v2(armature_object, rest_world, action_name, candidate):
     armature_object["coh_v2_left_upper_arm_length"] = left_rest_length
     armature_object["coh_v2_left_forearm_length"] = left_forearm_length
     armature_object["coh_v2_metrics"] = json.dumps(metrics, sort_keys=True)
+    armature_object["coh_v2_rotation_only_metrics"] = json.dumps(rotation_only_metrics, sort_keys=True)
+    armature_object["coh_v2_rotation_only_location_tolerance"] = ROTATION_ONLY_LOCATION_TOLERANCE
+    armature_object["coh_v2_rotation_only_scale_tolerance"] = ROTATION_ONLY_SCALE_TOLERANCE
+    armature_object["coh_v2_roll_method"] = "solved upper cross lower; pole-derived sign continuity"
     armature_object["coh_logical_animation"] = spec["logical"]
     armature_object["coh_clip_frames"] = spec["frames"]
     armature_object["coh_keyframe_frames"] = ",".join(str(frame) for frame in spec["keyframes"])

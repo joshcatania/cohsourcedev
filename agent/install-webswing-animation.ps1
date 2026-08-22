@@ -65,8 +65,8 @@ function Get-AnimationManifest {
         throw "Tracked Web Swing animation manifest is invalid: $trackedAnimationManifest ($($_.Exception.Message))"
     }
     $entries = @($manifest.animations)
-    if ($entries.Count -ne 9) {
-        throw "Expected exactly 9 tracked Web Swing animation entries, found $($entries.Count)."
+    if ($entries.Count -ne 10) {
+        throw "Expected exactly 10 tracked Web Swing animation entries, found $($entries.Count)."
     }
     return $entries
 }

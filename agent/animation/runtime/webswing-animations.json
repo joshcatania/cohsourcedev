@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "generator": "agent/animation/create_webswing_animation.py -> blender_export_animx.py -> GetAnimation2 -compile-animx",
   "animations": [
     {
@@ -9,6 +9,14 @@
       "file": "male/COHSOURCEDEV_WEBSWING_STRETCH.anim",
       "bytes": 18766,
       "sha256": "6d4f0ab66e592b7e9e95cc78f088043a6adb2f68eb9100b729f1f25ddfad7ec8"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH_V2",
+      "frames": 30,
+      "file": "male/COHSOURCEDEV_WEBSWING_STRETCH_V2.anim",
+      "bytes": 17261,
+      "sha256": "35b6da70ed03466828a38aa31270b22b139384a7a799f8bd8f2b9cbf05ece0e4"
     },
     {
       "type": "MALE",

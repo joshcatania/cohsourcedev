@@ -1,4 +1,6 @@
-// Issue 36 Web Swing purpose-built animation set V1. The installer includes
+// Issue 36 Web Swing purpose-built animation set with the Male STRETCH V2
+// proof mapped only to the attached/descending Male phases. V1 remains the
+// control for Fem, Huge, and the other phases. The installer includes
 // this file from the runtime player sequencer after resolving the local player
 // source. All three custom logical actions are exported independently for
 // Male, Fem, and Huge from the Blender authoring path.
@@ -30,7 +32,7 @@ Move WEBSWING_ATTACHED
 	Interpolate 5
 	Priority 20
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
+		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH_V2 1 30
 		TEnd
 	Type Huge
 		Anim HUGE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
@@ -48,7 +50,7 @@ Move WEBSWING_DESCEND
 	Interpolate 5
 	Priority 22
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
+		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH_V2 1 30
 		TEnd
 	Type Huge
 		Anim HUGE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
