@@ -1,18 +1,12 @@
-// Issue 36 Web Swing pose vocabulary V1. The installer includes this file
-// from the runtime player sequencer after resolving the local player source.
+// Issue 36 Web Swing purpose-built animation set V1. The installer includes
+// this file from the runtime player sequencer after resolving the local player
+// source. All three custom logical actions are exported independently for
+// Male, Fem, and Huge from the Blender authoring path.
 //
-// The five states reuse three weaponless, cross-skeleton source families:
-// AIR_MA_IRONKICK's authored main/recovery split provides the directional
-// extension, AIR_WINDUP_UPCUT's post range provides the raised-arm read, and
-// JUMP_N_SMASH's post range provides the compact bottom pose. These are
-// intentional subranges from existing authored moves, not filename-only picks.
-//
-// Ninja/Beast jump, apex, fall, hop, and post ranges were audited separately.
-// Their authored tracks are Male-only; Parkour has a predictable state but no
-// authored Parkour family in this source. They remain release follow-up
-// candidates rather than cross-skeleton primary poses. WEBSWING_RELEASE is
-// intentionally not added until a visual-only eligibility/state-bit path is
-// available and the range passes a GUI audition.
+// WEBSWING_AIRBORNE intentionally remains the stock airborne control. The
+// attached and descending phases share a loop-safe long-body stretch; the
+// bottom is a compact athletic tuck; and ascent opens back into a longer,
+// outbound silhouette. WEBSWING_RELEASE is intentionally deferred.
 
 Move WEBSWING_AIRBORNE
 	Interpolate 5
@@ -36,13 +30,13 @@ Move WEBSWING_ATTACHED
 	Interpolate 5
 	Priority 20
 	Type Male
-		Anim MALE/AIR_WINDUP_UPCUT 65 89
+		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Type Huge
-		Anim HUGE/AIR_WINDUP_UPCUT 65 89
+		Anim HUGE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Type Fem
-		Anim FEM/AIR_WINDUP_UPCUT 65 89
+		Anim FEM/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Member "<WEBSWING_ANIM>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -54,13 +48,13 @@ Move WEBSWING_DESCEND
 	Interpolate 5
 	Priority 22
 	Type Male
-		Anim MALE/AIR_MA_IRONKICK 84 120
+		Anim MALE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Type Huge
-		Anim HUGE/AIR_MA_IRONKICK 84 120
+		Anim HUGE/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Type Fem
-		Anim FEM/AIR_MA_IRONKICK 84 120
+		Anim FEM/COHSOURCEDEV_WEBSWING_STRETCH 1 30
 		TEnd
 	Member "<WEBSWING_ANIM>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -72,13 +66,13 @@ Move WEBSWING_BOTTOM
 	Interpolate 5
 	Priority 22
 	Type Male
-		Anim MALE/JUMP_N_SMASH 98 124
+		Anim MALE/COHSOURCEDEV_WEBSWING_TUCK 1 24
 		TEnd
 	Type Huge
-		Anim HUGE/JUMP_N_SMASH 98 124
+		Anim HUGE/COHSOURCEDEV_WEBSWING_TUCK 1 24
 		TEnd
 	Type Fem
-		Anim FEM/JUMP_N_SMASH 98 124
+		Anim FEM/COHSOURCEDEV_WEBSWING_TUCK 1 24
 		TEnd
 	Member "<WEBSWING_ANIM>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -90,13 +84,13 @@ Move WEBSWING_ASCEND
 	Interpolate 5
 	Priority 22
 	Type Male
-		Anim MALE/AIR_WINDUP_UPCUT 65 89
+		Anim MALE/COHSOURCEDEV_WEBSWING_ASCEND 1 28
 		TEnd
 	Type Huge
-		Anim HUGE/AIR_WINDUP_UPCUT 65 89
+		Anim HUGE/COHSOURCEDEV_WEBSWING_ASCEND 1 28
 		TEnd
 	Type Fem
-		Anim FEM/AIR_WINDUP_UPCUT 65 89
+		Anim FEM/COHSOURCEDEV_WEBSWING_ASCEND 1 28
 		TEnd
 	Member "<WEBSWING_ANIM>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"

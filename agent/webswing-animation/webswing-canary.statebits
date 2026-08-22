@@ -3,3 +3,4 @@ StateBit WEBSWING_ATTACHED Predictable
 StateBit WEBSWING_DESCEND Predictable
 StateBit WEBSWING_BOTTOM Predictable
 StateBit WEBSWING_ASCEND Predictable
+StateBit COHSOURCEDEV_ANIMCANARY Predictable

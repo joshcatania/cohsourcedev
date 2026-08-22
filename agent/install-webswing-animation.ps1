@@ -3,7 +3,9 @@ param(
     [ValidateSet('Status', 'Install', 'Remove')]
     [string]$Action = 'Status',
     [string]$PlayerSourcePath,
-    [string]$RepositoryRoot
+    [string]$RepositoryRoot,
+    [switch]$IncludeCanary,
+    [string]$CanaryAnimationPath
 )
 
 $ErrorActionPreference = 'Stop'
@@ -17,9 +19,14 @@ $animationRoot = Join-Path $root 'agent\webswing-animation'
 $trackedInclude = Join-Path $animationRoot 'webswing.inc'
 $trackedOverlay = Join-Path $animationRoot 'webswing.txt'
 $trackedStateBits = Join-Path $animationRoot 'webswing.statebits'
+$trackedCanaryOverlay = Join-Path $animationRoot 'webswing-canary.txt'
+$trackedCanaryStateBits = Join-Path $animationRoot 'webswing-canary.statebits'
 $trackedCanaryInclude = Join-Path $root 'agent\animation\canary-sequencer.inc'
+$trackedAnimationRoot = Join-Path $root 'agent\animation\runtime\player_library\animations'
+$trackedAnimationManifest = Join-Path $root 'agent\animation\runtime\webswing-animations.json'
 $runtimeRoot = Join-Path $root 'bin\data\sequencers'
 $runtimeDataRoot = Join-Path $root 'bin\data'
+$runtimeAnimationRoot = Join-Path $runtimeDataRoot 'player_library\animations'
 $runtimeInclude = Join-Path $runtimeRoot 'cohsourcedev_webswing.inc'
 $runtimeOverlay = Join-Path $runtimeRoot 'cohsourcedev_webswing.txt'
 $runtimeCanaryInclude = Join-Path $runtimeRoot 'cohsourcedev_canary.inc'
@@ -45,6 +52,105 @@ function Get-Sha256([string]$Path) {
 function Write-Utf8NoBom([string]$Path, [string]$Text) {
     $encoding = New-Object System.Text.UTF8Encoding($false)
     [System.IO.File]::WriteAllText($Path, $Text, $encoding)
+}
+
+function Get-AnimationManifest {
+    if (-not (Test-Path -LiteralPath $trackedAnimationManifest -PathType Leaf)) {
+        throw "Tracked Web Swing animation manifest is missing: $trackedAnimationManifest"
+    }
+    try {
+        $manifest = Get-Content -Raw -LiteralPath $trackedAnimationManifest | ConvertFrom-Json
+    }
+    catch {
+        throw "Tracked Web Swing animation manifest is invalid: $trackedAnimationManifest ($($_.Exception.Message))"
+    }
+    $entries = @($manifest.animations)
+    if ($entries.Count -ne 9) {
+        throw "Expected exactly 9 tracked Web Swing animation entries, found $($entries.Count)."
+    }
+    return $entries
+}
+
+function Get-AnimationAssetState {
+    $entries = @(Get-AnimationManifest)
+    $details = @()
+    foreach ($entry in $entries) {
+        if ([string]::IsNullOrWhiteSpace($entry.file) -or
+            [string]::IsNullOrWhiteSpace($entry.type) -or
+            [string]::IsNullOrWhiteSpace($entry.logical) -or
+            [string]::IsNullOrWhiteSpace($entry.sha256)) {
+            throw 'Tracked Web Swing animation manifest contains an incomplete entry.'
+        }
+        $relative = [string]$entry.file
+        if ([System.IO.Path]::IsPathRooted($relative) -or $relative.Contains('..')) {
+            throw "Tracked Web Swing animation manifest contains an unsafe path: $relative"
+        }
+        $source = Join-Path $trackedAnimationRoot $relative
+        $runtime = Join-Path $runtimeAnimationRoot $relative
+        $sourceHash = Get-Sha256 $source
+        $runtimeHash = Get-Sha256 $runtime
+        $expectedHash = ([string]$entry.sha256).ToLowerInvariant()
+        $details += [pscustomobject]@{
+            type = [string]$entry.type
+            logical = [string]$entry.logical
+            frames = [int]$entry.frames
+            file = $relative
+            sourcePath = $source
+            runtimePath = $runtime
+            expectedSha256 = $expectedHash
+            sourceSha256 = $sourceHash
+            runtimeSha256 = $runtimeHash
+            sourceValid = [bool]($sourceHash -and $sourceHash -eq $expectedHash)
+            runtimeValid = [bool]($runtimeHash -and $runtimeHash -eq $expectedHash)
+        }
+    }
+    [pscustomobject]@{
+        entries = @($details)
+        sourceValid = (@($details | Where-Object { -not $_.sourceValid }).Count -eq 0)
+        runtimeValid = (@($details | Where-Object { -not $_.runtimeValid }).Count -eq 0)
+    }
+}
+
+function Remove-CanaryRuntimeInclude {
+    if (-not (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)) { return }
+    $currentHash = Get-Sha256 $runtimeCanaryInclude
+    $trackedHash = Get-Sha256 $trackedCanaryInclude
+    if ($currentHash -ne $trackedHash) {
+        throw "Refusing to remove modified runtime canary include: $runtimeCanaryInclude"
+    }
+    Remove-Item -LiteralPath $runtimeCanaryInclude -Force
+}
+
+function Copy-AnimationAssets {
+    $assetState = Get-AnimationAssetState
+    if (-not $assetState.sourceValid) {
+        $bad = @($assetState.entries | Where-Object { -not $_.sourceValid } | ForEach-Object { $_.file }) -join ', '
+        throw "Tracked Web Swing animation assets are missing or corrupt: $bad"
+    }
+    foreach ($entry in $assetState.entries) {
+        $destinationDirectory = Split-Path -Parent $entry.runtimePath
+        if (-not (Test-Path -LiteralPath $destinationDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $destinationDirectory -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $entry.sourcePath -Destination $entry.runtimePath -Force
+    }
+    $installed = Get-AnimationAssetState
+    if (-not $installed.runtimeValid) {
+        $bad = @($installed.entries | Where-Object { -not $_.runtimeValid } | ForEach-Object { $_.file }) -join ', '
+        throw "Runtime Web Swing animation assets failed hash validation: $bad"
+    }
+    return $installed
+}
+
+function Remove-AnimationAssets {
+    $assetState = Get-AnimationAssetState
+    foreach ($entry in $assetState.entries) {
+        if (-not (Test-Path -LiteralPath $entry.runtimePath -PathType Leaf)) { continue }
+        if (-not $entry.runtimeValid) {
+            throw "Refusing to remove modified runtime Web Swing animation: $($entry.runtimePath)"
+        }
+        Remove-Item -LiteralPath $entry.runtimePath -Force
+    }
 }
 
 function Convert-PlayerDumpToNativeSource {
@@ -239,11 +345,31 @@ function Get-Status {
             $playerSourceFormat = 'invalid'
         }
     }
+    $animationState = Get-AnimationAssetState
+    $normalModeInstalled = ((Test-Path -LiteralPath $runtimeOverlay -PathType Leaf) -and
+        (Test-Path -LiteralPath $runtimeInclude -PathType Leaf) -and
+        (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf) -and
+        (Get-Sha256 $runtimeInclude) -eq (Get-Sha256 $trackedInclude) -and
+        (Get-Sha256 $runtimeOverlay) -eq (Get-Sha256 $trackedOverlay) -and
+        (Get-Sha256 $runtimeStateBits) -eq (Get-Sha256 $trackedStateBits) -and
+        $animationState.runtimeValid)
+    $canaryAssetPath = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_CUSTOM_CANARY.anim'
+    $canaryModeInstalled = ((Test-Path -LiteralPath $runtimeOverlay -PathType Leaf) -and
+        (Test-Path -LiteralPath $runtimeInclude -PathType Leaf) -and
+        (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) -and
+        (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf) -and
+        (Get-Sha256 $runtimeInclude) -eq (Get-Sha256 $trackedInclude) -and
+        (Get-Sha256 $runtimeOverlay) -eq (Get-Sha256 $trackedCanaryOverlay) -and
+        (Get-Sha256 $runtimeStateBits) -eq (Get-Sha256 $trackedCanaryStateBits) -and
+        (Get-Sha256 $runtimeCanaryInclude) -eq (Get-Sha256 $trackedCanaryInclude) -and
+        $animationState.runtimeValid -and
+        (Test-Path -LiteralPath $canaryAssetPath -PathType Leaf) -and
+        (Get-Item -LiteralPath $canaryAssetPath).Length -gt 0)
     [pscustomobject]@{
-        installed = ((Test-Path -LiteralPath $runtimeOverlay -PathType Leaf) -and
-            (Test-Path -LiteralPath $runtimeInclude -PathType Leaf) -and
-            (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) -and
-            (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf))
+        installed = if ($IncludeCanary) { $canaryModeInstalled } else { $normalModeInstalled }
+        normalModeInstalled = $normalModeInstalled
+        canaryModeInstalled = $canaryModeInstalled
+        includeCanary = [bool]$IncludeCanary
         legacyPlayerOverride = ($content.Contains($sentinelBegin) -or $content.Contains($sentinelEnd) -or $content.Contains($includeLine) -or $content.Contains($legacyIncludeLine))
         playerPath = $runtimePlayer
         playerPresent = (Test-Path -LiteralPath $runtimePlayer -PathType Leaf)
@@ -257,6 +383,9 @@ function Get-Status {
         includePresent = (Test-Path -LiteralPath $runtimeInclude -PathType Leaf)
         stateBitsPresent = (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf)
         canaryIncludePresent = (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)
+        canaryAssetPath = $canaryAssetPath
+        canaryAssetPresent = (Test-Path -LiteralPath $canaryAssetPath -PathType Leaf)
+        canaryAssetSha256 = Get-Sha256 $canaryAssetPath
         includeSha256 = Get-Sha256 $runtimeInclude
         overlaySha256 = Get-Sha256 $runtimeOverlay
         stateBitsSha256 = Get-Sha256 $runtimeStateBits
@@ -265,7 +394,12 @@ function Get-Status {
         trackedOverlaySha256 = Get-Sha256 $trackedOverlay
         trackedStateBitsSha256 = Get-Sha256 $trackedStateBits
         trackedCanaryIncludeSha256 = Get-Sha256 $trackedCanaryInclude
-    } | ConvertTo-Json -Depth 3
+        trackedCanaryOverlaySha256 = Get-Sha256 $trackedCanaryOverlay
+        trackedCanaryStateBitsSha256 = Get-Sha256 $trackedCanaryStateBits
+        animationAssets = $animationState.entries
+        animationAssetsSourceValid = $animationState.sourceValid
+        animationAssetsRuntimeValid = $animationState.runtimeValid
+    } | ConvertTo-Json -Depth 5
 }
 
 if ($Action -eq 'Status') {
@@ -276,8 +410,29 @@ if ($Action -eq 'Status') {
 if (-not (Test-Path -LiteralPath $trackedOverlay -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedInclude -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedStateBits -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $trackedCanaryOverlay -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $trackedCanaryStateBits -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedCanaryInclude -PathType Leaf)) {
     throw 'Tracked Web Swing animation data is incomplete.'
+}
+
+if ($IncludeCanary) {
+    $canaryRuntimeAsset = Join-Path $runtimeAnimationRoot 'male\COHSOURCEDEV_CUSTOM_CANARY.anim'
+    if ($CanaryAnimationPath) {
+        $resolvedCanary = (Resolve-Path -LiteralPath $CanaryAnimationPath -ErrorAction Stop).Path
+        if (-not (Test-Path -LiteralPath $resolvedCanary -PathType Leaf)) {
+            throw "Canary animation asset does not exist: $resolvedCanary"
+        }
+        $canaryDirectory = Split-Path -Parent $canaryRuntimeAsset
+        if (-not (Test-Path -LiteralPath $canaryDirectory -PathType Container)) {
+            New-Item -ItemType Directory -Path $canaryDirectory -Force | Out-Null
+        }
+        Copy-Item -LiteralPath $resolvedCanary -Destination $canaryRuntimeAsset -Force
+    }
+    if (-not (Test-Path -LiteralPath $canaryRuntimeAsset -PathType Leaf) -or
+        (Get-Item -LiteralPath $canaryRuntimeAsset).Length -le 0) {
+        throw "Explicit canary mode requires an audition asset at $canaryRuntimeAsset; supply -CanaryAnimationPath."
+    }
 }
 
 if (-not (Test-Path -LiteralPath $runtimeRoot -PathType Container)) {
@@ -291,8 +446,15 @@ if ($Action -eq 'Install') {
     Remove-LegacyPlayerOverride
     Copy-Item -LiteralPath $trackedOverlay -Destination $runtimeOverlay -Force
     Copy-Item -LiteralPath $trackedInclude -Destination $runtimeInclude -Force
-    Copy-Item -LiteralPath $trackedCanaryInclude -Destination $runtimeCanaryInclude -Force
     Copy-Item -LiteralPath $trackedStateBits -Destination $runtimeStateBits -Force
+    if ($IncludeCanary) {
+        Copy-Item -LiteralPath $trackedCanaryOverlay -Destination $runtimeOverlay -Force
+        Copy-Item -LiteralPath $trackedCanaryStateBits -Destination $runtimeStateBits -Force
+        Copy-Item -LiteralPath $trackedCanaryInclude -Destination $runtimeCanaryInclude -Force
+    } else {
+        Remove-CanaryRuntimeInclude
+    }
+    Copy-AnimationAssets | Out-Null
     Get-Status
     exit 0
 }
@@ -305,10 +467,14 @@ if ($Action -eq 'Remove') {
     if ($currentIncludeHash -and $currentIncludeHash -ne (Get-Sha256 $trackedInclude)) {
         throw "Refusing to remove modified runtime include: $runtimeInclude"
     }
-    if ($currentStateBitsHash -and $currentStateBitsHash -ne (Get-Sha256 $trackedStateBits)) {
+    if ($currentStateBitsHash -and
+        $currentStateBitsHash -ne (Get-Sha256 $trackedStateBits) -and
+        $currentStateBitsHash -ne (Get-Sha256 $trackedCanaryStateBits)) {
         throw "Refusing to remove modified runtime state bits: $runtimeStateBits"
     }
-    if ($currentOverlayHash -and $currentOverlayHash -ne (Get-Sha256 $trackedOverlay)) {
+    if ($currentOverlayHash -and
+        $currentOverlayHash -ne (Get-Sha256 $trackedOverlay) -and
+        $currentOverlayHash -ne (Get-Sha256 $trackedCanaryOverlay)) {
         throw "Refusing to remove modified runtime overlay: $runtimeOverlay"
     }
     if ($currentCanaryIncludeHash -and $currentCanaryIncludeHash -ne (Get-Sha256 $trackedCanaryInclude)) {
@@ -316,6 +482,7 @@ if ($Action -eq 'Remove') {
     }
 
     Remove-LegacyPlayerOverride
+    Remove-AnimationAssets
     foreach ($path in @($runtimeOverlay, $runtimeInclude, $runtimeCanaryInclude, $runtimeStateBits)) {
         if (Test-Path -LiteralPath $path -PathType Leaf) {
             Remove-Item -LiteralPath $path -Force

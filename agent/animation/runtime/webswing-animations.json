@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "generator": "agent/animation/create_webswing_animation.py -> blender_export_animx.py -> GetAnimation2 -compile-animx",
+  "animations": [
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "male/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 18766,
+      "sha256": "6d4f0ab66e592b7e9e95cc78f088043a6adb2f68eb9100b729f1f25ddfad7ec8"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "male/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 15568,
+      "sha256": "8ff76b8f1aa8e63cc21fcaddf1c557fadd03f9a56142b13116aece7180f558fa"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "male/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 17700,
+      "sha256": "299b7b0e4b1c6d8f61f0e41577158aadbb572ceb879c04671729f7c78a03e838"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "fem/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 16433,
+      "sha256": "e3cf68784c2e5f553bd600b69fb1865f0b302b67b6e5f8c8b56c0557d26cca15"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "fem/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 13817,
+      "sha256": "6849cc4299df8fd69c50d4bcd18e33887b42d056378ecaa351c4c94ceb0f11f7"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "fem/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 15685,
+      "sha256": "6763d8f5e29de8d8a3fdcd7be026f9c6f10bdbec5fb47fd5140bb292dda84624"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "huge/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 17066,
+      "sha256": "cb0957ffa0eac06af0e82a379a442350d3e555490ac86f9efb71d9bc29b22884"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "huge/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 14156,
+      "sha256": "e84ee5d0b9154b789b06b3a7f9831050ebe8803c61f73ae7f178266b66100e18"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "huge/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 16096,
+      "sha256": "25ee920015e5d9844dd50b40da250ebfd54e4532f00c6627474fcd9a28b09bcb"
+    }
+  ]
+}

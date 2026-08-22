@@ -19,6 +19,7 @@ def parse_args():
     parser.add_argument("--rig-json", required=True, type=Path)
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--armature-name", default="CoH_Male_AnimationRig")
+    parser.add_argument("--source-name", default=None)
     parser.add_argument("--start-frame", type=int, default=1)
     parser.add_argument("--end-frame", type=int, default=36)
     return parser.parse_args(argv)
@@ -115,12 +116,13 @@ def write_animx(args, scene, armature, report, bones, source_rest_world):
     end_frame = args.end_frame
     total_frames = end_frame - start_frame + 1
     names = [bone["name"] for bone in sorted(bones.values(), key=lambda item: item["id"])]
+    source_name = args.source_name or armature.get("coh_source_animation") or report["animation"]
     lines = [
         "# Exported from evaluated Blender pose-bone keyframes",
         "# Blender uses the ANIMX/3ds-Max source coordinate frame for this proof.",
         "",
         "Version 200",
-        "SourceName male/cohsourcedev_blender_canary",
+        f"SourceName {source_name}",
         f"TotalFrames {total_frames}",
         "FirstFrame 0",
         "",
@@ -164,7 +166,7 @@ def write_animx(args, scene, armature, report, bones, source_rest_world):
     print(
         "BLENDER_ANIMX_EXPORTED "
         f"output={args.output} frames={total_frames} bones={len(names)} "
-        f"fcurves={fcurve_count} source={report['animation']}"
+        f"fcurves={fcurve_count} source={source_name}"
     )
 
 

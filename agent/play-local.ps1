@@ -12,7 +12,8 @@ param(
     [switch]$FullShard,
     [switch]$NoShardRestart,
     [switch]$RestartFastShard,
-    [switch]$WebSwingDev
+    [switch]$WebSwingDev,
+    [switch]$WebSwingCanary
 )
 
 $ErrorActionPreference = 'Stop'
@@ -118,36 +119,48 @@ function Stop-LocalWorkflowClients {
 }
 
 function Ensure-WebSwingAnimationRuntime {
-    $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+    $statusArguments = @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+    if ($WebSwingCanary) { $statusArguments += '-IncludeCanary' }
+    $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments $statusArguments
+    $expectedOverlayHash = if ($WebSwingCanary) { $status.trackedCanaryOverlaySha256 } else { $status.trackedOverlaySha256 }
+    $expectedStateBitsHash = if ($WebSwingCanary) { $status.trackedCanaryStateBitsSha256 } else { $status.trackedStateBitsSha256 }
     $overlaySynchronized = $status.overlayPresent -and
-        ($status.overlaySha256 -eq $status.trackedOverlaySha256)
+        ($status.overlaySha256 -eq $expectedOverlayHash)
     $includeSynchronized = $status.includePresent -and
         ($status.includeSha256 -eq $status.trackedIncludeSha256)
     $stateBitsSynchronized = $status.stateBitsPresent -and
-        ($status.stateBitsSha256 -eq $status.trackedStateBitsSha256)
-    $canaryIncludeSynchronized = $status.canaryIncludePresent -and
-        ($status.canaryIncludeSha256 -eq $status.trackedCanaryIncludeSha256)
+        ($status.stateBitsSha256 -eq $expectedStateBitsHash)
+    $canaryIncludeSynchronized = (-not $WebSwingCanary) -or ($status.canaryIncludePresent -and
+        ($status.canaryIncludeSha256 -eq $status.trackedCanaryIncludeSha256) -and
+        $status.canaryAssetPresent)
 
     if (-not $status.installed -or -not $overlaySynchronized -or
         -not $includeSynchronized -or -not $stateBitsSynchronized -or
         -not $canaryIncludeSynchronized) {
         Write-Host 'Synchronizing tracked Web Swing animation data into loose runtime data...'
-        $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
+        $installArguments = @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
+        if ($WebSwingCanary) { $installArguments += '-IncludeCanary' }
+        $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments $installArguments
     } else {
         Write-Host 'Web Swing animation runtime data is already synchronized.'
     }
 
     if (-not $status.installed -or
-        $status.overlaySha256 -ne $status.trackedOverlaySha256 -or
+        $status.overlaySha256 -ne $expectedOverlayHash -or
         $status.includeSha256 -ne $status.trackedIncludeSha256 -or
-        $status.stateBitsSha256 -ne $status.trackedStateBitsSha256 -or
-        $status.canaryIncludeSha256 -ne $status.trackedCanaryIncludeSha256) {
+        $status.stateBitsSha256 -ne $expectedStateBitsHash -or
+        (-not $status.animationAssetsRuntimeValid) -or
+        ($WebSwingCanary -and $status.canaryIncludeSha256 -ne $status.trackedCanaryIncludeSha256)) {
         throw 'Web Swing animation runtime data did not reach tracked hash parity.'
     }
     return $status
 }
 
 try {
+    if ($WebSwingCanary -and -not $WebSwingDev) {
+        throw '-WebSwingCanary requires -WebSwingDev.'
+    }
+
     if (-not (Test-Path -LiteralPath $ouroboros)) {
         throw "Ouroboros.exe was not found at $ouroboros. Build the client first."
     }
@@ -165,15 +178,21 @@ try {
 
     $clientWorkingDirectory = $binDir
     if ($WebSwingDev) {
-        $runtimeStatus = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+        $runtimeStatusArguments = @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
+        if ($WebSwingCanary) { $runtimeStatusArguments += '-IncludeCanary' }
+        $runtimeStatus = Invoke-JsonScript -Path $webSwingInstaller -Arguments $runtimeStatusArguments
+        $expectedOverlayHash = if ($WebSwingCanary) { $runtimeStatus.trackedCanaryOverlaySha256 } else { $runtimeStatus.trackedOverlaySha256 }
+        $expectedStateBitsHash = if ($WebSwingCanary) { $runtimeStatus.trackedCanaryStateBitsSha256 } else { $runtimeStatus.trackedStateBitsSha256 }
         $runtimeSynchronized = $runtimeStatus.installed -and
             $runtimeStatus.overlayPresent -and
             $runtimeStatus.includePresent -and $runtimeStatus.stateBitsPresent -and
-            $runtimeStatus.canaryIncludePresent -and
-            $runtimeStatus.overlaySha256 -eq $runtimeStatus.trackedOverlaySha256 -and
+            $runtimeStatus.overlaySha256 -eq $expectedOverlayHash -and
             $runtimeStatus.includeSha256 -eq $runtimeStatus.trackedIncludeSha256 -and
-            $runtimeStatus.stateBitsSha256 -eq $runtimeStatus.trackedStateBitsSha256 -and
-            $runtimeStatus.canaryIncludeSha256 -eq $runtimeStatus.trackedCanaryIncludeSha256
+            $runtimeStatus.stateBitsSha256 -eq $expectedStateBitsHash -and
+            $runtimeStatus.animationAssetsRuntimeValid -and
+            ((-not $WebSwingCanary) -or ($runtimeStatus.canaryIncludePresent -and
+                $runtimeStatus.canaryIncludeSha256 -eq $runtimeStatus.trackedCanaryIncludeSha256 -and
+                $runtimeStatus.canaryAssetPresent))
         if (-not $runtimeSynchronized) {
             $compatibleClients = @($clientInventory.Managed | Where-Object { $_.WebSwingDev })
             if ($compatibleClients.Count -gt 0) {
@@ -182,7 +201,8 @@ try {
         }
         Ensure-WebSwingAnimationRuntime
         Write-Host "Web Swing development client: $ouroboros"
-        Write-Host 'Web Swing development mode: compiled player plus private overlay and animation canary'
+        $modeDescription = if ($WebSwingCanary) { 'compiled player plus explicit animation canary audition' } else { 'compiled player plus five-state custom Web Swing overlay' }
+        Write-Host "Web Swing development mode: $modeDescription"
     }
 
     $requestedProfile = if ($Full -or $FullShard) { 'Full' } else { $ShardProfile }

@@ -1,3 +1,4 @@
 Sequencer
 include sequencers/cohsourcedev_webswing.inc
+include sequencers/cohsourcedev_canary.inc
 SeqEnd
