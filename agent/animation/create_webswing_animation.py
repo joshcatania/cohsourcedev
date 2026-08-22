@@ -1,10 +1,16 @@
 """Author purpose-built Web Swing phase animations in Blender.
 
 The script reconstructs one of the shipped CoH player rigs from a
-GetAnimation2 runtime report, creates a real Blender armature, inserts
-pose-bone quaternion keyframes, and saves a normal .blend source artifact.
-The existing evaluated-pose ANIMX exporter and GetAnimation2 compiler remain
-the only path from this authoring source to a runtime .anim file.
+GetAnimation2 runtime report, creates a real Blender armature, authors
+semantic pose-space targets, and saves a normal .blend source artifact.  The
+existing evaluated-pose ANIMX exporter and GetAnimation2 compiler remain the
+only path from this authoring source to a runtime .anim file.
+
+``--authoring v1`` retains the original arbitrary local-axis FK authoring as a
+negative control.  The default ``v2`` path is intentionally narrow: it
+currently authors only Male STRETCH through a geometric two-bone reach solve.
+It does not use Blender IK on the reconstructed export bones; their edit tails
+are synthetic and are not anatomical segment lengths.
 """
 
 from __future__ import annotations
@@ -16,7 +22,7 @@ import sys
 from pathlib import Path
 
 import bpy
-from mathutils import Quaternion, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 
 AUTHORED_BONES = [
@@ -60,6 +66,14 @@ def parse_args():
     parser.add_argument("--output", required=True, type=Path)
     parser.add_argument("--action", required=True, choices=sorted(ACTION_SPECS))
     parser.add_argument("--rig-type", required=True, choices=["male", "fem", "huge"])
+    parser.add_argument(
+        "--authoring", choices=["v1", "v2"], default="v2",
+        help="authoring layer to use; v1 is the preserved arbitrary-FK negative control",
+    )
+    parser.add_argument(
+        "--candidate", choices=["A", "B", "C"], default="B",
+        help="bounded V2 reach candidate used by the visual iteration gate",
+    )
     return parser.parse_args(argv)
 
 
@@ -181,6 +195,272 @@ def create_armature(report, bones, by_id, rest_world, rig_type, logical_name):
     return armature_object
 
 
+def clamp(value, lower, upper):
+    return max(lower, min(upper, value))
+
+
+def matrix_from_axes(x_axis, y_axis, z_axis):
+    """Build a column-basis matrix from three orthonormal pose-space axes."""
+    matrix = Matrix.Identity(3)
+    matrix.col[0] = x_axis
+    matrix.col[1] = y_axis
+    matrix.col[2] = z_axis
+    return matrix
+
+
+def stable_basis(direction, up_reference):
+    """Return a stable right-handed basis whose Y axis follows direction."""
+    y_axis = direction.normalized()
+    z_axis = up_reference - y_axis * up_reference.dot(y_axis)
+    if z_axis.length <= 1.0e-6:
+        fallback = Vector((0.0, 1.0, 0.0)) if abs(y_axis.y) < 0.9 else Vector((1.0, 0.0, 0.0))
+        z_axis = fallback - y_axis * fallback.dot(y_axis)
+    z_axis.normalize()
+    x_axis = y_axis.cross(z_axis)
+    if x_axis.length <= 1.0e-6:
+        raise ValueError("Could not construct a stable pose-space basis")
+    x_axis.normalize()
+    z_axis = x_axis.cross(y_axis)
+    z_axis.normalize()
+    return matrix_from_axes(x_axis, y_axis, z_axis)
+
+
+def rotation_between(source, target, max_angle=None):
+    """Return a shortest-arc quaternion, optionally bounded in radians."""
+    source = source.normalized()
+    target = target.normalized()
+    dot = clamp(source.dot(target), -1.0, 1.0)
+    if dot > 1.0 - 1.0e-7:
+        return Quaternion((1.0, 0.0, 0.0, 0.0))
+    if dot < -1.0 + 1.0e-7:
+        axis = source.cross(Vector((1.0, 0.0, 0.0)))
+        if axis.length <= 1.0e-6:
+            axis = source.cross(Vector((0.0, 1.0, 0.0)))
+        axis.normalize()
+        angle = math.pi
+    else:
+        axis = source.cross(target)
+        axis.normalize()
+        angle = math.acos(dot)
+    if max_angle is not None:
+        angle = min(angle, max_angle)
+    return Quaternion(axis, angle)
+
+
+def pose_matrix_for_segment(rest_matrix, rest_segment, target_head, target_segment, up_reference):
+    """Map a real rest-pose joint segment onto a target pose-space segment.
+
+    This deliberately uses the reconstructed CoH child-origin vector rather
+    than Blender's synthetic edit-bone tail.  The returned matrix is an
+    object/pose-space matrix suitable for PoseBone.matrix.
+    """
+    rest_direction = rest_segment.normalized()
+    rest_up = rest_matrix.to_3x3() @ Vector((0.0, 0.0, 1.0))
+    if abs(rest_up.normalized().dot(rest_direction)) > 0.98:
+        rest_up = rest_matrix.to_3x3() @ Vector((1.0, 0.0, 0.0))
+    rest_basis = stable_basis(rest_direction, rest_up)
+    target_basis = stable_basis(target_segment, up_reference)
+    delta_rotation = target_basis @ rest_basis.inverted()
+    target_rotation = delta_rotation @ rest_matrix.to_3x3()
+    result = target_rotation.to_4x4()
+    result.translation = target_head
+    return result
+
+
+def rest_origin(rest_world, name):
+    return rest_world[name][1].copy()
+
+
+def pose_origin(armature_object, name):
+    return armature_object.pose.bones[name].matrix.translation.copy()
+
+
+def set_pose_matrix(armature_object, name, matrix):
+    pose_bone = armature_object.pose.bones[name]
+    pose_bone.rotation_mode = "QUATERNION"
+    pose_bone.matrix = matrix
+    return pose_bone
+
+
+def rotate_current_pose_bone(armature_object, name, axis, angle):
+    """Apply a bounded semantic joint rotation around its current origin."""
+    pose_bone = armature_object.pose.bones[name]
+    current = pose_bone.matrix.copy()
+    pivot = current.translation.copy()
+    delta = Matrix.Translation(pivot) @ Matrix.Rotation(angle, 4, axis) @ Matrix.Translation(-pivot)
+    return set_pose_matrix(armature_object, name, delta @ current)
+
+
+def clamp_target_to_reach(shoulder, target, upper_length, lower_length, fallback_direction):
+    """Clamp an unreachable hand target without changing either limb length."""
+    vector = target - shoulder
+    distance = vector.length
+    if distance <= 1.0e-6:
+        direction = fallback_direction.normalized()
+        distance = 0.0
+    else:
+        direction = vector.normalized()
+    minimum = abs(upper_length - lower_length) + 1.0e-4
+    maximum = upper_length + lower_length - 1.0e-4
+    clamped_distance = clamp(distance, minimum, maximum)
+    return shoulder + direction * clamped_distance, distance, clamped_distance
+
+
+def solve_two_bone_reach(shoulder, target, upper_length, lower_length, elbow_pole, fallback_pole):
+    """Solve a clamped two-bone chain with a stable pose-space pole plane."""
+    direction = target - shoulder
+    distance = direction.length
+    if distance <= 1.0e-6:
+        direction = Vector((1.0, 0.0, 0.0))
+        distance = 1.0
+    direction.normalize()
+
+    pole_vector = elbow_pole - shoulder
+    pole_projection = pole_vector - direction * pole_vector.dot(direction)
+    if pole_projection.length <= 1.0e-6:
+        pole_vector = fallback_pole - shoulder
+        pole_projection = pole_vector - direction * pole_vector.dot(direction)
+    if pole_projection.length <= 1.0e-6:
+        for fallback_axis in (
+            Vector((0.0, 0.0, 1.0)),
+            Vector((1.0, 0.0, 0.0)),
+            Vector((0.0, 1.0, 0.0)),
+        ):
+            candidate_projection = fallback_axis - direction * fallback_axis.dot(direction)
+            if candidate_projection.length > 1.0e-6:
+                pole_projection = candidate_projection
+                break
+    if pole_projection.length <= 1.0e-6:
+        raise ValueError("Could not construct a stable elbow pole plane")
+    pole_direction = pole_projection.normalized()
+
+    along = (upper_length * upper_length + distance * distance - lower_length * lower_length) / (2.0 * distance)
+    along = clamp(along, -upper_length, upper_length)
+    bend_height = math.sqrt(max(0.0, upper_length * upper_length - along * along))
+    elbow = shoulder + direction * along + pole_direction * bend_height
+    return elbow, pole_direction, distance
+
+
+def arm_names(side):
+    side = side.upper()
+    if side not in ("R", "L"):
+        raise ValueError(f"Unsupported arm side: {side}")
+    return {
+        "collar": f"COL_{side}",
+        "upper": f"UARM{side}",
+        "lower": f"LARM{side}",
+        "hand": f"HAND{side}",
+        "hand_marker": f"WEP{side}",
+    }
+
+
+def pose_reach_arm(
+    armature_object,
+    rest_world,
+    side,
+    hand_target,
+    elbow_pole,
+    shoulder_weight=0.0,
+    hand_orientation=None,
+):
+    """Place one arm from semantic targets rather than local Euler angles.
+
+    ``hand_target`` and ``elbow_pole`` are object/pose-space points.  The
+    shoulder weight is deliberately bounded and only affects a small
+    clavicle-opening adjustment before the two-bone solve.  ``hand_orientation``
+    is an optional ``(forward, up)`` pair in pose space for the palm/wrist.
+    """
+    names = arm_names(side)
+    upper = names["upper"]
+    lower = names["lower"]
+    hand = names["hand"]
+    collar = names["collar"]
+    marker = names["hand_marker"]
+    shoulder_weight = clamp(float(shoulder_weight), 0.0, 1.0)
+
+    # COL_R/COL_L is allowed to contribute only a bounded shoulder opening.
+    # It is driven by the target direction, never by arbitrary collar-axis
+    # numbers and never used to hide a bad upper/lower-arm solve.
+    collar_bone = armature_object.pose.bones[collar]
+    upper_bone = armature_object.pose.bones[upper]
+    collar_head = collar_bone.matrix.translation.copy()
+    current_offset = upper_bone.matrix.translation - collar_head
+    target_direction = hand_target - collar_head
+    if shoulder_weight > 1.0e-6 and target_direction.length > 1.0e-6:
+        current_direction = current_offset.normalized()
+        desired_direction = current_direction.lerp(target_direction.normalized(), 0.18 * shoulder_weight)
+        desired_direction += Vector((0.0, 0.0, 0.08 * shoulder_weight))
+        if desired_direction.length > 1.0e-6:
+            delta = rotation_between(current_direction, desired_direction, math.radians(10.0) * shoulder_weight)
+            pivot = collar_head
+            collar_matrix = collar_bone.matrix.copy()
+            collar_delta = Matrix.Translation(pivot) @ delta.to_matrix().to_4x4() @ Matrix.Translation(-pivot)
+            set_pose_matrix(armature_object, collar, collar_delta @ collar_matrix)
+            bpy.context.view_layer.update()
+
+    shoulder = pose_origin(armature_object, upper)
+    upper_length = (rest_origin(rest_world, lower) - rest_origin(rest_world, upper)).length
+    lower_length = (rest_origin(rest_world, hand) - rest_origin(rest_world, lower)).length
+    fallback_direction = rest_origin(rest_world, lower) - rest_origin(rest_world, upper)
+    target, requested_distance, clamped_distance = clamp_target_to_reach(
+        shoulder, hand_target, upper_length, lower_length, fallback_direction,
+    )
+    fallback_pole = shoulder + Vector((0.0, 0.0, 1.0))
+    elbow, pole_direction, solved_distance = solve_two_bone_reach(
+        shoulder, target, upper_length, lower_length, elbow_pole, fallback_pole,
+    )
+
+    rest_upper_matrix = armature_object.data.bones[upper].matrix_local.copy()
+    rest_lower_matrix = armature_object.data.bones[lower].matrix_local.copy()
+    rest_hand_matrix = armature_object.data.bones[hand].matrix_local.copy()
+    rest_upper_segment = rest_origin(rest_world, lower) - rest_origin(rest_world, upper)
+    rest_lower_segment = rest_origin(rest_world, hand) - rest_origin(rest_world, lower)
+    set_pose_matrix(
+        armature_object,
+        upper,
+        pose_matrix_for_segment(rest_upper_matrix, rest_upper_segment, shoulder, elbow - shoulder, Vector((0.0, 0.0, 1.0))),
+    )
+    bpy.context.view_layer.update()
+    set_pose_matrix(
+        armature_object,
+        lower,
+        pose_matrix_for_segment(rest_lower_matrix, rest_lower_segment, elbow, target - elbow, Vector((0.0, 0.0, 1.0))),
+    )
+    bpy.context.view_layer.update()
+
+    if hand_orientation is None:
+        hand_forward = (target - elbow).normalized()
+        hand_up = Vector((0.0, 0.0, 1.0))
+    else:
+        hand_forward, hand_up = hand_orientation
+        hand_forward = hand_forward.normalized()
+        hand_up = hand_up.normalized()
+    if marker in rest_world:
+        rest_hand_segment = rest_origin(rest_world, marker) - rest_origin(rest_world, hand)
+    else:
+        rest_hand_segment = rest_lower_segment
+    set_pose_matrix(
+        armature_object,
+        hand,
+        pose_matrix_for_segment(rest_hand_matrix, rest_hand_segment, target, hand_forward, hand_up),
+    )
+    bpy.context.view_layer.update()
+
+    return {
+        "side": side.upper(),
+        "shoulder": tuple(shoulder),
+        "elbow": tuple(elbow),
+        "hand": tuple(target),
+        "pole": tuple(pole_direction),
+        "upperLength": upper_length,
+        "lowerLength": lower_length,
+        "requestedDistance": requested_distance,
+        "clampedDistance": clamped_distance,
+        "solvedDistance": solved_distance,
+        "shoulderWeight": shoulder_weight,
+    }
+
+
 def delta_quaternion(*angles):
     """Compose local source-frame axis-angle deltas in authoring order."""
     result = Quaternion((1.0, 0.0, 0.0, 0.0))
@@ -194,8 +474,8 @@ def add_profile(base, amount, profile):
     return base + amount * profile
 
 
-def phase_pose(action, profile):
-    """Return meaningful local rotations for the shared semantic bones.
+def phase_pose_v1(action, profile):
+    """Return the preserved V1 arbitrary local rotations.
 
     The source frame is the ANIMX/3ds-Max frame used by Blender here: source Z
     is game up, source Y is the inverse of game forward, and source X is the
@@ -282,6 +562,198 @@ def phase_pose(action, profile):
     return pose
 
 
+V2_CANDIDATES = {
+    # Candidate A intentionally makes the elbow pole compete with the head.
+    # It is retained as a bounded negative iteration, not as a final pose.
+    "A": {
+        "right_hand_offset": Vector((-1.42, -0.18, 1.52)),
+        "right_pole_offset": Vector((-0.18, 0.22, 0.90)),
+        "left_hand_offset": Vector((1.42, 0.40, -0.10)),
+        "left_pole_offset": Vector((0.10, -0.05, 0.85)),
+        "right_hand_forward": Vector((-0.02, -0.08, 1.0)),
+        "left_hand_forward": Vector((0.0, -0.30, -1.0)),
+    },
+    # Candidate B is the primary solve: a slight down/ahead pole keeps the
+    # right elbow below the reach line and separates it from the head.
+    "B": {
+        "right_hand_offset": Vector((-1.50, -0.48, 1.35)),
+        "right_pole_offset": Vector((-0.10, -0.65, -0.90)),
+        "left_hand_offset": Vector((1.45, 0.45, -0.12)),
+        "left_pole_offset": Vector((0.10, -0.20, 0.82)),
+        "right_hand_forward": Vector((-0.02, -0.10, 1.0)),
+        "left_hand_forward": Vector((0.0, -0.30, -1.0)),
+    },
+    # Candidate C keeps the same plane but lowers the hand slightly for a
+    # clearer silhouette when the side camera is used.
+    "C": {
+        "right_hand_offset": Vector((-1.45, -0.58, 1.25)),
+        "right_pole_offset": Vector((-0.12, -0.82, -0.62)),
+        "left_hand_offset": Vector((1.40, 0.50, -0.16)),
+        "left_pole_offset": Vector((0.12, -0.22, 0.78)),
+        "right_hand_forward": Vector((-0.02, -0.12, 1.0)),
+        "left_hand_forward": Vector((0.0, -0.28, -1.0)),
+    },
+}
+
+
+def reset_authored_pose(armature_object):
+    """Reset keyed bones to the reconstructed rest pose before each key."""
+    for bone_name in AUTHORED_BONES:
+        set_pose_matrix(
+            armature_object,
+            bone_name,
+            armature_object.data.bones[bone_name].matrix_local.copy(),
+        )
+    bpy.context.view_layer.update()
+
+
+def keyframe_current_pose(armature_object, frame):
+    """Key the local pose channels produced by the evaluated pose matrices."""
+    for bone_name in AUTHORED_BONES:
+        pose_bone = armature_object.pose.bones[bone_name]
+        pose_bone.rotation_mode = "QUATERNION"
+        # matrix assignment can produce non-zero local locations for a solved
+        # child.  Key all transform channels; rotation-only keying would lose
+        # the geometric hand/elbow placement on export.
+        pose_bone.keyframe_insert(data_path="location", frame=frame, group=bone_name)
+        pose_bone.keyframe_insert(data_path="rotation_quaternion", frame=frame, group=bone_name)
+        pose_bone.keyframe_insert(data_path="scale", frame=frame, group=bone_name)
+
+
+def validate_reach_pose(armature_object, metrics):
+    """Reject a pose if evaluated joint origins lose the solved geometry."""
+    names = arm_names(metrics["side"])
+    upper_actual = (pose_origin(armature_object, names["lower"]) -
+                    pose_origin(armature_object, names["upper"])).length
+    lower_actual = (pose_origin(armature_object, names["hand"]) -
+                    pose_origin(armature_object, names["lower"])).length
+    elbow_error = (pose_origin(armature_object, names["lower"]) -
+                   Vector(metrics["elbow"])).length
+    hand_error = (pose_origin(armature_object, names["hand"]) -
+                  Vector(metrics["hand"])).length
+    tolerance = 2.0e-3
+    if abs(upper_actual - metrics["upperLength"]) > tolerance:
+        raise ValueError(f"{metrics['side']} upper-arm origin length drifted during solve")
+    if abs(lower_actual - metrics["lowerLength"]) > tolerance:
+        raise ValueError(f"{metrics['side']} forearm origin length drifted during solve")
+    if elbow_error > tolerance or hand_error > tolerance:
+        raise ValueError(f"{metrics['side']} evaluated joint origins missed the reach target")
+
+
+def semantic_stretch_targets(armature_object, candidate, profile):
+    spec = V2_CANDIDATES[candidate]
+    chest = pose_origin(armature_object, "CHEST")
+    right_target = chest + spec["right_hand_offset"]
+    right_target += Vector((-0.05, 0.06, 0.04)) * profile
+    left_target = chest + spec["left_hand_offset"]
+    left_target += Vector((0.04, -0.05, -0.03)) * profile
+    right_pole = chest + spec["right_pole_offset"]
+    left_pole = chest + spec["left_pole_offset"]
+    return {
+        "rightTarget": right_target,
+        "rightPole": right_pole,
+        "leftTarget": left_target,
+        "leftPole": left_pole,
+        "rightHandOrientation": (spec["right_hand_forward"], Vector((0.0, -1.0, 0.0))),
+        "leftHandOrientation": (spec["left_hand_forward"], Vector((0.0, 1.0, 0.0))),
+    }
+
+
+def author_keyframes_v2(armature_object, rest_world, action_name, candidate):
+    """Author V2 semantic poses; currently the narrow Male STRETCH gate."""
+    if action_name != "stretch":
+        raise ValueError("V2 authoring is intentionally gated to STRETCH until Male STRETCH passes visual review")
+    if armature_object.get("coh_rig_type") != "male":
+        raise ValueError("V2 authoring is intentionally gated to Male STRETCH; do not generate Fem/Huge yet")
+    if candidate not in V2_CANDIDATES:
+        raise ValueError(f"Unknown V2 candidate: {candidate}")
+
+    spec = ACTION_SPECS[action_name]
+    scene = bpy.context.scene
+    scene.frame_start = 1
+    scene.frame_end = spec["frames"]
+    scene.render.fps = 30
+    action = bpy.data.actions.new(
+        f"{spec['logical']}_{armature_object['coh_rig_type'].upper()}_V2_BLENDER_ACTION",
+    )
+    armature_object.animation_data_create()
+    armature_object.animation_data.action = action
+
+    metrics = []
+    for frame, profile in zip(spec["keyframes"], spec["profiles"]):
+        scene.frame_set(frame)
+        reset_authored_pose(armature_object)
+
+        # A small whole-body lean preserves the existing hanging/trailing read
+        # without adding a runtime orientation system or root translation.
+        rotate_current_pose_bone(
+            armature_object,
+            "HIPS",
+            Vector((1.0, 0.0, 0.0)),
+            math.radians(8.0 + 1.5 * profile),
+        )
+        bpy.context.view_layer.update()
+        targets = semantic_stretch_targets(armature_object, candidate, profile)
+
+        # The same semantic target->chain principle is used for the free arm;
+        # it is not a second set of arbitrary local-axis commands.
+        right_metrics = pose_reach_arm(
+            armature_object,
+            rest_world,
+            "R",
+            targets["rightTarget"],
+            targets["rightPole"],
+            shoulder_weight=0.35,
+            hand_orientation=targets["rightHandOrientation"],
+        )
+        left_metrics = pose_reach_arm(
+            armature_object,
+            rest_world,
+            "L",
+            targets["leftTarget"],
+            targets["leftPole"],
+            shoulder_weight=0.20,
+            hand_orientation=targets["leftHandOrientation"],
+        )
+        validate_reach_pose(armature_object, right_metrics)
+        validate_reach_pose(armature_object, left_metrics)
+        keyframe_current_pose(armature_object, frame)
+        metrics.append({"frame": frame, "profile": profile, "right": right_metrics, "left": left_metrics})
+
+    fcurves = list(getattr(action, "fcurves", []))
+    if not fcurves and hasattr(action, "layers"):
+        for layer in action.layers:
+            for strip in layer.strips:
+                for channelbag in strip.channelbags:
+                    fcurves.extend(channelbag.fcurves)
+    for fcurve in fcurves:
+        for keyframe in fcurve.keyframe_points:
+            keyframe.interpolation = "BEZIER"
+
+    scene.frame_set(1)
+    bpy.context.view_layer.update()
+    fcurve_count, keyframe_point_count = action_metrics(action)
+    right_rest_length = (rest_origin(rest_world, "LARMR") - rest_origin(rest_world, "UARMR")).length
+    right_forearm_length = (rest_origin(rest_world, "HANDR") - rest_origin(rest_world, "LARMR")).length
+    left_rest_length = (rest_origin(rest_world, "LARML") - rest_origin(rest_world, "UARML")).length
+    left_forearm_length = (rest_origin(rest_world, "HANDL") - rest_origin(rest_world, "LARML")).length
+    armature_object["coh_authoring_version"] = "V2_POSE_SPACE_GEOMETRIC_TWO_BONE"
+    armature_object["coh_v2_candidate"] = candidate
+    armature_object["coh_v2_rest_joint_source"] = "UARM/LARM/HAND origin distances; Blender edit tails intentionally ignored"
+    armature_object["coh_v2_right_upper_arm_length"] = right_rest_length
+    armature_object["coh_v2_right_forearm_length"] = right_forearm_length
+    armature_object["coh_v2_left_upper_arm_length"] = left_rest_length
+    armature_object["coh_v2_left_forearm_length"] = left_forearm_length
+    armature_object["coh_v2_metrics"] = json.dumps(metrics, sort_keys=True)
+    armature_object["coh_logical_animation"] = spec["logical"]
+    armature_object["coh_clip_frames"] = spec["frames"]
+    armature_object["coh_keyframe_frames"] = ",".join(str(frame) for frame in spec["keyframes"])
+    armature_object["coh_keyframe_point_count"] = keyframe_point_count
+    armature_object["coh_fcurve_count"] = fcurve_count
+    armature_object["coh_pose_description"] = spec["description"]
+    return metrics
+
+
 def action_metrics(action):
     fcurves = list(getattr(action, "fcurves", []))
     if not fcurves and hasattr(action, "layers"):
@@ -292,7 +764,7 @@ def action_metrics(action):
     return len(fcurves), sum(len(curve.keyframe_points) for curve in fcurves)
 
 
-def author_keyframes(armature_object, action_name):
+def author_keyframes_v1(armature_object, action_name):
     spec = ACTION_SPECS[action_name]
     scene = bpy.context.scene
     scene.frame_start = 1
@@ -303,7 +775,7 @@ def author_keyframes(armature_object, action_name):
     armature_object.animation_data.action = action
 
     for frame, profile in zip(spec["keyframes"], spec["profiles"]):
-        pose = phase_pose(action_name, profile)
+        pose = phase_pose_v1(action_name, profile)
         for bone_name in AUTHORED_BONES:
             pose_bone = armature_object.pose.bones[bone_name]
             pose_bone.rotation_mode = "QUATERNION"
@@ -337,11 +809,16 @@ def main():
     spec = ACTION_SPECS[args.action]
     rest_world = build_source_rest(bones, by_id)
     armature_object = create_armature(report, bones, by_id, rest_world, args.rig_type, spec["logical"])
-    author_keyframes(armature_object, args.action)
+    if args.authoring == "v1":
+        author_keyframes_v1(armature_object, args.action)
+        armature_object["coh_authoring_version"] = "V1_ARBITRARY_LOCAL_AXIS_FK_NEGATIVE_CONTROL"
+    else:
+        metrics = author_keyframes_v2(armature_object, rest_world, args.action, args.candidate)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     bpy.ops.wm.save_as_mainfile(filepath=str(args.output))
     print(
         "BLENDER_WEBSWING_CREATED "
+        f"authoring={args.authoring} candidate={args.candidate if args.authoring == 'v2' else 'n/a'} "
         f"action={args.action} logical={spec['logical']} rig={args.rig_type} "
         f"blend={args.output} frames={spec['frames']} bones={len(bones)} "
         f"authored={len(AUTHORED_BONES)} keyframeFrames={armature_object['coh_keyframe_frames']} "
