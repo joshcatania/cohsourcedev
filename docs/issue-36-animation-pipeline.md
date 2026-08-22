@@ -66,6 +66,11 @@ changing the legacy control packet layout.  This uses normal member/interrupt
 selection; it does not call `seqSetMove`, bypass `seqAInterruptsB`, or repurpose
 `TEST0`.
 
+The state bit is injected in `Game/src/entity/entclient.c` after the per-frame
+client-state rebuild and before normal interrupt search.  The final branch diff
+therefore leaves `Common/player/pmotion.c` and the Web Swing physics state
+builder unchanged.
+
 The tracked installer copies the overlay, normal include, canary include, and
 state-bit file.  Final parity status was `installed=true` with these matching
 hashes:

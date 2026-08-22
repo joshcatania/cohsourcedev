@@ -5,6 +5,7 @@
  ***************************************************************************/
 #include "entity/entity.h"
 #include "graphics/camera.h"
+#include "cmdparse/cmdcommon.h"
 #include "cmdparse/cmdgame.h"
 #include "graphics/FX/fx.h"
 #include <utilitieslib/utils/error.h>
@@ -2432,6 +2433,18 @@ static const SeqMove * runSequencerMoveUpdate( Entity *e, int *needCostumeApply 
     seqClearState( seq->stance_state );
     //End Special Trickiness /////////////
 
+#ifndef TEST_CLIENT
+    // The authored-animation audition is deliberately injected at the
+    // client sequencer boundary, after per-frame state rebuild and before
+    // normal interrupt search. It is active only for the controlled player
+    // in WebSwingDev, so the physics state builder and server remain untouched.
+    if (global_state.webswing_dev && e == controlledPlayerPtr())
+    {
+        int anim_canary_bit = seqGetStateNumberFromName("COHSOURCEDEV_ANIMCANARY");
+        if (anim_canary_bit >= 0)
+            seqOrState(seq->state, g_cohsourcedev_anim_canary, anim_canary_bit);
+    }
+#endif
 
     setMoveStickyStateBits(seq->state, e->move_bits);
 
