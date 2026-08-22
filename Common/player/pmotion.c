@@ -413,6 +413,7 @@ void pmotionSetState(Entity* e, ControlState* controls)
     int                    dir_key_down = 0;
     int                    i;
     int                    jumppackbit;
+    int                    anim_canary_bit;
     
     // All these bits need to be reset here because physics doesn't run every tick, but states get cleared.
 
@@ -455,6 +456,15 @@ void pmotionSetState(Entity* e, ControlState* controls)
     }
 
     pmotionSetWebSwingAnimState(e, scs->web_swing);
+
+    // The authored-animation audition is deliberately a client-side
+    // WebSwingDev state.  It is looked up dynamically because the state bit
+    // exists only in the private overlay; normal clients and servers simply
+    // leave this path inert.
+    anim_canary_bit = global_state.webswing_dev ?
+        seqGetStateNumberFromName("COHSOURCEDEV_ANIMCANARY") : -1;
+    if (anim_canary_bit >= 0)
+        seqOrState(state, g_cohsourcedev_anim_canary, anim_canary_bit);
 
     // If I'm not in control of my character, then don't set
     //   any of the bits that are directly based on input controls.

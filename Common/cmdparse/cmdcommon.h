@@ -321,6 +321,7 @@ typedef struct ControlState
 } ControlState;
 
 extern ControlState control_state;
+extern S32 g_cohsourcedev_anim_canary;
 extern ControlId opposite_control_id[CONTROLID_BINARY_MAX];
 
 typedef struct Cmd Cmd;

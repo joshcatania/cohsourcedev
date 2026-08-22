@@ -125,9 +125,12 @@ function Ensure-WebSwingAnimationRuntime {
         ($status.includeSha256 -eq $status.trackedIncludeSha256)
     $stateBitsSynchronized = $status.stateBitsPresent -and
         ($status.stateBitsSha256 -eq $status.trackedStateBitsSha256)
+    $canaryIncludeSynchronized = $status.canaryIncludePresent -and
+        ($status.canaryIncludeSha256 -eq $status.trackedCanaryIncludeSha256)
 
     if (-not $status.installed -or -not $overlaySynchronized -or
-        -not $includeSynchronized -or -not $stateBitsSynchronized) {
+        -not $includeSynchronized -or -not $stateBitsSynchronized -or
+        -not $canaryIncludeSynchronized) {
         Write-Host 'Synchronizing tracked Web Swing animation data into loose runtime data...'
         $status = Invoke-JsonScript -Path $webSwingInstaller -Arguments @('-Action', 'Install', '-RepositoryRoot', $repoRoot)
     } else {
@@ -137,7 +140,8 @@ function Ensure-WebSwingAnimationRuntime {
     if (-not $status.installed -or
         $status.overlaySha256 -ne $status.trackedOverlaySha256 -or
         $status.includeSha256 -ne $status.trackedIncludeSha256 -or
-        $status.stateBitsSha256 -ne $status.trackedStateBitsSha256) {
+        $status.stateBitsSha256 -ne $status.trackedStateBitsSha256 -or
+        $status.canaryIncludeSha256 -ne $status.trackedCanaryIncludeSha256) {
         throw 'Web Swing animation runtime data did not reach tracked hash parity.'
     }
     return $status
@@ -165,9 +169,11 @@ try {
         $runtimeSynchronized = $runtimeStatus.installed -and
             $runtimeStatus.overlayPresent -and
             $runtimeStatus.includePresent -and $runtimeStatus.stateBitsPresent -and
+            $runtimeStatus.canaryIncludePresent -and
             $runtimeStatus.overlaySha256 -eq $runtimeStatus.trackedOverlaySha256 -and
             $runtimeStatus.includeSha256 -eq $runtimeStatus.trackedIncludeSha256 -and
-            $runtimeStatus.stateBitsSha256 -eq $runtimeStatus.trackedStateBitsSha256
+            $runtimeStatus.stateBitsSha256 -eq $runtimeStatus.trackedStateBitsSha256 -and
+            $runtimeStatus.canaryIncludeSha256 -eq $runtimeStatus.trackedCanaryIncludeSha256
         if (-not $runtimeSynchronized) {
             $compatibleClients = @($clientInventory.Managed | Where-Object { $_.WebSwingDev })
             if ($compatibleClients.Count -gt 0) {
@@ -176,7 +182,7 @@ try {
         }
         Ensure-WebSwingAnimationRuntime
         Write-Host "Web Swing development client: $ouroboros"
-        Write-Host 'Web Swing development mode: compiled player plus private five-move overlay'
+        Write-Host 'Web Swing development mode: compiled player plus private overlay and animation canary'
     }
 
     $requestedProfile = if ($Full -or $FullShard) { 'Full' } else { $ShardProfile }

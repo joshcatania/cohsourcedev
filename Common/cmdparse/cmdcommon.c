@@ -28,6 +28,7 @@
 
 
 ControlState control_state;
+S32 g_cohsourcedev_anim_canary;
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
 {
@@ -149,6 +150,8 @@ Cmd control_cmds[] =
                         "anim test flag" },
     { 9, "atest9", 0, {{ PARSETYPE_S32, &control_state.anim_test[9] }},0,
                         "anim test flag" },
+    { 9, "animcanary", 0, {{ PARSETYPE_S32, &g_cohsourcedev_anim_canary }},0,
+                        "WebSwingDev-only authored animation canary" },
     { 1, "predict", 0, {{ PARSETYPE_S32, &control_state.predict }},0,
                         "turn client side prediction on/off" },
     { 9, "notimeout", CONCMD_NOTIMEOUT, {{ PARSETYPE_S32, &control_state.notimeout }}, 0,

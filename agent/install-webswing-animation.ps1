@@ -3,20 +3,26 @@ param(
     [ValidateSet('Status', 'Install', 'Remove')]
     [string]$Action = 'Status',
     [string]$PlayerSourcePath,
-    [string]$RepositoryRoot = (Split-Path -Parent $PSScriptRoot)
+    [string]$RepositoryRoot
 )
 
 $ErrorActionPreference = 'Stop'
 
-$root = (Resolve-Path -LiteralPath $RepositoryRoot).Path
+$root = if ($RepositoryRoot) {
+    (Resolve-Path -LiteralPath $RepositoryRoot).Path
+} else {
+    (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+}
 $animationRoot = Join-Path $root 'agent\webswing-animation'
 $trackedInclude = Join-Path $animationRoot 'webswing.inc'
 $trackedOverlay = Join-Path $animationRoot 'webswing.txt'
 $trackedStateBits = Join-Path $animationRoot 'webswing.statebits'
+$trackedCanaryInclude = Join-Path $root 'agent\animation\canary-sequencer.inc'
 $runtimeRoot = Join-Path $root 'bin\data\sequencers'
 $runtimeDataRoot = Join-Path $root 'bin\data'
 $runtimeInclude = Join-Path $runtimeRoot 'cohsourcedev_webswing.inc'
 $runtimeOverlay = Join-Path $runtimeRoot 'cohsourcedev_webswing.txt'
+$runtimeCanaryInclude = Join-Path $runtimeRoot 'cohsourcedev_canary.inc'
 $runtimeStateBits = Join-Path $runtimeDataRoot 'cohsourcedev_webswing.statebits'
 $runtimePlayer = Join-Path $runtimeRoot 'player.txt'
 $backupPlayer = Join-Path $runtimeRoot 'player.txt.cohsourcedev-webswing.bak'
@@ -236,6 +242,7 @@ function Get-Status {
     [pscustomobject]@{
         installed = ((Test-Path -LiteralPath $runtimeOverlay -PathType Leaf) -and
             (Test-Path -LiteralPath $runtimeInclude -PathType Leaf) -and
+            (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) -and
             (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf))
         legacyPlayerOverride = ($content.Contains($sentinelBegin) -or $content.Contains($sentinelEnd) -or $content.Contains($includeLine) -or $content.Contains($legacyIncludeLine))
         playerPath = $runtimePlayer
@@ -249,12 +256,15 @@ function Get-Status {
         overlayPresent = (Test-Path -LiteralPath $runtimeOverlay -PathType Leaf)
         includePresent = (Test-Path -LiteralPath $runtimeInclude -PathType Leaf)
         stateBitsPresent = (Test-Path -LiteralPath $runtimeStateBits -PathType Leaf)
+        canaryIncludePresent = (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)
         includeSha256 = Get-Sha256 $runtimeInclude
         overlaySha256 = Get-Sha256 $runtimeOverlay
         stateBitsSha256 = Get-Sha256 $runtimeStateBits
+        canaryIncludeSha256 = Get-Sha256 $runtimeCanaryInclude
         trackedIncludeSha256 = Get-Sha256 $trackedInclude
         trackedOverlaySha256 = Get-Sha256 $trackedOverlay
         trackedStateBitsSha256 = Get-Sha256 $trackedStateBits
+        trackedCanaryIncludeSha256 = Get-Sha256 $trackedCanaryInclude
     } | ConvertTo-Json -Depth 3
 }
 
@@ -265,7 +275,8 @@ if ($Action -eq 'Status') {
 
 if (-not (Test-Path -LiteralPath $trackedOverlay -PathType Leaf) -or
     -not (Test-Path -LiteralPath $trackedInclude -PathType Leaf) -or
-    -not (Test-Path -LiteralPath $trackedStateBits -PathType Leaf)) {
+    -not (Test-Path -LiteralPath $trackedStateBits -PathType Leaf) -or
+    -not (Test-Path -LiteralPath $trackedCanaryInclude -PathType Leaf)) {
     throw 'Tracked Web Swing animation data is incomplete.'
 }
 
@@ -280,6 +291,7 @@ if ($Action -eq 'Install') {
     Remove-LegacyPlayerOverride
     Copy-Item -LiteralPath $trackedOverlay -Destination $runtimeOverlay -Force
     Copy-Item -LiteralPath $trackedInclude -Destination $runtimeInclude -Force
+    Copy-Item -LiteralPath $trackedCanaryInclude -Destination $runtimeCanaryInclude -Force
     Copy-Item -LiteralPath $trackedStateBits -Destination $runtimeStateBits -Force
     Get-Status
     exit 0
@@ -288,6 +300,7 @@ if ($Action -eq 'Install') {
 if ($Action -eq 'Remove') {
     $currentIncludeHash = Get-Sha256 $runtimeInclude
     $currentOverlayHash = Get-Sha256 $runtimeOverlay
+    $currentCanaryIncludeHash = Get-Sha256 $runtimeCanaryInclude
     $currentStateBitsHash = Get-Sha256 $runtimeStateBits
     if ($currentIncludeHash -and $currentIncludeHash -ne (Get-Sha256 $trackedInclude)) {
         throw "Refusing to remove modified runtime include: $runtimeInclude"
@@ -298,9 +311,12 @@ if ($Action -eq 'Remove') {
     if ($currentOverlayHash -and $currentOverlayHash -ne (Get-Sha256 $trackedOverlay)) {
         throw "Refusing to remove modified runtime overlay: $runtimeOverlay"
     }
+    if ($currentCanaryIncludeHash -and $currentCanaryIncludeHash -ne (Get-Sha256 $trackedCanaryInclude)) {
+        throw "Refusing to remove modified runtime canary include: $runtimeCanaryInclude"
+    }
 
     Remove-LegacyPlayerOverride
-    foreach ($path in @($runtimeOverlay, $runtimeInclude, $runtimeStateBits)) {
+    foreach ($path in @($runtimeOverlay, $runtimeInclude, $runtimeCanaryInclude, $runtimeStateBits)) {
         if (Test-Path -LiteralPath $path -PathType Leaf) {
             Remove-Item -LiteralPath $path -Force
         }

@@ -110,8 +110,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("left")
     parser.add_argument("right")
-    parser.add_argument("--angle-tolerance-deg", type=float, default=0.5)
-    parser.add_argument("--position-tolerance", type=float, default=0.05)
+    # Runtime rotations use the shipped 12-bit nonlinear quaternion packing.
+    # Its observed stock round-trip bound is below 0.1 degrees.  Compressed
+    # positions use 1/32000 units per component, whose Euclidean worst case is
+    # sqrt(3)/32000 ~= 0.0000541; 0.00006 leaves only a small float/format
+    # margin without hiding transform drift.
+    parser.add_argument("--angle-tolerance-deg", type=float, default=0.1)
+    parser.add_argument("--position-tolerance", type=float, default=0.00006)
     args = parser.parse_args()
     result = compare(load_report(args.left), load_report(args.right),
                      args.angle_tolerance_deg, args.position_tolerance)

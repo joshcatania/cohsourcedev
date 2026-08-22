@@ -1,5 +1,5 @@
-// Temporary developer-only audition move for the authored ANIMX canary.
-// It is kept separate from the five Web Swing prototype moves.
+// Developer-only audition move for authored ANIMX/Blender canaries.
+// This include is consumed only by the private WebSwingDev player overlay.
 
 Move COHSOURCEDEV_CUSTOM_CANARY
 	Interpolate 5
@@ -7,6 +7,8 @@ Move COHSOURCEDEV_CUSTOM_CANARY
 	Type Male
 		Anim MALE/COHSOURCEDEV_CUSTOM_CANARY 1 36
 		TEnd
-	Requires TEST0
+	Member "<COHSOURCEDEV_CUSTOM_CANARY>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>", "<MOVEIRQ>"
+	Interrupts "<COHSOURCEDEV_CUSTOM_CANARY>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires COHSOURCEDEV_ANIMCANARY
 	Flags Cycle
 MEnd
