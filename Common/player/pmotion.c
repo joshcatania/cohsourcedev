@@ -422,21 +422,6 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                        vecParamsXYZ(e->motion->web_swing_anchor), e->motion->web_swing_rope_length);
         e->motion->web_swing_anim_phase = phase;
     }
-    else
-    {
-        // Keep diagnostics bounded but prove the Male/Enter bits are resolved and stable
-        // when the phase does not change. Log only the transition into ASCEND.
-        if (is_male && phase == WEBSWING_ANIM_PHASE_ASCEND && enter_state_bit >= 0 && TSTB(e->seq->state, enter_state_bit))
-        {
-            filelog_printf("webswing.log",
-                           "WEB_SWING %s ascend_enter pulse male=%d enter=%d phase=%s\n",
-                           pmotionWebSwingAnimSide(),
-                           male_state_bit >= 0 && TSTB(e->seq->state, male_state_bit),
-                           enter_state_bit >= 0 && TSTB(e->seq->state, enter_state_bit),
-                           pmotionWebSwingAnimPhaseName(phase));
-        }
-        e->motion->web_swing_anim_phase = phase;
-    }
 }
 
 void pmotionSetState(Entity* e, ControlState* controls)
