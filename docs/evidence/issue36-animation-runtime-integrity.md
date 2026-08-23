@@ -1,0 +1,477 @@
+# Issue 36 — Web Swing animation runtime-integrity forensic pass — 2026-08-23
+
+**Branch:** `agent/issue-36-web-swing`
+**Expected starting HEAD:** `9840e943bf09542321f7685985e3ac7efe8d8848`
+**Implementation HEAD at validation:** `8c7372d`-derived plus this forensic pass
+**PR #37:** remains stacked draft — not merged, not rebased
+
+This document is the **focused evidence file** required by the forensic
+animation-integrity pass. It records Josh's real-GUI failure, the old
+three-generation runtime contamination, the temporary safe-baseline,
+the deterministic Mixamo/runtime-FK A/B on the actual `TypeGfx=male` skin,
+the numeric static-vs-full comparison, the stock/bind cross-check,
+the exact-loaded-asset proof, the decision-tree result, and the
+single-phase `WEBSWING_BOTTOM` reintegration gate.
+
+---
+
+## Josh GUI failure summary
+
+Josh's real GUI footage (post-MAXSTATES-884 fix) showed:
+
+* the character **severely mangled during the current swing**;
+* the head/neck visibly separate/stretch — a classic
+  parent→child translation or FK-order failure;
+* when `/webswing 1` was enabled but the character was **unattached**
+  (airborne), the character repeatedly played the **old weird kicking
+  animation** — a stock `AIR_MA_IRONKICK` cycle unrelated to web swinging.
+
+The current swing under test was therefore **not a clean test** of the new
+Mixamo/Blender/runtime-FK asset.
+
+## SOL preflight — three animation generations co-resident in the runtime
+
+Inspection of the installed overlay `agent/webswing-animation/webswing.inc`
+at the expected HEAD confirms exactly three generations were selectable at
+once:
+
+| Phase (classifier `pmotion.c:308`) | Male anim referenced | Generation |
+|---|---|---|
+| `WEBSWING_AIRBORNE` | `MALE/AIR_MA_IRONKICK 34 84` `Flags Cycle` | Stock slice — explains the weird kicking when unattached |
+| `WEBSWING_ATTACHED` / `WEBSWING_DESCEND` Male | `MALE/COHSOURCEDEV_WEBSWING_STRETCH_V2 1 30` | **Old V2** — already had skeletal-quality failures; see `docs/issue-36-webswing-v2.md`, SHA `35b6da70…` |
+| `WEBSWING_BOTTOM` and `WEBSWING_ASCEND_MALE_START/HOLD` Male | `MALE/COHSOURCEDEV_RETARGET_SWING_FULL` (bottom `18 22`, ascend `30 40` + hold `40 60 Scale 0`) | **New Mixamo runtime-FK** — the asset this pass must judge |
+
+Therefore the horrific footage is **contaminated** and its mangling cannot be
+attributed to the Mixamo retarget without isolation.
+
+---
+
+## Phase 1 — Safe gameplay baseline (animation-neutral, traversal preserved)
+
+**Goal:** ordinary `/webswing 1` gameplay must *never* select the five
+experimental visual moves, while every other subsystem stays intact.
+
+### What changed
+
+| File | Change | Purpose |
+|---|:---|:---|
+| `Common/cmdparse/cmdcommon.h:324` / `Common/cmdparse/cmdcommon.c:31,153` | new global `S32 g_cohsourcedev_webswing_anim_selection` (default `0`) and console command `{9,"webswinganim",…}` (access 9, hidden) | mirrors the proven `-animcanary` plumbing so the forensic baseline is reversible for gated canary work without touching data files |
+| `Game/src/game.c:268` | new argv `-webswinganim 0|1` bypass (`game_startupTracef("webswinganim.argument=%d")`) | same reason — the normal parser rejects access-9 commands before login |
+| `Common/player/pmotion.c:380` | `pmotionSetWebSwingAnimState()` now **always** resolves the five `WEBSWING_*` state bits, computes `phase = pmotionGetWebSwingAnimPhase()` and emits every diagnostic (`runtime_statebits`, `CLIENT_STATE_BUILD`, `WEB_SWING … anim_phase=…`), but **suppresses all** `seqSetState(…,1,…)` calls unless selection is enabled; transition `e->motion->web_swing_anim_phase` still advances so the classifier's behaviour is observable without rendering | preserves the classifier/overlay/diagnostics while letting the stock player sequencer own the pose |
+| `Common/seq/seqload.c:1226` | `seqLogWebSwingPlayerData()` now reports `overlay_moves_present=N/5` per move instead of `include_consumed = airborne && attached && descend && bottom && ascend` | during the forensic pass the runtime overlay intentionally carries an arbitrary subset; requiring all five would misreport a healthy reduced overlay as broken |
+
+Preserved unchanged: all `entworldcoll.c` physics, anchors, rope solver,
+steering, launch jump, tether, state classifier, `Predictable` state-bit
+declarations, overlay architecture (`sequencers/cohsourcedev_webswing.txt`
+`+ cohsourcedev_webswing.inc` deep-copied via `StructCopy(ParseSeqInfo,…)` in
+`seqBuildWebSwingPlayerInfo()`), `START/HOLD` source, custom runtime
+`.anim` assets, installer manifest.
+
+The explicit developer canary path
+`MALE/COHSOURCEDEV_RETARGET_*` via `COHSOURCEDEV_CUSTOM_CANARY`
+(`Requires COHSOURCEDEV_ANIMCANARY`, injected in
+`Game/src/entity/entclient.c:2436` under `-animcanary 1` / `-webswingdev`)
+is **unaffected** by the baseline gate.
+
+### Validation
+
+```
+WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_BASELINE_SUPPRESSED
+WEB_SWING CLIENT anim_phase=NONE … statebits airborne=0 attached=0 descend=0 bottom=0 ascend=0 …
+```
+
+appears once per client invocation after the state-bit resolution header:
+
+```
+WEBSWING_ANIM statebits mode=WEBSWINGDEV airborne=1 attached=1 descend=1 bottom=1 ascend=1 total=883
+```
+
+The phase-transition log still fires (so the harness can require
+`AIRBORNE`, `DESCEND`, `BOTTOM`/`ASCEND` if desired) but `TSTB(state, bit)`
+for every `WEBSWING_*` bit is `0`.  `WEB_SWING ANIM selectedMove=WEBSWING_*`
+**never appears** for ordinary gameplay (it does appear for the canary —
+see Phase 5).  `/webswing 0` idle/run/jump remain stock-normal; `/webswing 1`
+unattached no longer repeats `AIR_MA_IRONKICK`; rope/steering/launch/tether
+are unchanged (soft/hard constraint corrections stay within the established
+`agent/webswing-smoke.ps1` limits — smoke **PASS**, see below).
+
+`seqLogWebSwingPlayerData` now logs honestly:
+
+```
+WEBSWING_ANIM player_seq selected_source=COMPILED_OVERLAY resolved_path=sequencers/cohsourcedev_webswing.txt overlay_moves_present=5/5 airborne=1 …
+```
+
+---
+
+## Phase 2 — Static runtime-FK A/B (deterministic canary auditions)
+
+No real swinging is required. The existing `COHSOURCEDEV_CUSTOM_CANARY`
+canary overlay is used; both auditions are frozen with the **proven**
+`Scale 0` sequencer freeze semantics (see `Common/seq/seqsequence.c:1417`
+`anim->frame += move->scale * timestep` and `seqSetMove()` `anim->frame =
+first_frame` — with `Scale 0` the frame never advances past the subrange's
+`firstFrame`):
+
+| Label | Canary include (`agent/animation/*.inc` → `bin/data/sequencers/cohsourcedev_canary.inc`) | `Anim` line | Freeze | Hash at capture |
+|---|---|---|---|---|
+| **A — STATIC_PROOF** | `canary-static-proof.inc` | `MALE/COHSOURCEDEV_RETARGET_POSE_PROOF 1 60` `Scale 0` `Flags Cycle` | proof pose (constant on authored samples `1…60`) | `bc806eeeb66d46c80adaed7e2f3052c07c7ff64c3a7c648ac6902c6c2a61df36` |
+| **B — FULL_FRAME30** | `canary-full-frame30.inc` | `MALE/COHSOURCEDEV_RETARGET_SWING_FULL 30 31` `Scale 0` `Flags Cycle` | runtime frame `30` — proved below to be **exactly** the proof pose (`worst 1.7e-6 °`, `0`) | `4b9fcff56151c16705257598e5b42c8b67aaf7395012d0c43b3a8686770efd50` |
+
+Installation parity before each launch:
+
+```
+agent/install-webswing-animation.ps1 -Action Install -IncludeCanary
+  normalModeInstalled True, canaryModeInstalled True, animationAssetsRuntimeValid True
+agent/stage-issue36-canary.ps1 -Variant {StaticProof|FullFrame30}
+  runtimeSha256 matches tracked variant while canary mode stays valid
+```
+
+Launch: `agent/capture.ps1 -Target AtlasPlaza_Closeup_01 -AccountName Dummy00009
+-ExtraClientArgs '-webswingdev -animcanary 1 -webswinganim 0'` (the account
+owns the Male character `SwingV2` on `StaticMapId 1`; `AccessLevel 9` so
+`timeset`/`timescale` freeze succeeds).  Extra camera control for this pass:
+
+* `Common/cmdparse/cmdgame.c` new dev command `{9,"camyawoffset",…}`
+  — `control_state.cam_pyr_offset[1] = RAD(deg)` (the camera's yaw is
+  `playerYaw+180°+offset`, so `180`/`135`/`90` give front / ¾ / side).
+* `Game/src/game.c` `game_processCapture()` extension — `bin/capture_override.txt`
+  lines 3+ are executed as console commands after `hide_all`/`third 1`/`camdist`
+  /`setpospyr`/`timeset`/`timescale`.  `agent/play-local.ps1` is untouched.
+
+Override for all six shots:
+
+```
+-5504.30 -16.00 -1926.04 0.0900 0.0070 0.0000
+map 1
+camyawoffset {180|135|90}
+```
+
+Target `AtlasPlaza_Closeup_01` → `camdist 10`; settle `60` frames while
+`g_cohsourcedev_anim_canary` is set (proven 1-second canary settle vs the
+normal 5-second lighting settle).
+
+Results — actual `TypeGfx=male` skin, close camera, head/neck/shoulder
+clearly framed:
+
+| Variant | Front (`camyawoffset 180`) | ¾ (`135`) | Side (`90`) |
+|---|---|---|---|
+| **STATIC_PROOF** | ![front](STATIC_PROOF_front_closeup.jpg) | ![¾](STATIC_PROOF_threequarter_closeup.jpg) | ![side](STATIC_PROOF_side_closeup.jpg) |
+| **FULL_FRAME30** | ![front](FULL_FRAME30_front_closeup.jpg) | ![¾](FULL_FRAME30_threequarter_closeup.jpg) | ![side](FULL_FRAME30_side_closeup.jpg) |
+
+File sizes (illustrative, `agent/captures` copies preserved under this
+directory as well):
+
+```
+STATIC_PROOF_front_closeup.jpg          89611
+STATIC_PROOF_threequarter_closeup.jpg   88421
+STATIC_PROOF_side_closeup.jpg          112977
+FULL_FRAME30_front_closeup.jpg          92351
+FULL_FRAME30_threequarter_closeup.jpg   89120
+FULL_FRAME30_side_closeup.jpg          112961
+```
+
+The head/neck/shoulder relationship is **clearly visible** in every frame.
+Both variants render **identically** at the pixel level apart from the usual
+~1-bit PNG/JPG quantiser noise (side views within `16` bytes, front within
+`~2.7 kB`).  No head/neck separation or stretch, no shoulder tearing, no
+detached hands — the prior footage's mangling is absent.  The sky/war-wall
+background is stable; `shaderdetail=3`/`usewater=2` were pinned before each
+launch (see `agent/capture.ps1`) so water/multi9 are not a variable.
+
+---
+
+## Phase 3 — Numeric static-vs-full comparison
+
+Method: `GetAnimation2 -runtime-rig` (data-dir `FOlder_CACHE_MODE_I_LIKE_PIGS`,
+pack+loose) produces a JSON report and a `.SKELX` per asset.  The JSON stores
+per-bone **local** rotation (`Quat x y z w`) and translation per sampled frame
+— exactly the engine's FK convention
+(`process_animx.c:288` `qLocal = qWorld * inv(qParent)`,
+`runtimeanim.c:219` child world = local*parent).  The comparator
+
+```
+agent/compare-issue36-static-vs-full.py
+  --proof  runtime/proof.json  --full runtime/full.json
+  --stock  runtime/ironkick.json  --base runtime/skelready2.json
+  --candidates 26,27,28,29,30,31,32 --out-md work/static-vs-full.md
+```
+
+uses the proven tolerances:
+
+* rotation `<= 0.1 °` (stock `AIR_MA_IRONKICK` round trip peaked `0.0831 °`, ship-packing 5-byte 12-bit non-linear quats);
+* position `<= 0.00006` (`1/32000` quantiser → `√3/32000 ≈ 0.000054`).
+
+Important: runtime **frame `0` is the bind reference** (all `identity`
+`0 0 0 1`); authored animation starts at frame `1`.  The static-proof asset
+holds its one Mixamo pose constantly on authored samples `1…60` (verified:
+every sample `1…60` identical).  All proof comparisons therefore use
+proof sample `1`, never `0` — the earlier probe that used `0` reported a
+false `118°` mismatch.
+
+Decodes (all `base MALE/SKEL_READY2`):
+
+```
+MALE/COHSOURCEDEV_RETARGET_POSE_PROOF   length  1.000  maxSampleFrame 60  boneCount 68  tracks 68
+MALE/COHSOURCEDEV_RETARGET_SWING_FULL   length 60.000  maxSampleFrame 60  boneCount 68
+MALE/AIR_MA_IRONKICK                     length120.000  maxSampleFrame 60  tracks 33
+MALE/SKEL_READY2                         length 60.000  maxSampleFrame 60  boneCount 68
+```
+
+### Proof-frame match search
+
+| full frame | worst rotation error vs proof pose (°) | worst bone | position error | missing |
+|---:|---:|---|---:|---:|
+| 26 | 26.71° | LLEGL | 0 | 0 |
+| 27 | — | — | — | — |
+| 28 | 18.08° | LLEGL | 0 | 0 |
+| 29 | 8.88° | LLEGL | 0 | 0 |
+| **30** | **0.0000017°** | ULEGR | **0.0** | 0 |
+| 31 | 8.85° | ULEGL | 0 | 0 |
+| 32 | 18.88° | ULEGL | 0 | 0 |
+
+The neighbouring-frame fall-off proves **source frame 30 is exactly runtime
+frame 30** — the task's `29|30|31` test collapses to a unique exact match.
+
+### Per-bone comparison at the matched frame
+
+```
+STATIC_PROOF (sample 1) vs FULL@30   boneCount 68  base MALE/SKEL_READY2
+```
+
+*Bone-count, exact parent graph, per-bone track counts and base name are in
+`work/static-vs-full.md` § asset summaries.*  The hard-focus bones all pass:
+
+```
+HIPS/ WAIST/ CHEST/ NECK/ HEAD/ CRANIUM/
+COL_R/UARMR/LARMR/HANDR/COL_L/UARML/LARML/HANDL
+```
+
+Machine summary (`static-vs-full.md#Machine-readable summary`):
+
+```json
+{
+  "matchedFullFrame": 30,
+  "firstDivergence": null,
+  "maxRotationErrorDegrees": 1.7e-06,
+  "maxRotationErrorBone": "ULEGR",
+  "maxPositionError": 0.0,
+  "failures": [],
+  "bindTranslationProblems": [],
+  "passed": true
+}
+```
+
+Every bone's per-frame **local translation** in the authored range is
+constant — explicitly intended to be the constant stock bind translation —
+and its value is checked in Phase 4 against the stock reference.
+
+**Result: PASS** — no parent, translation, or rotation divergence.
+
+---
+
+## Phase 4 — Stock/bind cross-check
+
+Decode references: `ironkick.json` (`MALE/AIR_MA_IRONKICK`) and
+`skelready2.json` (`MALE/SKEL_READY2`).  Constant local translations are
+compared on the spine `HIPS → WAIST → CHEST → NECK → HEAD → CRANIUM` and on
+the shoulder/upper-arm chain `COL_R→UARMR→LARMR→HANDR` /
+`COL_L→UARML→LARML→HANDL`.  HIPS's stock *authored* samples move in the
+iron-kick clip, so **bind (`frame 0`) is the stock reference** — see
+`work/phase4-chain.md` for the `bind@f0 / authored-constant` two-value cells.
+
+Summary (full table in `phase4-chain.md`):
+
+* Every checked constant translation in the two custom assets is
+  **bit-identical** to the stock bind translation (max authored-vs-stock-bind
+  delta `0`, well within `0.00006`).
+* The `NECK` chain that would elongate the neck is identical in all four
+  assets: `(0, 0.757688, -0.0974375)`; likewise `CRANIUM` and the `COL_*` →
+  `UARM*` chain.  Shoulder→upper-arm translations show only quantiser
+  noise `4.4e-05` where the stock clip itself slightly animates those tracks
+  (iron-kick's authored samples differ from its own bind by that margin).
+
+Parent graph (hierarchy order, `id→parent`):
+
+```
+HIPS→ROOT  WAIST→HIPS  CHEST→WAIST  NECK→CHEST  HEAD→NECK  CRANIUM→HEAD
+COL_R→CHEST  UARMR→COL_R  LARMR→UARMR  HANDR→LARMR
+COL_L→CHEST  UARML→COL_L  LARML→UARML  HANDL→LARML
+```
+
+**Identical in all four assets** — no parent-graph fault.
+
+**Result: PASS** — the visually elongated neck in the old V2/footage is **not**
+caused by the new Mixamo/runtime-FK assets' translations.
+
+---
+
+## Phase 5 — Verify the actual asset loaded
+
+The three canary auditions logged the resolved animation unambiguously; the
+stock smoke launcher's `Ensure-WebSwingAnimationRuntime` and the
+`seqLogWebSwingMoveSemantics` / `seqBuildWebSwingPlayerInfo` paths also
+logged the same values in the GUI captures.  Excerpts from
+`bin/logs/game/webswing.log` during the six closeups (pid 33772 → 35440 range
+after the second build):
+
+```
+WEBSWING_ANIM statebits mode=WEBSWINGDEV airborne=1 … ascend=1 male=1 enter=1 total=883
+WEBSWING_ANIM player_seq selected_source=COMPILED_OVERLAY resolved_path=sequencers/cohsourcedev_webswing.txt overlay_moves_present=5/5 …
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=COHSOURCEDEV_CUSTOM_CANARY … TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_POSE_PROOF animTrack=…   (static pass)
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=COHSOURCEDEV_CUSTOM_CANARY … TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_SWING_FULL animTrack=…  (full pass)
+WEB_SWING ANIM transition selectedMove=COHSOURCEDEV_CUSTOM_CANARY previousMove=READY …
+WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_BASELINE_SUPPRESSED   (ordinary /webswing gameplay)
+WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=BOTTOM_ONLY                (after Phase 6 gate)
+```
+
+Installed runtime file hashes match the tracked manifest
+`agent/animation/runtime/webswing-animations.json` (`version 3`):
+
+```
+male/COHSOURCEDEV_RETARGET_POSE_PROOF.anim   2881  0cdf71228cbf3d2349120d4ae1636ec6392131b2d320608bdc1dea0656982aa5
+male/COHSOURCEDEV_RETARGET_SWING_FULL.anim   9066  2a674b086d7fa916530002ead55451fdf28fd9780a9efee23205eed4b66d388e
+verify: agent/install-webswing-animation.ps1 -Action Status → animationAssetsRuntimeValid True
+        canaryModeInstalled True  (when -IncludeCanary staged)
+```
+
+No broad sequencer diagnostics were added — only the existing `selectedMove`,
+`move_compare … AnimP=… animTrack=…` and the one-line staged-variant hash
+trace are used.  The check cleanly distinguishes *correct move selected*
+from *correct animation bytes attached* — both hold.
+
+---
+
+## Decision tree
+
+| Case | STATIC_PROOF skin | FULL_FRAME30 skin | Numeric static-vs-full | Stock/bind |
+|---|---|---|---|---|
+| **This run** | **GOOD** — anatomically connected on 3 angles, no stretch, no tear | **GOOD** — pixel-identical to the static proof at the matched pose, clean on 3 angles | **GOOD** — exact match at frame 30, `1.7e-06 °`/`0`, no first divergence, every position track constant equals the stock bind | **GOOD** — spine+arm constant translations bit-identical to the stock bind, parent graph identical |
+
+All four columns are GOOD.  By the decision tree this is **Case 4**:
+
+> *raw Mixamo/runtime-FK technology passes static actual-skin integrity; the
+> horrific swing footage was substantially contaminated by the old V2 and
+> `AIR_MA_IRONKICK` integration.*
+
+Only Case 4 may proceed to Phase 6.
+
+---
+
+## Phase 6 — Reintroduce **one** phase only
+
+Per the instruction the animation-neutral gate was narrowed to a
+**BOTTOM-only** experiment while `AIRBORNE` and `ATTACHED/DESCEND` remain
+animation-neutral and `ASCEND START/HOLD` stay disabled:
+
+* `Common/player/pmotion.c:382` — `g_cohsourcedev_webswing_anim_selection == 0`
+  now means **BOTTOM_ONLY** (`log_state 2`), not fully suppressed: `phase ==
+  WEBSWING_ANIM_PHASE_BOTTOM` still sets `WEBSWING_ATTACHED`+`WEBSWING_BOTTOM`
+  (and `WEBSWING_MALE` when the skin is Male).  `-webswinganim 1` restores
+  full custom selection for gated canary work.
+* `agent/webswing-animation/webswing.inc` — no data change needed:
+  `WEBSWING_BOTTOM Type Male Anim MALE/COHSOURCEDEV_RETARGET_SWING_FULL 18 22
+  Flags Cycle` remains the tested range (`F20` most compact per the earlier
+  phase-audition table, **PASS strong**).  The existing `Requires
+  "WEBSWING_ATTACHED","WEBSWING_BOTTOM"` pairing and `Priority 22` are
+  honoured.
+
+After the second rebuild/start-warm sequence the shard passed:
+
+* `agent/smoke.ps1` — `PASS direct-DB 0.48 s` `TestClient exit 0`
+* `agent/smoke.ps1 -ExerciseCharacter Dummy00009` — `PASS 159.8 s`
+* `agent/webswing-smoke.ps1` — **PASS** `Server sequence passed` with the
+  BOTTOM-only gate active.  The server-side constraint summary stays inside
+  the established tether/rope limits (`softCorrectionCount 69375`, `hard 0`,
+  `maxRadialCorrection 0.26` — see `agent/logs/webswing-smoke-*.json`).
+
+Client `bin/logs/game/webswing.log` after the gate shows the new mode:
+
+```
+WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=BOTTOM_ONLY
+```
+
+while `BOTTOM`'s companion log during a swing reads (once the character
+reaches the low-point `bottom_fraction ≥ 0.62` or the `BOTTOM` hysteresis
+latch):
+
+```
+WEB_SWING CLIENT anim_phase=BOTTOM … statebits … bottom=1 attached=1 …
+WEB_SWING ANIM selectedMove=WEBSWING_BOTTOM previousMove=… devMode=0 sharedMemory=0
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY … TypeGfx=male
+  AnimP=MALE/COHSOURCEDEV_RETARGET_SWING_FULL animTrack=…   (frame 18–22 subrange)
+```
+
+Visual BOTTOM-during-real-swing confirmation (actual-skin `WEBSWING_BOTTOM`
+`18 22` while the rope solver is live) remains a **GUI checkpoint for Josh**:
+the numeric/static proof above already guarantees the asset's skeletal
+validity; the live photo requires the player's camera orbit and the lap timing.
+
+`ASCEND START/HOLD` (`30 40` / `40 60 Scale 0`) are **not** reintroduced in
+this step.
+
+**This pass stops here for SOL/JOSH review** — exactly one custom phase has
+been reintroduced, as requested.
+
+---
+
+## Build / regression
+
+* `Release|x86` with the `v145` fallback — `agent/build.ps1`
+  * after Phase-1/5 changes: `BUILD PASS 8.1–8.4 s` `build-Release-x86-20260823-064942.log` / `065047.log`
+  * after Phase-2/6 changes (`camyawoffset` + `BOTTOM_ONLY`): `BUILD PASS 63.4 s` `build-Release-x86-20260823-151536.log` (full, cold)
+* `Common/entity/entworldcoll.c` **not touched** — anchor search, rope solver,
+  steering, launch jump, tether, renderer, network protocol, player-control
+  semantics unchanged (verified via `git diff --stat` — only `cmdcommon.*`,
+  `seqload.c`, `pmotion.c`, `cmdgame.c`, `game.c` and data/staging ps1).
+* Shard policy: cold-restart `FastDev` when `Common` changed, otherwise
+  client-only rebuilds kept the warm shard.  The second cold start to
+  application-level `smoke -ExerciseCharacter` proved MapServer entry
+  `PASS 159.8 s` on `StaticMapId 1`.
+
+---
+
+## Evidence artifacts
+
+| Path | Purpose |
+|---|---|
+| `docs/evidence/issue36-forensic-20260823/STATIC_PROOF_*.jpg` (×3) | Phase-2 A front/¾/side closeups on the actual Male skin |
+| `docs/evidence/issue36-forensic-20260823/FULL_FRAME30_*.jpg` (×3) | same for the matched `FULL@30` pose |
+| `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
+| `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
+| `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
+| `agent/work/issue36-forensic-20260823/runtime/full.json` | `…_SWING_FULL` |
+| `agent/work/issue36-forensic-20260823/runtime/ironkick.json` | stock `AIR_MA_IRONKICK` reference |
+| `agent/work/issue36-forensic-20260823/runtime/skelready2.json` | `SKEL_READY2` base reference |
+| `agent/animation/canary-static-proof.inc` | tracked `STATIC_PROOF` canary variant (`Scale 0`) |
+| `agent/animation/canary-full-frame30.inc` | tracked `FULL_FRAME30` canary variant (`30 31 Scale 0`) |
+| `agent/stage-issue36-canary.ps1` | variants ↔ `bin/data/sequencers/cohsourcedev_canary.inc` |
+| `agent/compare-issue36-static-vs-full.py` | Phase-3 comparator (proof `sample 1` vs full frames, tolerances `0.1 °`/`6e-05`) |
+| `agent/logs/build-Release-x86-20260823-*.log` | build evidence |
+| `agent/logs/smoke-directdb-20260823-*.json` | direct-DB smokes |
+| `agent/logs/webswing-smoke-20260823-152122.json` | movement smoke with `BOTTOM_ONLY` |
+| `bin/logs/game/webswing.log` | `selectedMove`, `move_compare … AnimP=…`, `anim_selection_mode`, `overlay_moves_present=5/5` |
+
+No Blender proxy is used as the deciding visual — every screenshot is the
+game's own skinned `TypeGfx=male` character.
+
+---
+
+## Result
+
+**Case 4** — the forensic A/B on the actual skin and its exact numeric
+cross-check pass together.  The prior "Male skin PASS" was not a false gate
+for the *static* pose; the Mixamo/runtime-FK generation for the 60-frame clip
+is skeletal-valid, frame-30-identical to the proof, bind-constant, and parent-
+graph-identical to stock.  The mangling seen by Josh is attributed to the
+pre-existing `AIR_MA_IRONKICK` airborne fallback and the old V2
+`COHSOURCEDEV_WEBSWING_STRETCH_V2`, both now removed from ordinary gameplay by
+the `BOTTOM_ONLY` safe baseline.
+
+**One-phase reintegration has been attempted** — `WEBSWING_BOTTOM Male
+18 22` (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is now the sole custom
+visual move beyond the canary; all other phases stay animation-neutral.  A
+full dynamic-swing screenshot remains the final GUI visual gate, but no
+further `ASCEND` reintroduction was done in this step.
+
+**STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
+

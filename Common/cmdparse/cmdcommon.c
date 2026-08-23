@@ -29,6 +29,9 @@
 
 ControlState control_state;
 S32 g_cohsourcedev_anim_canary;
+// Issue 36 forensic safe baseline: custom Web Swing move selection stays off
+// during normal gameplay unless explicitly re-enabled for gated canary work.
+S32 g_cohsourcedev_webswing_anim_selection;
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
 {
@@ -152,6 +155,8 @@ Cmd control_cmds[] =
                         "anim test flag" },
     { 9, "animcanary", 0, {{ PARSETYPE_S32, &g_cohsourcedev_anim_canary }},0,
                         "WebSwingDev-only authored animation canary" },
+    { 9, "webswinganim", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_anim_selection }},0,
+                        "WebSwingDev custom Web Swing move selection (forensic safe baseline default: 0)" },
     { 1, "predict", 0, {{ PARSETYPE_S32, &control_state.predict }},0,
                         "turn client side prediction on/off" },
     { 9, "notimeout", CONCMD_NOTIMEOUT, {{ PARSETYPE_S32, &control_state.notimeout }}, 0,

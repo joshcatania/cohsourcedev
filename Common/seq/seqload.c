@@ -1225,26 +1225,35 @@ static void seqLogWebSwingMoveSemantics(const char *source, const SeqInfo *seqIn
 
 static void seqLogWebSwingPlayerData(const char *source, const char *path, const SeqInfo *seqInfo)
 {
-    int airborne;
-    int attached;
-    int descend;
-    int bottom;
-    int ascend;
+    static const char *const move_names[] = {
+        "WEBSWING_AIRBORNE",
+        "WEBSWING_ATTACHED",
+        "WEBSWING_DESCEND",
+        "WEBSWING_BOTTOM",
+        "WEBSWING_ASCEND",
+    };
+    int present[ARRAY_SIZE(move_names)] = { 0 };
+    int present_count = 0;
+    int i;
     U16 move_index;
 
-    move_index = 0;
-    airborne = seqInfo && seqGetMoveIdxFromName("WEBSWING_AIRBORNE", seqInfo, &move_index);
-    attached = seqInfo && seqGetMoveIdxFromName("WEBSWING_ATTACHED", seqInfo, &move_index);
-    descend = seqInfo && seqGetMoveIdxFromName("WEBSWING_DESCEND", seqInfo, &move_index);
-    bottom = seqInfo && seqGetMoveIdxFromName("WEBSWING_BOTTOM", seqInfo, &move_index);
-    ascend = seqInfo && seqGetMoveIdxFromName("WEBSWING_ASCEND", seqInfo, &move_index);
+    // Presence is deliberately reported per move.  During the issue-36
+    // forensic baseline the runtime overlay may intentionally carry only a
+    // subset of the experimental moves, so an all-five requirement would
+    // misreport a healthy reduced overlay as broken.
+    for (i = 0; i < ARRAY_SIZE(move_names); ++i)
+    {
+        move_index = 0;
+        present[i] = seqInfo && seqGetMoveIdxFromName(move_names[i], seqInfo, &move_index);
+        present_count += present[i] != 0;
+    }
 
     filelog_printf("webswing.log",
-                   "WEBSWING_ANIM player_seq selected_source=%s resolved_path=%s include_consumed=%d moves airborne=%d attached=%d descend=%d bottom=%d ascend=%d\n",
+                   "WEBSWING_ANIM player_seq selected_source=%s resolved_path=%s overlay_moves_present=%d/%d airborne=%d attached=%d descend=%d bottom=%d ascend=%d\n",
                    source ? source : "none",
                    path ? path : "none",
-                   airborne && attached && descend && bottom && ascend,
-                   airborne, attached, descend, bottom, ascend);
+                   present_count, (int)ARRAY_SIZE(move_names),
+                   present[0], present[1], present[2], present[3], present[4]);
 }
 
 static SeqInfo *seqBuildWebSwingPlayerInfo(const SeqInfo *compiledSeqInfo, int loadType)

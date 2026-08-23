@@ -651,6 +651,7 @@ enum
     CMD_TOGGLEFIXEDFUNCTIONFP,
     CMD_TOGGLEFIXEDFUNCTIONVP,
     CMD_COSTUME_DIFF,
+    CMD_CAMYAWOFFSET,
     CMD_CAMTURN,
     CMD_PLAYERTURN,
     CMD_FACE,
@@ -1147,6 +1148,8 @@ Cmd game_cmds[] =
                         "performance testing feature to not draw objects with less than the given number of triangles" },
     { 0, "camreset", CMD_CAMRESET,{{0}},0,
                         "Camreset is bound to the PageDown key (default) to reset the camera behind the player." },
+    { 9, "camyawoffset", CMD_CAMYAWOFFSET, {{ PARSETYPE_FLOAT, &tmp_f32 }},CMDF_HIDEPRINT,
+                        "Orbits the third-person camera around the player by the given yaw in degrees." },
     { 0, "demoplay", CMD_DEMOPLAY, {{ CMDSENTENCE(demo_state.demoname)}},CMDF_HIDEVARS|CMDF_HIDEPRINT,
                         "Name of demo to play back" },
     { 0, "demoloop", 0, {{ CMDINT(demo_state.demo_loop) }},CMDF_HIDEPRINT,
@@ -5536,6 +5539,11 @@ int cmdGameParse(char *str, int x, int y)
         xcase CMD_PLAYERTURN:
             control_state.pyr.cur[1] = addAngle(control_state.pyr.cur[1],control_state.cam_pyr_offset[1]);
             control_state.cam_pyr_offset[1] = 0;
+        xcase CMD_CAMYAWOFFSET:
+            // Deterministic-capture aid: orbit the third-person camera around
+            // the player without touching the player's facing.
+            control_state.cam_pyr_offset[1] = RAD(tmp_f32);
+            cam_info.rotate_scale = 1;
         xcase CMD_FACE:
             playerToggleFollowMode();
             playerDoFollowMode();

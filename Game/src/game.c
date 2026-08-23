@@ -276,6 +276,16 @@ void parseArgs(int argc,char **argv)
             i += 2;
             continue;
         }
+        if (stricmp(argv[i], "-webswinganim") == 0 && i + 1 < argc)
+        {
+            // Issue 36 forensic safe baseline.  Custom Web Swing move selection
+            // is suppressed by default; this opt-in re-enables it for gated
+            // canary work without touching the overlay data files.
+            g_cohsourcedev_webswing_anim_selection = atoi(argv[i + 1]) != 0;
+            game_startupTracef("webswinganim.argument=%d", g_cohsourcedev_webswing_anim_selection);
+            i += 2;
+            continue;
+        }
         if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
         {
             Strncpyt(commandLinePassword, argv[i + 1]);
@@ -2527,6 +2537,37 @@ static void game_processCapture(void)
             sprintf_s(SAFESTR(command), "timeset %d", shot->timeHour);
             cmdParse(command);
             cmdParse("timescale 0");
+            // capture_override.txt lines 3+ are executed as console commands
+            // after camera placement (e.g. "camyawoffset 180" for a front
+            // view).  This is a developer iteration aid; delete the file for
+            // table-driven captures.
+            {
+                FILE *overrideFile = fopen("capture_override.txt", "r");
+                if (overrideFile)
+                {
+                    char line[256];
+                    int skip = 2;
+                    while (fgets(line, sizeof(line), overrideFile))
+                    {
+                        char *newline;
+                        if (skip > 0)
+                        {
+                            --skip;
+                            continue;
+                        }
+                        newline = strchr(line, '\n');
+                        if (newline) *newline = '\0';
+                        newline = strchr(line, '\r');
+                        if (newline) *newline = '\0';
+                        if (line[0])
+                        {
+                            game_startupTracef("capture.command.override cmd=%s", line);
+                            cmdParse(line);
+                        }
+                    }
+                    fclose(overrideFile);
+                }
+            }
             // Diagnostic: water mode/feature state at capture time. The
             // multi feature gate explains which materials the map's
             // textures bound at load (see docs/agent-status.md).

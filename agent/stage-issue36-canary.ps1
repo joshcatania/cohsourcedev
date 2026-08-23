@@ -1,0 +1,61 @@
+[CmdletBinding()]
+param(
+    [ValidateSet('Status', 'StaticProof', 'FullFrame30', 'Tracked')]
+    [string]$Variant = 'Status'
+)
+
+# Stages one of the issue-36 forensic canary audition variants into the
+# runtime canary include (bin/data/sequencers/cohsourcedev_canary.inc).
+# The installer must already have installed canary mode (-IncludeCanary);
+# this script never touches tracked data files and 'Tracked' restores the
+# original tracked bytes.
+
+$ErrorActionPreference = 'Stop'
+$repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
+$runtimeCanaryInclude = Join-Path $repoRoot 'bin\data\sequencers\cohsourcedev_canary.inc'
+$trackedCanaryInclude = Join-Path $repoRoot 'agent\animation\canary-sequencer.inc'
+$variants = @{
+    StaticProof = Join-Path $repoRoot 'agent\animation\canary-static-proof.inc'
+    FullFrame30 = Join-Path $repoRoot 'agent\animation\canary-full-frame30.inc'
+}
+
+function Get-Sha256([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $null }
+    $sha256 = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString($sha256.ComputeHash([System.IO.File]::ReadAllBytes($Path)))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $sha256.Dispose()
+    }
+}
+
+if ($Variant -eq 'Status') {
+    [pscustomobject]@{
+        runtimePresent = (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)
+        runtimeSha256 = Get-Sha256 $runtimeCanaryInclude
+        trackedSha256 = Get-Sha256 $trackedCanaryInclude
+        staticProofSha256 = Get-Sha256 $variants.StaticProof
+        fullFrame30Sha256 = Get-Sha256 $variants.FullFrame30
+        staged = if (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) {
+            $h = Get-Sha256 $runtimeCanaryInclude
+            if ($h -eq (Get-Sha256 $variants.StaticProof)) { 'StaticProof' }
+            elseif ($h -eq (Get-Sha256 $variants.FullFrame30)) { 'FullFrame30' }
+            elseif ($h -eq (Get-Sha256 $trackedCanaryInclude)) { 'Tracked' }
+            else { 'Unknown' }
+        } else { 'Missing' }
+    } | ConvertTo-Json
+    exit 0
+}
+
+if (-not (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)) {
+    throw "Runtime canary include is missing; install canary mode first: agent/install-webswing-animation.ps1 -Action Install -IncludeCanary"
+}
+
+$source = if ($Variant -eq 'Tracked') { $trackedCanaryInclude } else { $variants[$Variant] }
+Copy-Item -LiteralPath $source -Destination $runtimeCanaryInclude -Force
+[pscustomobject]@{
+    staged = $Variant
+    source = $source
+    runtimeSha256 = Get-Sha256 $runtimeCanaryInclude
+} | ConvertTo-Json

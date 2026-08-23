@@ -379,37 +379,72 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
 
-    if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
-        seqSetState(e->seq->state, 1, male_state_bit);
+    {
+        // Issue 36 forensic baseline.  The classifier and every diagnostic
+        // stays live.  Normal /webswing gameplay is animation-neutral by
+        // default (stock sequencer owns the pose); the explicit developer
+        // canary path (COHSOURCEDEV_ANIMCANARY) is always unaffected.  After
+        // the Case-4 static integrity proof the single BOTTOM phase is
+        // reintroduced as a gated experiment while AIRBORNE/ATTACHED/DESCEND/
+        // ASCEND remain suppressed.
+        static int last_logged_selection = -1;
+        int apply_all = g_cohsourcedev_webswing_anim_selection != 0;
+        int allow_this_phase = apply_all ||
+            phase == WEBSWING_ANIM_PHASE_BOTTOM;
+        int log_state = apply_all ? 1 : (phase == WEBSWING_ANIM_PHASE_BOTTOM ? 2 : 0);
 
-    if (is_male && phase == WEBSWING_ANIM_PHASE_ASCEND && e->motion->web_swing_anim_phase != WEBSWING_ANIM_PHASE_ASCEND && enter_state_bit >= 0)
-        seqSetState(e->seq->state, 1, enter_state_bit);
+        if (last_logged_selection != log_state)
+        {
+            filelog_printf("webswing.log",
+                           "WEB_SWING %s anim_selection_mode=%d custom_move_selection=%s\n",
+                           pmotionWebSwingAnimSide(),
+                           log_state,
+                           log_state == 1 ? "ENABLED_ALL" :
+                           log_state == 2 ? "BOTTOM_ONLY" : "SAFE_BASELINE_SUPPRESSED");
+            last_logged_selection = log_state;
+        }
 
-    if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
-        seqSetState(e->seq->state, 1, state_bits[0]);
-    else if (phase == WEBSWING_ANIM_PHASE_ATTACHED && state_bits[1] >= 0)
-        seqSetState(e->seq->state, 1, state_bits[1]);
-    else if (phase == WEBSWING_ANIM_PHASE_DESCEND && state_bits[1] >= 0 && state_bits[2] >= 0)
-    {
-        seqSetState(e->seq->state, 1, state_bits[1]);
-        seqSetState(e->seq->state, 1, state_bits[2]);
-    }
-    else if (phase == WEBSWING_ANIM_PHASE_BOTTOM && state_bits[1] >= 0 && state_bits[3] >= 0)
-    {
-        seqSetState(e->seq->state, 1, state_bits[1]);
-        seqSetState(e->seq->state, 1, state_bits[3]);
-    }
-    else if (phase == WEBSWING_ANIM_PHASE_ASCEND && state_bits[1] >= 0 && state_bits[4] >= 0)
-    {
-        seqSetState(e->seq->state, 1, state_bits[1]);
-        seqSetState(e->seq->state, 1, state_bits[4]);
+        if (allow_this_phase)
+        {
+            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
+                seqSetState(e->seq->state, 1, male_state_bit);
+
+            if (is_male && phase == WEBSWING_ANIM_PHASE_ASCEND && e->motion->web_swing_anim_phase != WEBSWING_ANIM_PHASE_ASCEND && enter_state_bit >= 0)
+                seqSetState(e->seq->state, 1, enter_state_bit);
+
+            if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+                seqSetState(e->seq->state, 1, state_bits[0]);
+            else if (phase == WEBSWING_ANIM_PHASE_ATTACHED && state_bits[1] >= 0)
+                seqSetState(e->seq->state, 1, state_bits[1]);
+            else if (phase == WEBSWING_ANIM_PHASE_DESCEND && state_bits[1] >= 0 && state_bits[2] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[2]);
+            }
+            else if (phase == WEBSWING_ANIM_PHASE_BOTTOM && state_bits[1] >= 0 && state_bits[3] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[3]);
+            }
+            else if (phase == WEBSWING_ANIM_PHASE_ASCEND && state_bits[1] >= 0 && state_bits[4] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[4]);
+            }
+        }
+        else if (phase != WEBSWING_ANIM_PHASE_NONE && phase != WEBSWING_ANIM_PHASE_BOTTOM)
+        {
+            // Intentionally suppressed by the forensic baseline; the phase
+            // is still computed and logged above but no move bits are set.
+        }
     }
 
     if (phase != e->motion->web_swing_anim_phase)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s anim_phase=%s statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       "WEB_SWING %s anim_phase=%s anim_selection=%d statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        pmotionWebSwingAnimSide(), pmotionWebSwingAnimPhaseName(phase),
+                       g_cohsourcedev_webswing_anim_selection != 0,
                        state_bits[0] >= 0 && TSTB(e->seq->state, state_bits[0]),
                        state_bits[1] >= 0 && TSTB(e->seq->state, state_bits[1]),
                        state_bits[2] >= 0 && TSTB(e->seq->state, state_bits[2]),
