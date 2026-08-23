@@ -27,7 +27,7 @@ inside `phase == stored_phase`. That `enter` bit is set only when `phase == ASCE
 ## Starting / final
 
 * **Starting SHA (this diagnostic cleanup):** `3f6d8fd6e06cc2e213b586712fa58f28b9697bfd`
-* **Final SHA (after this commit):** `1a59c2d80bc5f8579be83df061adc6aac4337f9c` (pushed to `origin/agent/issue-36-web-swing`, PR #37 draft)
+* **Final SHA (after this commit):** `5e84737a82aeb01fcd7d557b56bfa05ecf15f54d` (pushed to `origin/agent/issue-36-web-swing`, PR #37 draft)
 * **Files changed (per design):** `Common/player/pmotion.c` (dead diagnostic removed, male/enter generation intact), `agent/webswing-animation/webswing.inc`, `agent/webswing-animation/webswing.statebits`, `agent/webswing-animation/webswing-canary.statebits`, this evidence doc. No `.anim` bytes, no `swinginganimations/*.fbx`, no `blender_export_animx.py`, no `prove_mixamo_anatomical_pose.py`, no `webswing-animations.json`, no physics/rope/steering.
 
 ## 1. Ranges auditioned (actual Male skin, normal scale)
