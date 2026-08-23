@@ -320,6 +320,9 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     F32 bottom_fraction;
     F32 tangent_speed;
     WebSwingAnimPhase phase;
+    int male_state_bit;
+    int enter_state_bit;
+    int is_male = 0;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     bottom_fraction = 0.0f;
@@ -335,14 +338,22 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         }
     }
 
+    male_state_bit = seqGetStateNumberFromName("WEBSWING_MALE");
+    enter_state_bit = seqGetStateNumberFromName("WEBSWING_ASCEND_MALE_ENTER");
+    if (male_state_bit >= 0)
+        seqSetState(e->seq->state, 0, male_state_bit);
+    if (enter_state_bit >= 0)
+        seqSetState(e->seq->state, 0, enter_state_bit);
+
     {
         static int logged_state_resolution;
         if (!logged_state_resolution)
         {
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d\n",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d\n",
                            state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
-                           state_bits[3] >= 0, state_bits[4] >= 0);
+                           state_bits[3] >= 0, state_bits[4] >= 0,
+                           male_state_bit >= 0, enter_state_bit >= 0);
             logged_state_resolution = 1;
         }
     }
@@ -365,6 +376,14 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     // leave the normal sequencer state machine completely unchanged.
     if (!resolved_count)
         return;
+
+    is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
+
+    if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
+        seqSetState(e->seq->state, 1, male_state_bit);
+
+    if (is_male && phase == WEBSWING_ANIM_PHASE_ASCEND && e->motion->web_swing_anim_phase != WEBSWING_ANIM_PHASE_ASCEND && enter_state_bit >= 0)
+        seqSetState(e->seq->state, 1, enter_state_bit);
 
     if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
         seqSetState(e->seq->state, 1, state_bits[0]);
@@ -389,16 +408,33 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     if (phase != e->motion->web_swing_anim_phase)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s anim_phase=%s statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       "WEB_SWING %s anim_phase=%s statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        pmotionWebSwingAnimSide(), pmotionWebSwingAnimPhaseName(phase),
                        state_bits[0] >= 0 && TSTB(e->seq->state, state_bits[0]),
                        state_bits[1] >= 0 && TSTB(e->seq->state, state_bits[1]),
                        state_bits[2] >= 0 && TSTB(e->seq->state, state_bits[2]),
                        state_bits[3] >= 0 && TSTB(e->seq->state, state_bits[3]),
                        state_bits[4] >= 0 && TSTB(e->seq->state, state_bits[4]),
+                       male_state_bit >= 0 && TSTB(e->seq->state, male_state_bit),
+                       enter_state_bit >= 0 && TSTB(e->seq->state, enter_state_bit),
                        e->motion->web_swing_attached, e->motion->input.web_swing_enabled,
                        bottom_fraction, tangent_speed, e->motion->vel[1],
                        vecParamsXYZ(e->motion->web_swing_anchor), e->motion->web_swing_rope_length);
+        e->motion->web_swing_anim_phase = phase;
+    }
+    else
+    {
+        // Keep diagnostics bounded but prove the Male/Enter bits are resolved and stable
+        // when the phase does not change. Log only the transition into ASCEND.
+        if (is_male && phase == WEBSWING_ANIM_PHASE_ASCEND && enter_state_bit >= 0 && TSTB(e->seq->state, enter_state_bit))
+        {
+            filelog_printf("webswing.log",
+                           "WEB_SWING %s ascend_enter pulse male=%d enter=%d phase=%s\n",
+                           pmotionWebSwingAnimSide(),
+                           male_state_bit >= 0 && TSTB(e->seq->state, male_state_bit),
+                           enter_state_bit >= 0 && TSTB(e->seq->state, enter_state_bit),
+                           pmotionWebSwingAnimPhaseName(phase));
+        }
         e->motion->web_swing_anim_phase = phase;
     }
 }
