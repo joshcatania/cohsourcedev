@@ -157,6 +157,141 @@ function Ensure-WebSwingAnimationRuntime {
     return $status
 }
 
+function Clear-ClientCrashPrompt {
+    param([string]$ShadowRegistryPath)
+    foreach ($name in @('gameprogressuserstring','gameprogressdialogtype')) {
+        $path = Join-Path $ShadowRegistryPath $name
+        if (Test-Path -LiteralPath $path) {
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+}
+
+function Get-LastStartupTrace {
+    param([string]$BinRoot, [string]$LogRoot, [string]$RepoRoot)
+    $candidates = @()
+    foreach ($dir in @($BinRoot, (Join-Path $BinRoot 'logs'), $LogRoot, $RepoRoot)) {
+        if (Test-Path -LiteralPath $dir) {
+            $candidates += Get-ChildItem -Path $dir -Filter '*startup*.trace' -File -Recurse -ErrorAction SilentlyContinue
+        }
+    }
+    $latest = $candidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
+    if (-not $latest) { return @{ path=$null; lastMarker=$null; tail=@(); exists=$false; lastWriteTimeUtc=$null; currentForLaunch=$false } }
+    $rawLines = Get-Content -LiteralPath $latest.FullName -Tail 50 -ErrorAction SilentlyContinue
+    $lines = @($rawLines | ForEach-Object { [string]$_ })
+    $last = $lines | Where-Object { $_ -match 'marker=' } | Select-Object -Last 1
+    if ($last) { $last = [string]$last }
+    return @{ path=$latest.FullName; lastMarker=$last; tail=@($lines); exists=$true; lastWriteTimeUtc=$latest.LastWriteTimeUtc.ToString('o'); currentForLaunch=$false }
+}
+
+function Format-RedactedClientArgs {
+    param([string[]]$Arguments)
+    $redacted = @()
+    $skipNext = $false
+    for ($i = 0; $i -lt $Arguments.Count; $i++) {
+        if ($skipNext) { $redacted += "<redacted>"; $skipNext = $false; continue }
+        if ($Arguments[$i] -eq "-password") { $redacted += "-password"; $skipNext = $true; continue }
+        $redacted += $Arguments[$i]
+    }
+    return $redacted
+}
+
+function Get-RecentClientLogs {
+    param([DateTime]$LaunchStartedUtc, [string]$BinRoot, [string]$LogRoot, [string]$RepoRoot)
+    $roots = @($BinRoot, (Join-Path $BinRoot 'logs'), (Join-Path $BinRoot 'logs/game'), (Join-Path $BinRoot 'logs/client'), $LogRoot, $RepoRoot) | Where-Object { Test-Path -LiteralPath $_ }
+    $candidates = @()
+    foreach ($root in $roots) {
+        $candidates += Get-ChildItem -Path $root -Filter "*.log" -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-3) }
+        $candidates += Get-ChildItem -Path $root -Filter "*.txt" -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-3) }
+        $candidates += Get-ChildItem -Path $root -Filter "*.trace" -File -ErrorAction SilentlyContinue | Where-Object { $_.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-3) }
+    }
+    $known = @((Join-Path $BinRoot 'Ouroboros.log'), (Join-Path $BinRoot 'logs/game/webswing.log'), (Join-Path $BinRoot 'logs/client/webswing.log'))
+    foreach ($p in $known) {
+        if (Test-Path -LiteralPath $p) {
+            $item = Get-Item -LiteralPath $p
+            if ($candidates.FullName -notcontains $item.FullName) { $candidates += $item }
+        }
+    }
+    $sorted = $candidates | Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 8
+    $result = @()
+    foreach ($file in $sorted) {
+        try {
+            $rawLines = Get-Content -LiteralPath $file.FullName -Tail 40 -ErrorAction SilentlyContinue
+            $lines = @($rawLines | ForEach-Object { [string]$_ })
+            $isCurrent = $file.LastWriteTimeUtc -ge $LaunchStartedUtc.AddSeconds(-3)
+            $result += [ordered]@{ path=$file.FullName; lastWriteTimeUtc=$file.LastWriteTimeUtc.ToString('o'); currentForLaunch=$isCurrent; tail=@($lines) }
+        } catch {
+            $result += [ordered]@{ path=$file.FullName; error=$_.Exception.Message }
+        }
+    }
+    return $result
+}
+
+function Write-ClientLaunchDiagnostics {
+    param(
+        [System.Diagnostics.Process]$Client,
+        [DateTime]$LaunchStartedUtc,
+        [string[]]$ClientArgs,
+        [bool]$WebSwingDev,
+        [bool]$WebSwingCanary,
+        [object]$WebSwingRuntimeStatus
+    )
+    $logRoot = Join-Path $repoRoot 'agent/logs'
+    New-Item -ItemType Directory -Force -Path $logRoot | Out-Null
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $diagPath = Join-Path $logRoot "play-client-launch-$stamp.json"
+    $redactedArgs = Format-RedactedClientArgs -Arguments $ClientArgs
+    $exitCode = $null
+    try { $Client.Refresh(); $exitCode = $Client.ExitCode } catch { $exitCode = -1 }
+    $trace = Get-LastStartupTrace -BinRoot $binDir -LogRoot $logRoot -RepoRoot $repoRoot
+    if ($trace.exists -and $trace.lastWriteTimeUtc) {
+        try { $traceTime = [DateTime]::Parse($trace.lastWriteTimeUtc); $trace.currentForLaunch = $traceTime -ge $LaunchStartedUtc.AddSeconds(-3) } catch { $trace.currentForLaunch = $false }
+    }
+    $recentLogs = Get-RecentClientLogs -LaunchStartedUtc $LaunchStartedUtc -BinRoot $binDir -LogRoot $logRoot -RepoRoot $repoRoot
+    $shardStatus = $null
+    try { $shardStatus = & powershell.exe -NoProfile -ExecutionPolicy Bypass -File $statusScript -Json 2>$null | ConvertFrom-Json } catch {}
+    $webSwingRuntime = $null
+    if ($WebSwingRuntimeStatus) {
+        $webSwingRuntime = [ordered]@{
+            installed=$WebSwingRuntimeStatus.installed
+            overlayPresent=$WebSwingRuntimeStatus.overlayPresent
+            overlaySha256=$WebSwingRuntimeStatus.overlaySha256
+            trackedOverlaySha256=$WebSwingRuntimeStatus.trackedOverlaySha256
+            includePresent=$WebSwingRuntimeStatus.includePresent
+            includeSha256=$WebSwingRuntimeStatus.includeSha256
+            trackedIncludeSha256=$WebSwingRuntimeStatus.trackedIncludeSha256
+            stateBitsPresent=$WebSwingRuntimeStatus.stateBitsPresent
+            stateBitsSha256=$WebSwingRuntimeStatus.stateBitsSha256
+            trackedStateBitsSha256=$WebSwingRuntimeStatus.trackedStateBitsSha256
+            animationAssetsRuntimeValid=$WebSwingRuntimeStatus.animationAssetsRuntimeValid
+        }
+        if ($WebSwingCanary) {
+            $webSwingRuntime.canaryIncludePresent = $WebSwingRuntimeStatus.canaryIncludePresent
+            $webSwingRuntime.canaryIncludeSha256 = $WebSwingRuntimeStatus.canaryIncludeSha256
+            $webSwingRuntime.trackedCanaryIncludeSha256 = $WebSwingRuntimeStatus.trackedCanaryIncludeSha256
+        }
+    }
+    $diag = [ordered]@{
+        passed=$false
+        reason="Ouroboros exited during startup probe"
+        startedAt=$LaunchStartedUtc.ToString('o')
+        finishedAt=[DateTime]::UtcNow.ToString('o')
+        pid=($Client.Id)
+        exitCode=$exitCode
+        executable=$ouroboros
+        workingDirectory=$binDir
+        arguments=@($redactedArgs)
+        webSwingDev=[bool]$WebSwingDev
+        webSwingCanary=[bool]$WebSwingCanary
+        webSwingRuntime=$webSwingRuntime
+        startupTrace=$trace
+        recentLogs=@($recentLogs)
+        shardStatus=$shardStatus
+    }
+    $diag | ConvertTo-Json -Depth 7 | Set-Content -LiteralPath $diagPath -Encoding UTF8
+    return $diagPath
+}
+
 try {
     if ($WebSwingCanary -and -not $WebSwingDev) {
         throw '-WebSwingCanary requires -WebSwingDev.'
@@ -178,6 +313,7 @@ try {
     }
 
     $clientWorkingDirectory = $binDir
+    $webSwingRuntimeStatus = $null
     if ($WebSwingDev) {
         $runtimeStatusArguments = @('-Action', 'Status', '-RepositoryRoot', $repoRoot)
         if ($WebSwingCanary) { $runtimeStatusArguments += '-IncludeCanary' }
@@ -201,7 +337,7 @@ try {
                 Stop-LocalWorkflowClients -Clients $compatibleClients
             }
         }
-        Ensure-WebSwingAnimationRuntime
+        $webSwingRuntimeStatus = Ensure-WebSwingAnimationRuntime
         Write-Host "Web Swing development client: $ouroboros"
         $modeDescription = if ($WebSwingCanary) { 'compiled player plus explicit animation canary audition' } else { 'compiled player plus five-state custom Web Swing overlay' }
         Write-Host "Web Swing development mode: $modeDescription"
@@ -280,11 +416,51 @@ try {
     $clientArgs = @('-db', '127.0.0.1', '-authname', $AccountName, '-password', $Password, '-noverify', '-quicklogin', '1', '-noversioncheck', '-fullscreen', '0', '-screen', '1280', '720', '-stopinactivedisplay', '0')
     if ($WebSwingDev) { $clientArgs += @('-webswingdev', '-nopopups') }
     if ($WebSwingCanary) { $clientArgs += @('-animcanary', '1') }
-    $client = Start-Process -FilePath $ouroboros -ArgumentList $clientArgs -WorkingDirectory $clientWorkingDirectory -PassThru
-    Start-Sleep -Milliseconds 1500
-    if (-not (Get-Process -Id $client.Id -ErrorAction SilentlyContinue)) {
-        throw "Ouroboros.exe exited immediately after launch. Inspect the client/runtime logs under $binDir."
+
+    $shadowRegistry = Join-Path $binDir 'registry-keys/hkey_current_user/software/cryptic/coh'
+    if (Test-Path -LiteralPath $shadowRegistry) {
+        Clear-ClientCrashPrompt -ShadowRegistryPath $shadowRegistry
     }
+
+    $launchStartedUtc = [DateTime]::UtcNow
+    $client = Start-Process -FilePath $ouroboros -ArgumentList $clientArgs -WorkingDirectory $clientWorkingDirectory -PassThru
+    $exitedDuringStartup = $client.WaitForExit(5000)
+    if ($exitedDuringStartup) {
+        $exitCode = -1
+        try { $client.Refresh(); $exitCode = $client.ExitCode } catch { $exitCode = -1 }
+        $diagPath = Write-ClientLaunchDiagnostics -Client $client -LaunchStartedUtc $launchStartedUtc -ClientArgs $clientArgs -WebSwingDev ([bool]$WebSwingDev) -WebSwingCanary ([bool]$WebSwingCanary) -WebSwingRuntimeStatus $webSwingRuntimeStatus
+        $traceInfo = Get-LastStartupTrace -BinRoot $binDir -LogRoot (Join-Path $repoRoot 'agent/logs') -RepoRoot $repoRoot
+        $startupMarker = if ($traceInfo.lastMarker) { $traceInfo.lastMarker } else { "<unavailable>" }
+        $webSwingParity = "UNKNOWN"
+        if ($webSwingRuntimeStatus) {
+            $expectedOverlay = if ($WebSwingCanary) { $webSwingRuntimeStatus.trackedCanaryOverlaySha256 } else { $webSwingRuntimeStatus.trackedOverlaySha256 }
+            $expectedStateBits = if ($WebSwingCanary) { $webSwingRuntimeStatus.trackedCanaryStateBitsSha256 } else { $webSwingRuntimeStatus.trackedStateBitsSha256 }
+            $parity = ($webSwingRuntimeStatus.overlaySha256 -eq $expectedOverlay) -and ($webSwingRuntimeStatus.stateBitsSha256 -eq $expectedStateBits) -and $webSwingRuntimeStatus.animationAssetsRuntimeValid
+            $webSwingParity = if ($parity) { "PASS" } else { "FAIL" }
+        } elseif (-not $WebSwingDev) {
+            $webSwingParity = "N/A (no WebSwingDev)"
+        }
+        Write-Host ''
+        Write-Host 'PLAY-COH CLIENT STARTUP FAILURE' -ForegroundColor Red
+        Write-Host "Exit code: $exitCode"
+        Write-Host "Startup marker: $startupMarker"
+        Write-Host "Web Swing runtime parity: $webSwingParity"
+        Write-Host "Diagnostic: $diagPath"
+        if ($traceInfo.tail -and $traceInfo.tail.Count -gt 0) {
+            Write-Host '--- Startup trace tail (last 5) ---'
+            $traceInfo.tail | Select-Object -Last 5 | ForEach-Object { Write-Host $_ }
+        }
+        $recentLogs = Get-RecentClientLogs -LaunchStartedUtc $launchStartedUtc -BinRoot $binDir -LogRoot (Join-Path $repoRoot 'agent/logs') -RepoRoot $repoRoot
+        if ($recentLogs -and $recentLogs.Count -gt 0) {
+            $firstLog = $recentLogs | Select-Object -First 1
+            if ($firstLog.tail -and $firstLog.tail.Count -gt 0) {
+                Write-Host ("--- Recent log tail: {0} ---" -f $firstLog.path)
+                $firstLog.tail | Select-Object -Last 5 | ForEach-Object { Write-Host $_ }
+            }
+        }
+        throw "Ouroboros.exe exited during startup probe (exit code $exitCode). Diagnostic: $diagPath"
+    }
+
     Write-Host "City of Heroes launched (PID $($client.Id))."
     exit 0
 } catch {

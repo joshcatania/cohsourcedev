@@ -1,10 +1,10 @@
 # Issue 36 — Mixamo swing phase runtime audition + Male-only HOLD (FINAL GATE) — CORRECTION APPLIED
 
-**Branch:** `agent/issue-36-web-swing` @ `dfd17ce1af0bcb71d7cf0949b0f99a75accf0b98` → `HEAD` after this correction
+**Branch:** `agent/issue-36-web-swing` @ `3f6d8fd6e06cc2e213b586712fa58f28b9697bfd` → `HEAD` after this diagnostic cleanup
 **Proven asset (byte-identical):** `MALE/COHSOURCEDEV_RETARGET_SWING_FULL` 60 f @30 fps SHA256 `2a674b086d7fa916530002ead55451fdf28fd9780a9efee23205eed4b66d388e` (`swinginganimations/Swinging.fbx` — untracked)
 **Control fallback:** `COHSOURCEDEV_WEBSWING_STRETCH_V2` `35b6da70…` (ATTACHED/DESCEND), `TUCK`/`ASCEND` V1 for Fem/Huge
 
-This document **supersedes** the prior `issue36-webswing-phase-audition.md` proposal. The prior `webswing.inc` directly cycled Mixamo `30–40` under `Flags Cycle` for generic ASCEND — that would snap and also affect Fem/Huge (Cycle belongs to `SeqMove`, not `Type`). The corrected design implements the pre-flighted `Scale 0` hold + `NextMove` + `WEBSWING_MALE`/`ENTER` bits. This correction also **removes the dead `ascend_enter pulse` diagnostic** and **corrects the `runtime_statebits` interpretation** per the new pre-flight.
+This document **supersedes** the prior `issue36-webswing-phase-audition.md` proposal and the `dfd17ce1` final-gate draft. The `webswing.inc` now correctly cycles Mixamo `30–40` only via helper `START/HOLD` (generic ASCEND remains V1 fallback). This update also **removes the dead `ascend_enter pulse` diagnostic** in `pmotion.c` and **corrects the `runtime_statebits` interpretation** per the new pre-flight.
 
 ## Correction 1 — dead diagnostic removed
 
@@ -26,8 +26,8 @@ inside `phase == stored_phase`. That `enter` bit is set only when `phase == ASCE
 
 ## Starting / final
 
-* **Starting SHA (this correction):** `dfd17ce1af0bcb71d7cf0949b0f99a75accf0b98`
-* **Final SHA (after this commit):** to be filled by `git rev-parse HEAD`
+* **Starting SHA (this diagnostic cleanup):** `3f6d8fd6e06cc2e213b586712fa58f28b9697bfd`
+* **Final SHA (after this commit):** to be filled by `git rev-parse HEAD` (pushed to `origin/agent/issue-36-web-swing`, PR #37 draft)
 * **Files changed (per design):** `Common/player/pmotion.c` (dead diagnostic removed, male/enter generation intact), `agent/webswing-animation/webswing.inc`, `agent/webswing-animation/webswing.statebits`, `agent/webswing-animation/webswing-canary.statebits`, this evidence doc. No `.anim` bytes, no `swinginganimations/*.fbx`, no `blender_export_animx.py`, no `prove_mixamo_anatomical_pose.py`, no `webswing-animations.json`, no physics/rope/steering.
 
 ## 1. Ranges auditioned (actual Male skin, normal scale)
@@ -108,13 +108,13 @@ StateBit COHSOURCEDEV_ANIMCANARY Predictable  (canary only)
 
 **Generation:** `Common/player/pmotion.c:pmotionSetWebSwingAnimState()` — `is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(..., "Male")` (not `calculatedSeqTypeName`). After `phase = pmotionGetWebSwingAnimPhase(...)`, before `e->motion->web_swing_anim_phase = phase`: `WEBSWING_MALE` set when `is_male && phase != NONE`; `WEBSWING_ASCEND_MALE_ENTER` set when `is_male && phase == ASCEND && e->motion->web_swing_anim_phase != ASCEND` (one-update pulse). Both bits cleared each call via `seqSetState(...,0,...)` alongside the five phase bits. Diagnostics: `WEBSWING_ANIM runtime_statebits ... male=%d enter=%d` now correctly means *resolved* ( `>=0` ), while `WEB_SWING ... anim_phase=ASCEND ... male=1 enter=1` via `TSTB` proves *active*.
 
-## 5. Runtime sequencer proof — OBSERVED (GUI client)
+## 5. Runtime sequencer proof — PENDING GUI CLIENT
 
-*Build:* `Release|x86` **BUILD PASS 37s** (`agent/logs/build-Release-x86-20260822-203026.log`), shard `ServerMonitor 9900`, `normalModeInstalled true` (`include 3a2bafa…`, `stateBits 840bc0…`).
+*Build:* `Release|x86` **BUILD PASS 37s** (`agent/logs/build-Release-x86-20260822-203026.log`) and **BUILD PASS 37s** after diagnostic cleanup (`agent/logs/build-Release-x86-20260822-203026.log` second build), shard `ServerMonitor 9900` warm, `normalModeInstalled true` (`include 3a2bafa…`, `stateBits 840bc0…`).
 
-*GUI path (required):* `Dummy00009` / `SwingV2` Male in Atlas via `agent/play-local.ps1 -WebSwingDev` (normal integrated Web Swing, NOT `animcanary`). Client log `bin/logs/game/webswing.log` (CLIENT) shows `selectedMove`.
+*GUI path (required for `selectedMove`):* `Dummy00009` / `SwingV2` Male in Atlas via `agent/play-local.ps1 -WebSwingDev` (normal integrated Web Swing, NOT `animcanary`). Client log `bin/logs/game/webswing.log` (CLIENT, `#ifdef CLIENT` in `seqsequence.c`) shows `selectedMove`; MapServer logs do **not** contain it.
 
-**Observed excerpts to be captured after this correction (to be filled from `bin/logs/game/webswing.log` after a swing reaching ASCEND):**
+**Expected excerpts after a swing reaching ASCEND (to be filled from `bin/logs/game/webswing.log` CLIENT after a successful GUI swing):**
 
 ```
 WEB_SWING CLIENT anim_phase=ASCEND ... male=1 enter=1 ...  // A. phase transition into ASCEND
@@ -125,17 +125,21 @@ WEB_SWING ANIM selectedMove=WEBSWING_ASCEND_MALE_HOLD      // C. after 30-40 com
 ... re-enter ASCEND → new enter=1 → START again            // F
 ```
 
-*Status after rebuild:* `webswing-smoke` `Dummy00010` `300s` **PASS** `serverSelectedAnchors 734` (vs prior 16), all 6 steering buckets, `hardCorrectionCount 0` (`agent/logs/webswing-smoke-20260822-203249.json`). The smoke that previously timed out now passes — physics unchanged, new mapping does not destabilize. The smoke’s animation phase list was empty because `RequireAnimationPhases` not set; re-run with that flag plus a GUI swing will emit the 12-step sequence above. Until that log is captured, the START/HOLD proof is *code + sequencer* proof (Priority, NextMove, Scale 0) plus the smoke’s server-side `male=1 enter=1` phase log.
+*Status after rebuild:* `webswing-smoke` `Dummy00010` `300s` **PASS** `serverSelectedAnchors 734` (vs prior 16), all 6 steering buckets, `hardCorrectionCount 0` (`agent/logs/webswing-smoke-20260822-203249.json`). The smoke that previously timed out now passes — physics unchanged, new mapping does not destabilize. The smoke’s `animationPhases` was empty because `RequireAnimationPhases` not set; re-run with that flag plus a GUI swing will emit the 12-step sequence above. Until GUI `selectedMove` log is captured, the START/HOLD proof remains *code + sequencer* proof (Priority, NextMove, Scale 0) plus the smoke’s server-side phase log — **not yet OBSERVED**.
 
-*If GUI video still pending due to Ouroboros launch flakiness (`PLAY-COH ERROR: Ouroboros.exe exited immediately` — check `bin/Ouroboros.log`), use the proven `SwingV2` Atlas anchor workflow from `issue-36-animation-pipeline.md`.*
+*Client launch diagnostics (new in `play-local.ps1`):* `WebSwingDev` GUI launch `Dummy00009` on `2026-08-22T21:02:40Z` exited during startup probe `exit code -1` at `marker=command-line.parse.complete`, `Web Swing runtime parity: PASS`, diagnostic `agent/logs/play-client-launch-20260822-205920.json` / `210240.json`. **Classification:** client-wide WebSwingDev startup failure, not Web Swing sequencer parse (parity PASS, `statebits_load overlay_complete data_count=7`). Bounded control without `-WebSwingDev` **succeeded** (`Ouroboros PID 5376` launched, `PLAY-COH CLIENT STARTUP` held). Both old (`0331ad7af` direct `30–40`) and new (`helper moves`) `webswing.inc` fail identically for WebSwingDev, so failure is not caused by `START/HOLD` syntax. Normal smoke `agent/smoke.ps1 -ExerciseCharacter Dummy00009` **PASS 8.3s** — shard healthy.
 
 ## 6. Frame-40 HOLD proof
 
 `HOLD Anim = 40 60, move-level Scale 0` → sequencer initializes at 40 and never advances (`seqStep` uses `move->scale`, `seqClientStep` uses `move->scale`). Practical gate: `selectedMove` proves `HOLD` entered, GUI video shows no `40→30` snap, held pose remains stable. No new instrumentation needed.
 
-## 7. GUI visual gate — REQUIRED
+## 7. GUI visual gate — REQUIRED (PENDING)
 
-Capture normal-size Male `airborne→attach→descend→bottom (18–22)→ascend START (30–40)→hold @40→detach→airborne` via `play-local -WebSwingDev` + `Dummy00009`/`SwingV2`. Preserve MP4 + stills (Bottom athletic tuck, Ascend START/mid, HOLD). `/webswing 0` negative control must return to stock `AIR_MA_IRONKICK`. Bottom `18–22` **PASS only if** no 5-frame buzzing, no snap, no knee pop; if worse than V1 TUCK, **revert Male BOTTOM to `MALE/COHSOURCEDEV_WEBSWING_TUCK 1 24`**. Ascend `30–40→hold` must show smooth `F30` entry, readable extension, stable `F40`, clean detach.
+Capture normal-size Male `airborne→attach→descend→bottom (18–22)→ascend START (30–40)→hold @40→detach→airborne` via `play-local -WebSwingDev` + `Dummy00009`/`SwingV2`. Preserve MP4 + stills (Bottom athletic tuck, Ascend START/mid, HOLD). `/webswing 0` negative control must return to stock `AIR_MA_IRONKICK`.
+
+*Current status:* GUI video **pending** due to `PLAY-COH CLIENT STARTUP FAILURE exit -1` at `command-line.parse.complete` (see `agent/logs/play-client-launch-20260822-210240.json`). The new diagnostics prove it is a **client-wide WebSwingDev startup failure** (normal client without `-WebSwingDev` launches, parity `PASS`, `statebits_load data_count=7`). Not caused by `START/HOLD` — old `webswing.inc` (`30–40` direct) fails identically.
+
+Bottom `18–22` is **candidate / proxy-pass** (Blender proxy `0°` segment error, no buzzing in 5-frame window, but GUI confirmation pending); if worse than V1 `TUCK`, **revert Male BOTTOM to `MALE/COHSOURCEDEV_WEBSWING_TUCK 1 24`**. Ascend `30–40→hold` must show smooth `F30` entry, readable extension, stable `F40`, clean detach.
 
 ## 8. Regression
 
@@ -165,8 +169,10 @@ No `swinginganimations/*.fbx`, no `blender_export_animx.py`, no `prove_mixamo_an
 
 ---
 
-**Final visual verdict:**
-* Bottom `18–22` — **PASS loop-clean** (pending GUI confirmation; revert to V1 if snap observed)
-* Ascend `30–40→hold` — **designed PASS one-shot + Scale 0 hold** (pending GUI `selectedMove` + video proof of no `40→30` wrap)
+**Final visual verdict (pending GUI):**
+* Bottom `18–22` — **candidate / proxy-pass loop-clean** (Blender `0°` segment error, 5-frame window clean; GUI confirmation pending — revert to V1 `TUCK` if snap observed)
+* Ascend `30–40→hold` — **designed one-shot + Scale 0 hold** (code + sequencer proof: Priority 23, NextMove, Scale 0; GUI `selectedMove` + video proof of no `40→30` wrap pending)
+
+**Client launch diagnostics:** `WebSwingDev` `Dummy00009` → `PLAY-COH CLIENT STARTUP FAILURE exit -1 marker=command-line.parse.complete parity=PASS diagnostic=agent/logs/play-client-launch-20260822-210240.json`; normal launch without `WebSwingDev` **succeeded** (`PID 5376`). Classification: **B. WebSwingDev/runtime-data-specific startup failure, not animation** — both old and new `webswing.inc` fail identically. Normal smoke `8.3s PASS`, webswing smoke `734 anchors PASS` (physics intact).
 
 **STOP FOR SOL/JOSH REVIEW** — do not merge PR #37.
