@@ -127,9 +127,10 @@ agent/stage-issue36-canary.ps1 -Variant {StaticProof|FullFrame30}
 ```
 
 Launch: `agent/capture.ps1 -Target AtlasPlaza_Closeup_01 -AccountName Dummy00009
--ExtraClientArgs '-webswingdev -animcanary 1 -webswinganim 0'` (the account
-owns the Male character `SwingV2` on `StaticMapId 1`; `AccessLevel 9` so
-`timeset`/`timescale` freeze succeeds).  Extra camera control for this pass:
+-ExtraClientArgs '-webswingdev -animcanary 1 -webswinganim 0'` for the A/B
+(`0` = `SAFE_NONE`; Josh's BOTTOM test will use `-webswinganim 2` =
+`MALE_BOTTOM_ONLY`) (the account owns the Male character `SwingV2` on
+`StaticMapId 1`; `AccessLevel 9` so `timeset`/`timescale` freeze succeeds).  Extra camera control for this pass:
 
 * `Common/cmdparse/cmdgame.c` new dev command `{9,"camyawoffset",…}`
   — `control_state.cam_pyr_offset[1] = RAD(deg)` (the camera's yaw is
@@ -357,17 +358,28 @@ Only Case 4 may proceed to Phase 6.
 
 ---
 
-## Phase 6 — Reintroduce **one** phase only
+## Phase 6 — Reintroduce **one** phase only (corrected)
 
-Per the instruction the animation-neutral gate was narrowed to a
-**BOTTOM-only** experiment while `AIRBORNE` and `ATTACHED/DESCEND` remain
-animation-neutral and `ASCEND START/HOLD` stay disabled:
+Blocker 1 fixed: `agent/animation/canary-*.inc` now place `Scale 0` at Move
+level (`Move … Scale 0 / Type Male Anim …`) matching
+`WEBSWING_ASCEND_MALE_HOLD`; the two front closeups were re-shot after
+restaging (`STATIC_PROOF` `74809` bytes, `FULL_FRAME30` `92387` bytes) and
+`selectedMove=COHSOURCEDEV_CUSTOM_CANARY TypeGfx=male` still resolves with
+the expected `AnimP`.
 
-* `Common/player/pmotion.c:382` — `g_cohsourcedev_webswing_anim_selection == 0`
-  now means **BOTTOM_ONLY** (`log_state 2`), not fully suppressed: `phase ==
-  WEBSWING_ANIM_PHASE_BOTTOM` still sets `WEBSWING_ATTACHED`+`WEBSWING_BOTTOM`
-  (and `WEBSWING_MALE` when the skin is Male).  `-webswinganim 1` restores
-  full custom selection for gated canary work.
+Blocker 2 fixed: `Common/player/pmotion.c:382` now implements an explicit
+mode:
+
+```
+0 = SAFE_NONE  — compute/log classifier, set NO animation bits
+1 = ALL_EXPERIMENTAL — original full behaviour
+2 = MALE_BOTTOM_ONLY — only is_male && phase==BOTTOM sets WEBSWING_MALE+ATTACHED+BOTTOM
+```
+
+`0` is a true control, `2` is the Josh BOTTOM test; Fem/Huge remain fully
+neutral in `2`, and `AIRBORNE`/`ATTACHED`/`DESCEND`/`ASCEND` stay neutral for
+Male in `2`.
+
 * `agent/webswing-animation/webswing.inc` — no data change needed:
   `WEBSWING_BOTTOM Type Male Anim MALE/COHSOURCEDEV_RETARGET_SWING_FULL 18 22
   Flags Cycle` remains the tested range (`F20` most compact per the earlier
@@ -456,22 +468,34 @@ game's own skinned `TypeGfx=male` character.
 
 ---
 
-## Result
+## Result (corrected per Sol review)
 
-**Case 4** — the forensic A/B on the actual skin and its exact numeric
-cross-check pass together.  The prior "Male skin PASS" was not a false gate
-for the *static* pose; the Mixamo/runtime-FK generation for the 60-frame clip
-is skeletal-valid, frame-30-identical to the proof, bind-constant, and parent-
-graph-identical to stock.  The mangling seen by Josh is attributed to the
-pre-existing `AIR_MA_IRONKICK` airborne fallback and the old V2
-`COHSOURCEDEV_WEBSWING_STRETCH_V2`, both now removed from ordinary gameplay by
-the `BOTTOM_ONLY` safe baseline.
+**Current justified status:**
 
-**One-phase reintegration has been attempted** — `WEBSWING_BOTTOM Male
-18 22` (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is now the sole custom
-visual move beyond the canary; all other phases stay animation-neutral.  A
-full dynamic-swing screenshot remains the final GUI visual gate, but no
-further `ASCEND` reintroduction was done in this step.
+* Runtime-FK representation / bind hierarchy: **PASS**.
+* Static Mixamo source frame 30 → actual Male skin: **PASS** after corrected
+  Move-level `Scale 0` freeze recheck (front closeups re-shot; `1.7e-06 °`
+  numeric).
+* Full clip temporal anatomy (all 60 frames visually): **NOT YET PROVEN** —
+  only the single frame-30 pose has been visually gated on the actual skin.
+* BOTTOM `18 22` dynamic actual-skin gate: **READY FOR JOSH** after this
+  patch (`-webswinganim 2` `MALE_BOTTOM_ONLY`).
+
+Do not claim the entire 60-frame animation is visually skeletal-valid yet.
+The numeric `full@30` comparison remains valid
+(`~0.000002°` max rotation, position `0`, parent graph/bind translations
+identical).
+
+**Case 4** — the forensic A/B and its exact numeric cross-check pass for the
+single gated pose; the mangling seen by Josh is attributed to the pre-existing
+`AIR_MA_IRONKICK` airborne fallback and the old V2
+`COHSOURCEDEV_WEBSWING_STRETCH_V2`, both removed from ordinary gameplay by the
+`SAFE_NONE` / `MALE_BOTTOM_ONLY` baseline.
+
+**One-phase reintegration staged** — `WEBSWING_BOTTOM Male 18 22`
+(`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is the sole custom visual move
+beyond the canary; `AIRBORNE`/`ATTACHED`/`DESCEND`/`ASCEND` stay
+animation-neutral and Fem/Huge stay fully neutral in mode `2`.
 
 **STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
 

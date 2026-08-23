@@ -380,31 +380,26 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
 
     {
-        // Issue 36 forensic baseline.  The classifier and every diagnostic
-        // stays live.  Normal /webswing gameplay is animation-neutral by
-        // default (stock sequencer owns the pose); the explicit developer
-        // canary path (COHSOURCEDEV_ANIMCANARY) is always unaffected.  After
-        // the Case-4 static integrity proof the single BOTTOM phase is
-        // reintroduced as a gated experiment while AIRBORNE/ATTACHED/DESCEND/
-        // ASCEND remain suppressed.
-        static int last_logged_selection = -1;
-        int apply_all = g_cohsourcedev_webswing_anim_selection != 0;
-        int allow_this_phase = apply_all ||
-            phase == WEBSWING_ANIM_PHASE_BOTTOM;
-        int log_state = apply_all ? 1 : (phase == WEBSWING_ANIM_PHASE_BOTTOM ? 2 : 0);
+        // Issue 36 forensic: explicit mode.  0=SAFE_NONE (no WebSwing
+        // visual bits), 1=ALL_EXPERIMENTAL, 2=MALE_BOTTOM_ONLY.
+        #define WEBSWING_ANIM_MODE_SAFE_NONE          0
+        #define WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL   1
+        #define WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY   2
+        static int last_logged_mode = -1;
+        int mode = g_cohsourcedev_webswing_anim_selection;
+        if (mode < 0 || mode > 2) mode = WEBSWING_ANIM_MODE_SAFE_NONE;
 
-        if (last_logged_selection != log_state)
+        if (last_logged_mode != mode)
         {
+            const char *label = mode == WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL ? "ALL_EXPERIMENTAL" :
+                                mode == WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY ? "MALE_BOTTOM_ONLY" : "SAFE_NONE";
             filelog_printf("webswing.log",
                            "WEB_SWING %s anim_selection_mode=%d custom_move_selection=%s\n",
-                           pmotionWebSwingAnimSide(),
-                           log_state,
-                           log_state == 1 ? "ENABLED_ALL" :
-                           log_state == 2 ? "BOTTOM_ONLY" : "SAFE_BASELINE_SUPPRESSED");
-            last_logged_selection = log_state;
+                           pmotionWebSwingAnimSide(), mode, label);
+            last_logged_mode = mode;
         }
 
-        if (allow_this_phase)
+        if (mode == WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL)
         {
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
@@ -432,11 +427,19 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                 seqSetState(e->seq->state, 1, state_bits[4]);
             }
         }
-        else if (phase != WEBSWING_ANIM_PHASE_NONE && phase != WEBSWING_ANIM_PHASE_BOTTOM)
+        else if (mode == WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY)
         {
-            // Intentionally suppressed by the forensic baseline; the phase
-            // is still computed and logged above but no move bits are set.
+            if (is_male && phase == WEBSWING_ANIM_PHASE_BOTTOM &&
+                state_bits[1] >= 0 && state_bits[3] >= 0 && male_state_bit >= 0)
+            {
+                seqSetState(e->seq->state, 1, male_state_bit);
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[3]);
+            }
         }
+        #undef WEBSWING_ANIM_MODE_SAFE_NONE
+        #undef WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL
+        #undef WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY
     }
 
     if (phase != e->motion->web_swing_anim_phase)
