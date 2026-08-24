@@ -3,6 +3,7 @@ param(
     [string]$Target = 'AtlasPlaza_CityHall_03',
     [string]$AccountName = 'Dummy00010',
     [string]$Password = '11111111',
+    [string]$CharacterName = '',
     [int]$TimeoutSeconds = 180,
     [int]$Width = 1280,
     [int]$Height = 720,
@@ -38,6 +39,9 @@ $serverStatusPath = Join-Path $logRoot "capture-$safeTarget-$stamp.server.json"
 $outputPath = Join-Path $captureRoot "$safeTarget.jpg"
 $startedAt = Get-Date
 New-Item -ItemType Directory -Force -Path $screenshotRoot, $captureRoot, $logRoot | Out-Null
+if ($CharacterName -and $CharacterName -notmatch '^[A-Za-z][A-Za-z0-9_]{1,31}$') {
+    throw "CharacterName must contain only letters, digits, and underscores: $CharacterName"
+}
 function Get-LastStartupTrace {
     param([string]$BinRoot, [string]$LogRoot)
     $candidates = @()
@@ -117,6 +121,9 @@ try {
     $before = @{}
     Get-ChildItem -LiteralPath $screenshotRoot -Filter '*.jpg' -File -ErrorAction SilentlyContinue | ForEach-Object { $before[$_.FullName]=$_.LastWriteTimeUtc }
     $arguments = @('-db','127.0.0.1','-authname',$AccountName,'-password',$Password,'-noverify','-quicklogin','1','-noversioncheck','-capture',$Target,'-fullscreen','0','-screen',$Width.ToString(),$Height.ToString(),'-stopinactivedisplay','0')
+    if ($CharacterName) {
+        $arguments += @('-capturecharacter', $CharacterName)
+    }
     if ($CgMode -ge 0) {
         $arguments += @('-useCg', $CgMode.ToString())
     }

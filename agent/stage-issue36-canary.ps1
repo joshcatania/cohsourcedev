@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Status', 'StaticProof', 'FullFrame30', 'FullFrame', 'Tracked')]
+    [ValidateSet('Status', 'StaticProof', 'RestBasisFrame20', 'FullFrame30', 'FullFrame', 'Tracked')]
     [string]$Variant = 'Status',
     [ValidateRange(1, 60)]
     [int]$FrameStart = 1
@@ -18,6 +18,7 @@ $runtimeCanaryInclude = Join-Path $repoRoot 'bin\data\sequencers\cohsourcedev_ca
 $trackedCanaryInclude = Join-Path $repoRoot 'agent\animation\canary-sequencer.inc'
 $variants = @{
     StaticProof = Join-Path $repoRoot 'agent\animation\canary-static-proof.inc'
+    RestBasisFrame20 = Join-Path $repoRoot 'agent\animation\canary-rest-basis-frame20.inc'
     FullFrame30 = Join-Path $repoRoot 'agent\animation\canary-full-frame30.inc'
 }
 
@@ -38,10 +39,12 @@ if ($Variant -eq 'Status') {
         runtimeSha256 = Get-Sha256 $runtimeCanaryInclude
         trackedSha256 = Get-Sha256 $trackedCanaryInclude
         staticProofSha256 = Get-Sha256 $variants.StaticProof
+        restBasisFrame20Sha256 = Get-Sha256 $variants.RestBasisFrame20
         fullFrame30Sha256 = Get-Sha256 $variants.FullFrame30
         staged = if (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf) {
             $h = Get-Sha256 $runtimeCanaryInclude
             if ($h -eq (Get-Sha256 $variants.StaticProof)) { 'StaticProof' }
+            elseif ($h -eq (Get-Sha256 $variants.RestBasisFrame20)) { 'RestBasisFrame20' }
             elseif ($h -eq (Get-Sha256 $variants.FullFrame30)) { 'FullFrame30' }
             elseif ($h -eq (Get-Sha256 $trackedCanaryInclude)) { 'Tracked' }
             else { 'Unknown' }

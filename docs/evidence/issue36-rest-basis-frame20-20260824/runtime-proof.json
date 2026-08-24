@@ -1,0 +1,445 @@
+{
+  "passed": true,
+  "asset": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_FRAME20",
+  "runtimeAnimation": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_FRAME20",
+  "baseAnimation": "MALE/SKEL_READY2",
+  "runtimeBoneCount": 68,
+  "runtimeLength": 1,
+  "runtimeMaxSampleFrame": 60,
+  "focusedBones": [
+    "HIPS",
+    "WAIST",
+    "CHEST",
+    "NECK",
+    "HEAD",
+    "COL_R",
+    "UARMR",
+    "LARMR",
+    "HANDR",
+    "COL_L",
+    "UARML",
+    "LARML",
+    "HANDL",
+    "ULEGR",
+    "LLEGR",
+    "FOOTR",
+    "ULEGL",
+    "LLEGL",
+    "FOOTL"
+  ],
+  "missingRuntimeBones": [],
+  "unexpectedRuntimeBones": [],
+  "hierarchyMismatches": [],
+  "failedChecks": [],
+  "angleToleranceDegrees": 0.1,
+  "positionTolerance": 6e-05,
+  "maxBindTranslationError": 0.0,
+  "maxStaticTranslationDrift": 0.0,
+  "maxStaticRotationDriftDegrees": 2.9575586669421963e-06,
+  "maxDecodedRuntimeLocalErrorDegrees": 0.05765206757278362,
+  "maxDecodedRuntimeLocalErrorBone": "LARML",
+  "maxDecodedRuntimeLocalErrorFrame": 1,
+  "preExportMaxFullBasisDeltaDegrees": 0.03956468205889273,
+  "preExportMaxRuntimeWorldQuaternionErrorDegrees": 0.03956468205889273,
+  "bones": [
+    {
+      "bone": "CHEST",
+      "expectedRuntimeLocalQuaternion": [
+        -0.1539209634065628,
+        -0.005155916791409254,
+        0.012386268004775047,
+        0.9879921674728394
+      ],
+      "decodedFrame1Quaternion": [
+        -0.153643817,
+        -0.00483373832,
+        0.0124296127,
+        0.988036394
+      ],
+      "maxDecodedLocalErrorDegrees": 0.04921354781729919,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 3.4804416022815915e-05,
+      "preExportFullBasisDeltaDegrees": 0.03956468205889273
+    },
+    {
+      "bone": "COL_L",
+      "expectedRuntimeLocalQuaternion": [
+        0.16468338668346405,
+        -0.16307200491428375,
+        0.31385084986686707,
+        0.920752227306366
+      ],
+      "decodedFrame1Quaternion": [
+        0.164692357,
+        -0.162966028,
+        0.314192981,
+        0.920652747
+      ],
+      "maxDecodedLocalErrorDegrees": 0.04260920263305667,
+      "maxStaticRotationDriftDegrees": 2.9575586669421963e-06,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.00042510995459298854,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "COL_R",
+      "expectedRuntimeLocalQuaternion": [
+        -0.023574935272336006,
+        0.12088850885629654,
+        -0.1816541850566864,
+        0.975618839263916
+      ],
+      "decodedFrame1Quaternion": [
+        -0.0234781578,
+        0.121188723,
+        -0.18161045,
+        0.975592077
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03661973457642445,
+      "maxStaticRotationDriftDegrees": 1.7075472925031877e-06,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.0001240445636521261,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "FOOTL",
+      "expectedRuntimeLocalQuaternion": [
+        0.12296362966299057,
+        0.12802454829216003,
+        -0.26335209608078003,
+        0.9482275247573853
+      ],
+      "decodedFrame1Quaternion": [
+        0.123260312,
+        0.128094047,
+        -0.263093442,
+        0.948251367
+      ],
+      "maxDecodedLocalErrorDegrees": 0.045882559902265765,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 1.2733940469299318e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "FOOTR",
+      "expectedRuntimeLocalQuaternion": [
+        -0.09762486815452576,
+        0.06370006501674652,
+        0.20194470882415771,
+        0.9724351763725281
+      ],
+      "decodedFrame1Quaternion": [
+        -0.0973653048,
+        0.0638744012,
+        0.201981217,
+        0.97244221
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03608243123740641,
+      "maxStaticRotationDriftDegrees": 2.9575586669421963e-06,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 1.5120270622506938e-05,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "HANDL",
+      "expectedRuntimeLocalQuaternion": [
+        0.8338584899902344,
+        -0.055493053048849106,
+        0.20434054732322693,
+        0.5097506642341614
+      ],
+      "decodedFrame1Quaternion": [
+        0.833733261,
+        -0.0552427173,
+        0.204398051,
+        0.50995934
+      ],
+      "maxDecodedLocalErrorDegrees": 0.04054703807144556,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.0,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "HANDR",
+      "expectedRuntimeLocalQuaternion": [
+        0.596805989742279,
+        0.1425468772649765,
+        0.16146619617938995,
+        0.7729371786117554
+      ],
+      "decodedFrame1Quaternion": [
+        0.596966624,
+        0.142595261,
+        0.161584944,
+        0.772779226
+      ],
+      "maxDecodedLocalErrorDegrees": 0.029704290234927225,
+      "maxStaticRotationDriftDegrees": 1.7075472925031877e-06,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.0008434653221116358,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "HEAD",
+      "expectedRuntimeLocalQuaternion": [
+        -0.17540408670902252,
+        -0.03825538232922554,
+        0.054090406745672226,
+        0.9822648167610168
+      ],
+      "decodedFrame1Quaternion": [
+        -0.175395623,
+        -0.0379793681,
+        0.0542069152,
+        0.982270598
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03435131807969174,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 9.503670817498572e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "HIPS",
+      "expectedRuntimeLocalQuaternion": [
+        0.274959921836853,
+        0.008913119323551655,
+        0.14527356624603271,
+        0.9503753185272217
+      ],
+      "decodedFrame1Quaternion": [
+        0.275177807,
+        0.00897694193,
+        0.145357415,
+        0.950298905
+      ],
+      "maxDecodedLocalErrorDegrees": 0.029083892308950518,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.0001916253006800973,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "LARML",
+      "expectedRuntimeLocalQuaternion": [
+        4.1723259869286267e-07,
+        -0.2846173942089081,
+        0.0,
+        0.9586411714553833
+      ],
+      "decodedFrame1Quaternion": [
+        0.000345266977,
+        -0.284500003,
+        0.000345266977,
+        0.958675921
+      ],
+      "maxDecodedLocalErrorDegrees": 0.05765206757278362,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 2.836641456423489e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "LARMR",
+      "expectedRuntimeLocalQuaternion": [
+        -9.685756197086448e-08,
+        0.21707259118556976,
+        1.788139627478813e-07,
+        0.9761554598808289
+      ],
+      "decodedFrame1Quaternion": [
+        0,
+        0.217172936,
+        0.000345266977,
+        0.976133108
+      ],
+      "maxDecodedLocalErrorDegrees": 0.041261639985480124,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 4.148303204190364e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "LLEGL",
+      "expectedRuntimeLocalQuaternion": [
+        -0.5211990475654602,
+        0.12766969203948975,
+        -0.020137028768658638,
+        0.8435914516448975
+      ],
+      "decodedFrame1Quaternion": [
+        -0.521007895,
+        0.127748787,
+        -0.0200254843,
+        0.843700171
+      ],
+      "maxDecodedLocalErrorDegrees": 0.029673988478785496,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 5.5340675663288745e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "LLEGR",
+      "expectedRuntimeLocalQuaternion": [
+        -0.5222528576850891,
+        0.028695620596408844,
+        0.12034767866134644,
+        0.8437683582305908
+      ],
+      "decodedFrame1Quaternion": [
+        -0.522043705,
+        0.0290024299,
+        0.120498188,
+        0.843865871
+      ],
+      "maxDecodedLocalErrorDegrees": 0.047252669787913495,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 2.8826392997819473e-05,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "NECK",
+      "expectedRuntimeLocalQuaternion": [
+        0.03586067631840706,
+        0.004445292986929417,
+        -0.03015138953924179,
+        0.9988919496536255
+      ],
+      "decodedFrame1Quaternion": [
+        0.035907764,
+        0.0044884705,
+        -0.0300382264,
+        0.998893499
+      ],
+      "maxDecodedLocalErrorDegrees": 0.014892425580764148,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 4.043073580469686e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "UARML",
+      "expectedRuntimeLocalQuaternion": [
+        0.20518438518047333,
+        -0.2742433547973633,
+        -0.009529950097203255,
+        0.9394674897193909
+      ],
+      "decodedFrame1Quaternion": [
+        0.205433875,
+        -0.274141997,
+        -0.00932220928,
+        0.939444721
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03906096908313362,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 5.296274515124505e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "UARMR",
+      "expectedRuntimeLocalQuaternion": [
+        0.22115525603294373,
+        0.5101819634437561,
+        0.21905624866485596,
+        0.8017599582672119
+      ],
+      "decodedFrame1Quaternion": [
+        0.221316129,
+        0.51030457,
+        0.219244525,
+        0.801586092
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03741198351600637,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 1.0282979772514482e-05,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "ULEGL",
+      "expectedRuntimeLocalQuaternion": [
+        0.7600090503692627,
+        0.20916147530078888,
+        0.1377783566713333,
+        0.5997124314308167
+      ],
+      "decodedFrame1Quaternion": [
+        0.75991708,
+        0.209231794,
+        0.138106793,
+        0.599728763
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03994964740181218,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.00039256503395298663,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "ULEGR",
+      "expectedRuntimeLocalQuaternion": [
+        0.8179941773414612,
+        -0.14206957817077637,
+        0.002345912391319871,
+        0.5574012994766235
+      ],
+      "decodedFrame1Quaternion": [
+        0.817882955,
+        -0.141904727,
+        0.00241686893,
+        0.557606161
+      ],
+      "maxDecodedLocalErrorDegrees": 0.03371201027157539,
+      "maxStaticRotationDriftDegrees": 0.0,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 0.00011950248498170288,
+      "preExportFullBasisDeltaDegrees": 0.0
+    },
+    {
+      "bone": "WAIST",
+      "expectedRuntimeLocalQuaternion": [
+        -0.03901328518986702,
+        -0.002817385131493211,
+        0.0043221465311944485,
+        0.9992254376411438
+      ],
+      "decodedFrame1Quaternion": [
+        -0.0386699028,
+        -0.00276213582,
+        0.0044884705,
+        0.999238133
+      ],
+      "maxDecodedLocalErrorDegrees": 0.04420157173054672,
+      "maxStaticRotationDriftDegrees": 2.4148365394514667e-06,
+      "maxStaticTranslationDrift": 0.0,
+      "preExportDirectionDeltaDegrees": 0.0,
+      "preExportRollDeltaDegrees": 2.6353012513121198e-06,
+      "preExportFullBasisDeltaDegrees": 0.0
+    }
+  ]
+}

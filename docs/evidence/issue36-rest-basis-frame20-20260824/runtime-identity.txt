@@ -1,0 +1,28 @@
+Issue 36 final actual-skin frame-20 canary identity
+Captured: 2026-08-24
+
+All three final captures used:
+  -db 127.0.0.1 -authname Dummy00009 -quicklogin 1 -capturecharacter Swingv3
+  -nosharedmemory -webswingdev -animcanary 1 -webswinganim 0
+
+Capture handoff (stdout from each run):
+  capture-AtlasPlaza_AnimFront_01-20260824-113342: slot=1 name=Swingv3 result=1 error=none
+  capture-AtlasPlaza_AnimThreeQuarter_01-20260824-113646: slot=1 name=Swingv3 result=1 error=none
+  capture-AtlasPlaza_AnimSide_01-20260824-113718: slot=1 name=Swingv3 result=1 error=none
+
+Final client runtime lines:
+  front PID 7708: player=Swingv3 db_id=23; runtime_statebits male=1 enter=1
+  three-quarter PID 10216: player=Swingv3 db_id=23; runtime_statebits male=1 enter=1
+  side PID 19496: player=Swingv3 db_id=23; runtime_statebits male=1 enter=1
+
+For each PID, the move table resolves:
+  selectedMove=COHSOURCEDEV_CUSTOM_CANARY
+  TypeGfx=male
+  AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_FRAME20
+
+The exact Swingv3 entity classifier is also recorded in the running shard log as:
+  entity=Swingv3 seq_type=male calculated_type=male is_male=1
+
+The source log is bin/logs/game/webswing.log. The three capture result JSON files
+are agent/logs/capture-AtlasPlaza_Anim{Front_01,ThreeQuarter_01,Side_01}-20260824-
+{113342,113646,113718}.json respectively; those generated logs remain ignored.
