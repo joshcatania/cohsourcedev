@@ -20,6 +20,14 @@
     },
     {
       "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM",
+      "frames": 5,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM.anim",
+      "bytes": 3251,
+      "sha256": "e1cb732169ba920b03d164ce062ec0a18d80099cba96184f082ba29d3512e9b2"
+    },
+    {
+      "type": "MALE",
       "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
       "frames": 30,
       "file": "male/COHSOURCEDEV_WEBSWING_STRETCH.anim",

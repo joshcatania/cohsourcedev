@@ -1248,3 +1248,48 @@ ASCEND 30..40 with HOLD at 40
 
 PR #37 remains a stacked draft.  Do not merge or rebase.  STOP FOR SOL/JOSH
 REVIEW.
+
+## Phase 13 — Normal overlay, corrected BOTTOM live mode-2 handoff (2026-08-24)
+
+The narrow production reference now selects the corrected five-sample rest-basis
+asset for the Male `WEBSWING_BOTTOM` move:
+
+```text
+MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM 1 5
+```
+
+The tracked runtime manifest contains the 3,251-byte asset with SHA-256
+`e1cb732169ba920b03d164ce062ec0a18d80099cba96184f082ba29d3512e9b2`.
+`agent/install-webswing-animation.ps1 -Action Status` verified all 13 tracked
+assets, the normal overlay, and the corrected asset in the runtime directory.
+The normal overlay is installed with `canaryModeInstalled=false` and no
+`cohsourcedev_canary.inc`; no `-animcanary` run is part of this handoff.
+
+### Build and live technical evidence
+
+* `agent/build.ps1 -Configuration Release -Platform x86` passed using the
+  verified v145 fallback.
+* The current GUI handoff is Ouroboros PID `6476`, window title `Atlas Park`,
+  character `Swingv3`, with `-webswinganim 2` in its command line.
+* At `14:47:14`, that live client reported
+  `anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY`; the live
+  MapServer reported the same mode. The client also reported
+  `selected_source=COMPILED_OVERLAY` with all five Web Swing moves present.
+* The same-day `Swingv3` live swing trace reached Male `BOTTOM` at `14:21:34`
+  and selected `WEBSWING_BOTTOM` before transitioning to `ASCEND` in
+  `bin/logs/game/webswing.log`; the MapServer recorded the corresponding Male
+  `BOTTOM` state in `bin/logs/mapserver/webswing.log`.
+
+The log evidence proves technical mode-2 selection and the corrected normal
+overlay being available. It does not decide the appearance or quality of the
+motion in the live GUI; that remains Josh's visual review gate.
+
+```text
+REST-BASIS FRAME20 ACTUAL SKIN: PASS
+REST-BASIS BOTTOM 18..22 CONSTITUENT POSES: PASS
+REST-BASIS BOTTOM LIVE MODE2 TECHNICAL SELECTION: PASS
+REST-BASIS BOTTOM LIVE VISUAL MOTION: AWAITING JOSH
+```
+
+PR #37 remains a stacked draft. Do not merge or rebase. Leave the GUI running
+for Josh.
