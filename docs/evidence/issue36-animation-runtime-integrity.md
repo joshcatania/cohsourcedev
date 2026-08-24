@@ -453,11 +453,11 @@ passed in `8.9 s` with the v145 fallback (`agent/logs/build-Release-x86-20260823
 
 ---
 
-## Phase 7 — Sol follow-up: mode preservation and client/server agreement
+## Phase 7 — Sol follow-up: mode preservation and client/server agreement (historical pre-recovery checkpoint)
 
-This section is the current checkpoint and supersedes any earlier wording
-that treated a client-only mode line or a movement smoke as proof of agreement
-between the client and MapServer.
+This section records the pre-recovery checkpoint. Phase 8 below supersedes its
+blocked runtime conclusion; the earlier wording remains here to preserve the
+investigation history.
 
 ### Code review and final initialization paths
 
@@ -569,14 +569,13 @@ The disposable shard was stopped with `agent/stop-shard.ps1
 control, mode-2 phase exercise, or GUI client was run after this failure, and
 no speculative game-code workaround was added.
 
-### Current status / Josh handoff
+### Historical status / Josh handoff at that checkpoint
 
 * Runtime-FK representation / bind hierarchy: **PASS**
 * Static frame-30 actual Male skin: **PASS**
 * Full 60-frame temporal anatomy: **NOT PROVEN**
-* Full 60-frame temporal anatomy: **NOT PROVEN**
-* CLIENT/SERVER mode-2 runtime agreement: **BLOCKED BY LOCAL SHARD**
-* BOTTOM 18..22 dynamic actual-skin visual: **BLOCKED ON RUNTIME MODE GATE**
+* CLIENT/SERVER mode-2 runtime agreement: **BLOCKED BY LOCAL SHARD AT THAT TIME**
+* BOTTOM 18..22 dynamic actual-skin visual: **BLOCKED ON RUNTIME MODE GATE AT THAT TIME**
 
 The source is staged for Josh's eventual mode-2 visual inspection, but a
 healthy GUI client could not be left running because the local shard recovery
@@ -585,6 +584,111 @@ cfg to `2`, launch the client with `-webswingdev -webswinganim 2`, and first
 verify both exact mode-2 lines from that one session before judging the live
 BOTTOM tuck. Then repeat both processes with mode `0` for the SAFE_NONE
 control. Do not re-enable AIRBORNE, ATTACHED, DESCEND, or ASCEND visuals.
+
+---
+
+## Phase 8 — Sol follow-up: parser crash fix and real GUI mode gates — 2026-08-24
+
+This phase supersedes Phase 7's blocked runtime conclusion. The local shard
+was recovered, the MapServer startup crash was fixed narrowly, and the mode-2
+GUI run plus the mode-0 control were completed on the actual `Swingv3` Male
+character.
+
+### Root cause and narrow fix
+
+`mapServerReadWebSwingAnimConfig()` in `MapServer/src/svr/svr_init.c` opened
+the config through the repository's wrapped `FILE` API. In this codebase,
+`FILE` is `FileWrapper` and `fopen`/`fgets`/`fclose` resolve to the wrapped
+file functions, but `fscanf` remained the CRT function. Passing the wrapper
+to CRT `fscanf` caused MapServer to fault with `STATUS_INVALID_HANDLE`
+(`0xC0000008`) at the `fscanf` frame during `serverStateInit()`.
+
+The fix is limited to the config read: it uses wrapped `fgets()` into a
+bounded `char line[32]`, then parses that line with `sscanf()`. Existing
+fallback/search paths, explicit-argument precedence, and `0..2` mode
+semantics are unchanged. No motion, physics, network, animation asset, or
+sequencer data path was changed.
+
+### Build and shard recovery
+
+* `agent/build.ps1 -Configuration Release -Platform x86` — **PASS**, using
+  the verified v145 fallback; primary post-fix log:
+  `agent/logs/build-Release-x86-20260823-203217.log`.
+* The first smoke after each cold shard start timed out at the documented
+  warm-up boundary without a new crash. A warmed retry passed direct-DB login
+  in `agent/logs/smoke-directdb-20260823-211325.json`.
+* `agent/smoke.ps1 -ExerciseCharacter -AccountName Dummy00009
+  -TimeoutSeconds 180` — **PASS**, character creation and MapServer entry;
+  `agent/logs/smoke-directdb-20260823-211403.json`.
+
+### Mode-2 GUI result — actual `Swingv3` Male entity
+
+The mode-2 client was PID `16124`; its startup trace records
+`webswinganim.argument=2`. The same session identifies the live entity as:
+
+```
+WEBSWING_ANIM entity_type entity=Swingv3 seq_type=male
+  seq_name=player.txt calculated_type=male is_male=1
+WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY
+WEB_SWING SERVER anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY
+```
+
+During the user's real swing, both client and MapServer repeatedly reached:
+
+```
+WEB_SWING CLIENT anim_phase=BOTTOM anim_selection=1
+  statebits airborne=0 attached=1 descend=0 bottom=1 ascend=0 male=1
+WEB_SWING ANIM selectedMove=WEBSWING_BOTTOM
+WEB_SWING SERVER anim_phase=BOTTOM anim_selection=1
+  statebits airborne=0 attached=1 descend=0 bottom=1 ascend=0 male=1
+```
+
+The selected move is the configured runtime asset
+`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`, frames `18..22`, from
+`agent/webswing-animation/webswing.inc`. No custom AIRBORNE, ATTACHED,
+DESCEND, or ASCEND move was selected. The user reported that the animation
+was visibly occurring, though fast and difficult to judge visually; the
+runtime selection and synchronized phase evidence are conclusive for the
+single BOTTOM gate, but do not prove the full 60-frame temporal anatomy.
+
+### Mode-0 SAFE_NONE control — same character, traversal preserved
+
+The mode-0 client was PID `19212`; its startup trace records
+`webswinganim.argument=0` and `map.scene.complete`. MapServer PID `1236`
+reported:
+
+```
+WEB_SWING SERVER anim_selection_mode=0 custom_move_selection=SAFE_NONE
+```
+
+After the user swung, both sides reached repeated BOTTOM, DESCEND, ASCEND,
+and AIRBORNE phases with `anim_selection=0` and all custom state bits clear:
+
+```
+WEB_SWING CLIENT anim_phase=BOTTOM anim_selection=0
+  statebits airborne=0 attached=0 descend=0 bottom=0 ascend=0 male=0
+WEB_SWING SERVER anim_phase=BOTTOM anim_selection=0
+  statebits airborne=0 attached=0 descend=0 bottom=0 ascend=0 male=0
+```
+
+The client selected ordinary stock moves (`HOP*`, `JUMPPOST`, `RUNFALL`,
+and related transitions) and never selected `WEBSWING_BOTTOM`. This proves
+that the SAFE_NONE control preserves swing traversal while suppressing the
+experimental visual state selection.
+
+### Evidence status after Phase 8
+
+* Runtime-FK representation / bind hierarchy: **PASS**
+* Static frame-30 actual Male skin: **PASS**
+* Full 60-frame temporal anatomy: **NOT PROVEN**
+* CLIENT/SERVER mode-2 runtime agreement: **PASS**
+* Male BOTTOM `18..22` dynamic runtime selection: **PASS**
+* SAFE_NONE mode-0 control and traversal: **PASS**
+* Fem/Huge mode-2 visual selection: **NOT TESTED in this GUI session**
+
+The relevant runtime logs are `bin/logs/game/webswing.log`,
+`bin/logs/mapserver/webswing.log`, and
+`bin/logs/ouroboros-startup-19212.trace`.
 
 ---
 
@@ -615,14 +719,12 @@ game's own skinned `TypeGfx=male` character.
 
 ---
 
-## Result (corrected per Sol review)
+## Result (updated after Phase 8)
 
-**Current validation caveat:** Phase 7 records the final local parser/server
-initialization fixes, but the post-fix client/server runtime proof is blocked
-by the local shard loader environment. Earlier Phase 6 movement results are
-historical handoff evidence only and do not prove mode agreement.
-
-**Current justified status:**
+**Current validation status:** the parser crash fix, warmed shard recovery,
+client/server mode-2 agreement, Male BOTTOM runtime selection, and SAFE_NONE
+mode-0 control all pass. The earlier Phase 7 loader blockage is historical and
+is superseded by Phase 8.
 
 * Runtime-FK representation / bind hierarchy: **PASS**.
 * Static Mixamo source frame 30 → actual Male skin: **PASS** after corrected
@@ -630,10 +732,10 @@ historical handoff evidence only and do not prove mode agreement.
   numeric).
 * Full 60-frame temporal anatomy: **NOT PROVEN** —
   only the single frame-30 pose has been visually gated on the actual skin.
-* CLIENT/SERVER mode-2 runtime agreement: **BLOCKED BY LOCAL SHARD**.
-* BOTTOM `18 22` dynamic actual-skin visual: **BLOCKED ON RUNTIME MODE GATE**
-  (`-webswinganim 2` `MALE_BOTTOM_ONLY` has not received client/server runtime
-  proof on a healthy local shard).
+* CLIENT/SERVER mode-2 runtime agreement: **PASS**.
+* BOTTOM `18 22` dynamic runtime selection: **PASS** — both sides repeatedly
+  reached Male `BOTTOM` and selected `WEBSWING_BOTTOM`.
+* SAFE_NONE mode-0 control and traversal: **PASS**.
 
 Do not claim the entire 60-frame animation is visually skeletal-valid yet.
 The numeric `full@30` comparison remains valid
@@ -641,11 +743,11 @@ The numeric `full@30` comparison remains valid
 identical).
 
 **Case 4** — the forensic A/B and its exact numeric cross-check pass for the
-single gated pose. AIR_MA_IRONKICK and old V2 STRETCH are confirmed
-contaminants of Josh's failed footage. Static frame 30 clears the new
-runtime-FK representation at that pose, but BOTTOM 18..22 and the full
-temporal clip remain visually unproven; ALL observed mangling cannot yet be
-attributed conclusively to the old assets.
+single gated pose plus the live BOTTOM selection. AIR_MA_IRONKICK and old V2
+STRETCH are confirmed contaminants of Josh's failed footage. Static frame 30
+and the live BOTTOM gate pass, while the full temporal clip remains visually
+unproven; ALL observed mangling cannot yet be attributed conclusively to the
+old assets.
 
 **One-phase reintegration staged** — `WEBSWING_BOTTOM Male 18 22`
 (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is the sole custom visual move

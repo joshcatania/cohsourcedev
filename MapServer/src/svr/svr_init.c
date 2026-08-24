@@ -611,6 +611,7 @@ static int mapServerReadWebSwingAnimConfig(void)
     };
     FILE *f = NULL;
     int path_index;
+    char line[32];
     int mode;
 
     // This helper is called once during startup, never from a motion or tick
@@ -624,7 +625,9 @@ static int mapServerReadWebSwingAnimConfig(void)
         return 0;
 
     mode = 0;
-    if (fscanf(f, "%d", &mode) == 1 && mode >= 0 && mode <= 2)
+    if (fgets(line, sizeof(line), f) &&
+        sscanf(line, "%d", &mode) == 1 &&
+        mode >= 0 && mode <= 2)
     {
         fclose(f);
         mapServerSetWebSwingAnimSelection(mode);
