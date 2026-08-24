@@ -842,6 +842,116 @@ Therefore the deciding result remains:
 
 ---
 
+## Phase 11 — Frame-locked raw-source / retarget / runtime correspondence (2026-08-24)
+
+Josh's visual review supersedes the broad Phase-10 interpretation for the
+overall BOTTOM visual gate: the current `Swingv3` Male BOTTOM pose is visibly
+twisted/corkscrewed/tangled. Phase 10 remains valid as a narrow runtime
+identity, bind/hierarchy, attachment, and gross-detachment check; its
+technical/anatomical PASS must not be read as a rotation/pose-fidelity PASS.
+The following source-vs-target diagnostic is the deciding localization pass.
+
+### Exact frame and identity mapping
+
+The comparison uses the exact source asset and action:
+
+```text
+swinginganimations/Swinging.fbx
+action: Armature|mixamo.com|Layer0
+fps: 30
+authored frames: 1..60
+mapping: source frame N -> Blender target frame N -> runtime sample N
+runtime frame 0: bind/reference only
+```
+
+The production Blender proof is the saved full-60 runtime-FK blend and
+`CoH_Male_Exact_Export_Rig`. The runtime side is the already captured exact
+identity:
+
+```yaml
+account: Dummy00009
+character: Swingv3
+TypeGfx: male
+is_male: 1
+animation: MALE/COHSOURCEDEV_RETARGET_SWING_FULL
+```
+
+No direct-bone experiment, alternate blend, frame offset, physics change, or
+ASCEND change is part of this conclusion.
+
+### Raw source versus Blender Male versus CoH runtime
+
+The compact three-view comparisons are preserved in
+[the correspondence evidence](issue36-forensic-20260824/pose-correspondence.md):
+
+| Frame | Comparison |
+|---:|---|
+| 18 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME18_raw-vs-retarget-vs-runtime.jpg) |
+| 20 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME20_raw-vs-retarget-vs-runtime.jpg) |
+| 22 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME22_raw-vs-retarget-vs-runtime.jpg) |
+
+The raw Mixamo action is itself a strongly compressed swing tuck; it is not a
+neutral anatomical reference. It is nevertheless not the same silhouette or
+branch layout as the more corkscrewed Blender Male target at these exact
+frames. The first visible divergence is not isolated to one bone from stills
+alone: it appears in the torso/hip scaffold and propagates into the
+shoulder/arm and leg branches.
+
+### Numeric target-to-runtime boundary
+
+The production Blender target was extracted at frames `18`, `20`, and `22`
+and compared against the checked-in `full.json` samples. The focused local
+channels remain below the established `0.1°` exporter/runtime rotation
+tolerance, while the ANIMX world conversion residual is effectively zero:
+
+| Source/runtime frame | Max exporter-local → runtime-local | Max exporter ANIMX world residual | Max runtime-recomposed world residual | First local divergence > 0.1° |
+|---:|---:|---:|---:|---|
+| 18 | 0.083516283° | 0.000019014° | 0.130850145° | none |
+| 20 | 0.074867470° | 0.000022394° | 0.156138179° | none |
+| 22 | 0.073373143° | 0.000034659° | 0.147203682° | none |
+
+The recomposed-world residual is cumulative quantization across parent
+chains, not a first divergent local channel. The checked hierarchy was:
+
+```text
+HIPS → WAIST → CHEST → NECK → HEAD
+CHEST → COL_L → UARML → LARML → HANDL
+CHEST → COL_R → UARMR → LARMR → HANDR
+HIPS → ULEGL → LLEGL
+HIPS → ULEGR → LLEGR
+```
+
+This rules out the runtime-local quaternion transport, bind translations,
+compiled runtime decode, and frame mapping as the source of the observed
+visual failure. It does not validate the source-to-Male anatomical transfer.
+
+### Current classification
+
+**Case C — source-to-Male retarget divergence.** The production CoH target is
+faithfully carried through export, ANIMX, compiler/runtime decode, and the
+correct `Swingv3` runtime selection. The actionable boundary is therefore the
+source-to-Blender-Male retarget construction. This pass does not yet identify
+whether the defect is a specific rest-axis basis, bend-plane choice,
+handedness convention, or another detail of the anatomical solve; no
+speculative production animation fix is justified.
+
+Updated gate status:
+
+```text
+Swingv3 runtime identity:                 PASS
+BOTTOM runtime selection:                 PASS
+BOTTOM bind/hierarchy continuity:         PASS
+BOTTOM gross detachment/stretch check:    PASS
+BOTTOM rotation/pose fidelity:            FAIL / under investigation
+BOTTOM overall visual gate:               FAIL
+ASCEND:                                   HOLD (not tested)
+```
+
+The durable diagnostic details and tooling are listed in
+[pose-correspondence.md](issue36-forensic-20260824/pose-correspondence.md).
+
+---
+
 ## Evidence artifacts
 
 | Path | Purpose |
@@ -850,6 +960,8 @@ Therefore the deciding result remains:
 | `docs/evidence/issue36-forensic-20260823/FULL_FRAME30_*.jpg` (×3) | same for the matched `FULL@30` pose |
 | `docs/evidence/issue36-forensic-20260824/BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | frozen actual-Male-skin constituent-pose gate for BOTTOM source frames 18..22 |
 | `docs/evidence/issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | corrected deciding gate on the exact runtime-proven `Swingv3` Male character; supersedes the earlier Phase-9 deciding set |
+| `docs/evidence/issue36-forensic-20260824/pose-correspondence/FRAME18..22_raw-vs-retarget-vs-runtime.jpg` (×3) | frame-locked raw Mixamo / Blender Male / exact CoH runtime comparison sheets |
+| `docs/evidence/issue36-forensic-20260824/pose-correspondence.md` | source/frame mapping, visual classification, focused runtime numeric correspondence, and current gate decision |
 | `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
 | `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
 | `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
@@ -860,18 +972,23 @@ Therefore the deciding result remains:
 | `agent/animation/canary-full-frame30.inc` | tracked `FULL_FRAME30` canary variant (`30 31 Scale 0`) |
 | `agent/stage-issue36-canary.ps1` | variants and generated one-frame slices ↔ `bin/data/sequencers/cohsourcedev_canary.inc` |
 | `agent/compare-issue36-static-vs-full.py` | Phase-3 comparator (proof `sample 1` vs full frames, tolerances `0.1 °`/`6e-05`) |
+| `agent/animation/render_issue36_production_correspondence.py` | clean frame-locked source/target skeleton renderer; hides stale proof proxies and applies the saved display alignment |
+| `agent/animation/make_issue36_comparison_sheets.py` | compact three-view comparison-sheet generator |
+| `agent/animation/extract_issue36_correspondence.py` / `compare_issue36_correspondence.py` | production target extraction and focused exporter/runtime correspondence comparator |
 | `agent/logs/build-Release-x86-20260823-*.log` | build evidence |
 | `agent/logs/smoke-directdb-20260823-*.json` | direct-DB smokes |
 | `agent/logs/smoke-directdb-20260823-191048.json` | post-recovery direct-DB timeout proving runtime validation was blocked |
 | `agent/logs/webswing-smoke-20260823-152122.json` | movement smoke with `BOTTOM_ONLY` |
 | `bin/logs/game/webswing.log` | `selectedMove`, `move_compare … AnimP=…`, `anim_selection_mode`, `overlay_moves_present=5/5` |
 
-No Blender proxy is used as the deciding visual — every screenshot is the
-game's own skinned `TypeGfx=male` character.
+The runtime screenshots remain the deciding actual-skin evidence for identity,
+selection, attachment, and gross continuity. The new Blender proxy sheets are
+diagnostic source/retarget evidence only; they are not substituted for the
+game's own skinned `TypeGfx=male` visual gate.
 
 ---
 
-## Result (updated after Phase 8)
+## Historical result (updated after Phase 8; superseded by Phase 11)
 
 **Current validation status:** the parser crash fix, warmed shard recovery,
 client/server mode-2 agreement, Male BOTTOM runtime selection, and SAFE_NONE
@@ -909,5 +1026,26 @@ old assets.
 (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is the sole custom visual move
 beyond the canary; `AIRBORNE`/`ATTACHED`/`DESCEND`/`ASCEND` stay
 animation-neutral and Fem/Huge stay fully neutral in mode `2`.
+
+## Result (updated after Phase 11)
+
+* Runtime identity (`Dummy00009` / `Swingv3` Male): **PASS**.
+* BOTTOM runtime selection and client/server agreement: **PASS**.
+* BOTTOM bind hierarchy, attachment continuity, and gross detachment/stretch
+  check: **PASS**.
+* BOTTOM rotation/pose fidelity: **FAIL / under investigation**.
+* BOTTOM overall visual gate: **FAIL** — the exact `Swingv3` BOTTOM pose is
+  visibly tangled/corkscrewed in the current visual review.
+* First actionable divergence: **source-to-Male retarget construction**. The
+  Blender target matches CoH runtime through the focused exporter/ANIMX/runtime
+  check at frames 18/20/22, so this is not currently localized to runtime FK,
+  bind translations, compiled decode, or frame mapping.
+* Full 60-frame temporal anatomy: **NOT PROVEN**.
+* ASCEND: **HOLD**; no ASCEND or physics work was performed.
+
+Do not merge PR #37 and do not make a speculative production animation fix
+from this evidence alone. The next scoped investigation is the
+source-to-Male retarget solve: rest-axis/basis, bend-plane, and handedness
+choices, with the same raw/target/runtime frame-locked comparison retained.
 
 **STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
