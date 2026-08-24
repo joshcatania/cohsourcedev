@@ -28,6 +28,7 @@
 #include "utils/debugUtils.h"
 #include "ai/entscript.h"
 #include "cmdparse/entcon.h"
+#include "cmdparse/cmdcommon.h"
 #include <utilitieslib/UtilsNew/profiler.h>
 #include "dbcomm/dbquery.h"
 #include "gridcoll/gridcoll.h"
@@ -572,9 +573,85 @@ static void parseArgs0(int argc,char **argv)
     }
 }
 
+static const char *mapServerWebSwingAnimSelectionName(int mode)
+{
+    switch (mode)
+    {
+        case 1: return "ALL_EXPERIMENTAL";
+        case 2: return "MALE_BOTTOM_ONLY";
+        default: return "SAFE_NONE";
+    }
+}
+
+static void mapServerSetWebSwingAnimSelection(int mode)
+{
+    if (mode < 0 || mode > 2)
+        mode = 0;
+
+    g_cohsourcedev_webswing_anim_selection = mode;
+}
+
+static void mapServerEnableWebSwingDevEnvironment(void)
+{
+    // The animation mode and the WebSwingDev environment are separate
+    // controls.  A mode of SAFE_NONE still needs the private overlay and
+    // state-bit universe loaded so the server can prove that it selected no
+    // custom move.  This is a dev-only startup switch; it does not change any
+    // network or MotionState representation.
+    global_state.webswing_dev = 1;
+}
+
+static int mapServerReadWebSwingAnimConfig(void)
+{
+    static const char *paths[] = {
+        "webswinganim.cfg",
+        "data/webswinganim.cfg",
+        "bin/webswinganim.cfg",
+        "bin/data/webswinganim.cfg",
+    };
+    FILE *f = NULL;
+    int path_index;
+    int mode;
+
+    // This helper is called once from parseArgs1(), never from a motion or
+    // tick path.  The file is an ephemeral local-development fallback for
+    // MapServer instances spawned by ServerMonitor, which has no convenient
+    // per-child argv hook in the normal FastDev launcher.
+    for (path_index = 0; path_index < ARRAY_SIZE(paths) && !f; ++path_index)
+        f = fopen(paths[path_index], "r");
+
+    if (!f)
+        return 0;
+
+    mode = 0;
+    if (fscanf(f, "%d", &mode) == 1 && mode >= 0 && mode <= 2)
+    {
+        fclose(f);
+        mapServerSetWebSwingAnimSelection(mode);
+        mapServerEnableWebSwingDevEnvironment();
+        return 1;
+    }
+
+    fclose(f);
+    return 0;
+}
+
+static void mapServerLogWebSwingAnimSelection(void)
+{
+    int mode = g_cohsourcedev_webswing_anim_selection;
+
+    if (mode < 0 || mode > 2)
+        mode = 0;
+
+    filelog_printf("webswing.log",
+                   "WEB_SWING SERVER anim_selection_mode=%d custom_move_selection=%s\n",
+                   mode, mapServerWebSwingAnimSelectionName(mode));
+}
+
 static void parseArgs1(int argc,char **argv)
 {
     int        i;
+    int        web_swing_anim_argument_seen = 0;
 
     for(i=1;i<argc;i++)
     {
@@ -745,6 +822,14 @@ static void parseArgs1(int argc,char **argv)
         {
             serverErrorfSetForceShowDialog();
         }
+        else if (stricmp(argv[i], "-webswinganim")==0 && i+1 < argc)
+        {
+            int mode;
+            web_swing_anim_argument_seen = 1;
+            mode = atoi(argv[++i]);
+            mapServerSetWebSwingAnimSelection(mode);
+            mapServerEnableWebSwingDevEnvironment();
+        }
         else
         {
             handled = 0;
@@ -760,6 +845,11 @@ static void parseArgs1(int argc,char **argv)
             }
         }
     }
+
+    // An explicit command-line value, including zero, always wins over the
+    // optional local cfg fallback.
+    if (!web_swing_anim_argument_seen)
+        mapServerReadWebSwingAnimConfig();
 }
 
 void parseArgs2(int argc,char **argv)
@@ -1424,6 +1514,11 @@ void parseArgs2(int argc,char **argv)
             else
                 Errorf("Invalid command line parameters for '-maintenanceHours begin end', begin and end need to be hours from 0-24");
         }
+        else if (stricmp(argv[i], "-webswinganim")==0 && i+1 < argc)
+        {
+            mapServerSetWebSwingAnimSelection(atoi(argv[++i]));
+            mapServerEnableWebSwingDevEnvironment();
+        }
         /* else if (argv[i][0])
         {
             Errorf("Invalid command line parameter passed to mapserver.exe: %s", argv[i]);
@@ -1468,6 +1563,7 @@ static void serverStateInit(int argc,char **argv)
     }
     
     parseArgs2(argc,argv);
+    mapServerLogWebSwingAnimSelection();
 
     if(db_state.local_server)
         server_state.lock_doors = 1;

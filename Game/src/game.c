@@ -278,10 +278,10 @@ void parseArgs(int argc,char **argv)
         }
         if (stricmp(argv[i], "-webswinganim") == 0 && i + 1 < argc)
         {
-            // Issue 36 forensic safe baseline.  Custom Web Swing move selection
-            // is suppressed by default; this opt-in re-enables it for gated
-            // canary work without touching the overlay data files.
-            g_cohsourcedev_webswing_anim_selection = atoi(argv[i + 1]) != 0;
+            int mode = atoi(argv[i + 1]);
+            if (mode < 0 || mode > 2)
+                mode = 0;
+            g_cohsourcedev_webswing_anim_selection = mode;
             game_startupTracef("webswinganim.argument=%d", g_cohsourcedev_webswing_anim_selection);
             i += 2;
             continue;

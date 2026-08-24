@@ -1,8 +1,8 @@
 # Issue 36 — Web Swing animation runtime-integrity forensic pass — 2026-08-23
 
 **Branch:** `agent/issue-36-web-swing`
-**Expected starting HEAD:** `9840e943bf09542321f7685985e3ac7efe8d8848`
-**Implementation HEAD at validation:** `8c7372d`-derived plus this forensic pass
+**Expected starting HEAD:** `602f5688e2def3ef9466d2b81333d88590a324ad`
+**Implementation at this checkpoint:** `602f5688e` plus the preserved local worktree changes below
 **PR #37:** remains stacked draft — not merged, not rebased
 
 This document is the **focused evidence file** required by the forensic
@@ -56,7 +56,7 @@ experimental visual moves, while every other subsystem stays intact.
 | File | Change | Purpose |
 |---|:---|:---|
 | `Common/cmdparse/cmdcommon.h:324` / `Common/cmdparse/cmdcommon.c:31,153` | new global `S32 g_cohsourcedev_webswing_anim_selection` (default `0`) and console command `{9,"webswinganim",…}` (access 9, hidden) | mirrors the proven `-animcanary` plumbing so the forensic baseline is reversible for gated canary work without touching data files |
-| `Game/src/game.c:268` | new argv `-webswinganim 0|1` bypass (`game_startupTracef("webswinganim.argument=%d")`) | same reason — the normal parser rejects access-9 commands before login |
+| `Game/src/game.c:268` | argv `-webswinganim 0|1|2` bypass (`game_startupTracef("webswinganim.argument=%d")`) | same reason — the normal parser rejects access-9 commands before login |
 | `Common/player/pmotion.c:380` | `pmotionSetWebSwingAnimState()` now **always** resolves the five `WEBSWING_*` state bits, computes `phase = pmotionGetWebSwingAnimPhase()` and emits every diagnostic (`runtime_statebits`, `CLIENT_STATE_BUILD`, `WEB_SWING … anim_phase=…`), but **suppresses all** `seqSetState(…,1,…)` calls unless selection is enabled; transition `e->motion->web_swing_anim_phase` still advances so the classifier's behaviour is observable without rendering | preserves the classifier/overlay/diagnostics while letting the stock player sequencer own the pose |
 | `Common/seq/seqload.c:1226` | `seqLogWebSwingPlayerData()` now reports `overlay_moves_present=N/5` per move instead of `include_consumed = airborne && attached && descend && bottom && ascend` | during the forensic pass the runtime overlay intentionally carries an arbitrary subset; requiring all five would misreport a healthy reduced overlay as broken |
 
@@ -76,7 +76,7 @@ is **unaffected** by the baseline gate.
 ### Validation
 
 ```
-WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_BASELINE_SUPPRESSED
+WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_NONE
 WEB_SWING CLIENT anim_phase=NONE … statebits airborne=0 attached=0 descend=0 bottom=0 ascend=0 …
 ```
 
@@ -321,8 +321,8 @@ WEBSWING_ANIM player_seq selected_source=COMPILED_OVERLAY resolved_path=sequence
 WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=COHSOURCEDEV_CUSTOM_CANARY … TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_POSE_PROOF animTrack=…   (static pass)
 WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=COHSOURCEDEV_CUSTOM_CANARY … TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_SWING_FULL animTrack=…  (full pass)
 WEB_SWING ANIM transition selectedMove=COHSOURCEDEV_CUSTOM_CANARY previousMove=READY …
-WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_BASELINE_SUPPRESSED   (ordinary /webswing gameplay)
-WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=BOTTOM_ONLY                (after Phase 6 gate)
+WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_NONE                 (ordinary /webswing gameplay)
+WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY          (after the mode-2 gate)
 ```
 
 Installed runtime file hashes match the tracked manifest
@@ -387,7 +387,7 @@ Male in `2`.
   "WEBSWING_ATTACHED","WEBSWING_BOTTOM"` pairing and `Priority 22` are
   honoured.
 
-After the second rebuild/start-warm sequence the shard passed:
+The earlier Muse handoff reported the following on a previous warm shard:
 
 * `agent/smoke.ps1` — `PASS direct-DB 0.48 s` `TestClient exit 0`
 * `agent/smoke.ps1 -ExerciseCharacter Dummy00009` — `PASS 159.8 s`
@@ -396,7 +396,7 @@ After the second rebuild/start-warm sequence the shard passed:
   the established tether/rope limits (`softCorrectionCount 69375`, `hard 0`,
   `maxRadialCorrection 0.26` — see `agent/logs/webswing-smoke-*.json`).
 
-Client `bin/logs/game/webswing.log` after the gate shows the new mode:
+That earlier handoff's client log reportedly showed the new mode:
 
 ```
 WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=BOTTOM_ONLY
@@ -421,8 +421,11 @@ validity; the live photo requires the player's camera orbit and the lap timing.
 `ASCEND START/HOLD` (`30 40` / `40 60 Scale 0`) are **not** reintroduced in
 this step.
 
-**This pass stops here for SOL/JOSH review** — exactly one custom phase has
-been reintroduced, as requested.
+Those earlier movement results predate the Sol-requested client/server mode
+agreement proof and are not sufficient to establish this checkpoint. The
+follow-up validation and its infrastructure result are recorded in Phase 7
+below. Exactly one custom phase remains reintroduced in source; no visual
+claim is made for the dynamic actual-skin BOTTOM pose.
 
 ---
 
@@ -439,6 +442,144 @@ been reintroduced, as requested.
   client-only rebuilds kept the warm shard.  The second cold start to
   application-level `smoke -ExerciseCharacter` proved MapServer entry
   `PASS 159.8 s` on `StaticMapId 1`.
+
+The Sol follow-up build/recovery evidence is separate: the first build attempt
+reached compilation but could not copy locked shard binaries; after the
+required cold stop, `agent/build.ps1 -Configuration Release -Platform x86`
+passed in `8.9 s` with the v145 fallback (`agent/logs/build-Release-x86-20260823-190757.log`).
+
+---
+
+## Phase 7 — Sol follow-up: mode preservation and client/server agreement
+
+This section is the current checkpoint and supersedes any earlier wording
+that treated a client-only mode line or a movement smoke as proof of agreement
+between the client and MapServer.
+
+### Code review and final initialization paths
+
+The Sol review found that the old client parser used `atoi(argv[i + 1]) != 0`,
+which collapsed `-webswinganim 2` into `1`. The local fix in
+`Game/src/game.c:279-286` is:
+
+```c
+int mode = atoi(argv[i + 1]);
+if (mode < 0 || mode > 2)
+    mode = 0;
+g_cohsourcedev_webswing_anim_selection = mode;
+game_startupTracef("webswinganim.argument=%d", g_cohsourcedev_webswing_anim_selection);
+```
+
+The client parses the value once in `parseArgs()` during startup. With
+`-webswinganim 2`, its startup trace must retain `webswinganim.argument=2`;
+with `-webswinganim 0`, it must retain `webswinganim.argument=0`. The existing
+`-webswingdev` flag remains the independent client overlay/state-bit
+environment switch.
+
+MapServer now has the narrow dev-only startup path in
+`MapServer/src/svr/svr_init.c`:
+
+* `parseArgs1()` consumes `-webswinganim` once and clamps it to `0..2`.
+* An explicit argument, including `0`, wins over the optional local
+  `webswinganim.cfg` fallback.
+* If the argument is not propagated by ServerMonitor, the cfg fallback is
+  read once during startup from the normal runtime working-directory choices;
+  it is never read from a motion, tick, or packet path.
+* `mapServerSetWebSwingAnimSelection()` only sets the integer animation mode.
+  `mapServerEnableWebSwingDevEnvironment()` separately enables the private
+  overlay/state-bit environment, including for mode `0`, so SAFE_NONE can be
+  observed without selecting a custom move.
+* `serverStateInit()` emits the independent startup line
+  `WEB_SWING SERVER anim_selection_mode=N custom_move_selection=...`.
+
+`Common/player/pmotion.c:pmotionSetWebSwingAnimState()` consumes only the
+already-initialized integer and state-bit IDs. There is no `fopen`, text read,
+file-existence check, `stat`, or equivalent filesystem I/O in that hot/shared
+motion path. No `MotionState`, control packet, network protocol, physics,
+anchor, rope, steering, jump, tether, speed, or retarget/export code was
+changed for this mode plumbing.
+
+### Static mode and phase-selection proof
+
+The mode-2 branch is narrowly gated by:
+
+```c
+if (is_male && phase == WEBSWING_ANIM_PHASE_BOTTOM &&
+    state_bits[1] >= 0 && state_bits[3] >= 0 && male_state_bit >= 0)
+{
+    seqSetState(e->seq->state, 1, male_state_bit);
+    seqSetState(e->seq->state, 1, state_bits[1]);
+    seqSetState(e->seq->state, 1, state_bits[3]);
+}
+```
+
+Therefore the source-level contract is:
+
+| Mode-2 phase/entity | Custom visual state selected | Expected move/asset |
+|---|---|---|
+| Male AIRBORNE | none | no `AIR_MA_IRONKICK` override |
+| Male ATTACHED | none | none |
+| Male DESCEND | none | no `COHSOURCEDEV_WEBSWING_STRETCH_V2` |
+| Male BOTTOM | `WEBSWING_MALE=1`, `WEBSWING_ATTACHED=1`, `WEBSWING_BOTTOM=1` | `WEBSWING_BOTTOM`, `MALE/COHSOURCEDEV_RETARGET_SWING_FULL`, frames `18..22` |
+| Male ASCEND | none | no `WEBSWING_ASCEND_MALE_START` or `WEBSWING_ASCEND_MALE_HOLD` |
+| Fem/Huge, any phase | none | none |
+
+Mode `0` clears the five phase bits and the Male/Ascend-enter bits each
+update, computes/logs the classifier, and sets no custom visual state. This is
+the SAFE_NONE control. These are code proofs, not a substitute for the
+requested runtime traces.
+
+### Runtime proof and infrastructure outcome
+
+The requested same-session lines were **not obtained** in this follow-up:
+
+```text
+WEB_SWING CLIENT anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY
+WEB_SWING SERVER anim_selection_mode=2 custom_move_selection=MALE_BOTTOM_ONLY
+WEB_SWING CLIENT anim_selection_mode=0 custom_move_selection=SAFE_NONE
+WEB_SWING SERVER anim_selection_mode=0 custom_move_selection=SAFE_NONE
+```
+
+The reason is infrastructure, not an animation conclusion. One disciplined
+cold recovery was performed after preserving the existing logs. The fresh
+start reported process-ready in `6.66 s`, but the application-level result
+was:
+
+* `DbServer.exe -startall` PID `31256` stayed at `1.66` CPU seconds across
+  three samples over six seconds, with 72 threads and no newly advancing
+  DbServer application log; its owned listeners were `6971`, `6989`, `6992`,
+  `6996`, `6997`, and `6998`.
+* `agent/smoke.ps1 -TimeoutSeconds 180 -Json` timed out with
+  `sawConnectMarker=false`, `characterCreated=false`, and `mapConnected=false`;
+  evidence is preserved in
+  `agent/logs/smoke-directdb-20260823-191048.json` and its companion logs.
+* Windows Application Error events at `19:09` and `19:12` recorded repeated
+  `MapServer.exe` faults in `ntdll.dll`, exception `0xc0000008`, offset
+  `0x000a038b`. No new dump was found in the repository dump/log locations.
+* SQL Server service remained running and `agent/doctor.ps1 -Json` passed the
+  checked-in `Server=localhost`/`cohdb` test. The newest DbServer application
+  log still predated this cold start, so this does not establish shard
+  readiness.
+
+The disposable shard was stopped with `agent/stop-shard.ps1
+-ForceProcessStop`. Per the stop condition, no animation smoke, mode-0
+control, mode-2 phase exercise, or GUI client was run after this failure, and
+no speculative game-code workaround was added.
+
+### Current status / Josh handoff
+
+* Runtime-FK representation / bind hierarchy: **PASS**
+* Static frame-30 actual Male skin: **PASS**
+* Full 60-frame temporal anatomy: **NOT PROVEN**
+* BOTTOM 18..22 dynamic actual-skin visual: **READY FOR JOSH**
+
+The source is staged for Josh's eventual mode-2 visual inspection, but a
+healthy GUI client could not be left running because the local shard recovery
+failed. Once the loader environment is repaired, set the ephemeral runtime
+cfg to `2`, launch the client with `-webswingdev -webswinganim 2`, and first
+verify both exact mode-2 lines from that one session before judging the live
+BOTTOM tuck. Then repeat both processes with mode `0` for the SAFE_NONE
+control. Do not re-enable AIRBORNE, ATTACHED, DESCEND, or ASCEND visuals.
 
 ---
 
@@ -460,6 +601,7 @@ been reintroduced, as requested.
 | `agent/compare-issue36-static-vs-full.py` | Phase-3 comparator (proof `sample 1` vs full frames, tolerances `0.1 °`/`6e-05`) |
 | `agent/logs/build-Release-x86-20260823-*.log` | build evidence |
 | `agent/logs/smoke-directdb-20260823-*.json` | direct-DB smokes |
+| `agent/logs/smoke-directdb-20260823-191048.json` | post-recovery direct-DB timeout proving runtime validation was blocked |
 | `agent/logs/webswing-smoke-20260823-152122.json` | movement smoke with `BOTTOM_ONLY` |
 | `bin/logs/game/webswing.log` | `selectedMove`, `move_compare … AnimP=…`, `anim_selection_mode`, `overlay_moves_present=5/5` |
 
@@ -469,6 +611,11 @@ game's own skinned `TypeGfx=male` character.
 ---
 
 ## Result (corrected per Sol review)
+
+**Current validation caveat:** Phase 7 records the final local parser/server
+initialization fixes, but the post-fix client/server runtime proof is blocked
+by the local shard loader environment. Earlier Phase 6 movement results are
+historical handoff evidence only and do not prove mode agreement.
 
 **Current justified status:**
 
@@ -498,4 +645,3 @@ beyond the canary; `AIRBORNE`/`ATTACHED`/`DESCEND`/`ASCEND` stay
 animation-neutral and Fem/Huge stay fully neutral in mode `2`.
 
 **STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
-
