@@ -1,7 +1,7 @@
 # Issue 36 — Web Swing animation runtime-integrity forensic pass — 2026-08-23
 
 **Branch:** `agent/issue-36-web-swing`
-**Expected starting HEAD:** `602f5688e2def3ef9466d2b81333d88590a324ad`
+**Expected starting HEAD:** `19eb739a28ac8b3b0d09733edfd476279027957a`
 **Implementation at this checkpoint:** the committed source and evidence changes at the checkpoint SHA below
 **PR #37:** remains stacked draft — not merged, not rebased
 
@@ -842,113 +842,217 @@ Therefore the deciding result remains:
 
 ---
 
-## Phase 11 — Frame-locked raw-source / retarget / runtime correspondence (2026-08-24)
+## Phase 11 — Source→CoH Male orientation localization (2026-08-24)
 
-Josh's visual review supersedes the broad Phase-10 interpretation for the
-overall BOTTOM visual gate: the current `Swingv3` Male BOTTOM pose is visibly
-twisted/corkscrewed/tangled. Phase 10 remains valid as a narrow runtime
-identity, bind/hierarchy, attachment, and gross-detachment check; its
-technical/anatomical PASS must not be read as a rotation/pose-fidelity PASS.
-The following source-vs-target diagnostic is the deciding localization pass.
+Josh's visual review remains the deciding BOTTOM result: the exact `Swingv3`
+Male pose is visibly twisted/corkscrewed/tangled. Phase 10 remains valid for
+runtime identity, bind/hierarchy, attachment, and gross-detachment checks;
+its PASS is not a pose-fidelity PASS. This phase localizes the orientation
+failure without changing production animation or runtime plumbing.
 
-### Exact frame and identity mapping
+### Scope and exact inputs
 
-The comparison uses the exact source asset and action:
+Only source frames `18`, `20`, and `22` were evaluated, using:
 
 ```text
-swinginganimations/Swinging.fbx
+source: swinginganimations/Swinging.fbx
 action: Armature|mixamo.com|Layer0
-fps: 30
-authored frames: 1..60
-mapping: source frame N -> Blender target frame N -> runtime sample N
-runtime frame 0: bind/reference only
+mapping: source frame N -> Blender frame N -> runtime sample N
+production proof: agent/work/issue36-mixamo-full60-20260822/COHSOURCEDEV_RETARGET_POSE_PROOF.blend
+target: CoH_Male_Exact_Export_Rig
+rig reference: agent/work/issue36-v2-reference.json
 ```
 
-The production Blender proof is the saved full-60 runtime-FK blend and
-`CoH_Male_Exact_Export_Rig`. The runtime side is the already captured exact
-identity:
+The runtime side remains the previously proved identity: `Dummy00009`,
+`Swingv3`, `TypeGfx=male`, `is_male=1`,
+`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`. No frame offset, direct-bone
+experiment, physics, sequencer, BOTTOM, or ASCEND change was performed.
 
-```yaml
-account: Dummy00009
-character: Swingv3
-TypeGfx: male
-is_male: 1
-animation: MALE/COHSOURCEDEV_RETARGET_SWING_FULL
-```
+### Full-basis diagnostic
 
-No direct-bone experiment, alternate blend, frame offset, physics change, or
-ASCEND change is part of this conclusion.
+The old `semantic_control_comparison()` gate reports joint-position and
+segment-direction agreement only. It does not compare axial roll, a complete
+orthonormal basis, sign continuity, or handedness. In all three frames its old
+criteria report `pass=true`; **the old PASS criteria can accept a corkscrewed
+pose**.
 
-### Raw source versus Blender Male versus CoH runtime
+The new diagnostic records, separately for source→control and control→CoH:
 
-The compact three-view comparisons are preserved in
-[the correspondence evidence](issue36-forensic-20260824/pose-correspondence.md):
+* primary direction angular error;
+* roll-only angular error after primary-axis alignment;
+* full basis quaternion angular error;
+* secondary/third-axis sign and handedness agreement;
+* full source, control, current CoH, and rest-basis B X/Y/Z bases and
+  quaternions.
 
-| Frame | Comparison |
-|---:|---|
-| 18 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME18_raw-vs-retarget-vs-runtime.jpg) |
-| 20 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME20_raw-vs-retarget-vs-runtime.jpg) |
-| 22 | [raw Mixamo → Blender Male → CoH runtime](issue36-forensic-20260824/pose-correspondence/FRAME22_raw-vs-retarget-vs-runtime.jpg) |
+The durable machine-readable report and compact tables are in
+[orientation-report.json](issue36-orientation-20260824/orientation-report.json)
+and [orientation-report.md](issue36-orientation-20260824/orientation-report.md).
+The diagnostic runner is
+[diagnose_issue36_orientation.py](../../agent/animation/diagnose_issue36_orientation.py).
 
-The raw Mixamo action is itself a strongly compressed swing tuck; it is not a
-neutral anatomical reference. It is nevertheless not the same silhouette or
-branch layout as the more corkscrewed Blender Male target at these exact
-frames. The first visible divergence is not isolated to one bone from stills
-alone: it appears in the torso/hip scaffold and propagates into the
-shoulder/arm and leg branches.
+### First failing boundaries
 
-### Numeric target-to-runtime boundary
+| Boundary | First concrete failure | Direction | Axial roll | Full basis |
+|---|---|---:|---:|---:|
+| source→control, frame 18 | `shoulder_r` → `COL_R` | `0.00°` | `84.52°` | `84.52°` |
+| source→control, frame 20 | `shoulder_r` → `COL_R` | `0.00°` | `91.23°` | `91.23°` |
+| source→control, frame 22 | `shoulder_r` → `COL_R` | `0.00°` | `96.25°` | `96.25°` |
+| control→CoH, frames 18/20/22 | `HIPS` | `5.98°` | `90.00°` | `90.16°` |
 
-The production Blender target was extracted at frames `18`, `20`, and `22`
-and compared against the checked-in `full.json` samples. The focused local
-channels remain below the established `0.1°` exporter/runtime rotation
-tolerance, while the ANIMX world conversion residual is effectively zero:
+Thus the first downstream target bone is **`HIPS`**. Its segment direction is
+close but not exact; the decisive error is its approximately 90° axial roll.
+The source→control boundary already loses roll at the right shoulder, while
+the target traversal first exposes a full-basis failure at HIPS. `head` is an
+earlier list row only because the terminal `head_end` geometry differs from
+the target `CRANIUM` terminal; it is not the first shoulder/limb roll cause.
 
-| Source/runtime frame | Max exporter-local → runtime-local | Max exporter ANIMX world residual | Max runtime-recomposed world residual | First local divergence > 0.1° |
-|---:|---:|---:|---:|---|
-| 18 | 0.083516283° | 0.000019014° | 0.130850145° | none |
-| 20 | 0.074867470° | 0.000022394° | 0.156138179° | none |
-| 22 | 0.073373143° | 0.000034659° | 0.147203682° | none |
+The torso mapping is explicit, not a generic scaffold:
 
-The recomposed-world residual is cumulative quantization across parent
-chains, not a first divergent local channel. The checked hierarchy was:
+| target | source semantic | A frame 18 d/r/b | A frame 20 d/r/b | A frame 22 d/r/b | B all frames |
+|---|---|---:|---:|---:|---:|
+| `HIPS` | `hips` | `5.98° / 90.00° / 90.16°` | `5.98° / 90.00° / 90.16°` | `5.98° / 90.00° / 90.16°` | `0° / 0° / 0°` |
+| `WAIST` | `spine` | `11.15° / 0.95° / 11.19°` | `11.15° / 0.56° / 11.16°` | `11.15° / 0.25° / 11.15°` | `0° / 0° / 0°` |
+| `CHEST` | `spine2` | `0.35° / 90.00° / 90.00°` | `0.35° / 90.00° / 90.00°` | `0.35° / 90.00° / 90.00°` | `0° / 0° / 0°` |
+| `NECK` | `neck` | `1.49° / 90.00° / 90.01°` | `1.49° / 90.00° / 90.01°` | `1.49° / 90.00° / 90.01°` | `0° / 0° / 0°` |
+| `HEAD` | `head` | `26.89° / 179.21° / 179.24°` | `26.89° / 179.21° / 179.24°` | `26.89° / 179.21° / 179.24°` | `0° / 0° / 0°` |
+
+`Spine1` is audited explicitly but is not directly consumed by the current
+compressed mapping: `Hips → HIPS`, `Spine → WAIST`, `Spine2 → CHEST`,
+`Neck → NECK`, `Head → HEAD`.
+
+### Rest-basis measurement
+
+The rest-pose audit records source/target X/Y/Z bases, relative basis
+matrix/quaternion, primary-axis offset, and roll-axis offset in the JSON. The
+important offsets are:
+
+| source→target | primary offset | roll offset after primary alignment | finding |
+|---|---:|---:|---|
+| `Hips → HIPS` | `5.976°` | `180.000°` | material axial rest mismatch |
+| `Spine/Spine1 → WAIST` | `11.146°` | `0.000°` | direction compression, no measured rest roll offset |
+| `Spine2 → CHEST` | `0.349°` | `0.000°` | near-aligned rest pair |
+| `Neck → NECK` | `1.489°` | `-180.000°` | material axial rest mismatch |
+| `Head → HEAD` | `14.008°` | `179.266°` | material axial rest mismatch |
+| `RightShoulder → COL_R` | `16.925°` | `-178.968°` | material axial rest mismatch |
+| `RightArm → UARMR` | `2.172°` | `179.998°` | material axial rest mismatch |
+| `RightForeArm → LARMR` | `1.299°` | `180.000°` | material axial rest mismatch |
+| `LeftShoulder → COL_L` | `16.924°` | `178.969°` | material axial rest mismatch |
+| `LeftArm → UARML` | `2.172°` | `-179.998°` | material axial rest mismatch |
+| `LeftForeArm → LARML` | `1.299°` | `-180.000°` | material axial rest mismatch |
+| `RightUpLeg → ULEGR` | `6.665°` | `27.281°` | nontrivial rest roll offset |
+| `RightLeg → LLEGR` | `10.173°` | `179.904°` | material axial rest mismatch |
+| `LeftUpLeg → ULEGL` | `7.206°` | `-34.283°` | nontrivial rest roll offset |
+| `LeftLeg → LLEGL` | `10.172°` | `-179.904°` | material axial rest mismatch |
+
+The current direction-plus-plane method calls `stable_basis()` against the
+target segment and a synthetic/current roll reference, but does not carry the
+source pose delta through each target rest basis. That is the missing
+conversion.
+
+### Bend-plane and sign audit
+
+The current source-space roll references are exactly the inspected quantities:
+`upper.cross(lower)` for arm chains, `thigh.cross(shin)` for leg chains,
+`pelvis lateral.cross(up)` for the pelvis, and `source_pose_roll(...)` as a
+near-straight fallback/torso reference. One arm plane is reused for shoulder,
+upper arm, forearm, and hand; one leg plane is reused across the leg chain.
+
+The reuse contributes to A's axial error: at frame 18 the right arm plane is
+opposite the evaluated source roll for `arm_r` and `forearm_r` (`180°`, dot
+`-1.000`), while the leg planes differ from the evaluated source roll by about
+`77°–101°` for thigh/shin. The complete per-bone/frame table is in the
+[shared-plane section](issue36-orientation-20260824/orientation-report.md#shared-bend-plane-reuse).
+This is a contributing mechanism inside the current basis construction, but
+the evidence does not establish it as an independent primary case: the rest
+axes are materially mismatched and the explicit rest-basis B removes the
+target error without using the shared plane.
+
+No tested plane or roll vector flips sign between `18→20` or `20→22`; every
+consecutive dot is positive (the report records the exact dots). Sign
+continuity is therefore **not** the first cause in this window.
+
+### Rest-basis A/B and visual proof
+
+A reconstructs the current direction+plane solver in the source/ANIMX frame.
+B computes:
 
 ```text
-HIPS → WAIST → CHEST → NECK → HEAD
-CHEST → COL_L → UARML → LARML → HANDL
-CHEST → COL_R → UARMR → LARMR → HANDR
-HIPS → ULEGL → LLEGL
-HIPS → ULEGR → LLEGR
+source_pose_delta = source_pose_world * inverse(source_rest_world)
+target_pose_world = source_pose_delta * target_rest_world
+target_local = existing Blender parent/rest conversion of target_pose_world
 ```
 
-This rules out the runtime-local quaternion transport, bind translations,
-compiled runtime decode, and frame mapping as the source of the observed
-visual failure. It does not validate the source-to-Male anatomical transfer.
+No local quaternion is copied naïvely; B applies rotation only, with zero
+translation and unit scale within `1e-6` in the proof. B compares at the same
+three frames and the report's target table shows zero basis error (apart from
+floating-point rounding), while A retains the 90°/180° axial failures.
 
-### Current classification
+The proxy renders are normalized per representation so each skeleton is
+visible at useful scale. They show the raw source tuck, the tangled/corkscrewed
+current CoH result, and the cleaner source-like rest-basis result:
 
-**Case C — source-to-Male retarget divergence.** The production CoH target is
-faithfully carried through export, ANIMX, compiler/runtime decode, and the
-correct `Swingv3` runtime selection. The actionable boundary is therefore the
-source-to-Blender-Male retarget construction. This pass does not yet identify
-whether the defect is a specific rest-axis basis, bend-plane choice,
-handedness convention, or another detail of the anatomical solve; no
-speculative production animation fix is justified.
+| frame | raw Mixamo | current CoH Male A | rest-basis CoH Male B |
+|---:|---|---|---|
+| 18 | [front](issue36-orientation-20260824/visual/frame18/raw/front.png), [3/4](issue36-orientation-20260824/visual/frame18/raw/threequarter.png), [side](issue36-orientation-20260824/visual/frame18/raw/side.png) | [front](issue36-orientation-20260824/visual/frame18/current/front.png), [3/4](issue36-orientation-20260824/visual/frame18/current/threequarter.png), [side](issue36-orientation-20260824/visual/frame18/current/side.png) | [front](issue36-orientation-20260824/visual/frame18/rest/front.png), [3/4](issue36-orientation-20260824/visual/frame18/rest/threequarter.png), [side](issue36-orientation-20260824/visual/frame18/rest/side.png) |
+| 20 | [front](issue36-orientation-20260824/visual/frame20/raw/front.png), [3/4](issue36-orientation-20260824/visual/frame20/raw/threequarter.png), [side](issue36-orientation-20260824/visual/frame20/raw/side.png) | [front](issue36-orientation-20260824/visual/frame20/current/front.png), [3/4](issue36-orientation-20260824/visual/frame20/current/threequarter.png), [side](issue36-orientation-20260824/visual/frame20/current/side.png) | [front](issue36-orientation-20260824/visual/frame20/rest/front.png), [3/4](issue36-orientation-20260824/visual/frame20/rest/threequarter.png), [side](issue36-orientation-20260824/visual/frame20/rest/side.png) |
+| 22 | [front](issue36-orientation-20260824/visual/frame22/raw/front.png), [3/4](issue36-orientation-20260824/visual/frame22/raw/threequarter.png), [side](issue36-orientation-20260824/visual/frame22/raw/side.png) | [front](issue36-orientation-20260824/visual/frame22/current/front.png), [3/4](issue36-orientation-20260824/visual/frame22/current/threequarter.png), [side](issue36-orientation-20260824/visual/frame22/current/side.png) | [front](issue36-orientation-20260824/visual/frame22/rest/front.png), [3/4](issue36-orientation-20260824/visual/frame22/rest/threequarter.png), [side](issue36-orientation-20260824/visual/frame22/rest/side.png) |
+
+The A/B removes the proxy corkscrew at all three tested frames while keeping
+the source tuck's connected branch silhouette. This is diagnostic proof only;
+no production `.anim` was regenerated.
+
+### Decision — exactly one primary result
+
+**CASE 1 — REST BASIS IS THE PROBLEM.** Source/target rest axes differ by
+approximately 90°/180° on the first failing target chain, the current solver
+ignores that rest-basis difference, and the explicit rest-basis A/B removes the
+full-basis/visual twist. The primary conclusion is:
+
+```text
+RETARGET REST-BASIS CONVERSION: FAIL
+```
+
+The shared bend-plane reuse is recorded as a contributing roll-loss mechanism,
+but is not promoted to an independent CASE 2 without a separate plane-only
+A/B. The torso mapping is not the primary CASE 3 because HIPS is the first
+downstream failure while arms/legs also show the same rest-axis pattern. CASE 4
+is not selected: the evidence supports one primary rest-basis conversion
+defect, not multiple independently isolated production defects.
+
+### Runtime/exporter status and next pilot
+
+The existing exporter/compiler/runtime-FK evidence remains PASS. The focused
+runtime-local residuals are `0.0835°`, `0.0749°`, and `0.0734°` at frames
+18/20/22, below the established `0.1°` tolerance; the ANIMX world residuals
+remain `0.000019°`, `0.000022°`, and `0.000035°`. Bind translations, hierarchy,
+compiled decode, and frame mapping remain cleared.
+
+The smallest next production pilot, only after Sol/Josh approval, is a
+reversible **three-frame rest-basis pilot for HIPS at source frames 18/20/22**
+on a temporary proof asset, leaving every other target channel and all runtime
+plumbing unchanged. If that first target correction removes the torso twist on
+the actual skin, extend the same explicit source-delta × target-rest formula
+to the focused arm/leg channels in another three-frame proof. Do not regenerate
+the full 60-frame asset until that review gate passes.
 
 Updated gate status:
 
 ```text
 Swingv3 runtime identity:                 PASS
 BOTTOM runtime selection:                 PASS
-BOTTOM bind/hierarchy continuity:         PASS
-BOTTOM gross detachment/stretch check:    PASS
-BOTTOM rotation/pose fidelity:            FAIL / under investigation
+Exporter/compiler/runtime-FK transport:   PASS
+Bind translations/hierarchy continuity:   PASS
+Source→CoH Male retarget orientation:     FAIL (CASE 1: rest basis)
+BOTTOM rotation/pose fidelity:             FAIL
 BOTTOM overall visual gate:               FAIL
 ASCEND:                                   HOLD (not tested)
+Physics:                                  FROZEN
 ```
 
-The durable diagnostic details and tooling are listed in
-[pose-correspondence.md](issue36-forensic-20260824/pose-correspondence.md).
+Do not merge PR #37, do not rebase, and do not make a speculative production
+retarget or runtime animation change from this evidence alone. STOP FOR
+SOL/JOSH REVIEW.
 
 ---
 
@@ -962,6 +1066,9 @@ The durable diagnostic details and tooling are listed in
 | `docs/evidence/issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | corrected deciding gate on the exact runtime-proven `Swingv3` Male character; supersedes the earlier Phase-9 deciding set |
 | `docs/evidence/issue36-forensic-20260824/pose-correspondence/FRAME18..22_raw-vs-retarget-vs-runtime.jpg` (×3) | frame-locked raw Mixamo / Blender Male / exact CoH runtime comparison sheets |
 | `docs/evidence/issue36-forensic-20260824/pose-correspondence.md` | source/frame mapping, visual classification, focused runtime numeric correspondence, and current gate decision |
+| `docs/evidence/issue36-orientation-20260824/orientation-report.json` | machine-readable full-basis source/control/CoH A/B, rest offsets, roll references, sign continuity, and rotation-only assertions |
+| `docs/evidence/issue36-orientation-20260824/orientation-report.md` | compact 18/20/22 roll/basis tables, bend-plane audit, and visual links |
+| `docs/evidence/issue36-orientation-20260824/visual/frame18..22/{raw,current,rest}/{front,threequarter,side}.png` (×27) | raw Mixamo, current CoH Male A, and rest-basis CoH Male B proxy views |
 | `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
 | `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
 | `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
@@ -974,6 +1081,7 @@ The durable diagnostic details and tooling are listed in
 | `agent/compare-issue36-static-vs-full.py` | Phase-3 comparator (proof `sample 1` vs full frames, tolerances `0.1 °`/`6e-05`) |
 | `agent/animation/render_issue36_production_correspondence.py` | clean frame-locked source/target skeleton renderer; hides stale proof proxies and applies the saved display alignment |
 | `agent/animation/make_issue36_comparison_sheets.py` | compact three-view comparison-sheet generator |
+| `agent/animation/diagnose_issue36_orientation.py` | diagnostic-only full-basis/rest-basis A/B runner for frames 18/20/22 |
 | `agent/animation/extract_issue36_correspondence.py` / `compare_issue36_correspondence.py` | production target extraction and focused exporter/runtime correspondence comparator |
 | `agent/logs/build-Release-x86-20260823-*.log` | build evidence |
 | `agent/logs/smoke-directdb-20260823-*.json` | direct-DB smokes |
@@ -1015,12 +1123,12 @@ The numeric `full@30` comparison remains valid
 (`~0.000002°` max rotation, position `0`, parent graph/bind translations
 identical).
 
-**Case 4** — the forensic A/B and its exact numeric cross-check pass for the
-single gated pose plus the live BOTTOM selection. AIR_MA_IRONKICK and old V2
-STRETCH are confirmed contaminants of Josh's failed footage. Static frame 30
-and the live BOTTOM gate pass, while the full temporal clip remains visually
-unproven; ALL observed mangling cannot yet be attributed conclusively to the
-old assets.
+**Historical pre-orientation result (superseded):** the earlier static A/B and
+its exact numeric cross-check passed for the single gated pose plus the live
+BOTTOM selection. AIR_MA_IRONKICK and old V2 STRETCH were confirmed
+contaminants of Josh's failed footage. The Phase-11 full-basis diagnostic now
+supersedes that broad interpretation for pose fidelity and identifies the
+source→Male rest-basis conversion as the current failure.
 
 **One-phase reintegration staged** — `WEBSWING_BOTTOM Male 18 22`
 (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is the sole custom visual move
@@ -1036,16 +1144,25 @@ animation-neutral and Fem/Huge stay fully neutral in mode `2`.
 * BOTTOM rotation/pose fidelity: **FAIL / under investigation**.
 * BOTTOM overall visual gate: **FAIL** — the exact `Swingv3` BOTTOM pose is
   visibly tangled/corkscrewed in the current visual review.
-* First actionable divergence: **source-to-Male retarget construction**. The
-  Blender target matches CoH runtime through the focused exporter/ANIMX/runtime
-  check at frames 18/20/22, so this is not currently localized to runtime FK,
-  bind translations, compiled decode, or frame mapping.
+* First actionable target bone: **`HIPS`**. Its segment direction error is
+  `5.98°`, but its axial roll error is `90.00°` and its full-basis error is
+  `90.16°`; source→control already first loses roll at `shoulder_r`/`COL_R`.
+* Primary classification: **CASE 1 — REST BASIS IS THE PROBLEM**. The measured
+  HIPS/arm/leg rest pairs contain approximately 90°/180° offsets, and the
+  explicit rest-basis B removes the target basis error and proxy corkscrew at
+  frames 18/20/22. The shared plane is a contributing mechanism, not a
+  separately proven primary case.
+* Roll-reference sign continuity: **PASS** for the tested window; no
+  18→20/20→22 reference dot is negative.
+* Exporter/compiler/runtime-FK transport: **PASS**; runtime-local errors remain
+  below `0.1°` and frame mapping/bind translations/hierarchy remain cleared.
 * Full 60-frame temporal anatomy: **NOT PROVEN**.
 * ASCEND: **HOLD**; no ASCEND or physics work was performed.
 
 Do not merge PR #37 and do not make a speculative production animation fix
-from this evidence alone. The next scoped investigation is the
-source-to-Male retarget solve: rest-axis/basis, bend-plane, and handedness
-choices, with the same raw/target/runtime frame-locked comparison retained.
+from this evidence alone. The smallest next pilot, after Sol/Josh approval,
+is a temporary three-frame HIPS-only rest-basis proof at 18/20/22; if that
+passes on the actual skin, extend the same formula to the focused arm/leg
+channels before considering any full-60 regeneration.
 
 **STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
