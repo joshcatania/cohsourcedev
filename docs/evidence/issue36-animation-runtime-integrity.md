@@ -1069,6 +1069,7 @@ SOL/JOSH REVIEW.
 | `docs/evidence/issue36-orientation-20260824/orientation-report.json` | machine-readable full-basis source/control/CoH A/B, rest offsets, roll references, sign continuity, and rotation-only assertions |
 | `docs/evidence/issue36-orientation-20260824/orientation-report.md` | compact 18/20/22 roll/basis tables, bend-plane audit, and visual links |
 | `docs/evidence/issue36-orientation-20260824/visual/frame18..22/{raw,current,rest}/{front,threequarter,side}.png` (×27) | raw Mixamo, current CoH Male A, and rest-basis CoH Male B proxy views |
+| `docs/evidence/issue36-rest-basis-bottom-20260824/` | corrected five-sample rest-basis runtime proof, identity record, contact sheet, and 15 actual-skin canary captures |
 | `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
 | `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
 | `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
@@ -1135,7 +1136,7 @@ source→Male rest-basis conversion as the current failure.
 beyond the canary; `AIRBORNE`/`ATTACHED`/`DESCEND`/`ASCEND` stay
 animation-neutral and Fem/Huge stay fully neutral in mode `2`.
 
-## Result (updated after Phase 11)
+## Historical result (Phase 11, superseded by Phase 12)
 
 * Runtime identity (`Dummy00009` / `Swingv3` Male): **PASS**.
 * BOTTOM runtime selection and client/server agreement: **PASS**.
@@ -1166,3 +1167,84 @@ passes on the actual skin, extend the same formula to the focused arm/leg
 channels before considering any full-60 regeneration.
 
 **STOP FOR SOL/JOSH REVIEW — do not merge PR #37.**
+
+---
+
+## Phase 12 — Corrected rest-basis BOTTOM canary, source frames 18..22 (2026-08-24)
+
+This phase implements the accepted rest-basis transfer as a bounded proof asset
+only.  It supersedes the Phase-11 visual FAIL for the old source→Male
+orientation result; it does not replace the production 60-frame asset.
+
+```yaml
+"source->Male retarget orientation fix direction": confirmed
+"corrected frame20 actual-skin": PASS
+"corrected bottom 18..22 actual-skin": PASS
+"full 60-frame animation": NOT PROVEN
+"ASCEND 30..40": NOT IMPLEMENTED
+```
+
+The temporary runtime asset is
+`MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM`.  It contains exactly five
+authored samples, mapping runtime samples `1..5` to source frames `18..22`.
+The generator applies the accepted source-pose-delta × target-rest-basis
+transfer to the torso, both arm chains, both leg chains, and head/neck while
+keeping bind translations fixed, pose-bone translations at zero, and scale
+constant.
+
+### Pre-runtime and runtime proof
+
+The exact `MALE/SKEL_READY2` 68-bone target passed Blender pre-export proof:
+
+* focused-bone direction error: `0.0°`;
+* maximum roll error: `0.002097°`;
+* maximum full-basis/runtime-world error: `0.039565°`;
+* local translation magnitude: `0.0`;
+* local scale error: `3.5763e-7`.
+
+ANIMX export, `GetAnimation2` compile, and runtime decode also passed:
+
+* runtime animation: `MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM`;
+* base animation: `MALE/SKEL_READY2`;
+* five authored samples, 68 tracks, hierarchy mismatch `0`;
+* bind translation error `0.0`, authored translation drift `0.0`;
+* maximum decoded runtime-local orientation error `0.072206°` on `ULEGL`;
+* failed runtime proof checks: `0`.
+
+### Actual-skin decision
+
+The existing canary path was used with `Dummy00009` / `Swingv3`.  The test
+identity was `seq_type=male`, `calculated_type=male`, `is_male=1`,
+`TypeGfx=male`; the canary selected
+`MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM`.  All 15 captures exited cleanly:
+front, three-quarter, and side for each source frame `18`, `19`, `20`, `21`,
+and `22`.
+
+The enlarged review set shows a coherent compressed swing tuck through the
+range: torso/hip relationship is coherent, limbs remain connected to the same
+body, and no visible corkscrew, detached segment, or extreme stretch appears.
+The deciding result is:
+
+```text
+CORRECTED BOTTOM 18..22 ACTUAL-SKIN PILOT: PASS
+```
+
+Detailed proof reports and all 15 actual-skin images are in
+`docs/evidence/issue36-rest-basis-bottom-20260824/`.
+
+### Scope boundary and handoff
+
+The production `MALE/COHSOURCEDEV_RETARGET_SWING_FULL` asset was not
+overwritten.  No ASCEND, physics, anchors, rope, steering, jump, tether,
+WebSwing mode plumbing, system/shard forensic, or exporter/runtime-FK
+reopening was performed.  Full 60-frame animation validity remains **not
+proven**.
+
+Next task recommendation, without implementing it here:
+
+```text
+ASCEND 30..40 with HOLD at 40
+```
+
+PR #37 remains a stacked draft.  Do not merge or rebase.  STOP FOR SOL/JOSH
+REVIEW.
