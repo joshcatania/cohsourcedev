@@ -692,7 +692,15 @@ The relevant runtime logs are `bin/logs/game/webswing.log`,
 
 ---
 
-## Phase 9 — Male BOTTOM constituent-pose gate (frames 18..22)
+## Phase 9 — Male BOTTOM constituent-pose gate (frames 18..22) — superseded deciding set
+
+The Phase-9 capture set below is retained as historical evidence, but it is
+**superseded for the deciding BOTTOM visual gate**. Josh requested a
+correction using the exact known Male test character `Swingv3`. The earlier
+set did not satisfy that identity requirement: its same-run runtime logs
+identified `SwingV2` as `seq_type=huge`, `calculated_type=huge`,
+`is_male=0`. Those images are therefore not used to decide the gate, even
+where the canary move and visual observations were otherwise useful.
 
 The live BOTTOM phase is intentionally unchanged.  To make its five source
 poses judgeable without changing swing timing, the existing private
@@ -740,7 +748,11 @@ frames 21 and 22.  That hand change is visible as pose motion, not a bind,
 hierarchy, or translation discontinuity; the actual skinned images above remain
 the deciding gate.
 
-### ASCEND preflight (not enabled)
+### Historical ASCEND note — no ASCEND gate performed here
+
+The following is retained as planning context only. No 30..40 ASCEND
+capture, runtime gate, or visual decision was performed in this corrective
+pass.
 
 Because all five BOTTOM constituent poses pass, the currently-disabled Male
 ASCEND contract is technically coherent on this HEAD: `WEBSWING_ASCEND_MALE_START`
@@ -751,13 +763,82 @@ correct place.  Recommendation: make the next gate a separate frozen
 ASCEND-start/hold visual audition, then a dynamic ASCEND-only test; do not
 enable ASCEND in normal mode 2 until that gate passes.
 
-**MALE BOTTOM 18..22 CONSTITUENT POSE INTEGRITY: PASS**
+**Historical Phase-9 MALE BOTTOM 18..22 CONSTITUENT POSE INTEGRITY: PASS**
 
 Combined with the dynamic mode-2 selection already proven:
 
-**WEBSWING_BOTTOM technical/anatomical gate: PASS**
+**Historical Phase-9 WEBSWING_BOTTOM technical/anatomical gate: PASS**
 
 This does **not** prove full 60-frame temporal anatomy.
+
+---
+
+## Phase 10 — Corrective Swingv3 Male BOTTOM gate (2026-08-24)
+
+This is the deciding corrective gate requested by Sol/Josh. It supersedes the
+earlier Phase-9 capture set for the BOTTOM visual decision without deleting
+that historical evidence.
+
+Required identity was used for every capture:
+
+```yaml
+account: Dummy00009
+character: Swingv3
+```
+
+Before counting any frame, each same-run client log was checked for:
+
+```ini
+entity=Swingv3
+seq_type=male
+calculated_type=male
+is_male=1
+```
+
+The canary proof was also present in each same-run log:
+
+```ini
+selectedMove=COHSOURCEDEV_CUSTOM_CANARY
+TypeGfx=male
+AnimP=MALE/COHSOURCEDEV_RETARGET_SWING_FULL
+```
+
+No capture reported `SwingV2`, `Huge`, or `Fem`. The runtime canary was staged
+with `agent/stage-issue36-canary.ps1 -Variant FullFrame`, one range at a time,
+using Move-level `Scale 0` and the exact ranges below. Each frame used the
+actual game skin in front, three-quarter, and side views; no Blender or
+exported-rig image was used.
+
+| Frame | Exact staged range | Runtime include SHA-256 | Capture PIDs (front / ¾ / side) | Visual gate |
+|---:|---|---|---|---|
+| 18 | `18 19` | `486db30128b360cd2ac2c80f5211bbc46dc0f261ac0ed9c87e1954d554b300cb` | `15952 / 3044 / 14264` | **PASS** |
+| 19 | `19 20` | `e7487d4e05d9ce9e84cbbb3d911f9f173e8c85858689d24d9c77ed1740e24f33` | `12856 / 2460 / 1236` | **PASS** |
+| 20 | `20 21` | `58c5aece45e7b37462f47cc4b39c83549b749bbd9b6271e20292ba5a18c4a3dc` | `5832 / 11432 / 3040` | **PASS** |
+| 21 | `21 22` | `4b405199e8ed3d4e3a91d3d702166f7c6efdb5a8c3d30a52ef7e136d5e9cccb0` | `14924 / 19240 / 5684` | **PASS** |
+| 22 | `22 23` | `50d20ed24061af00352dea5c4c89fff0dbf300cc4a18be3b967073ebf2011df0` | `8972 / 9232 / 4292` | **PASS** |
+
+The corrected actual-skin captures are preserved separately from the earlier
+historical filenames:
+
+| Frame | Corrected actual-skin captures | Constituent-pose review |
+|---:|---|---|
+| 18 | [front](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18_front.jpg), [¾](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18_threequarter.jpg), [side](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18_side.jpg) | **PASS** — hips→waist→chest→neck→head→cranium continuous; collars, shoulders, arms, hands, hips, and legs attached; no detached geometry or extreme stretch. |
+| 19 | [front](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME19_front.jpg), [¾](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME19_threequarter.jpg), [side](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME19_side.jpg) | **PASS** — tucked torso and both upper/lower arm and hand chains remain connected; no detached geometry or extreme stretch. |
+| 20 | [front](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME20_front.jpg), [¾](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME20_threequarter.jpg), [side](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME20_side.jpg) | **PASS** — spine, collar/shoulder attachments, hands, hips, and legs remain anatomically continuous. |
+| 21 | [front](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME21_front.jpg), [¾](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME21_threequarter.jpg), [side](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME21_side.jpg) | **PASS** — rotated tuck remains connected at neck, shoulders, arms, hands, hips, and legs; no one-frame skeletal break. |
+| 22 | [front](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME22_front.jpg), [¾](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME22_threequarter.jpg), [side](issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME22_side.jpg) | **PASS** — final tuck remains anatomically continuous with no detached geometry or extreme stretch. |
+
+No 30..40 ASCEND gate was started or performed in this task. The staged
+runtime include was restored to the tracked bytes after the final capture.
+
+```text
+SWINGV3 MALE BOTTOM 18..22 CONSTITUENT POSE INTEGRITY:
+    PASS
+```
+
+Therefore the deciding result remains:
+
+**WEBSWING_BOTTOM technical/anatomical gate: PASS**
 
 ---
 
@@ -768,6 +849,7 @@ This does **not** prove full 60-frame temporal anatomy.
 | `docs/evidence/issue36-forensic-20260823/STATIC_PROOF_*.jpg` (×3) | Phase-2 A front/¾/side closeups on the actual Male skin |
 | `docs/evidence/issue36-forensic-20260823/FULL_FRAME30_*.jpg` (×3) | same for the matched `FULL@30` pose |
 | `docs/evidence/issue36-forensic-20260824/BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | frozen actual-Male-skin constituent-pose gate for BOTTOM source frames 18..22 |
+| `docs/evidence/issue36-forensic-20260824/SWINGV3_BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | corrected deciding gate on the exact runtime-proven `Swingv3` Male character; supersedes the earlier Phase-9 deciding set |
 | `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
 | `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
 | `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
@@ -805,6 +887,10 @@ is superseded by Phase 8.
 * CLIENT/SERVER mode-2 runtime agreement: **PASS**.
 * BOTTOM `18 22` dynamic runtime selection: **PASS** — both sides repeatedly
   reached Male `BOTTOM` and selected `WEBSWING_BOTTOM`.
+* Corrective exact-character BOTTOM constituent-pose gate on `Dummy00009` /
+  `Swingv3`, frames `18..22`, front/¾/side: **PASS** — the earlier Phase-9
+  deciding set is superseded for this result because it did not prove the
+  required `Swingv3` Male runtime identity.
 * SAFE_NONE mode-0 control and traversal: **PASS**.
 
 Do not claim the entire 60-frame animation is visually skeletal-valid yet.
