@@ -692,12 +692,82 @@ The relevant runtime logs are `bin/logs/game/webswing.log`,
 
 ---
 
+## Phase 9 — Male BOTTOM constituent-pose gate (frames 18..22)
+
+The live BOTTOM phase is intentionally unchanged.  To make its five source
+poses judgeable without changing swing timing, the existing private
+`COHSOURCEDEV_CUSTOM_CANARY` path was staged five times.  Each staging used
+Move-level `Scale 0` and exactly one source-frame slice:
+
+| Source frame | Staged `Anim` range | Runtime include SHA-256 | Client capture PIDs (front / ¾ / side) | Visual gate |
+|---:|---|---|---|---|
+| 18 | `MALE/COHSOURCEDEV_RETARGET_SWING_FULL 18 19` | `486db30128b360cd2ac2c80f5211bbc46dc0f261ac0ed9c87e1954d554b300cb` | `17716 / 5556 / 1696` | **PASS** |
+| 19 | `… 19 20` | `e7487d4e05d9ce9e84cbbb3d911f9f173e8c85858689d24d9c77ed1740e24f33` | `4152 / 14392 / 648` | **PASS** |
+| 20 | `… 20 21` | `58c5aece45e7b37462f47cc4b39c83549b749bbd9b6271e20292ba5a18c4a3dc` | `12652 / 20188 / 19068` | **PASS** |
+| 21 | `… 21 22` | `4b405199e8ed3d4e3a91d3d702166f7c6efdb5a8c3d30a52ef7e136d5e9cccb0` | `7476 / 6580 / 4576` | **PASS** |
+| 22 | `… 22 23` | `50d20ed24061af00352dea5c4c89fff0dbf300cc4a18be3b967073ebf2011df0` | `2816 / 13204 / 16776` | **PASS** |
+
+Every client capture exited cleanly.  For every PID, `bin/logs/game/webswing.log`
+records `selectedMove=COHSOURCEDEV_CUSTOM_CANARY`, `TypeGfx=male`, and
+`AnimP=MALE/COHSOURCEDEV_RETARGET_SWING_FULL`.  The existing move diagnostic
+prints the resolved animation track but not the sequencer start/end fields;
+the exact requested source range is therefore anchored by the generated
+include content and its per-capture runtime hash in the table above.  No
+production move or `.anim` bytes were changed.
+
+The deciding visual review used the actual game skin in the front, ¾, and side
+captures below.  Across all five frames:
+
+* HIPS → WAIST → CHEST → NECK → HEAD → CRANIUM remains a continuous chain.
+* Both collars remain attached to the chest; shoulders, upper/lower arms, and
+  hands remain attached.
+* Upper/lower legs remain attached through the tucked pose.
+* No detached geometry, extreme stretch, or one-frame skeletal break is visible.
+
+| Frame | Actual-skin captures | Observation |
+|---:|---|---|
+| 18 | [front](issue36-forensic-20260824/BOTTOM_FRAME18_front.jpg), [¾](issue36-forensic-20260824/BOTTOM_FRAME18_threequarter.jpg), [side](issue36-forensic-20260824/BOTTOM_FRAME18_side.jpg) | **PASS** — continuous spine, collar/shoulder and limb attachments; no detached geometry. |
+| 19 | [front](issue36-forensic-20260824/BOTTOM_FRAME19_front.jpg), [¾](issue36-forensic-20260824/BOTTOM_FRAME19_threequarter.jpg), [side](issue36-forensic-20260824/BOTTOM_FRAME19_side.jpg) | **PASS** — tucked torso and both arm/hand chains remain connected; no extreme stretch. |
+| 20 | [front](issue36-forensic-20260824/BOTTOM_FRAME20_front.jpg), [¾](issue36-forensic-20260824/BOTTOM_FRAME20_threequarter.jpg), [side](issue36-forensic-20260824/BOTTOM_FRAME20_side.jpg) | **PASS** — hips-to-head continuity and shoulder/arm attachments remain sane. |
+| 21 | [front](issue36-forensic-20260824/BOTTOM_FRAME21_front.jpg), [¾](issue36-forensic-20260824/BOTTOM_FRAME21_threequarter.jpg), [side](issue36-forensic-20260824/BOTTOM_FRAME21_side.jpg) | **PASS** — rotated tuck remains connected at neck, shoulders, hands, hips, and legs. |
+| 22 | [front](issue36-forensic-20260824/BOTTOM_FRAME22_front.jpg), [¾](issue36-forensic-20260824/BOTTOM_FRAME22_threequarter.jpg), [side](issue36-forensic-20260824/BOTTOM_FRAME22_side.jpg) | **PASS** — final tuck remains anatomically continuous with no detached or stretched segment. |
+
+Optional numeric sanity from the existing `GetAnimation2 -runtime-rig`
+`full.json` report checked frames 17..23: all 68 bones retain the same parent
+graph, all local translations remain exactly at bind values (`max error 0`),
+and the largest adjacent local rotation change is 29.694° on `HANDR` between
+frames 21 and 22.  That hand change is visible as pose motion, not a bind,
+hierarchy, or translation discontinuity; the actual skinned images above remain
+the deciding gate.
+
+### ASCEND preflight (not enabled)
+
+Because all five BOTTOM constituent poses pass, the currently-disabled Male
+ASCEND contract is technically coherent on this HEAD: `WEBSWING_ASCEND_MALE_START`
+uses `RETARGET_SWING_FULL 30..40` and explicitly `NextMove`s to
+`WEBSWING_ASCEND_MALE_HOLD`, whose `40..60` slice has Move-level `Scale 0`.
+The two moves use the same proven asset and the hold-only freeze is in the
+correct place.  Recommendation: make the next gate a separate frozen
+ASCEND-start/hold visual audition, then a dynamic ASCEND-only test; do not
+enable ASCEND in normal mode 2 until that gate passes.
+
+**MALE BOTTOM 18..22 CONSTITUENT POSE INTEGRITY: PASS**
+
+Combined with the dynamic mode-2 selection already proven:
+
+**WEBSWING_BOTTOM technical/anatomical gate: PASS**
+
+This does **not** prove full 60-frame temporal anatomy.
+
+---
+
 ## Evidence artifacts
 
 | Path | Purpose |
 |---|---|
 | `docs/evidence/issue36-forensic-20260823/STATIC_PROOF_*.jpg` (×3) | Phase-2 A front/¾/side closeups on the actual Male skin |
 | `docs/evidence/issue36-forensic-20260823/FULL_FRAME30_*.jpg` (×3) | same for the matched `FULL@30` pose |
+| `docs/evidence/issue36-forensic-20260824/BOTTOM_FRAME18..22_{front,threequarter,side}.jpg` (×15) | frozen actual-Male-skin constituent-pose gate for BOTTOM source frames 18..22 |
 | `docs/evidence/issue36-forensic-20260823/static-vs-full.md` | full Phase-3 per-bone `full@30 vs proof(sample 1)` table (`1.7e-06 °`) |
 | `docs/evidence/issue36-forensic-20260823/phase4-chain.md` | Phase-4 spine+arm `bind@f0 / authored-constant` table |
 | `agent/work/issue36-forensic-20260823/runtime/proof.json` | `GetAnimation2 -runtime-rig MALE/COHSOURCEDEV_RETARGET_POSE_PROOF` |
@@ -706,7 +776,7 @@ The relevant runtime logs are `bin/logs/game/webswing.log`,
 | `agent/work/issue36-forensic-20260823/runtime/skelready2.json` | `SKEL_READY2` base reference |
 | `agent/animation/canary-static-proof.inc` | tracked `STATIC_PROOF` canary variant (`Scale 0`) |
 | `agent/animation/canary-full-frame30.inc` | tracked `FULL_FRAME30` canary variant (`30 31 Scale 0`) |
-| `agent/stage-issue36-canary.ps1` | variants ↔ `bin/data/sequencers/cohsourcedev_canary.inc` |
+| `agent/stage-issue36-canary.ps1` | variants and generated one-frame slices ↔ `bin/data/sequencers/cohsourcedev_canary.inc` |
 | `agent/compare-issue36-static-vs-full.py` | Phase-3 comparator (proof `sample 1` vs full frames, tolerances `0.1 °`/`6e-05`) |
 | `agent/logs/build-Release-x86-20260823-*.log` | build evidence |
 | `agent/logs/smoke-directdb-20260823-*.json` | direct-DB smokes |
