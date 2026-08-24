@@ -613,8 +613,8 @@ static int mapServerReadWebSwingAnimConfig(void)
     int path_index;
     int mode;
 
-    // This helper is called once from parseArgs1(), never from a motion or
-    // tick path.  The file is an ephemeral local-development fallback for
+    // This helper is called once during startup, never from a motion or tick
+    // path.  The file is an ephemeral local-development fallback for
     // MapServer instances spawned by ServerMonitor, which has no convenient
     // per-child argv hook in the normal FastDev launcher.
     for (path_index = 0; path_index < ARRAY_SIZE(paths) && !f; ++path_index)
@@ -636,6 +636,8 @@ static int mapServerReadWebSwingAnimConfig(void)
     return 0;
 }
 
+static int s_web_swing_anim_argument_seen;
+
 static void mapServerLogWebSwingAnimSelection(void)
 {
     int mode = g_cohsourcedev_webswing_anim_selection;
@@ -651,8 +653,6 @@ static void mapServerLogWebSwingAnimSelection(void)
 static void parseArgs1(int argc,char **argv)
 {
     int        i;
-    int        web_swing_anim_argument_seen = 0;
-
     for(i=1;i<argc;i++)
     {
         int handled = 1;
@@ -825,7 +825,7 @@ static void parseArgs1(int argc,char **argv)
         else if (stricmp(argv[i], "-webswinganim")==0 && i+1 < argc)
         {
             int mode;
-            web_swing_anim_argument_seen = 1;
+            s_web_swing_anim_argument_seen = 1;
             mode = atoi(argv[++i]);
             mapServerSetWebSwingAnimSelection(mode);
             mapServerEnableWebSwingDevEnvironment();
@@ -846,10 +846,6 @@ static void parseArgs1(int argc,char **argv)
         }
     }
 
-    // An explicit command-line value, including zero, always wins over the
-    // optional local cfg fallback.
-    if (!web_swing_anim_argument_seen)
-        mapServerReadWebSwingAnimConfig();
 }
 
 void parseArgs2(int argc,char **argv)
@@ -1514,11 +1510,6 @@ void parseArgs2(int argc,char **argv)
             else
                 Errorf("Invalid command line parameters for '-maintenanceHours begin end', begin and end need to be hours from 0-24");
         }
-        else if (stricmp(argv[i], "-webswinganim")==0 && i+1 < argc)
-        {
-            mapServerSetWebSwingAnimSelection(atoi(argv[++i]));
-            mapServerEnableWebSwingDevEnvironment();
-        }
         /* else if (argv[i][0])
         {
             Errorf("Invalid command line parameter passed to mapserver.exe: %s", argv[i]);
@@ -1536,6 +1527,12 @@ static void serverStateInit(int argc,char **argv)
     server_state.doNotAutoGroup = isProductionMode();
     server_state.maintenance_idle = 20;        // idle minutes after which to do periodic maintenance (0 disables)
     serverSetSkyFade(0, 1, 0.0);
+
+    // parseArgs1() must remain disk-free.  Apply the one-time local fallback
+    // at the first clean startup point after it; an explicit argv value,
+    // including zero, remains authoritative.
+    if (!s_web_swing_anim_argument_seen)
+        mapServerReadWebSwingAnimConfig();
 
     if(!beaconizerIsStarting())
     {

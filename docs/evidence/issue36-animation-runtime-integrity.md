@@ -2,7 +2,7 @@
 
 **Branch:** `agent/issue-36-web-swing`
 **Expected starting HEAD:** `602f5688e2def3ef9466d2b81333d88590a324ad`
-**Implementation at this checkpoint:** `602f5688e` plus the preserved local worktree changes below
+**Implementation at this checkpoint:** the committed source and evidence changes at the checkpoint SHA below
 **PR #37:** remains stacked draft — not merged, not rebased
 
 This document is the **focused evidence file** required by the forensic
@@ -41,8 +41,11 @@ once:
 | `WEBSWING_ATTACHED` / `WEBSWING_DESCEND` Male | `MALE/COHSOURCEDEV_WEBSWING_STRETCH_V2 1 30` | **Old V2** — already had skeletal-quality failures; see `docs/issue-36-webswing-v2.md`, SHA `35b6da70…` |
 | `WEBSWING_BOTTOM` and `WEBSWING_ASCEND_MALE_START/HOLD` Male | `MALE/COHSOURCEDEV_RETARGET_SWING_FULL` (bottom `18 22`, ascend `30 40` + hold `40 60 Scale 0`) | **New Mixamo runtime-FK** — the asset this pass must judge |
 
-Therefore the horrific footage is **contaminated** and its mangling cannot be
-attributed to the Mixamo retarget without isolation.
+Therefore the horrific footage is **contaminated**. AIR_MA_IRONKICK and old V2
+STRETCH are confirmed contaminants of Josh's failed footage. Static frame 30
+clears the new runtime-FK representation at that pose, but BOTTOM 18..22 and
+the full temporal clip remain visually unproven; ALL observed mangling cannot
+yet be attributed conclusively to the old assets.
 
 ---
 
@@ -571,7 +574,9 @@ no speculative game-code workaround was added.
 * Runtime-FK representation / bind hierarchy: **PASS**
 * Static frame-30 actual Male skin: **PASS**
 * Full 60-frame temporal anatomy: **NOT PROVEN**
-* BOTTOM 18..22 dynamic actual-skin visual: **READY FOR JOSH**
+* Full 60-frame temporal anatomy: **NOT PROVEN**
+* CLIENT/SERVER mode-2 runtime agreement: **BLOCKED BY LOCAL SHARD**
+* BOTTOM 18..22 dynamic actual-skin visual: **BLOCKED ON RUNTIME MODE GATE**
 
 The source is staged for Josh's eventual mode-2 visual inspection, but a
 healthy GUI client could not be left running because the local shard recovery
@@ -623,10 +628,12 @@ historical handoff evidence only and do not prove mode agreement.
 * Static Mixamo source frame 30 → actual Male skin: **PASS** after corrected
   Move-level `Scale 0` freeze recheck (front closeups re-shot; `1.7e-06 °`
   numeric).
-* Full clip temporal anatomy (all 60 frames visually): **NOT YET PROVEN** —
+* Full 60-frame temporal anatomy: **NOT PROVEN** —
   only the single frame-30 pose has been visually gated on the actual skin.
-* BOTTOM `18 22` dynamic actual-skin gate: **READY FOR JOSH** after this
-  patch (`-webswinganim 2` `MALE_BOTTOM_ONLY`).
+* CLIENT/SERVER mode-2 runtime agreement: **BLOCKED BY LOCAL SHARD**.
+* BOTTOM `18 22` dynamic actual-skin visual: **BLOCKED ON RUNTIME MODE GATE**
+  (`-webswinganim 2` `MALE_BOTTOM_ONLY` has not received client/server runtime
+  proof on a healthy local shard).
 
 Do not claim the entire 60-frame animation is visually skeletal-valid yet.
 The numeric `full@30` comparison remains valid
@@ -634,10 +641,11 @@ The numeric `full@30` comparison remains valid
 identical).
 
 **Case 4** — the forensic A/B and its exact numeric cross-check pass for the
-single gated pose; the mangling seen by Josh is attributed to the pre-existing
-`AIR_MA_IRONKICK` airborne fallback and the old V2
-`COHSOURCEDEV_WEBSWING_STRETCH_V2`, both removed from ordinary gameplay by the
-`SAFE_NONE` / `MALE_BOTTOM_ONLY` baseline.
+single gated pose. AIR_MA_IRONKICK and old V2 STRETCH are confirmed
+contaminants of Josh's failed footage. Static frame 30 clears the new
+runtime-FK representation at that pose, but BOTTOM 18..22 and the full
+temporal clip remain visually unproven; ALL observed mangling cannot yet be
+attributed conclusively to the old assets.
 
 **One-phase reintegration staged** — `WEBSWING_BOTTOM Male 18 22`
 (`MALE/COHSOURCEDEV_RETARGET_SWING_FULL`) is the sole custom visual move
