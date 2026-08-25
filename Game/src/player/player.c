@@ -1608,6 +1608,14 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
                   g_cohsourcedev_webswing_physics_selection);
         commAddInput(backendCommand);
     }
+    if (e == controlledPlayerPtr() && g_cohsourcedev_webswing_physics_selection >= 0 &&
+        !controls->server_state->web_swing && (motion->tickCounter % 30) == 0)
+    {
+        // An explicit handoff physics mode is also an explicit request to use
+        // the prototype. Send the normal server command through prediction's
+        // existing input channel so a fresh client needs no manual setup.
+        commAddInput("webswing 1");
+    }
 
     if (global_state.webswing_dev && e == controlledPlayerPtr())
     {

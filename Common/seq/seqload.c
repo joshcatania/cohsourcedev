@@ -1005,10 +1005,15 @@ const TypeGfx * seqGetTypeGfx( const SeqInfo * info, const SeqMove * move, const
 static const SeqInfo *seqWebSwingLoosePlayerInfo;
 static char seqWebSwingLoosePlayerPath[MAX_PATH];
 static SeqInfo *seqWebSwingOverlayInfo;
-static SeqInfo *seqWebSwingOverlayPlayerInfo;
-static const SeqInfo *seqWebSwingOverlayCompiledInfo;
-static const SeqInfo *seqWebSwingLoggedCompiledInfo;
-static const SeqInfo *seqWebSwingLoggedOverlayInfo;
+#define WEB_SWING_OVERLAY_CACHE_SIZE 8
+static SeqInfo *seqWebSwingOverlayPlayerInfos[WEB_SWING_OVERLAY_CACHE_SIZE];
+static const SeqInfo *seqWebSwingOverlayCompiledInfos[WEB_SWING_OVERLAY_CACHE_SIZE];
+static int seqWebSwingOverlayCacheCount;
+static const SeqInfo *seqWebSwingOverlayBuildInProgress;
+static int seqWebSwingLoggedCompiledInfo;
+static int seqWebSwingLoggedOverlayInfo;
+static int seqWebSwingLoggedSelectedInfo;
+static int seqWebSwingLoggedEligibility;
 static char seqWebSwingOverlayPath[MAX_PATH];
 
 //Load a single sequencer at run time  development only
@@ -1123,7 +1128,16 @@ static int seqIsWebSwingLoosePlayerInfo(const SeqInfo *seqInfo)
 
 static int seqIsWebSwingOverlayPlayerInfo(const SeqInfo *seqInfo)
 {
-    return seqInfo && seqInfo == seqWebSwingOverlayPlayerInfo;
+    int i;
+
+    if (!seqInfo)
+        return 0;
+    for (i = 0; i < seqWebSwingOverlayCacheCount; ++i)
+    {
+        if (seqInfo == seqWebSwingOverlayPlayerInfos[i])
+            return 1;
+    }
+    return 0;
 }
 
 static void seqFormatU16Array(const U16 *values, int count, char *buffer, size_t buffer_size)
@@ -1281,12 +1295,27 @@ static SeqInfo *seqBuildWebSwingPlayerInfo(const SeqInfo *compiledSeqInfo, int l
     if (!seqWebSwingOverlayInfo)
         return NULL;
 
-    if (seqWebSwingOverlayPlayerInfo && seqWebSwingOverlayCompiledInfo == compiledSeqInfo)
-        return seqWebSwingOverlayPlayerInfo;
+    // A client can legitimately expose several compiled player variants.
+    // Cache one overlay for each source pointer instead of alternating one
+    // slot and leaking a deep 8,000-move copy on every variant switch.
+    for (i = 0; i < seqWebSwingOverlayCacheCount; ++i)
+    {
+        if (seqWebSwingOverlayCompiledInfos[i] == compiledSeqInfo)
+            return seqWebSwingOverlayPlayerInfos[i];
+    }
+    if (seqWebSwingOverlayCacheCount >= WEB_SWING_OVERLAY_CACHE_SIZE)
+        return NULL;
+    if (seqWebSwingOverlayBuildInProgress)
+        return NULL;
+
+    seqWebSwingOverlayBuildInProgress = compiledSeqInfo;
 
     overlayPlayerInfo = StructAllocRaw(sizeof(*overlayPlayerInfo));
     if (!overlayPlayerInfo)
+    {
+        seqWebSwingOverlayBuildInProgress = NULL;
         return NULL;
+    }
     memset(overlayPlayerInfo, 0, sizeof(*overlayPlayerInfo));
 
     // StructCopy performs a deep copy of the parser-owned arrays and strings,
@@ -1305,7 +1334,10 @@ static SeqInfo *seqBuildWebSwingPlayerInfo(const SeqInfo *compiledSeqInfo, int l
     {
         SeqMove *overlayMove = StructAllocRaw(sizeof(*overlayMove));
         if (!overlayMove)
+        {
+            seqWebSwingOverlayBuildInProgress = NULL;
             return NULL;
+        }
         memset(overlayMove, 0, sizeof(*overlayMove));
         StructCopy(ParseMoveP, seqWebSwingOverlayInfo->moves[i], overlayMove, 0, 0);
         eaPush(&overlayPlayerInfo->moves, overlayMove);
@@ -1322,8 +1354,10 @@ static SeqInfo *seqBuildWebSwingPlayerInfo(const SeqInfo *compiledSeqInfo, int l
     seqInitializePostLoad(overlayPlayerInfo, loadType);
     seqInitializeFinalLoad(overlayPlayerInfo, false);
 
-    seqWebSwingOverlayCompiledInfo = compiledSeqInfo;
-    seqWebSwingOverlayPlayerInfo = overlayPlayerInfo;
+    seqWebSwingOverlayCompiledInfos[seqWebSwingOverlayCacheCount] = compiledSeqInfo;
+    seqWebSwingOverlayPlayerInfos[seqWebSwingOverlayCacheCount] = overlayPlayerInfo;
+    ++seqWebSwingOverlayCacheCount;
+    seqWebSwingOverlayBuildInProgress = NULL;
     return overlayPlayerInfo;
 }
 
@@ -1432,16 +1466,20 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             webswing_player_eligible = 0;
 #endif
             dev_eligible = normal_dev_eligible || webswing_player_eligible;
-            filelog_printf("webswing.log",
-                           "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d normal_dev_eligible=%d webswing_player_eligible=%d dev_eligible=%d\n",
-                           isDevelopmentMode(), global_state.no_file_change_check,
-                           seqInfo != NULL, shared_memory, global_state.webswing_dev,
-                           normal_dev_eligible, webswing_player_eligible, dev_eligible);
+            if (!seqWebSwingLoggedEligibility)
+            {
+                filelog_printf("webswing.log",
+                               "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d normal_dev_eligible=%d webswing_player_eligible=%d dev_eligible=%d\n",
+                               isDevelopmentMode(), global_state.no_file_change_check,
+                               seqInfo != NULL, shared_memory, global_state.webswing_dev,
+                               normal_dev_eligible, webswing_player_eligible, dev_eligible);
+                seqWebSwingLoggedEligibility = 1;
+            }
 
-            if (compiled_seq_info && seqWebSwingLoggedCompiledInfo != compiled_seq_info)
+            if (compiled_seq_info && !seqWebSwingLoggedCompiledInfo)
             {
                 seqLogWebSwingMoveSemantics("COMPILED", compiled_seq_info);
-                seqWebSwingLoggedCompiledInfo = compiled_seq_info;
+                seqWebSwingLoggedCompiledInfo = 1;
             }
         }
         else
@@ -1473,8 +1511,6 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
                 seqInfo = overlaySeqInfo;
             else
                 seqInfo = cpp_const_cast(SeqInfo*)(compiled_seq_info);
-            filelog_printf("webswing.log", "WEBSWING_ANIM player_seq overlay_load result=%s\n",
-                           overlaySeqInfo ? "selected" : "failed_using_compiled_player");
         }
         else if (dev_eligible)
         {
@@ -1498,12 +1534,18 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             const char *selected_path = seqIsWebSwingOverlayPlayerInfo(seqInfo) ? seqWebSwingOverlayPath :
                 (seqIsWebSwingLoosePlayerInfo(seqInfo) ? seqWebSwingLoosePlayerPath :
                  (seqInfo == compiled_seq_info ? "compiled sequencers.bin" : "none"));
-            seqLogWebSwingPlayerData(selected_source, selected_path, seqInfo);
+            if (!seqWebSwingLoggedSelectedInfo)
+            {
+                filelog_printf("webswing.log", "WEBSWING_ANIM player_seq overlay_load result=%s\n",
+                               seqIsWebSwingOverlayPlayerInfo(seqInfo) ? "selected" : "failed_using_compiled_player");
+                seqLogWebSwingPlayerData(selected_source, selected_path, seqInfo);
+                seqWebSwingLoggedSelectedInfo = 1;
+            }
             if (seqIsWebSwingOverlayPlayerInfo(seqInfo) &&
-                seqWebSwingLoggedOverlayInfo != seqInfo)
+                !seqWebSwingLoggedOverlayInfo)
             {
                 seqLogWebSwingMoveSemantics("COMPILED_OVERLAY", seqInfo);
-                seqWebSwingLoggedOverlayInfo = seqInfo;
+                seqWebSwingLoggedOverlayInfo = 1;
             }
         }
 

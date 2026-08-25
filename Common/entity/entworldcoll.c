@@ -88,9 +88,14 @@
 #define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        1.75f
 #define WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED    0.45f
 #define WEB_ASSIST_BOTTOM_MIN_TICKS            3
-#define WEB_ASSIST_GROUND_PROBE_DISTANCE      16.0f
-#define WEB_ASSIST_GROUND_TARGET_CLEARANCE     3.5f
-#define WEB_ASSIST_GROUND_TRANSITION_PADDING   2.0f
+#define WEB_ASSIST_GROUND_PROBE_DISTANCE      32.0f
+#define WEB_ASSIST_GROUND_TARGET_CLEARANCE     6.0f
+#define WEB_ASSIST_GROUND_TRANSITION_PADDING   3.0f
+#define WEB_ASSIST_GROUND_STOP_ACCEL            0.40f
+#define WEB_ASSIST_GROUND_LOOKAHEAD_BASE       10.0f
+#define WEB_ASSIST_GROUND_LOOKAHEAD_SPEED       3.0f
+#define WEB_ASSIST_GROUND_LOOKAHEAD_MAX        24.0f
+#define WEB_ASSIST_VISUAL_TETHER_GAP_TICKS      7
 #define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.45f
 #define WEB_ASSIST_ASCEND_SPEED                2.05f
 #define WEB_ASSIST_APEX_SPEED                  1.65f
@@ -852,7 +857,46 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
                WEB_ASSIST_REATTACH_ENERGY_PER_SPEED,
                0.0f, WEB_ASSIST_MAX_ENERGY);
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
+    motion->web_swing_visual_tether_visible = 1;
+    motion->web_swing_visual_tether_gap_ticks = 0;
     webSwingAssistedSetPhase(e, initial_phase, grounded ? "GROUND_ACTIVATION" : "AIRBORNE_REATTACH");
+}
+
+static void webSwingSetAssistedVisualAnchor(Entity *e, const Vec3 travel_intent)
+{
+    MotionState *motion = e->motion;
+    Vec3 lead;
+
+    copyVec3(ENTPOS(e), motion->web_swing_anchor);
+    scaleVec3(travel_intent, WEB_SKY_ANCHOR_FORWARD_LEAD, lead);
+    addVec3(motion->web_swing_anchor, lead, motion->web_swing_anchor);
+    motion->web_swing_anchor[1] += WEB_SKY_ANCHOR_HEIGHT;
+    motion->web_swing_rope_length = distance3(ENTPOS(e), motion->web_swing_anchor);
+}
+
+static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_intent)
+{
+    MotionState *motion = e->motion;
+
+    if(motion->web_swing_visual_tether_visible || !motion->web_swing_visual_tether_gap_ticks)
+        return;
+
+    --motion->web_swing_visual_tether_gap_ticks;
+    if(!motion->web_swing_visual_tether_gap_ticks)
+    {
+        // Move the fictional endpoint only while the old web is invisible.
+        // The new line therefore reads as a fresh shot instead of a sky point
+        // whipping across the screen, and never changes assisted physics.
+        webSwingSetAssistedVisualAnchor(e, travel_intent);
+        motion->web_swing_visual_tether_visible = 1;
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s visual_tether_attach cycle_id=%u segment_id=%u gap_ticks=%u anchor=(%.2f %.2f %.2f) physics_continuous=1\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->web_swing_assist_cycle_id,
+                       motion->web_swing_anim_segment_id,
+                       WEB_ASSIST_VISUAL_TETHER_GAP_TICKS,
+                       vecParamsXYZ(motion->web_swing_anchor));
+    }
 }
 
 static void webSwingUpdateAssistedVisualAnchor(Entity *e, const Vec3 travel_intent)
@@ -941,6 +985,9 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 bottom_threshold;
     F32 vertical_delta;
     F32 horizontal_speed;
+    F32 current_clearance;
+    F32 ahead_clearance;
+    F32 lookahead_distance;
     F32 speed;
     F32 phase_vertical_target;
 
@@ -972,8 +1019,28 @@ static void webSwingApplyAssistedController(Entity *e)
                        vecParamsXYZ(motion->vel));
     }
 
-    clearance = HeightAtLoc(ENTPOS(e), DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE);
-    webSwingUpdateAssistedVisualAnchor(e, travel_intent);
+    horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
+    lookahead_distance = MIN(WEB_ASSIST_GROUND_LOOKAHEAD_MAX,
+                             WEB_ASSIST_GROUND_LOOKAHEAD_BASE +
+                             horizontal_speed * WEB_ASSIST_GROUND_LOOKAHEAD_SPEED);
+    {
+        Vec3 ahead_position;
+        Vec3 half_ahead_position;
+
+        copyVec3(ENTPOS(e), ahead_position);
+        ahead_position[0] += travel_intent[0] * lookahead_distance;
+        ahead_position[2] += travel_intent[2] * lookahead_distance;
+        copyVec3(ENTPOS(e), half_ahead_position);
+        half_ahead_position[0] += travel_intent[0] * lookahead_distance * 0.5f;
+        half_ahead_position[2] += travel_intent[2] * lookahead_distance * 0.5f;
+        current_clearance = HeightAtLoc(ENTPOS(e), DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE);
+        ahead_clearance = MIN(HeightAtLoc(half_ahead_position, DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE),
+                              HeightAtLoc(ahead_position, DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE));
+        clearance = MIN(current_clearance, ahead_clearance);
+    }
+    webSwingUpdateAssistedVisualTether(e, travel_intent);
+    if(motion->web_swing_visual_tether_visible)
+        webSwingUpdateAssistedVisualAnchor(e, travel_intent);
     webSwingApplyAssistedHorizontal(e, travel_intent, phase);
 
     switch(phase)
@@ -1011,7 +1078,7 @@ static void webSwingApplyAssistedController(Entity *e)
             downward_speed = MAX(0.0f, -motion->vel[1]);
             bottom_threshold = WEB_ASSIST_GROUND_TARGET_CLEARANCE +
                                WEB_ASSIST_GROUND_TRANSITION_PADDING +
-                               downward_speed * downward_speed / (2.0f * 0.45f);
+                               downward_speed * downward_speed / (2.0f * WEB_ASSIST_GROUND_STOP_ACCEL);
             bottom_threshold = MIN(bottom_threshold, WEB_ASSIST_GROUND_PROBE_DISTANCE - 1.0f);
             if(clearance <= bottom_threshold)
             {
@@ -1033,6 +1100,8 @@ static void webSwingApplyAssistedController(Entity *e)
             {
                 ++motion->web_swing_assist_cycle_id;
                 ++motion->web_swing_anim_segment_id;
+                motion->web_swing_visual_tether_visible = 0;
+                motion->web_swing_visual_tether_gap_ticks = WEB_ASSIST_VISUAL_TETHER_GAP_TICKS;
                 filelog_printf("webswing.log",
                                "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
@@ -1043,6 +1112,13 @@ static void webSwingApplyAssistedController(Entity *e)
                                clearance,
                                vecParamsXYZ(ENTPOS(e)),
                                vecParamsXYZ(motion->vel));
+                filelog_printf("webswing.log",
+                               "WEB_SWING %s visual_tether_release cycle_id=%u segment_id=%u gap_ticks=%u anchor=(%.2f %.2f %.2f) physics_continuous=1\n",
+                               WEB_SWING_LOG_SIDE,
+                               motion->web_swing_assist_cycle_id,
+                               motion->web_swing_anim_segment_id,
+                               motion->web_swing_visual_tether_gap_ticks,
+                               vecParamsXYZ(motion->web_swing_anchor));
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "BOTTOM_SWEEP_COMPLETE");
             }
             break;
@@ -1067,20 +1143,24 @@ static void webSwingApplyAssistedController(Entity *e)
     if(motion->web_swing_log_tick >= 15)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u energy=%.3f clearance=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f)\n",
+                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u energy=%.3f clearance=%.3f current_clearance=%.3f ahead_clearance=%.3f lookahead=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f) visual_tether=%d\n",
                        WEB_SWING_LOG_SIDE,
                        webSwingAssistPhaseName((WebSwingAssistPhase)motion->web_swing_assist_phase),
                        motion->web_swing_assist_phase_ticks,
                        motion->web_swing_assist_cycle_id,
                        motion->web_swing_assist_energy,
                        clearance,
+                       current_clearance,
+                       ahead_clearance,
+                       lookahead_distance,
                        lengthVec3(motion->vel),
                        horizontal_speed,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(motion->vel),
                        vecParamsXYZ(travel_intent),
                        horizontal_input_magnitude,
-                       vecParamsXYZ(motion->web_swing_anchor));
+                       vecParamsXYZ(motion->web_swing_anchor),
+                       motion->web_swing_visual_tether_visible);
         motion->web_swing_log_tick = 0;
     }
 }
@@ -1150,6 +1230,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
         motion->web_swing_assist_energy = 0.0f;
+        motion->web_swing_visual_tether_visible = 0;
+        motion->web_swing_visual_tether_gap_ticks = 0;
         zeroVec3(motion->web_swing_previous_anchor);
         zeroVec3(motion->web_swing_next_anchor);
         motion->web_swing_log_tick = 0;
@@ -1175,6 +1257,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
         motion->web_swing_assist_energy = 0.0f;
+        motion->web_swing_visual_tether_visible = 0;
+        motion->web_swing_visual_tether_gap_ticks = 0;
         zeroVec3(motion->web_swing_next_anchor);
         zeroVec3(motion->web_swing_previous_anchor);
         motion->web_swing_diag_latched = 0;
@@ -1204,6 +1288,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_chain_armed = 0;
         motion->web_swing_chain_ascent_seen = 0;
         motion->web_swing_next_anchor_valid = 0;
+        motion->web_swing_visual_tether_visible = 0;
+        motion->web_swing_visual_tether_gap_ticks = 0;
         zeroVec3(motion->web_swing_next_anchor);
         zeroVec3(motion->web_swing_previous_anchor);
         motion->web_swing_diag_latched = 0;
@@ -1249,6 +1335,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         {
             motion->web_swing_attached = 1;
             motion->web_swing_active_backend = selected_backend;
+            motion->web_swing_visual_tether_visible = 1;
+            motion->web_swing_visual_tether_gap_ticks = 0;
             copyVec3(anchor, motion->web_swing_anchor);
             rope_length = distance3(ENTPOS(e), anchor);
             motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);

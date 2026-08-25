@@ -231,6 +231,8 @@ $assistedTickLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERV
 $assistedPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_phase ' })
 $assistedCycleLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_cycle ' })
 $assistedGroundBoostLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER ground_boost ' })
+$assistedVisualReleaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_release ' })
+$assistedVisualAttachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_attach ' })
 $assistedPhases = @($assistedPhaseLines | ForEach-Object {
     $phaseMatch = [regex]::Match($_, ' phase=([A-Z]+) ')
     if ($phaseMatch.Success) { $phaseMatch.Groups[1].Value }
@@ -697,6 +699,13 @@ $assistedGroundBoostPass = @($assistedGroundBoostLines | Where-Object {
     [double]::Parse($upMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 2.0 -and
     [double]::Parse($forwardMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 1.5
 }).Count -ge 1
+$assistedVisualCadencePass = $assistedVisualReleaseLines.Count -ge 2 -and
+                             $assistedVisualAttachLines.Count -ge 2 -and
+                             @($assistedVisualReleaseLines | Where-Object { $_ -match 'physics_continuous=1' }).Count -eq $assistedVisualReleaseLines.Count -and
+                             @($assistedVisualAttachLines | Where-Object { $_ -match 'physics_continuous=1' }).Count -eq $assistedVisualAttachLines.Count
+$assistedAheadProbePass = @($assistedTickLines | Where-Object {
+    $_ -match 'current_clearance=' -and $_ -match 'ahead_clearance=' -and $_ -match 'lookahead='
+}).Count -ge 10
 $missingAssistedPhases = @(@('LAUNCH', 'ASCEND', 'APEX', 'DESCEND', 'BOTTOM') | Where-Object {
     $assistedPhases -notcontains $_
 })
@@ -707,7 +716,9 @@ $assistedControllerEvidencePass = $assistedTickLines.Count -ge 10 -and
                                   $assistedBottomSpeedPass -and
                                   $assistedPendulumSpeedPass -and
                                   $assistedEnergyGrowthPass -and
-                                  $assistedGroundBoostPass
+                                  $assistedGroundBoostPass -and
+                                  $assistedVisualCadencePass -and
+                                  $assistedAheadProbePass
 
 if ($Backend -eq 'SkyAssisted') {
     # SKY_ASSISTED intentionally has no rope constraint, anchor-quality, or
@@ -764,7 +775,7 @@ if ($timedOut) {
 } elseif (-not $chainHandoffEvidencePass) {
     $reason = "Automatic held-swing handoff evidence was missing for $expectedBackendName."
 } elseif ($Backend -eq 'SkyAssisted' -and -not $assistedControllerEvidencePass) {
-    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
+    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), visual_releases=$($assistedVisualReleaseLines.Count), visual_attaches=$($assistedVisualAttachLines.Count), ahead_probe=$assistedAheadProbePass, missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
@@ -852,6 +863,10 @@ $result = [pscustomobject]@{
     assistedEnergyGrowthPass = $assistedEnergyGrowthPass
     assistedGroundBoostLines = $assistedGroundBoostLines.Count
     assistedGroundBoostPass = $assistedGroundBoostPass
+    assistedVisualReleaseLines = $assistedVisualReleaseLines.Count
+    assistedVisualAttachLines = $assistedVisualAttachLines.Count
+    assistedVisualCadencePass = $assistedVisualCadencePass
+    assistedAheadProbePass = $assistedAheadProbePass
     steeringLines = $steeringLines.Count
     steeringEvidencePass = $steeringEvidencePass
     steeringEvidence = @($steeringEvidence.Keys | Sort-Object)

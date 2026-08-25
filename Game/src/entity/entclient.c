@@ -3236,22 +3236,30 @@ void entClientDrawWebSwingTethers(void)
         Vec3 tether_start;
         GfxNode *right_hand = NULL;
         GfxNode *left_hand = NULL;
+        int right_hand_id = 0;
+        int left_hand_id = 0;
         Mat4 right_hand_mat;
         Mat4 left_hand_mat;
         int hand_origin = 0;
 
         if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
-           !e->motion->web_swing_attached)
+           !e->motion->web_swing_attached || !e->motion->web_swing_visual_tether_visible)
             continue;
 
-        if(e->seq && e->seq->gfx_root)
+        if(e->seq && gfxTreeNodeIsValid(e->seq->gfx_root, e->seq->gfx_root_unique_id))
         {
             right_hand = seqFindGfxNodeGivenBoneNum(e->seq, BONEID_HANDR);
             left_hand = seqFindGfxNodeGivenBoneNum(e->seq, BONEID_HANDL);
-            if(right_hand)
+            right_hand_id = right_hand ? right_hand->unique_id : 0;
+            left_hand_id = left_hand ? left_hand->unique_id : 0;
+            if(gfxTreeNodeIsValid(right_hand, right_hand_id))
                 gfxTreeFindWorldSpaceMat(right_hand_mat, right_hand);
-            if(left_hand)
+            else
+                right_hand = NULL;
+            if(gfxTreeNodeIsValid(left_hand, left_hand_id))
                 gfxTreeFindWorldSpaceMat(left_hand_mat, left_hand);
+            else
+                left_hand = NULL;
 
             // The corrected swing animation alternates which arm reads as the
             // raised attachment arm. Follow the higher animated hand each
