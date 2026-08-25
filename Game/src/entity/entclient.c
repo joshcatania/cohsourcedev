@@ -3244,7 +3244,7 @@ void entClientDrawWebSwingTethers(void)
         else
             copyVec3(ENTPOS(e), tether_start);
         tether_start[1] += 3.0f;
-        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xe0ff70ff, 3.0f);
+        drawLine3DWidth(tether_start, e->motion->web_swing_visual_anchor, 0xe0ff70ff, 3.0f);
         ++attached_count;
     }
 
