@@ -2,7 +2,7 @@
 param(
     [string]$DbAddress = '127.0.0.1',
     [string]$AccountName = 'Dummy00009',
-    [int]$TimeoutSeconds = 180,
+    [int]$TimeoutSeconds = 300,
     [switch]$RequireClientDiagnostics,
     [switch]$RequireAnimationPhases,
     [switch]$Json
@@ -28,6 +28,42 @@ $directionDeltaThreshold = 0.30
 $radialVelocityThreshold = 0.25
 $maxAllowedConsecutiveDirectionDeltas = 3
 $maxAllowedDirectionDeltaPercent = 12.5
+
+function Get-LogNumber([string]$Line, [string]$Name) {
+    $match = [regex]::Match($Line, "(?:^| )$([regex]::Escape($Name))=([-+0-9.eE]+)")
+    if (-not $match.Success) { return $null }
+    $value = 0.0
+    if ([double]::TryParse($match.Groups[1].Value, [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$value)) {
+        return $value
+    }
+    return $null
+}
+
+function Get-LogVector([string]$Line, [string]$Name) {
+    $pattern = [regex]::Escape($Name) + '=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)'
+    $match = [regex]::Match($Line, $pattern)
+    if (-not $match.Success) { return $null }
+    $values = @(
+        [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        [double]::Parse($match.Groups[2].Value, [Globalization.CultureInfo]::InvariantCulture)
+        [double]::Parse($match.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+    )
+    return ,$values
+}
+
+function Get-AppendedLogText([string]$Path, [int64]$Offset) {
+    if (-not (Test-Path -LiteralPath $Path)) { return '' }
+    $stream = [System.IO.File]::Open($Path, [System.IO.FileMode]::Open,
+        [System.IO.FileAccess]::Read, [System.IO.FileShare]::ReadWrite)
+    try {
+        if ($Offset -gt $stream.Length) { $Offset = 0 }
+        $stream.Seek($Offset, [System.IO.SeekOrigin]::Begin) | Out-Null
+        $reader = New-Object System.IO.StreamReader($stream)
+        return $reader.ReadToEnd()
+    } finally {
+        $stream.Dispose()
+    }
+}
 
 function Finish([object]$Result, [int]$ExitCode) {
     $Result | ConvertTo-Json -Depth 8 | Set-Content -Encoding UTF8 $resultLog
@@ -70,12 +106,12 @@ $webswingLogDefinitions = @(
     [pscustomobject]@{ Source = $serverWebswingLog; Capture = $serverWebswingCapture },
     [pscustomobject]@{ Source = $clientWebswingLog; Capture = $clientWebswingCapture }
 )
-$webswingTextBefore = @{}
+$webswingByteBefore = @{}
 foreach ($definition in $webswingLogDefinitions) {
-    $webswingTextBefore[$definition.Source] = if (Test-Path -LiteralPath $definition.Source) {
-        Get-Content -Raw -LiteralPath $definition.Source
+    $webswingByteBefore[$definition.Source] = if (Test-Path -LiteralPath $definition.Source) {
+        (Get-Item -LiteralPath $definition.Source).Length
     } else {
-        ''
+        [int64]0
     }
 }
 
@@ -149,16 +185,9 @@ Set-Content -Path $stderrLog -Value $stderrText -Encoding UTF8
 $webswingTextParts = @()
 foreach ($definition in $webswingLogDefinitions) {
     if (Test-Path -LiteralPath $definition.Source) {
-        Copy-Item -LiteralPath $definition.Source -Destination $definition.Capture -Force
-        $webswingAllText = Get-Content -Raw -LiteralPath $definition.Source
-        $webswingBefore = $webswingTextBefore[$definition.Source]
-        if ($webswingBefore -and
-            $webswingAllText.Length -ge $webswingBefore.Length -and
-            $webswingAllText.StartsWith($webswingBefore)) {
-            $webswingTextParts += $webswingAllText.Substring($webswingBefore.Length)
-        } else {
-            $webswingTextParts += $webswingAllText
-        }
+        $webswingAppendedText = Get-AppendedLogText $definition.Source $webswingByteBefore[$definition.Source]
+        Set-Content -Path $definition.Capture -Value $webswingAppendedText -Encoding UTF8
+        $webswingTextParts += $webswingAppendedText
     } else {
         Set-Content -Path $definition.Capture -Value '' -Encoding UTF8
     }
@@ -280,19 +309,6 @@ $anchorFanEvidencePass = $selectedServerAttempts.Count -ge 5 -and @($selectedSer
     $match.Success -and [int]$match.Groups[1].Value -ge 15
 }).Count -ge 5
 $momentumSelectedAttempts = @($selectedServerAttempts | Where-Object { $_ -match 'momentum_basis=1' })
-$divergent45Attempts = @($momentumSelectedAttempts | Where-Object {
-    $match = [regex]::Match($_, 'facing_travel_dot=([-+0-9.eE]+)')
-    if (-not $match.Success) { return $false }
-    $dot = [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
-    [math]::Abs($dot) -ge 0.55 -and [math]::Abs($dot) -le 0.85
-})
-$divergent90Attempts = @($momentumSelectedAttempts | Where-Object {
-    $match = [regex]::Match($_, 'facing_travel_dot=([-+0-9.eE]+)')
-    if (-not $match.Success) { return $false }
-    $dot = [double]::Parse($match.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
-    [math]::Abs($dot) -le 0.35
-})
-$divergentAnchorEvidencePass = $divergent45Attempts.Count -ge 1 -and $divergent90Attempts.Count -ge 1
 $detachSpeeds = @()
 foreach ($line in $detachLines) {
     $detachMatch = [regex]::Match($line, 'detach speed=([-+0-9.eE]+)')
@@ -340,11 +356,238 @@ foreach ($line in $steeringLines) {
 $requiredSteeringEvidence = @('yaw0/forward', 'yaw0/left', 'yaw0/right', 'yaw90/forward', 'yaw90/left', 'yaw90/right')
 $missingSteeringEvidence = @($requiredSteeringEvidence | Where-Object { -not $steeringEvidence.ContainsKey($_) })
 $steeringEvidencePass = $missingSteeringEvidence.Count -eq 0
+$opposingSteeringLines = @($steeringLines | Where-Object {
+    $alignment = Get-LogNumber $_ 'tangent_intent_alignment'
+    $alignment -ne $null -and $alignment -lt 0.0 -and $_ -match 'intent_source=INPUT' -and $_ -match 'phase_pump_suppressed=1'
+})
+$opposingSteeringRecoveryCount = 0
+$sawOpposingSteering = $false
+foreach ($line in $steeringLines) {
+    $alignment = Get-LogNumber $line 'tangent_intent_alignment'
+    if ($line -match 'intent_source=INPUT' -and $line -match 'phase_pump_suppressed=1' -and $alignment -ne $null -and $alignment -lt 0.0) {
+        $sawOpposingSteering = $true
+    } elseif ($sawOpposingSteering -and $line -match 'intent_source=INPUT' -and $line -match 'phase_pump_suppressed=0' -and $alignment -ne $null -and $alignment -ge 0.0) {
+        ++$opposingSteeringRecoveryCount
+        $sawOpposingSteering = $false
+    }
+}
+$opposingMomentumSteeringPass = $opposingSteeringLines.Count -ge 1 -and $opposingSteeringRecoveryCount -ge 1
 $fullSequence = $attachLines.Count -ge 2 -and $detachLines.Count -ge 1 -and $swingLines.Count -ge 1
 $combinedText = (($stdoutText, $stderrText) -join "`n")
 $statusWritten = Test-Path -LiteralPath $statusLog
 $statusText = if ($statusWritten) { Get-Content -Raw -LiteralPath $statusLog } else { '' }
 $smokeComplete = $statusText -match 'webswing_smoke_complete=1'
+
+function Get-AgentStatusValue([string]$Name) {
+    $pattern = '(?m)^(' + [regex]::Escape($Name) + ')=([^\r\n]*)'
+    $match = [regex]::Match($statusText, $pattern)
+    if ($match.Success) { return $match.Groups[2].Value }
+    return $null
+}
+
+$groundAttachObserved = 0
+$groundAttachTransitions = 0
+$groundAttachVerticalSpeed = 0.0
+$groundAttachForwardSpeed = 0.0
+$groundAltitudeGain = 0.0
+$groundForwardDisplacement = 0.0
+$forwardAttachObserved = 0
+$forwardDisplacement = 0.0
+$forwardPeakDisplacement = 0.0
+$forwardPeakSpeed = 0.0
+$forwardDetachSpeed = 0.0
+[int]::TryParse((Get-AgentStatusValue 'webswing_ground_attach_observed'), [ref]$groundAttachObserved) | Out-Null
+[int]::TryParse((Get-AgentStatusValue 'webswing_ground_attach_transitions'), [ref]$groundAttachTransitions) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_ground_attach_vertical_speed'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$groundAttachVerticalSpeed) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_ground_attach_forward_speed'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$groundAttachForwardSpeed) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_ground_altitude_gain'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$groundAltitudeGain) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_ground_forward_displacement'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$groundForwardDisplacement) | Out-Null
+[int]::TryParse((Get-AgentStatusValue 'webswing_forward_attach_observed'), [ref]$forwardAttachObserved) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_forward_displacement'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$forwardDisplacement) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_forward_peak_displacement'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$forwardPeakDisplacement) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_forward_peak_speed'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$forwardPeakSpeed) | Out-Null
+[double]::TryParse((Get-AgentStatusValue 'webswing_forward_detach_speed'), [Globalization.NumberStyles]::Float, [Globalization.CultureInfo]::InvariantCulture, [ref]$forwardDetachSpeed) | Out-Null
+
+$attachCatchLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) attach_catch ' })
+$serverAttachCatchLines = @($attachCatchLines | Where-Object { $_ -match 'WEB_SWING SERVER attach_catch ' })
+$groundSelectedServerAttempts = @($serverAttempts | Where-Object {
+    $_ -match 'grounded=1' -and $_ -match 'falling=0' -and $_ -match 'jumping=0' -and $_ -match 'selected=1' -and $_ -match 'anchor=\('
+} | Select-Object -First 1)
+$groundAnchorKeys = @($groundSelectedServerAttempts | ForEach-Object {
+    $anchorMatch = [regex]::Match($_, 'anchor=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if ($anchorMatch.Success) {
+        "anchor=($($anchorMatch.Groups[1].Value) $($anchorMatch.Groups[2].Value) $($anchorMatch.Groups[3].Value))"
+    }
+})
+$groundAnchorPattern = if ($groundAnchorKeys.Count -gt 0) {
+    '(?:' + (($groundAnchorKeys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')'
+} else {
+    '(?!)'
+}
+$serverGroundAttachCatchLines = @($serverAttachCatchLines | Where-Object {
+    $_ -match 'grounded_at_acquisition=1' -and $_ -match 'falling_at_acquisition=0' -and
+        $_ -match 'jumping_at_acquisition=0' -and $_ -match $groundAnchorPattern
+})
+$groundCatchVerticalSpeed = 0.0
+$groundCatchForwardSpeed = 0.0
+$groundServerAltitudeGain = 0.0
+$groundServerForwardDisplacement = 0.0
+if ($serverGroundAttachCatchLines.Count -gt 0) {
+    $groundCatchLine = $serverGroundAttachCatchLines[0]
+    $catchMatch = [regex]::Match($groundCatchLine, 'velocity_after=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\).*intent=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if ($catchMatch.Success) {
+        $afterX = [double]::Parse($catchMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $groundCatchVerticalSpeed = [double]::Parse($catchMatch.Groups[2].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $afterZ = [double]::Parse($catchMatch.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $intentX = [double]::Parse($catchMatch.Groups[4].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $intentZ = [double]::Parse($catchMatch.Groups[6].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $groundCatchForwardSpeed = $afterX * $intentX + $afterZ * $intentZ
+    }
+}
+if ($groundSelectedServerAttempts.Count -gt 0 -and $groundAnchorKeys.Count -gt 0) {
+    $groundAttachPosition = Get-LogVector $groundSelectedServerAttempts[0] 'pos'
+    $groundIntentVector = Get-LogVector $groundSelectedServerAttempts[0] 'intent'
+    if ($null -ne $groundAttachPosition -and $null -ne $groundIntentVector) {
+        for ($lineIndex = 0; $lineIndex -lt $webswingLines.Count; ++$lineIndex) {
+            $line = $webswingLines[$lineIndex]
+            if ($line -match 'WEB_SWING SERVER detach ' -and $line -match $groundAnchorPattern) {
+                $groundDetachPosition = Get-LogVector $line 'pos'
+                if ($null -ne $groundDetachPosition) {
+                    $groundServerAltitudeGain = $groundDetachPosition[1] - $groundAttachPosition[1]
+                    $groundServerForwardDisplacement =
+                        ($groundDetachPosition[0] - $groundAttachPosition[0]) * $groundIntentVector[0] +
+                        ($groundDetachPosition[2] - $groundAttachPosition[2]) * $groundIntentVector[2]
+                }
+                break
+            }
+        }
+    }
+}
+$groundOriginAttachEvidencePass = $statusWritten -and
+                                  $groundSelectedServerAttempts.Count -ge 1 -and
+                                  $serverGroundAttachCatchLines.Count -eq 1 -and
+                                  $groundCatchVerticalSpeed -ge 0.75 -and
+                                  $groundCatchForwardSpeed -ge 0.50 -and
+                                  ($groundAltitudeGain -ge 0.50 -or $groundServerAltitudeGain -ge 0.50)
+
+$intentInputAttempts = @($selectedServerAttempts | Where-Object {
+    $_ -match 'intent_source=INPUT' -and $_ -match 'meaningful_momentum=1'
+})
+$intent45Attempts = @($intentInputAttempts | Where-Object {
+    $momentumIntentDot = Get-LogNumber $_ 'intent_momentum_alignment'
+    $selectedIntent = Get-LogNumber $_ 'selected_intent_alignment'
+    $selectedMomentum = Get-LogNumber $_ 'selected_momentum_alignment'
+    $null -ne $momentumIntentDot -and $null -ne $selectedIntent -and $null -ne $selectedMomentum -and
+        [math]::Abs($momentumIntentDot) -ge 0.45 -and [math]::Abs($momentumIntentDot) -le 0.90 -and
+        $selectedIntent -gt $selectedMomentum
+})
+$intent90Attempts = @($intentInputAttempts | Where-Object {
+    $momentumIntentDot = Get-LogNumber $_ 'intent_momentum_alignment'
+    $selectedIntent = Get-LogNumber $_ 'selected_intent_alignment'
+    $selectedMomentum = Get-LogNumber $_ 'selected_momentum_alignment'
+    $null -ne $momentumIntentDot -and $null -ne $selectedIntent -and $null -ne $selectedMomentum -and
+        [math]::Abs($momentumIntentDot) -le 0.35 -and $selectedIntent -gt $selectedMomentum
+})
+$intentAnchorEvidencePass = $intent45Attempts.Count -ge 1 -and $intent90Attempts.Count -ge 1
+$divergent45Attempts = $intent45Attempts
+$divergent90Attempts = $intent90Attempts
+$divergentAnchorEvidencePass = $intentAnchorEvidencePass
+$forwardSelectedServerAttempts = @($selectedServerAttempts | Where-Object {
+    $position = Get-LogVector $_ 'pos'
+    $_ -match 'intent_source=(?:INPUT|FACING)' -and $_ -match 'selected=1' -and $_ -match 'anchor=\(' -and
+        $null -ne $position -and $position[1] -ge 115.0 -and $position[1] -le 145.0 -and
+        [math]::Abs($position[0] - 100.0) -le 8.0 -and
+        [math]::Abs($position[2] + 650.0) -le 20.0
+} | Select-Object -First 1)
+$forwardAnchorKeys = @($forwardSelectedServerAttempts | ForEach-Object {
+    $anchorMatch = [regex]::Match($_, 'anchor=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if ($anchorMatch.Success) {
+        "anchor=($($anchorMatch.Groups[1].Value) $($anchorMatch.Groups[2].Value) $($anchorMatch.Groups[3].Value))"
+    }
+})
+$forwardAnchorPattern = if ($forwardAnchorKeys.Count -gt 0) {
+    '(?:' + (($forwardAnchorKeys | ForEach-Object { [regex]::Escape($_) }) -join '|') + ')'
+} else {
+    '(?!)'
+}
+$serverForwardAttachCatchLines = @($serverAttachCatchLines | Where-Object {
+    $_ -match 'intent_source=(?:INPUT|FACING)' -and $_ -match $forwardAnchorPattern
+})
+$forwardCatchVerticalSpeed = 0.0
+$forwardCatchForwardSpeed = 0.0
+foreach ($catchLine in $serverForwardAttachCatchLines) {
+    $catchMatch = [regex]::Match($catchLine, 'velocity_after=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\).*intent=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if ($catchMatch.Success) {
+        $afterX = [double]::Parse($catchMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $forwardCatchVerticalSpeed = [double]::Parse($catchMatch.Groups[2].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $afterZ = [double]::Parse($catchMatch.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $intentX = [double]::Parse($catchMatch.Groups[4].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $intentZ = [double]::Parse($catchMatch.Groups[6].Value, [Globalization.CultureInfo]::InvariantCulture)
+        $forwardCatchForwardSpeed = $afterX * $intentX + $afterZ * $intentZ
+        break
+    }
+}
+$forwardServerPeakSpeed = 0.0
+$forwardServerPeakDisplacement = 0.0
+$forwardServerDetachSpeed = 0.0
+$forwardServerDisplacement = 0.0
+if ($forwardAnchorKeys.Count -gt 0) {
+    $forwardAttachPosition = if ($forwardSelectedServerAttempts.Count -gt 0) {
+        Get-LogVector $forwardSelectedServerAttempts[0] 'pos'
+    } else { $null }
+    $forwardIntentVector = if ($forwardSelectedServerAttempts.Count -gt 0) {
+        Get-LogVector $forwardSelectedServerAttempts[0] 'intent'
+    } else { $null }
+    $forwardCatchIndex = -1
+    for ($lineIndex = 0; $lineIndex -lt $webswingLines.Count; ++$lineIndex) {
+        if ($webswingLines[$lineIndex] -match 'WEB_SWING SERVER attach_catch ' -and
+            $webswingLines[$lineIndex] -match $forwardAnchorPattern) {
+            $forwardCatchIndex = $lineIndex
+            break
+        }
+    }
+    if ($forwardCatchIndex -ge 0) {
+        for ($lineIndex = $forwardCatchIndex + 1; $lineIndex -lt $webswingLines.Count; ++$lineIndex) {
+            $line = $webswingLines[$lineIndex]
+            if ($line -match 'WEB_SWING SERVER swing ') {
+                $speedMatch = [regex]::Match($line, 'speed=([-+0-9.eE]+)')
+                if ($speedMatch.Success) {
+                    $forwardServerPeakSpeed = [math]::Max($forwardServerPeakSpeed,
+                        [double]::Parse($speedMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture))
+                }
+                $swingPosition = Get-LogVector $line 'pos'
+                if ($null -ne $swingPosition -and $null -ne $forwardAttachPosition -and $null -ne $forwardIntentVector) {
+                    $swingDisplacement =
+                        ($swingPosition[0] - $forwardAttachPosition[0]) * $forwardIntentVector[0] +
+                        ($swingPosition[2] - $forwardAttachPosition[2]) * $forwardIntentVector[2]
+                    $forwardServerPeakDisplacement = [math]::Max($forwardServerPeakDisplacement, $swingDisplacement)
+                }
+            }
+            if ($line -match 'WEB_SWING SERVER detach ' -and $line -match $forwardAnchorPattern) {
+                $speedMatch = [regex]::Match($line, 'detach speed=([-+0-9.eE]+)')
+                if ($speedMatch.Success) {
+                    $forwardServerDetachSpeed = [double]::Parse($speedMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+                }
+                $forwardDetachPosition = Get-LogVector $line 'pos'
+                if ($null -ne $forwardAttachPosition -and $null -ne $forwardDetachPosition -and $null -ne $forwardIntentVector) {
+                    $forwardServerDisplacement =
+                        ($forwardDetachPosition[0] - $forwardAttachPosition[0]) * $forwardIntentVector[0] +
+                        ($forwardDetachPosition[2] - $forwardAttachPosition[2]) * $forwardIntentVector[2]
+                }
+                break
+            }
+        }
+    }
+}
+$forwardServerPeakSpeed = [math]::Max($forwardServerPeakSpeed, $forwardServerDetachSpeed)
+$forwardTravelEvidencePass = $statusWritten -and
+                              $forwardSelectedServerAttempts.Count -ge 1 -and
+                              $serverForwardAttachCatchLines.Count -eq 1 -and
+                              $forwardCatchVerticalSpeed -ge 0.75 -and
+                              $forwardCatchForwardSpeed -ge 0.50 -and
+                              ($forwardServerDisplacement -ge 1.0 -or $forwardServerPeakDisplacement -ge 1.0 -or $forwardPeakDisplacement -ge 1.0) -and
+                              $forwardServerPeakSpeed -gt 0.50 -and
+                              $forwardServerDetachSpeed -gt 0.25
 $clientDiagnosticsAvailable = $selectedClientAttempts.Count -ge 3 -and $clientEnabledAttempts.Count -ge 3
 $serverSequencePass = $smokeComplete -and
                       ($selectedServerAttempts.Count -ge 5) -and
@@ -353,7 +596,10 @@ $serverSequencePass = $smokeComplete -and
                       $constraintDiagnosticsPass -and
                       $smoothnessDiagnosticsPass -and
                       $anchorFanEvidencePass -and
-                      $divergentAnchorEvidencePass
+                      $intentAnchorEvidencePass -and
+                      $groundOriginAttachEvidencePass -and
+                      $forwardTravelEvidencePass -and
+                      $opposingMomentumSteeringPass
 $exitCodeValue = $null
 if (-not $timedOut) { try { $exitCodeValue = [int]$proc.ExitCode } catch {} }
 
@@ -382,8 +628,14 @@ if ($timedOut) {
     $reason = "Repeated smoothness discontinuity evidence exceeded the deterministic gate (avg_direction_delta=$([math]::Round($aggregateAvgVelocityDirectionDelta, 4)), large_direction_delta_pct=$([math]::Round($aggregateVelocityDirectionDeltaPercent, 2)), max_consecutive_large=$maxConsecutiveVelocityDirectionDelta, radial_velocity_removed_pct=$([math]::Round($aggregateRadialVelocityRemovedPercent, 2)))."
 } elseif (-not $anchorFanEvidencePass) {
     $reason = "Broad anchor fan evidence was incomplete; expected five selected attempts with probes>=15."
-} elseif (-not $divergentAnchorEvidencePass) {
-    $reason = "Facing/travel-divergent anchor evidence was incomplete; expected selected momentum attempts near 45 and 90 degrees."
+} elseif (-not $groundOriginAttachEvidencePass) {
+    $reason = "Ground-origin Web Swing attach evidence was incomplete (selected=$($groundSelectedServerAttempts.Count) scoped_catches=$($serverGroundAttachCatchLines.Count) catch_vertical=$([math]::Round($groundCatchVerticalSpeed, 3)) catch_forward=$([math]::Round($groundCatchForwardSpeed, 3)) replicated_altitude_gain=$([math]::Round($groundAltitudeGain, 3)) server_altitude_gain=$([math]::Round($groundServerAltitudeGain, 3)))."
+} elseif (-not $intentAnchorEvidencePass) {
+    $reason = "Intent-first anchor evidence was incomplete; expected selected INPUT anchors with meaningful stale momentum at roughly 45 and 90 degrees (45=$($intent45Attempts.Count), 90=$($intent90Attempts.Count))."
+} elseif (-not $forwardTravelEvidencePass) {
+    $reason = "Held-swing forward-travel evidence was incomplete (selected=$($forwardSelectedServerAttempts.Count) catches=$($serverForwardAttachCatchLines.Count) catch_forward=$([math]::Round($forwardCatchForwardSpeed, 3)) replicated_displacement=$([math]::Round($forwardDisplacement, 3)) server_displacement=$([math]::Round($forwardServerDisplacement, 3)) server_peak_displacement=$([math]::Round($forwardServerPeakDisplacement, 3)) server_peak_speed=$([math]::Round($forwardServerPeakSpeed, 3)) server_detach_speed=$([math]::Round($forwardServerDetachSpeed, 3)))."
+} elseif (-not $opposingMomentumSteeringPass) {
+    $reason = "Opposing-momentum steering evidence was incomplete (suppressed=$($opposingSteeringLines.Count) recoveries=$opposingSteeringRecoveryCount)."
 } elseif ($RequireAnimationPhases -and -not $animationPhaseEvidencePass) {
     $reason = "Animation phase evidence was incomplete; expected AIRBORNE, DESCEND, and BOTTOM or ASCEND (phases=$($animationPhases -join ', '))."
 } elseif ($RequireClientDiagnostics -and -not $clientDiagnosticsAvailable) {
@@ -413,6 +665,8 @@ $result = [pscustomobject]@{
     animationPhases = $animationPhases
     animationPhaseEvidencePass = $animationPhaseEvidencePass
     attachLines = $attachLines.Count
+    attachCatchLines = $attachCatchLines.Count
+    serverAttachCatchLines = $serverAttachCatchLines.Count
     swingLines = $swingLines.Count
     detachLines = $detachLines.Count
     detachSpeeds = @($detachSpeeds | ForEach-Object { [math]::Round($_, 3) })
@@ -448,10 +702,44 @@ $result = [pscustomobject]@{
     radialVelocityLargeCount = $radialVelocityLargeCount
     radialVelocityLargePercent = [math]::Round($aggregateRadialVelocityLargePercent, 4)
     anchorFanEvidencePass = $anchorFanEvidencePass
+    groundOriginAttachEvidencePass = $groundOriginAttachEvidencePass
+    groundAttachObserved = $groundAttachObserved
+    groundAttachTransitions = $groundAttachTransitions
+    groundAttachServerCatchCount = $serverGroundAttachCatchLines.Count
+    groundSelectedServerAttempts = $groundSelectedServerAttempts.Count
+    groundAttachVerticalSpeed = [math]::Round($groundAttachVerticalSpeed, 3)
+    groundAttachForwardSpeed = [math]::Round($groundAttachForwardSpeed, 3)
+    groundCatchVerticalSpeed = [math]::Round($groundCatchVerticalSpeed, 3)
+    groundCatchForwardSpeed = [math]::Round($groundCatchForwardSpeed, 3)
+    groundServerAltitudeGain = [math]::Round($groundServerAltitudeGain, 3)
+    groundServerForwardDisplacement = [math]::Round($groundServerForwardDisplacement, 3)
+    groundAltitudeGain = [math]::Round($groundAltitudeGain, 3)
+    groundForwardDisplacement = [math]::Round($groundForwardDisplacement, 3)
+    forwardTravelEvidencePass = $forwardTravelEvidencePass
+    forwardSelectedServerAttempts = $forwardSelectedServerAttempts.Count
+    forwardServerCatchCount = $serverForwardAttachCatchLines.Count
+    forwardCatchVerticalSpeed = [math]::Round($forwardCatchVerticalSpeed, 3)
+    forwardCatchForwardSpeed = [math]::Round($forwardCatchForwardSpeed, 3)
+    forwardServerPeakSpeed = [math]::Round($forwardServerPeakSpeed, 3)
+    forwardServerDetachSpeed = [math]::Round($forwardServerDetachSpeed, 3)
+    forwardServerDisplacement = [math]::Round($forwardServerDisplacement, 3)
+    forwardServerPeakDisplacement = [math]::Round($forwardServerPeakDisplacement, 3)
+    forwardPeakDisplacement = [math]::Round($forwardPeakDisplacement, 3)
+    forwardAttachObserved = $forwardAttachObserved
+    forwardDisplacement = [math]::Round($forwardDisplacement, 3)
+    forwardPeakSpeed = [math]::Round($forwardPeakSpeed, 3)
+    forwardDetachSpeed = [math]::Round($forwardDetachSpeed, 3)
     momentumSelectedAnchorAttempts = $momentumSelectedAttempts.Count
+    intentInputAttempts = $intentInputAttempts.Count
+    intent45AnchorAttempts = $intent45Attempts.Count
+    intent90AnchorAttempts = $intent90Attempts.Count
+    intentAnchorEvidencePass = $intentAnchorEvidencePass
     divergent45AnchorAttempts = $divergent45Attempts.Count
     divergent90AnchorAttempts = $divergent90Attempts.Count
     divergentAnchorEvidencePass = $divergentAnchorEvidencePass
+    opposingSteeringLines = $opposingSteeringLines.Count
+    opposingSteeringRecoveryCount = $opposingSteeringRecoveryCount
+    opposingMomentumSteeringPass = $opposingMomentumSteeringPass
     tetherRenderEvidenceAvailable = $tetherRenderLines.Count -gt 0
     tetherRenderLines = $tetherRenderLines.Count
     poseAttempts = $clientAttempts

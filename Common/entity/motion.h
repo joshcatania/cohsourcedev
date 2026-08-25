@@ -128,6 +128,10 @@ typedef struct MotionState
     F32                    hitStumbleTractionLoss;
 
     U32                    web_swing_attached : 1;
+    U32                    web_swing_attach_catch_pending : 1;
+    U32                    web_swing_attach_grounded : 1;
+    U32                    web_swing_attach_falling : 1;
+    U32                    web_swing_attach_jumping : 1;
     U32                    web_swing_diag_latched : 1;
     U32                    web_swing_state_diag_latched : 1;
     U32                    web_swing_anim_phase;

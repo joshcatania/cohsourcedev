@@ -34,7 +34,12 @@
 #define WEB_PENDULUM_ACCEL_APEX    0.015f
 #define WEB_FORWARD_TANGENT_ACCEL  0.025f
 #define WEB_STEER_ACCEL            0.040f
-#define WEB_ATTACH_FORWARD_IMPULSE 0.120f
+#define WEB_ATTACH_UPWARD_TARGET_SPEED  1.00f
+#define WEB_ATTACH_UPWARD_MAX_DELTA     1.25f
+#define WEB_ATTACH_FORWARD_TARGET_SPEED 0.75f
+#define WEB_ATTACH_FORWARD_MAX_DELTA    0.75f
+#define WEB_INTENT_INPUT_THRESHOLD      0.05f
+#define WEB_INTENT_MOMENTUM_MIN_SPEED   0.25f
 #define WEB_MAX_SPEED              4.50f
 
 #if SERVER
@@ -49,6 +54,78 @@ int landed_on_ground; //Anytime in the last DoPhysics did you hit the ground? (i
 #define MDBG 0 && CLIENT
 
 static CollInfo    last_surf;
+
+typedef enum WebSwingIntentSource
+{
+    WEB_SWING_INTENT_NONE = 0,
+    WEB_SWING_INTENT_INPUT,
+    WEB_SWING_INTENT_FACING,
+} WebSwingIntentSource;
+
+static const char *webSwingIntentSourceName(WebSwingIntentSource source)
+{
+    switch(source)
+    {
+        case WEB_SWING_INTENT_INPUT:
+            return "INPUT";
+        case WEB_SWING_INTENT_FACING:
+            return "FACING";
+        default:
+            return "NONE";
+    }
+}
+
+/*
+ * MotionStateInput.vel is world-space by the time entMotion is called.  The
+ * client builds it from control-local input with control_mat in
+ * playerRunPhysicsStep(); the server's pmotionSetVel path writes the
+ * authoritative world movement vector directly.  Keep this helper as the
+ * single definition of horizontal travel intent for Web Swing.
+ */
+static WebSwingIntentSource webSwingGetTravelIntent(Entity *e, Vec3 intent, F32 *horizontal_input_magnitude)
+{
+    Vec3 input;
+    F32 input_magnitude;
+
+    copyVec3(e->motion->input.vel, input);
+    input[1] = 0.0f;
+    input_magnitude = lengthVec3(input);
+    if(horizontal_input_magnitude)
+        *horizontal_input_magnitude = input_magnitude;
+
+    if(input_magnitude > WEB_INTENT_INPUT_THRESHOLD)
+    {
+        scaleVec3(input, 1.0f / input_magnitude, intent);
+        return WEB_SWING_INTENT_INPUT;
+    }
+
+    copyVec3(ENTMAT(e)[2], intent);
+    intent[1] = 0.0f;
+    if(normalVec3(intent))
+        return WEB_SWING_INTENT_FACING;
+
+    zeroVec3(intent);
+    return WEB_SWING_INTENT_NONE;
+}
+
+static int webSwingGetMeaningfulMomentum(Entity *e, Vec3 momentum, F32 *horizontal_speed)
+{
+    F32 speed;
+
+    copyVec3(e->motion->vel, momentum);
+    momentum[1] = 0.0f;
+    speed = lengthVec3(momentum);
+    if(horizontal_speed)
+        *horizontal_speed = speed;
+    if(speed <= WEB_INTENT_MOMENTUM_MIN_SPEED)
+    {
+        zeroVec3(momentum);
+        return 0;
+    }
+
+    scaleVec3(momentum, 1.0f / speed, momentum);
+    return 1;
+}
 
 static void printColls(CollInfo* coll,U32 flags)
 {
@@ -139,11 +216,20 @@ typedef struct WebSwingAnchorSearchStats
     int distance_rejects;
     int selected;
     int used_fallback;
+    WebSwingIntentSource intent_source;
+    F32 horizontal_input_magnitude;
+    int meaningful_momentum;
     int momentum_basis;
     F32 facing_travel_dot;
+    Vec3 intent;
+    Vec3 momentum;
     Vec3 travel;
     Vec3 travel_right;
     Vec3 entity_right;
+    F32 intent_momentum_alignment;
+    F32 selected_intent_alignment;
+    F32 selected_momentum_alignment;
+    F32 selected_forward_alignment;
     Vec3 selected_anchor;
     F32 selected_rope_length;
 } WebSwingAnchorSearchStats;
@@ -185,10 +271,12 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     Vec3 entity_right;
     Vec3 travel_right;
     Vec3 momentum;
-    Vec3 travel;
+    Vec3 intent;
     Vec3 up = {0.0f, 1.0f, 0.0f};
     Vec3 best_anchor = {0};
     F32 best_score = -1e30f;
+    WebSwingIntentSource intent_source;
+    F32 horizontal_input_magnitude = 0.0f;
     int has_momentum;
     int i;
 
@@ -204,25 +292,29 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
     entity_right[1] = 0.0f;
     if(!normalVec3(entity_right))
         copyVec3(ENTMAT(e)[0], entity_right);
-    copyVec3(e->motion->vel, momentum);
-    momentum[1] = 0.0f;
-    has_momentum = normalVec3(momentum) > 0.001f;
-    copyVec3(has_momentum ? momentum : forward, travel);
-    if(!normalVec3(travel))
+    intent_source = webSwingGetTravelIntent(e, intent, &horizontal_input_magnitude);
+    if(intent_source == WEB_SWING_INTENT_NONE)
         return 0;
+    has_momentum = webSwingGetMeaningfulMomentum(e, momentum, NULL);
 
-    // The lateral fan must be perpendicular to the actual travel basis.  The
-    // entity-right vector is only used to keep the established left/right
-    // convention stable; it is not used to shape momentum-centered probes.
-    crossVec3(up, travel, travel_right);
+    // The lateral fan is always perpendicular to player travel intent.  The
+    // entity-right vector only keeps the established left/right convention
+    // stable; it does not shape the fan around stale momentum.
+    crossVec3(up, intent, travel_right);
     if(!normalVec3(travel_right))
         return 0;
     if(dotVec3(travel_right, entity_right) < 0.0f)
         scaleVec3(travel_right, -1.0f, travel_right);
 
+    stats->intent_source = intent_source;
+    stats->horizontal_input_magnitude = horizontal_input_magnitude;
+    stats->meaningful_momentum = has_momentum;
     stats->momentum_basis = has_momentum;
-    stats->facing_travel_dot = dotVec3(forward, travel);
-    copyVec3(travel, stats->travel);
+    stats->facing_travel_dot = dotVec3(forward, intent);
+    stats->intent_momentum_alignment = has_momentum ? dotVec3(intent, momentum) : 0.0f;
+    copyVec3(intent, stats->intent);
+    copyVec3(momentum, stats->momentum);
+    copyVec3(intent, stats->travel);
     copyVec3(travel_right, stats->travel_right);
     copyVec3(entity_right, stats->entity_right);
 
@@ -240,7 +332,7 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
         F32 momentum_alignment = 0.0f;
         F32 score;
 
-        scaleVec3(travel, probes[i].forward, direction);
+        scaleVec3(intent, probes[i].forward, direction);
         scaleVec3(up, probes[i].up, delta);
         addVec3(direction, delta, direction);
         scaleVec3(travel_right, probes[i].side, delta);
@@ -259,7 +351,7 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
         subVec3(delta, start, delta);
         distance = normalVec3(delta);
         height = coll.mat[3][1] - ENTPOSY(e);
-        travel_alignment = dotVec3(delta, travel);
+        travel_alignment = dotVec3(delta, intent);
         forward_alignment = dotVec3(delta, forward);
 
         if(distance < WEB_MIN_ROPE_LENGTH)
@@ -272,16 +364,20 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
         if(has_momentum)
             momentum_alignment = dotVec3(delta, momentum);
 
-        // Prefer high, forward, momentum-aligned real collision geometry while
-        // still allowing the wide side/upper fan to rescue street-canyon shots.
-        score = height * 1.5f + travel_alignment * 18.0f +
-                forward_alignment * 7.0f + momentum_alignment * 24.0f -
+        // Prefer high, intent-aligned real collision geometry while retaining
+        // forward/fallback coverage and using meaningful momentum only as a
+        // secondary continuity signal.
+        score = height * 1.5f + travel_alignment * 30.0f +
+                forward_alignment * 5.0f + momentum_alignment * 8.0f -
                 distance * 0.20f;
         if(score > best_score)
         {
             best_score = score;
             copyVec3(coll.mat[3], best_anchor);
             stats->used_fallback = i >= 5;
+            stats->selected_intent_alignment = travel_alignment;
+            stats->selected_momentum_alignment = momentum_alignment;
+            stats->selected_forward_alignment = forward_alignment;
         }
     }
 
@@ -299,19 +395,27 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
 {
     MotionState *motion = e->motion;
     Vec3 forward;
+    int grounded = !motion->falling && !motion->jumping;
 
     copyVec3(ENTMAT(e)[2], forward);
     if(stats->selected)
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d selected_intent_alignment=%.3f selected_momentum_alignment=%.3f selected_forward_alignment=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
+                       grounded,
                        motion->falling,
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
+                       webSwingIntentSourceName(stats->intent_source),
+                       vecParamsXYZ(stats->intent),
+                       stats->horizontal_input_magnitude,
+                       stats->meaningful_momentum,
+                       vecParamsXYZ(stats->momentum),
+                       stats->intent_momentum_alignment,
                        vecParamsXYZ(stats->travel),
                        vecParamsXYZ(stats->travel_right),
                        vecParamsXYZ(stats->entity_right),
@@ -322,20 +426,30 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        stats->height_rejects,
                        stats->distance_rejects,
                        stats->used_fallback,
+                       stats->selected_intent_alignment,
+                       stats->selected_momentum_alignment,
+                       stats->selected_forward_alignment,
                        vecParamsXYZ(stats->selected_anchor),
                        stats->selected_rope_length);
     }
     else
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0 selected_intent_alignment=0.000 selected_momentum_alignment=0.000 selected_forward_alignment=0.000\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
+                       grounded,
                        motion->falling,
                        motion->jumping,
                        vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(forward),
+                       webSwingIntentSourceName(stats->intent_source),
+                       vecParamsXYZ(stats->intent),
+                       stats->horizontal_input_magnitude,
+                       stats->meaningful_momentum,
+                       vecParamsXYZ(stats->momentum),
+                       stats->intent_momentum_alignment,
                        vecParamsXYZ(stats->travel),
                        vecParamsXYZ(stats->travel_right),
                        vecParamsXYZ(stats->entity_right),
@@ -377,15 +491,17 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
     {
         if(motion->web_swing_attached)
         {
-            printf("WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            printf("WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                    WEB_SWING_LOG_SIDE,
                    lengthVec3(motion->vel),
                    vecParamsXYZ(motion->web_swing_anchor),
+                   vecParamsXYZ(ENTPOS(e)),
                    vecParamsXYZ(motion->input.vel));
-            filelog_printf("webswing.log", "WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            filelog_printf("webswing.log", "WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                            WEB_SWING_LOG_SIDE,
                            lengthVec3(motion->vel),
                            vecParamsXYZ(motion->web_swing_anchor),
+                           vecParamsXYZ(ENTPOS(e)),
                            vecParamsXYZ(motion->input.vel));
             filelog_printf("webswing.log", "WEB_SWING %s constraint_summary samples=%u soft_corrections=%u radial_corrections=%u hard_corrections=0 max_error=%.4f avg_error=%.4f max_radial_correction=%.4f avg_radial_correction=%.4f max_velocity_dir_delta=%.4f avg_velocity_dir_delta=%.4f velocity_dir_delta_sum=%.4f velocity_dir_delta_large_count=%u velocity_dir_delta_large_pct=%.2f max_consecutive_velocity_dir_delta=%u radial_velocity_removed_count=%u radial_velocity_removed_pct=%.2f avg_radial_velocity_removed=%.4f max_radial_velocity_removed=%.4f radial_velocity_large_count=%u radial_velocity_large_pct=%.2f direction_delta_threshold=%.3f radial_velocity_threshold=%.3f\n",
                            WEB_SWING_LOG_SIDE,
@@ -412,6 +528,10 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
                            WEB_SWING_RADIAL_VELOCITY_THRESHOLD);
         }
         motion->web_swing_attached = 0;
+        motion->web_swing_attach_catch_pending = 0;
+        motion->web_swing_attach_grounded = 0;
+        motion->web_swing_attach_falling = 0;
+        motion->web_swing_attach_jumping = 0;
         motion->web_swing_diag_latched = 0;
         motion->web_swing_state_diag_latched = 0;
         motion->web_swing_log_tick = 0;
@@ -433,8 +553,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
                        vecParamsXYZ(ENTPOS(e)));
     }
 
-    if(!web_swing_test_no_attach &&
-       !motion->web_swing_attached && (motion->falling || motion->jumping))
+    if(!web_swing_test_no_attach && !motion->web_swing_attached)
     {
         Vec3 anchor;
         F32 rope_length;
@@ -456,18 +575,12 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
             motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
             motion->web_swing_log_tick = 0;
             webSwingResetConstraintMetrics(motion);
+            motion->web_swing_attach_grounded = !motion->falling && !motion->jumping;
+            motion->web_swing_attach_falling = motion->falling;
+            motion->web_swing_attach_jumping = motion->jumping;
+            motion->web_swing_attach_catch_pending = 1;
             motion->jumping = 0;
             motion->falling = 1;
-
-            if(lengthVec3Squared(motion->vel) < 0.01f)
-            {
-                Vec3 impulse;
-                copyVec3(ENTMAT(e)[2], impulse);
-                impulse[1] = 0.0f;
-                normalVec3(impulse);
-                scaleVec3(impulse, WEB_ATTACH_FORWARD_IMPULSE, impulse);
-                addVec3(motion->vel, impulse, motion->vel);
-            }
 
             printf("WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
                    WEB_SWING_LOG_SIDE,
@@ -489,7 +602,8 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     Vec3 rope;
     Vec3 tangent_velocity;
     Vec3 tangent_direction;
-    Vec3 tangent_forward;
+    Vec3 travel_intent;
+    Vec3 tangent_intent;
     Vec3 input_world;
     Vec3 tangent_input;
     Vec3 forward;
@@ -510,11 +624,79 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     F32 speed;
     F32 arc_height;
     F32 phase_accel;
+    F32 horizontal_input_magnitude = 0.0f;
+    F32 tangent_intent_alignment = 0.0f;
+    F32 upward_delta = 0.0f;
+    F32 forward_delta = 0.0f;
+    F32 forward_speed_before = 0.0f;
+    WebSwingIntentSource intent_source;
     int hard_correction_fired = 0;
     int soft_correction_fired = 0;
+    int phase_pump_suppressed = 0;
 
     if(!motion->web_swing_attached || e->timestep <= 0.0001f)
         return;
+
+    if(motion->web_swing_attach_catch_pending)
+    {
+        Vec3 velocity_before_catch;
+        Vec3 velocity_after_catch;
+
+        intent_source = webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
+        copyVec3(motion->vel, velocity_before_catch);
+
+        if(motion->vel[1] < WEB_ATTACH_UPWARD_TARGET_SPEED)
+        {
+            upward_delta = MIN(WEB_ATTACH_UPWARD_TARGET_SPEED - motion->vel[1],
+                               WEB_ATTACH_UPWARD_MAX_DELTA);
+            motion->vel[1] += upward_delta;
+        }
+
+        if(intent_source != WEB_SWING_INTENT_NONE)
+        {
+            forward_speed_before = dotVec3(motion->vel, travel_intent);
+            if(forward_speed_before < WEB_ATTACH_FORWARD_TARGET_SPEED)
+            {
+                forward_delta = MIN(WEB_ATTACH_FORWARD_TARGET_SPEED - forward_speed_before,
+                                    WEB_ATTACH_FORWARD_MAX_DELTA);
+                scaleVec3(travel_intent, forward_delta, projected);
+                addVec3(motion->vel, projected, motion->vel);
+            }
+        }
+
+        copyVec3(motion->vel, velocity_after_catch);
+        printf("WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+               WEB_SWING_LOG_SIDE,
+               motion->web_swing_attach_grounded,
+               motion->web_swing_attach_falling,
+               motion->web_swing_attach_jumping,
+               vecParamsXYZ(velocity_before_catch),
+               vecParamsXYZ(velocity_after_catch),
+               upward_delta,
+               forward_delta,
+               forward_speed_before,
+               vecParamsXYZ(travel_intent),
+               webSwingIntentSourceName(intent_source),
+               horizontal_input_magnitude,
+               vecParamsXYZ(motion->web_swing_anchor),
+               motion->web_swing_rope_length);
+        filelog_printf("webswing.log", "WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->web_swing_attach_grounded,
+                       motion->web_swing_attach_falling,
+                       motion->web_swing_attach_jumping,
+                       vecParamsXYZ(velocity_before_catch),
+                       vecParamsXYZ(velocity_after_catch),
+                       upward_delta,
+                       forward_delta,
+                       forward_speed_before,
+                       vecParamsXYZ(travel_intent),
+                       webSwingIntentSourceName(intent_source),
+                       horizontal_input_magnitude,
+                       vecParamsXYZ(motion->web_swing_anchor),
+                       motion->web_swing_rope_length);
+        motion->web_swing_attach_catch_pending = 0;
+    }
 
     subVec3(motion->last_pos, motion->web_swing_anchor, rope);
     if(!normalVec3(rope))
@@ -541,14 +723,25 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     right[1] = 0.0f;
     normalVec3(right);
 
-    // A small forward-facing tangent bias gives a newly attached swing a
-    // useful direction, while the existing tangent velocity remains primary.
-    // The sign correction prevents the assist from reversing earned momentum.
-    copyVec3(forward, tangent_forward);
-    scaleVec3(rope, dotVec3(tangent_forward, rope), projected);
-    subVec3(tangent_forward, projected, tangent_forward);
-    if(normalVec3(tangent_forward) && dotVec3(tangent_forward, tangent_direction) < 0.0f)
-        scaleVec3(tangent_forward, -1.0f, tangent_forward);
+    intent_source = webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
+    zeroVec3(tangent_intent);
+    if(intent_source != WEB_SWING_INTENT_NONE)
+    {
+        scaleVec3(rope, dotVec3(travel_intent, rope), projected);
+        subVec3(travel_intent, projected, tangent_intent);
+        if(normalVec3(tangent_intent))
+            tangent_intent_alignment = dotVec3(tangent_direction, tangent_intent);
+    }
+
+    // Explicit input that opposes the current pendulum direction must not
+    // continue pumping the unwanted phase.  Passive facing intent does not
+    // suppress the normal energy assist.
+    if(intent_source == WEB_SWING_INTENT_INPUT &&
+       lengthVec3Squared(tangent_intent) > 0.0001f &&
+       tangent_intent_alignment < 0.0f)
+    {
+        phase_pump_suppressed = 1;
+    }
 
     arc_height = (ENTPOSY(e) - (motion->web_swing_anchor[1] - motion->web_swing_rope_length)) /
                  MAX(motion->web_swing_rope_length, WEB_MIN_ROPE_LENGTH);
@@ -564,17 +757,24 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                       (WEB_PENDULUM_ACCEL_APEX - WEB_PENDULUM_ACCEL_ASCENT) * ((arc_height - 0.55f) / 0.45f);
     }
 
-    scaleVec3(tangent_direction, phase_accel * e->timestep, projected);
-    addVec3(motion->vel, projected, motion->vel);
+    if(!phase_pump_suppressed)
+    {
+        scaleVec3(tangent_direction, phase_accel * e->timestep, projected);
+        addVec3(motion->vel, projected, motion->vel);
+    }
 
-    scaleVec3(tangent_forward, WEB_FORWARD_TANGENT_ACCEL * e->timestep, projected);
-    addVec3(motion->vel, projected, motion->vel);
+    if(lengthVec3Squared(tangent_intent) > 0.0001f)
+    {
+        scaleVec3(tangent_intent, WEB_FORWARD_TANGENT_ACCEL * e->timestep, projected);
+        addVec3(motion->vel, projected, motion->vel);
+    }
 
     // motion->input.vel is already world-space here.  W/A/D are steering
     // input, not the source of swing motion; remove vertical jump input and
     // project the world-space steering vector directly onto the rope tangent.
     copyVec3(motion->input.vel, input_world);
     input_world[1] = 0.0f;
+    zeroVec3(tangent_input);
     scaleVec3(rope, dotVec3(input_world, rope), projected);
     subVec3(input_world, projected, tangent_input);
     if(normalVec3(tangent_input))
@@ -674,13 +874,15 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     ++motion->web_swing_log_tick;
     if(motion->web_swing_log_tick >= 15)
     {
-        printf("WEB_SWING %s swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+        printf("WEB_SWING %s swing speed=%.3f rope=%.2f pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                WEB_SWING_LOG_SIDE,
                lengthVec3(motion->vel), motion->web_swing_rope_length,
+               vecParamsXYZ(ENTPOS(e)),
                vecParamsXYZ(motion->input.vel));
-        filelog_printf("webswing.log", "WEB_SWING %s swing speed=%.3f rope=%.2f input=(%.2f %.2f %.2f)\n",
+        filelog_printf("webswing.log", "WEB_SWING %s swing speed=%.3f rope=%.2f pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                        WEB_SWING_LOG_SIDE,
                        lengthVec3(motion->vel), motion->web_swing_rope_length,
+                       vecParamsXYZ(ENTPOS(e)),
                        vecParamsXYZ(motion->input.vel));
         filelog_printf("webswing.log", "WEB_SWING %s constraint pre_distance=%.3f rope=%.3f radial_error=%.3f radial_velocity=%.3f radial_velocity_removed=%.3f vel_before=(%.3f %.3f %.3f) vel_after=(%.3f %.3f %.3f) hard_correction=%d soft_correction=%d radial_correction=%.4f velocity_dir_delta=%.4f\n",
                        WEB_SWING_LOG_SIDE,
@@ -697,14 +899,20 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                        velocity_dir_delta);
         if(lengthVec3Squared(input_world) > 0.0001f)
         {
-            printf("WEB_SWING %s steering forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f)\n",
+            printf("WEB_SWING %s steering intent_source=%s forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f) tangent_direction=(%.3f %.3f %.3f) tangent_intent=(%.3f %.3f %.3f) tangent_intent_alignment=%.3f phase_pump_suppressed=%d\n",
                    WEB_SWING_LOG_SIDE,
+                   webSwingIntentSourceName(intent_source),
                    vecParamsXYZ(forward), vecParamsXYZ(right),
-                   vecParamsXYZ(input_world), vecParamsXYZ(tangent_input));
-            filelog_printf("webswing.log", "WEB_SWING %s steering forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f)\n",
+                   vecParamsXYZ(input_world), vecParamsXYZ(tangent_input),
+                   vecParamsXYZ(tangent_direction), vecParamsXYZ(tangent_intent),
+                   tangent_intent_alignment, phase_pump_suppressed);
+            filelog_printf("webswing.log", "WEB_SWING %s steering intent_source=%s forward=(%.3f %.3f %.3f) right=(%.3f %.3f %.3f) input_world=(%.3f %.3f %.3f) tangent_input=(%.3f %.3f %.3f) tangent_direction=(%.3f %.3f %.3f) tangent_intent=(%.3f %.3f %.3f) tangent_intent_alignment=%.3f phase_pump_suppressed=%d\n",
                            WEB_SWING_LOG_SIDE,
+                           webSwingIntentSourceName(intent_source),
                            vecParamsXYZ(forward), vecParamsXYZ(right),
-                           vecParamsXYZ(input_world), vecParamsXYZ(tangent_input));
+                           vecParamsXYZ(input_world), vecParamsXYZ(tangent_input),
+                           vecParamsXYZ(tangent_direction), vecParamsXYZ(tangent_intent),
+                           tangent_intent_alignment, phase_pump_suppressed);
         }
         motion->web_swing_log_tick = 0;
     }
