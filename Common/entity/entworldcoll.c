@@ -40,8 +40,6 @@
 #define WEB_ATTACH_FORWARD_MAX_DELTA    0.75f
 #define WEB_INTENT_INPUT_THRESHOLD      0.05f
 #define WEB_INTENT_MOMENTUM_MIN_SPEED   0.25f
-#define WEB_VIRTUAL_ANCHOR_HEIGHT       35.0f
-#define WEB_VIRTUAL_ANCHOR_FORWARD_LEAD 20.0f
 #define WEB_MAX_SPEED              4.50f
 
 #if SERVER
@@ -484,19 +482,6 @@ static void webSwingResetConstraintMetrics(MotionState *motion)
     motion->web_swing_constraint_max_radial_velocity_removed = 0.0f;
 }
 
-static void webSwingBuildVirtualPhysicsAnchor(Entity *e, const Vec3 travel_intent)
-{
-    MotionState *motion = e->motion;
-    Vec3 offset;
-
-    copyVec3(ENTPOS(e), motion->web_swing_anchor);
-    scaleVec3(travel_intent, WEB_VIRTUAL_ANCHOR_FORWARD_LEAD, offset);
-    addVec3(motion->web_swing_anchor, offset, motion->web_swing_anchor);
-    motion->web_swing_anchor[1] += WEB_VIRTUAL_ANCHOR_HEIGHT;
-    motion->web_swing_rope_length = MINMAX(distance3(ENTPOS(e), motion->web_swing_anchor),
-                                           WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
-}
-
 void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
 {
     MotionState *motion = e->motion;
@@ -506,24 +491,16 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
     {
         if(motion->web_swing_attached)
         {
-            printf("WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            printf("WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                    WEB_SWING_LOG_SIDE,
                    lengthVec3(motion->vel),
-                   vecParamsXYZ(motion->web_swing_visual_anchor),
-                   vecParamsXYZ(motion->web_swing_visual_anchor),
                    vecParamsXYZ(motion->web_swing_anchor),
-                   motion->web_swing_rope_length,
-                   distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
                    vecParamsXYZ(ENTPOS(e)),
                    vecParamsXYZ(motion->input.vel));
-            filelog_printf("webswing.log", "WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
+            filelog_printf("webswing.log", "WEB_SWING %s detach speed=%.3f anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
                            WEB_SWING_LOG_SIDE,
                            lengthVec3(motion->vel),
-                           vecParamsXYZ(motion->web_swing_visual_anchor),
-                           vecParamsXYZ(motion->web_swing_visual_anchor),
                            vecParamsXYZ(motion->web_swing_anchor),
-                           motion->web_swing_rope_length,
-                           distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
                            vecParamsXYZ(ENTPOS(e)),
                            vecParamsXYZ(motion->input.vel));
             filelog_printf("webswing.log", "WEB_SWING %s constraint_summary samples=%u soft_corrections=%u radial_corrections=%u hard_corrections=0 max_error=%.4f avg_error=%.4f max_radial_correction=%.4f avg_radial_correction=%.4f max_velocity_dir_delta=%.4f avg_velocity_dir_delta=%.4f velocity_dir_delta_sum=%.4f velocity_dir_delta_large_count=%u velocity_dir_delta_large_pct=%.2f max_consecutive_velocity_dir_delta=%u radial_velocity_removed_count=%u radial_velocity_removed_pct=%.2f avg_radial_velocity_removed=%.4f max_radial_velocity_removed=%.4f radial_velocity_large_count=%u radial_velocity_large_pct=%.2f direction_delta_threshold=%.3f radial_velocity_threshold=%.3f\n",
@@ -579,6 +556,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
     if(!web_swing_test_no_attach && !motion->web_swing_attached)
     {
         Vec3 anchor;
+        F32 rope_length;
         WebSwingAnchorSearchStats search_stats;
         int found_anchor;
 
@@ -592,8 +570,9 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         if(found_anchor)
         {
             motion->web_swing_attached = 1;
-            copyVec3(anchor, motion->web_swing_visual_anchor);
-            webSwingBuildVirtualPhysicsAnchor(e, search_stats.intent);
+            copyVec3(anchor, motion->web_swing_anchor);
+            rope_length = distance3(ENTPOS(e), anchor);
+            motion->web_swing_rope_length = MINMAX(rope_length, WEB_MIN_ROPE_LENGTH, WEB_MAX_ROPE_LENGTH);
             motion->web_swing_log_tick = 0;
             webSwingResetConstraintMetrics(motion);
             motion->web_swing_attach_grounded = !motion->falling && !motion->jumping;
@@ -603,26 +582,16 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
             motion->jumping = 0;
             motion->falling = 1;
 
-            printf("WEB_SWING %s attach anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f rope=%.2f speed=%.3f intent=(%.3f %.3f %.3f)\n",
+            printf("WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
                    WEB_SWING_LOG_SIDE,
-                   vecParamsXYZ(motion->web_swing_visual_anchor),
-                   vecParamsXYZ(motion->web_swing_visual_anchor),
                    vecParamsXYZ(motion->web_swing_anchor),
                    motion->web_swing_rope_length,
-                   distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
-                   motion->web_swing_rope_length,
-                   lengthVec3(motion->vel),
-                   vecParamsXYZ(search_stats.intent));
-            filelog_printf("webswing.log", "WEB_SWING %s attach anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f rope=%.2f speed=%.3f intent=(%.3f %.3f %.3f)\n",
+                   lengthVec3(motion->vel));
+            filelog_printf("webswing.log", "WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
                            WEB_SWING_LOG_SIDE,
-                           vecParamsXYZ(motion->web_swing_visual_anchor),
-                           vecParamsXYZ(motion->web_swing_visual_anchor),
                            vecParamsXYZ(motion->web_swing_anchor),
                            motion->web_swing_rope_length,
-                           distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
-                           motion->web_swing_rope_length,
-                           lengthVec3(motion->vel),
-                           vecParamsXYZ(search_stats.intent));
+                           lengthVec3(motion->vel));
         }
     }
 }
@@ -696,7 +665,7 @@ void entWorldWebSwingApplyConstraint(Entity *e)
         }
 
         copyVec3(motion->vel, velocity_after_catch);
-        printf("WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f rope=%.2f\n",
+        printf("WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                WEB_SWING_LOG_SIDE,
                motion->web_swing_attach_grounded,
                motion->web_swing_attach_falling,
@@ -709,13 +678,9 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                vecParamsXYZ(travel_intent),
                webSwingIntentSourceName(intent_source),
                horizontal_input_magnitude,
-               vecParamsXYZ(motion->web_swing_visual_anchor),
-               vecParamsXYZ(motion->web_swing_visual_anchor),
                vecParamsXYZ(motion->web_swing_anchor),
-               motion->web_swing_rope_length,
-               distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
                motion->web_swing_rope_length);
-        filelog_printf("webswing.log", "WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) visual_anchor=(%.2f %.2f %.2f) physics_anchor=(%.2f %.2f %.2f) anchor_mode=VIRTUAL physics_rope=%.2f visual_physics_separation=%.2f rope=%.2f\n",
+        filelog_printf("webswing.log", "WEB_SWING %s attach_catch grounded_at_acquisition=%d falling_at_acquisition=%d jumping_at_acquisition=%d velocity_before=(%.3f %.3f %.3f) velocity_after=(%.3f %.3f %.3f) upward_delta=%.3f forward_delta=%.3f forward_speed_before=%.3f intent=(%.3f %.3f %.3f) intent_source=%s input_magnitude=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        WEB_SWING_LOG_SIDE,
                        motion->web_swing_attach_grounded,
                        motion->web_swing_attach_falling,
@@ -728,11 +693,7 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                        vecParamsXYZ(travel_intent),
                        webSwingIntentSourceName(intent_source),
                        horizontal_input_magnitude,
-                       vecParamsXYZ(motion->web_swing_visual_anchor),
-                       vecParamsXYZ(motion->web_swing_visual_anchor),
                        vecParamsXYZ(motion->web_swing_anchor),
-                       motion->web_swing_rope_length,
-                       distance3(motion->web_swing_visual_anchor, motion->web_swing_anchor),
                        motion->web_swing_rope_length);
         motion->web_swing_attach_catch_pending = 0;
     }
