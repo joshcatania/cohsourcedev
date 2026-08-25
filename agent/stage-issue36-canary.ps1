@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [ValidateSet('Status', 'StaticProof', 'RestBasisFrame20', 'RestBasisBottom', 'RestBasisBottomFrame', 'FullFrame30', 'FullFrame', 'Tracked')]
+    [ValidateSet('Status', 'StaticProof', 'RestBasisFrame20', 'RestBasisBottom', 'RestBasisBottomFrame', 'RestBasisFullFrame', 'FullFrame30', 'FullFrame', 'Tracked')]
     [string]$Variant = 'Status',
     [ValidateRange(1, 60)]
     [int]$FrameStart = 1
@@ -61,16 +61,18 @@ if (-not (Test-Path -LiteralPath $runtimeCanaryInclude -PathType Leaf)) {
 }
 
 $generated = $false
-if ($Variant -in @('FullFrame', 'RestBasisBottomFrame')) {
+if ($Variant -in @('FullFrame', 'RestBasisBottomFrame', 'RestBasisFullFrame')) {
     if ($Variant -eq 'RestBasisBottomFrame' -and $FrameStart -gt 5) {
         throw 'RestBasisBottomFrame requires FrameStart 1..5.'
     }
     if ($Variant -eq 'FullFrame' -and $FrameStart -ge 60) {
         throw 'FullFrame requires FrameStart 1..59 so the Anim range has an end frame.'
     }
-    $endFrame = $FrameStart + 1
+    $endFrame = if ($Variant -eq 'RestBasisFullFrame' -and $FrameStart -eq 60) { 60 } else { $FrameStart + 1 }
     $asset = if ($Variant -eq 'RestBasisBottomFrame') {
         'MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM'
+    } elseif ($Variant -eq 'RestBasisFullFrame') {
+        'MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL'
     } else {
         'MALE/COHSOURCEDEV_RETARGET_SWING_FULL'
     }
@@ -100,7 +102,7 @@ MEnd
 [pscustomobject]@{
     staged = $Variant
     frameStart = if ($generated) { $FrameStart } else { $null }
-    frameEnd = if ($generated) { $FrameStart + 1 } else { $null }
+    frameEnd = if ($generated) { $endFrame } else { $null }
     source = if ($generated) { 'generated-in-memory' } else { $source }
     runtimeSha256 = Get-Sha256 $runtimeCanaryInclude
 } | ConvertTo-Json

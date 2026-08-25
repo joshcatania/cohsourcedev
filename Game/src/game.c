@@ -293,7 +293,7 @@ void parseArgs(int argc,char **argv)
         if (stricmp(argv[i], "-webswinganim") == 0 && i + 1 < argc)
         {
             int mode = atoi(argv[i + 1]);
-            if (mode < 0 || mode > 2)
+            if (mode < 0 || mode > 3)
                 mode = 0;
             g_cohsourcedev_webswing_anim_selection = mode;
             game_startupTracef("webswinganim.argument=%d", g_cohsourcedev_webswing_anim_selection);

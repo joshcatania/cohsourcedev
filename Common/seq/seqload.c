@@ -1176,7 +1176,11 @@ static void seqLogWebSwingMoveSemantics(const char *source, const SeqInfo *seqIn
     static const char *const representative_moves[] =
     {
         "READY", "RUNCYCLE", "JUMPPRE", "JUMPUP", "JUMPFALL", "JUMPPOST", "RUNFALL", "PREFALL",
-        "COHSOURCEDEV_CUSTOM_CANARY"
+        "COHSOURCEDEV_CUSTOM_CANARY",
+        "WEBSWING_FULL_ATTACHED_START", "WEBSWING_FULL_ATTACHED_HOLD",
+        "WEBSWING_FULL_DESCEND_START", "WEBSWING_FULL_DESCEND_HOLD",
+        "WEBSWING_FULL_BOTTOM_START", "WEBSWING_FULL_BOTTOM_HOLD",
+        "WEBSWING_FULL_ASCEND_START", "WEBSWING_FULL_ASCEND_HOLD"
     };
     int i;
 

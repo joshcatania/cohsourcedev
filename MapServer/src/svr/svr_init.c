@@ -579,13 +579,14 @@ static const char *mapServerWebSwingAnimSelectionName(int mode)
     {
         case 1: return "ALL_EXPERIMENTAL";
         case 2: return "MALE_BOTTOM_ONLY";
+        case 3: return "MALE_FULL_CORRECTED";
         default: return "SAFE_NONE";
     }
 }
 
 static void mapServerSetWebSwingAnimSelection(int mode)
 {
-    if (mode < 0 || mode > 2)
+    if (mode < 0 || mode > 3)
         mode = 0;
 
     g_cohsourcedev_webswing_anim_selection = mode;
@@ -627,7 +628,7 @@ static int mapServerReadWebSwingAnimConfig(void)
     mode = 0;
     if (fgets(line, sizeof(line), f) &&
         sscanf(line, "%d", &mode) == 1 &&
-        mode >= 0 && mode <= 2)
+        mode >= 0 && mode <= 3)
     {
         fclose(f);
         mapServerSetWebSwingAnimSelection(mode);
@@ -645,7 +646,7 @@ static void mapServerLogWebSwingAnimSelection(void)
 {
     int mode = g_cohsourcedev_webswing_anim_selection;
 
-    if (mode < 0 || mode > 2)
+    if (mode < 0 || mode > 3)
         mode = 0;
 
     filelog_printf("webswing.log",

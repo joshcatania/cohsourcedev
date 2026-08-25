@@ -381,18 +381,21 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 
     {
         // Issue 36 forensic: explicit mode.  0=SAFE_NONE (no WebSwing
-        // visual bits), 1=ALL_EXPERIMENTAL, 2=MALE_BOTTOM_ONLY.
+        // visual bits), 1=ALL_EXPERIMENTAL, 2=MALE_BOTTOM_ONLY,
+        // 3=MALE_FULL_CORRECTED.
         #define WEBSWING_ANIM_MODE_SAFE_NONE          0
         #define WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL   1
         #define WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY   2
+        #define WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED 3
         static int last_logged_mode = -1;
         int mode = g_cohsourcedev_webswing_anim_selection;
-        if (mode < 0 || mode > 2) mode = WEBSWING_ANIM_MODE_SAFE_NONE;
+        if (mode < 0 || mode > 3) mode = WEBSWING_ANIM_MODE_SAFE_NONE;
 
         if (last_logged_mode != mode)
         {
             const char *label = mode == WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL ? "ALL_EXPERIMENTAL" :
-                                mode == WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY ? "MALE_BOTTOM_ONLY" : "SAFE_NONE";
+                                mode == WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY ? "MALE_BOTTOM_ONLY" :
+                                mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED ? "MALE_FULL_CORRECTED" : "SAFE_NONE";
             filelog_printf("webswing.log",
                            "WEB_SWING %s anim_selection_mode=%d custom_move_selection=%s\n",
                            pmotionWebSwingAnimSide(), mode, label);
@@ -437,9 +440,48 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                 seqSetState(e->seq->state, 1, state_bits[3]);
             }
         }
+        else if (mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED)
+        {
+            // Mode 3 keeps the normal phase bits for Fem/Huge, while Male
+            // attached phases also carry AIRBORNE as a private discriminator.
+            // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
+            // the corrected-full helpers without consuming the canary's
+            // eighth and final WebSwingDev overlay slot.
+            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
+                seqSetState(e->seq->state, 1, male_state_bit);
+
+            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != e->motion->web_swing_anim_phase && enter_state_bit >= 0)
+                seqSetState(e->seq->state, 1, enter_state_bit);
+
+            if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+                seqSetState(e->seq->state, 1, state_bits[0]);
+            else if (phase == WEBSWING_ANIM_PHASE_ATTACHED && state_bits[1] >= 0)
+                seqSetState(e->seq->state, 1, state_bits[1]);
+            else if (phase == WEBSWING_ANIM_PHASE_DESCEND && state_bits[1] >= 0 && state_bits[2] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[2]);
+            }
+            else if (phase == WEBSWING_ANIM_PHASE_BOTTOM && state_bits[1] >= 0 && state_bits[3] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[3]);
+            }
+            else if (phase == WEBSWING_ANIM_PHASE_ASCEND && state_bits[1] >= 0 && state_bits[4] >= 0)
+            {
+                seqSetState(e->seq->state, 1, state_bits[1]);
+                seqSetState(e->seq->state, 1, state_bits[4]);
+            }
+
+            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+                seqSetState(e->seq->state, 1, state_bits[0]);
+        }
         #undef WEBSWING_ANIM_MODE_SAFE_NONE
         #undef WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL
         #undef WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY
+        #undef WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED
     }
 
     if (phase != e->motion->web_swing_anim_phase)
