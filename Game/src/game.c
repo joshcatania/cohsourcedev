@@ -269,9 +269,8 @@ void parseArgs(int argc,char **argv)
         }
         if (stricmp(argv[i], "-capturecharacter") == 0 && i + 1 < argc)
         {
-            // Capture-only character selection.  The normal quick-login
-            // path intentionally uses slot 1 for fresh accounts; deterministic
-            // forensic captures sometimes need a named existing character in
+            // Optional named quick-login selection. Deterministic captures and
+            // development gameplay sessions may need an existing character in
             // a later slot without changing database ordering.
             Strncpyt(commandLineCaptureCharacter, argv[i + 1]);
             commandLineCaptureCharacterSet = 1;
@@ -1040,7 +1039,7 @@ void checkQuickLogin(void)
         // a fresh development account can create a reproducible character.
         if (auth_result && db_result && db_info.players && quick_slot >= 0 && quick_slot < db_info.max_slots) {
             int newchar;
-            if (game_state.capture_state && commandLineCaptureCharacterSet)
+            if (commandLineCaptureCharacterSet)
             {
                 int requested_slot = -1;
                 int slot;
@@ -1058,7 +1057,7 @@ void checkQuickLogin(void)
                     game_startupTracef("character.selection.requested-not-found name=%s",
                                        commandLineCaptureCharacter);
                     writeConsole(OUTPUT_ERROR,
-                                 "Capture character not found: %s",
+                                 "Requested quick-login character not found: %s",
                                  commandLineCaptureCharacter);
                     return;
                 }
