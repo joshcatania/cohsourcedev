@@ -641,6 +641,16 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         return;
     }
 
+    // Landing ends an automatic continuation.  A later attachment while the
+    // input is still held is a fresh street/ground start and receives the
+    // normal launch catch instead of inheriting chain suppression.
+    if(motion->web_swing_chain_reacquire && !motion->falling && !motion->jumping)
+    {
+        motion->web_swing_chain_armed = 0;
+        motion->web_swing_chain_reacquire = 0;
+        zeroVec3(motion->web_swing_previous_anchor);
+    }
+
     if(!motion->web_swing_attached && !motion->web_swing_state_diag_latched)
     {
         motion->web_swing_state_diag_latched = 1;
