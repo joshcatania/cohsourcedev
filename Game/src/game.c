@@ -274,6 +274,7 @@ void parseArgs(int argc,char **argv)
             // a later slot without changing database ordering.
             Strncpyt(commandLineCaptureCharacter, argv[i + 1]);
             commandLineCaptureCharacterSet = 1;
+            game_state.quick_login = 1;
             game_startupTracef("capturecharacter.argument=%s", commandLineCaptureCharacter);
             i += 2;
             continue;
