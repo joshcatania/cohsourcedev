@@ -1,6 +1,6 @@
 {
-  "version": 3,
-  "generator": "create_webswing_animation.py or prove_mixamo_anatomical_pose.py -> blender_export_animx.py -> GetAnimation2 -compile-animx",
+  "version": 4,
+  "generator": "build_issue36_rest_basis_full.ps1 or prior tracked generators -> blender_export_animx.py -> GetAnimation2 -compile-animx",
   "animations": [
     {
       "type": "MALE",
@@ -25,6 +25,14 @@
       "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM.anim",
       "bytes": 3251,
       "sha256": "e1cb732169ba920b03d164ce062ec0a18d80099cba96184f082ba29d3512e9b2"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL",
+      "frames": 60,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL.anim",
+      "bytes": 8476,
+      "sha256": "acc0fc2d0ce4f382ec1cbf6675dfb3f6f96747080ffe24f6cc1c53866dfec840"
     },
     {
       "type": "MALE",
