@@ -32,6 +32,9 @@ S32 g_cohsourcedev_anim_canary;
 // Issue 36 forensic safe baseline: custom Web Swing move selection stays off
 // during normal gameplay unless explicitly re-enabled for gated canary work.
 S32 g_cohsourcedev_webswing_anim_selection;
+// -1 leaves the authoritative backend unchanged; 0/1 requests the matching
+// Web Swing backend after the controlled player reaches a map.
+S32 g_cohsourcedev_webswing_physics_selection = -1;
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
 {
@@ -157,6 +160,8 @@ Cmd control_cmds[] =
                         "WebSwingDev-only authored animation canary" },
     { 9, "webswinganim", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_anim_selection }},0,
                         "WebSwingDev custom Web Swing move selection (forensic safe baseline default: 0)" },
+    { 9, "webswingphysics", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_physics_selection }},0,
+                        "WebSwingDev Web Swing physics backend (0 REAL_ANCHOR, 1 SKY_ASSISTED)" },
     { 1, "predict", 0, {{ PARSETYPE_S32, &control_state.predict }},0,
                         "turn client side prediction on/off" },
     { 9, "notimeout", CONCMD_NOTIMEOUT, {{ PARSETYPE_S32, &control_state.notimeout }}, 0,

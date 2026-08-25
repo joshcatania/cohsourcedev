@@ -300,6 +300,16 @@ void parseArgs(int argc,char **argv)
             i += 2;
             continue;
         }
+        if (stricmp(argv[i], "-webswingphysics") == 0 && i + 1 < argc)
+        {
+            int mode = atoi(argv[i + 1]);
+            if (mode < 0 || mode > 1)
+                mode = 1;
+            g_cohsourcedev_webswing_physics_selection = mode;
+            game_startupTracef("webswingphysics.argument=%d", g_cohsourcedev_webswing_physics_selection);
+            i += 2;
+            continue;
+        }
         if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
         {
             Strncpyt(commandLinePassword, argv[i + 1]);

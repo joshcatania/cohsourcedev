@@ -1597,6 +1597,17 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     motion->input.max_jump_height    = pmotionGetMaxJumpHeight(e, controls);
     motion->input.stunned            = controls->server_state->stun;
     motion->input.web_swing_enabled  = controls->server_state->web_swing;
+    motion->input.web_swing_backend  = controls->server_state->web_swing_backend;
+
+    if (e == controlledPlayerPtr() && g_cohsourcedev_webswing_physics_selection >= 0 &&
+        controls->server_state->web_swing_backend != g_cohsourcedev_webswing_physics_selection &&
+        (motion->tickCounter % 30) == 0)
+    {
+        char backendCommand[32];
+        sprintf_s(backendCommand, sizeof(backendCommand), "webswingbackend %d",
+                  g_cohsourcedev_webswing_physics_selection);
+        commAddInput(backendCommand);
+    }
 
     if (global_state.webswing_dev && e == controlledPlayerPtr())
     {
@@ -2358,6 +2369,7 @@ static void playerReceiveServerControlState(Packet *pak)
 
         server_state.no_jump_repeat =            pktGetBits(pak, 1);
         server_state.web_swing =                 pktGetBits(pak, 1);
+        server_state.web_swing_backend =         pktGetBits(pak, 1);
         server_state.web_swing_test_no_attach =  pktGetBits(pak, 1);
 
         if(!oo_packet)
@@ -2409,8 +2421,10 @@ static void playerReceiveServerControlState(Packet *pak)
             scs->no_ent_collision =                server_state.no_ent_collision;
             scs->no_jump_repeat =                server_state.no_jump_repeat;
             scs->web_swing =                     server_state.web_swing;
+            scs->web_swing_backend =             server_state.web_swing_backend;
             scs->web_swing_test_no_attach =     server_state.web_swing_test_no_attach;
             motion->input.web_swing_enabled =    server_state.web_swing;
+            motion->input.web_swing_backend =    server_state.web_swing_backend;
 
             if(motion->input.flying != scs->fly)
             {

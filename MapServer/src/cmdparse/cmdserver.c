@@ -1119,6 +1119,8 @@ Cmd server_cmds[] =
                             "Disable jump auto-repeat" },
     { 0, "webswing",        SCMD_WEBSWING, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                             "Enable or disable prototype web swinging" },
+    { 0, "webswingbackend", SCMD_WEBSWING_BACKEND, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
+                            "Select Web Swing physics: 0 REAL_ANCHOR, 1 SKY_ASSISTED" },
     { 9, "webswing_test_no_attach", SCMD_WEBSWING_TEST_NO_ATTACH, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                             "TEST ONLY: keep Web Swing launch jump but suppress anchor acquisition" },
     { 9, "missionx",        SCMD_MISSIONX, {{0}}, CMDF_HIDEVARS,
@@ -5876,6 +5878,11 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             if(e)
             {
                 setWebSwing(e, tmp_int);
+            }
+        xcase SCMD_WEBSWING_BACKEND:
+            if(e)
+            {
+                setWebSwingBackend(e, tmp_int);
             }
         xcase SCMD_WEBSWING_TEST_NO_ATTACH:
             if(e)

@@ -36,6 +36,16 @@ typedef struct SurfaceParams
     F32        max_speed;
 } SurfaceParams;
 
+typedef enum WebSwingAssistPhase
+{
+    WEB_SWING_ASSIST_NONE = 0,
+    WEB_SWING_ASSIST_LAUNCH,
+    WEB_SWING_ASSIST_ASCEND,
+    WEB_SWING_ASSIST_APEX,
+    WEB_SWING_ASSIST_DESCEND,
+    WEB_SWING_ASSIST_BOTTOM,
+} WebSwingAssistPhase;
+
 typedef enum SurfParamIndex
 {
     SURFPARAM_GROUND,
@@ -86,6 +96,7 @@ typedef struct MotionStateInput {
     U32                    stunned            : 1;
     U32                    jump_released    : 1;
     U32                    web_swing_enabled: 1;
+    U32                    web_swing_backend: 1;
 } MotionStateInput;
 
 typedef struct MotionState
@@ -138,6 +149,10 @@ typedef struct MotionState
     U32                    web_swing_chain_ascent_seen : 1;
     U32                    web_swing_next_anchor_valid : 1;
     U32                    web_swing_ground_launch_active : 1;
+    U32                    web_swing_active_backend : 1;
+    U32                    web_swing_assist_phase;
+    U32                    web_swing_assist_phase_ticks;
+    U32                    web_swing_assist_cycle_id;
     U32                    web_swing_anim_phase;
     U32                    web_swing_anim_segment_id;
     U32                    web_swing_anim_phase_segment_id;

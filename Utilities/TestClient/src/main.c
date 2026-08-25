@@ -213,6 +213,7 @@ int g_direct_db_mode = 0;
 int g_agent_smoke_map_connected = 0;
 char g_agent_smoke_status_path[MAX_PATH] = {0};
 int g_web_swing_smoke = 0;
+int g_web_swing_sky_assisted = 0;
 int g_web_swing_smoke_complete = 0;
 int g_web_swing_jump_smoke = 0;
 int g_web_swing_jump_smoke_complete = 0;
@@ -258,6 +259,8 @@ static void webSwingSmokeLoop(void)
     static F32 forward_peak_displacement = 0.0f;
     static int forward_measure_active = 0;
     static Entity *player;
+    static int intent45_attach_reported = 0;
+    static int intent90_attach_reported = 0;
     Vec3 displacement;
 
     if (!g_web_swing_smoke || !commConnected() || do_map_xfer ||
@@ -268,7 +271,9 @@ static void webSwingSmokeLoop(void)
     {
         stage = 20;
         stage_frames = 0;
-        printf("WEB_SWING_SMOKE begin\n");
+        commAddInput(g_web_swing_sky_assisted ? "webswingbackend 1" : "webswingbackend 0");
+        printf("WEB_SWING_SMOKE begin backend=%s\n",
+               g_web_swing_sky_assisted ? "SKY_ASSISTED" : "REAL_ANCHOR");
     }
 
     switch (stage)
@@ -708,6 +713,7 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ >= 8)
             {
                 printf("WEB_SWING_SMOKE phase=pose_f_establish_diagonal_momentum\n");
+                intent45_attach_reported = 0;
                 stage = 14;
                 stage_frames = 0;
             }
@@ -717,13 +723,25 @@ static void webSwingSmokeLoop(void)
             if (stage_frames == 0)
                 doJump();
             updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
-            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 70, timeGetTime());
-            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames >= 60 && stage_frames < 200, timeGetTime());
+            /* Build diagonal momentum first, then make a clean intent change.
+             * One frame separates the authoritative INPUT transition from
+             * Web Swing enablement while preserving stale momentum. */
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 60, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames >= 0 && stage_frames < 200, timeGetTime());
             updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
             if (stage_frames == 60)
             {
-                printf("WEB_SWING_SMOKE phase=pose_f_enable_after_rightward_momentum_diagonal\n");
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=60 release=RIGHT apply=FORWARD\n");
+            }
+            if (stage_frames == 61)
+            {
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=61 enable=WEBSWING\n");
                 commAddInput("webswing 1");
+            }
+            if (player->motion->web_swing_attached && !intent45_attach_reported)
+            {
+                intent45_attach_reported = 1;
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=%d attachment=observed\n", stage_frames);
             }
             if (stage_frames >= 160)
             {
@@ -758,6 +776,7 @@ static void webSwingSmokeLoop(void)
             if (stage_frames++ >= 8)
             {
                 printf("WEB_SWING_SMOKE phase=pose_g_establish_strafe_momentum\n");
+                intent90_attach_reported = 0;
                 stage = 17;
                 stage_frames = 0;
             }
@@ -769,10 +788,20 @@ static void webSwingSmokeLoop(void)
             updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 60, timeGetTime());
             updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames >= 60 && stage_frames < 200, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
             if (stage_frames == 60)
             {
-                printf("WEB_SWING_SMOKE phase=pose_g_enable_after_rightward_momentum_forward\n");
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=60 release=RIGHT apply=FORWARD\n");
+            }
+            if (stage_frames == 61)
+            {
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=61 enable=WEBSWING\n");
                 commAddInput("webswing 1");
+            }
+            if (player->motion->web_swing_attached && !intent90_attach_reported)
+            {
+                intent90_attach_reported = 1;
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=%d attachment=observed\n", stage_frames);
             }
             if (stage_frames >= 160)
             {
@@ -1357,6 +1386,8 @@ void checkArgs(int argc, char **argv) {
             g_agent_smoke_status_path[sizeof(g_agent_smoke_status_path) - 1] = 0;
         } else if (CMDEQ("-webswing-smoke")) {
             g_web_swing_smoke = 1;
+        } else if (CMDEQ("-webswing-sky-assisted")) {
+            g_web_swing_sky_assisted = 1;
         } else if (CMDEQ("-webswing-jump-smoke")) {
             g_web_swing_jump_smoke = 1;
         } else if (CMDEQ("-swing-test-prep")) {

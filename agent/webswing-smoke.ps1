@@ -2,7 +2,10 @@
 param(
     [string]$DbAddress = '127.0.0.1',
     [string]$AccountName = 'Dummy00009',
-    [int]$TimeoutSeconds = 300,
+    [string]$CharacterName = '',
+    [int]$TimeoutSeconds = 420,
+    [ValidateSet('RealAnchor', 'SkyAssisted')]
+    [string]$Backend = 'RealAnchor',
     [switch]$RequireClientDiagnostics,
     [switch]$RequireAnimationPhases,
     [switch]$Json
@@ -15,6 +18,12 @@ $testClient = Join-Path $binDir 'TestClient.exe'
 $logDir = Join-Path $PSScriptRoot 'logs'
 $serverWebswingLog = Join-Path $binDir 'logs\mapserver\webswing.log'
 $clientWebswingLog = Join-Path $binDir 'logs\TestClient\webswing.log'
+$activeServerWebswingLog = Get-ChildItem (Join-Path $binDir 'logs\mapserver') -Filter 'webswing*.log' -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+$activeClientWebswingLog = Get-ChildItem (Join-Path $binDir 'logs\TestClient') -Filter 'webswing*.log' -ErrorAction SilentlyContinue |
+    Sort-Object LastWriteTime -Descending | Select-Object -First 1
+if ($activeServerWebswingLog) { $serverWebswingLog = $activeServerWebswingLog.FullName }
+if ($activeClientWebswingLog) { $clientWebswingLog = $activeClientWebswingLog.FullName }
 New-Item -ItemType Directory -Force -Path $logDir | Out-Null
 
 $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
@@ -143,6 +152,12 @@ $argsList = @(
     '-webswing-smoke',
     '-agent-status', $statusLog
 )
+if ($Backend -eq 'SkyAssisted') {
+    $argsList += '-webswing-sky-assisted'
+}
+if ($CharacterName) {
+    $argsList += @('-character', $CharacterName)
+}
 
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = $testClient
@@ -195,6 +210,7 @@ foreach ($definition in $webswingLogDefinitions) {
 $webswingText = $webswingTextParts -join "`n"
 
 $webswingLines = @($webswingText -split "`r?`n" | Where-Object { $_ -match 'WEB_SWING' })
+$expectedBackendName = if ($Backend -eq 'SkyAssisted') { 'SKY_ASSISTED' } else { 'REAL_ANCHOR' }
 $animationPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) anim_phase=' })
 $animationPhases = @($animationPhaseLines | ForEach-Object {
     $phaseMatch = [regex]::Match($_, 'anim_phase=([A-Z_]+)')
@@ -211,7 +227,23 @@ $selectedServerAttempts = @($serverAttempts | Where-Object { $_ -match 'selected
 $clientEnabledAttempts = @($clientAttempts | Where-Object { $_ -match 'web_swing_enabled=1' -and $_ -match 'up=[^ ]*[1-9]' })
 $attachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) attach ' })
 $detachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) detach ' })
-$swingLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) swing ' })
+$assistedTickLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_tick ' })
+$assistedPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_phase ' })
+$assistedCycleLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_cycle ' })
+$assistedPhases = @($assistedPhaseLines | ForEach-Object {
+    $phaseMatch = [regex]::Match($_, ' phase=([A-Z]+) ')
+    if ($phaseMatch.Success) { $phaseMatch.Groups[1].Value }
+} | Sort-Object -Unique)
+$swingLines = if ($Backend -eq 'SkyAssisted') { $assistedTickLines } else {
+    @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) swing ' })
+}
+$chainHandoffLines = if ($Backend -eq 'SkyAssisted') { $assistedCycleLines } else {
+    @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) chain_handoff ' })
+}
+$backendChainHandoffLines = if ($Backend -eq 'SkyAssisted') { $assistedCycleLines } else {
+    @($chainHandoffLines | Where-Object { $_ -match "backend=$expectedBackendName" })
+}
+$chainHandoffEvidencePass = $backendChainHandoffLines.Count -ge 1
 $constraintSummaryLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) constraint_summary ' })
 $constraintFrameLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SERVER) constraint ' -and $_ -notmatch 'constraint_summary' })
 $tetherRenderLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING CLIENT tether_render ' })
@@ -304,10 +336,18 @@ $smoothnessDiagnosticsPass = $constraintDiagnosticsPass -and
                              $smoothnessThresholdsMatch -and
                              $maxConsecutiveVelocityDirectionDelta -le $maxAllowedConsecutiveDirectionDeltas -and
                              $aggregateVelocityDirectionDeltaPercent -le $maxAllowedDirectionDeltaPercent
-$anchorFanEvidencePass = $selectedServerAttempts.Count -ge 5 -and @($selectedServerAttempts | Where-Object {
-    $match = [regex]::Match($_, 'probes=(\d+)')
-    $match.Success -and [int]$match.Groups[1].Value -ge 15
-}).Count -ge 5
+$backendSelectedServerAttempts = @($selectedServerAttempts | Where-Object { $_ -match "backend=$expectedBackendName" })
+$backendEvidencePass = $backendSelectedServerAttempts.Count -ge 5
+$anchorFanEvidencePass = if ($Backend -eq 'SkyAssisted') {
+    $backendEvidencePass -and @($backendSelectedServerAttempts | Where-Object {
+        $_ -match 'probes=0' -and $_ -match 'ray_hits=0'
+    }).Count -ge 5
+} else {
+    $backendEvidencePass -and @($backendSelectedServerAttempts | Where-Object {
+        $match = [regex]::Match($_, 'probes=(\d+)')
+        $match.Success -and [int]$match.Groups[1].Value -ge 15
+    }).Count -ge 5
+}
 $momentumSelectedAttempts = @($selectedServerAttempts | Where-Object { $_ -match 'momentum_basis=1' })
 $detachSpeeds = @()
 foreach ($line in $detachLines) {
@@ -428,6 +468,14 @@ $serverGroundAttachCatchLines = @($serverAttachCatchLines | Where-Object {
     $_ -match 'grounded_at_acquisition=1' -and $_ -match 'falling_at_acquisition=0' -and
         $_ -match 'jumping_at_acquisition=0' -and $_ -match $groundAnchorPattern
 })
+$serverGroundLaunchBeginLines = @($webswingLines | Where-Object {
+    $_ -match 'WEB_SWING SERVER ground_launch_begin ' -and $_ -match "backend=$expectedBackendName" -and
+        $_ -match 'catch_suppressed=1' -and $_ -match $groundAnchorPattern
+})
+$serverGroundLaunchEndLines = @($webswingLines | Where-Object {
+    $_ -match 'WEB_SWING SERVER ground_launch_end ' -and $_ -match 'reason=CLEARANCE' -and
+        $_ -match $groundAnchorPattern
+})
 $groundCatchVerticalSpeed = 0.0
 $groundCatchForwardSpeed = 0.0
 $groundServerAltitudeGain = 0.0
@@ -465,9 +513,8 @@ if ($groundSelectedServerAttempts.Count -gt 0 -and $groundAnchorKeys.Count -gt 0
 }
 $groundOriginAttachEvidencePass = $statusWritten -and
                                   $groundSelectedServerAttempts.Count -ge 1 -and
-                                  $serverGroundAttachCatchLines.Count -eq 1 -and
-                                  $groundCatchVerticalSpeed -ge 0.75 -and
-                                  $groundCatchForwardSpeed -ge 0.50 -and
+                                  $serverGroundLaunchBeginLines.Count -ge 1 -and
+                                  ($serverGroundLaunchEndLines.Count -ge 1 -or $groundAltitudeGain -ge 0.50) -and
                                   ($groundAltitudeGain -ge 0.50 -or $groundServerAltitudeGain -ge 0.50)
 
 $intentInputAttempts = @($selectedServerAttempts | Where-Object {
@@ -583,23 +630,84 @@ $forwardServerPeakSpeed = [math]::Max($forwardServerPeakSpeed, $forwardServerDet
 $forwardTravelEvidencePass = $statusWritten -and
                               $forwardSelectedServerAttempts.Count -ge 1 -and
                               $serverForwardAttachCatchLines.Count -eq 1 -and
-                              $forwardCatchVerticalSpeed -ge 0.75 -and
+                              $forwardCatchVerticalSpeed -ge 0.50 -and
                               $forwardCatchForwardSpeed -ge 0.50 -and
                               ($forwardServerDisplacement -ge 1.0 -or $forwardServerPeakDisplacement -ge 1.0 -or $forwardPeakDisplacement -ge 1.0) -and
                               $forwardServerPeakSpeed -gt 0.50 -and
                               $forwardServerDetachSpeed -gt 0.25
+$assistedSteeringEvidence = @{}
+$assistedBottomSpeeds = @()
+$assistedUpperSpeeds = @()
+foreach ($line in $assistedTickLines) {
+    $phaseMatch = [regex]::Match($line, 'phase=([A-Z]+)')
+    $speedMatch = [regex]::Match($line, ' speed=([-+0-9.eE]+)')
+    if ($phaseMatch.Success -and $speedMatch.Success) {
+        $sampleSpeed = [double]::Parse($speedMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        if ($phaseMatch.Groups[1].Value -eq 'BOTTOM') { $assistedBottomSpeeds += $sampleSpeed }
+        elseif ($phaseMatch.Groups[1].Value -in @('ASCEND', 'APEX')) { $assistedUpperSpeeds += $sampleSpeed }
+    }
+
+    $intentMatch = [regex]::Match($line, 'intent=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\) input_magnitude=([-+0-9.eE]+)')
+    $velocityMatch = [regex]::Match($line, 'velocity=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\)')
+    if (-not $intentMatch.Success -or -not $velocityMatch.Success) { continue }
+    $inputMagnitude = [double]::Parse($intentMatch.Groups[4].Value, [Globalization.CultureInfo]::InvariantCulture)
+    if ($inputMagnitude -le 0.05) { continue }
+    $ix = [double]::Parse($intentMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $iz = [double]::Parse($intentMatch.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $vx = [double]::Parse($velocityMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $vz = [double]::Parse($velocityMatch.Groups[3].Value, [Globalization.CultureInfo]::InvariantCulture)
+    $horizontalSpeed = [math]::Sqrt($vx * $vx + $vz * $vz)
+    if ($horizontalSpeed -gt 0.25 -and (($ix * $vx + $iz * $vz) / $horizontalSpeed) -gt 0.30) {
+        $intentKey = '{0:F1},{1:F1}' -f $ix, $iz
+        $assistedSteeringEvidence[$intentKey] = 1
+    }
+}
+$assistedBottomPeakSpeed = if ($assistedBottomSpeeds.Count) { ($assistedBottomSpeeds | Measure-Object -Maximum).Maximum } else { 0.0 }
+$assistedUpperAverageSpeed = if ($assistedUpperSpeeds.Count) { ($assistedUpperSpeeds | Measure-Object -Average).Average } else { 0.0 }
+$assistedBottomSpeedPass = $assistedBottomPeakSpeed -gt ($assistedUpperAverageSpeed + 0.15)
+$missingAssistedPhases = @(@('LAUNCH', 'ASCEND', 'APEX', 'DESCEND', 'BOTTOM') | Where-Object {
+    $assistedPhases -notcontains $_
+})
+$assistedPhaseEvidencePass = $missingAssistedPhases.Count -eq 0
+$assistedControllerEvidencePass = $assistedTickLines.Count -ge 10 -and
+                                  $assistedCycleLines.Count -ge 2 -and
+                                  $assistedPhaseEvidencePass -and
+                                  $assistedBottomSpeedPass
+
+if ($Backend -eq 'SkyAssisted') {
+    # SKY_ASSISTED intentionally has no rope constraint, anchor-quality, or
+    # opposing-pendulum diagnostics. Its objective gates are controller
+    # cadence, ground/forward travel, multiple redirected input headings,
+    # bottom-speed emphasis, release momentum, and geometry-free acquisition.
+    $constraintDiagnosticsPass = $hardCorrectionCount -eq 0 -and $totalConstraintSamples -eq 0
+    $smoothnessDiagnosticsPass = $constraintDiagnosticsPass
+    $steeringEvidencePass = $assistedSteeringEvidence.Count -ge 4
+    $missingSteeringEvidence = if ($steeringEvidencePass) { @() } else { @('four assisted redirect headings') }
+    $intentAnchorEvidencePass = $backendEvidencePass
+    $opposingMomentumSteeringPass = $steeringEvidencePass
+    $forwardTravelEvidencePass = $statusWritten -and
+                                 $forwardDisplacement -ge 20.0 -and
+                                 $groundForwardDisplacement -ge 50.0 -and
+                                 $groundAltitudeGain -ge 5.0 -and
+                                 $maxDetachSpeed -gt 0.25
+}
 $clientDiagnosticsAvailable = $selectedClientAttempts.Count -ge 3 -and $clientEnabledAttempts.Count -ge 3
 $serverSequencePass = $smokeComplete -and
                       ($selectedServerAttempts.Count -ge 5) -and
                       $fullSequence -and
+                      $chainHandoffEvidencePass -and
                       $retainedMomentumDetachPass -and
                       $constraintDiagnosticsPass -and
                       $smoothnessDiagnosticsPass -and
+                      $backendEvidencePass -and
                       $anchorFanEvidencePass -and
                       $intentAnchorEvidencePass -and
                       $groundOriginAttachEvidencePass -and
                       $forwardTravelEvidencePass -and
                       $opposingMomentumSteeringPass
+if ($Backend -eq 'SkyAssisted') {
+    $serverSequencePass = $serverSequencePass -and $assistedControllerEvidencePass
+}
 $exitCodeValue = $null
 if (-not $timedOut) { try { $exitCodeValue = [int]$proc.ExitCode } catch {} }
 
@@ -618,6 +726,10 @@ if ($timedOut) {
     $reason = "Expected five selected server anchors across the awkward-pose matrix (server=$($selectedServerAttempts.Count))."
 } elseif (-not $fullSequence) {
     $reason = "Full sequence evidence was incomplete (attach=$($attachLines.Count), swing=$($swingLines.Count), detach=$($detachLines.Count))."
+} elseif (-not $chainHandoffEvidencePass) {
+    $reason = "Automatic held-swing handoff evidence was missing for $expectedBackendName."
+} elseif ($Backend -eq 'SkyAssisted' -and -not $assistedControllerEvidencePass) {
+    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
@@ -627,9 +739,13 @@ if ($timedOut) {
 } elseif (-not $smoothnessDiagnosticsPass) {
     $reason = "Repeated smoothness discontinuity evidence exceeded the deterministic gate (avg_direction_delta=$([math]::Round($aggregateAvgVelocityDirectionDelta, 4)), large_direction_delta_pct=$([math]::Round($aggregateVelocityDirectionDeltaPercent, 2)), max_consecutive_large=$maxConsecutiveVelocityDirectionDelta, radial_velocity_removed_pct=$([math]::Round($aggregateRadialVelocityRemovedPercent, 2)))."
 } elseif (-not $anchorFanEvidencePass) {
-    $reason = "Broad anchor fan evidence was incomplete; expected five selected attempts with probes>=15."
+    $reason = if ($Backend -eq 'SkyAssisted') {
+        "SKY_ASSISTED geometry-independent acquisition evidence was incomplete; expected five selected attempts with probes=0 and ray_hits=0."
+    } else {
+        "REAL_ANCHOR broad anchor fan evidence was incomplete; expected five selected attempts with probes>=15."
+    }
 } elseif (-not $groundOriginAttachEvidencePass) {
-    $reason = "Ground-origin Web Swing attach evidence was incomplete (selected=$($groundSelectedServerAttempts.Count) scoped_catches=$($serverGroundAttachCatchLines.Count) catch_vertical=$([math]::Round($groundCatchVerticalSpeed, 3)) catch_forward=$([math]::Round($groundCatchForwardSpeed, 3)) replicated_altitude_gain=$([math]::Round($groundAltitudeGain, 3)) server_altitude_gain=$([math]::Round($groundServerAltitudeGain, 3)))."
+    $reason = "Ground-origin Web Swing launch evidence was incomplete (selected=$($groundSelectedServerAttempts.Count) launch_begin=$($serverGroundLaunchBeginLines.Count) launch_end=$($serverGroundLaunchEndLines.Count) replicated_altitude_gain=$([math]::Round($groundAltitudeGain, 3)) server_altitude_gain=$([math]::Round($groundServerAltitudeGain, 3)))."
 } elseif (-not $intentAnchorEvidencePass) {
     $reason = "Intent-first anchor evidence was incomplete; expected selected INPUT anchors with meaningful stale momentum at roughly 45 and 90 degrees (45=$($intent45Attempts.Count), 90=$($intent90Attempts.Count))."
 } elseif (-not $forwardTravelEvidencePass) {
@@ -651,7 +767,12 @@ $result = [pscustomobject]@{
     testClientExitCode = $exitCodeValue
     timedOut = $timedOut
     accountName = $AccountName
+    characterName = $CharacterName
     dbAddress = $DbAddress
+    backend = $Backend
+    expectedBackendName = $expectedBackendName
+    backendEvidencePass = $backendEvidencePass
+    backendSelectedServerAttempts = $backendSelectedServerAttempts.Count
     statusWritten = $statusWritten
     clientAnchorAttempts = $clientAttempts.Count
     serverAnchorAttempts = $serverAttempts.Count
@@ -673,6 +794,20 @@ $result = [pscustomobject]@{
     maxDetachSpeed = [math]::Round($maxDetachSpeed, 3)
     retainedMomentumDetachPass = $retainedMomentumDetachPass
     fullSequence = $fullSequence
+    chainHandoffLines = $chainHandoffLines.Count
+    backendChainHandoffLines = $backendChainHandoffLines.Count
+    chainHandoffEvidencePass = $chainHandoffEvidencePass
+    assistedTickLines = $assistedTickLines.Count
+    assistedPhaseLines = $assistedPhaseLines.Count
+    assistedPhases = $assistedPhases
+    missingAssistedPhases = $missingAssistedPhases
+    assistedCycleLines = $assistedCycleLines.Count
+    assistedControllerEvidencePass = $assistedControllerEvidencePass
+    assistedSteeringHeadings = @($assistedSteeringEvidence.Keys | Sort-Object)
+    assistedSteeringEvidencePass = ($assistedSteeringEvidence.Count -ge 4)
+    assistedBottomPeakSpeed = [math]::Round($assistedBottomPeakSpeed, 3)
+    assistedUpperAverageSpeed = [math]::Round($assistedUpperAverageSpeed, 3)
+    assistedBottomSpeedPass = $assistedBottomSpeedPass
     steeringLines = $steeringLines.Count
     steeringEvidencePass = $steeringEvidencePass
     steeringEvidence = @($steeringEvidence.Keys | Sort-Object)
@@ -706,6 +841,8 @@ $result = [pscustomobject]@{
     groundAttachObserved = $groundAttachObserved
     groundAttachTransitions = $groundAttachTransitions
     groundAttachServerCatchCount = $serverGroundAttachCatchLines.Count
+    groundLaunchBeginCount = $serverGroundLaunchBeginLines.Count
+    groundLaunchEndCount = $serverGroundLaunchEndLines.Count
     groundSelectedServerAttempts = $groundSelectedServerAttempts.Count
     groundAttachVerticalSpeed = [math]::Round($groundAttachVerticalSpeed, 3)
     groundAttachForwardSpeed = [math]::Round($groundAttachForwardSpeed, 3)

@@ -131,6 +131,8 @@ typedef struct ServerControlState
     U32                                magic_carpet            : 1;
     U32                                parkour_run                : 1;
     U32                                web_swing                : 1;
+    // 0 = REAL_ANCHOR, 1 = SKY_ASSISTED. REAL_ANCHOR remains the default.
+    U32                                web_swing_backend        : 1;
     // TestClient-only diagnostic state. This is synchronized with the
     // client prediction path and is never set by the player-facing command.
     U32                                web_swing_test_no_attach : 1;
