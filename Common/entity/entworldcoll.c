@@ -4,6 +4,7 @@
 #include <utilitieslib/utils/error.h>
 #include "entity/entity.h"
 #include "gridcoll/gridcoll.h"
+#include "cmdparse/cmdcommon.h"
 #include "varutils.h"
 #include "entity/motion.h"
 #include "group/groupscene.h"
@@ -41,6 +42,16 @@
 #define WEB_INTENT_INPUT_THRESHOLD      0.05f
 #define WEB_INTENT_MOMENTUM_MIN_SPEED   0.25f
 #define WEB_MAX_SPEED              4.50f
+#define WEB_CHAIN_ARM_ARC_HEIGHT        0.35f
+#define WEB_CHAIN_ARM_DOWN_SPEED       -0.10f
+#define WEB_CHAIN_RELEASE_UP_SPEED      0.18f
+#define WEB_CHAIN_MIN_FORWARD_SPEED     0.15f
+#define WEB_CHAIN_PREVIOUS_ANCHOR_EXCLUSION 10.0f
+#define WEB_ANCHOR_VERTICALITY_WEIGHT   12.0f
+#define WEB_ANCHOR_LATERAL_PENALTY      18.0f
+#define WEB_LATERAL_REPULSION_ACCEL      0.035f
+#define WEB_LATERAL_REPULSION_MIN_DIST   6.0f
+#define WEB_LATERAL_REPULSION_FULL_DIST 24.0f
 
 #if SERVER
 #define WEB_SWING_LOG_SIDE "SERVER"
@@ -230,6 +241,9 @@ typedef struct WebSwingAnchorSearchStats
     F32 selected_intent_alignment;
     F32 selected_momentum_alignment;
     F32 selected_forward_alignment;
+    F32 selected_verticality;
+    F32 selected_lateral_alignment;
+    int previous_anchor_rejects;
     Vec3 selected_anchor;
     F32 selected_rope_length;
 } WebSwingAnchorSearchStats;
@@ -324,12 +338,15 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
         Vec3 direction;
         Vec3 end;
         Vec3 delta;
+        Vec3 candidate_direction;
         CollInfo coll = {0};
         F32 distance;
         F32 height;
         F32 travel_alignment;
         F32 forward_alignment;
         F32 momentum_alignment = 0.0f;
+        F32 verticality;
+        F32 lateral_alignment;
         F32 score;
 
         scaleVec3(intent, probes[i].forward, direction);
@@ -348,11 +365,20 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
 
         ++stats->collision_ray_hits;
         copyVec3(coll.mat[3], delta);
-        subVec3(delta, start, delta);
-        distance = normalVec3(delta);
+        subVec3(delta, ENTPOS(e), candidate_direction);
+        distance = normalVec3(candidate_direction);
+        if(e->motion->web_swing_chain_reacquire &&
+           distance3(coll.mat[3], e->motion->web_swing_previous_anchor) < WEB_CHAIN_PREVIOUS_ANCHOR_EXCLUSION)
+        {
+            ++stats->previous_anchor_rejects;
+            continue;
+        }
+
         height = coll.mat[3][1] - ENTPOSY(e);
-        travel_alignment = dotVec3(delta, intent);
-        forward_alignment = dotVec3(delta, forward);
+        travel_alignment = dotVec3(candidate_direction, intent);
+        forward_alignment = dotVec3(candidate_direction, forward);
+        verticality = MAX(0.0f, candidate_direction[1]);
+        lateral_alignment = fabs(dotVec3(candidate_direction, travel_right));
 
         if(distance < WEB_MIN_ROPE_LENGTH)
             ++stats->distance_rejects;
@@ -362,13 +388,15 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
             continue;
 
         if(has_momentum)
-            momentum_alignment = dotVec3(delta, momentum);
+            momentum_alignment = dotVec3(candidate_direction, momentum);
 
         // Prefer high, intent-aligned real collision geometry while retaining
         // forward/fallback coverage and using meaningful momentum only as a
         // secondary continuity signal.
         score = height * 1.5f + travel_alignment * 30.0f +
-                forward_alignment * 5.0f + momentum_alignment * 8.0f -
+                forward_alignment * 5.0f + momentum_alignment * 8.0f +
+                verticality * WEB_ANCHOR_VERTICALITY_WEIGHT -
+                lateral_alignment * WEB_ANCHOR_LATERAL_PENALTY -
                 distance * 0.20f;
         if(score > best_score)
         {
@@ -378,6 +406,8 @@ static int webSwingFindAnchor(Entity *e, Vec3 anchor, WebSwingAnchorSearchStats 
             stats->selected_intent_alignment = travel_alignment;
             stats->selected_momentum_alignment = momentum_alignment;
             stats->selected_forward_alignment = forward_alignment;
+            stats->selected_verticality = verticality;
+            stats->selected_lateral_alignment = lateral_alignment;
         }
     }
 
@@ -401,7 +431,7 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
     if(stats->selected)
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=1 fallback=%d selected_intent_alignment=%.3f selected_momentum_alignment=%.3f selected_forward_alignment=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d previous_anchor_rejects=%d selected=1 fallback=%d selected_intent_alignment=%.3f selected_momentum_alignment=%.3f selected_forward_alignment=%.3f verticality=%.3f lateral_alignment=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -422,20 +452,23 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        stats->momentum_basis,
                        stats->facing_travel_dot,
                        stats->probe_count,
-                        stats->collision_ray_hits,
+                       stats->collision_ray_hits,
                        stats->height_rejects,
                        stats->distance_rejects,
+                       stats->previous_anchor_rejects,
                        stats->used_fallback,
                        stats->selected_intent_alignment,
                        stats->selected_momentum_alignment,
                        stats->selected_forward_alignment,
+                       stats->selected_verticality,
+                       stats->selected_lateral_alignment,
                        vecParamsXYZ(stats->selected_anchor),
                        stats->selected_rope_length);
     }
     else
     {
         filelog_printf("webswing.log",
-                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d selected=0 fallback=0 selected_intent_alignment=0.000 selected_momentum_alignment=0.000 selected_forward_alignment=0.000\n",
+                        "WEB_SWING %s attach_attempt web_swing_enabled=%d up=%.3f grounded=%d falling=%d jumping=%d pos=(%.2f %.2f %.2f) forward=(%.3f %.3f %.3f) intent_source=%s intent=(%.3f %.3f %.3f) horizontal_input_magnitude=%.3f meaningful_momentum=%d momentum=(%.3f %.3f %.3f) intent_momentum_alignment=%.3f travel=(%.3f %.3f %.3f) travel_right=(%.3f %.3f %.3f) entity_right=(%.3f %.3f %.3f) momentum_basis=%d facing_travel_dot=%.3f probes=%d ray_hits=%d height_rejects=%d distance_rejects=%d previous_anchor_rejects=%d selected=0 fallback=0 selected_intent_alignment=0.000 selected_momentum_alignment=0.000 selected_forward_alignment=0.000 verticality=0.000 lateral_alignment=0.000\n",
                        WEB_SWING_LOG_SIDE,
                        motion->input.web_swing_enabled,
                        motion->input.vel[1],
@@ -456,10 +489,76 @@ static void webSwingLogAttachAttempt(Entity *e, const WebSwingAnchorSearchStats 
                        stats->momentum_basis,
                        stats->facing_travel_dot,
                        stats->probe_count,
-                        stats->collision_ray_hits,
+                       stats->collision_ray_hits,
                        stats->height_rejects,
-                       stats->distance_rejects);
+                       stats->distance_rejects,
+                       stats->previous_anchor_rejects);
     }
+}
+
+static void webSwingLogChainArm(Entity *e, F32 arc_height, F32 forward_speed)
+{
+    MotionState *motion = e->motion;
+
+    printf("WEB_SWING %s chain_arm anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) arc_height=%.3f velocity=(%.3f %.3f %.3f) forward_speed=%.3f\n",
+           WEB_SWING_LOG_SIDE,
+           vecParamsXYZ(motion->web_swing_anchor),
+           vecParamsXYZ(ENTPOS(e)),
+           arc_height,
+           vecParamsXYZ(motion->vel),
+           forward_speed);
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s chain_arm anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) arc_height=%.3f velocity=(%.3f %.3f %.3f) forward_speed=%.3f\n",
+                   WEB_SWING_LOG_SIDE,
+                   vecParamsXYZ(motion->web_swing_anchor),
+                   vecParamsXYZ(ENTPOS(e)),
+                   arc_height,
+                   vecParamsXYZ(motion->vel),
+                   forward_speed);
+}
+
+static void webSwingLogAutoChainRelease(Entity *e, F32 forward_speed)
+{
+    MotionState *motion = e->motion;
+    F32 speed = lengthVec3(motion->vel);
+
+    printf("WEB_SWING %s auto_chain_release previous_anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) speed=%.3f forward_speed=%.3f\n",
+           WEB_SWING_LOG_SIDE,
+           vecParamsXYZ(motion->web_swing_anchor),
+           vecParamsXYZ(ENTPOS(e)),
+           vecParamsXYZ(motion->vel),
+           speed,
+           forward_speed);
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s auto_chain_release previous_anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) speed=%.3f forward_speed=%.3f\n",
+                   WEB_SWING_LOG_SIDE,
+                   vecParamsXYZ(motion->web_swing_anchor),
+                   vecParamsXYZ(ENTPOS(e)),
+                   vecParamsXYZ(motion->vel),
+                   speed,
+                   forward_speed);
+}
+
+static void webSwingLogChainAttach(Entity *e, const Vec3 previous_anchor, const Vec3 incoming_velocity)
+{
+    MotionState *motion = e->motion;
+    F32 anchor_advance = distance3(previous_anchor, motion->web_swing_anchor);
+
+    printf("WEB_SWING %s chain_attach previous_anchor=(%.2f %.2f %.2f) new_anchor=(%.2f %.2f %.2f) anchor_advance=%.2f incoming_velocity=(%.3f %.3f %.3f) outgoing_velocity=(%.3f %.3f %.3f) catch_suppressed=1\n",
+           WEB_SWING_LOG_SIDE,
+           vecParamsXYZ(previous_anchor),
+           vecParamsXYZ(motion->web_swing_anchor),
+           anchor_advance,
+           vecParamsXYZ(incoming_velocity),
+           vecParamsXYZ(motion->vel));
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s chain_attach previous_anchor=(%.2f %.2f %.2f) new_anchor=(%.2f %.2f %.2f) anchor_advance=%.2f incoming_velocity=(%.3f %.3f %.3f) outgoing_velocity=(%.3f %.3f %.3f) catch_suppressed=1\n",
+                   WEB_SWING_LOG_SIDE,
+                   vecParamsXYZ(previous_anchor),
+                   vecParamsXYZ(motion->web_swing_anchor),
+                   anchor_advance,
+                   vecParamsXYZ(incoming_velocity),
+                   vecParamsXYZ(motion->vel));
 }
 
 static void webSwingResetConstraintMetrics(MotionState *motion)
@@ -534,6 +633,9 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_attach_jumping = 0;
         motion->web_swing_diag_latched = 0;
         motion->web_swing_state_diag_latched = 0;
+        motion->web_swing_chain_armed = 0;
+        motion->web_swing_chain_reacquire = 0;
+        zeroVec3(motion->web_swing_previous_anchor);
         motion->web_swing_log_tick = 0;
         webSwingResetConstraintMetrics(motion);
         return;
@@ -556,9 +658,19 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
     if(!web_swing_test_no_attach && !motion->web_swing_attached)
     {
         Vec3 anchor;
+        Vec3 previous_anchor;
+        Vec3 incoming_velocity;
         F32 rope_length;
         WebSwingAnchorSearchStats search_stats;
+        int chain_attach;
         int found_anchor;
+
+        chain_attach = motion->web_swing_chain_reacquire;
+        if(chain_attach)
+        {
+            copyVec3(motion->web_swing_previous_anchor, previous_anchor);
+            copyVec3(motion->vel, incoming_velocity);
+        }
 
         found_anchor = webSwingFindAnchor(e, anchor, &search_stats);
         if(!motion->web_swing_diag_latched)
@@ -578,9 +690,15 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
             motion->web_swing_attach_grounded = !motion->falling && !motion->jumping;
             motion->web_swing_attach_falling = motion->falling;
             motion->web_swing_attach_jumping = motion->jumping;
-            motion->web_swing_attach_catch_pending = 1;
+            motion->web_swing_attach_catch_pending = !chain_attach;
+            motion->web_swing_chain_armed = 0;
+            if(chain_attach)
+                motion->web_swing_chain_reacquire = 0;
             motion->jumping = 0;
             motion->falling = 1;
+
+            if(chain_attach)
+                webSwingLogChainAttach(e, previous_anchor, incoming_velocity);
 
             printf("WEB_SWING %s attach anchor=(%.2f %.2f %.2f) rope=%.2f speed=%.3f\n",
                    WEB_SWING_LOG_SIDE,
@@ -606,6 +724,8 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     Vec3 tangent_intent;
     Vec3 input_world;
     Vec3 tangent_input;
+    Vec3 lateral_anchor_offset;
+    Vec3 lateral_repulsion_direction = {0};
     Vec3 forward;
     Vec3 right;
     Vec3 projected;
@@ -624,6 +744,10 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     F32 speed;
     F32 arc_height;
     F32 phase_accel;
+    F32 forward_speed = 0.0f;
+    F32 lateral_anchor_distance = 0.0f;
+    F32 lateral_repulsion_scale = 0.0f;
+    F32 lateral_repulsion_accel = 0.0f;
     F32 horizontal_input_magnitude = 0.0f;
     F32 tangent_intent_alignment = 0.0f;
     F32 upward_delta = 0.0f;
@@ -724,6 +848,8 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     normalVec3(right);
 
     intent_source = webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
+    if(intent_source != WEB_SWING_INTENT_NONE)
+        forward_speed = dotVec3(motion->vel, travel_intent);
     zeroVec3(tangent_intent);
     if(intent_source != WEB_SWING_INTENT_NONE)
     {
@@ -746,6 +872,31 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     arc_height = (ENTPOSY(e) - (motion->web_swing_anchor[1] - motion->web_swing_rope_length)) /
                  MAX(motion->web_swing_rope_length, WEB_MIN_ROPE_LENGTH);
     arc_height = MINMAX(arc_height, 0.0f, 1.0f);
+
+    if(!motion->web_swing_chain_armed &&
+       arc_height <= WEB_CHAIN_ARM_ARC_HEIGHT &&
+       motion->vel[1] <= WEB_CHAIN_ARM_DOWN_SPEED)
+    {
+        motion->web_swing_chain_armed = 1;
+        webSwingLogChainArm(e, arc_height, forward_speed);
+    }
+
+    if(motion->web_swing_chain_armed &&
+       motion->vel[1] >= WEB_CHAIN_RELEASE_UP_SPEED &&
+       forward_speed >= WEB_CHAIN_MIN_FORWARD_SPEED)
+    {
+        copyVec3(motion->web_swing_anchor, motion->web_swing_previous_anchor);
+        webSwingLogAutoChainRelease(e, forward_speed);
+        motion->web_swing_attached = 0;
+        motion->web_swing_chain_armed = 0;
+        motion->web_swing_chain_reacquire = 1;
+        motion->web_swing_attach_catch_pending = 0;
+        motion->web_swing_diag_latched = 0;
+        motion->web_swing_state_diag_latched = 0;
+        motion->web_swing_log_tick = 0;
+        return;
+    }
+
     if(arc_height < 0.55f)
     {
         phase_accel = WEB_PENDULUM_ACCEL_DESCENT +
@@ -781,6 +932,40 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     {
         scaleVec3(tangent_input, WEB_STEER_ACCEL * e->timestep, projected);
         addVec3(motion->vel, projected, motion->vel);
+    }
+
+    // A side-mounted real anchor can pull the player toward a building.  Only
+    // the anchor offset perpendicular to current travel intent is corrected;
+    // an anchor directly ahead never receives a backward push.
+    if(intent_source != WEB_SWING_INTENT_NONE)
+    {
+        Vec3 anchor_offset;
+        F32 anchor_along_intent;
+
+        subVec3(motion->web_swing_anchor, ENTPOS(e), anchor_offset);
+        anchor_offset[1] = 0.0f;
+        anchor_along_intent = dotVec3(anchor_offset, travel_intent);
+        scaleVec3(travel_intent, anchor_along_intent, projected);
+        subVec3(anchor_offset, projected, lateral_anchor_offset);
+        lateral_anchor_distance = lengthVec3(lateral_anchor_offset);
+        if(lateral_anchor_distance > WEB_LATERAL_REPULSION_MIN_DIST)
+        {
+            F32 ramp = MINMAX((lateral_anchor_distance - WEB_LATERAL_REPULSION_MIN_DIST) /
+                              (WEB_LATERAL_REPULSION_FULL_DIST - WEB_LATERAL_REPULSION_MIN_DIST),
+                              0.0f, 1.0f);
+
+            // Smoothstep keeps the correction gentle as a side anchor enters
+            // the active range while reaching the bounded maximum at full
+            // lateral separation.
+            ramp = ramp * ramp * (3.0f - 2.0f * ramp);
+            scaleVec3(lateral_anchor_offset, -1.0f / lateral_anchor_distance,
+                      lateral_repulsion_direction);
+            lateral_repulsion_scale = ramp;
+            lateral_repulsion_accel = WEB_LATERAL_REPULSION_ACCEL * ramp;
+            scaleVec3(lateral_repulsion_direction,
+                      lateral_repulsion_accel * e->timestep, projected);
+            addVec3(motion->vel, projected, motion->vel);
+        }
     }
 
     speed = lengthVec3(motion->vel);
@@ -913,6 +1098,21 @@ void entWorldWebSwingApplyConstraint(Entity *e)
                            vecParamsXYZ(input_world), vecParamsXYZ(tangent_input),
                            vecParamsXYZ(tangent_direction), vecParamsXYZ(tangent_intent),
                            tangent_intent_alignment, phase_pump_suppressed);
+        }
+        if(global_state.webswing_dev)
+        {
+            printf("WEB_SWING %s lateral_repulsion lateral_anchor_distance=%.3f repulsion_scale=%.3f repulsion_accel=%.4f direction=(%.3f %.3f %.3f)\n",
+                   WEB_SWING_LOG_SIDE,
+                   lateral_anchor_distance,
+                   lateral_repulsion_scale,
+                   lateral_repulsion_accel,
+                   vecParamsXYZ(lateral_repulsion_direction));
+            filelog_printf("webswing.log", "WEB_SWING %s lateral_repulsion lateral_anchor_distance=%.3f repulsion_scale=%.3f repulsion_accel=%.4f direction=(%.3f %.3f %.3f)\n",
+                           WEB_SWING_LOG_SIDE,
+                           lateral_anchor_distance,
+                           lateral_repulsion_scale,
+                           lateral_repulsion_accel,
+                           vecParamsXYZ(lateral_repulsion_direction));
         }
         motion->web_swing_log_tick = 0;
     }

@@ -134,8 +134,11 @@ typedef struct MotionState
     U32                    web_swing_attach_jumping : 1;
     U32                    web_swing_diag_latched : 1;
     U32                    web_swing_state_diag_latched : 1;
+    U32                    web_swing_chain_armed : 1;
+    U32                    web_swing_chain_reacquire : 1;
     U32                    web_swing_anim_phase;
     Vec3                   web_swing_anchor;
+    Vec3                   web_swing_previous_anchor;
     F32                    web_swing_rope_length;
     U32                    web_swing_log_tick;
     U32                    web_swing_constraint_samples;
