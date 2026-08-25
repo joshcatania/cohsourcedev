@@ -235,6 +235,7 @@ $assistedVisualReleaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_S
 $assistedVisualRetractedLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_retracted ' })
 $assistedVisualAttachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_attach ' })
 $assistedVisualExtendedLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_extended ' })
+$assistedVisualShootTimes = @($assistedVisualExtendedLines | ForEach-Object { Get-LogNumber $_ 'shoot_time' } | Where-Object { $null -ne $_ })
 $assistedPhases = @($assistedPhaseLines | ForEach-Object {
     $phaseMatch = [regex]::Match($_, ' phase=([A-Z]+) ')
     if ($phaseMatch.Success) { $phaseMatch.Groups[1].Value }
@@ -710,6 +711,14 @@ $assistedVisualCadencePass = $assistedVisualReleaseLines.Count -ge 2 -and
                                  $gapMatch = [regex]::Match($_, 'gap_ticks=([0-9]+)')
                                  $_ -match 'physics_continuous=1' -and $gapMatch.Success -and [int]$gapMatch.Groups[1].Value -ge 18
                              }).Count -eq $assistedVisualAttachLines.Count
+$assistedVisualShootTimingPass = $assistedVisualShootTimes.Count -eq $assistedVisualExtendedLines.Count -and
+                                  @($assistedVisualExtendedLines | Where-Object {
+                                      $shootTime = Get-LogNumber $_ 'shoot_time'
+                                      $windupTime = Get-LogNumber $_ 'windup_time'
+                                      $null -ne $shootTime -and $null -ne $windupTime -and
+                                      [math]::Abs($windupTime - 12.0) -le 0.001 -and
+                                      $shootTime -ge 15.5 -and $shootTime -le 18.0
+                                  }).Count -eq $assistedVisualExtendedLines.Count
 $assistedAheadProbePass = @($assistedTickLines | Where-Object {
     $_ -match 'current_clearance=' -and $_ -match 'ahead_clearance=' -and $_ -match 'lookahead='
 }).Count -ge 10
@@ -725,6 +734,7 @@ $assistedControllerEvidencePass = $assistedTickLines.Count -ge 10 -and
                                   $assistedEnergyGrowthPass -and
                                   $assistedGroundBoostPass -and
                                   $assistedVisualCadencePass -and
+                                  $assistedVisualShootTimingPass -and
                                   $assistedAheadProbePass
 
 if ($Backend -eq 'SkyAssisted') {
@@ -782,7 +792,7 @@ if ($timedOut) {
 } elseif (-not $chainHandoffEvidencePass) {
     $reason = "Automatic held-swing handoff evidence was missing for $expectedBackendName."
 } elseif ($Backend -eq 'SkyAssisted' -and -not $assistedControllerEvidencePass) {
-    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), visual_releases=$($assistedVisualReleaseLines.Count), visual_retracted=$($assistedVisualRetractedLines.Count), visual_attaches=$($assistedVisualAttachLines.Count), visual_extended=$($assistedVisualExtendedLines.Count), ahead_probe=$assistedAheadProbePass, missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
+    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), visual_releases=$($assistedVisualReleaseLines.Count), visual_retracted=$($assistedVisualRetractedLines.Count), visual_attaches=$($assistedVisualAttachLines.Count), visual_extended=$($assistedVisualExtendedLines.Count), shoot_timing=$assistedVisualShootTimingPass, ahead_probe=$assistedAheadProbePass, missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
@@ -875,6 +885,8 @@ $result = [pscustomobject]@{
     assistedVisualAttachLines = $assistedVisualAttachLines.Count
     assistedVisualExtendedLines = $assistedVisualExtendedLines.Count
     assistedVisualCadencePass = $assistedVisualCadencePass
+    assistedVisualShootTimes = @($assistedVisualShootTimes | ForEach-Object { [math]::Round($_, 3) })
+    assistedVisualShootTimingPass = $assistedVisualShootTimingPass
     assistedAheadProbePass = $assistedAheadProbePass
     steeringLines = $steeringLines.Count
     steeringEvidencePass = $steeringEvidencePass

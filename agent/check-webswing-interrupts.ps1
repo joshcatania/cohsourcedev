@@ -66,6 +66,7 @@ function Assert-Excludes([string]$Label, [string[]]$Values, [string]$Excluded) {
 $phases = @('ATTACHED', 'DESCEND', 'BOTTOM', 'ASCEND')
 $genericGroup = '<WEBSWING_ANIM>'
 $correctedGroup = '<WEBSWING_MALE_FULL_CORRECTED>'
+$shootGroup = '<WEBSWING_V2_SHOOT>'
 $standardMembers = @('<DEATHIRQ>', '<HITIRQ>', '<REACTIRQ>', '<BLOCKIRQ>', '<BLOCK>', '<STUNMOVE>', '<ATTACKIRQ>')
 $standardInterrupts = @('<JUMPS>', '<FALL>', '<GROUNDMOVEALL>')
 
@@ -112,6 +113,35 @@ foreach ($newPhase in $phases) {
     }
 }
 
+$shootStart = Get-Move 'WEBSWING_V2_SHOOT_START'
+$shootHold = Get-Move 'WEBSWING_V2_SHOOT_HOLD'
+foreach ($move in @($shootStart, $shootHold)) {
+    Assert-Contains "$($move.Name) is a V2 shoot member" $move.Member $shootGroup
+    Assert-Excludes "$($move.Name) is isolated from corrected phase membership" $move.Member $correctedGroup
+    Assert-Excludes "$($move.Name) excludes MOVEIRQ to block FFLY_PREFALL interruption" $move.Member '<MOVEIRQ>'
+    foreach ($group in $standardMembers) {
+        Assert-Contains "$($move.Name) retains stock membership $group" $move.Member $group
+    }
+    foreach ($group in $standardInterrupts) {
+        Assert-Contains "$($move.Name) retains stock interrupt $group" $move.Interrupts $group
+    }
+}
+Assert-Contains 'shoot START can replace corrected phase moves' $shootStart.Interrupts $correctedGroup
+Assert-Contains 'shoot START can replace a stale shoot move' $shootStart.Interrupts $shootGroup
+Assert-Contains 'shoot START can replace generic Web Swing moves' $shootStart.Interrupts $genericGroup
+Assert-Excludes 'shoot HOLD cannot replace corrected phase moves' $shootHold.Interrupts $correctedGroup
+Assert-Excludes 'shoot HOLD cannot restart shoot choreography' $shootHold.Interrupts $shootGroup
+Assert-Equal 'shoot HOLD does not interrupt shoot START' (Test-Interrupt $shootHold.Name $shootStart.Name) $false
+
+foreach ($phase in $phases) {
+    $phaseStart = "WEBSWING_FULL_${phase}_START"
+    $phaseHold = "WEBSWING_FULL_${phase}_HOLD"
+    Assert-Equal "$phaseStart cannot cut off shoot START" (Test-Interrupt $phaseStart $shootStart.Name) $false
+    Assert-Equal "$phaseStart cannot cut off shoot HOLD" (Test-Interrupt $phaseStart $shootHold.Name) $false
+    Assert-Equal "shoot START interrupts $phaseStart" (Test-Interrupt $shootStart.Name $phaseStart) $true
+    Assert-Equal "shoot START interrupts $phaseHold" (Test-Interrupt $shootStart.Name $phaseHold) $true
+}
+
 $resolvedPath = (Resolve-Path -LiteralPath $IncludePath).Path
 $sha256 = (Get-FileHash -LiteralPath $resolvedPath -Algorithm SHA256).Hash.ToLowerInvariant()
 Write-Host 'WEB SWING INTERRUPT CHECK PASS'
@@ -121,3 +151,4 @@ Write-Host "Assertions: $checkCount"
 Write-Host 'Same-phase HOLD -> START: 4/4 blocked'
 Write-Host 'Generic fallback -> corrected START/HOLD: 8/8 blocked'
 Write-Host 'Cross-phase corrected START -> prior START/HOLD: 24/24 allowed'
+Write-Host 'V2 shoot START isolation and phase handoff: verified'

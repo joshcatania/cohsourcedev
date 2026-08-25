@@ -46,6 +46,15 @@ typedef enum WebSwingAssistPhase
     WEB_SWING_ASSIST_BOTTOM,
 } WebSwingAssistPhase;
 
+typedef enum WebSwingVisualTetherState
+{
+    WEB_SWING_VISUAL_TETHER_HIDDEN = 0,
+    WEB_SWING_VISUAL_TETHER_EXTENDING,
+    WEB_SWING_VISUAL_TETHER_ATTACHED,
+    WEB_SWING_VISUAL_TETHER_RETRACTING,
+    WEB_SWING_VISUAL_TETHER_GAP,
+} WebSwingVisualTetherState;
+
 typedef enum SurfParamIndex
 {
     SURFPARAM_GROUND,
@@ -151,12 +160,16 @@ typedef struct MotionState
     U32                    web_swing_ground_launch_active : 1;
     U32                    web_swing_active_backend : 1;
     U32                    web_swing_visual_tether_visible : 1;
+    U32                    web_swing_visual_tether_left_hand : 1;
+    U32                    web_swing_anim_shoot_active : 1;
     U32                    web_swing_assist_phase;
     U32                    web_swing_assist_phase_ticks;
     U32                    web_swing_assist_cycle_id;
     U32                    web_swing_visual_tether_gap_ticks;
+    U32                    web_swing_visual_tether_shoot_ticks;
     U32                    web_swing_visual_tether_state;
     F32                    web_swing_visual_tether_progress;
+    F32                    web_swing_visual_tether_shoot_time;
     F32                    web_swing_assist_energy;
     U32                    web_swing_anim_phase;
     U32                    web_swing_anim_segment_id;

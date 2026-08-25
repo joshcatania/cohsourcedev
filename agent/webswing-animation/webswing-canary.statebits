@@ -5,4 +5,5 @@ StateBit WEBSWING_BOTTOM Predictable
 StateBit WEBSWING_ASCEND Predictable
 StateBit WEBSWING_MALE Predictable
 StateBit WEBSWING_ASCEND_MALE_ENTER Predictable
+StateBit WEBSWING_SHOOT Predictable
 StateBit COHSOURCEDEV_ANIMCANARY Predictable

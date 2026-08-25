@@ -382,9 +382,12 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     WebSwingAnimPhase previous_phase;
     int male_state_bit;
     int enter_state_bit;
+    int shoot_state_bit;
     int is_male = 0;
     int new_segment;
     int phase_entry;
+    int shooting;
+    int shoot_entry;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     raw_phase = WEBSWING_ANIM_PHASE_NONE;
@@ -406,20 +409,23 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 
     male_state_bit = seqGetStateNumberFromName("WEBSWING_MALE");
     enter_state_bit = seqGetStateNumberFromName("WEBSWING_ASCEND_MALE_ENTER");
+    shoot_state_bit = seqGetStateNumberFromName("WEBSWING_SHOOT");
     if (male_state_bit >= 0)
         seqSetState(e->seq->state, 0, male_state_bit);
     if (enter_state_bit >= 0)
         seqSetState(e->seq->state, 0, enter_state_bit);
+    if (shoot_state_bit >= 0)
+        seqSetState(e->seq->state, 0, shoot_state_bit);
 
     {
         static int logged_state_resolution;
         if (!logged_state_resolution)
         {
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d\n",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d\n",
                            state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
                            state_bits[3] >= 0, state_bits[4] >= 0,
-                           male_state_bit >= 0, enter_state_bit >= 0);
+                           male_state_bit >= 0, enter_state_bit >= 0, shoot_state_bit >= 0);
             logged_state_resolution = 1;
         }
     }
@@ -446,6 +452,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         return;
 
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
+    shooting = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING;
+    shoot_entry = shooting && !e->motion->web_swing_anim_shoot_active;
     raw_phase = phase;
     phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
@@ -528,15 +536,20 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             // Mode 3 keeps the normal phase bits for Fem/Huge, while Male
             // attached phases also carry AIRBORNE as a private discriminator.
             // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
-            // the corrected-full helpers without consuming the canary's
-            // eighth and final WebSwingDev overlay slot.
+            // the corrected-full helpers. WEBSWING_SHOOT is the one explicit
+            // V2 choreography bit: it aligns the authored wrist-fire clip to
+            // the visual line's wind-up/extension state.
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE && male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
 
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
-                phase != WEBSWING_ANIM_PHASE_AIRBORNE && phase_entry && enter_state_bit >= 0)
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE &&
+                (phase_entry || shoot_entry) && enter_state_bit >= 0)
                 seqSetState(e->seq->state, 1, enter_state_bit);
+
+            if (is_male && shooting && shoot_state_bit >= 0)
+                seqSetState(e->seq->state, 1, shoot_state_bit);
 
             if (is_male && phase == WEBSWING_ANIM_PHASE_AIRBORNE)
             {
@@ -585,12 +598,27 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                                e->motion->web_swing_attached,
                                e->motion->vel[1], bottom_fraction, tangent_speed);
             }
+
+            if (is_male && shoot_entry)
+            {
+                filelog_printf("webswing.log",
+                               "MODE3_SHOOT %s cycle_id=%u segment_id=%u phase=%s shoot_ticks=%u shoot_time=%.3f move=WEBSWING_V2_SHOOT_START visual_progress=%.3f\n",
+                               pmotionWebSwingAnimSide(),
+                               e->motion->web_swing_assist_cycle_id,
+                               e->motion->web_swing_anim_segment_id,
+                               pmotionWebSwingAnimPhaseName(phase),
+                               e->motion->web_swing_visual_tether_shoot_ticks,
+                               e->motion->web_swing_visual_tether_shoot_time,
+                               e->motion->web_swing_visual_tether_progress);
+            }
         }
         #undef WEBSWING_ANIM_MODE_SAFE_NONE
         #undef WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL
         #undef WEBSWING_ANIM_MODE_MALE_BOTTOM_ONLY
         #undef WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED
     }
+
+    e->motion->web_swing_anim_shoot_active = shooting;
 
     if (phase_entry)
     {

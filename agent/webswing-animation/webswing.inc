@@ -131,6 +131,36 @@ MEnd
 // the discontinuous full-window wrap described by the offline source/target
 // correspondence audit.
 
+// V2 wrist-fire choreography. The assisted controller exposes SHOOT only
+// while the visual tether is winding up and traveling outward. START is
+// intentionally allowed to finish after SHOOT clears so the arm completes
+// its authored catch before the current physics-phase move takes over.
+
+Move WEBSWING_V2_SHOOT_START
+	Interpolate 4
+	Priority 28
+	NextMove WEBSWING_V2_SHOOT_HOLD
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 1 26
+	TEnd
+	Member "<WEBSWING_V2_SHOOT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_SHOOT", "WEBSWING_ASCEND_MALE_ENTER"
+MEnd
+
+Move WEBSWING_V2_SHOOT_HOLD
+	Interpolate 4
+	Priority 27
+	Scale 0
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 26 26
+	TEnd
+	Member "<WEBSWING_V2_SHOOT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_SHOOT"
+	Flags Cycle
+MEnd
+
 Move WEBSWING_FULL_ATTACHED_START
 	Interpolate 5
 	Priority 25

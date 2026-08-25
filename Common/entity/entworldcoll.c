@@ -98,7 +98,8 @@
 #define WEB_ASSIST_VISUAL_TETHER_MIN_GAP_TICKS 18
 #define WEB_ASSIST_VISUAL_TETHER_MAX_GAP_TICKS 45
 #define WEB_ASSIST_VISUAL_TETHER_RETRACT_RATE   0.25f
-#define WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE    0.20f
+#define WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME 12.0f
+#define WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE    0.25f
 #define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.65f
 #define WEB_ASSIST_ASCEND_SPEED                2.50f
 #define WEB_ASSIST_APEX_SPEED                  2.00f
@@ -137,15 +138,6 @@ typedef enum WebSwingIntentSource
     WEB_SWING_INTENT_INPUT,
     WEB_SWING_INTENT_FACING,
 } WebSwingIntentSource;
-
-typedef enum WebSwingVisualTetherState
-{
-    WEB_SWING_VISUAL_TETHER_HIDDEN = 0,
-    WEB_SWING_VISUAL_TETHER_EXTENDING,
-    WEB_SWING_VISUAL_TETHER_ATTACHED,
-    WEB_SWING_VISUAL_TETHER_RETRACTING,
-    WEB_SWING_VISUAL_TETHER_GAP,
-} WebSwingVisualTetherState;
 
 typedef enum WebSwingAnchorContext
 {
@@ -871,6 +863,9 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     motion->web_swing_visual_tether_visible = 1;
     motion->web_swing_visual_tether_gap_ticks = 0;
+    motion->web_swing_visual_tether_shoot_ticks = 0;
+    motion->web_swing_visual_tether_shoot_time = 0.0f;
+    motion->web_swing_anim_shoot_active = 0;
     motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_EXTENDING;
     motion->web_swing_visual_tether_progress = 0.0f;
     webSwingAssistedSetPhase(e, initial_phase, grounded ? "GROUND_ACTIVATION" : "AIRBORNE_REATTACH");
@@ -904,6 +899,8 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
                 motion->web_swing_visual_tether_visible = 0;
                 motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_GAP;
                 motion->web_swing_visual_tether_gap_ticks = 0;
+                motion->web_swing_visual_tether_shoot_ticks = 0;
+                motion->web_swing_visual_tether_shoot_time = 0.0f;
                 filelog_printf("webswing.log",
                                "WEB_SWING %s visual_tether_retracted cycle_id=%u segment_id=%u physics_continuous=1\n",
                                WEB_SWING_LOG_SIDE,
@@ -924,6 +921,8 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
                 motion->web_swing_visual_tether_visible = 1;
                 motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_EXTENDING;
                 motion->web_swing_visual_tether_progress = 0.0f;
+                motion->web_swing_visual_tether_shoot_ticks = 0;
+                motion->web_swing_visual_tether_shoot_time = 0.0f;
                 filelog_printf("webswing.log",
                                "WEB_SWING %s visual_tether_attach cycle_id=%u segment_id=%u gap_ticks=%u anchor=(%.2f %.2f %.2f) physics_continuous=1\n",
                                WEB_SWING_LOG_SIDE,
@@ -935,17 +934,29 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
             break;
 
         case WEB_SWING_VISUAL_TETHER_EXTENDING:
-            motion->web_swing_visual_tether_progress = MIN(1.0f,
-                motion->web_swing_visual_tether_progress +
-                WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE * e->timestep);
+            ++motion->web_swing_visual_tether_shoot_ticks;
+            motion->web_swing_visual_tether_shoot_time += e->timestep;
+            // The arm visibly recovers and aims before the web leaves the
+            // wrist.  Physics remains continuous; only the fictional line is
+            // held at zero length for the authored wind-up.
+            if(motion->web_swing_visual_tether_shoot_time >
+               WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME)
+            {
+                motion->web_swing_visual_tether_progress = MIN(1.0f,
+                    motion->web_swing_visual_tether_progress +
+                    WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE * e->timestep);
+            }
             if(motion->web_swing_visual_tether_progress >= 1.0f)
             {
                 motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_ATTACHED;
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s visual_tether_extended cycle_id=%u segment_id=%u physics_continuous=1\n",
+                               "WEB_SWING %s visual_tether_extended cycle_id=%u segment_id=%u shoot_ticks=%u shoot_time=%.3f windup_time=%.3f physics_continuous=1\n",
                                WEB_SWING_LOG_SIDE,
                                motion->web_swing_assist_cycle_id,
-                               motion->web_swing_anim_segment_id);
+                               motion->web_swing_anim_segment_id,
+                               motion->web_swing_visual_tether_shoot_ticks,
+                               motion->web_swing_visual_tether_shoot_time,
+                               WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME);
             }
             break;
 
@@ -1159,6 +1170,8 @@ static void webSwingApplyAssistedController(Entity *e)
                 motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_RETRACTING;
                 motion->web_swing_visual_tether_progress = 1.0f;
                 motion->web_swing_visual_tether_gap_ticks = 0;
+                motion->web_swing_visual_tether_shoot_ticks = 0;
+                motion->web_swing_visual_tether_shoot_time = 0.0f;
                 filelog_printf("webswing.log",
                                "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
@@ -1288,6 +1301,9 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_energy = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
+        motion->web_swing_visual_tether_shoot_ticks = 0;
+        motion->web_swing_visual_tether_shoot_time = 0.0f;
+        motion->web_swing_anim_shoot_active = 0;
         motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_HIDDEN;
         motion->web_swing_visual_tether_progress = 0.0f;
         zeroVec3(motion->web_swing_previous_anchor);
@@ -1317,6 +1333,9 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_energy = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
+        motion->web_swing_visual_tether_shoot_ticks = 0;
+        motion->web_swing_visual_tether_shoot_time = 0.0f;
+        motion->web_swing_anim_shoot_active = 0;
         motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_HIDDEN;
         motion->web_swing_visual_tether_progress = 0.0f;
         zeroVec3(motion->web_swing_next_anchor);
@@ -1350,6 +1369,9 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_next_anchor_valid = 0;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
+        motion->web_swing_visual_tether_shoot_ticks = 0;
+        motion->web_swing_visual_tether_shoot_time = 0.0f;
+        motion->web_swing_anim_shoot_active = 0;
         motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_HIDDEN;
         motion->web_swing_visual_tether_progress = 0.0f;
         zeroVec3(motion->web_swing_next_anchor);
@@ -1399,6 +1421,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
             motion->web_swing_active_backend = selected_backend;
             motion->web_swing_visual_tether_visible = 1;
             motion->web_swing_visual_tether_gap_ticks = 0;
+            motion->web_swing_visual_tether_shoot_ticks = 0;
+            motion->web_swing_visual_tether_shoot_time = 0.0f;
             motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_ATTACHED;
             motion->web_swing_visual_tether_progress = 1.0f;
             copyVec3(anchor, motion->web_swing_anchor);

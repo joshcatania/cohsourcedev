@@ -3236,6 +3236,8 @@ void entClientDrawWebSwingTethers(void)
         Vec3 tether_start;
         Vec3 tether_end;
         Vec3 tether_delta;
+        Vec3 tether_to_anchor;
+        Vec3 leader_start;
         GfxNode *right_hand = NULL;
         GfxNode *left_hand = NULL;
         int right_hand_id = 0;
@@ -3243,6 +3245,7 @@ void entClientDrawWebSwingTethers(void)
         Mat4 right_hand_mat;
         Mat4 left_hand_mat;
         int hand_origin = 0;
+        F32 tether_progress;
 
         if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
            !e->motion->web_swing_attached || !e->motion->web_swing_visual_tether_visible)
@@ -3263,17 +3266,29 @@ void entClientDrawWebSwingTethers(void)
             else
                 left_hand = NULL;
 
-            // The corrected swing animation alternates which arm reads as the
-            // raised attachment arm. Follow the higher animated hand each
-            // frame instead of drawing from a generic torso/root offset.
-            if(right_hand && (!left_hand || right_hand_mat[3][1] >= left_hand_mat[3][1]))
+            // During the invisible wrist-fire wind-up, select whichever
+            // authored hand is higher. Lock that hand once the web becomes
+            // visible so its origin cannot jump between wrists mid-shot.
+            if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING &&
+               e->motion->web_swing_visual_tether_progress <= 0.001f)
+            {
+                e->motion->web_swing_visual_tether_left_hand =
+                    left_hand && (!right_hand || left_hand_mat[3][1] > right_hand_mat[3][1]);
+            }
+
+            if(!e->motion->web_swing_visual_tether_left_hand && right_hand)
             {
                 copyVec3(right_hand_mat[3], tether_start);
                 hand_origin = 1;
             }
-            else if(left_hand)
+            else if(e->motion->web_swing_visual_tether_left_hand && left_hand)
             {
                 copyVec3(left_hand_mat[3], tether_start);
+                hand_origin = 1;
+            }
+            else if(right_hand || left_hand)
+            {
+                copyVec3(right_hand ? right_hand_mat[3] : left_hand_mat[3], tether_start);
                 hand_origin = 1;
             }
             else
@@ -3284,14 +3299,28 @@ void entClientDrawWebSwingTethers(void)
         if(!hand_origin)
             tether_start[1] += 3.0f;
 
-        subVec3(e->motion->web_swing_anchor, tether_start, tether_delta);
-        scaleVec3(tether_delta, MINMAX(e->motion->web_swing_visual_tether_progress, 0.0f, 1.0f), tether_delta);
+        tether_progress = MINMAX(e->motion->web_swing_visual_tether_progress, 0.0f, 1.0f);
+        if(tether_progress <= 0.001f)
+            continue;
+        subVec3(e->motion->web_swing_anchor, tether_start, tether_to_anchor);
+        scaleVec3(tether_to_anchor, tether_progress, tether_delta);
         addVec3(tether_start, tether_delta, tether_end);
 
         // A broad blue-white silhouette and bright core keep the web readable
         // against both daylight sky and dark city geometry.
         drawLine3DWidth(tether_start, tether_end, 0xffd0a060, 6.0f);
         drawLine3DWidth(tether_start, tether_end, 0xffffffff, 2.5f);
+        if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING ||
+           e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING)
+        {
+            F32 leader_progress = MAX(0.0f, tether_progress - 0.16f);
+            scaleVec3(tether_to_anchor, leader_progress, tether_delta);
+            addVec3(tether_start, tether_delta, leader_start);
+            // A short, brighter traveling head makes extension read as a web
+            // projectile and retraction read as motion back toward the wrist.
+            drawLine3DWidth(leader_start, tether_end, 0xffe8c080, 8.0f);
+            drawLine3DWidth(leader_start, tether_end, 0xffffffff, 3.5f);
+        }
         ++attached_count;
     }
 

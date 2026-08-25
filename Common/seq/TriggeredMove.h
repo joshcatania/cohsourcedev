@@ -1,7 +1,7 @@
 #ifndef TRIGGEREDMOVE_H
 #define TRIGGEREDMOVE_H
 
-#define MAXSTATES 884 // 876 stock state slots plus up to eight WebSwingDev overlay bits
+#define MAXSTATES 885 // 876 stock state slots plus up to nine WebSwingDev overlay bits
 #define STATE_ARRAY_SIZE ((MAXSTATES + 31)/32) //now adjective array size.  anything over this is a noun and gets it's own number
 
 typedef struct TriggeredMove  //figure out where to put this...
