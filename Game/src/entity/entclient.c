@@ -3234,17 +3234,50 @@ void entClientDrawWebSwingTethers(void)
     {
         Entity *e;
         Vec3 tether_start;
+        GfxNode *right_hand = NULL;
+        GfxNode *left_hand = NULL;
+        Mat4 right_hand_mat;
+        Mat4 left_hand_mat;
+        int hand_origin = 0;
 
         if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
            !e->motion->web_swing_attached)
             continue;
 
         if(e->seq && e->seq->gfx_root)
-            copyVec3(e->seq->gfx_root->mat[3], tether_start);
+        {
+            right_hand = seqFindGfxNodeGivenBoneNum(e->seq, BONEID_HANDR);
+            left_hand = seqFindGfxNodeGivenBoneNum(e->seq, BONEID_HANDL);
+            if(right_hand)
+                gfxTreeFindWorldSpaceMat(right_hand_mat, right_hand);
+            if(left_hand)
+                gfxTreeFindWorldSpaceMat(left_hand_mat, left_hand);
+
+            // The corrected swing animation alternates which arm reads as the
+            // raised attachment arm. Follow the higher animated hand each
+            // frame instead of drawing from a generic torso/root offset.
+            if(right_hand && (!left_hand || right_hand_mat[3][1] >= left_hand_mat[3][1]))
+            {
+                copyVec3(right_hand_mat[3], tether_start);
+                hand_origin = 1;
+            }
+            else if(left_hand)
+            {
+                copyVec3(left_hand_mat[3], tether_start);
+                hand_origin = 1;
+            }
+            else
+                copyVec3(e->seq->gfx_root->mat[3], tether_start);
+        }
         else
             copyVec3(ENTPOS(e), tether_start);
-        tether_start[1] += 3.0f;
-        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xe0ff70ff, 3.0f);
+        if(!hand_origin)
+            tether_start[1] += 3.0f;
+
+        // A broad blue-white silhouette and bright core keep the web readable
+        // against both daylight sky and dark city geometry.
+        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xffd0a060, 6.0f);
+        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xffffffff, 2.5f);
         ++attached_count;
     }
 

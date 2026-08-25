@@ -153,6 +153,7 @@ typedef struct MotionState
     U32                    web_swing_assist_phase;
     U32                    web_swing_assist_phase_ticks;
     U32                    web_swing_assist_cycle_id;
+    F32                    web_swing_assist_energy;
     U32                    web_swing_anim_phase;
     U32                    web_swing_anim_segment_id;
     U32                    web_swing_anim_phase_segment_id;

@@ -74,22 +74,37 @@
 #define WEB_SKY_ANCHOR_HEIGHT              35.0f
 #define WEB_SKY_ANCHOR_FORWARD_LEAD        20.0f
 #define WEB_ASSIST_VISUAL_ANCHOR_BLEND       0.35f
-#define WEB_ASSIST_LAUNCH_UP_SPEED            1.65f
-#define WEB_ASSIST_LAUNCH_FORWARD_SPEED       1.35f
-#define WEB_ASSIST_LAUNCH_ACCEL               0.32f
+#define WEB_ASSIST_LAUNCH_UP_SPEED            2.15f
+#define WEB_ASSIST_LAUNCH_FORWARD_SPEED       1.75f
+#define WEB_ASSIST_LAUNCH_ACCEL               0.45f
 #define WEB_ASSIST_LAUNCH_CLEARANCE           4.0f
 #define WEB_ASSIST_ASCEND_GRAVITY_ASSIST      0.015f
+#define WEB_ASSIST_ASCEND_ENERGY_ASSIST       0.004f
 #define WEB_ASSIST_APEX_DOWN_ACCEL            0.020f
-#define WEB_ASSIST_DESCEND_DOWN_ACCEL         0.025f
+#define WEB_ASSIST_DESCEND_DOWN_ACCEL         0.030f
+#define WEB_ASSIST_DESCEND_ENERGY_ACCEL       0.006f
 #define WEB_ASSIST_BOTTOM_UP_ACCEL             0.55f
-#define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        1.55f
+#define WEB_ASSIST_BOTTOM_ENERGY_ACCEL         0.10f
+#define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        1.75f
+#define WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED    0.45f
 #define WEB_ASSIST_BOTTOM_MIN_TICKS            3
 #define WEB_ASSIST_GROUND_PROBE_DISTANCE      16.0f
 #define WEB_ASSIST_GROUND_TARGET_CLEARANCE     3.5f
 #define WEB_ASSIST_GROUND_TRANSITION_PADDING   2.0f
-#define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.50f
-#define WEB_ASSIST_HORIZONTAL_CRUISE_SPEED     3.35f
-#define WEB_ASSIST_HORIZONTAL_MAX_SPEED        4.25f
+#define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.45f
+#define WEB_ASSIST_ASCEND_SPEED                2.05f
+#define WEB_ASSIST_APEX_SPEED                  1.65f
+#define WEB_ASSIST_DESCEND_SPEED               3.10f
+#define WEB_ASSIST_BOTTOM_SPEED                3.90f
+#define WEB_ASSIST_ASCEND_ENERGY_SPEED         0.25f
+#define WEB_ASSIST_APEX_ENERGY_SPEED           0.30f
+#define WEB_ASSIST_DESCEND_ENERGY_SPEED        0.65f
+#define WEB_ASSIST_BOTTOM_ENERGY_SPEED         0.75f
+#define WEB_ASSIST_HORIZONTAL_MAX_SPEED        5.05f
+#define WEB_ASSIST_TOTAL_MAX_SPEED             5.75f
+#define WEB_ASSIST_ENERGY_PER_CYCLE            0.24f
+#define WEB_ASSIST_MAX_ENERGY                  1.50f
+#define WEB_ASSIST_REATTACH_ENERGY_PER_SPEED   0.40f
 #define WEB_ASSIST_STEER_ASCEND                 0.070f
 #define WEB_ASSIST_STEER_APEX                   0.140f
 #define WEB_ASSIST_STEER_DESCEND                0.090f
@@ -820,6 +835,7 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
 {
     MotionState *motion = e->motion;
     WebSwingAssistPhase initial_phase;
+    F32 horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
 
     if(grounded)
         initial_phase = WEB_SWING_ASSIST_LAUNCH;
@@ -831,6 +847,10 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
         initial_phase = WEB_SWING_ASSIST_APEX;
 
     motion->web_swing_assist_cycle_id = 1;
+    motion->web_swing_assist_energy = grounded ? 0.0f :
+        MINMAX((horizontal_speed - WEB_ASSIST_HORIZONTAL_MIN_SPEED) *
+               WEB_ASSIST_REATTACH_ENERGY_PER_SPEED,
+               0.0f, WEB_ASSIST_MAX_ENERGY);
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     webSwingAssistedSetPhase(e, initial_phase, grounded ? "GROUND_ACTIVATION" : "AIRBORNE_REATTACH");
 }
@@ -870,26 +890,35 @@ static void webSwingApplyAssistedHorizontal(Entity *e, const Vec3 travel_intent,
     horizontal_velocity[1] = 0.0f;
     horizontal_speed = lengthVec3(horizontal_velocity);
 
-    if(phase == WEB_SWING_ASSIST_LAUNCH)
+    switch(phase)
     {
-        target_speed = MAX(horizontal_speed, WEB_ASSIST_LAUNCH_FORWARD_SPEED);
-        steer_accel = WEB_ASSIST_LAUNCH_ACCEL;
+        case WEB_SWING_ASSIST_LAUNCH:
+            target_speed = MAX(horizontal_speed, WEB_ASSIST_LAUNCH_FORWARD_SPEED);
+            steer_accel = WEB_ASSIST_LAUNCH_ACCEL;
+            break;
+        case WEB_SWING_ASSIST_APEX:
+            target_speed = WEB_ASSIST_APEX_SPEED +
+                           motion->web_swing_assist_energy * WEB_ASSIST_APEX_ENERGY_SPEED;
+            steer_accel = WEB_ASSIST_STEER_APEX;
+            break;
+        case WEB_SWING_ASSIST_DESCEND:
+            target_speed = WEB_ASSIST_DESCEND_SPEED +
+                           motion->web_swing_assist_energy * WEB_ASSIST_DESCEND_ENERGY_SPEED;
+            steer_accel = WEB_ASSIST_STEER_DESCEND;
+            break;
+        case WEB_SWING_ASSIST_BOTTOM:
+            target_speed = WEB_ASSIST_BOTTOM_SPEED +
+                           motion->web_swing_assist_energy * WEB_ASSIST_BOTTOM_ENERGY_SPEED;
+            steer_accel = WEB_ASSIST_STEER_BOTTOM;
+            break;
+        default:
+            target_speed = WEB_ASSIST_ASCEND_SPEED +
+                           motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_SPEED;
+            steer_accel = WEB_ASSIST_STEER_ASCEND;
+            break;
     }
-    else
-    {
-        target_speed = MAX(horizontal_speed, WEB_ASSIST_HORIZONTAL_MIN_SPEED);
-        if(phase == WEB_SWING_ASSIST_DESCEND || phase == WEB_SWING_ASSIST_BOTTOM)
-            target_speed = MAX(target_speed, WEB_ASSIST_HORIZONTAL_CRUISE_SPEED);
-        target_speed = MIN(target_speed, WEB_ASSIST_HORIZONTAL_MAX_SPEED);
-
-        switch(phase)
-        {
-            case WEB_SWING_ASSIST_APEX:    steer_accel = WEB_ASSIST_STEER_APEX; break;
-            case WEB_SWING_ASSIST_DESCEND: steer_accel = WEB_ASSIST_STEER_DESCEND; break;
-            case WEB_SWING_ASSIST_BOTTOM:  steer_accel = WEB_ASSIST_STEER_BOTTOM; break;
-            default:                       steer_accel = WEB_ASSIST_STEER_ASCEND; break;
-        }
-    }
+    target_speed = MINMAX(target_speed, WEB_ASSIST_HORIZONTAL_MIN_SPEED,
+                          WEB_ASSIST_HORIZONTAL_MAX_SPEED);
 
     scaleVec3(travel_intent, target_speed, target_velocity);
     subVec3(target_velocity, horizontal_velocity, velocity_delta);
@@ -913,6 +942,7 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 vertical_delta;
     F32 horizontal_speed;
     F32 speed;
+    F32 phase_vertical_target;
 
     if(phase == WEB_SWING_ASSIST_NONE)
         webSwingAssistedBegin(e, !motion->falling && !motion->jumping);
@@ -922,6 +952,25 @@ static void webSwingApplyAssistedController(Entity *e)
     webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
     if(lengthVec3Squared(travel_intent) < 0.0001f)
         return;
+
+    // A grounded activation gets one clean authored jump impulse. Subsequent
+    // LAUNCH ticks only maintain the target; they never stack impulses.
+    if(phase == WEB_SWING_ASSIST_LAUNCH && motion->web_swing_assist_phase_ticks == 1)
+    {
+        F32 forward_component = motion->vel[0] * travel_intent[0] +
+                                motion->vel[2] * travel_intent[2];
+        F32 forward_delta = MAX(0.0f, WEB_ASSIST_LAUNCH_FORWARD_SPEED - forward_component);
+        motion->vel[1] = MAX(motion->vel[1], WEB_ASSIST_LAUNCH_UP_SPEED);
+        motion->vel[0] += travel_intent[0] * forward_delta;
+        motion->vel[2] += travel_intent[2] * forward_delta;
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s ground_boost cycle_id=%u up_speed=%.3f forward_speed=%.3f velocity=(%.3f %.3f %.3f) one_shot=1\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->web_swing_assist_cycle_id,
+                       motion->vel[1],
+                       sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
+                       vecParamsXYZ(motion->vel));
+    }
 
     clearance = HeightAtLoc(ENTPOS(e), DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE);
     webSwingUpdateAssistedVisualAnchor(e, travel_intent);
@@ -942,7 +991,9 @@ static void webSwingApplyAssistedController(Entity *e)
             break;
 
         case WEB_SWING_ASSIST_ASCEND:
-            motion->vel[1] += WEB_ASSIST_ASCEND_GRAVITY_ASSIST * e->timestep;
+            motion->vel[1] += (WEB_ASSIST_ASCEND_GRAVITY_ASSIST +
+                               motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_ASSIST) *
+                              e->timestep;
             if(motion->vel[1] <= 0.20f)
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_APEX, "VERTICAL_TURNOVER");
             break;
@@ -954,28 +1005,41 @@ static void webSwingApplyAssistedController(Entity *e)
             break;
 
         case WEB_SWING_ASSIST_DESCEND:
-            motion->vel[1] -= WEB_ASSIST_DESCEND_DOWN_ACCEL * e->timestep;
+            motion->vel[1] -= (WEB_ASSIST_DESCEND_DOWN_ACCEL +
+                               motion->web_swing_assist_energy * WEB_ASSIST_DESCEND_ENERGY_ACCEL) *
+                              e->timestep;
             downward_speed = MAX(0.0f, -motion->vel[1]);
             bottom_threshold = WEB_ASSIST_GROUND_TARGET_CLEARANCE +
                                WEB_ASSIST_GROUND_TRANSITION_PADDING +
                                downward_speed * downward_speed / (2.0f * 0.45f);
             bottom_threshold = MIN(bottom_threshold, WEB_ASSIST_GROUND_PROBE_DISTANCE - 1.0f);
             if(clearance <= bottom_threshold)
+            {
+                motion->web_swing_assist_energy = MIN(WEB_ASSIST_MAX_ENERGY,
+                    motion->web_swing_assist_energy + WEB_ASSIST_ENERGY_PER_CYCLE);
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_BOTTOM, "GROUND_ANTICIPATION");
+            }
             break;
 
         case WEB_SWING_ASSIST_BOTTOM:
-            motion->vel[1] += WEB_ASSIST_BOTTOM_UP_ACCEL * e->timestep;
+            motion->vel[1] += (WEB_ASSIST_BOTTOM_UP_ACCEL +
+                               motion->web_swing_assist_energy * WEB_ASSIST_BOTTOM_ENERGY_ACCEL) *
+                              e->timestep;
+            phase_vertical_target = WEB_ASSIST_BOTTOM_EXIT_UP_SPEED +
+                                    motion->web_swing_assist_energy *
+                                    WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED;
             if(motion->web_swing_assist_phase_ticks >= WEB_ASSIST_BOTTOM_MIN_TICKS &&
-               motion->vel[1] >= WEB_ASSIST_BOTTOM_EXIT_UP_SPEED)
+               motion->vel[1] >= phase_vertical_target)
             {
                 ++motion->web_swing_assist_cycle_id;
                 ++motion->web_swing_anim_segment_id;
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
+                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
                                motion->web_swing_assist_cycle_id,
                                motion->web_swing_anim_segment_id,
+                               motion->web_swing_assist_energy,
+                               phase_vertical_target,
                                clearance,
                                vecParamsXYZ(ENTPOS(e)),
                                vecParamsXYZ(motion->vel));
@@ -996,18 +1060,19 @@ static void webSwingApplyAssistedController(Entity *e)
         motion->vel[2] *= horizontal_scale;
     }
     speed = lengthVec3(motion->vel);
-    if(speed > WEB_MAX_SPEED)
-        scaleVec3(motion->vel, WEB_MAX_SPEED / speed, motion->vel);
+    if(speed > WEB_ASSIST_TOTAL_MAX_SPEED)
+        scaleVec3(motion->vel, WEB_ASSIST_TOTAL_MAX_SPEED / speed, motion->vel);
 
     ++motion->web_swing_log_tick;
     if(motion->web_swing_log_tick >= 15)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u clearance=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f)\n",
+                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u energy=%.3f clearance=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f)\n",
                        WEB_SWING_LOG_SIDE,
                        webSwingAssistPhaseName((WebSwingAssistPhase)motion->web_swing_assist_phase),
                        motion->web_swing_assist_phase_ticks,
                        motion->web_swing_assist_cycle_id,
+                       motion->web_swing_assist_energy,
                        clearance,
                        lengthVec3(motion->vel),
                        horizontal_speed,
@@ -1084,6 +1149,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
+        motion->web_swing_assist_energy = 0.0f;
         zeroVec3(motion->web_swing_previous_anchor);
         zeroVec3(motion->web_swing_next_anchor);
         motion->web_swing_log_tick = 0;
@@ -1108,6 +1174,7 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
+        motion->web_swing_assist_energy = 0.0f;
         zeroVec3(motion->web_swing_next_anchor);
         zeroVec3(motion->web_swing_previous_anchor);
         motion->web_swing_diag_latched = 0;

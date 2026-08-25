@@ -230,6 +230,7 @@ $detachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING (CLIENT|SE
 $assistedTickLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_tick ' })
 $assistedPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_phase ' })
 $assistedCycleLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_cycle ' })
+$assistedGroundBoostLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER ground_boost ' })
 $assistedPhases = @($assistedPhaseLines | ForEach-Object {
     $phaseMatch = [regex]::Match($_, ' phase=([A-Z]+) ')
     if ($phaseMatch.Success) { $phaseMatch.Groups[1].Value }
@@ -638,13 +639,26 @@ $forwardTravelEvidencePass = $statusWritten -and
 $assistedSteeringEvidence = @{}
 $assistedBottomSpeeds = @()
 $assistedUpperSpeeds = @()
+$assistedBottomHorizontalSpeeds = @()
+$assistedApexHorizontalSpeeds = @()
+$assistedTickEnergies = @()
 foreach ($line in $assistedTickLines) {
     $phaseMatch = [regex]::Match($line, 'phase=([A-Z]+)')
     $speedMatch = [regex]::Match($line, ' speed=([-+0-9.eE]+)')
+    $horizontalSpeedMatch = [regex]::Match($line, ' horizontal_speed=([-+0-9.eE]+)')
+    $energyMatch = [regex]::Match($line, ' energy=([-+0-9.eE]+)')
     if ($phaseMatch.Success -and $speedMatch.Success) {
         $sampleSpeed = [double]::Parse($speedMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
         if ($phaseMatch.Groups[1].Value -eq 'BOTTOM') { $assistedBottomSpeeds += $sampleSpeed }
         elseif ($phaseMatch.Groups[1].Value -in @('ASCEND', 'APEX')) { $assistedUpperSpeeds += $sampleSpeed }
+    }
+    if ($phaseMatch.Success -and $horizontalSpeedMatch.Success) {
+        $sampleHorizontalSpeed = [double]::Parse($horizontalSpeedMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
+        if ($phaseMatch.Groups[1].Value -eq 'BOTTOM') { $assistedBottomHorizontalSpeeds += $sampleHorizontalSpeed }
+        elseif ($phaseMatch.Groups[1].Value -eq 'APEX') { $assistedApexHorizontalSpeeds += $sampleHorizontalSpeed }
+    }
+    if ($energyMatch.Success) {
+        $assistedTickEnergies += [double]::Parse($energyMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture)
     }
 
     $intentMatch = [regex]::Match($line, 'intent=\(([-+0-9.eE]+) ([-+0-9.eE]+) ([-+0-9.eE]+)\) input_magnitude=([-+0-9.eE]+)')
@@ -665,6 +679,24 @@ foreach ($line in $assistedTickLines) {
 $assistedBottomPeakSpeed = if ($assistedBottomSpeeds.Count) { ($assistedBottomSpeeds | Measure-Object -Maximum).Maximum } else { 0.0 }
 $assistedUpperAverageSpeed = if ($assistedUpperSpeeds.Count) { ($assistedUpperSpeeds | Measure-Object -Average).Average } else { 0.0 }
 $assistedBottomSpeedPass = $assistedBottomPeakSpeed -gt ($assistedUpperAverageSpeed + 0.15)
+$assistedBottomAverageHorizontalSpeed = if ($assistedBottomHorizontalSpeeds.Count) { ($assistedBottomHorizontalSpeeds | Measure-Object -Average).Average } else { 0.0 }
+$assistedApexAverageHorizontalSpeed = if ($assistedApexHorizontalSpeeds.Count) { ($assistedApexHorizontalSpeeds | Measure-Object -Average).Average } else { 0.0 }
+$assistedPendulumSpeedPass = $assistedBottomHorizontalSpeeds.Count -gt 0 -and
+                             $assistedApexHorizontalSpeeds.Count -gt 0 -and
+                             $assistedBottomAverageHorizontalSpeed -gt ($assistedApexAverageHorizontalSpeed + 0.50)
+$assistedMinEnergy = if ($assistedTickEnergies.Count) { ($assistedTickEnergies | Measure-Object -Minimum).Minimum } else { 0.0 }
+$assistedMaxEnergy = if ($assistedTickEnergies.Count) { ($assistedTickEnergies | Measure-Object -Maximum).Maximum } else { 0.0 }
+$assistedEnergyGrowth = $assistedMaxEnergy - $assistedMinEnergy
+$assistedEnergyGrowthPass = $assistedTickEnergies.Count -gt 0 -and
+                            $assistedMaxEnergy -ge 0.70 -and
+                            $assistedEnergyGrowth -ge 0.45
+$assistedGroundBoostPass = @($assistedGroundBoostLines | Where-Object {
+    $upMatch = [regex]::Match($_, 'up_speed=([-+0-9.eE]+)')
+    $forwardMatch = [regex]::Match($_, 'forward_speed=([-+0-9.eE]+)')
+    $upMatch.Success -and $forwardMatch.Success -and
+    [double]::Parse($upMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 2.0 -and
+    [double]::Parse($forwardMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 1.5
+}).Count -ge 1
 $missingAssistedPhases = @(@('LAUNCH', 'ASCEND', 'APEX', 'DESCEND', 'BOTTOM') | Where-Object {
     $assistedPhases -notcontains $_
 })
@@ -672,7 +704,10 @@ $assistedPhaseEvidencePass = $missingAssistedPhases.Count -eq 0
 $assistedControllerEvidencePass = $assistedTickLines.Count -ge 10 -and
                                   $assistedCycleLines.Count -ge 2 -and
                                   $assistedPhaseEvidencePass -and
-                                  $assistedBottomSpeedPass
+                                  $assistedBottomSpeedPass -and
+                                  $assistedPendulumSpeedPass -and
+                                  $assistedEnergyGrowthPass -and
+                                  $assistedGroundBoostPass
 
 if ($Backend -eq 'SkyAssisted') {
     # SKY_ASSISTED intentionally has no rope constraint, anchor-quality, or
@@ -729,7 +764,7 @@ if ($timedOut) {
 } elseif (-not $chainHandoffEvidencePass) {
     $reason = "Automatic held-swing handoff evidence was missing for $expectedBackendName."
 } elseif ($Backend -eq 'SkyAssisted' -and -not $assistedControllerEvidencePass) {
-    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)))."
+    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
@@ -808,6 +843,15 @@ $result = [pscustomobject]@{
     assistedBottomPeakSpeed = [math]::Round($assistedBottomPeakSpeed, 3)
     assistedUpperAverageSpeed = [math]::Round($assistedUpperAverageSpeed, 3)
     assistedBottomSpeedPass = $assistedBottomSpeedPass
+    assistedBottomAverageHorizontalSpeed = [math]::Round($assistedBottomAverageHorizontalSpeed, 3)
+    assistedApexAverageHorizontalSpeed = [math]::Round($assistedApexAverageHorizontalSpeed, 3)
+    assistedPendulumSpeedPass = $assistedPendulumSpeedPass
+    assistedMinEnergy = [math]::Round($assistedMinEnergy, 3)
+    assistedMaxEnergy = [math]::Round($assistedMaxEnergy, 3)
+    assistedEnergyGrowth = [math]::Round($assistedEnergyGrowth, 3)
+    assistedEnergyGrowthPass = $assistedEnergyGrowthPass
+    assistedGroundBoostLines = $assistedGroundBoostLines.Count
+    assistedGroundBoostPass = $assistedGroundBoostPass
     steeringLines = $steeringLines.Count
     steeringEvidencePass = $steeringEvidencePass
     steeringEvidence = @($steeringEvidence.Keys | Sort-Object)
