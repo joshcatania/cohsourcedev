@@ -1419,8 +1419,18 @@ const SeqInfo * seqGetSequencer( const char seqInfoName[], int loadType, int rel
             int shared_memory = seqInfo && isSharedMemory(seqInfo);
             normal_dev_eligible = !global_state.no_file_change_check &&
                 isDevelopmentMode() && !shared_memory;
+#ifdef CLIENT
+            // The private WebSwing overlay changes only client-side visual
+            // move selection.  Building the 8,000+ move player overlay on a
+            // MapServer is unnecessary and can destabilize the server's
+            // parser allocator while entities are generated.  Physics and
+            // state-bit prediction remain shared; only the renderer consumes
+            // these additional authored moves.
             webswing_player_eligible = global_state.webswing_dev &&
                 seqInfo && !shared_memory;
+#else
+            webswing_player_eligible = 0;
+#endif
             dev_eligible = normal_dev_eligible || webswing_player_eligible;
             filelog_printf("webswing.log",
                            "WEBSWING_ANIM player_seq devMode=%d noFileCheck=%d compiledFound=%d sharedMemory=%d webSwingDev=%d normal_dev_eligible=%d webswing_player_eligible=%d dev_eligible=%d\n",
