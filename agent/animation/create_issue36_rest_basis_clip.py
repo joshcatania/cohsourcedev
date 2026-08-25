@@ -59,6 +59,11 @@ def parse_args():
     parser.add_argument("--asset-name", required=True)
     parser.add_argument("--source-start", required=True, type=int)
     parser.add_argument("--source-end", required=True, type=int)
+    parser.add_argument(
+        "--reverse",
+        action="store_true",
+        help="Author the requested bounded source range in descending order.",
+    )
     return parser.parse_args(argv)
 
 
@@ -141,6 +146,8 @@ def main():
         raise RuntimeError("Exact target is missing the runtime-local-bind-translation contract")
 
     source_frames = tuple(range(args.source_start, args.source_end + 1))
+    if args.reverse:
+        source_frames = tuple(reversed(source_frames))
     authored_frames = tuple(range(1, len(source_frames) + 1))
     report, bones, by_id = load_rig(args.rig_json)
     source_rest_local, rest_world = build_source_rest(bones, by_id)
@@ -212,6 +219,7 @@ def main():
             "rigJson": root_relative(args.rig_json), "armature": source.name,
             "action": SOURCE_ACTION, "actionFrameRange": [action_start, action_end],
             "sourceFrames": list(source_frames), "fps": 30,
+            "reversed": args.reverse,
         },
         "target": {
             "armature": proof_target.name, "asset": f"MALE/{args.asset_name}",

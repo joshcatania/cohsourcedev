@@ -67,6 +67,8 @@ $phases = @('ATTACHED', 'DESCEND', 'BOTTOM', 'ASCEND')
 $genericGroup = '<WEBSWING_ANIM>'
 $correctedGroup = '<WEBSWING_MALE_FULL_CORRECTED>'
 $shootGroup = '<WEBSWING_V2_SHOOT>'
+$retractGroup = '<WEBSWING_V2_RETRACT>'
+$groundLaunchGroup = '<WEBSWING_V2_GROUND_LAUNCH>'
 $standardMembers = @('<DEATHIRQ>', '<HITIRQ>', '<REACTIRQ>', '<BLOCKIRQ>', '<BLOCK>', '<STUNMOVE>', '<ATTACKIRQ>')
 $standardInterrupts = @('<JUMPS>', '<FALL>', '<GROUNDMOVEALL>')
 
@@ -113,33 +115,64 @@ foreach ($newPhase in $phases) {
     }
 }
 
+$choreography = @(
+    [pscustomobject]@{ Label = 'ground launch'; Prefix = 'WEBSWING_V2_GROUND_LAUNCH'; Group = $groundLaunchGroup },
+    [pscustomobject]@{ Label = 'retract'; Prefix = 'WEBSWING_V2_RETRACT'; Group = $retractGroup },
+    [pscustomobject]@{ Label = 'shoot'; Prefix = 'WEBSWING_V2_SHOOT'; Group = $shootGroup }
+)
+foreach ($item in $choreography) {
+    $start = Get-Move "$($item.Prefix)_START"
+    $hold = Get-Move "$($item.Prefix)_HOLD"
+    foreach ($move in @($start, $hold)) {
+        Assert-Contains "$($move.Name) is a V2 $($item.Label) member" $move.Member $item.Group
+        Assert-Excludes "$($move.Name) is isolated from corrected phase membership" $move.Member $correctedGroup
+        Assert-Excludes "$($move.Name) excludes MOVEIRQ to block FFLY_PREFALL interruption" $move.Member '<MOVEIRQ>'
+        foreach ($group in $standardMembers) {
+            Assert-Contains "$($move.Name) retains stock membership $group" $move.Member $group
+        }
+        foreach ($group in $standardInterrupts) {
+            Assert-Contains "$($move.Name) retains stock interrupt $group" $move.Interrupts $group
+        }
+    }
+    Assert-Contains "$($item.Label) START can replace corrected phase moves" $start.Interrupts $correctedGroup
+    Assert-Contains "$($item.Label) START can replace stale $($item.Label) choreography" $start.Interrupts $item.Group
+    Assert-Contains "$($item.Label) START can replace generic Web Swing moves" $start.Interrupts $genericGroup
+    Assert-Excludes "$($item.Label) HOLD cannot replace corrected phase moves" $hold.Interrupts $correctedGroup
+    Assert-Excludes "$($item.Label) HOLD cannot restart its choreography" $hold.Interrupts $item.Group
+    Assert-Equal "$($item.Label) HOLD does not interrupt its START" (Test-Interrupt $hold.Name $start.Name) $false
+}
+
+$launchStart = Get-Move 'WEBSWING_V2_GROUND_LAUNCH_START'
+$launchHold = Get-Move 'WEBSWING_V2_GROUND_LAUNCH_HOLD'
+$retractStart = Get-Move 'WEBSWING_V2_RETRACT_START'
+$retractHold = Get-Move 'WEBSWING_V2_RETRACT_HOLD'
 $shootStart = Get-Move 'WEBSWING_V2_SHOOT_START'
 $shootHold = Get-Move 'WEBSWING_V2_SHOOT_HOLD'
-foreach ($move in @($shootStart, $shootHold)) {
-    Assert-Contains "$($move.Name) is a V2 shoot member" $move.Member $shootGroup
-    Assert-Excludes "$($move.Name) is isolated from corrected phase membership" $move.Member $correctedGroup
-    Assert-Excludes "$($move.Name) excludes MOVEIRQ to block FFLY_PREFALL interruption" $move.Member '<MOVEIRQ>'
-    foreach ($group in $standardMembers) {
-        Assert-Contains "$($move.Name) retains stock membership $group" $move.Member $group
-    }
-    foreach ($group in $standardInterrupts) {
-        Assert-Contains "$($move.Name) retains stock interrupt $group" $move.Interrupts $group
-    }
+
+foreach ($old in @($retractStart.Name, $retractHold.Name, $shootStart.Name, $shootHold.Name)) {
+    Assert-Equal "ground launch START interrupts $old" (Test-Interrupt $launchStart.Name $old) $true
 }
-Assert-Contains 'shoot START can replace corrected phase moves' $shootStart.Interrupts $correctedGroup
-Assert-Contains 'shoot START can replace a stale shoot move' $shootStart.Interrupts $shootGroup
-Assert-Contains 'shoot START can replace generic Web Swing moves' $shootStart.Interrupts $genericGroup
-Assert-Excludes 'shoot HOLD cannot replace corrected phase moves' $shootHold.Interrupts $correctedGroup
-Assert-Excludes 'shoot HOLD cannot restart shoot choreography' $shootHold.Interrupts $shootGroup
-Assert-Equal 'shoot HOLD does not interrupt shoot START' (Test-Interrupt $shootHold.Name $shootStart.Name) $false
+foreach ($old in @($launchStart.Name, $launchHold.Name, $shootStart.Name, $shootHold.Name)) {
+    Assert-Equal "retract START interrupts $old" (Test-Interrupt $retractStart.Name $old) $true
+}
+foreach ($old in @($retractStart.Name, $retractHold.Name)) {
+    Assert-Equal "shoot START interrupts $old" (Test-Interrupt $shootStart.Name $old) $true
+}
+foreach ($old in @($launchStart.Name, $launchHold.Name)) {
+    Assert-Equal "shoot START cannot cut off $old" (Test-Interrupt $shootStart.Name $old) $false
+}
 
 foreach ($phase in $phases) {
     $phaseStart = "WEBSWING_FULL_${phase}_START"
     $phaseHold = "WEBSWING_FULL_${phase}_HOLD"
-    Assert-Equal "$phaseStart cannot cut off shoot START" (Test-Interrupt $phaseStart $shootStart.Name) $false
-    Assert-Equal "$phaseStart cannot cut off shoot HOLD" (Test-Interrupt $phaseStart $shootHold.Name) $false
-    Assert-Equal "shoot START interrupts $phaseStart" (Test-Interrupt $shootStart.Name $phaseStart) $true
-    Assert-Equal "shoot START interrupts $phaseHold" (Test-Interrupt $shootStart.Name $phaseHold) $true
+    foreach ($item in $choreography) {
+        $start = "$($item.Prefix)_START"
+        $hold = "$($item.Prefix)_HOLD"
+        Assert-Equal "$phaseStart cannot cut off $start" (Test-Interrupt $phaseStart $start) $false
+        Assert-Equal "$phaseStart cannot cut off $hold" (Test-Interrupt $phaseStart $hold) $false
+        Assert-Equal "$start interrupts $phaseStart" (Test-Interrupt $start $phaseStart) $true
+        Assert-Equal "$start interrupts $phaseHold" (Test-Interrupt $start $phaseHold) $true
+    }
 }
 
 $resolvedPath = (Resolve-Path -LiteralPath $IncludePath).Path
@@ -151,4 +184,4 @@ Write-Host "Assertions: $checkCount"
 Write-Host 'Same-phase HOLD -> START: 4/4 blocked'
 Write-Host 'Generic fallback -> corrected START/HOLD: 8/8 blocked'
 Write-Host 'Cross-phase corrected START -> prior START/HOLD: 24/24 allowed'
-Write-Host 'V2 shoot START isolation and phase handoff: verified'
+Write-Host 'V2 ground-launch -> retract/recover -> shoot choreography: verified'

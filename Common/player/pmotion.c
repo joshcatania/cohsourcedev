@@ -383,11 +383,16 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     int male_state_bit;
     int enter_state_bit;
     int shoot_state_bit;
+    int retract_state_bit;
+    int ground_launch_state_bit;
     int is_male = 0;
     int new_segment;
     int phase_entry;
     int shooting;
     int shoot_entry;
+    int retracting;
+    int retract_entry;
+    int ground_launching;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     raw_phase = WEBSWING_ANIM_PHASE_NONE;
@@ -410,22 +415,29 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     male_state_bit = seqGetStateNumberFromName("WEBSWING_MALE");
     enter_state_bit = seqGetStateNumberFromName("WEBSWING_ASCEND_MALE_ENTER");
     shoot_state_bit = seqGetStateNumberFromName("WEBSWING_SHOOT");
+    retract_state_bit = seqGetStateNumberFromName("WEBSWING_RETRACT");
+    ground_launch_state_bit = seqGetStateNumberFromName("WEBSWING_GROUND_LAUNCH");
     if (male_state_bit >= 0)
         seqSetState(e->seq->state, 0, male_state_bit);
     if (enter_state_bit >= 0)
         seqSetState(e->seq->state, 0, enter_state_bit);
     if (shoot_state_bit >= 0)
         seqSetState(e->seq->state, 0, shoot_state_bit);
+    if (retract_state_bit >= 0)
+        seqSetState(e->seq->state, 0, retract_state_bit);
+    if (ground_launch_state_bit >= 0)
+        seqSetState(e->seq->state, 0, ground_launch_state_bit);
 
     {
         static int logged_state_resolution;
         if (!logged_state_resolution)
         {
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d\n",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d retract=%d ground_launch=%d\n",
                            state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
                            state_bits[3] >= 0, state_bits[4] >= 0,
-                           male_state_bit >= 0, enter_state_bit >= 0, shoot_state_bit >= 0);
+                           male_state_bit >= 0, enter_state_bit >= 0, shoot_state_bit >= 0,
+                           retract_state_bit >= 0, ground_launch_state_bit >= 0);
             logged_state_resolution = 1;
         }
     }
@@ -454,6 +466,10 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
     shooting = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING;
     shoot_entry = shooting && !e->motion->web_swing_anim_shoot_active;
+    retracting = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING ||
+                 e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_GAP;
+    retract_entry = 0;
+    ground_launching = shooting && e->motion->web_swing_ground_launch_active;
     raw_phase = phase;
     phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
@@ -480,6 +496,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             phase = e->motion->web_swing_ground_launch_active ? WEBSWING_ANIM_PHASE_ATTACHED :
                     pmotionStabilizeMode3WebSwingPhase(raw_phase, previous_phase);
             phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
+            retract_entry = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING &&
+                            phase_entry;
         }
 
         if (last_logged_mode != mode)
@@ -538,18 +556,27 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
             // the corrected-full helpers. WEBSWING_SHOOT is the one explicit
             // V2 choreography bit: it aligns the authored wrist-fire clip to
-            // the visual line's wind-up/extension state.
+            // the visual line's wind-up/extension state. RETRACT owns both
+            // the shrinking line and the invisible recovery gap, while
+            // GROUND_LAUNCH upgrades the first shot to the complete authored
+            // catch-and-pull sequence.
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE && male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
 
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE &&
-                (phase_entry || shoot_entry) && enter_state_bit >= 0)
+                (phase_entry || shoot_entry || retract_entry) && enter_state_bit >= 0)
                 seqSetState(e->seq->state, 1, enter_state_bit);
 
             if (is_male && shooting && shoot_state_bit >= 0)
                 seqSetState(e->seq->state, 1, shoot_state_bit);
+
+            if (is_male && retracting && retract_state_bit >= 0)
+                seqSetState(e->seq->state, 1, retract_state_bit);
+
+            if (is_male && ground_launching && ground_launch_state_bit >= 0)
+                seqSetState(e->seq->state, 1, ground_launch_state_bit);
 
             if (is_male && phase == WEBSWING_ANIM_PHASE_AIRBORNE)
             {
@@ -599,7 +626,19 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                                e->motion->vel[1], bottom_fraction, tangent_speed);
             }
 
-            if (is_male && shoot_entry)
+            if (is_male && shoot_entry && ground_launching)
+            {
+                filelog_printf("webswing.log",
+                               "MODE3_GROUND_LAUNCH %s cycle_id=%u segment_id=%u phase=%s shoot_ticks=%u shoot_time=%.3f move=WEBSWING_V2_GROUND_LAUNCH_START visual_progress=%.3f\n",
+                               pmotionWebSwingAnimSide(),
+                               e->motion->web_swing_assist_cycle_id,
+                               e->motion->web_swing_anim_segment_id,
+                               pmotionWebSwingAnimPhaseName(phase),
+                               e->motion->web_swing_visual_tether_shoot_ticks,
+                               e->motion->web_swing_visual_tether_shoot_time,
+                               e->motion->web_swing_visual_tether_progress);
+            }
+            else if (is_male && shoot_entry)
             {
                 filelog_printf("webswing.log",
                                "MODE3_SHOOT %s cycle_id=%u segment_id=%u phase=%s shoot_ticks=%u shoot_time=%.3f move=WEBSWING_V2_SHOOT_START visual_progress=%.3f\n",
@@ -609,6 +648,17 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                                pmotionWebSwingAnimPhaseName(phase),
                                e->motion->web_swing_visual_tether_shoot_ticks,
                                e->motion->web_swing_visual_tether_shoot_time,
+                               e->motion->web_swing_visual_tether_progress);
+            }
+
+            if (is_male && retract_entry)
+            {
+                filelog_printf("webswing.log",
+                               "MODE3_RETRACT %s cycle_id=%u segment_id=%u phase=%s move=WEBSWING_V2_RETRACT_START visual_progress=%.3f\n",
+                               pmotionWebSwingAnimSide(),
+                               e->motion->web_swing_assist_cycle_id,
+                               e->motion->web_swing_anim_segment_id,
+                               pmotionWebSwingAnimPhaseName(phase),
                                e->motion->web_swing_visual_tether_progress);
             }
         }

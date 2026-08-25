@@ -131,26 +131,78 @@ MEnd
 // the discontinuous full-window wrap described by the offline source/target
 // correspondence audit.
 
-// V2 wrist-fire choreography. The assisted controller exposes SHOOT only
-// while the visual tether is winding up and traveling outward. START is
-// intentionally allowed to finish after SHOOT clears so the arm completes
-// its authored catch before the current physics-phase move takes over.
+// V2 web-cycle choreography. Ground activation plays the complete authored
+// crouch -> one-hand shot -> two-hand catch/pull clip. Repeated cycles first
+// play the shot preparation in reverse while the old line retracts, hold the
+// compact recovery pose through the invisible gap, then play it forward as
+// the new line leaves the raised wrist. Physics stays phase-driven and does
+// not wait on any of these moves.
+
+Move WEBSWING_V2_GROUND_LAUNCH_START
+	Interpolate 4
+	Priority 30
+	NextMove WEBSWING_V2_GROUND_LAUNCH_HOLD
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 1 62
+	TEnd
+	Member "<WEBSWING_V2_GROUND_LAUNCH>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_GROUND_LAUNCH>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_SHOOT", "WEBSWING_GROUND_LAUNCH", "WEBSWING_ASCEND_MALE_ENTER"
+MEnd
+
+Move WEBSWING_V2_GROUND_LAUNCH_HOLD
+	Interpolate 4
+	Priority 29
+	Scale 0
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 62 62
+	TEnd
+	Member "<WEBSWING_V2_GROUND_LAUNCH>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_GROUND_LAUNCH"
+	Flags Cycle
+MEnd
+
+Move WEBSWING_V2_RETRACT_START
+	Interpolate 3
+	Priority 29
+	NextMove WEBSWING_V2_RETRACT_HOLD
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 1 26
+	TEnd
+	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_GROUND_LAUNCH>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_RETRACT", "WEBSWING_ASCEND_MALE_ENTER"
+MEnd
+
+Move WEBSWING_V2_RETRACT_HOLD
+	Interpolate 3
+	Priority 28
+	Scale 0
+	Type Male
+		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 26 26
+	TEnd
+	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_RETRACT"
+	Flags Cycle
+MEnd
 
 Move WEBSWING_V2_SHOOT_START
-	Interpolate 4
-	Priority 28
+	Interpolate 3
+	Priority 29
 	NextMove WEBSWING_V2_SHOOT_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 1 26
 	TEnd
 	Member "<WEBSWING_V2_SHOOT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
-	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
 	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_SHOOT", "WEBSWING_ASCEND_MALE_ENTER"
 MEnd
 
 Move WEBSWING_V2_SHOOT_HOLD
-	Interpolate 4
-	Priority 27
+	Interpolate 3
+	Priority 28
 	Scale 0
 	Type Male
 		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 26 26
