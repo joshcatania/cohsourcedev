@@ -120,9 +120,11 @@ MEnd
 
 // webswinganim 3 — MALE_FULL_CORRECTED. AIRBORNE+ATTACHED is the private
 // mode discriminator; WEBSWING_ASCEND_MALE_ENTER is pulsed on every mode-3
-// phase entry. Each authored phase plays once and then holds its terminal
-// pose, avoiding the discontinuous full-window wrap described by the offline
-// source/target correspondence audit.
+// phase entry. Phase-specific moves outrank the generic attached helpers so
+// their shared ATTACHED requirement cannot make both families alternate.
+// Each authored phase plays once and then holds its terminal pose, avoiding
+// the discontinuous full-window wrap described by the offline source/target
+// correspondence audit.
 
 Move WEBSWING_FULL_ATTACHED_START
 	Interpolate 5
@@ -151,7 +153,7 @@ MEnd
 
 Move WEBSWING_FULL_DESCEND_START
 	Interpolate 5
-	Priority 25
+	Priority 26
 	NextMove WEBSWING_FULL_DESCEND_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 9 17
@@ -163,7 +165,7 @@ MEnd
 
 Move WEBSWING_FULL_DESCEND_HOLD
 	Interpolate 5
-	Priority 24
+	Priority 25
 	Scale 0
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 17 60
@@ -176,7 +178,7 @@ MEnd
 
 Move WEBSWING_FULL_BOTTOM_START
 	Interpolate 5
-	Priority 25
+	Priority 26
 	NextMove WEBSWING_FULL_BOTTOM_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 18 22
@@ -188,7 +190,7 @@ MEnd
 
 Move WEBSWING_FULL_BOTTOM_HOLD
 	Interpolate 5
-	Priority 24
+	Priority 25
 	Scale 0
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 22 60
@@ -201,7 +203,7 @@ MEnd
 
 Move WEBSWING_FULL_ASCEND_START
 	Interpolate 5
-	Priority 25
+	Priority 26
 	NextMove WEBSWING_FULL_ASCEND_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 23 40
@@ -213,7 +215,7 @@ MEnd
 
 Move WEBSWING_FULL_ASCEND_HOLD
 	Interpolate 5
-	Priority 24
+	Priority 25
 	Scale 0
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 40 60

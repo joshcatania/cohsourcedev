@@ -235,6 +235,7 @@ static void pmotionLogWebSwingClientStateBuild(Entity *e, int server_web_swing,
 #endif
 
 static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *motion,
+                                                       WebSwingAnimPhase previous_phase,
                                                        F32 *bottom_fraction, F32 *tangent_speed)
 {
     Vec3 rope;
@@ -275,19 +276,19 @@ static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *mot
 
     // Keep the low-point and direction thresholds apart so small deterministic
     // velocity changes do not make the selected move chatter at a transition.
-    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_BOTTOM &&
+    if (previous_phase == WEBSWING_ANIM_PHASE_BOTTOM &&
         *bottom_fraction >= 0.48f && fabs(vertical_speed) < 0.90f && *tangent_speed >= 0.15f)
     {
         return WEBSWING_ANIM_PHASE_BOTTOM;
     }
 
-    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_DESCEND &&
+    if (previous_phase == WEBSWING_ANIM_PHASE_DESCEND &&
         vertical_speed < -0.15f && *bottom_fraction < 0.82f)
     {
         return WEBSWING_ANIM_PHASE_DESCEND;
     }
 
-    if (motion->web_swing_anim_phase == WEBSWING_ANIM_PHASE_ASCEND &&
+    if (previous_phase == WEBSWING_ANIM_PHASE_ASCEND &&
         vertical_speed > 0.15f && *bottom_fraction < 0.82f)
     {
         return WEBSWING_ANIM_PHASE_ASCEND;
@@ -305,6 +306,45 @@ static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *mot
     return WEBSWING_ANIM_PHASE_ATTACHED;
 }
 
+static WebSwingAnimPhase pmotionStabilizeMode3WebSwingPhase(WebSwingAnimPhase raw_phase,
+                                                            WebSwingAnimPhase previous_phase)
+{
+    // ATTACHED is a useful segment-entry phase, but between authored motion
+    // phases it is only the dead band between the descend/ascend thresholds.
+    // Retain the current authored phase across that dead band so its START is
+    // not selected again from transient vertical-velocity noise.
+    if (raw_phase == WEBSWING_ANIM_PHASE_ATTACHED &&
+        (previous_phase == WEBSWING_ANIM_PHASE_DESCEND ||
+         previous_phase == WEBSWING_ANIM_PHASE_BOTTOM ||
+         previous_phase == WEBSWING_ANIM_PHASE_ASCEND))
+    {
+        return previous_phase;
+    }
+
+    // Once the low-point phase has been entered, require a real ascent before
+    // leaving it; a small negative sample must not restart DESCEND.
+    if (previous_phase == WEBSWING_ANIM_PHASE_BOTTOM &&
+        raw_phase != WEBSWING_ANIM_PHASE_ASCEND)
+    {
+        return WEBSWING_ANIM_PHASE_BOTTOM;
+    }
+
+    return raw_phase;
+}
+
+static const char *pmotionMode3WebSwingMoveName(WebSwingAnimPhase phase)
+{
+    switch (phase)
+    {
+        case WEBSWING_ANIM_PHASE_ATTACHED: return "WEBSWING_FULL_ATTACHED_START";
+        case WEBSWING_ANIM_PHASE_DESCEND:  return "WEBSWING_FULL_DESCEND_START";
+        case WEBSWING_ANIM_PHASE_BOTTOM:   return "WEBSWING_FULL_BOTTOM_START";
+        case WEBSWING_ANIM_PHASE_ASCEND:   return "WEBSWING_FULL_ASCEND_START";
+        case WEBSWING_ANIM_PHASE_AIRBORNE: return "STOCK_UNATTACHED";
+        default:                           return "STOCK";
+    }
+}
+
 static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 {
     static const char *state_names[] = {
@@ -320,13 +360,21 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     F32 bottom_fraction;
     F32 tangent_speed;
     WebSwingAnimPhase phase;
+    WebSwingAnimPhase raw_phase;
+    WebSwingAnimPhase previous_phase;
     int male_state_bit;
     int enter_state_bit;
     int is_male = 0;
+    int new_segment;
+    int phase_entry;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
+    raw_phase = WEBSWING_ANIM_PHASE_NONE;
     bottom_fraction = 0.0f;
     tangent_speed = 0.0f;
+    new_segment = e->motion->web_swing_anim_phase_segment_id !=
+                  e->motion->web_swing_anim_segment_id;
+    previous_phase = (WebSwingAnimPhase)e->motion->web_swing_anim_phase;
 
     for (i = 0; i < ARRAY_SIZE(state_names); ++i)
     {
@@ -360,7 +408,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
 
 #if CLIENT
     if (resolved_count)
-        phase = pmotionGetWebSwingAnimPhase(e, e->motion, &bottom_fraction, &tangent_speed);
+        phase = pmotionGetWebSwingAnimPhase(e, e->motion, previous_phase,
+                                            &bottom_fraction, &tangent_speed);
     pmotionLogWebSwingClientStateBuild(e, server_web_swing, resolved_count, phase,
                                        bottom_fraction, tangent_speed);
 #else
@@ -369,7 +418,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     if (!resolved_count)
         return;
 
-    phase = pmotionGetWebSwingAnimPhase(e, e->motion, &bottom_fraction, &tangent_speed);
+    phase = pmotionGetWebSwingAnimPhase(e, e->motion, previous_phase,
+                                        &bottom_fraction, &tangent_speed);
 #endif
 
     // The animation data is optional. If the state bits are not installed,
@@ -378,6 +428,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         return;
 
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
+    raw_phase = phase;
+    phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
     {
         // Issue 36 forensic: explicit mode.  0=SAFE_NONE (no WebSwing
@@ -390,6 +442,19 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         static int last_logged_mode = -1;
         int mode = g_cohsourcedev_webswing_anim_selection;
         if (mode < 0 || mode > 3) mode = WEBSWING_ANIM_MODE_SAFE_NONE;
+
+        if (mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED && is_male)
+        {
+            if (new_segment)
+            {
+                previous_phase = WEBSWING_ANIM_PHASE_NONE;
+                raw_phase = pmotionGetWebSwingAnimPhase(e, e->motion, previous_phase,
+                                                        &bottom_fraction, &tangent_speed);
+            }
+            phase = e->motion->web_swing_ground_launch_active ? WEBSWING_ANIM_PHASE_ATTACHED :
+                    pmotionStabilizeMode3WebSwingPhase(raw_phase, previous_phase);
+            phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
+        }
 
         if (last_logged_mode != mode)
         {
@@ -447,14 +512,20 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
             // the corrected-full helpers without consuming the canary's
             // eighth and final WebSwingDev overlay slot.
-            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE && male_state_bit >= 0)
+            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE && male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
 
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
-                phase != e->motion->web_swing_anim_phase && enter_state_bit >= 0)
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE && phase_entry && enter_state_bit >= 0)
                 seqSetState(e->seq->state, 1, enter_state_bit);
 
-            if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+            if (is_male && phase == WEBSWING_ANIM_PHASE_AIRBORNE)
+            {
+                // Male mode 3 is intentionally invisible while unattached;
+                // stock running/falling sequencer state owns this interval.
+            }
+            else if (phase == WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
                 seqSetState(e->seq->state, 1, state_bits[0]);
             else if (phase == WEBSWING_ANIM_PHASE_ATTACHED && state_bits[1] >= 0)
                 seqSetState(e->seq->state, 1, state_bits[1]);
@@ -477,6 +548,25 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
                 seqSetState(e->seq->state, 1, state_bits[0]);
+
+            if (is_male && (phase_entry || phase != raw_phase))
+            {
+                const char *reason = new_segment ? "NEW_SEGMENT" :
+                                     phase != raw_phase ? "ATTACHED_DEADBAND_SUPPRESSED" :
+                                     "PHYSICS_PHASE_ENTRY";
+                filelog_printf("webswing.log",
+                               "MODE3_PHASE %s segment_id=%u previous_phase=%s raw_phase=%s new_phase=%s move=%s reason=%s ground_launch=%d attached=%d vertical_speed=%.3f bottom_fraction=%.3f tangent_speed=%.3f\n",
+                               pmotionWebSwingAnimSide(),
+                               e->motion->web_swing_anim_segment_id,
+                               pmotionWebSwingAnimPhaseName(previous_phase),
+                               pmotionWebSwingAnimPhaseName(raw_phase),
+                               pmotionWebSwingAnimPhaseName(phase),
+                               pmotionMode3WebSwingMoveName(phase),
+                               reason,
+                               e->motion->web_swing_ground_launch_active,
+                               e->motion->web_swing_attached,
+                               e->motion->vel[1], bottom_fraction, tangent_speed);
+            }
         }
         #undef WEBSWING_ANIM_MODE_SAFE_NONE
         #undef WEBSWING_ANIM_MODE_ALL_EXPERIMENTAL
@@ -484,11 +574,14 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         #undef WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED
     }
 
-    if (phase != e->motion->web_swing_anim_phase)
+    if (phase_entry)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s anim_phase=%s anim_selection=%d statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
+                       "WEB_SWING %s anim_phase=%s raw_phase=%s segment_id=%u new_segment=%d anim_selection=%d statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d attached_state=%d enabled=%d bottom_fraction=%.3f tangent_speed=%.3f vertical_speed=%.3f anchor=(%.2f %.2f %.2f) rope=%.2f\n",
                        pmotionWebSwingAnimSide(), pmotionWebSwingAnimPhaseName(phase),
+                       pmotionWebSwingAnimPhaseName(raw_phase),
+                       e->motion->web_swing_anim_segment_id,
+                       new_segment,
                        g_cohsourcedev_webswing_anim_selection != 0,
                        state_bits[0] >= 0 && TSTB(e->seq->state, state_bits[0]),
                        state_bits[1] >= 0 && TSTB(e->seq->state, state_bits[1]),
@@ -501,6 +594,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                        bottom_fraction, tangent_speed, e->motion->vel[1],
                        vecParamsXYZ(e->motion->web_swing_anchor), e->motion->web_swing_rope_length);
         e->motion->web_swing_anim_phase = phase;
+        e->motion->web_swing_anim_phase_segment_id = e->motion->web_swing_anim_segment_id;
     }
 }
 
