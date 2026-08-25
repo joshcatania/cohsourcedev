@@ -3234,6 +3234,8 @@ void entClientDrawWebSwingTethers(void)
     {
         Entity *e;
         Vec3 tether_start;
+        Vec3 tether_end;
+        Vec3 tether_delta;
         GfxNode *right_hand = NULL;
         GfxNode *left_hand = NULL;
         int right_hand_id = 0;
@@ -3282,10 +3284,14 @@ void entClientDrawWebSwingTethers(void)
         if(!hand_origin)
             tether_start[1] += 3.0f;
 
+        subVec3(e->motion->web_swing_anchor, tether_start, tether_delta);
+        scaleVec3(tether_delta, MINMAX(e->motion->web_swing_visual_tether_progress, 0.0f, 1.0f), tether_delta);
+        addVec3(tether_start, tether_delta, tether_end);
+
         // A broad blue-white silhouette and bright core keep the web readable
         // against both daylight sky and dark city geometry.
-        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xffd0a060, 6.0f);
-        drawLine3DWidth(tether_start, e->motion->web_swing_anchor, 0xffffffff, 2.5f);
+        drawLine3DWidth(tether_start, tether_end, 0xffd0a060, 6.0f);
+        drawLine3DWidth(tether_start, tether_end, 0xffffffff, 2.5f);
         ++attached_count;
     }
 
