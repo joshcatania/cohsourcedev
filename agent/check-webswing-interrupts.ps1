@@ -66,7 +66,7 @@ function Assert-Excludes([string]$Label, [string[]]$Values, [string]$Excluded) {
 $phases = @('ATTACHED', 'DESCEND', 'BOTTOM', 'ASCEND')
 $genericGroup = '<WEBSWING_ANIM>'
 $correctedGroup = '<WEBSWING_MALE_FULL_CORRECTED>'
-$standardMembers = @('<DEATHIRQ>', '<HITIRQ>', '<REACTIRQ>', '<BLOCKIRQ>', '<BLOCK>', '<STUNMOVE>', '<ATTACKIRQ>', '<MOVEIRQ>')
+$standardMembers = @('<DEATHIRQ>', '<HITIRQ>', '<REACTIRQ>', '<BLOCKIRQ>', '<BLOCK>', '<STUNMOVE>', '<ATTACKIRQ>')
 $standardInterrupts = @('<JUMPS>', '<FALL>', '<GROUNDMOVEALL>')
 
 foreach ($phase in $phases) {
@@ -87,6 +87,8 @@ foreach ($phase in $phases) {
         Assert-Contains "$($start.Name) retains stock membership $group" $start.Member $group
         Assert-Contains "$($hold.Name) retains stock membership $group" $hold.Member $group
     }
+    Assert-Excludes "$($start.Name) excludes MOVEIRQ to block FFLY_PREFALL interruption" $start.Member '<MOVEIRQ>'
+    Assert-Excludes "$($hold.Name) excludes MOVEIRQ to block FFLY_PREFALL interruption" $hold.Member '<MOVEIRQ>'
     foreach ($group in $standardInterrupts) {
         Assert-Contains "$($start.Name) retains stock interrupt $group" $start.Interrupts $group
         Assert-Contains "$($hold.Name) retains stock interrupt $group" $hold.Interrupts $group

@@ -256,6 +256,24 @@ static WebSwingAnimPhase pmotionGetWebSwingAnimPhase(Entity *e, MotionState *mot
     if (!motion->web_swing_attached)
         return WEBSWING_ANIM_PHASE_AIRBORNE;
 
+    if (motion->web_swing_active_backend)
+    {
+        Vec3 horizontal_velocity;
+
+        copyVec3(motion->vel, horizontal_velocity);
+        horizontal_velocity[1] = 0.0f;
+        *tangent_speed = lengthVec3(horizontal_velocity);
+        switch ((WebSwingAssistPhase)motion->web_swing_assist_phase)
+        {
+            case WEB_SWING_ASSIST_LAUNCH:  return WEBSWING_ANIM_PHASE_ATTACHED;
+            case WEB_SWING_ASSIST_ASCEND:  return WEBSWING_ANIM_PHASE_ASCEND;
+            case WEB_SWING_ASSIST_APEX:    return WEBSWING_ANIM_PHASE_ATTACHED;
+            case WEB_SWING_ASSIST_DESCEND: return WEBSWING_ANIM_PHASE_DESCEND;
+            case WEB_SWING_ASSIST_BOTTOM:  return WEBSWING_ANIM_PHASE_BOTTOM;
+            default:                       return WEBSWING_ANIM_PHASE_ATTACHED;
+        }
+    }
+
     rope_length = MAX(motion->web_swing_rope_length, 0.001f);
     *bottom_fraction = MINMAX((motion->web_swing_anchor[1] - ENTPOSY(e)) / rope_length, 0.0f, 1.0f);
 
