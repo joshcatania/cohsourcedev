@@ -739,7 +739,8 @@ $assistedAltitudeBandBeginPass = @($assistedAltitudeBandBeginLines | Where-Objec
     $lowPointY = Get-LogNumber $_ 'low_point_y'
     $rope = Get-LogNumber $_ 'rope'
     $null -ne $attachY -and $null -ne $lowPointY -and $null -ne $rope -and
-    $attachY -gt $lowPointY -and ($attachY - $lowPointY) -le 15.0 -and
+    $attachY -gt $lowPointY -and ($attachY - $lowPointY) -ge 35.0 -and
+    ($attachY - $lowPointY) -le 55.0 -and
     $rope -ge 8.0 -and $_ -match 'preserve_elevation=1'
 }).Count -eq $assistedAltitudeBandBeginLines.Count -and $assistedAltitudeBandBeginLines.Count -ge 5
 $assistedAltitudeBandRaisePass = @($assistedAltitudeBandRaiseLines | Where-Object {

@@ -17,6 +17,9 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
             Name = $Matches[1]
             Member = @()
             Interrupts = @()
+            Requires = @()
+            Flags = @()
+            NextMove = $null
             Scale = 1.0
             AnimStart = $null
             AnimEnd = $null
@@ -41,12 +44,23 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
         $current.AnimEnd = [int]$Matches[2]
         continue
     }
-    if ($line -notmatch '^\s*(Member|Interrupts)\s+(.+)$') {
+    if ($line -match '^\s*NextMove\s+(\S+)\s*$') {
+        $current.NextMove = $Matches[1]
+        continue
+    }
+    if ($line -match '^\s*Flags\s+(.+)$') {
+        $current.Flags = @($Matches[1] -split ',' | ForEach-Object { $_.Trim() })
+        continue
+    }
+    if ($line -notmatch '^\s*(Member|Interrupts|Requires)\s+(.+)$') {
         continue
     }
 
     $field = $Matches[1]
     $values = @([regex]::Matches($Matches[2], '"([^"]+)"') | ForEach-Object { $_.Groups[1].Value })
+    if ($values.Count -eq 0 -and $field -eq 'Requires') {
+        $values = @($Matches[2] -split ',' | ForEach-Object { $_.Trim().Trim('"') } | Where-Object { $_ })
+    }
     if ($values.Count -eq 0) {
         throw "Move $($current.Name) has an unreadable $field line: $line"
     }
@@ -117,6 +131,13 @@ foreach ($phase in $phases) {
     Assert-Excludes "$($start.Name) is not a generic Web Swing member" $start.Member $genericGroup
     Assert-Contains "$($start.Name) can replace corrected-mode moves" $start.Interrupts $correctedGroup
     Assert-Contains "$($start.Name) can replace generic Web Swing moves" $start.Interrupts $genericGroup
+    Assert-Contains "$($start.Name) owns its phase without falling through to stock" $start.Flags 'Cycle'
+    Assert-Equal "$($start.Name) has no end-of-window NextMove race" ([string]::IsNullOrEmpty($start.NextMove)) $true
+    Assert-Excludes "$($start.Name) remains eligible for the complete controller phase" $start.Requires 'WEBSWING_ASCEND_MALE_ENTER'
+    Assert-Excludes "$($start.Name) does not cut off the accepted ground launch" $start.Interrupts $groundLaunchGroup
+    foreach ($group in @($retractGroup, $shootGroup)) {
+        Assert-Contains "$($start.Name) can resume directly after choreography $group" $start.Interrupts $group
+    }
 
     Assert-Contains "$($hold.Name) is a corrected-mode member" $hold.Member $correctedGroup
     Assert-Excludes "$($hold.Name) is not a generic Web Swing member" $hold.Member $genericGroup
@@ -188,11 +209,23 @@ $retractHold = Get-Move 'WEBSWING_V2_RETRACT_HOLD'
 $shootStart = Get-Move 'WEBSWING_V2_SHOOT_START'
 $shootHold = Get-Move 'WEBSWING_V2_SHOOT_HOLD'
 
+foreach ($move in @($retractStart, $shootStart)) {
+    Assert-Contains "$($move.Name) cycles its complete authored clip while active" $move.Flags 'Cycle'
+    Assert-Equal "$($move.Name) has no terminal HOLD fallthrough" ([string]::IsNullOrEmpty($move.NextMove)) $true
+    Assert-Excludes "$($move.Name) does not depend on a one-tick entry pulse" $move.Requires 'WEBSWING_ASCEND_MALE_ENTER'
+}
+Assert-Equal 'ground launch still completes its authored one-shot before its hold' (
+    $launchStart.NextMove -eq 'WEBSWING_V2_GROUND_LAUNCH_HOLD'
+) $true
+
 foreach ($old in @($retractStart.Name, $retractHold.Name, $shootStart.Name, $shootHold.Name)) {
     Assert-Equal "ground launch START interrupts $old" (Test-Interrupt $launchStart.Name $old) $true
 }
-foreach ($old in @($launchStart.Name, $launchHold.Name, $shootStart.Name, $shootHold.Name)) {
+foreach ($old in @($shootStart.Name, $shootHold.Name)) {
     Assert-Equal "retract START interrupts $old" (Test-Interrupt $retractStart.Name $old) $true
+}
+foreach ($old in @($launchStart.Name, $launchHold.Name)) {
+    Assert-Equal "retract START cannot cut off $old" (Test-Interrupt $retractStart.Name $old) $false
 }
 foreach ($old in @($retractStart.Name, $retractHold.Name)) {
     Assert-Equal "shoot START interrupts $old" (Test-Interrupt $shootStart.Name $old) $true
@@ -207,8 +240,9 @@ foreach ($phase in $phases) {
     foreach ($item in $choreography) {
         $start = "$($item.Prefix)_START"
         $hold = "$($item.Prefix)_HOLD"
-        Assert-Equal "$phaseStart cannot cut off $start" (Test-Interrupt $phaseStart $start) $false
-        Assert-Equal "$phaseStart cannot cut off $hold" (Test-Interrupt $phaseStart $hold) $false
+        $phaseCanResume = $item.Prefix -ne 'WEBSWING_V2_GROUND_LAUNCH'
+        Assert-Equal "$phaseStart respects $start completion policy" (Test-Interrupt $phaseStart $start) $phaseCanResume
+        Assert-Equal "$phaseStart respects $hold completion policy" (Test-Interrupt $phaseStart $hold) $phaseCanResume
         Assert-Equal "$start interrupts $phaseStart" (Test-Interrupt $start $phaseStart) $true
         Assert-Equal "$start interrupts $phaseHold" (Test-Interrupt $start $phaseHold) $true
     }
@@ -223,4 +257,4 @@ Write-Host "Assertions: $checkCount"
 Write-Host 'Same-phase HOLD -> START: 4/4 blocked'
 Write-Host 'Generic fallback -> corrected START/HOLD: 8/8 blocked'
 Write-Host 'Cross-phase corrected START -> prior START/HOLD: 24/24 allowed'
-Write-Host 'V2 ground-launch -> retract/recover -> shoot choreography: verified'
+Write-Host 'Mode-3 phase cycles and direct choreography recovery: verified'

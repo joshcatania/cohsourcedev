@@ -281,14 +281,14 @@ static void webSwingSmokeLoop(void)
         case 20:
             if (stage_frames == 0)
             {
-                printf("WEB_SWING_SMOKE scenario=ground_attach position=(100.00 0.50 -650.00) yaw=0.0000 no_jump=1\n");
+                printf("WEB_SWING_SMOKE scenario=ground_attach position=(-4668.25 0.50 1585.13) yaw=0.0000 no_jump=1\n");
                 updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
                 updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
                 commAddInput("powexec_toggleoff Pool.Flight.Fly");
                 commAddInput("webswing 0");
-                commAddInput("setpospyr 100.00 0.50 -650.00 0.0000 0.0000 0.0000");
+                commAddInput("setpospyr -4668.25 0.50 1585.13 0.0000 0.0000 0.0000");
                 g_web_swing_ground_attach_observed = 0;
                 g_web_swing_ground_attach_transitions = 0;
                 g_web_swing_ground_attach_vertical_speed = 0.0f;

@@ -88,10 +88,12 @@
 #define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        3.10f
 #define WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED    0.70f
 #define WEB_ASSIST_BOTTOM_MIN_TICKS            3
-#define WEB_ASSIST_ALTITUDE_TRANSITION_PADDING 3.0f
-#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE    4.0f
-#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_ENERGY  2.0f
-#define WEB_ASSIST_ALTITUDE_MAX_GAIN           48.0f
+#define WEB_ASSIST_ALTITUDE_ARC_DEPTH          36.0f
+#define WEB_ASSIST_ALTITUDE_TRANSITION_PADDING 2.0f
+#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE    1.5f
+#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_ENERGY  1.0f
+#define WEB_ASSIST_ALTITUDE_MAX_GAIN           24.0f
+#define WEB_ASSIST_ALTITUDE_STOP_ACCEL          0.90f
 #define WEB_ASSIST_GROUND_PROBE_DISTANCE      32.0f
 #define WEB_ASSIST_GROUND_TARGET_CLEARANCE     6.0f
 #define WEB_ASSIST_GROUND_TRANSITION_PADDING   3.0f
@@ -869,7 +871,8 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
     // fictional pivot and line length define a low point in world space so
     // a rooftop/high-air attachment does not normalize back to street level.
     motion->web_swing_assist_initial_low_point_y =
-        motion->web_swing_anchor[1] - motion->web_swing_rope_length;
+        motion->web_swing_anchor[1] - motion->web_swing_rope_length -
+        WEB_ASSIST_ALTITUDE_ARC_DEPTH;
     motion->web_swing_assist_low_point_y = motion->web_swing_assist_initial_low_point_y;
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     motion->web_swing_visual_tether_visible = 1;
@@ -903,7 +906,8 @@ static void webSwingSetAssistedVisualAnchor(Entity *e, const Vec3 travel_intent)
     addVec3(motion->web_swing_anchor, lead, motion->web_swing_anchor);
     motion->web_swing_anchor[1] += WEB_SKY_ANCHOR_HEIGHT;
     motion->web_swing_rope_length = distance3(ENTPOS(e), motion->web_swing_anchor);
-    candidate_low_point = motion->web_swing_anchor[1] - motion->web_swing_rope_length;
+    candidate_low_point = motion->web_swing_anchor[1] - motion->web_swing_rope_length -
+                          WEB_ASSIST_ALTITUDE_ARC_DEPTH;
     maximum_rise = WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE +
                    motion->web_swing_assist_energy * WEB_ASSIST_ALTITUDE_FLOOR_RISE_ENERGY;
     gain_ceiling = motion->web_swing_assist_initial_low_point_y +
@@ -1101,6 +1105,7 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 phase_vertical_target;
     F32 altitude_trigger_y;
     F32 stopping_distance;
+    F32 altitude_stopping_distance;
 
     if(phase == WEB_SWING_ASSIST_NONE)
         webSwingAssistedBegin(e, !motion->falling && !motion->jumping);
@@ -1189,13 +1194,15 @@ static void webSwingApplyAssistedController(Entity *e)
             downward_speed = MAX(0.0f, -motion->vel[1]);
             stopping_distance = downward_speed * downward_speed /
                                 (2.0f * WEB_ASSIST_GROUND_STOP_ACCEL);
+            altitude_stopping_distance = downward_speed * downward_speed /
+                                         (2.0f * WEB_ASSIST_ALTITUDE_STOP_ACCEL);
             bottom_threshold = WEB_ASSIST_GROUND_TARGET_CLEARANCE +
                                WEB_ASSIST_GROUND_TRANSITION_PADDING +
                                stopping_distance;
             bottom_threshold = MIN(bottom_threshold, WEB_ASSIST_GROUND_PROBE_DISTANCE - 1.0f);
             altitude_trigger_y = motion->web_swing_assist_low_point_y +
                                  WEB_ASSIST_ALTITUDE_TRANSITION_PADDING +
-                                 stopping_distance;
+                                 altitude_stopping_distance;
             if(clearance <= bottom_threshold || ENTPOSY(e) <= altitude_trigger_y)
             {
                 const char *bottom_reason = ENTPOSY(e) <= altitude_trigger_y &&
@@ -1204,13 +1211,14 @@ static void webSwingApplyAssistedController(Entity *e)
                 motion->web_swing_assist_energy = MIN(WEB_ASSIST_MAX_ENERGY,
                     motion->web_swing_assist_energy + WEB_ASSIST_ENERGY_PER_CYCLE);
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s assisted_bottom_guard reason=%s cycle_id=%u pos_y=%.3f low_point_y=%.3f altitude_trigger_y=%.3f clearance=%.3f terrain_threshold=%.3f downward_speed=%.3f\n",
+                               "WEB_SWING %s assisted_bottom_guard reason=%s cycle_id=%u pos_y=%.3f low_point_y=%.3f altitude_trigger_y=%.3f altitude_stopping_distance=%.3f clearance=%.3f terrain_threshold=%.3f downward_speed=%.3f\n",
                                WEB_SWING_LOG_SIDE,
                                bottom_reason,
                                motion->web_swing_assist_cycle_id,
                                ENTPOSY(e),
                                motion->web_swing_assist_low_point_y,
                                altitude_trigger_y,
+                               altitude_stopping_distance,
                                clearance,
                                bottom_threshold,
                                downward_speed);
