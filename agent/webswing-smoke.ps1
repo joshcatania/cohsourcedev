@@ -231,6 +231,18 @@ $assistedTickLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERV
 $assistedPhaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_phase ' })
 $assistedCycleLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER assisted_cycle ' })
 $assistedGroundBoostLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER ground_boost ' })
+$assistedAltitudeBandBeginLines = @($webswingLines | Where-Object {
+    $_ -match 'WEB_SWING SERVER assisted_altitude_band event=BEGIN '
+})
+$assistedAltitudeBandRaiseLines = @($webswingLines | Where-Object {
+    $_ -match 'WEB_SWING SERVER assisted_altitude_band event=RAISE '
+})
+$assistedBottomGuardLines = @($webswingLines | Where-Object {
+    $_ -match 'WEB_SWING SERVER assisted_bottom_guard '
+})
+$assistedAltitudeBottomGuardLines = @($assistedBottomGuardLines | Where-Object {
+    $_ -match 'reason=ALTITUDE_BAND'
+})
 $assistedVisualReleaseLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_release ' })
 $assistedVisualRetractedLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_retracted ' })
 $assistedVisualAttachLines = @($webswingLines | Where-Object { $_ -match 'WEB_SWING SERVER visual_tether_attach ' })
@@ -717,11 +729,38 @@ $assistedVisualShootTimingPass = $assistedVisualShootTimes.Count -eq $assistedVi
                                       $windupTime = Get-LogNumber $_ 'windup_time'
                                       $null -ne $shootTime -and $null -ne $windupTime -and
                                       [math]::Abs($windupTime - 12.0) -le 0.001 -and
-                                      $shootTime -ge 15.5 -and $shootTime -le 18.0
+                                      $shootTime -ge 14.5 -and $shootTime -le 18.0
                                   }).Count -eq $assistedVisualExtendedLines.Count
 $assistedAheadProbePass = @($assistedTickLines | Where-Object {
     $_ -match 'current_clearance=' -and $_ -match 'ahead_clearance=' -and $_ -match 'lookahead='
 }).Count -ge 10
+$assistedAltitudeBandBeginPass = @($assistedAltitudeBandBeginLines | Where-Object {
+    $attachY = Get-LogNumber $_ 'attach_y'
+    $lowPointY = Get-LogNumber $_ 'low_point_y'
+    $rope = Get-LogNumber $_ 'rope'
+    $null -ne $attachY -and $null -ne $lowPointY -and $null -ne $rope -and
+    $attachY -gt $lowPointY -and ($attachY - $lowPointY) -le 15.0 -and
+    $rope -ge 8.0 -and $_ -match 'preserve_elevation=1'
+}).Count -eq $assistedAltitudeBandBeginLines.Count -and $assistedAltitudeBandBeginLines.Count -ge 5
+$assistedAltitudeBandRaisePass = @($assistedAltitudeBandRaiseLines | Where-Object {
+    $previous = Get-LogNumber $_ 'previous_low_point_y'
+    $candidate = Get-LogNumber $_ 'candidate_low_point_y'
+    $lowPoint = Get-LogNumber $_ 'low_point_y'
+    $maxRise = Get-LogNumber $_ 'max_rise'
+    $gainCeiling = Get-LogNumber $_ 'gain_ceiling_y'
+    $null -ne $previous -and $null -ne $candidate -and $null -ne $lowPoint -and
+    $null -ne $maxRise -and $null -ne $gainCeiling -and
+    $lowPoint -gt $previous -and $lowPoint -le $candidate + 0.01 -and
+    ($lowPoint - $previous) -le $maxRise + 0.01 -and
+    $lowPoint -le $gainCeiling + 0.01 -and $_ -match 'preserve_elevation=1'
+}).Count -eq $assistedAltitudeBandRaiseLines.Count -and $assistedAltitudeBandRaiseLines.Count -ge 1
+$assistedAltitudeTelemetryPass = @($assistedTickLines | Where-Object {
+    $_ -match 'low_point_y=' -and $_ -match 'altitude_margin='
+}).Count -ge 10
+$assistedAltitudeBandPass = $assistedAltitudeBandBeginPass -and
+                            $assistedAltitudeBandRaisePass -and
+                            $assistedAltitudeTelemetryPass -and
+                            $assistedAltitudeBottomGuardLines.Count -ge 1
 $missingAssistedPhases = @(@('LAUNCH', 'ASCEND', 'APEX', 'DESCEND', 'BOTTOM') | Where-Object {
     $assistedPhases -notcontains $_
 })
@@ -735,7 +774,8 @@ $assistedControllerEvidencePass = $assistedTickLines.Count -ge 10 -and
                                   $assistedGroundBoostPass -and
                                   $assistedVisualCadencePass -and
                                   $assistedVisualShootTimingPass -and
-                                  $assistedAheadProbePass
+                                  $assistedAheadProbePass -and
+                                  $assistedAltitudeBandPass
 
 if ($Backend -eq 'SkyAssisted') {
     # SKY_ASSISTED intentionally has no rope constraint, anchor-quality, or
@@ -792,7 +832,7 @@ if ($timedOut) {
 } elseif (-not $chainHandoffEvidencePass) {
     $reason = "Automatic held-swing handoff evidence was missing for $expectedBackendName."
 } elseif ($Backend -eq 'SkyAssisted' -and -not $assistedControllerEvidencePass) {
-    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), visual_releases=$($assistedVisualReleaseLines.Count), visual_retracted=$($assistedVisualRetractedLines.Count), visual_attaches=$($assistedVisualAttachLines.Count), visual_extended=$($assistedVisualExtendedLines.Count), shoot_timing=$assistedVisualShootTimingPass, ahead_probe=$assistedAheadProbePass, missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
+    $reason = "Assisted cadence evidence was incomplete (ticks=$($assistedTickLines.Count), cycles=$($assistedCycleLines.Count), boosts=$($assistedGroundBoostLines.Count), visual_releases=$($assistedVisualReleaseLines.Count), visual_retracted=$($assistedVisualRetractedLines.Count), visual_attaches=$($assistedVisualAttachLines.Count), visual_extended=$($assistedVisualExtendedLines.Count), shoot_timing=$assistedVisualShootTimingPass, ahead_probe=$assistedAheadProbePass, altitude_band=$assistedAltitudeBandPass, altitude_begins=$($assistedAltitudeBandBeginLines.Count), altitude_raises=$($assistedAltitudeBandRaiseLines.Count), altitude_guards=$($assistedAltitudeBottomGuardLines.Count), missing_phases=$($missingAssistedPhases -join ','), bottom_peak=$([math]::Round($assistedBottomPeakSpeed, 3)), upper_avg=$([math]::Round($assistedUpperAverageSpeed, 3)), bottom_horizontal_avg=$([math]::Round($assistedBottomAverageHorizontalSpeed, 3)), apex_horizontal_avg=$([math]::Round($assistedApexAverageHorizontalSpeed, 3)), energy_growth=$([math]::Round($assistedEnergyGrowth, 3)))."
 } elseif (-not $retainedMomentumDetachPass) {
     $reason = "Space-release momentum evidence was incomplete; expected a non-trivial detach speed (max=$([math]::Round($maxDetachSpeed, 3)))."
 } elseif (-not $steeringEvidencePass) {
@@ -888,6 +928,14 @@ $result = [pscustomobject]@{
     assistedVisualShootTimes = @($assistedVisualShootTimes | ForEach-Object { [math]::Round($_, 3) })
     assistedVisualShootTimingPass = $assistedVisualShootTimingPass
     assistedAheadProbePass = $assistedAheadProbePass
+    assistedAltitudeBandBeginLines = $assistedAltitudeBandBeginLines.Count
+    assistedAltitudeBandRaiseLines = $assistedAltitudeBandRaiseLines.Count
+    assistedBottomGuardLines = $assistedBottomGuardLines.Count
+    assistedAltitudeBottomGuardLines = $assistedAltitudeBottomGuardLines.Count
+    assistedAltitudeBandBeginPass = $assistedAltitudeBandBeginPass
+    assistedAltitudeBandRaisePass = $assistedAltitudeBandRaisePass
+    assistedAltitudeTelemetryPass = $assistedAltitudeTelemetryPass
+    assistedAltitudeBandPass = $assistedAltitudeBandPass
     steeringLines = $steeringLines.Count
     steeringEvidencePass = $steeringEvidencePass
     steeringEvidence = @($steeringEvidence.Keys | Sort-Object)

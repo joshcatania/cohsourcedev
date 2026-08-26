@@ -88,6 +88,10 @@
 #define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        3.10f
 #define WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED    0.70f
 #define WEB_ASSIST_BOTTOM_MIN_TICKS            3
+#define WEB_ASSIST_ALTITUDE_TRANSITION_PADDING 3.0f
+#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE    4.0f
+#define WEB_ASSIST_ALTITUDE_FLOOR_RISE_ENERGY  2.0f
+#define WEB_ASSIST_ALTITUDE_MAX_GAIN           48.0f
 #define WEB_ASSIST_GROUND_PROBE_DISTANCE      32.0f
 #define WEB_ASSIST_GROUND_TARGET_CLEARANCE     6.0f
 #define WEB_ASSIST_GROUND_TRANSITION_PADDING   3.0f
@@ -860,6 +864,13 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
         MINMAX((horizontal_speed - WEB_ASSIST_HORIZONTAL_MIN_SPEED) *
                WEB_ASSIST_REATTACH_ENERGY_PER_SPEED,
                0.0f, WEB_ASSIST_MAX_ENERGY);
+    // SKY_ASSISTED does not use the visible endpoint as a rigid pivot, but
+    // the attachment still authors the altitude band for this run.  The
+    // fictional pivot and line length define a low point in world space so
+    // a rooftop/high-air attachment does not normalize back to street level.
+    motion->web_swing_assist_initial_low_point_y =
+        motion->web_swing_anchor[1] - motion->web_swing_rope_length;
+    motion->web_swing_assist_low_point_y = motion->web_swing_assist_initial_low_point_y;
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     motion->web_swing_visual_tether_visible = 1;
     motion->web_swing_visual_tether_gap_ticks = 0;
@@ -868,6 +879,13 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
     motion->web_swing_anim_shoot_active = 0;
     motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_EXTENDING;
     motion->web_swing_visual_tether_progress = 0.0f;
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s assisted_altitude_band event=BEGIN attach_y=%.3f anchor_y=%.3f rope=%.3f low_point_y=%.3f preserve_elevation=1\n",
+                   WEB_SWING_LOG_SIDE,
+                   ENTPOSY(e),
+                   motion->web_swing_anchor[1],
+                   motion->web_swing_rope_length,
+                   motion->web_swing_assist_low_point_y);
     webSwingAssistedSetPhase(e, initial_phase, grounded ? "GROUND_ACTIVATION" : "AIRBORNE_REATTACH");
 }
 
@@ -875,12 +893,37 @@ static void webSwingSetAssistedVisualAnchor(Entity *e, const Vec3 travel_intent)
 {
     MotionState *motion = e->motion;
     Vec3 lead;
+    F32 previous_low_point = motion->web_swing_assist_low_point_y;
+    F32 candidate_low_point;
+    F32 maximum_rise;
+    F32 gain_ceiling;
 
     copyVec3(ENTPOS(e), motion->web_swing_anchor);
     scaleVec3(travel_intent, WEB_SKY_ANCHOR_FORWARD_LEAD, lead);
     addVec3(motion->web_swing_anchor, lead, motion->web_swing_anchor);
     motion->web_swing_anchor[1] += WEB_SKY_ANCHOR_HEIGHT;
     motion->web_swing_rope_length = distance3(ENTPOS(e), motion->web_swing_anchor);
+    candidate_low_point = motion->web_swing_anchor[1] - motion->web_swing_rope_length;
+    maximum_rise = WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE +
+                   motion->web_swing_assist_energy * WEB_ASSIST_ALTITUDE_FLOOR_RISE_ENERGY;
+    gain_ceiling = motion->web_swing_assist_initial_low_point_y +
+                   WEB_ASSIST_ALTITUDE_MAX_GAIN *
+                   MIN(1.0f, motion->web_swing_assist_energy / WEB_ASSIST_MAX_ENERGY);
+    motion->web_swing_assist_low_point_y = MAX(previous_low_point,
+        MIN(gain_ceiling, MIN(candidate_low_point, previous_low_point + maximum_rise)));
+    if(motion->web_swing_assist_low_point_y > previous_low_point + 0.01f)
+    {
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s assisted_altitude_band event=RAISE cycle_id=%u previous_low_point_y=%.3f candidate_low_point_y=%.3f low_point_y=%.3f max_rise=%.3f gain_ceiling_y=%.3f energy=%.3f preserve_elevation=1\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->web_swing_assist_cycle_id,
+                       previous_low_point,
+                       candidate_low_point,
+                       motion->web_swing_assist_low_point_y,
+                       maximum_rise,
+                       gain_ceiling,
+                       motion->web_swing_assist_energy);
+    }
 }
 
 static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_intent)
@@ -1056,6 +1099,8 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 lookahead_distance;
     F32 speed;
     F32 phase_vertical_target;
+    F32 altitude_trigger_y;
+    F32 stopping_distance;
 
     if(phase == WEB_SWING_ASSIST_NONE)
         webSwingAssistedBegin(e, !motion->falling && !motion->jumping);
@@ -1142,15 +1187,34 @@ static void webSwingApplyAssistedController(Entity *e)
                                motion->web_swing_assist_energy * WEB_ASSIST_DESCEND_ENERGY_ACCEL) *
                               e->timestep;
             downward_speed = MAX(0.0f, -motion->vel[1]);
+            stopping_distance = downward_speed * downward_speed /
+                                (2.0f * WEB_ASSIST_GROUND_STOP_ACCEL);
             bottom_threshold = WEB_ASSIST_GROUND_TARGET_CLEARANCE +
                                WEB_ASSIST_GROUND_TRANSITION_PADDING +
-                               downward_speed * downward_speed / (2.0f * WEB_ASSIST_GROUND_STOP_ACCEL);
+                               stopping_distance;
             bottom_threshold = MIN(bottom_threshold, WEB_ASSIST_GROUND_PROBE_DISTANCE - 1.0f);
-            if(clearance <= bottom_threshold)
+            altitude_trigger_y = motion->web_swing_assist_low_point_y +
+                                 WEB_ASSIST_ALTITUDE_TRANSITION_PADDING +
+                                 stopping_distance;
+            if(clearance <= bottom_threshold || ENTPOSY(e) <= altitude_trigger_y)
             {
+                const char *bottom_reason = ENTPOSY(e) <= altitude_trigger_y &&
+                                            clearance > bottom_threshold ?
+                                            "ALTITUDE_BAND" : "GROUND_ANTICIPATION";
                 motion->web_swing_assist_energy = MIN(WEB_ASSIST_MAX_ENERGY,
                     motion->web_swing_assist_energy + WEB_ASSIST_ENERGY_PER_CYCLE);
-                webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_BOTTOM, "GROUND_ANTICIPATION");
+                filelog_printf("webswing.log",
+                               "WEB_SWING %s assisted_bottom_guard reason=%s cycle_id=%u pos_y=%.3f low_point_y=%.3f altitude_trigger_y=%.3f clearance=%.3f terrain_threshold=%.3f downward_speed=%.3f\n",
+                               WEB_SWING_LOG_SIDE,
+                               bottom_reason,
+                               motion->web_swing_assist_cycle_id,
+                               ENTPOSY(e),
+                               motion->web_swing_assist_low_point_y,
+                               altitude_trigger_y,
+                               clearance,
+                               bottom_threshold,
+                               downward_speed);
+                webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_BOTTOM, bottom_reason);
             }
             break;
 
@@ -1212,7 +1276,7 @@ static void webSwingApplyAssistedController(Entity *e)
     if(motion->web_swing_log_tick >= 15)
     {
         filelog_printf("webswing.log",
-                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u energy=%.3f clearance=%.3f current_clearance=%.3f ahead_clearance=%.3f lookahead=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f) visual_tether=%d\n",
+                       "WEB_SWING %s assisted_tick phase=%s phase_ticks=%u cycle_id=%u energy=%.3f clearance=%.3f current_clearance=%.3f ahead_clearance=%.3f lookahead=%.3f low_point_y=%.3f altitude_margin=%.3f speed=%.3f horizontal_speed=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) intent=(%.3f %.3f %.3f) input_magnitude=%.3f anchor=(%.2f %.2f %.2f) visual_tether=%d\n",
                        WEB_SWING_LOG_SIDE,
                        webSwingAssistPhaseName((WebSwingAssistPhase)motion->web_swing_assist_phase),
                        motion->web_swing_assist_phase_ticks,
@@ -1222,6 +1286,8 @@ static void webSwingApplyAssistedController(Entity *e)
                        current_clearance,
                        ahead_clearance,
                        lookahead_distance,
+                       motion->web_swing_assist_low_point_y,
+                       ENTPOSY(e) - motion->web_swing_assist_low_point_y,
                        lengthVec3(motion->vel),
                        horizontal_speed,
                        vecParamsXYZ(ENTPOS(e)),
@@ -1299,6 +1365,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
         motion->web_swing_assist_energy = 0.0f;
+        motion->web_swing_assist_initial_low_point_y = 0.0f;
+        motion->web_swing_assist_low_point_y = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;
@@ -1331,6 +1399,8 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_phase_ticks = 0;
         motion->web_swing_assist_cycle_id = 0;
         motion->web_swing_assist_energy = 0.0f;
+        motion->web_swing_assist_initial_low_point_y = 0.0f;
+        motion->web_swing_assist_low_point_y = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;

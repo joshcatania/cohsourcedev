@@ -298,11 +298,21 @@ static void webSwingSmokeLoop(void)
                 ground_had_attached = 0;
                 ground_previous_attached = 0;
             }
-            if (stage_frames++ >= 30)
+            /* Zone-specific test coordinates can begin above their nearest
+             * surface.  Wait for a real grounded state so this scenario
+             * continues to prove ground activation rather than accidentally
+             * exercising airborne reattach. */
+            if ((stage_frames >= 30 && !player->motion->falling &&
+                 !player->motion->jumping && player->motion->on_surf) ||
+                stage_frames >= 240)
             {
                 printf("WEB_SWING_SMOKE phase=ground_attach_hold_up_forward\n");
                 stage = 21;
                 stage_frames = 0;
+            }
+            else
+            {
+                ++stage_frames;
             }
             break;
 

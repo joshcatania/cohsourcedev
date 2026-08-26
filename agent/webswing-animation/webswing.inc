@@ -133,10 +133,11 @@ MEnd
 
 // V2 web-cycle choreography. Ground activation plays the complete authored
 // crouch -> one-hand shot -> two-hand catch/pull clip. Repeated cycles first
-// play the shot preparation in reverse while the old line retracts, hold the
-// compact recovery pose through the invisible gap, then play it forward as
-// the new line leaves the raised wrist. Physics stays phase-driven and does
-// not wait on any of these moves.
+// play the shot preparation in reverse while the old line retracts, keep a
+// small authored motion tail alive through the invisible gap, then play it
+// forward as the new line leaves the raised wrist. Physics stays phase-driven
+// and does not wait on any of these moves. No V2 HOLD is a static pose: a
+// held frame reads as a statue immediately while the controller keeps moving.
 
 Move WEBSWING_V2_GROUND_LAUNCH_START
 	Interpolate 4
@@ -153,9 +154,9 @@ MEnd
 Move WEBSWING_V2_GROUND_LAUNCH_HOLD
 	Interpolate 4
 	Priority 29
-	Scale 0
+	Scale 0.45
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 62 62
+		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 54 62
 	TEnd
 	Member "<WEBSWING_V2_GROUND_LAUNCH>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -178,9 +179,9 @@ MEnd
 Move WEBSWING_V2_RETRACT_HOLD
 	Interpolate 3
 	Priority 28
-	Scale 0
+	Scale 0.5
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 26 26
+		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 21 26
 	TEnd
 	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -203,9 +204,9 @@ MEnd
 Move WEBSWING_V2_SHOOT_HOLD
 	Interpolate 3
 	Priority 28
-	Scale 0
+	Scale 0.5
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 26 26
+		Anim MALE/COHSOURCEDEV_WEBSWING_SHOOT_V2 21 26
 	TEnd
 	Member "<WEBSWING_V2_SHOOT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -216,6 +217,7 @@ MEnd
 Move WEBSWING_FULL_ATTACHED_START
 	Interpolate 5
 	Priority 25
+	Scale 0.35
 	NextMove WEBSWING_FULL_ATTACHED_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 1 8
@@ -228,9 +230,9 @@ MEnd
 Move WEBSWING_FULL_ATTACHED_HOLD
 	Interpolate 5
 	Priority 24
-	Scale 0
+	Scale 0.35
 	Type Male
-		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 8 60
+		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 1 8
 	TEnd
 	Member "<WEBSWING_MALE_FULL_CORRECTED>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -241,6 +243,7 @@ MEnd
 Move WEBSWING_FULL_DESCEND_START
 	Interpolate 5
 	Priority 26
+	Scale 0.22
 	NextMove WEBSWING_FULL_DESCEND_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 9 17
@@ -253,9 +256,9 @@ MEnd
 Move WEBSWING_FULL_DESCEND_HOLD
 	Interpolate 5
 	Priority 25
-	Scale 0
+	Scale 0.22
 	Type Male
-		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 17 60
+		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 9 17
 	TEnd
 	Member "<WEBSWING_MALE_FULL_CORRECTED>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -266,6 +269,7 @@ MEnd
 Move WEBSWING_FULL_BOTTOM_START
 	Interpolate 5
 	Priority 26
+	Scale 0.25
 	NextMove WEBSWING_FULL_BOTTOM_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 18 22
@@ -278,9 +282,9 @@ MEnd
 Move WEBSWING_FULL_BOTTOM_HOLD
 	Interpolate 5
 	Priority 25
-	Scale 0
+	Scale 0.25
 	Type Male
-		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 22 60
+		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 18 22
 	TEnd
 	Member "<WEBSWING_MALE_FULL_CORRECTED>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
@@ -291,6 +295,7 @@ MEnd
 Move WEBSWING_FULL_ASCEND_START
 	Interpolate 5
 	Priority 26
+	Scale 0.32
 	NextMove WEBSWING_FULL_ASCEND_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 23 40
@@ -303,9 +308,9 @@ MEnd
 Move WEBSWING_FULL_ASCEND_HOLD
 	Interpolate 5
 	Priority 25
-	Scale 0
+	Scale 0.32
 	Type Male
-		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 40 60
+		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 23 40
 	TEnd
 	Member "<WEBSWING_MALE_FULL_CORRECTED>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"

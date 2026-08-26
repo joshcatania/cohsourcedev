@@ -13,7 +13,14 @@ $moves = @{}
 $current = $null
 foreach ($line in Get-Content -LiteralPath $IncludePath) {
     if ($line -match '^\s*Move\s+(\S+)\s*$') {
-        $current = [ordered]@{ Name = $Matches[1]; Member = @(); Interrupts = @() }
+        $current = [ordered]@{
+            Name = $Matches[1]
+            Member = @()
+            Interrupts = @()
+            Scale = 1.0
+            AnimStart = $null
+            AnimEnd = $null
+        }
         $moves[$current.Name] = $current
         continue
     }
@@ -21,7 +28,20 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
         $current = $null
         continue
     }
-    if ($null -eq $current -or $line -notmatch '^\s*(Member|Interrupts)\s+(.+)$') {
+    if ($null -eq $current) {
+        continue
+    }
+
+    if ($line -match '^\s*Scale\s+([0-9.]+)\s*$') {
+        $current.Scale = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture)
+        continue
+    }
+    if ($line -match '^\s*Anim\s+\S+\s+(\d+)\s+(\d+)\s*$') {
+        $current.AnimStart = [int]$Matches[1]
+        $current.AnimEnd = [int]$Matches[2]
+        continue
+    }
+    if ($line -notmatch '^\s*(Member|Interrupts)\s+(.+)$') {
         continue
     }
 
@@ -71,10 +91,27 @@ $retractGroup = '<WEBSWING_V2_RETRACT>'
 $groundLaunchGroup = '<WEBSWING_V2_GROUND_LAUNCH>'
 $standardMembers = @('<DEATHIRQ>', '<HITIRQ>', '<REACTIRQ>', '<BLOCKIRQ>', '<BLOCK>', '<STUNMOVE>', '<ATTACKIRQ>')
 $standardInterrupts = @('<JUMPS>', '<FALL>', '<GROUNDMOVEALL>')
+$phaseWindows = @{
+    ATTACHED = [pscustomobject]@{ Start = 1; End = 8; Scale = 0.35 }
+    DESCEND = [pscustomobject]@{ Start = 9; End = 17; Scale = 0.22 }
+    BOTTOM = [pscustomobject]@{ Start = 18; End = 22; Scale = 0.25 }
+    ASCEND = [pscustomobject]@{ Start = 23; End = 40; Scale = 0.32 }
+}
 
 foreach ($phase in $phases) {
     $start = Get-Move "WEBSWING_FULL_${phase}_START"
     $hold = Get-Move "WEBSWING_FULL_${phase}_HOLD"
+    $window = $phaseWindows[$phase]
+
+    foreach ($move in @($start, $hold)) {
+        Assert-Equal "$($move.Name) advances instead of freezing a terminal pose" ($move.Scale -gt 0.0) $true
+        Assert-Equal "$($move.Name) uses the accepted $phase frame window" (
+            $move.AnimStart -eq $window.Start -and $move.AnimEnd -eq $window.End
+        ) $true
+        Assert-Equal "$($move.Name) is tempo-matched to the assisted $phase phase" (
+            [math]::Abs($move.Scale - $window.Scale) -lt 0.0001
+        ) $true
+    }
 
     Assert-Contains "$($start.Name) is a corrected-mode member" $start.Member $correctedGroup
     Assert-Excludes "$($start.Name) is not a generic Web Swing member" $start.Member $genericGroup
@@ -123,6 +160,8 @@ $choreography = @(
 foreach ($item in $choreography) {
     $start = Get-Move "$($item.Prefix)_START"
     $hold = Get-Move "$($item.Prefix)_HOLD"
+    Assert-Equal "$($hold.Name) advances instead of freezing a terminal pose" ($hold.Scale -gt 0.0) $true
+    Assert-Equal "$($hold.Name) retains more than one authored frame" ($hold.AnimEnd -gt $hold.AnimStart) $true
     foreach ($move in @($start, $hold)) {
         Assert-Contains "$($move.Name) is a V2 $($item.Label) member" $move.Member $item.Group
         Assert-Excludes "$($move.Name) is isolated from corrected phase membership" $move.Member $correctedGroup

@@ -171,6 +171,8 @@ typedef struct MotionState
     F32                    web_swing_visual_tether_progress;
     F32                    web_swing_visual_tether_shoot_time;
     F32                    web_swing_assist_energy;
+    F32                    web_swing_assist_initial_low_point_y;
+    F32                    web_swing_assist_low_point_y;
     U32                    web_swing_anim_phase;
     U32                    web_swing_anim_segment_id;
     U32                    web_swing_anim_phase_segment_id;
