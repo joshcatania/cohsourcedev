@@ -138,7 +138,12 @@ foreach ($phase in $phases) {
     Assert-Excludes "$($start.Name) remains eligible for the complete controller phase" $start.Requires 'WEBSWING_ASCEND_MALE_ENTER'
     Assert-Excludes "$($start.Name) does not cut off the accepted ground launch" $start.Interrupts $groundLaunchGroup
     foreach ($group in @($retractGroup, $shootGroup)) {
-        Assert-Contains "$($start.Name) can resume directly after choreography $group" $start.Interrupts $group
+        if ($phase -eq 'ASCEND' -and $group -eq $retractGroup) {
+            Assert-Excludes "$($start.Name) yields ascent ownership to choreography $group" $start.Interrupts $group
+        }
+        else {
+            Assert-Contains "$($start.Name) can resume directly after choreography $group" $start.Interrupts $group
+        }
     }
 
     Assert-Contains "$($hold.Name) is a corrected-mode member" $hold.Member $correctedGroup
@@ -220,7 +225,7 @@ Assert-Equal 'retract START hands a long ascent to its moving tuck tail' (
 ) $true
 Assert-Contains 'retract START selects once per new assisted segment' $retractStart.Requires 'WEBSWING_ASCEND_MALE_ENTER'
 Assert-Excludes 'retract START does not wrap the full performance' $retractStart.Flags 'Cycle'
-Assert-Equal 'retract START spans the complete assisted arc instead of dwelling in tuck' $retractStart.Scale 0.5
+Assert-Equal 'retract START spans the assisted ascent instead of dwelling in tuck' $retractStart.Scale 0.65
 Assert-Equal 'retract HOLD reuses only the moving tuck tail' (
     $retractHold.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
     $retractHold.AnimStart -eq 54 -and $retractHold.AnimEnd -eq 62
@@ -260,7 +265,8 @@ foreach ($phase in $phases) {
     foreach ($item in $choreography) {
         $start = "$($item.Prefix)_START"
         $hold = "$($item.Prefix)_HOLD"
-        $phaseCanResume = $item.Prefix -ne 'WEBSWING_V2_GROUND_LAUNCH'
+        $phaseCanResume = $item.Prefix -ne 'WEBSWING_V2_GROUND_LAUNCH' -and
+                          -not ($item.Prefix -eq 'WEBSWING_V2_RETRACT' -and $phase -eq 'ASCEND')
         Assert-Equal "$phaseStart respects $start completion policy" (Test-Interrupt $phaseStart $start) $phaseCanResume
         Assert-Equal "$phaseStart respects $hold completion policy" (Test-Interrupt $phaseStart $hold) $phaseCanResume
         Assert-Equal "$start interrupts $phaseStart" (Test-Interrupt $start $phaseStart) $true
