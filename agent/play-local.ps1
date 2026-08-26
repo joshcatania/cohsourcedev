@@ -414,7 +414,12 @@ try {
 
     Write-Host 'Launching City of Heroes...'
     $clientArgs = @('-db', '127.0.0.1', '-authname', $AccountName, '-password', $Password, '-noverify', '-quicklogin', '1', '-noversioncheck', '-fullscreen', '0', '-screen', '1280', '720', '-stopinactivedisplay', '0')
-    if ($WebSwingDev) { $clientArgs += @('-webswingdev', '-nopopups') }
+    if ($WebSwingDev) {
+        # WebSwingDev's human-ready profile is deliberately explicit: the
+        # character, server backend request, and authored mode-3 animation
+        # selector must not depend on account ordering or normal defaults.
+        $clientArgs += @('-capturecharacter', 'Swingv3', '-nosharedmemory', '-webswingdev', '-webswingphysics', '1', '-webswinganim', '3', '-nopopups')
+    }
     if ($WebSwingCanary) { $clientArgs += @('-animcanary', '1') }
 
     $shadowRegistry = Join-Path $binDir 'registry-keys/hkey_current_user/software/cryptic/coh'

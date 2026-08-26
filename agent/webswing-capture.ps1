@@ -254,6 +254,13 @@ function Assert-Headers {
     }
 }
 
+function Get-CsvHeaders {
+    param([string]$Path)
+    $headerLine = Get-Content -LiteralPath $Path -TotalCount 1
+    if ([string]::IsNullOrWhiteSpace($headerLine)) { throw "CSV is empty: $Path" }
+    return @($headerLine.Split(',') | ForEach-Object { $_.Trim() })
+}
+
 try {
     if ([string]::IsNullOrWhiteSpace($InputPath)) {
         $inputDirectory = Get-LatestCaptureDirectory -Root (Join-Path $repoRoot 'bin\logs\game\webswing-captures')
@@ -274,6 +281,22 @@ try {
     )
     Assert-Headers -Path $eventsPath -Required @('event_type', 'capture_id', 'tick', 'cycle_id', 'phase')
 
+    $telemetryHeaders = Get-CsvHeaders -Path $telemetryPath
+    $eventHeaders = Get-CsvHeaders -Path $eventsPath
+    $identityHeaders = @('activation_id', 'capture_cycle_index', 'controller_cycle_id')
+    $telemetryIdentityCount = @($identityHeaders | Where-Object { $telemetryHeaders -contains $_ }).Count
+    $eventIdentityCount = @($identityHeaders | Where-Object { $eventHeaders -contains $_ }).Count
+    if ($telemetryIdentityCount -ne 0 -and $telemetryIdentityCount -ne $identityHeaders.Count) {
+        throw "Telemetry has a partial capture identity schema; expected all of $($identityHeaders -join ', ')."
+    }
+    if ($eventIdentityCount -ne 0 -and $eventIdentityCount -ne $identityHeaders.Count) {
+        throw "Events have a partial capture identity schema; expected all of $($identityHeaders -join ', ')."
+    }
+    if ($telemetryIdentityCount -eq $identityHeaders.Count -and $eventIdentityCount -ne $identityHeaders.Count) {
+        throw 'Telemetry has capture-local identity fields but events.csv does not; refusing an ambiguous package.'
+    }
+    $captureIdentityAvailable = $telemetryIdentityCount -eq $identityHeaders.Count
+
     $rawRows = @(Import-Csv -LiteralPath $telemetryPath)
     $eventRows = @(Import-Csv -LiteralPath $eventsPath)
     if ($rawRows.Count -eq 0) { throw "Capture telemetry has no samples: $telemetryPath" }
@@ -284,6 +307,10 @@ try {
         if ($null -eq $tickValue) { continue }
         $sampleValue = Get-NumberValue -Row $raw -Name 'sample_index'
         $cycleValue = Get-NumberValue -Row $raw -Name 'cycle_id'
+        $activationValue = Get-NumberValue -Row $raw -Name 'activation_id'
+        $captureCycleValue = Get-NumberValue -Row $raw -Name 'capture_cycle_index'
+        $controllerCycleValue = Get-NumberValue -Row $raw -Name 'controller_cycle_id'
+        if ($null -eq $controllerCycleValue) { $controllerCycleValue = $cycleValue }
         $phase = Get-TextValue -Row $raw -Name 'phase'
         if ([string]::IsNullOrWhiteSpace($phase)) { $phase = Get-TextValue -Row $raw -Name 'assist_phase' }
         $normalizedList.Add([pscustomobject][ordered]@{
@@ -296,7 +323,14 @@ try {
             AssistPhase = Get-TextValue -Row $raw -Name 'assist_phase'
             Phase = $phase
             PhaseTicks = if ($null -eq (Get-NumberValue -Row $raw -Name 'phase_ticks')) { 0 } else { [int64](Get-NumberValue -Row $raw -Name 'phase_ticks') }
-            CycleId = if ($null -eq $cycleValue) { 0 } else { [int64]$cycleValue }
+            ActivationId = if ($null -eq $activationValue) { 0 } else { [int64]$activationValue }
+            CaptureCycleIndex = if ($null -eq $captureCycleValue) {
+                if ($null -eq $controllerCycleValue) { 0 } else { [int64]$controllerCycleValue }
+            } else { [int64]$captureCycleValue }
+            ControllerCycleId = if ($null -eq $controllerCycleValue) { 0 } else { [int64]$controllerCycleValue }
+            # Keep the existing normalized name as the controller diagnostic
+            # value for callers of the original packaging script.
+            CycleId = if ($null -eq $controllerCycleValue) { 0 } else { [int64]$controllerCycleValue }
             AssistEnergy = Get-NumberValue -Row $raw -Name 'assist_energy'
             PosX = Get-NumberValue -Row $raw -Name 'pos_x'
             PosY = Get-NumberValue -Row $raw -Name 'pos_y'
@@ -361,11 +395,19 @@ try {
     $totalDisplacement = [Math]::Sqrt($deltaX * $deltaX + $deltaY * $deltaY + $deltaZ * $deltaZ)
     $horizontalDisplacement = [Math]::Sqrt($deltaX * $deltaX + $deltaZ * $deltaZ)
 
-    $cycleIds = @($rows | Where-Object { $_.CycleId -gt 0 } | Select-Object -ExpandProperty CycleId -Unique | Sort-Object)
+    $captureCycleIndices = @($rows |
+        Where-Object { $_.CaptureCycleIndex -gt 0 } |
+        Select-Object -ExpandProperty CaptureCycleIndex -Unique |
+        Sort-Object)
     $cycles = @()
-    foreach ($cycleId in $cycleIds) {
-        $cycleRows = @($rows | Where-Object { $_.CycleId -eq $cycleId })
+    foreach ($captureCycleIndex in $captureCycleIndices) {
+        $cycleRows = @($rows | Where-Object { $_.CaptureCycleIndex -eq $captureCycleIndex })
         if ($cycleRows.Count -eq 0) { continue }
+        $cycleFirst = $cycleRows[0]
+        $cycleLast = $cycleRows[$cycleRows.Count - 1]
+        $activationId = $cycleFirst.ActivationId
+        $controllerCycleIds = @($cycleRows | Select-Object -ExpandProperty ControllerCycleId -Unique)
+        $controllerCycleId = if ($controllerCycleIds.Count -eq 0) { 0 } else { [int64]$controllerCycleIds[0] }
         $apexY = Get-Maximum -Values @($cycleRows | ForEach-Object { $_.PosY })
         $lowY = Get-Minimum -Values @($cycleRows | ForEach-Object { $_.PosY })
         $apexRow = $cycleRows | Sort-Object PosY -Descending | Select-Object -First 1
@@ -380,8 +422,6 @@ try {
         $ratio = if ($null -ne $apexSpeed -and [Math]::Abs([double]$apexSpeed) -gt 0.000001 -and $null -ne $bottomSpeed) { [double]$bottomSpeed / [double]$apexSpeed } else { $null }
         $clearanceValues = @($cycleRows | ForEach-Object { Get-RowClearance $_ })
         $minClearance = Get-Minimum -Values $clearanceValues
-        $cycleFirst = $cycleRows[0]
-        $cycleLast = $cycleRows[$cycleRows.Count - 1]
         $cycleDeltaX = if ($null -ne $cycleFirst.PosX -and $null -ne $cycleLast.PosX) { [double]$cycleLast.PosX - $cycleFirst.PosX } else { 0.0 }
         $cycleDeltaZ = if ($null -ne $cycleFirst.PosZ -and $null -ne $cycleLast.PosZ) { [double]$cycleLast.PosZ - $cycleFirst.PosZ } else { 0.0 }
         $intentLength = if ($null -ne $cycleFirst.IntentX -and $null -ne $cycleFirst.IntentZ) { [Math]::Sqrt([double]$cycleFirst.IntentX * $cycleFirst.IntentX + [double]$cycleFirst.IntentZ * $cycleFirst.IntentZ) } else { 0.0 }
@@ -400,15 +440,25 @@ try {
             $reversalDefinition = 'strongest_descending_sample'
         }
         $reversalTicks = $null
+        $reversalStatus = 'not_applicable'
         if ($null -ne $reversalStart) {
-            $upward = $rows | Where-Object {
+            $upward = $cycleRows | Where-Object {
                 $_.Tick -ge $reversalStart.Tick -and ($_.VerticalSpeed -gt 0.0 -or $_.Phase -eq 'ASCEND' -or $_.AssistPhase -eq 'ASCEND')
             } | Select-Object -First 1
-            if ($null -ne $upward) { $reversalTicks = [int64]$upward.Tick - [int64]$reversalStart.Tick }
+            if ($null -ne $upward) {
+                $reversalTicks = [int64]$upward.Tick - [int64]$reversalStart.Tick
+                $reversalStatus = 'observed'
+            } else {
+                $reversalStatus = 'not_observed'
+            }
         }
 
         $cycles += [pscustomobject][ordered]@{
-            cycle_id = [int64]$cycleId
+            capture_cycle_index = [int64]$captureCycleIndex
+            activation_id = if ($null -eq $activationId) { 0 } else { [int64]$activationId }
+            controller_cycle_id = $controllerCycleId
+            # Compatibility alias: cycle_id is still the controller value.
+            cycle_id = $controllerCycleId
             start_tick = [int64]$cycleFirst.Tick
             end_tick = [int64]$cycleLast.Tick
             duration_seconds = ([double]($cycleLast.Tick - $cycleFirst.Tick)) / $physicsTickRate
@@ -423,6 +473,7 @@ try {
             forward_displacement = $forwardDisplacement
             bottom_entry_tick = if ($null -eq $bottomEntry) { $null } else { [int64]$bottomEntry.Tick }
             reversal_start = $reversalDefinition
+            reversal_status = $reversalStatus
             reversal_ticks = $reversalTicks
             reversal_seconds = if ($null -eq $reversalTicks) { $null } else { [double]$reversalTicks / $physicsTickRate }
         }
@@ -449,17 +500,21 @@ try {
         }
     }
 
-    $sha = ''
-    try { $sha = (& git -C $repoRoot rev-parse HEAD 2>$null | Select-Object -First 1).ToString().Trim() } catch { $sha = '' }
-    if ([string]::IsNullOrWhiteSpace($sha)) { $sha = 'not-recorded' }
+    $analysisRepoSha = ''
+    try { $analysisRepoSha = (& git -C $repoRoot rev-parse HEAD 2>$null | Select-Object -First 1).ToString().Trim() } catch { $analysisRepoSha = '' }
+    if ([string]::IsNullOrWhiteSpace($analysisRepoSha)) { $analysisRepoSha = 'not-recorded' }
     $captureId = if ($null -ne $metadata -and $null -ne $metadata.capture_id) { [int64]$metadata.capture_id } else { [int64]$first.CaptureId }
     $backendNames = @($rows | Select-Object -ExpandProperty Backend -Unique | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
     $backend = if ($backendNames.Count -eq 0) { 'unknown' } else { $backendNames -join '/' }
     $startedTime = if ($null -ne $metadata -and $null -ne $metadata.started_time) { [string]$metadata.started_time } else { $null }
     $sampleTickInterval = if ($null -ne $metadata -and $null -ne $metadata.sample_tick_interval) { [int]$metadata.sample_tick_interval } else { 2 }
+    $runtimeBuildId = if ($null -ne $metadata -and $null -ne $metadata.runtime_build_id -and
+                          -not [string]::IsNullOrWhiteSpace([string]$metadata.runtime_build_id)) {
+        [string]$metadata.runtime_build_id
+    } else { 'not-recorded' }
 
     $summaryObject = [ordered]@{
-        schema_version = 1
+        schema_version = 2
         capture = [ordered]@{
             capture_id = $captureId
             source_directory = (Resolve-Path -LiteralPath $inputDirectory).Path
@@ -467,7 +522,8 @@ try {
             started_tick = [int64]$first.Tick
             ended_tick = [int64]$last.Tick
             started_time = $startedTime
-            sha = $sha
+            analysis_repo_sha = $analysisRepoSha
+            runtime_build_id = $runtimeBuildId
             backend = $backend
             source = 'client'
             development_only = $true
@@ -476,6 +532,7 @@ try {
             sample_tick_interval = $sampleTickInterval
             sample_count = $rows.Count
             event_count = $eventRows.Count
+            cycle_identity = if ($captureIdentityAvailable) { 'capture_local' } else { 'legacy_controller_cycle_id' }
         }
         overall = [ordered]@{
             duration_seconds = $durationSeconds
@@ -516,13 +573,13 @@ try {
         definitions = [ordered]@{
             duration = 'tick span divided by 30 physics ticks per second'
             phase_duration = 'sample count divided by nominal 15 samples per second'
-            cycle_duration = 'first to last telemetry tick with the same cycle_id, divided by 30'
+            cycle_duration = 'first to last telemetry tick with the same capture_cycle_index, divided by 30'
             apex = 'highest sampled pos_y in the cycle'
             low = 'lowest sampled pos_y in the cycle'
             forward_displacement = 'horizontal displacement projected onto the first sampled horizontal intent; horizontal distance if no intent is available'
             minimum_clearance = 'minimum valid value across current and ahead terrain-clearance copies'
             bottom_speed = 'mean horizontal speed during BOTTOM samples, falling back to the lowest sampled row'
-            reversal = 'ticks from BOTTOM entry, or strongest descending sample when no BOTTOM row exists, to the first sample with positive vertical speed or ASCEND phase'
+            reversal = 'ticks from BOTTOM entry, or strongest descending sample when no BOTTOM row exists, to the first positive vertical speed or ASCEND sample within the same capture_cycle_index; null when not observed'
             standard_deviation = 'population standard deviation across captured cycles'
         }
     }
@@ -537,7 +594,8 @@ try {
     [void]$summaryText.AppendLine('WEBSWING MANUAL CAPTURE')
     [void]$summaryText.AppendLine('')
     [void]$summaryText.AppendLine(('Capture: CAP {0:D3}' -f $captureId))
-    [void]$summaryText.AppendLine(('SHA: {0}' -f $sha))
+    [void]$summaryText.AppendLine(('Analysis repo SHA: {0}' -f $analysisRepoSha))
+    [void]$summaryText.AppendLine(('Runtime build ID: {0}' -f $runtimeBuildId))
     [void]$summaryText.AppendLine(('Backend: {0}' -f $backend))
     [void]$summaryText.AppendLine('Animation mode if detectable: not recorded; anim_phase and segment IDs are in telemetry')
     [void]$summaryText.AppendLine(('Duration: {0} s' -f (Format-Value $durationSeconds 3)))
@@ -577,15 +635,17 @@ try {
     [void]$summaryText.AppendLine(('low Y stddev: {0}' -f (Format-Value $summaryObject.consistency.low_y_stddev 3)))
     [void]$summaryText.AppendLine(('bottom speed stddev: {0}' -f (Format-Value $summaryObject.consistency.bottom_speed_stddev 3)))
     [void]$summaryText.AppendLine('')
-    [void]$summaryText.AppendLine('CYCLE TABLE')
-    [void]$summaryText.AppendLine('Cycle | Duration | ApexY | LowY | Excursion | MinClear | ApexSpd | BottomSpd | Bottom/Apex | Forward')
-    [void]$summaryText.AppendLine('------|----------|-------|------|-----------|----------|----------|------------|-------------|--------')
+    [void]$summaryText.AppendLine('CYCLE TABLE (capture-local identity)')
+    [void]$summaryText.AppendLine('CaptureCycle | Activation | ControllerCycle | Duration | ApexY | LowY | Excursion | MinClear | ApexSpd | BottomSpd | Bottom/Apex | Forward')
+    [void]$summaryText.AppendLine('-------------|------------|-----------------|----------|-------|------|-----------|----------|----------|------------|-------------|--------')
     if ($cycles.Count -eq 0) {
-        [void]$summaryText.AppendLine('No Sky-Assisted cycles with cycle_id > 0.')
+        [void]$summaryText.AppendLine('No swing cycles with capture_cycle_index > 0.')
     } else {
         foreach ($cycle in $cycles) {
-            [void]$summaryText.AppendLine(('{0,5} | {1,8} | {2,5} | {3,5} | {4,9} | {5,8} | {6,8} | {7,10} | {8,11} | {9,8}' -f
-                $cycle.cycle_id,
+            [void]$summaryText.AppendLine(('{0,12} | {1,10} | {2,15} | {3,8} | {4,5} | {5,5} | {6,9} | {7,8} | {8,8} | {9,10} | {10,11} | {11,8}' -f
+                $cycle.capture_cycle_index,
+                $cycle.activation_id,
+                $cycle.controller_cycle_id,
                 (Format-Value $cycle.duration_seconds 3),
                 (Format-Value $cycle.apex_y 2),
                 (Format-Value $cycle.low_y 2),
@@ -598,7 +658,10 @@ try {
         }
     }
     [void]$summaryText.AppendLine('')
-    [void]$summaryText.AppendLine('Definitions: phase durations use nominal 15 Hz samples; reversal is measured from BOTTOM entry (or strongest descending sample) to positive vertical velocity/ASCEND.')
+    [void]$summaryText.AppendLine('Definitions: phase durations use nominal 15 Hz samples; capture cycles use capture_cycle_index; cycle_id/controller_cycle_id retain the controller value; reversal never crosses a capture cycle and is null when not observed.')
+    if (-not $captureIdentityAvailable) {
+        [void]$summaryText.AppendLine('Warning: this is a legacy capture without capture-local identity fields; capture_cycle_index falls back to controller cycle_id and cannot disambiguate reused controller ids.')
+    }
     [void]$summaryText.AppendLine(('Raw capture: {0}' -f $inputDirectory))
     [void]$summaryText.AppendLine(('Packaged artifacts: {0}' -f $outputDirectory))
     [IO.File]::WriteAllText((Join-Path $outputDirectory 'summary.txt'), $summaryText.ToString(), (New-Object System.Text.UTF8Encoding($false)))
@@ -607,14 +670,17 @@ try {
     [IO.File]::WriteAllText((Join-Path $outputDirectory 'summary.json'), $summaryJson, (New-Object System.Text.UTF8Encoding($false)))
 
     if ($GoldenCycle -gt 0) {
-        $goldenRows = @($rows | Where-Object { $_.CycleId -eq $GoldenCycle })
+        $goldenRows = @($rows | Where-Object { $_.CaptureCycleIndex -eq $GoldenCycle })
         if ($goldenRows.Count -eq 0) { throw "Golden cycle $GoldenCycle was not present in the capture." }
         $goldenSamples = @($goldenRows | ForEach-Object {
             [ordered]@{
                 tick = $_.Tick
                 phase = $_.Phase
                 phase_ticks = $_.PhaseTicks
-                cycle_id = $_.CycleId
+                capture_cycle_index = $_.CaptureCycleIndex
+                activation_id = $_.ActivationId
+                controller_cycle_id = $_.ControllerCycleId
+                cycle_id = $_.ControllerCycleId
                 pos_x = $_.PosX; pos_y = $_.PosY; pos_z = $_.PosZ
                 vel_x = $_.VelX; vel_y = $_.VelY; vel_z = $_.VelZ
                 total_speed = $_.TotalSpeed; horizontal_speed = $_.HorizontalSpeed
@@ -625,10 +691,10 @@ try {
             }
         })
         $goldenObject = [ordered]@{
-            schema_version = 1
+            schema_version = 2
             source_capture_id = $captureId
-            cycle_id = $GoldenCycle
-            cycle = @($cycles | Where-Object { $_.cycle_id -eq $GoldenCycle } | Select-Object -First 1)
+            capture_cycle_index = $GoldenCycle
+            cycle = @($cycles | Where-Object { $_.capture_cycle_index -eq $GoldenCycle } | Select-Object -First 1)
             samples = $goldenSamples
             definitions = 'Reference telemetry only; this artifact does not tune or optimize Web Swing.'
         }

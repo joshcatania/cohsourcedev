@@ -206,7 +206,12 @@ static const char *pmotionWebSwingAnimSide(void)
 typedef struct WebSwingCaptureFrame
 {
     U32 tick;
-    U32 cycle_id;
+    // The CSV cycle_id alias remains the controller's diagnostic value.
+    // Capture-local identities below are assigned only while this manual
+    // capture is active.
+    U32 controller_cycle_id;
+    U32 activation_id;
+    U32 capture_cycle_index;
     U32 phase_ticks;
     U32 anim_segment_id;
     U32 anim_phase_segment_id;
@@ -249,6 +254,8 @@ typedef struct WebSwingCaptureState
     U32 start_tick;
     U32 last_sample_tick;
     U32 sample_index;
+    U32 activation_id;
+    U32 capture_cycle_index;
     Entity *player;
     FILE *telemetry;
     FILE *events;
@@ -294,7 +301,10 @@ static const char *pmotionWebSwingCaptureTetherStateName(WebSwingVisualTetherSta
 
 static int pmotionWebSwingCaptureAllowed(void)
 {
-    return global_state.webswing_dev && isDevelopmentMode();
+    // WebSwingDev is the private client-side eligibility route.  It is
+    // intentionally independent of the normal loose-data development-mode
+    // check, which is not enabled by the private -webswingdev flag.
+    return global_state.webswing_dev;
 }
 
 static void pmotionWebSwingCaptureBuildIntent(Entity *e, Vec3 intent, F32 *input_magnitude)
@@ -333,7 +343,7 @@ static void pmotionWebSwingCaptureBuildFrame(Entity *e, WebSwingCaptureFrame *fr
 
     memset(frame, 0, sizeof(*frame));
     frame->tick = motion->tickCounter;
-    frame->cycle_id = motion->web_swing_assist_cycle_id;
+    frame->controller_cycle_id = motion->web_swing_assist_cycle_id;
     frame->phase_ticks = sky_assisted ? motion->web_swing_assist_phase_ticks : 0;
     frame->anim_segment_id = motion->web_swing_anim_segment_id;
     frame->anim_phase_segment_id = motion->web_swing_anim_phase_segment_id;
@@ -389,6 +399,39 @@ static void pmotionWebSwingCaptureBuildFrame(Entity *e, WebSwingCaptureFrame *fr
     frame->assist_energy = motion->web_swing_assist_energy;
 }
 
+static void pmotionWebSwingCaptureAssignIdentity(WebSwingCaptureFrame *frame)
+{
+    WebSwingCaptureFrame *previous = &s_web_swing_capture.last_frame;
+    int first_frame = !s_web_swing_capture.has_last_frame;
+    int cycle_active = frame->controller_cycle_id > 0 && frame->swing_enabled;
+    int cycle_started = cycle_active &&
+        (first_frame || previous->controller_cycle_id != frame->controller_cycle_id ||
+         !previous->swing_enabled);
+
+    if (first_frame)
+    {
+        s_web_swing_capture.activation_id = frame->swing_enabled ? 1 : 0;
+        s_web_swing_capture.capture_cycle_index = 0;
+    }
+    else if (!previous->swing_enabled && frame->swing_enabled)
+    {
+        ++s_web_swing_capture.activation_id;
+    }
+
+    // A capture cycle is only assigned to an active controller cycle.  This
+    // keeps release/backend-reset gaps out of the prior cycle's measurements.
+    // A later reuse of the same controller id receives a new index after the
+    // intervening inactive interval.
+    if (cycle_started)
+    {
+        ++s_web_swing_capture.capture_cycle_index;
+    }
+
+    frame->activation_id = s_web_swing_capture.activation_id;
+    frame->capture_cycle_index = cycle_active ?
+        s_web_swing_capture.capture_cycle_index : 0;
+}
+
 static void pmotionWebSwingCaptureReportIoFailure(const char *kind)
 {
     if (!s_web_swing_capture.io_failure_logged)
@@ -406,7 +449,7 @@ static void pmotionWebSwingCaptureWriteTelemetryHeader(void)
         return;
 
     if (fprintf(s_web_swing_capture.telemetry,
-                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
+                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
     {
         s_web_swing_capture.telemetry_failed = 1;
         pmotionWebSwingCaptureReportIoFailure("telemetry_header");
@@ -419,7 +462,7 @@ static void pmotionWebSwingCaptureWriteEventsHeader(void)
         return;
 
     if (fprintf(s_web_swing_capture.events,
-                "event_type,detail,capture_id,tick,cycle_id,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
+                "event_type,detail,capture_id,tick,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
     {
         s_web_swing_capture.events_failed = 1;
         pmotionWebSwingCaptureReportIoFailure("events_header");
@@ -433,9 +476,11 @@ static void pmotionWebSwingCaptureWriteEvent(const WebSwingCaptureFrame *frame,
         return;
 
     if (fprintf(s_web_swing_capture.events,
-                "%s,%s,%u,%u,%u,%s,%d,%d,%s,%s,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
+                "%s,%s,%u,%u,%u,%u,%u,%u,%s,%d,%d,%s,%s,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
                 event_type, detail ? detail : "none",
-                s_web_swing_capture.capture_id, frame->tick, frame->cycle_id,
+                s_web_swing_capture.capture_id, frame->tick,
+                frame->controller_cycle_id, frame->activation_id,
+                frame->capture_cycle_index, frame->controller_cycle_id,
                 frame->backend, frame->swing_enabled, frame->attached,
                 frame->assist_phase, frame->phase, frame->phase_ticks,
                 frame->position[0], frame->position[1], frame->position[2],
@@ -460,11 +505,13 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
     if (s_web_swing_capture.telemetry && !s_web_swing_capture.telemetry_failed)
     {
         if (fprintf(s_web_swing_capture.telemetry,
-                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
+                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%u,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
                     s_web_swing_capture.capture_id, frame->tick, sample_index,
                     elapsed_seconds, frame->backend, frame->swing_enabled,
                     frame->attached, frame->assist_phase, frame->phase,
-                    frame->phase_ticks, frame->cycle_id, frame->assist_energy,
+                    frame->phase_ticks, frame->controller_cycle_id,
+                    frame->activation_id, frame->capture_cycle_index,
+                    frame->controller_cycle_id, frame->assist_energy,
                     frame->position[0], frame->position[1], frame->position[2],
                     frame->velocity[0], frame->velocity[1], frame->velocity[2],
                     frame->total_speed, frame->horizontal_speed, frame->vertical_speed,
@@ -488,9 +535,13 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
     s_web_swing_capture.has_last_sample = 1;
 }
 
-static void pmotionWebSwingCaptureTrackFrame(const WebSwingCaptureFrame *frame, int initial)
+static void pmotionWebSwingCaptureTrackFrame(WebSwingCaptureFrame *frame, int initial,
+                                             int identity_assigned)
 {
     WebSwingCaptureFrame *previous = &s_web_swing_capture.last_frame;
+
+    if (!identity_assigned)
+        pmotionWebSwingCaptureAssignIdentity(frame);
 
     if (initial || !s_web_swing_capture.has_last_frame)
     {
@@ -504,7 +555,7 @@ static void pmotionWebSwingCaptureTrackFrame(const WebSwingCaptureFrame *frame, 
             pmotionWebSwingCaptureWriteEvent(frame, "ATTACH", "capture_start");
             s_web_swing_capture.has_attached_once = 1;
         }
-        if (frame->cycle_id > 0)
+        if (frame->capture_cycle_index > 0)
         {
             pmotionWebSwingCaptureWriteEvent(frame, "CYCLE_BEGIN", "capture_start");
             s_web_swing_capture.cycle_open = 1;
@@ -525,7 +576,8 @@ static void pmotionWebSwingCaptureTrackFrame(const WebSwingCaptureFrame *frame, 
             pmotionWebSwingCaptureWriteEvent(frame,
                 frame->swing_enabled ? "SWING_ENABLE" : "SWING_DISABLE",
                 "state_transition");
-            pmotionWebSwingCaptureWriteEvent(frame,
+            pmotionWebSwingCaptureWriteEvent(
+                frame->swing_enabled ? frame : previous,
                 frame->swing_enabled ? "ACTIVATE" : "RELEASE",
                 "state_transition");
         }
@@ -539,18 +591,18 @@ static void pmotionWebSwingCaptureTrackFrame(const WebSwingCaptureFrame *frame, 
         }
         else if (previous->attached && !frame->attached)
         {
-            pmotionWebSwingCaptureWriteEvent(frame, "RELEASE", "state_transition");
-            pmotionWebSwingCaptureWriteEvent(frame, "DETACH", "state_transition");
+            pmotionWebSwingCaptureWriteEvent(previous, "RELEASE", "state_transition");
+            pmotionWebSwingCaptureWriteEvent(previous, "DETACH", "state_transition");
         }
 
-        if (previous->cycle_id != frame->cycle_id)
+        if (previous->capture_cycle_index != frame->capture_cycle_index)
         {
             if (s_web_swing_capture.cycle_open)
             {
                 pmotionWebSwingCaptureWriteEvent(previous, "CYCLE_END", "cycle_transition");
                 s_web_swing_capture.cycle_open = 0;
             }
-            if (frame->cycle_id > 0)
+            if (frame->capture_cycle_index > 0)
             {
                 pmotionWebSwingCaptureWriteEvent(frame, "CYCLE_BEGIN", "cycle_transition");
                 s_web_swing_capture.cycle_open = 1;
@@ -625,7 +677,7 @@ static void pmotionWebSwingCaptureWriteMetadata(const WebSwingCaptureFrame *fram
 
     if (fprintf(metadata,
                 "{\n"
-                "  \"schema_version\": 1,\n"
+                "  \"schema_version\": 2,\n"
                 "  \"capture_id\": %u,\n"
                 "  \"started_tick\": %u,\n"
                 "  \"started_time\": \"%s\",\n"
@@ -634,16 +686,22 @@ static void pmotionWebSwingCaptureWriteMetadata(const WebSwingCaptureFrame *fram
                 "  \"sample_rate_hz\": 15,\n"
                 "  \"source\": \"client\",\n"
                 "  \"development_only\": true,\n"
+                "  \"runtime_build_id\": \"not-recorded\",\n"
+                "  \"activation_id_at_start\": %u,\n"
+                "  \"capture_cycle_index_at_start\": %u,\n"
+                "  \"controller_cycle_id_at_start\": %u,\n"
                 "  \"backend_at_start\": \"%s\"\n"
                 "}\n",
                 s_web_swing_capture.capture_id, frame->tick, stamp,
-                WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL, frame->backend) < 0)
+                WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL, frame->activation_id,
+                frame->capture_cycle_index, frame->controller_cycle_id,
+                frame->backend) < 0)
         pmotionWebSwingCaptureReportIoFailure("metadata_row");
 
     fclose(metadata);
 }
 
-static void pmotionWebSwingCaptureBegin(Entity *e, const WebSwingCaptureFrame *frame)
+static void pmotionWebSwingCaptureBegin(Entity *e, WebSwingCaptureFrame *frame)
 {
     char stamp[64];
     char path[MAX_PATH];
@@ -697,9 +755,10 @@ static void pmotionWebSwingCaptureBegin(Entity *e, const WebSwingCaptureFrame *f
 
     pmotionWebSwingCaptureWriteTelemetryHeader();
     pmotionWebSwingCaptureWriteEventsHeader();
+    pmotionWebSwingCaptureAssignIdentity(frame);
     pmotionWebSwingCaptureWriteMetadata(frame, stamp);
     pmotionWebSwingCaptureWriteEvent(frame, "CAPTURE_BEGIN", "manual_start");
-    pmotionWebSwingCaptureTrackFrame(frame, 1);
+    pmotionWebSwingCaptureTrackFrame(frame, 1, 1);
     pmotionWebSwingCaptureWriteSample(frame);
 
     if (!s_web_swing_capture_atexit_registered)
@@ -709,8 +768,10 @@ static void pmotionWebSwingCaptureBegin(Entity *e, const WebSwingCaptureFrame *f
     }
 
     filelog_printf("webswing.log",
-                   "WEBSWING_CAPTURE CAPTURE_BEGIN capture_id=%03u start_tick=%u sample_tick_interval=%u sample_rate_hz=15 output_dir=%s backend=%s\n",
+                   "WEBSWING_CAPTURE CAPTURE_BEGIN capture_id=%03u start_tick=%u activation_id=%u capture_cycle_index=%u controller_cycle_id=%u sample_tick_interval=%u sample_rate_hz=15 output_dir=%s backend=%s\n",
                    s_web_swing_capture.capture_id, frame->tick,
+                   frame->activation_id, frame->capture_cycle_index,
+                   frame->controller_cycle_id,
                    WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL,
                    s_web_swing_capture.capture_dir[0] ? s_web_swing_capture.capture_dir : "<unavailable>",
                    frame->backend);
@@ -727,7 +788,7 @@ static void pmotionWebSwingCaptureEnd(Entity *e, const char *reason)
     if (e && e->motion)
     {
         pmotionWebSwingCaptureBuildFrame(e, &frame);
-        pmotionWebSwingCaptureTrackFrame(&frame, 0);
+        pmotionWebSwingCaptureTrackFrame(&frame, 0, 0);
         event_frame = &frame;
     }
     else if (s_web_swing_capture.has_last_frame)
@@ -754,9 +815,11 @@ static void pmotionWebSwingCaptureEnd(Entity *e, const char *reason)
                                      reason ? reason : "manual_stop");
 
     filelog_printf("webswing.log",
-                   "WEBSWING_CAPTURE CAPTURE_END capture_id=%03u end_tick=%u samples=%u output_dir=%s reason=%s\n",
+                   "WEBSWING_CAPTURE CAPTURE_END capture_id=%03u end_tick=%u samples=%u last_activation_id=%u last_capture_cycle_index=%u last_controller_cycle_id=%u output_dir=%s reason=%s\n",
                    s_web_swing_capture.capture_id, event_frame->tick,
                    s_web_swing_capture.sample_index,
+                   event_frame->activation_id, event_frame->capture_cycle_index,
+                   event_frame->controller_cycle_id,
                    s_web_swing_capture.capture_dir[0] ? s_web_swing_capture.capture_dir : "<unavailable>",
                    reason ? reason : "manual_stop");
     pmotionWebSwingCaptureCloseFiles();
@@ -801,7 +864,7 @@ static void pmotionWebSwingCaptureTick(Entity *e)
         return;
     }
 
-    pmotionWebSwingCaptureTrackFrame(&frame, 0);
+    pmotionWebSwingCaptureTrackFrame(&frame, 0, 0);
     if (!s_web_swing_capture.has_last_sample ||
         (U32)(frame.tick - s_web_swing_capture.last_sample_tick) >=
             WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL)
@@ -830,11 +893,14 @@ void pmotionWebSwingCaptureRenderHud(void)
         return;
 
     xyprintfcolor(2, 2, 255, 220, 80, "WEBSWING CAP %03u", s_web_swing_capture.capture_id);
-    xyprintfcolor(2, 3, 150, 255, 255, "%s", frame->backend);
-    xyprintfcolor(2, 4, 255, 255, 255, "tick: %u  sample: %u", frame->tick,
+    xyprintfcolor(2, 3, 255, 255, 255, "ACT %u  CYCLE %u  controller cycle %u",
+                  frame->activation_id, frame->capture_cycle_index,
+                  frame->controller_cycle_id);
+    xyprintfcolor(2, 4, 150, 255, 255, "%s", frame->backend);
+    xyprintfcolor(2, 5, 255, 255, 255, "tick: %u  sample: %u", frame->tick,
                   s_web_swing_capture.sample_index);
-    xyprintfcolor(2, 5, 255, 255, 255, "cycle: %u  phase: %s", frame->cycle_id, frame->phase);
-    xyprintfcolor(2, 6, 255, 255, 255, "phase tick: %u", frame->phase_ticks);
+    xyprintfcolor(2, 6, 255, 255, 255, "phase: %s  phase tick: %u",
+                  frame->phase, frame->phase_ticks);
     xyprintfcolor(2, 7, 180, 255, 180, "speed: %0.2f  horiz: %0.2f  vert: %0.2f",
                   frame->total_speed, frame->horizontal_speed, frame->vertical_speed);
     xyprintfcolor(2, 8, 180, 255, 180, "pos: (%0.1f %0.1f %0.1f)",
