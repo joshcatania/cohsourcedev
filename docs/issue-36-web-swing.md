@@ -109,6 +109,8 @@ Josh's first human pass on that candidate exposed a sequencer timing fault rathe
 
 The follow-up 05:57 Steel Canyon video proved that restart eligibility alone was insufficient. Every later cycle logged `selectedMove=WEBSWING_V2_RETRACT_START`, immediately followed by `selectedMove=WEBSWING_FULL_ASCEND_START`; visually, the full pull survived for only one sequencer update and the character remained in the ordinary two-hand tuck. `WEBSWING_FULL_ASCEND_START` no longer interrupts the private retract/pull group. The repeated 1..62 performance now owns the complete assisted ascent at `Scale 0.65`, matching the observed roughly three-second ascent interval, and the controller's DESCEND move remains responsible for the intentional handoff into the downswing.
 
+The first fresh-client trace after that correction exposed a second path into the same failure: `RETRACT_START -> FULL_ATTACHED_START -> FULL_ASCEND_START`. The phase-neutral attached fallback could still interrupt the pull before the ascent move took over from it. Both attached and ascend starts now yield to the private retract/pull group; descend and bottom remain eligible to end it at their real controller transitions.
+
 ## Animation slice
 
 - `pmotionSetState()` resolves the Web Swing phase and choreography bits by name, so missing animation data leaves the ordinary sequencer state unchanged. `REAL_ANCHOR` retains rope/velocity classification; `SKY_ASSISTED` maps the authored controller phase directly (`LAUNCH` attach, `ASCEND` ascend, `APEX` stable attached/dead-band pose, `DESCEND` descend, `BOTTOM` bottom) and maps its visual tether state directly to ground launch, retract/recovery, and wrist fire.

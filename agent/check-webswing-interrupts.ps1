@@ -138,7 +138,7 @@ foreach ($phase in $phases) {
     Assert-Excludes "$($start.Name) remains eligible for the complete controller phase" $start.Requires 'WEBSWING_ASCEND_MALE_ENTER'
     Assert-Excludes "$($start.Name) does not cut off the accepted ground launch" $start.Interrupts $groundLaunchGroup
     foreach ($group in @($retractGroup, $shootGroup)) {
-        if ($phase -eq 'ASCEND' -and $group -eq $retractGroup) {
+        if ($phase -in @('ATTACHED', 'ASCEND') -and $group -eq $retractGroup) {
             Assert-Excludes "$($start.Name) yields ascent ownership to choreography $group" $start.Interrupts $group
         }
         else {
@@ -266,7 +266,7 @@ foreach ($phase in $phases) {
         $start = "$($item.Prefix)_START"
         $hold = "$($item.Prefix)_HOLD"
         $phaseCanResume = $item.Prefix -ne 'WEBSWING_V2_GROUND_LAUNCH' -and
-                          -not ($item.Prefix -eq 'WEBSWING_V2_RETRACT' -and $phase -eq 'ASCEND')
+                          -not ($item.Prefix -eq 'WEBSWING_V2_RETRACT' -and $phase -in @('ATTACHED', 'ASCEND'))
         Assert-Equal "$phaseStart respects $start completion policy" (Test-Interrupt $phaseStart $start) $phaseCanResume
         Assert-Equal "$phaseStart respects $hold completion policy" (Test-Interrupt $phaseStart $hold) $phaseCanResume
         Assert-Equal "$start interrupts $phaseStart" (Test-Interrupt $start $phaseStart) $true
