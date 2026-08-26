@@ -135,9 +135,12 @@ MEnd
 // crouch -> one-hand shot -> two-hand catch/pull clip. Repeated cycles first
 // play the complete ground-launch performance forward again while the old
 // line retracts and the replacement fires: planted preparation -> raised
-// wrist -> leg kick-back -> tuck. A moving tuck tail covers unusually long
-// ascents. Physics stays phase-driven; only the initial street boost waits for
-// its web to visibly attach. No V2 HOLD is a static pose.
+// wrist -> leg kick-back -> tuck. The repeat is stretched across one full
+// assisted arc instead of reaching its tuck halfway through and dwelling
+// there. A moving tuck tail covers only unusually long arcs. A legitimate new
+// assisted cycle may replace a still-finishing initial launch; no ordinary
+// phase threshold can. Physics stays phase-driven; only the initial street
+// boost waits for its web to visibly attach. No V2 HOLD is a static pose.
 
 Move WEBSWING_V2_GROUND_LAUNCH_START
 	Interpolate 4
@@ -167,12 +170,13 @@ MEnd
 Move WEBSWING_V2_RETRACT_START
 	Interpolate 2
 	Priority 29
+	Scale 0.5
 	NextMove WEBSWING_V2_RETRACT_HOLD
 	Type Male
 		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 1 62
 	TEnd
 	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
-	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_GROUND_LAUNCH>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
 	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_RETRACT", "WEBSWING_ASCEND_MALE_ENTER"
 MEnd
 

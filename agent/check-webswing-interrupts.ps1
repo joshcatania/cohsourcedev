@@ -220,6 +220,7 @@ Assert-Equal 'retract START hands a long ascent to its moving tuck tail' (
 ) $true
 Assert-Contains 'retract START selects once per new assisted segment' $retractStart.Requires 'WEBSWING_ASCEND_MALE_ENTER'
 Assert-Excludes 'retract START does not wrap the full performance' $retractStart.Flags 'Cycle'
+Assert-Equal 'retract START spans the complete assisted arc instead of dwelling in tuck' $retractStart.Scale 0.5
 Assert-Equal 'retract HOLD reuses only the moving tuck tail' (
     $retractHold.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
     $retractHold.AnimStart -eq 54 -and $retractHold.AnimEnd -eq 62
@@ -244,7 +245,7 @@ foreach ($old in @($shootStart.Name, $shootHold.Name)) {
     Assert-Equal "retract START interrupts $old" (Test-Interrupt $retractStart.Name $old) $true
 }
 foreach ($old in @($launchStart.Name, $launchHold.Name)) {
-    Assert-Equal "retract START cannot cut off $old" (Test-Interrupt $retractStart.Name $old) $false
+    Assert-Equal "new-cycle retract START can replace $old" (Test-Interrupt $retractStart.Name $old) $true
 }
 foreach ($old in @($retractStart.Name, $retractHold.Name)) {
     Assert-Equal "shoot START interrupts $old" (Test-Interrupt $shootStart.Name $old) $true
