@@ -404,16 +404,19 @@ static void pmotionWebSwingCaptureAssignIdentity(WebSwingCaptureFrame *frame)
     WebSwingCaptureFrame *previous = &s_web_swing_capture.last_frame;
     int first_frame = !s_web_swing_capture.has_last_frame;
     int cycle_active = frame->controller_cycle_id > 0 && frame->swing_enabled;
+    int previous_cycle_active = !first_frame &&
+        previous->controller_cycle_id > 0 && previous->swing_enabled;
+    int activation_started = cycle_active && !previous_cycle_active;
     int cycle_started = cycle_active &&
-        (first_frame || previous->controller_cycle_id != frame->controller_cycle_id ||
-         !previous->swing_enabled);
+        (first_frame || !previous_cycle_active ||
+         previous->controller_cycle_id != frame->controller_cycle_id);
 
     if (first_frame)
     {
-        s_web_swing_capture.activation_id = frame->swing_enabled ? 1 : 0;
+        s_web_swing_capture.activation_id = cycle_active ? 1 : 0;
         s_web_swing_capture.capture_cycle_index = 0;
     }
-    else if (!previous->swing_enabled && frame->swing_enabled)
+    else if (activation_started)
     {
         ++s_web_swing_capture.activation_id;
     }
