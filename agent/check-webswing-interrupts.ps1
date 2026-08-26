@@ -20,6 +20,7 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
             Requires = @()
             Flags = @()
             NextMove = $null
+            Interpolate = 0
             Scale = 1.0
             Animation = $null
             AnimStart = $null
@@ -38,6 +39,10 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
 
     if ($line -match '^\s*Scale\s+([0-9.]+)\s*$') {
         $current.Scale = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture)
+        continue
+    }
+    if ($line -match '^\s*Interpolate\s+(\d+)\s*$') {
+        $current.Interpolate = [int]$Matches[1]
         continue
     }
     if ($line -match '^\s*Anim\s+(\S+)\s+(\d+)\s+(\d+)\s*$') {
@@ -226,11 +231,15 @@ Assert-Equal 'retract START hands a long ascent to its moving tuck tail' (
 Assert-Contains 'retract START selects once per new assisted segment' $retractStart.Requires 'WEBSWING_ASCEND_MALE_ENTER'
 Assert-Excludes 'retract START does not wrap the full performance' $retractStart.Flags 'Cycle'
 Assert-Equal 'retract START spans the assisted ascent instead of dwelling in tuck' $retractStart.Scale 0.65
+Assert-Equal 'retract START softly resets the body from bottom into the next pull' $retractStart.Interpolate 8
 Assert-Equal 'retract HOLD reuses only the moving tuck tail' (
     $retractHold.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
     $retractHold.AnimStart -eq 54 -and $retractHold.AnimEnd -eq 62
 ) $true
 Assert-Contains 'retract HOLD keeps its tuck tail alive' $retractHold.Flags 'Cycle'
+
+$descendStart = Get-Move 'WEBSWING_FULL_DESCEND_START'
+Assert-Equal 'descend START crossfades the late pull into the tuck' $descendStart.Interpolate 10
 
 Assert-Contains 'fresh airborne shoot cycles its complete authored clip while active' $shootStart.Flags 'Cycle'
 Assert-Equal 'fresh airborne shoot has no terminal HOLD fallthrough' ([string]::IsNullOrEmpty($shootStart.NextMove)) $true

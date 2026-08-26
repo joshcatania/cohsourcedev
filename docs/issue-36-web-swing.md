@@ -111,6 +111,8 @@ The follow-up 05:57 Steel Canyon video proved that restart eligibility alone was
 
 The first fresh-client trace after that correction exposed a second path into the same failure: `RETRACT_START -> FULL_ATTACHED_START -> FULL_ASCEND_START`. The phase-neutral attached fallback could still interrupt the pull before the ascent move took over from it. Both attached and ascend starts now yield to the private retract/pull group; descend and bottom remain eligible to end it at their real controller transitions.
 
+Josh's next pass confirmed the cycle ownership but identified a hard body seam: the late legs-back pull changed into the corrected descend tuck over only five interpolation ticks, then the bottom pose reset into the next pull over only two. Those are now deliberate traversal crossfades: ten ticks into DESCEND and eight ticks into the next repeated pull. The authored clips, accepted frame windows, controller phases, and movement constants remain unchanged.
+
 ## Animation slice
 
 - `pmotionSetState()` resolves the Web Swing phase and choreography bits by name, so missing animation data leaves the ordinary sequencer state unchanged. `REAL_ANCHOR` retains rope/velocity classification; `SKY_ASSISTED` maps the authored controller phase directly (`LAUNCH` attach, `ASCEND` ascend, `APEX` stable attached/dead-band pose, `DESCEND` descend, `BOTTOM` bottom) and maps its visual tether state directly to ground launch, retract/recovery, and wrist fire.

@@ -168,7 +168,7 @@ Move WEBSWING_V2_GROUND_LAUNCH_HOLD
 MEnd
 
 Move WEBSWING_V2_RETRACT_START
-	Interpolate 2
+	Interpolate 8
 	Priority 29
 	Scale 0.65
 	NextMove WEBSWING_V2_RETRACT_HOLD
@@ -245,7 +245,7 @@ Move WEBSWING_FULL_ATTACHED_HOLD
 MEnd
 
 Move WEBSWING_FULL_DESCEND_START
-	Interpolate 5
+	Interpolate 10
 	Priority 26
 	Scale 0.22
 	Type Male
