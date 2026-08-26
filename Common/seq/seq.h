@@ -307,6 +307,7 @@ typedef enum
     SEQMOVE_COSTUMECHANGE    = (1 << 26),
     SEQMOVE_HIDEWEAPON        = (1 << 27),
     SEQMOVE_HIDESHIELD        = (1 << 28),
+    SEQMOVE_HOLDLASTFRAME    = (1 << 29), //Cycle move advances once, then holds its terminal pose until interrupted
 } eMoveFlag;
 
  

@@ -975,7 +975,12 @@ static const SeqMove * seqStep( Animation * anim, const SeqInfo * info, U32 stat
 
     if ( anim->frame > last_frame )
     {
-        if ( ( move->flags & SEQMOVE_CYCLE ) && sparseRequiresMet( &move->raw.required, state ) )
+        if ( ( move->flags & (SEQMOVE_CYCLE | SEQMOVE_HOLDLASTFRAME) ) == (SEQMOVE_CYCLE | SEQMOVE_HOLDLASTFRAME) )
+        {
+            anim->frame = last_frame;
+            anim->prev_frame = last_frame;
+        }
+        else if ( ( move->flags & SEQMOVE_CYCLE ) && sparseRequiresMet( &move->raw.required, state ) )
         {    
             if( move->flags & SEQMOVE_COMPLEXCYCLE )
             {
@@ -1445,7 +1450,12 @@ static const SeqMove * seqClientStep( Animation * anim, const SeqInfo * info, F3
 
     if ( anim->frame > lastFrame )
     {
-        if ( move->flags & SEQMOVE_CYCLE )
+        if ( ( move->flags & (SEQMOVE_CYCLE | SEQMOVE_HOLDLASTFRAME) ) == (SEQMOVE_CYCLE | SEQMOVE_HOLDLASTFRAME) )
+        {
+            anim->frame = lastFrame;
+            anim->prev_frame = lastFrame;
+        }
+        else if ( move->flags & SEQMOVE_CYCLE )
         {
             if( move->flags & SEQMOVE_COMPLEXCYCLE )
                 complexcyclemove = info->moves[ move->raw.cycleMove[ randUIntGivenSeed( seed ) % move->raw.cycleMoveCnt ] ] ;

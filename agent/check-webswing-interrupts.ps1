@@ -59,6 +59,7 @@ foreach ($event in $events) {
         Assert-Contains "$($move.Name) replaces phased choreography" $move.Interrupts $phasedGroup
         Assert-Contains "$($move.Name) replaces physical phase" $move.Interrupts $correctedGroup
         Assert-Contains "$($move.Name) advances while active" $move.Flags 'Cycle'
+        Assert-Contains "$($move.Name) holds its terminal pose instead of wrapping" $move.Flags 'HoldLastFrame'
         Assert-True "$($move.Name) moving window" ($move.Scale -gt 0 -and $move.AnimEnd -gt $move.AnimStart)
         Assert-Excludes "$($move.Name) excludes MOVEIRQ" $move.Member '<MOVEIRQ>'
         foreach ($group in $standardMembers) { Assert-Contains "$($move.Name) retains $group" $move.Member $group }
@@ -81,6 +82,7 @@ foreach ($name in $phaseMoves) {
         Assert-Contains "$name can replace another physical phase" $move.Interrupts $correctedGroup
     }
     Assert-Contains "$name advances" $move.Flags 'Cycle'
+    Assert-Contains "$name holds its terminal pose instead of wrapping" $move.Flags 'HoldLastFrame'
     Assert-True "$name moving window" ($move.Scale -gt 0 -and $move.AnimEnd -gt $move.AnimStart)
     Assert-Excludes "$name excludes MOVEIRQ" $move.Member '<MOVEIRQ>'
 }

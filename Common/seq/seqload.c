@@ -81,6 +81,7 @@ StaticDefineInt    MoveFlags[] =
     { "NoDraw",            SEQMOVE_NODRAW            },
     { "HideWeapon",        SEQMOVE_HIDEWEAPON        },
     { "HideShield",        SEQMOVE_HIDESHIELD        },
+    { "HoldLastFrame",    SEQMOVE_HOLDLASTFRAME    },
     DEFINE_END
 };
 
