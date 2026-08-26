@@ -133,11 +133,11 @@ MEnd
 
 // V2 web-cycle choreography. Ground activation plays the complete authored
 // crouch -> one-hand shot -> two-hand catch/pull clip. Repeated cycles first
-// play the shot preparation in reverse while the old line retracts, keep a
-// small authored motion tail alive through the invisible gap, then play it
-// forward as the new line leaves the raised wrist. Physics stays phase-driven
-// and does not wait on any of these moves. No V2 HOLD is a static pose: a
-// held frame reads as a statue immediately while the controller keeps moving.
+// play the complete ground-launch performance forward again while the old
+// line retracts and the replacement fires: planted preparation -> raised
+// wrist -> leg kick-back -> tuck. A moving tuck tail covers unusually long
+// ascents. Physics stays phase-driven; only the initial street boost waits for
+// its web to visibly attach. No V2 HOLD is a static pose.
 
 Move WEBSWING_V2_GROUND_LAUNCH_START
 	Interpolate 4
@@ -165,23 +165,23 @@ Move WEBSWING_V2_GROUND_LAUNCH_HOLD
 MEnd
 
 Move WEBSWING_V2_RETRACT_START
-	Interpolate 3
+	Interpolate 2
 	Priority 29
+	NextMove WEBSWING_V2_RETRACT_HOLD
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 1 26
+		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 1 62
 	TEnd
 	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_RETRACT>", "<WEBSWING_V2_SHOOT>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
-	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_RETRACT"
-	Flags Cycle
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_RETRACT", "WEBSWING_ASCEND_MALE_ENTER"
 MEnd
 
 Move WEBSWING_V2_RETRACT_HOLD
-	Interpolate 3
+	Interpolate 2
 	Priority 28
 	Scale 0.5
 	Type Male
-		Anim MALE/COHSOURCEDEV_WEBSWING_RETRACT_V2 21 26
+		Anim MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2 54 62
 	TEnd
 	Member "<WEBSWING_V2_RETRACT>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
 	Interrupts "<WEBSWING_ANIM>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"

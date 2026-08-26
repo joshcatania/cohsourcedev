@@ -312,6 +312,12 @@ static void webSwingSmokeLoop(void)
             }
             else
             {
+                /* setpospyr does not clear an inherited horizontal velocity.
+                 * Reassert the known street point while waiting so an
+                 * airborne prior scenario cannot drift off the pavement
+                 * before the ground-activation check begins. */
+                if (stage_frames > 0 && (stage_frames % 30) == 0)
+                    commAddInput("setpospyr -4668.25 0.50 1585.13 0.0000 0.0000 0.0000");
                 ++stage_frames;
             }
             break;

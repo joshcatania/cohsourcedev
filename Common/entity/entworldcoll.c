@@ -77,7 +77,6 @@
 #define WEB_ASSIST_LAUNCH_UP_SPEED            3.20f
 #define WEB_ASSIST_LAUNCH_FORWARD_SPEED       2.20f
 #define WEB_ASSIST_LAUNCH_ACCEL               0.60f
-#define WEB_ASSIST_LAUNCH_CLEARANCE           6.0f
 #define WEB_ASSIST_ASCEND_GRAVITY_ASSIST      0.012f
 #define WEB_ASSIST_ASCEND_ENERGY_ASSIST       0.006f
 #define WEB_ASSIST_APEX_DOWN_ACCEL            0.020f
@@ -105,7 +104,10 @@
 #define WEB_ASSIST_VISUAL_TETHER_MAX_GAP_TICKS 45
 #define WEB_ASSIST_VISUAL_TETHER_RETRACT_RATE   0.25f
 #define WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME 12.0f
+#define WEB_ASSIST_VISUAL_TETHER_REPEAT_WINDUP_TIME 0.0f
 #define WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE    0.25f
+#define WEB_ASSIST_GROUND_WEB_READY_PROGRESS    0.999f
+#define WEB_ASSIST_GROUND_PREFIRE_MAX_TICKS     90
 #define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.65f
 #define WEB_ASSIST_ASCEND_SPEED                2.50f
 #define WEB_ASSIST_APEX_SPEED                  2.00f
@@ -934,6 +936,9 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
 {
     MotionState *motion = e->motion;
     WebSwingAssistPhase phase = (WebSwingAssistPhase)motion->web_swing_assist_phase;
+    F32 shoot_windup_time = motion->web_swing_assist_cycle_id > 1 ?
+        WEB_ASSIST_VISUAL_TETHER_REPEAT_WINDUP_TIME :
+        WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME;
 
     switch((WebSwingVisualTetherState)motion->web_swing_visual_tether_state)
     {
@@ -983,11 +988,11 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
         case WEB_SWING_VISUAL_TETHER_EXTENDING:
             ++motion->web_swing_visual_tether_shoot_ticks;
             motion->web_swing_visual_tether_shoot_time += e->timestep;
-            // The arm visibly recovers and aims before the web leaves the
-            // wrist.  Physics remains continuous; only the fictional line is
-            // held at zero length for the authored wind-up.
+            // A fresh attach includes the authored wrist preparation.  A
+            // repeated cycle already played that preparation while the old
+            // line retracted, so its replacement line leaves immediately.
             if(motion->web_swing_visual_tether_shoot_time >
-               WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME)
+               shoot_windup_time)
             {
                 motion->web_swing_visual_tether_progress = MIN(1.0f,
                     motion->web_swing_visual_tether_progress +
@@ -1003,7 +1008,7 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
                                motion->web_swing_anim_segment_id,
                                motion->web_swing_visual_tether_shoot_ticks,
                                motion->web_swing_visual_tether_shoot_time,
-                               WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME);
+                               shoot_windup_time);
             }
             break;
 
@@ -1096,7 +1101,6 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 clearance;
     F32 downward_speed;
     F32 bottom_threshold;
-    F32 vertical_delta;
     F32 horizontal_speed;
     F32 current_clearance;
     F32 ahead_clearance;
@@ -1115,25 +1119,6 @@ static void webSwingApplyAssistedController(Entity *e)
     webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
     if(lengthVec3Squared(travel_intent) < 0.0001f)
         return;
-
-    // A grounded activation gets one clean authored jump impulse. Subsequent
-    // LAUNCH ticks only maintain the target; they never stack impulses.
-    if(phase == WEB_SWING_ASSIST_LAUNCH && motion->web_swing_assist_phase_ticks == 1)
-    {
-        F32 forward_component = motion->vel[0] * travel_intent[0] +
-                                motion->vel[2] * travel_intent[2];
-        F32 forward_delta = MAX(0.0f, WEB_ASSIST_LAUNCH_FORWARD_SPEED - forward_component);
-        motion->vel[1] = MAX(motion->vel[1], WEB_ASSIST_LAUNCH_UP_SPEED);
-        motion->vel[0] += travel_intent[0] * forward_delta;
-        motion->vel[2] += travel_intent[2] * forward_delta;
-        filelog_printf("webswing.log",
-                       "WEB_SWING %s ground_boost cycle_id=%u up_speed=%.3f forward_speed=%.3f velocity=(%.3f %.3f %.3f) one_shot=1\n",
-                       WEB_SWING_LOG_SIDE,
-                       motion->web_swing_assist_cycle_id,
-                       motion->vel[1],
-                       sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
-                       vecParamsXYZ(motion->vel));
-    }
 
     horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
     lookahead_distance = MIN(WEB_ASSIST_GROUND_LOOKAHEAD_MAX,
@@ -1157,20 +1142,65 @@ static void webSwingApplyAssistedController(Entity *e)
     webSwingUpdateAssistedVisualTether(e, travel_intent);
     if(motion->web_swing_visual_tether_visible)
         webSwingUpdateAssistedVisualAnchor(e, travel_intent);
+
+    // A street activation first plays the planted aim and visibly completes
+    // the wrist shot. Only then does the existing one-shot up/forward boost
+    // begin the pull. This keeps the web causally ahead of lift-off without
+    // changing the accepted airborne controller or stacking impulses.
+    if(phase == WEB_SWING_ASSIST_LAUNCH)
+    {
+        int web_ready =
+            motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_ATTACHED &&
+            motion->web_swing_visual_tether_progress >= WEB_ASSIST_GROUND_WEB_READY_PROGRESS;
+        int prefire_timeout =
+            motion->web_swing_assist_phase_ticks >= WEB_ASSIST_GROUND_PREFIRE_MAX_TICKS;
+
+        if(!web_ready && !prefire_timeout)
+        {
+            motion->vel[1] = 0.0f;
+            if(motion->web_swing_assist_phase_ticks == 1)
+            {
+                filelog_printf("webswing.log",
+                               "WEB_SWING %s ground_launch_prefire cycle_id=%u segment_id=%u web_progress=%.3f web_state=%u hold_for_web=1\n",
+                               WEB_SWING_LOG_SIDE,
+                               motion->web_swing_assist_cycle_id,
+                               motion->web_swing_anim_segment_id,
+                               motion->web_swing_visual_tether_progress,
+                               motion->web_swing_visual_tether_state);
+            }
+            return;
+        }
+        else
+        {
+            F32 forward_component = motion->vel[0] * travel_intent[0] +
+                                    motion->vel[2] * travel_intent[2];
+            F32 forward_delta = MAX(0.0f, WEB_ASSIST_LAUNCH_FORWARD_SPEED - forward_component);
+            motion->vel[1] = MAX(motion->vel[1], WEB_ASSIST_LAUNCH_UP_SPEED);
+            motion->vel[0] += travel_intent[0] * forward_delta;
+            motion->vel[2] += travel_intent[2] * forward_delta;
+            filelog_printf("webswing.log",
+                           "WEB_SWING %s ground_boost cycle_id=%u up_speed=%.3f forward_speed=%.3f velocity=(%.3f %.3f %.3f) web_progress=%.3f web_state=%u web_fired_before_boost=%d prefire_ticks=%u fallback=%d one_shot=1\n",
+                           WEB_SWING_LOG_SIDE,
+                           motion->web_swing_assist_cycle_id,
+                           motion->vel[1],
+                           sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
+                           vecParamsXYZ(motion->vel),
+                           motion->web_swing_visual_tether_progress,
+                           motion->web_swing_visual_tether_state,
+                           web_ready,
+                           motion->web_swing_assist_phase_ticks,
+                           prefire_timeout && !web_ready);
+            webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND,
+                                     web_ready ? "WEB_ATTACHED_PULL" : "PREFIRE_TIMEOUT");
+            phase = WEB_SWING_ASSIST_ASCEND;
+        }
+    }
     webSwingApplyAssistedHorizontal(e, travel_intent, phase);
 
     switch(phase)
     {
         case WEB_SWING_ASSIST_LAUNCH:
-            if(motion->vel[1] < WEB_ASSIST_LAUNCH_UP_SPEED)
-            {
-                vertical_delta = MIN(WEB_ASSIST_LAUNCH_UP_SPEED - motion->vel[1],
-                                     WEB_ASSIST_LAUNCH_ACCEL * e->timestep);
-                motion->vel[1] += vertical_delta;
-            }
-            if((clearance >= WEB_ASSIST_LAUNCH_CLEARANCE && motion->vel[1] >= 1.10f) ||
-               motion->web_swing_assist_phase_ticks >= 30)
-                webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "LAUNCH_CLEAR");
+            // LAUNCH always resolves to ASCEND above, after the web is ready.
             break;
 
         case WEB_SWING_ASSIST_ASCEND:

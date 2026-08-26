@@ -21,6 +21,7 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
             Flags = @()
             NextMove = $null
             Scale = 1.0
+            Animation = $null
             AnimStart = $null
             AnimEnd = $null
         }
@@ -39,9 +40,10 @@ foreach ($line in Get-Content -LiteralPath $IncludePath) {
         $current.Scale = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture)
         continue
     }
-    if ($line -match '^\s*Anim\s+\S+\s+(\d+)\s+(\d+)\s*$') {
-        $current.AnimStart = [int]$Matches[1]
-        $current.AnimEnd = [int]$Matches[2]
+    if ($line -match '^\s*Anim\s+(\S+)\s+(\d+)\s+(\d+)\s*$') {
+        $current.Animation = $Matches[1]
+        $current.AnimStart = [int]$Matches[2]
+        $current.AnimEnd = [int]$Matches[3]
         continue
     }
     if ($line -match '^\s*NextMove\s+(\S+)\s*$') {
@@ -209,13 +211,30 @@ $retractHold = Get-Move 'WEBSWING_V2_RETRACT_HOLD'
 $shootStart = Get-Move 'WEBSWING_V2_SHOOT_START'
 $shootHold = Get-Move 'WEBSWING_V2_SHOOT_HOLD'
 
-foreach ($move in @($retractStart, $shootStart)) {
-    Assert-Contains "$($move.Name) cycles its complete authored clip while active" $move.Flags 'Cycle'
-    Assert-Equal "$($move.Name) has no terminal HOLD fallthrough" ([string]::IsNullOrEmpty($move.NextMove)) $true
-    Assert-Excludes "$($move.Name) does not depend on a one-tick entry pulse" $move.Requires 'WEBSWING_ASCEND_MALE_ENTER'
-}
+Assert-Equal 'retract START reuses the complete accepted launch-to-tuck performance' (
+    $retractStart.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
+    $retractStart.AnimStart -eq 1 -and $retractStart.AnimEnd -eq 62
+) $true
+Assert-Equal 'retract START hands a long ascent to its moving tuck tail' (
+    $retractStart.NextMove -eq 'WEBSWING_V2_RETRACT_HOLD'
+) $true
+Assert-Contains 'retract START selects once per new assisted segment' $retractStart.Requires 'WEBSWING_ASCEND_MALE_ENTER'
+Assert-Excludes 'retract START does not wrap the full performance' $retractStart.Flags 'Cycle'
+Assert-Equal 'retract HOLD reuses only the moving tuck tail' (
+    $retractHold.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
+    $retractHold.AnimStart -eq 54 -and $retractHold.AnimEnd -eq 62
+) $true
+Assert-Contains 'retract HOLD keeps its tuck tail alive' $retractHold.Flags 'Cycle'
+
+Assert-Contains 'fresh airborne shoot cycles its complete authored clip while active' $shootStart.Flags 'Cycle'
+Assert-Equal 'fresh airborne shoot has no terminal HOLD fallthrough' ([string]::IsNullOrEmpty($shootStart.NextMove)) $true
+Assert-Excludes 'fresh airborne shoot does not depend on a one-tick entry pulse' $shootStart.Requires 'WEBSWING_ASCEND_MALE_ENTER'
 Assert-Equal 'ground launch still completes its authored one-shot before its hold' (
     $launchStart.NextMove -eq 'WEBSWING_V2_GROUND_LAUNCH_HOLD'
+) $true
+Assert-Equal 'ground launch uses the complete accepted launch-to-tuck performance' (
+    $launchStart.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and
+    $launchStart.AnimStart -eq 1 -and $launchStart.AnimEnd -eq 62
 ) $true
 
 foreach ($old in @($retractStart.Name, $retractHold.Name, $shootStart.Name, $shootHold.Name)) {

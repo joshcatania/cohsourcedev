@@ -710,9 +710,14 @@ $assistedEnergyGrowthPass = $assistedTickEnergies.Count -gt 0 -and
 $assistedGroundBoostPass = @($assistedGroundBoostLines | Where-Object {
     $upMatch = [regex]::Match($_, 'up_speed=([-+0-9.eE]+)')
     $forwardMatch = [regex]::Match($_, 'forward_speed=([-+0-9.eE]+)')
+    $webProgress = Get-LogNumber $_ 'web_progress'
+    $webBeforeBoost = Get-LogNumber $_ 'web_fired_before_boost'
+    $fallback = Get-LogNumber $_ 'fallback'
     $upMatch.Success -and $forwardMatch.Success -and
     [double]::Parse($upMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 2.0 -and
-    [double]::Parse($forwardMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 1.5
+    [double]::Parse($forwardMatch.Groups[1].Value, [Globalization.CultureInfo]::InvariantCulture) -ge 1.5 -and
+    $null -ne $webProgress -and $webProgress -ge 0.99 -and
+    $webBeforeBoost -eq 1.0 -and $fallback -eq 0.0
 }).Count -ge 1
 $assistedVisualCadencePass = $assistedVisualReleaseLines.Count -ge 2 -and
                              $assistedVisualRetractedLines.Count -ge 2 -and
@@ -728,8 +733,10 @@ $assistedVisualShootTimingPass = $assistedVisualShootTimes.Count -eq $assistedVi
                                       $shootTime = Get-LogNumber $_ 'shoot_time'
                                       $windupTime = Get-LogNumber $_ 'windup_time'
                                       $null -ne $shootTime -and $null -ne $windupTime -and
-                                      [math]::Abs($windupTime - 12.0) -le 0.001 -and
-                                      $shootTime -ge 14.5 -and $shootTime -le 18.0
+                                      (([math]::Abs($windupTime - 12.0) -le 0.001 -and
+                                        $shootTime -ge 14.5 -and $shootTime -le 18.0) -or
+                                       ([math]::Abs($windupTime) -le 0.001 -and
+                                        $shootTime -ge 3.0 -and $shootTime -le 6.0))
                                   }).Count -eq $assistedVisualExtendedLines.Count
 $assistedAheadProbePass = @($assistedTickLines | Where-Object {
     $_ -match 'current_clearance=' -and $_ -match 'ahead_clearance=' -and $_ -match 'lookahead='

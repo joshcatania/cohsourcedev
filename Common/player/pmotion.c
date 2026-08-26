@@ -393,6 +393,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     int retracting;
     int retract_entry;
     int ground_launching;
+    int recurring_cycle;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     raw_phase = WEBSWING_ANIM_PHASE_NONE;
@@ -470,6 +471,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                  e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_GAP;
     retract_entry = 0;
     ground_launching = shooting && e->motion->web_swing_ground_launch_active;
+    recurring_cycle = 0;
     raw_phase = phase;
     phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
@@ -496,6 +498,18 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             phase = e->motion->web_swing_ground_launch_active ? WEBSWING_ANIM_PHASE_ATTACHED :
                     pmotionStabilizeMode3WebSwingPhase(raw_phase, previous_phase);
             phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
+            recurring_cycle = e->motion->web_swing_assist_cycle_id > 1;
+            if (recurring_cycle)
+            {
+                // One forward-authored launch-to-tuck performance owns each
+                // repeated ascent. The visual line may change from retract to
+                // gap to shoot underneath it without reversing or replacing
+                // the body animation mid-cycle.
+                shooting = 0;
+                shoot_entry = 0;
+                if (phase == WEBSWING_ANIM_PHASE_ASCEND)
+                    retracting = 1;
+            }
             retract_entry = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING &&
                             phase_entry;
         }
@@ -556,10 +570,11 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
             // the corrected-full helpers. WEBSWING_SHOOT is the one explicit
             // V2 choreography bit: it aligns the authored wrist-fire clip to
-            // the visual line's wind-up/extension state. RETRACT owns both
-            // the shrinking line and the invisible recovery gap, while
-            // GROUND_LAUNCH upgrades the first shot to the complete authored
-            // catch-and-pull sequence.
+            // a fresh visual line. During repeated cycles RETRACT instead owns
+            // one continuous forward launch-to-tuck performance across old
+            // line retraction, the invisible gap, the new shot, and ascent.
+            // GROUND_LAUNCH upgrades the first shot to the same complete
+            // authored catch-and-pull sequence.
             if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE && male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
