@@ -101,7 +101,6 @@
 #define WEB_ASSIST_GROUND_LOOKAHEAD_SPEED       3.0f
 #define WEB_ASSIST_GROUND_LOOKAHEAD_MAX        24.0f
 #define WEB_ASSIST_VISUAL_TETHER_MIN_GAP_TICKS 18
-#define WEB_ASSIST_VISUAL_TETHER_MAX_GAP_TICKS 45
 #define WEB_ASSIST_VISUAL_TETHER_RETRACT_RATE   0.25f
 #define WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME 12.0f
 #define WEB_ASSIST_VISUAL_TETHER_REPEAT_WINDUP_TIME 0.0f
@@ -936,6 +935,28 @@ static void webSwingSetAssistedVisualAnchor(Entity *e, const Vec3 travel_intent)
     }
 }
 
+static void webSwingAssistedReleaseVisualTether(Entity *e)
+{
+    MotionState *motion = e->motion;
+
+    if(motion->web_swing_visual_tether_state != WEB_SWING_VISUAL_TETHER_ATTACHED)
+        return;
+
+    motion->web_swing_visual_tether_visible = 1;
+    motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_RETRACTING;
+    motion->web_swing_visual_tether_progress = 1.0f;
+    motion->web_swing_visual_tether_gap_ticks = 0;
+    motion->web_swing_visual_tether_shoot_ticks = 0;
+    motion->web_swing_visual_tether_shoot_time = 0.0f;
+    motion->web_swing_anim_catch_ticks = 0;
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s visual_tether_release cycle_id=%u segment_id=%u phase=APEX anchor=(%.2f %.2f %.2f) retracting=1 physics_continuous=1\n",
+                   WEB_SWING_LOG_SIDE,
+                   motion->web_swing_assist_cycle_id,
+                   motion->web_swing_anim_segment_id,
+                   vecParamsXYZ(motion->web_swing_anchor));
+}
+
 static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_intent)
 {
     MotionState *motion = e->motion;
@@ -968,9 +989,8 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
 
         case WEB_SWING_VISUAL_TETHER_GAP:
             ++motion->web_swing_visual_tether_gap_ticks;
-            if((motion->web_swing_visual_tether_gap_ticks >= WEB_ASSIST_VISUAL_TETHER_MIN_GAP_TICKS &&
-                phase == WEB_SWING_ASSIST_APEX) ||
-               motion->web_swing_visual_tether_gap_ticks >= WEB_ASSIST_VISUAL_TETHER_MAX_GAP_TICKS)
+            if(motion->web_swing_visual_tether_gap_ticks >= WEB_ASSIST_VISUAL_TETHER_MIN_GAP_TICKS &&
+               (phase == WEB_SWING_ASSIST_APEX || phase == WEB_SWING_ASSIST_DESCEND))
             {
                 // Move the fictional endpoint only while the old web is
                 // invisible, then visibly shoot the new line outward.
@@ -982,10 +1002,11 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
                 motion->web_swing_visual_tether_shoot_time = 0.0f;
                 motion->web_swing_anim_catch_ticks = 0;
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s visual_tether_attach cycle_id=%u segment_id=%u gap_ticks=%u anchor=(%.2f %.2f %.2f) physics_continuous=1\n",
+                               "WEB_SWING %s visual_tether_attach cycle_id=%u segment_id=%u phase=%s gap_ticks=%u anchor=(%.2f %.2f %.2f) physics_continuous=1\n",
                                WEB_SWING_LOG_SIDE,
                                motion->web_swing_assist_cycle_id,
                                motion->web_swing_anim_segment_id,
+                               webSwingAssistPhaseName(phase),
                                motion->web_swing_visual_tether_gap_ticks,
                                vecParamsXYZ(motion->web_swing_anchor));
             }
@@ -1221,7 +1242,10 @@ static void webSwingApplyAssistedController(Entity *e)
                                motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_ASSIST) *
                               e->timestep;
             if(motion->vel[1] <= 0.20f)
+            {
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_APEX, "VERTICAL_TURNOVER");
+                webSwingAssistedReleaseVisualTether(e);
+            }
             break;
 
         case WEB_SWING_ASSIST_APEX:
@@ -1281,13 +1305,6 @@ static void webSwingApplyAssistedController(Entity *e)
             {
                 ++motion->web_swing_assist_cycle_id;
                 ++motion->web_swing_anim_segment_id;
-                motion->web_swing_visual_tether_visible = 1;
-                motion->web_swing_visual_tether_state = WEB_SWING_VISUAL_TETHER_RETRACTING;
-                motion->web_swing_visual_tether_progress = 1.0f;
-                motion->web_swing_visual_tether_gap_ticks = 0;
-                motion->web_swing_visual_tether_shoot_ticks = 0;
-                motion->web_swing_visual_tether_shoot_time = 0.0f;
-                motion->web_swing_anim_catch_ticks = 0;
                 filelog_printf("webswing.log",
                                "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
@@ -1298,12 +1315,6 @@ static void webSwingApplyAssistedController(Entity *e)
                                clearance,
                                vecParamsXYZ(ENTPOS(e)),
                                vecParamsXYZ(motion->vel));
-                filelog_printf("webswing.log",
-                               "WEB_SWING %s visual_tether_release cycle_id=%u segment_id=%u anchor=(%.2f %.2f %.2f) retracting=1 physics_continuous=1\n",
-                               WEB_SWING_LOG_SIDE,
-                               motion->web_swing_assist_cycle_id,
-                               motion->web_swing_anim_segment_id,
-                               vecParamsXYZ(motion->web_swing_anchor));
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "BOTTOM_SWEEP_COMPLETE");
             }
             break;

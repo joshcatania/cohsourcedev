@@ -724,9 +724,11 @@ $assistedVisualCadencePass = $assistedVisualReleaseLines.Count -ge 2 -and
                              $assistedVisualAttachLines.Count -ge 2 -and
                              $assistedVisualExtendedLines.Count -ge 2 -and
                              @($assistedVisualReleaseLines | Where-Object { $_ -match 'physics_continuous=1' }).Count -eq $assistedVisualReleaseLines.Count -and
+                             @($assistedVisualReleaseLines | Where-Object { $_ -match 'phase=APEX' }).Count -eq $assistedVisualReleaseLines.Count -and
                              @($assistedVisualAttachLines | Where-Object {
                                  $gapMatch = [regex]::Match($_, 'gap_ticks=([0-9]+)')
-                                 $_ -match 'physics_continuous=1' -and $gapMatch.Success -and [int]$gapMatch.Groups[1].Value -ge 18
+                                 $_ -match 'phase=(?:APEX|DESCEND)' -and $_ -match 'physics_continuous=1' -and
+                                 $gapMatch.Success -and [int]$gapMatch.Groups[1].Value -ge 18
                              }).Count -eq $assistedVisualAttachLines.Count
 $assistedVisualShootTimingPass = $assistedVisualShootTimes.Count -eq $assistedVisualExtendedLines.Count -and
                                   @($assistedVisualExtendedLines | Where-Object {
