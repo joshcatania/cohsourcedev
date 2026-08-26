@@ -912,6 +912,7 @@ void gfxDraw2DStuffPost3D(int show2D, int headShot)
         failTextDisplay();
         PERFINFO_AUTO_STOP_START("displayDebugUI",1);
         displayDebugInterface2D();
+        pmotionWebSwingCaptureRenderHud();
 
         // this renders the direct xyprintf text
         PERFINFO_AUTO_STOP_START("fontRenderEditor", 1);

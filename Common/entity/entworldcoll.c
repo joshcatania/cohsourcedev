@@ -877,6 +877,10 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
         motion->web_swing_anchor[1] - motion->web_swing_rope_length -
         WEB_ASSIST_ALTITUDE_ARC_DEPTH;
     motion->web_swing_assist_low_point_y = motion->web_swing_assist_initial_low_point_y;
+    motion->web_swing_assist_current_clearance = -1.0f;
+    motion->web_swing_assist_ahead_clearance = -1.0f;
+    motion->web_swing_assist_lookahead_distance = -1.0f;
+    motion->web_swing_assist_altitude_margin = 0.0f;
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     motion->web_swing_visual_tether_visible = 1;
     motion->web_swing_visual_tether_gap_ticks = 0;
@@ -1145,9 +1149,19 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 stopping_distance;
     F32 altitude_stopping_distance;
 
+    // The controller already computes these values below.  Keep a cheap copy
+    // for client-side manual capture instead of repeating terrain probes.
+    motion->web_swing_assist_current_clearance = -1.0f;
+    motion->web_swing_assist_ahead_clearance = -1.0f;
+    motion->web_swing_assist_lookahead_distance = -1.0f;
+    motion->web_swing_assist_altitude_margin =
+        ENTPOSY(e) - motion->web_swing_assist_low_point_y;
+
     if(phase == WEB_SWING_ASSIST_NONE)
         webSwingAssistedBegin(e, !motion->falling && !motion->jumping);
     phase = (WebSwingAssistPhase)motion->web_swing_assist_phase;
+    motion->web_swing_assist_altitude_margin =
+        ENTPOSY(e) - motion->web_swing_assist_low_point_y;
     ++motion->web_swing_assist_phase_ticks;
 
     webSwingGetTravelIntent(e, travel_intent, &horizontal_input_magnitude);
@@ -1173,9 +1187,16 @@ static void webSwingApplyAssistedController(Entity *e)
                               HeightAtLoc(ahead_position, DEFAULT_RADIUS, WEB_ASSIST_GROUND_PROBE_DISTANCE));
         clearance = MIN(current_clearance, ahead_clearance);
     }
+    motion->web_swing_assist_current_clearance = current_clearance;
+    motion->web_swing_assist_ahead_clearance = ahead_clearance;
+    motion->web_swing_assist_lookahead_distance = lookahead_distance;
+    motion->web_swing_assist_altitude_margin =
+        ENTPOSY(e) - motion->web_swing_assist_low_point_y;
     webSwingUpdateAssistedVisualTether(e, travel_intent);
     if(motion->web_swing_visual_tether_visible)
         webSwingUpdateAssistedVisualAnchor(e, travel_intent);
+    motion->web_swing_assist_altitude_margin =
+        ENTPOSY(e) - motion->web_swing_assist_low_point_y;
 
     // A street activation first plays the planted aim and visibly completes
     // the wrist shot. Only then does the existing one-shot up/forward boost
@@ -1436,6 +1457,10 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_energy = 0.0f;
         motion->web_swing_assist_initial_low_point_y = 0.0f;
         motion->web_swing_assist_low_point_y = 0.0f;
+        motion->web_swing_assist_current_clearance = -1.0f;
+        motion->web_swing_assist_ahead_clearance = -1.0f;
+        motion->web_swing_assist_lookahead_distance = -1.0f;
+        motion->web_swing_assist_altitude_margin = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;
@@ -1471,6 +1496,10 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_energy = 0.0f;
         motion->web_swing_assist_initial_low_point_y = 0.0f;
         motion->web_swing_assist_low_point_y = 0.0f;
+        motion->web_swing_assist_current_clearance = -1.0f;
+        motion->web_swing_assist_ahead_clearance = -1.0f;
+        motion->web_swing_assist_lookahead_distance = -1.0f;
+        motion->web_swing_assist_altitude_margin = 0.0f;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;

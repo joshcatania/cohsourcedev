@@ -23,6 +23,11 @@
 #include "storyarc/playerCreatedStoryarcValidate.h"
 #include "group/groupProperties.h"
 #include <utilitieslib/components/estring.h>
+#include <utilitieslib/utils/log.h>
+#include <utilitieslib/utils/timing.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #if CLIENT
     #include "cmdparse/cmdgame.h"
@@ -188,6 +193,671 @@ static const char *pmotionWebSwingAnimSide(void)
 }
 
 #if CLIENT
+/*
+ * Manual Web Swing capture is deliberately a client-side observation path.
+ * It samples on motion ticks, not render frames, and reads the same MotionState
+ * values used by the existing Web Swing diagnostics.  In particular, terrain
+ * values are copied from the Sky-Assisted controller rather than recomputed.
+ */
+#define WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL 2
+#define WEBSWING_CAPTURE_PHYSICS_TICK_HZ      30.0f
+#define WEBSWING_CAPTURE_INTENT_THRESHOLD     0.05f
+
+typedef struct WebSwingCaptureFrame
+{
+    U32 tick;
+    U32 cycle_id;
+    U32 phase_ticks;
+    U32 anim_segment_id;
+    U32 anim_phase_segment_id;
+    int swing_enabled;
+    int attached;
+    char backend[24];
+    char assist_phase[16];
+    char phase[16];
+    char anim_phase[16];
+    char visual_tether_state[16];
+    Vec3 position;
+    Vec3 velocity;
+    F32 total_speed;
+    F32 horizontal_speed;
+    F32 vertical_speed;
+    F32 current_ground_clearance;
+    F32 ahead_ground_clearance;
+    F32 lookahead_distance;
+    F32 low_point_y;
+    F32 initial_low_point_y;
+    F32 altitude_margin;
+    Vec3 intent;
+    F32 input_magnitude;
+    Vec3 anchor;
+    F32 visual_tether_progress;
+    F32 assist_energy;
+} WebSwingCaptureFrame;
+
+typedef struct WebSwingCaptureState
+{
+    int active;
+    int telemetry_failed;
+    int events_failed;
+    int io_failure_logged;
+    int has_last_frame;
+    int has_last_sample;
+    int has_attached_once;
+    int cycle_open;
+    U32 capture_id;
+    U32 start_tick;
+    U32 last_sample_tick;
+    U32 sample_index;
+    Entity *player;
+    FILE *telemetry;
+    FILE *events;
+    char capture_dir[MAX_PATH];
+    WebSwingCaptureFrame last_frame;
+    WebSwingCaptureFrame last_sample;
+} WebSwingCaptureState;
+
+static WebSwingCaptureState s_web_swing_capture;
+static U32 s_web_swing_capture_serial;
+static int s_web_swing_capture_atexit_registered;
+
+static const char *pmotionWebSwingCaptureBackendName(const MotionState *motion)
+{
+    return motion->web_swing_active_backend || motion->input.web_swing_backend ?
+           "SKY_ASSISTED" : "REAL_ANCHOR";
+}
+
+static const char *pmotionWebSwingCaptureAssistPhaseName(WebSwingAssistPhase phase)
+{
+    switch (phase)
+    {
+        case WEB_SWING_ASSIST_LAUNCH:  return "LAUNCH";
+        case WEB_SWING_ASSIST_ASCEND:  return "ASCEND";
+        case WEB_SWING_ASSIST_APEX:    return "APEX";
+        case WEB_SWING_ASSIST_DESCEND: return "DESCEND";
+        case WEB_SWING_ASSIST_BOTTOM:  return "BOTTOM";
+        default:                       return "NONE";
+    }
+}
+
+static const char *pmotionWebSwingCaptureTetherStateName(WebSwingVisualTetherState state)
+{
+    switch (state)
+    {
+        case WEB_SWING_VISUAL_TETHER_EXTENDING:  return "EXTENDING";
+        case WEB_SWING_VISUAL_TETHER_ATTACHED:   return "ATTACHED";
+        case WEB_SWING_VISUAL_TETHER_RETRACTING: return "RETRACTING";
+        case WEB_SWING_VISUAL_TETHER_GAP:        return "GAP";
+        default:                                 return "HIDDEN";
+    }
+}
+
+static int pmotionWebSwingCaptureAllowed(void)
+{
+    return global_state.webswing_dev && isDevelopmentMode();
+}
+
+static void pmotionWebSwingCaptureBuildIntent(Entity *e, Vec3 intent, F32 *input_magnitude)
+{
+    MotionState *motion = e->motion;
+    F32 magnitude;
+
+    copyVec3(motion->input.vel, intent);
+    intent[1] = 0.0f;
+    magnitude = lengthVec3(intent);
+    if (input_magnitude)
+        *input_magnitude = magnitude;
+
+    if (magnitude > WEBSWING_CAPTURE_INTENT_THRESHOLD)
+    {
+        scaleVec3(intent, 1.0f / magnitude, intent);
+        return;
+    }
+
+    if (e->seq)
+    {
+        copyVec3(ENTMAT(e)[2], intent);
+        intent[1] = 0.0f;
+        if (normalVec3(intent))
+            return;
+    }
+
+    zeroVec3(intent);
+}
+
+static void pmotionWebSwingCaptureBuildFrame(Entity *e, WebSwingCaptureFrame *frame)
+{
+    MotionState *motion = e->motion;
+    WebSwingAssistPhase assist_phase = (WebSwingAssistPhase)motion->web_swing_assist_phase;
+    int sky_assisted = motion->web_swing_active_backend || motion->input.web_swing_backend;
+
+    memset(frame, 0, sizeof(*frame));
+    frame->tick = motion->tickCounter;
+    frame->cycle_id = motion->web_swing_assist_cycle_id;
+    frame->phase_ticks = sky_assisted ? motion->web_swing_assist_phase_ticks : 0;
+    frame->anim_segment_id = motion->web_swing_anim_segment_id;
+    frame->anim_phase_segment_id = motion->web_swing_anim_phase_segment_id;
+    frame->swing_enabled = motion->input.web_swing_enabled != 0;
+    frame->attached = motion->web_swing_attached != 0;
+    strcpy_s(frame->backend, sizeof(frame->backend),
+             pmotionWebSwingCaptureBackendName(motion));
+    strcpy_s(frame->assist_phase, sizeof(frame->assist_phase),
+             pmotionWebSwingCaptureAssistPhaseName(assist_phase));
+    if (sky_assisted)
+        strcpy_s(frame->phase, sizeof(frame->phase),
+                 pmotionWebSwingCaptureAssistPhaseName(assist_phase));
+    else
+        strcpy_s(frame->phase, sizeof(frame->phase),
+                 pmotionWebSwingAnimPhaseName((WebSwingAnimPhase)motion->web_swing_anim_phase));
+    strcpy_s(frame->anim_phase, sizeof(frame->anim_phase),
+             pmotionWebSwingAnimPhaseName((WebSwingAnimPhase)motion->web_swing_anim_phase));
+    strcpy_s(frame->visual_tether_state, sizeof(frame->visual_tether_state),
+             pmotionWebSwingCaptureTetherStateName(
+                 (WebSwingVisualTetherState)motion->web_swing_visual_tether_state));
+
+    copyVec3(ENTPOS(e), frame->position);
+    copyVec3(motion->vel, frame->velocity);
+    frame->total_speed = lengthVec3(motion->vel);
+    frame->horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
+    frame->vertical_speed = motion->vel[1];
+
+    frame->current_ground_clearance = motion->web_swing_assist_current_clearance;
+    frame->ahead_ground_clearance = motion->web_swing_assist_ahead_clearance;
+    frame->lookahead_distance = motion->web_swing_assist_lookahead_distance;
+    frame->low_point_y = motion->web_swing_assist_low_point_y;
+    frame->initial_low_point_y = motion->web_swing_assist_initial_low_point_y;
+    frame->altitude_margin = motion->web_swing_assist_altitude_margin;
+    if (!sky_assisted || motion->web_swing_assist_cycle_id == 0)
+    {
+        // No Sky-Assisted controller pass has supplied terrain values for
+        // this interval.  Keep the CSV sentinel distinct from real zero
+        // clearance rather than presenting an unprobed value as measured.
+        frame->current_ground_clearance = -1.0f;
+        frame->ahead_ground_clearance = -1.0f;
+        frame->lookahead_distance = -1.0f;
+    }
+    if (!sky_assisted && motion->web_swing_attached)
+    {
+        frame->low_point_y = motion->web_swing_anchor[1] - motion->web_swing_rope_length;
+        frame->initial_low_point_y = frame->low_point_y;
+        frame->altitude_margin = frame->position[1] - frame->low_point_y;
+    }
+
+    pmotionWebSwingCaptureBuildIntent(e, frame->intent, &frame->input_magnitude);
+    copyVec3(motion->web_swing_anchor, frame->anchor);
+    frame->visual_tether_progress = motion->web_swing_visual_tether_progress;
+    frame->assist_energy = motion->web_swing_assist_energy;
+}
+
+static void pmotionWebSwingCaptureReportIoFailure(const char *kind)
+{
+    if (!s_web_swing_capture.io_failure_logged)
+    {
+        filelog_printf("webswing.log",
+                       "WEBSWING_CAPTURE file_io_failure kind=%s capture_id=%u gameplay_continues=1\n",
+                       kind, s_web_swing_capture.capture_id);
+        s_web_swing_capture.io_failure_logged = 1;
+    }
+}
+
+static void pmotionWebSwingCaptureWriteTelemetryHeader(void)
+{
+    if (!s_web_swing_capture.telemetry || s_web_swing_capture.telemetry_failed)
+        return;
+
+    if (fprintf(s_web_swing_capture.telemetry,
+                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
+    {
+        s_web_swing_capture.telemetry_failed = 1;
+        pmotionWebSwingCaptureReportIoFailure("telemetry_header");
+    }
+}
+
+static void pmotionWebSwingCaptureWriteEventsHeader(void)
+{
+    if (!s_web_swing_capture.events || s_web_swing_capture.events_failed)
+        return;
+
+    if (fprintf(s_web_swing_capture.events,
+                "event_type,detail,capture_id,tick,cycle_id,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
+    {
+        s_web_swing_capture.events_failed = 1;
+        pmotionWebSwingCaptureReportIoFailure("events_header");
+    }
+}
+
+static void pmotionWebSwingCaptureWriteEvent(const WebSwingCaptureFrame *frame,
+                                             const char *event_type, const char *detail)
+{
+    if (!s_web_swing_capture.events || s_web_swing_capture.events_failed)
+        return;
+
+    if (fprintf(s_web_swing_capture.events,
+                "%s,%s,%u,%u,%u,%s,%d,%d,%s,%s,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
+                event_type, detail ? detail : "none",
+                s_web_swing_capture.capture_id, frame->tick, frame->cycle_id,
+                frame->backend, frame->swing_enabled, frame->attached,
+                frame->assist_phase, frame->phase, frame->phase_ticks,
+                frame->position[0], frame->position[1], frame->position[2],
+                frame->velocity[0], frame->velocity[1], frame->velocity[2],
+                frame->total_speed, frame->horizontal_speed, frame->vertical_speed,
+                frame->anchor[0], frame->anchor[1], frame->anchor[2],
+                frame->visual_tether_state, frame->visual_tether_progress,
+                frame->anim_phase, frame->anim_segment_id,
+                frame->anim_phase_segment_id) < 0)
+    {
+        s_web_swing_capture.events_failed = 1;
+        pmotionWebSwingCaptureReportIoFailure("events_row");
+    }
+}
+
+static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
+{
+    U32 sample_index = s_web_swing_capture.sample_index + 1;
+    F32 elapsed_seconds = (F32)((U32)(frame->tick - s_web_swing_capture.start_tick)) /
+                          WEBSWING_CAPTURE_PHYSICS_TICK_HZ;
+
+    if (s_web_swing_capture.telemetry && !s_web_swing_capture.telemetry_failed)
+    {
+        if (fprintf(s_web_swing_capture.telemetry,
+                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
+                    s_web_swing_capture.capture_id, frame->tick, sample_index,
+                    elapsed_seconds, frame->backend, frame->swing_enabled,
+                    frame->attached, frame->assist_phase, frame->phase,
+                    frame->phase_ticks, frame->cycle_id, frame->assist_energy,
+                    frame->position[0], frame->position[1], frame->position[2],
+                    frame->velocity[0], frame->velocity[1], frame->velocity[2],
+                    frame->total_speed, frame->horizontal_speed, frame->vertical_speed,
+                    frame->current_ground_clearance, frame->ahead_ground_clearance,
+                    frame->lookahead_distance, frame->low_point_y,
+                    frame->initial_low_point_y, frame->altitude_margin,
+                    frame->intent[0], frame->intent[1], frame->intent[2],
+                    frame->input_magnitude, frame->anchor[0], frame->anchor[1],
+                    frame->anchor[2], frame->visual_tether_state,
+                    frame->visual_tether_progress, frame->anim_phase,
+                    frame->anim_segment_id, frame->anim_phase_segment_id) < 0)
+        {
+            s_web_swing_capture.telemetry_failed = 1;
+            pmotionWebSwingCaptureReportIoFailure("telemetry_row");
+        }
+    }
+
+    s_web_swing_capture.sample_index = sample_index;
+    s_web_swing_capture.last_sample_tick = frame->tick;
+    s_web_swing_capture.last_sample = *frame;
+    s_web_swing_capture.has_last_sample = 1;
+}
+
+static void pmotionWebSwingCaptureTrackFrame(const WebSwingCaptureFrame *frame, int initial)
+{
+    WebSwingCaptureFrame *previous = &s_web_swing_capture.last_frame;
+
+    if (initial || !s_web_swing_capture.has_last_frame)
+    {
+        if (frame->swing_enabled)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame, "SWING_ENABLE", "capture_start");
+            pmotionWebSwingCaptureWriteEvent(frame, "ACTIVATE", "capture_start");
+        }
+        if (frame->attached)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame, "ATTACH", "capture_start");
+            s_web_swing_capture.has_attached_once = 1;
+        }
+        if (frame->cycle_id > 0)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame, "CYCLE_BEGIN", "capture_start");
+            s_web_swing_capture.cycle_open = 1;
+        }
+        if (strcmp(frame->phase, "NONE") != 0)
+            pmotionWebSwingCaptureWriteEvent(frame, "PHASE_CHANGE", "capture_start");
+        if (strcmp(frame->phase, "BOTTOM") == 0)
+            pmotionWebSwingCaptureWriteEvent(frame, "GROUND_AVOID", "bottom_phase_entry");
+        if (strcmp(frame->visual_tether_state, "ATTACHED") == 0)
+            pmotionWebSwingCaptureWriteEvent(frame, "TETHER_ATTACH", "capture_start");
+        if (strcmp(frame->anim_phase, "NONE") != 0)
+            pmotionWebSwingCaptureWriteEvent(frame, "ANIMATION_PHASE_CHANGE", "capture_start");
+    }
+    else
+    {
+        if (previous->swing_enabled != frame->swing_enabled)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame,
+                frame->swing_enabled ? "SWING_ENABLE" : "SWING_DISABLE",
+                "state_transition");
+            pmotionWebSwingCaptureWriteEvent(frame,
+                frame->swing_enabled ? "ACTIVATE" : "RELEASE",
+                "state_transition");
+        }
+
+        if (!previous->attached && frame->attached)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame,
+                s_web_swing_capture.has_attached_once ? "REATTACH" : "ATTACH",
+                "state_transition");
+            s_web_swing_capture.has_attached_once = 1;
+        }
+        else if (previous->attached && !frame->attached)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame, "RELEASE", "state_transition");
+            pmotionWebSwingCaptureWriteEvent(frame, "DETACH", "state_transition");
+        }
+
+        if (previous->cycle_id != frame->cycle_id)
+        {
+            if (s_web_swing_capture.cycle_open)
+            {
+                pmotionWebSwingCaptureWriteEvent(previous, "CYCLE_END", "cycle_transition");
+                s_web_swing_capture.cycle_open = 0;
+            }
+            if (frame->cycle_id > 0)
+            {
+                pmotionWebSwingCaptureWriteEvent(frame, "CYCLE_BEGIN", "cycle_transition");
+                s_web_swing_capture.cycle_open = 1;
+            }
+        }
+
+        if (strcmp(previous->phase, frame->phase) != 0)
+        {
+            pmotionWebSwingCaptureWriteEvent(frame, "PHASE_CHANGE", "state_transition");
+            if (strcmp(frame->phase, "BOTTOM") == 0)
+                pmotionWebSwingCaptureWriteEvent(frame, "GROUND_AVOID", "bottom_phase_entry");
+        }
+
+        if (strcmp(previous->visual_tether_state, frame->visual_tether_state) != 0)
+        {
+            if (strcmp(frame->visual_tether_state, "ATTACHED") == 0)
+                pmotionWebSwingCaptureWriteEvent(frame, "TETHER_ATTACH", "state_transition");
+            else if (strcmp(previous->visual_tether_state, "ATTACHED") == 0)
+                pmotionWebSwingCaptureWriteEvent(frame, "TETHER_RELEASE", "state_transition");
+        }
+
+        if (strcmp(previous->anim_phase, frame->anim_phase) != 0 ||
+            previous->anim_segment_id != frame->anim_segment_id ||
+            previous->anim_phase_segment_id != frame->anim_phase_segment_id)
+            pmotionWebSwingCaptureWriteEvent(frame, "ANIMATION_PHASE_CHANGE", "phase_or_segment");
+    }
+
+    *previous = *frame;
+    s_web_swing_capture.has_last_frame = 1;
+}
+
+static void pmotionWebSwingCaptureCloseFiles(void)
+{
+    if (s_web_swing_capture.telemetry)
+    {
+        fflush(s_web_swing_capture.telemetry);
+        fclose(s_web_swing_capture.telemetry);
+        s_web_swing_capture.telemetry = NULL;
+    }
+    if (s_web_swing_capture.events)
+    {
+        fflush(s_web_swing_capture.events);
+        fclose(s_web_swing_capture.events);
+        s_web_swing_capture.events = NULL;
+    }
+}
+
+static void pmotionWebSwingCaptureEnd(Entity *e, const char *reason);
+
+static void pmotionWebSwingCaptureAtExit(void)
+{
+    if (s_web_swing_capture.active)
+        pmotionWebSwingCaptureEnd(NULL, "process_exit");
+}
+
+static void pmotionWebSwingCaptureWriteMetadata(const WebSwingCaptureFrame *frame,
+                                                const char *stamp)
+{
+    char path[MAX_PATH];
+    FILE *metadata;
+
+    if (!s_web_swing_capture.capture_dir[0])
+        return;
+
+    sprintf_s(path, sizeof(path), "%smetadata.json", s_web_swing_capture.capture_dir);
+    metadata = fileOpen(path, "wt");
+    if (!metadata)
+    {
+        pmotionWebSwingCaptureReportIoFailure("metadata_open");
+        return;
+    }
+
+    if (fprintf(metadata,
+                "{\n"
+                "  \"schema_version\": 1,\n"
+                "  \"capture_id\": %u,\n"
+                "  \"started_tick\": %u,\n"
+                "  \"started_time\": \"%s\",\n"
+                "  \"physics_tick_rate_hz\": 30,\n"
+                "  \"sample_tick_interval\": %u,\n"
+                "  \"sample_rate_hz\": 15,\n"
+                "  \"source\": \"client\",\n"
+                "  \"development_only\": true,\n"
+                "  \"backend_at_start\": \"%s\"\n"
+                "}\n",
+                s_web_swing_capture.capture_id, frame->tick, stamp,
+                WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL, frame->backend) < 0)
+        pmotionWebSwingCaptureReportIoFailure("metadata_row");
+
+    fclose(metadata);
+}
+
+static void pmotionWebSwingCaptureBegin(Entity *e, const WebSwingCaptureFrame *frame)
+{
+    char stamp[64];
+    char path[MAX_PATH];
+    char *log_dir;
+
+    memset(&s_web_swing_capture, 0, sizeof(s_web_swing_capture));
+    s_web_swing_capture.active = 1;
+    s_web_swing_capture.player = e;
+    s_web_swing_capture.start_tick = frame->tick;
+    s_web_swing_capture.capture_id = ++s_web_swing_capture_serial;
+    if (!s_web_swing_capture.capture_id)
+        s_web_swing_capture.capture_id = ++s_web_swing_capture_serial;
+
+    timerMakeDateString_fileFriendly_s(stamp, sizeof(stamp));
+    {
+        size_t i;
+        for (i = 0; stamp[i]; ++i)
+        {
+            if (!((stamp[i] >= '0' && stamp[i] <= '9') ||
+                  (stamp[i] >= 'A' && stamp[i] <= 'Z') ||
+                  (stamp[i] >= 'a' && stamp[i] <= 'z')))
+                stamp[i] = '-';
+        }
+    }
+
+    log_dir = getLogDir();
+    if (log_dir && log_dir[0])
+    {
+        sprintf_s(s_web_swing_capture.capture_dir,
+                  sizeof(s_web_swing_capture.capture_dir),
+                  "%swebswing-captures/webswing-%s-%03u/",
+                  log_dir, stamp, s_web_swing_capture.capture_id);
+        mkdirtree(s_web_swing_capture.capture_dir);
+
+        sprintf_s(path, sizeof(path), "%stelemetry.csv", s_web_swing_capture.capture_dir);
+        s_web_swing_capture.telemetry = fileOpen(path, "wt");
+        sprintf_s(path, sizeof(path), "%sevents.csv", s_web_swing_capture.capture_dir);
+        s_web_swing_capture.events = fileOpen(path, "wt");
+    }
+
+    if (!s_web_swing_capture.telemetry)
+    {
+        s_web_swing_capture.telemetry_failed = 1;
+        pmotionWebSwingCaptureReportIoFailure("telemetry_open");
+    }
+    if (!s_web_swing_capture.events)
+    {
+        s_web_swing_capture.events_failed = 1;
+        pmotionWebSwingCaptureReportIoFailure("events_open");
+    }
+
+    pmotionWebSwingCaptureWriteTelemetryHeader();
+    pmotionWebSwingCaptureWriteEventsHeader();
+    pmotionWebSwingCaptureWriteMetadata(frame, stamp);
+    pmotionWebSwingCaptureWriteEvent(frame, "CAPTURE_BEGIN", "manual_start");
+    pmotionWebSwingCaptureTrackFrame(frame, 1);
+    pmotionWebSwingCaptureWriteSample(frame);
+
+    if (!s_web_swing_capture_atexit_registered)
+    {
+        atexit(pmotionWebSwingCaptureAtExit);
+        s_web_swing_capture_atexit_registered = 1;
+    }
+
+    filelog_printf("webswing.log",
+                   "WEBSWING_CAPTURE CAPTURE_BEGIN capture_id=%03u start_tick=%u sample_tick_interval=%u sample_rate_hz=15 output_dir=%s backend=%s\n",
+                   s_web_swing_capture.capture_id, frame->tick,
+                   WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL,
+                   s_web_swing_capture.capture_dir[0] ? s_web_swing_capture.capture_dir : "<unavailable>",
+                   frame->backend);
+}
+
+static void pmotionWebSwingCaptureEnd(Entity *e, const char *reason)
+{
+    WebSwingCaptureFrame frame;
+    const WebSwingCaptureFrame *event_frame;
+
+    if (!s_web_swing_capture.active)
+        return;
+
+    if (e && e->motion)
+    {
+        pmotionWebSwingCaptureBuildFrame(e, &frame);
+        pmotionWebSwingCaptureTrackFrame(&frame, 0);
+        event_frame = &frame;
+    }
+    else if (s_web_swing_capture.has_last_frame)
+        event_frame = &s_web_swing_capture.last_frame;
+    else
+    {
+        memset(&frame, 0, sizeof(frame));
+        frame.tick = s_web_swing_capture.start_tick;
+        strcpy_s(frame.backend, sizeof(frame.backend), "UNKNOWN");
+        strcpy_s(frame.assist_phase, sizeof(frame.assist_phase), "NONE");
+        strcpy_s(frame.phase, sizeof(frame.phase), "NONE");
+        strcpy_s(frame.anim_phase, sizeof(frame.anim_phase), "NONE");
+        strcpy_s(frame.visual_tether_state, sizeof(frame.visual_tether_state), "HIDDEN");
+        event_frame = &frame;
+    }
+
+    if (s_web_swing_capture.cycle_open)
+    {
+        pmotionWebSwingCaptureWriteEvent(&s_web_swing_capture.last_frame,
+                                         "CYCLE_END", "capture_end");
+        s_web_swing_capture.cycle_open = 0;
+    }
+    pmotionWebSwingCaptureWriteEvent(event_frame, "CAPTURE_END",
+                                     reason ? reason : "manual_stop");
+
+    filelog_printf("webswing.log",
+                   "WEBSWING_CAPTURE CAPTURE_END capture_id=%03u end_tick=%u samples=%u output_dir=%s reason=%s\n",
+                   s_web_swing_capture.capture_id, event_frame->tick,
+                   s_web_swing_capture.sample_index,
+                   s_web_swing_capture.capture_dir[0] ? s_web_swing_capture.capture_dir : "<unavailable>",
+                   reason ? reason : "manual_stop");
+    pmotionWebSwingCaptureCloseFiles();
+    s_web_swing_capture.active = 0;
+    s_web_swing_capture.player = NULL;
+}
+
+static void pmotionWebSwingCaptureTick(Entity *e)
+{
+    WebSwingCaptureFrame frame;
+
+    if (!g_cohsourcedev_webswing_capture && !s_web_swing_capture.active)
+        return;
+
+    if (!pmotionWebSwingCaptureAllowed())
+    {
+        if (s_web_swing_capture.active)
+            pmotionWebSwingCaptureEnd(NULL, "development_gate_lost");
+        g_cohsourcedev_webswing_capture = 0;
+        return;
+    }
+
+    if (!e || e != controlledPlayerPtr())
+        return;
+
+    if (s_web_swing_capture.active && s_web_swing_capture.player != e)
+    {
+        pmotionWebSwingCaptureEnd(NULL, "controlled_player_changed");
+        return;
+    }
+
+    pmotionWebSwingCaptureBuildFrame(e, &frame);
+    if (!s_web_swing_capture.active)
+    {
+        pmotionWebSwingCaptureBegin(e, &frame);
+        return;
+    }
+
+    if (!g_cohsourcedev_webswing_capture)
+    {
+        pmotionWebSwingCaptureEnd(e, "manual_stop");
+        return;
+    }
+
+    pmotionWebSwingCaptureTrackFrame(&frame, 0);
+    if (!s_web_swing_capture.has_last_sample ||
+        (U32)(frame.tick - s_web_swing_capture.last_sample_tick) >=
+            WEBSWING_CAPTURE_SAMPLE_TICK_INTERVAL)
+        pmotionWebSwingCaptureWriteSample(&frame);
+}
+
+static const char *pmotionWebSwingCaptureHudFloat(F32 value, char *buffer, size_t buffer_size)
+{
+    if (value < -0.5f)
+        strcpy_s(buffer, buffer_size, "n/a");
+    else
+        sprintf_s(buffer, buffer_size, "%0.2f", value);
+    return buffer;
+}
+
+void pmotionWebSwingCaptureRenderHud(void)
+{
+    WebSwingCaptureFrame *frame = &s_web_swing_capture.last_sample;
+    char clearance[16];
+    char ahead_clearance[16];
+    char lookahead[16];
+
+    if (!s_web_swing_capture.active || !s_web_swing_capture.has_last_sample ||
+        !pmotionWebSwingCaptureAllowed() ||
+        controlledPlayerPtr() != s_web_swing_capture.player)
+        return;
+
+    xyprintfcolor(2, 2, 255, 220, 80, "WEBSWING CAP %03u", s_web_swing_capture.capture_id);
+    xyprintfcolor(2, 3, 150, 255, 255, "%s", frame->backend);
+    xyprintfcolor(2, 4, 255, 255, 255, "tick: %u  sample: %u", frame->tick,
+                  s_web_swing_capture.sample_index);
+    xyprintfcolor(2, 5, 255, 255, 255, "cycle: %u  phase: %s", frame->cycle_id, frame->phase);
+    xyprintfcolor(2, 6, 255, 255, 255, "phase tick: %u", frame->phase_ticks);
+    xyprintfcolor(2, 7, 180, 255, 180, "speed: %0.2f  horiz: %0.2f  vert: %0.2f",
+                  frame->total_speed, frame->horizontal_speed, frame->vertical_speed);
+    xyprintfcolor(2, 8, 180, 255, 180, "pos: (%0.1f %0.1f %0.1f)",
+                  frame->position[0], frame->position[1], frame->position[2]);
+    xyprintfcolor(2, 9, 180, 255, 180, "clear: %s  ahead: %s  look: %s",
+                  pmotionWebSwingCaptureHudFloat(frame->current_ground_clearance,
+                                                  clearance, sizeof(clearance)),
+                  pmotionWebSwingCaptureHudFloat(frame->ahead_ground_clearance,
+                                                  ahead_clearance, sizeof(ahead_clearance)),
+                  pmotionWebSwingCaptureHudFloat(frame->lookahead_distance,
+                                                  lookahead, sizeof(lookahead)));
+    xyprintfcolor(2, 10, 180, 255, 180, "low: %0.1f  margin: %0.1f  energy: %0.2f",
+                  frame->low_point_y, frame->altitude_margin, frame->assist_energy);
+    xyprintfcolor(2, 11, 180, 255, 180, "intent: (%0.2f %0.2f %0.2f) mag: %0.2f",
+                  frame->intent[0], frame->intent[1], frame->intent[2],
+                  frame->input_magnitude);
+    xyprintfcolor(2, 12, 180, 255, 180, "tether: %s  progress: %0.2f",
+                  frame->visual_tether_state, frame->visual_tether_progress);
+    xyprintfcolor(2, 13, 180, 255, 180, "anim: %s  segment: %u  phase_segment: %u",
+                  frame->anim_phase, frame->anim_segment_id,
+                  frame->anim_phase_segment_id);
+}
+
 static void pmotionLogWebSwingClientStateBuild(Entity *e, int server_web_swing,
                                                 int resolved_count, WebSwingAnimPhase computed_phase,
                                                 F32 bottom_fraction, F32 tangent_speed)
@@ -765,6 +1435,14 @@ void pmotionSetState(Entity* e, ControlState* controls)
     }
 
     pmotionSetWebSwingAnimState(e, scs->web_swing);
+
+#if CLIENT
+    // Capture is a gated client observation path.  The branch is false for
+    // every normal gameplay tick while capture is disabled.
+    if ((g_cohsourcedev_webswing_capture || s_web_swing_capture.active) &&
+        e == controlledPlayerPtr())
+        pmotionWebSwingCaptureTick(e);
+#endif
 
     // If I'm not in control of my character, then don't set
     //   any of the bits that are directly based on input controls.

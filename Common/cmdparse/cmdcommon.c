@@ -35,6 +35,11 @@ S32 g_cohsourcedev_webswing_anim_selection;
 // -1 leaves the authoritative backend unchanged; 0/1 requests the matching
 // Web Swing backend after the controlled player reaches a map.
 S32 g_cohsourcedev_webswing_physics_selection = -1;
+#if CLIENT
+// Client-only manual observability toggle.  It intentionally does not live in
+// control_cmds, so it is never sent to the server as gameplay input.
+S32 g_cohsourcedev_webswing_capture;
+#endif
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
 {
@@ -108,6 +113,8 @@ ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
                             "Toggles autorun." },
         { 9, "no_ragdoll", 0, {{ PARSETYPE_S32, &control_state.no_ragdoll }},0,
                             "disables client ragdoll sim" },
+        { 9, "webswingcapture", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_capture }},0,
+                            "WebSwingDev client manual telemetry capture (1 start, 0 stop)" },
         { 0 },
     };
 #endif

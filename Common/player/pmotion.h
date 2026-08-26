@@ -43,6 +43,7 @@ extern GlobalPlayerMotionState global_pmotion_state;
 extern StashTable g_htAttackVolumes;
 #ifdef CLIENT
 extern char *g_activeMaterialTrackerName;
+void pmotionWebSwingCaptureRenderHud(void);
 #endif
 
 #define entMode(e,mode_num) ( (e)->state.mode & ( 1 << (mode_num) ) )

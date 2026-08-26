@@ -310,6 +310,16 @@ void parseArgs(int argc,char **argv)
             i += 2;
             continue;
         }
+        if (stricmp(argv[i], "-webswingcapture") == 0)
+        {
+            // Optional development startup convenience.  Runtime toggling
+            // remains the normal workflow and is provided by the local client
+            // command in cmdcommon.c.
+            g_cohsourcedev_webswing_capture = 1;
+            game_startupTracef("webswingcapture.argument=%d", g_cohsourcedev_webswing_capture);
+            i++;
+            continue;
+        }
         if (stricmp(argv[i], "-password") == 0 && i + 1 < argc)
         {
             Strncpyt(commandLinePassword, argv[i + 1]);

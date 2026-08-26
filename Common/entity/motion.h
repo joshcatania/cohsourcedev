@@ -204,6 +204,13 @@ typedef struct MotionState
     F32                    web_swing_constraint_radial_velocity_removed_sum;
     F32                    web_swing_constraint_max_radial_velocity_removed;
 
+    // Last terrain values already measured by the Sky-Assisted controller.
+    // These are observation copies, not additional collision queries.
+    F32                    web_swing_assist_current_clearance;
+    F32                    web_swing_assist_ahead_clearance;
+    F32                    web_swing_assist_lookahead_distance;
+    F32                    web_swing_assist_altitude_margin;
+
     EntityCapsule        capsule;
 
     MotionStateInput    input;

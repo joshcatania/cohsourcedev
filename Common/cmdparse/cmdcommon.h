@@ -324,6 +324,9 @@ extern ControlState control_state;
 extern S32 g_cohsourcedev_anim_canary;
 extern S32 g_cohsourcedev_webswing_anim_selection;
 extern S32 g_cohsourcedev_webswing_physics_selection;
+#ifdef CLIENT
+extern S32 g_cohsourcedev_webswing_capture;
+#endif
 extern ControlId opposite_control_id[CONTROLID_BINARY_MAX];
 
 typedef struct Cmd Cmd;
