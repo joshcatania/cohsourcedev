@@ -41,6 +41,7 @@ $correctedGroup = '<WEBSWING_MALE_FULL_CORRECTED>'
 $launch = Get-Move 'WEBSWING_V2_GROUND_LAUNCH_START'
 Assert-True 'accepted 62-frame first launch remains intact' ($launch.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and $launch.AnimStart -eq 1 -and $launch.AnimEnd -eq 62)
 Assert-Contains 'ground launch replaces phased choreography' $launch.Interrupts $phasedGroup
+Assert-Excludes 'legacy retract cannot insert itself between ground launch and catch' (Get-Move 'WEBSWING_V2_RETRACT_START').Interrupts '<WEBSWING_V2_GROUND_LAUNCH>'
 
 $events = @(
     [pscustomobject]@{ Prefix='WEBSWING_V2_REACH'; Bits=@('WEBSWING_SHOOT') },
@@ -73,6 +74,12 @@ foreach ($name in $phaseMoves) {
     if ($variant -eq 'B') { Assert-Contains "$name variant requirement" $move.Requires 'WEBSWING_VARIANT_B' }
     else { Assert-Excludes "$name is the fallback variant" $move.Requires 'WEBSWING_VARIANT_B' }
     Assert-Contains "$name resumes after lifecycle phase" $move.Interrupts $phasedGroup
+    if ($name -like 'WEBSWING_FULL_ATTACHED*') {
+        Assert-Excludes "$name cannot replace a more-specific physical phase" $move.Interrupts $correctedGroup
+    }
+    else {
+        Assert-Contains "$name can replace another physical phase" $move.Interrupts $correctedGroup
+    }
     Assert-Contains "$name advances" $move.Flags 'Cycle'
     Assert-True "$name moving window" ($move.Scale -gt 0 -and $move.AnimEnd -gt $move.AnimStart)
     Assert-Excludes "$name excludes MOVEIRQ" $move.Member '<MOVEIRQ>'
