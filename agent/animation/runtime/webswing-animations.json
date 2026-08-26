@@ -1,5 +1,5 @@
 {
-  "version": 6,
+  "version": 7,
   "generator": "accepted Issue 36 rest-basis generators -> blender_export_animx.py -> GetAnimation2 -compile-animx",
   "animations": [
     {
@@ -57,6 +57,22 @@
       "file": "male/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2.anim",
       "bytes": 8536,
       "sha256": "31cc2f173751306fb64ec357850cfb0c2312b7a4bb342172b442c24bce40c648"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_COMPACT_V2",
+      "frames": 50,
+      "file": "male/COHSOURCEDEV_WEBSWING_COMPACT_V2.anim",
+      "bytes": 7526,
+      "sha256": "8d184c1c7ff62dd7098bc8fc7d1ab39202a5bf1c895e7d99c7fbe94c48db066f"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_RELEASE_V2",
+      "frames": 22,
+      "file": "male/COHSOURCEDEV_WEBSWING_RELEASE_V2.anim",
+      "bytes": 4866,
+      "sha256": "a8b25c67359ed6b055b8adcebd5b53f79eb62d001ebbed5463c7438ffd520257"
     },
     {
       "type": "MALE",

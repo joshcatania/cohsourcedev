@@ -8,3 +8,4 @@ StateBit WEBSWING_ASCEND_MALE_ENTER Predictable
 StateBit WEBSWING_SHOOT Predictable
 StateBit WEBSWING_RETRACT Predictable
 StateBit WEBSWING_GROUND_LAUNCH Predictable
+StateBit WEBSWING_VARIANT_B Predictable

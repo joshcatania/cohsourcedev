@@ -167,6 +167,8 @@ typedef struct MotionState
     U32                    web_swing_assist_cycle_id;
     U32                    web_swing_visual_tether_gap_ticks;
     U32                    web_swing_visual_tether_shoot_ticks;
+    U32                    web_swing_anim_catch_ticks;
+    U32                    web_swing_anim_release_ticks;
     U32                    web_swing_visual_tether_state;
     F32                    web_swing_visual_tether_progress;
     F32                    web_swing_visual_tether_shoot_time;

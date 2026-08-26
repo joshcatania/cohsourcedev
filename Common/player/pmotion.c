@@ -373,6 +373,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         "WEBSWING_ASCEND",
     };
     int state_bits[ARRAY_SIZE(state_names)];
+    int variant_b_state_bit;
     int i;
     int resolved_count = 0;
     F32 bottom_fraction;
@@ -390,10 +391,13 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     int phase_entry;
     int shooting;
     int shoot_entry;
-    int retracting;
     int retract_entry;
     int ground_launching;
-    int recurring_cycle;
+    int web_reaching;
+    int web_catching;
+    int web_releasing;
+    int phase_airborne;
+    int variant_b;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     raw_phase = WEBSWING_ANIM_PHASE_NONE;
@@ -418,6 +422,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     shoot_state_bit = seqGetStateNumberFromName("WEBSWING_SHOOT");
     retract_state_bit = seqGetStateNumberFromName("WEBSWING_RETRACT");
     ground_launch_state_bit = seqGetStateNumberFromName("WEBSWING_GROUND_LAUNCH");
+    variant_b_state_bit = seqGetStateNumberFromName("WEBSWING_VARIANT_B");
     if (male_state_bit >= 0)
         seqSetState(e->seq->state, 0, male_state_bit);
     if (enter_state_bit >= 0)
@@ -428,6 +433,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         seqSetState(e->seq->state, 0, retract_state_bit);
     if (ground_launch_state_bit >= 0)
         seqSetState(e->seq->state, 0, ground_launch_state_bit);
+    if (variant_b_state_bit >= 0)
+        seqSetState(e->seq->state, 0, variant_b_state_bit);
 
     {
         static int logged_state_resolution;
@@ -467,11 +474,17 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     is_male = e && e->seq && e->seq->type && e->seq->type->seqTypeName && !stricmp(e->seq->type->seqTypeName, "Male");
     shooting = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING;
     shoot_entry = shooting && !e->motion->web_swing_anim_shoot_active;
-    retracting = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING ||
-                 e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_GAP;
     retract_entry = 0;
     ground_launching = shooting && e->motion->web_swing_ground_launch_active;
-    recurring_cycle = 0;
+    web_reaching = shooting && !ground_launching;
+    web_catching = !ground_launching &&
+        e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_ATTACHED &&
+        e->motion->web_swing_anim_catch_ticks > 0 &&
+        e->motion->web_swing_anim_catch_ticks <= 12;
+    web_releasing = e->motion->web_swing_anim_release_ticks > 0 ||
+        e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING;
+    phase_airborne = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_GAP;
+    variant_b = (e->motion->web_swing_assist_cycle_id & 1) == 0;
     raw_phase = phase;
     phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
@@ -498,18 +511,6 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             phase = e->motion->web_swing_ground_launch_active ? WEBSWING_ANIM_PHASE_ATTACHED :
                     pmotionStabilizeMode3WebSwingPhase(raw_phase, previous_phase);
             phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
-            recurring_cycle = e->motion->web_swing_assist_cycle_id > 1;
-            if (recurring_cycle)
-            {
-                // One forward-authored launch-to-tuck performance owns each
-                // repeated ascent. The visual line may change from retract to
-                // gap to shoot underneath it without reversing or replacing
-                // the body animation mid-cycle.
-                shooting = 0;
-                shoot_entry = 0;
-                if (phase == WEBSWING_ANIM_PHASE_ASCEND)
-                    retracting = 1;
-            }
             retract_entry = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING &&
                             phase_entry;
         }
@@ -565,29 +566,31 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         }
         else if (mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED)
         {
-            // Mode 3 keeps the normal phase bits for Fem/Huge, while Male
-            // attached phases also carry AIRBORNE as a private discriminator.
-            // AIRBORNE+ATTACHED never occurs in modes 0/1/2, so this selects
-            // the corrected-full helpers. WEBSWING_SHOOT is the one explicit
-            // V2 choreography bit: it aligns the authored wrist-fire clip to
-            // a fresh visual line. During repeated cycles RETRACT instead owns
-            // one continuous forward launch-to-tuck performance across old
-            // line retraction, the invisible gap, the new shot, and ascent.
-            // GROUND_LAUNCH upgrades the first shot to the same complete
-            // authored catch-and-pull sequence.
-            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
-                phase != WEBSWING_ANIM_PHASE_AIRBORNE && male_state_bit >= 0)
+            // World-space motion remains controller-owned. The visible line
+            // lifecycle selects reach/catch/release/airborne performances;
+            // assisted phases select descend/extension/tuck. Alternating
+            // authored variants keeps identical arcs from reading as one
+            // looping Swing Pose.
+            if (is_male && ((phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE) || web_releasing) &&
+                male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
 
-            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
-                phase != WEBSWING_ANIM_PHASE_AIRBORNE &&
-                (phase_entry || shoot_entry || retract_entry) && enter_state_bit >= 0)
+            if (is_male && (phase != WEBSWING_ANIM_PHASE_NONE || web_releasing))
+            {
+                if (variant_b && variant_b_state_bit >= 0)
+                    seqSetState(e->seq->state, 1, variant_b_state_bit);
+            }
+
+            if (is_male && (ground_launching || web_catching) && enter_state_bit >= 0)
                 seqSetState(e->seq->state, 1, enter_state_bit);
 
-            if (is_male && shooting && shoot_state_bit >= 0)
+            if (is_male && (ground_launching || web_reaching || phase_airborne) &&
+                shoot_state_bit >= 0)
                 seqSetState(e->seq->state, 1, shoot_state_bit);
 
-            if (is_male && retracting && retract_state_bit >= 0)
+            if (is_male && (web_catching || web_releasing || phase_airborne) &&
+                retract_state_bit >= 0)
                 seqSetState(e->seq->state, 1, retract_state_bit);
 
             if (is_male && ground_launching && ground_launch_state_bit >= 0)
@@ -618,8 +621,9 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                 seqSetState(e->seq->state, 1, state_bits[4]);
             }
 
-            if (is_male && phase != WEBSWING_ANIM_PHASE_NONE &&
-                phase != WEBSWING_ANIM_PHASE_AIRBORNE && state_bits[0] >= 0)
+            if (is_male && ((phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE) || web_releasing) &&
+                state_bits[0] >= 0)
                 seqSetState(e->seq->state, 1, state_bits[0]);
 
             if (is_male && (phase_entry || phase != raw_phase))
