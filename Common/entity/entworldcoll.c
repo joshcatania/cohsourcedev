@@ -1,4 +1,5 @@
 #include "entworldcoll.h"
+#include <float.h>
 #include <string.h>
 #include <utilitieslib/utils/mathutil.h>
 #include <utilitieslib/utils/error.h>
@@ -79,16 +80,19 @@
 #define WEB_ASSIST_LAUNCH_ACCEL               0.60f
 #define WEB_ASSIST_ASCEND_GRAVITY_ASSIST       0.012f
 #define WEB_ASSIST_ASCEND_ENERGY_ASSIST        0.006f
-#define WEB_ASSIST_ASCEND_BUILD_ACCEL          0.240f
-#define WEB_ASSIST_ASCEND_BUILD_TICKS             24
 #define WEB_ASSIST_APEX_DOWN_ACCEL            0.020f
 #define WEB_ASSIST_DESCEND_DOWN_ACCEL         0.040f
 #define WEB_ASSIST_DESCEND_ENERGY_ACCEL       0.008f
-#define WEB_ASSIST_BOTTOM_BASE_UP_ACCEL        0.36f
-#define WEB_ASSIST_BOTTOM_MAX_UP_ACCEL         0.90f
-#define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        0.70f
-#define WEB_ASSIST_BOTTOM_SURFACE_EXIT_UP_SPEED 0.05f
-#define WEB_ASSIST_BOTTOM_MIN_TICKS            3
+#define WEB_ASSIST_SWOOP_DEFAULT_RADIUS       105.0f
+#define WEB_ASSIST_SWOOP_MIN_RADIUS            24.0f
+#define WEB_ASSIST_SWOOP_EXIT_ANGLE             RAD(36.0f)
+#define WEB_ASSIST_SWOOP_MAX_ANGULAR_STEP       RAD(15.0f)
+#define WEB_ASSIST_SWOOP_MIN_PLANE_SPEED         0.25f
+#define WEB_ASSIST_SWOOP_HORIZONTAL_BLEND_START  0.12f
+#define WEB_ASSIST_SWOOP_HORIZONTAL_BLEND_FULL   0.35f
+#define WEB_ASSIST_SWOOP_EMERGENCY_BASE_ACCEL    0.36f
+#define WEB_ASSIST_SWOOP_EMERGENCY_MAX_ACCEL     0.90f
+#define WEB_ASSIST_SWOOP_EMERGENCY_MARGIN        0.50f
 #define WEB_ASSIST_ALTITUDE_ARC_DEPTH          36.0f
 #define WEB_ASSIST_ALTITUDE_TRANSITION_PADDING 2.0f
 #define WEB_ASSIST_ALTITUDE_FLOOR_RISE_BASE    1.5f
@@ -923,6 +927,11 @@ static void webSwingAssistedBegin(Entity *e, int grounded)
     motion->web_swing_assist_ahead_clearance = -1.0f;
     motion->web_swing_assist_lookahead_distance = -1.0f;
     motion->web_swing_assist_altitude_margin = 0.0f;
+    motion->web_swing_assist_swoop_active = 0;
+    motion->web_swing_assist_swoop_entry_plane_speed = 0.0f;
+    motion->web_swing_assist_swoop_entry_angle = 0.0f;
+    motion->web_swing_assist_swoop_radius = 0.0f;
+    motion->web_swing_assist_swoop_emergency_count = 0;
     motion->web_swing_assist_phase = WEB_SWING_ASSIST_NONE;
     motion->web_swing_visual_tether_visible = 1;
     motion->web_swing_visual_tether_gap_ticks = 0;
@@ -1115,7 +1124,8 @@ static void webSwingUpdateAssistedVisualAnchor(Entity *e, const Vec3 travel_inte
 }
 
 static void webSwingApplyAssistedHorizontal(Entity *e, const Vec3 travel_intent,
-                                             WebSwingAssistPhase phase)
+                                             WebSwingAssistPhase phase,
+                                             int preserve_momentum)
 {
     MotionState *motion = e->motion;
     Vec3 horizontal_velocity;
@@ -1160,6 +1170,8 @@ static void webSwingApplyAssistedHorizontal(Entity *e, const Vec3 travel_intent,
     }
     target_speed = MINMAX(target_speed, WEB_ASSIST_HORIZONTAL_MIN_SPEED,
                           WEB_ASSIST_HORIZONTAL_MAX_SPEED);
+    if(preserve_momentum)
+        target_speed = MAX(horizontal_speed, target_speed);
 
     scaleVec3(travel_intent, target_speed, target_velocity);
     subVec3(target_velocity, horizontal_velocity, velocity_delta);
@@ -1169,6 +1181,174 @@ static void webSwingApplyAssistedHorizontal(Entity *e, const Vec3 travel_intent,
         scaleVec3(velocity_delta, max_delta / delta_length, velocity_delta);
     motion->vel[0] += velocity_delta[0];
     motion->vel[2] += velocity_delta[2];
+}
+
+static void webSwingAssistedBeginSwoop(Entity *e)
+{
+    MotionState *motion = e->motion;
+    F32 horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
+    F32 plane_speed = sqrt(SQR(horizontal_speed) + SQR(motion->vel[1]));
+
+    motion->web_swing_assist_swoop_active = 1;
+    motion->web_swing_assist_swoop_entry_plane_speed =
+        MIN(plane_speed, WEB_ASSIST_TOTAL_MAX_SPEED);
+    motion->web_swing_assist_swoop_entry_angle =
+        atan2(motion->vel[1], MAX(horizontal_speed, 0.0001f));
+    motion->web_swing_assist_swoop_radius = WEB_ASSIST_SWOOP_DEFAULT_RADIUS;
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s assisted_swoop_begin tick=%u cycle_id=%u entry_angle_deg=%.3f entry_plane_speed=%.3f horizontal_speed=%.3f vertical_speed=%.3f default_radius=%.3f\n",
+                   WEB_SWING_LOG_SIDE,
+                   motion->tickCounter,
+                   motion->web_swing_assist_cycle_id,
+                   DEG(motion->web_swing_assist_swoop_entry_angle),
+                   motion->web_swing_assist_swoop_entry_plane_speed,
+                   horizontal_speed,
+                   motion->vel[1],
+                   WEB_ASSIST_SWOOP_DEFAULT_RADIUS);
+}
+
+static int webSwingApplyAssistedSwoop(Entity *e, const Vec3 travel_intent,
+                                      WebSwingAssistPhase phase, F32 clearance)
+{
+    MotionState *motion = e->motion;
+    Vec3 horizontal_direction;
+    F32 horizontal_speed;
+    F32 plane_speed;
+    F32 swing_angle;
+    F32 target_angle;
+    F32 selected_radius = motion->web_swing_assist_swoop_radius;
+    F32 safe_radius = WEB_ASSIST_SWOOP_DEFAULT_RADIUS;
+    F32 available_drop = FLT_MAX;
+    F32 angular_step;
+    F32 horizontal_ratio;
+    F32 redirect_strength;
+    F32 new_angle;
+    F32 new_horizontal_speed;
+    int terrain_emergency = 0;
+
+    copyVec3(motion->vel, horizontal_direction);
+    horizontal_direction[1] = 0.0f;
+    horizontal_speed = lengthVec3(horizontal_direction);
+    plane_speed = sqrt(SQR(horizontal_speed) + SQR(motion->vel[1]));
+    if(plane_speed < WEB_ASSIST_SWOOP_MIN_PLANE_SPEED)
+        return 0;
+
+    if(horizontal_speed > 0.0001f)
+        scaleVec3(horizontal_direction, 1.0f / horizontal_speed, horizontal_direction);
+    else
+        copyVec3(travel_intent, horizontal_direction);
+
+    swing_angle = atan2(motion->vel[1], MAX(horizontal_speed, 0.0001f));
+    target_angle = phase == WEB_SWING_ASSIST_BOTTOM ? 0.0f :
+                   WEB_ASSIST_SWOOP_EXIT_ANGLE;
+
+    if(phase == WEB_SWING_ASSIST_BOTTOM && swing_angle < 0.0f)
+    {
+        F32 denominator = 1.0f - cos(fabs(swing_angle));
+        F32 altitude_available = ENTPOSY(e) -
+            motion->web_swing_assist_low_point_y -
+            WEB_ASSIST_ALTITUDE_TRANSITION_PADDING;
+
+        available_drop = altitude_available;
+        if(clearance >= 0.0f && clearance < WEB_ASSIST_GROUND_PROBE_DISTANCE)
+        {
+            available_drop = MIN(available_drop,
+                clearance - WEB_ASSIST_GROUND_TARGET_CLEARANCE -
+                WEB_ASSIST_GROUND_TRANSITION_PADDING);
+        }
+
+        if(denominator > 0.0001f)
+            safe_radius = available_drop / denominator;
+        selected_radius = MIN(WEB_ASSIST_SWOOP_DEFAULT_RADIUS, safe_radius);
+        if(selected_radius < WEB_ASSIST_SWOOP_MIN_RADIUS)
+        {
+            selected_radius = WEB_ASSIST_SWOOP_MIN_RADIUS;
+            terrain_emergency = 1;
+        }
+        motion->web_swing_assist_swoop_radius = selected_radius;
+    }
+
+    horizontal_ratio = horizontal_speed / plane_speed;
+    redirect_strength = MINMAX(
+        (horizontal_ratio - WEB_ASSIST_SWOOP_HORIZONTAL_BLEND_START) /
+        (WEB_ASSIST_SWOOP_HORIZONTAL_BLEND_FULL -
+         WEB_ASSIST_SWOOP_HORIZONTAL_BLEND_START),
+        0.0f, 1.0f);
+    redirect_strength = redirect_strength * redirect_strength *
+        (3.0f - 2.0f * redirect_strength);
+
+    angular_step = MIN(WEB_ASSIST_SWOOP_MAX_ANGULAR_STEP,
+        plane_speed / MAX(selected_radius, WEB_ASSIST_SWOOP_MIN_RADIUS) *
+        MAX(e->timestep, 0.0f));
+    angular_step *= redirect_strength;
+    new_angle = MIN(target_angle, swing_angle + angular_step);
+
+    if(redirect_strength > 0.0f && new_angle > swing_angle)
+    {
+        new_horizontal_speed = plane_speed * cos(new_angle);
+        motion->vel[0] = horizontal_direction[0] * new_horizontal_speed;
+        motion->vel[2] = horizontal_direction[2] * new_horizontal_speed;
+        motion->vel[1] = plane_speed * sin(new_angle);
+    }
+
+    if(phase == WEB_SWING_ASSIST_BOTTOM)
+    {
+        F32 downward_speed = MAX(0.0f, -motion->vel[1]);
+        int inside_unsafe_clearance =
+            (clearance >= 0.0f && clearance < WEB_ASSIST_GROUND_PROBE_DISTANCE &&
+             clearance <= WEB_ASSIST_GROUND_TARGET_CLEARANCE +
+                          WEB_ASSIST_SWOOP_EMERGENCY_MARGIN) ||
+            ENTPOSY(e) <= motion->web_swing_assist_low_point_y +
+                          WEB_ASSIST_SWOOP_EMERGENCY_MARGIN;
+
+        if(downward_speed > 0.25f &&
+           (terrain_emergency || inside_unsafe_clearance))
+        {
+            F32 emergency_room = MAX(0.5f, available_drop);
+            F32 required_accel = downward_speed * downward_speed /
+                                 (2.0f * emergency_room);
+            F32 emergency_accel = MIN(WEB_ASSIST_SWOOP_EMERGENCY_MAX_ACCEL,
+                MAX(WEB_ASSIST_SWOOP_EMERGENCY_BASE_ACCEL, required_accel));
+            F32 applied_correction = emergency_accel * e->timestep;
+
+            motion->vel[1] += applied_correction;
+            ++motion->web_swing_assist_swoop_emergency_count;
+            filelog_printf("webswing.log",
+                           "WEB_SWING %s assisted_swoop_emergency tick=%u cycle_id=%u clearance=%.3f angle_deg=%.3f plane_speed=%.3f required_radius=%.3f selected_radius=%.3f available_drop=%.3f applied_correction=%.3f emergency_count=%u\n",
+                           WEB_SWING_LOG_SIDE,
+                           motion->tickCounter,
+                           motion->web_swing_assist_cycle_id,
+                           clearance,
+                           DEG(swing_angle),
+                           plane_speed,
+                           safe_radius,
+                           selected_radius,
+                           available_drop,
+                           applied_correction,
+                           motion->web_swing_assist_swoop_emergency_count);
+        }
+    }
+
+    if(new_angle >= target_angle - 0.0001f)
+    {
+        if(phase == WEB_SWING_ASSIST_ASCEND)
+        {
+            motion->web_swing_assist_swoop_active = 0;
+            filelog_printf("webswing.log",
+                           "WEB_SWING %s assisted_swoop_exit tick=%u cycle_id=%u exit_angle_deg=%.3f plane_speed=%.3f horizontal_speed=%.3f radius=%.3f emergency_count=%u\n",
+                           WEB_SWING_LOG_SIDE,
+                           motion->tickCounter,
+                           motion->web_swing_assist_cycle_id,
+                           DEG(new_angle),
+                           lengthVec3(motion->vel),
+                           sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
+                           motion->web_swing_assist_swoop_radius,
+                           motion->web_swing_assist_swoop_emergency_count);
+        }
+        return 1;
+    }
+
+    return 0;
 }
 
 static void webSwingApplyAssistedController(Entity *e)
@@ -1185,7 +1365,6 @@ static void webSwingApplyAssistedController(Entity *e)
     F32 ahead_clearance;
     F32 lookahead_distance;
     F32 speed;
-    F32 phase_vertical_target;
     F32 altitude_trigger_y;
     F32 stopping_distance;
     F32 altitude_stopping_distance;
@@ -1263,7 +1442,10 @@ static void webSwingApplyAssistedController(Entity *e)
         webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "IMMEDIATE_PHYSICS");
         phase = WEB_SWING_ASSIST_ASCEND;
     }
-    webSwingApplyAssistedHorizontal(e, travel_intent, phase);
+    webSwingApplyAssistedHorizontal(e, travel_intent, phase,
+        phase == WEB_SWING_ASSIST_BOTTOM ||
+        (phase == WEB_SWING_ASSIST_ASCEND &&
+         motion->web_swing_assist_cycle_id > 1));
 
     switch(phase)
     {
@@ -1273,25 +1455,18 @@ static void webSwingApplyAssistedController(Entity *e)
 
         case WEB_SWING_ASSIST_ASCEND:
         {
-            F32 early_ascend_fraction = 0.0f;
-            int early_ascend_building = 0;
-
-            // BOTTOM now owns only the zero crossing.  A short, tapering
-            // early-ASCEND assist builds the next arc progressively, then
-            // expires so ordinary gravity always produces an apex.
-            if(motion->web_swing_assist_cycle_id > 1 &&
-               motion->web_swing_assist_phase_ticks < WEB_ASSIST_ASCEND_BUILD_TICKS)
+            if(motion->web_swing_assist_swoop_active)
             {
-                early_ascend_building = 1;
-                early_ascend_fraction = 1.0f -
-                    (F32)motion->web_swing_assist_phase_ticks /
-                    (F32)WEB_ASSIST_ASCEND_BUILD_TICKS;
+                webSwingApplyAssistedSwoop(e, travel_intent, phase, clearance);
             }
-            motion->vel[1] += (WEB_ASSIST_ASCEND_GRAVITY_ASSIST +
-                               motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_ASSIST +
-                               early_ascend_fraction * WEB_ASSIST_ASCEND_BUILD_ACCEL) *
-                              e->timestep;
-            if(!early_ascend_building && motion->vel[1] <= 0.20f)
+            else
+            {
+                motion->vel[1] += (WEB_ASSIST_ASCEND_GRAVITY_ASSIST +
+                                   motion->web_swing_assist_energy *
+                                   WEB_ASSIST_ASCEND_ENERGY_ASSIST) *
+                                  e->timestep;
+            }
+            if(!motion->web_swing_assist_swoop_active && motion->vel[1] <= 0.20f)
             {
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_APEX, "VERTICAL_TURNOVER");
                 webSwingAssistedReleaseVisualTether(e);
@@ -1340,50 +1515,25 @@ static void webSwingApplyAssistedController(Entity *e)
                                clearance,
                                bottom_threshold,
                                downward_speed);
+                webSwingAssistedBeginSwoop(e);
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_BOTTOM, bottom_reason);
             }
             break;
 
         case WEB_SWING_ASSIST_BOTTOM:
         {
-            F32 bottom_up_accel = WEB_ASSIST_BOTTOM_BASE_UP_ACCEL;
-            F32 altitude_available = MAX(0.5f,
-                ENTPOSY(e) - motion->web_swing_assist_low_point_y -
-                WEB_ASSIST_ALTITUDE_TRANSITION_PADDING);
-            F32 available_clearance = altitude_available;
-            F32 required_stop_accel;
-
-            downward_speed = MAX(0.0f, -motion->vel[1]);
-            // A real nearby surface remains the hard floor.  A max-range probe
-            // means no ground was found, so the authored altitude band can own
-            // the gentler reversal instead of manufacturing a false emergency.
-            if(clearance >= 0.0f && clearance < WEB_ASSIST_GROUND_PROBE_DISTANCE)
-            {
-                available_clearance = MIN(available_clearance,
-                    MAX(0.5f, clearance - WEB_ASSIST_GROUND_TARGET_CLEARANCE));
-            }
-            required_stop_accel = downward_speed * downward_speed /
-                                  (2.0f * available_clearance);
-            bottom_up_accel = MIN(WEB_ASSIST_BOTTOM_MAX_UP_ACCEL,
-                                  MAX(bottom_up_accel, required_stop_accel));
-            motion->vel[1] += bottom_up_accel * e->timestep;
-            phase_vertical_target = (motion->on_surf || motion->was_on_surf) &&
-                                    fabs(motion->last_surf_normal[1]) >= 0.70f ?
-                                    WEB_ASSIST_BOTTOM_SURFACE_EXIT_UP_SPEED :
-                                    WEB_ASSIST_BOTTOM_EXIT_UP_SPEED;
-            if(motion->web_swing_assist_phase_ticks >= WEB_ASSIST_BOTTOM_MIN_TICKS &&
-               motion->vel[1] >= phase_vertical_target)
+            if(webSwingApplyAssistedSwoop(e, travel_intent, phase, clearance))
             {
                 ++motion->web_swing_assist_cycle_id;
                 ++motion->web_swing_anim_segment_id;
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f bottom_accel=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
+                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f zero_cross=1 swoop_radius=%.3f entry_plane_speed=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_plane_speed=1 preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
                                motion->web_swing_assist_cycle_id,
                                motion->web_swing_anim_segment_id,
                                motion->web_swing_assist_energy,
-                               phase_vertical_target,
-                               bottom_up_accel,
+                               motion->web_swing_assist_swoop_radius,
+                               motion->web_swing_assist_swoop_entry_plane_speed,
                                clearance,
                                vecParamsXYZ(ENTPOS(e)),
                                vecParamsXYZ(motion->vel));
@@ -1398,7 +1548,8 @@ static void webSwingApplyAssistedController(Entity *e)
     }
 
     horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
-    if(horizontal_speed > WEB_ASSIST_HORIZONTAL_MAX_SPEED)
+    if(!motion->web_swing_assist_swoop_active &&
+       horizontal_speed > WEB_ASSIST_HORIZONTAL_MAX_SPEED)
     {
         F32 horizontal_scale = WEB_ASSIST_HORIZONTAL_MAX_SPEED / horizontal_speed;
         motion->vel[0] *= horizontal_scale;
@@ -1524,6 +1675,11 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_ahead_clearance = -1.0f;
         motion->web_swing_assist_lookahead_distance = -1.0f;
         motion->web_swing_assist_altitude_margin = 0.0f;
+        motion->web_swing_assist_swoop_active = 0;
+        motion->web_swing_assist_swoop_entry_plane_speed = 0.0f;
+        motion->web_swing_assist_swoop_entry_angle = 0.0f;
+        motion->web_swing_assist_swoop_radius = 0.0f;
+        motion->web_swing_assist_swoop_emergency_count = 0;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;
@@ -1578,6 +1734,11 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         motion->web_swing_assist_ahead_clearance = -1.0f;
         motion->web_swing_assist_lookahead_distance = -1.0f;
         motion->web_swing_assist_altitude_margin = 0.0f;
+        motion->web_swing_assist_swoop_active = 0;
+        motion->web_swing_assist_swoop_entry_plane_speed = 0.0f;
+        motion->web_swing_assist_swoop_entry_angle = 0.0f;
+        motion->web_swing_assist_swoop_radius = 0.0f;
+        motion->web_swing_assist_swoop_emergency_count = 0;
         motion->web_swing_visual_tether_visible = 0;
         motion->web_swing_visual_tether_gap_ticks = 0;
         motion->web_swing_visual_tether_shoot_ticks = 0;

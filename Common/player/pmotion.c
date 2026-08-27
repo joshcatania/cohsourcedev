@@ -238,6 +238,14 @@ typedef struct WebSwingCaptureFrame
     Vec3 anchor;
     F32 visual_tether_progress;
     F32 assist_energy;
+    F32 swing_plane_speed;
+    F32 swing_angle_deg;
+    F32 forward_speed_along_intent;
+    int swoop_active;
+    F32 swoop_radius;
+    F32 swoop_entry_plane_speed;
+    F32 swoop_entry_angle_deg;
+    U32 swoop_emergency_count;
 } WebSwingCaptureFrame;
 
 typedef struct WebSwingCaptureState
@@ -397,6 +405,22 @@ static void pmotionWebSwingCaptureBuildFrame(Entity *e, WebSwingCaptureFrame *fr
     copyVec3(motion->web_swing_anchor, frame->anchor);
     frame->visual_tether_progress = motion->web_swing_visual_tether_progress;
     frame->assist_energy = motion->web_swing_assist_energy;
+    frame->swing_plane_speed = sqrt(SQR(frame->horizontal_speed) +
+                                      SQR(frame->vertical_speed));
+    frame->swing_angle_deg = DEG(atan2(frame->vertical_speed,
+        MAX(frame->horizontal_speed, 0.0001f)));
+    frame->forward_speed_along_intent =
+        frame->velocity[0] * frame->intent[0] +
+        frame->velocity[2] * frame->intent[2];
+    frame->swoop_active = sky_assisted &&
+        motion->web_swing_assist_swoop_active;
+    frame->swoop_radius = motion->web_swing_assist_swoop_radius;
+    frame->swoop_entry_plane_speed =
+        motion->web_swing_assist_swoop_entry_plane_speed;
+    frame->swoop_entry_angle_deg =
+        DEG(motion->web_swing_assist_swoop_entry_angle);
+    frame->swoop_emergency_count =
+        motion->web_swing_assist_swoop_emergency_count;
 }
 
 static void pmotionWebSwingCaptureAssignIdentity(WebSwingCaptureFrame *frame)
@@ -452,7 +476,7 @@ static void pmotionWebSwingCaptureWriteTelemetryHeader(void)
         return;
 
     if (fprintf(s_web_swing_capture.telemetry,
-                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id\n") < 0)
+                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id,swing_plane_speed,swing_angle_deg,forward_speed_along_intent,swoop_active,swoop_radius,swoop_entry_plane_speed,swoop_entry_angle_deg,swoop_emergency_count\n") < 0)
     {
         s_web_swing_capture.telemetry_failed = 1;
         pmotionWebSwingCaptureReportIoFailure("telemetry_header");
@@ -508,7 +532,7 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
     if (s_web_swing_capture.telemetry && !s_web_swing_capture.telemetry_failed)
     {
         if (fprintf(s_web_swing_capture.telemetry,
-                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%u,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u\n",
+                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%u,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u,%.6f,%.6f,%.6f,%d,%.6f,%.6f,%.6f,%u\n",
                     s_web_swing_capture.capture_id, frame->tick, sample_index,
                     elapsed_seconds, frame->backend, frame->swing_enabled,
                     frame->attached, frame->assist_phase, frame->phase,
@@ -524,8 +548,13 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
                     frame->intent[0], frame->intent[1], frame->intent[2],
                     frame->input_magnitude, frame->anchor[0], frame->anchor[1],
                     frame->anchor[2], frame->visual_tether_state,
-                    frame->visual_tether_progress, frame->anim_phase,
-                    frame->anim_segment_id, frame->anim_phase_segment_id) < 0)
+                     frame->visual_tether_progress, frame->anim_phase,
+                     frame->anim_segment_id, frame->anim_phase_segment_id,
+                     frame->swing_plane_speed, frame->swing_angle_deg,
+                     frame->forward_speed_along_intent, frame->swoop_active,
+                     frame->swoop_radius, frame->swoop_entry_plane_speed,
+                     frame->swoop_entry_angle_deg,
+                     frame->swoop_emergency_count) < 0)
         {
             s_web_swing_capture.telemetry_failed = 1;
             pmotionWebSwingCaptureReportIoFailure("telemetry_row");
@@ -571,6 +600,10 @@ static void pmotionWebSwingCaptureTrackFrame(WebSwingCaptureFrame *frame, int in
             pmotionWebSwingCaptureWriteEvent(frame, "TETHER_ATTACH", "capture_start");
         if (strcmp(frame->anim_phase, "NONE") != 0)
             pmotionWebSwingCaptureWriteEvent(frame, "ANIMATION_PHASE_CHANGE", "capture_start");
+        if (frame->swoop_active)
+            pmotionWebSwingCaptureWriteEvent(frame, "SWOOP_BEGIN", "capture_start");
+        if (frame->swoop_emergency_count > 0)
+            pmotionWebSwingCaptureWriteEvent(frame, "SWOOP_EMERGENCY", "capture_start");
     }
     else
     {
@@ -631,6 +664,14 @@ static void pmotionWebSwingCaptureTrackFrame(WebSwingCaptureFrame *frame, int in
             previous->anim_segment_id != frame->anim_segment_id ||
             previous->anim_phase_segment_id != frame->anim_phase_segment_id)
             pmotionWebSwingCaptureWriteEvent(frame, "ANIMATION_PHASE_CHANGE", "phase_or_segment");
+
+        if (previous->swoop_active != frame->swoop_active)
+            pmotionWebSwingCaptureWriteEvent(frame,
+                frame->swoop_active ? "SWOOP_BEGIN" : "SWOOP_EXIT",
+                "state_transition");
+        if (previous->swoop_emergency_count != frame->swoop_emergency_count)
+            pmotionWebSwingCaptureWriteEvent(frame, "SWOOP_EMERGENCY",
+                                             "controller_increment");
     }
 
     *previous = *frame;
@@ -680,7 +721,7 @@ static void pmotionWebSwingCaptureWriteMetadata(const WebSwingCaptureFrame *fram
 
     if (fprintf(metadata,
                 "{\n"
-                "  \"schema_version\": 2,\n"
+                "  \"schema_version\": 3,\n"
                 "  \"capture_id\": %u,\n"
                 "  \"started_tick\": %u,\n"
                 "  \"started_time\": \"%s\",\n"
@@ -925,6 +966,10 @@ void pmotionWebSwingCaptureRenderHud(void)
     xyprintfcolor(2, 13, 180, 255, 180, "anim: %s  segment: %u  phase_segment: %u",
                   frame->anim_phase, frame->anim_segment_id,
                   frame->anim_phase_segment_id);
+    xyprintfcolor(2, 14, 255, 210, 120,
+                  "angle: %0.1fdeg  plane: %0.2f  swoop: %s  radius: %0.1f",
+                  frame->swing_angle_deg, frame->swing_plane_speed,
+                  frame->swoop_active ? "YES" : "NO", frame->swoop_radius);
 }
 
 static void pmotionLogWebSwingClientStateBuild(Entity *e, int server_web_swing,

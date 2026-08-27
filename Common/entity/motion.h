@@ -162,6 +162,7 @@ typedef struct MotionState
     U32                    web_swing_visual_tether_visible : 1;
     U32                    web_swing_visual_tether_left_hand : 1;
     U32                    web_swing_anim_shoot_active : 1;
+    U32                    web_swing_assist_swoop_active : 1;
     U32                    web_swing_assist_phase;
     U32                    web_swing_assist_phase_ticks;
     U32                    web_swing_assist_cycle_id;
@@ -178,6 +179,10 @@ typedef struct MotionState
     F32                    web_swing_assist_energy;
     F32                    web_swing_assist_initial_low_point_y;
     F32                    web_swing_assist_low_point_y;
+    F32                    web_swing_assist_swoop_entry_plane_speed;
+    F32                    web_swing_assist_swoop_entry_angle;
+    F32                    web_swing_assist_swoop_radius;
+    U32                    web_swing_assist_swoop_emergency_count;
     U32                    web_swing_anim_phase;
     U32                    web_swing_anim_segment_id;
     U32                    web_swing_anim_phase_segment_id;

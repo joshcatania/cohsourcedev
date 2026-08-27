@@ -359,6 +359,14 @@ try {
             AnimPhase = Get-TextValue -Row $raw -Name 'anim_phase'
             AnimSegmentId = if ($null -eq (Get-NumberValue -Row $raw -Name 'anim_segment_id')) { 0 } else { [int64](Get-NumberValue -Row $raw -Name 'anim_segment_id') }
             AnimPhaseSegmentId = if ($null -eq (Get-NumberValue -Row $raw -Name 'anim_phase_segment_id')) { 0 } else { [int64](Get-NumberValue -Row $raw -Name 'anim_phase_segment_id') }
+            SwingPlaneSpeed = Get-NumberValue -Row $raw -Name 'swing_plane_speed'
+            SwingAngleDeg = Get-NumberValue -Row $raw -Name 'swing_angle_deg'
+            ForwardSpeedAlongIntent = Get-NumberValue -Row $raw -Name 'forward_speed_along_intent'
+            SwoopActive = Get-NumberValue -Row $raw -Name 'swoop_active'
+            SwoopRadius = Get-NumberValue -Row $raw -Name 'swoop_radius'
+            SwoopEntryPlaneSpeed = Get-NumberValue -Row $raw -Name 'swoop_entry_plane_speed'
+            SwoopEntryAngleDeg = Get-NumberValue -Row $raw -Name 'swoop_entry_angle_deg'
+            SwoopEmergencyCount = Get-NumberValue -Row $raw -Name 'swoop_emergency_count'
         })
     }
     $rows = @($normalizedList | Sort-Object Tick, SampleIndex)
@@ -453,6 +461,76 @@ try {
             }
         }
 
+        $bottomEntryAngle = $null
+        $bottomEntryPlaneSpeed = $null
+        $mostNegativeAngle = Get-Minimum -Values @($cycleRows | ForEach-Object { $_.SwingAngleDeg })
+        $selectedSwoopRadius = $null
+        $zeroCross = $null
+        $swoopExit = $null
+        $zeroCrossRetention = $null
+        $largestPlaneSpeedDrop = $null
+        $bottomToZeroTicks = $null
+        $zeroToExitTicks = $null
+        $emergencySwoopCount = 0
+        if ($null -ne $bottomEntry) {
+            $bottomEntryAngle = if ($null -ne $bottomEntry.SwoopEntryAngleDeg) {
+                $bottomEntry.SwoopEntryAngleDeg
+            } else { $bottomEntry.SwingAngleDeg }
+            $bottomEntryPlaneSpeed = if ($null -ne $bottomEntry.SwoopEntryPlaneSpeed) {
+                $bottomEntry.SwoopEntryPlaneSpeed
+            } else { $bottomEntry.SwingPlaneSpeed }
+
+            $nextBottom = $rows | Where-Object {
+                $_.ActivationId -eq $activationId -and $_.Tick -gt $bottomEntry.Tick -and
+                ($_.Phase -eq 'BOTTOM' -or $_.AssistPhase -eq 'BOTTOM') -and
+                $_.SwoopEntryPlaneSpeed -ne $bottomEntry.SwoopEntryPlaneSpeed
+            } | Select-Object -First 1
+            $swoopRows = @($rows | Where-Object {
+                $_.ActivationId -eq $activationId -and $_.Tick -ge $bottomEntry.Tick -and
+                ($null -eq $nextBottom -or $_.Tick -lt $nextBottom.Tick)
+            })
+            $selectedSwoopRadius = Get-Minimum -Values @($swoopRows | Where-Object {
+                $null -ne $_.SwoopRadius -and $_.SwoopRadius -gt 0.0
+            } | ForEach-Object { $_.SwoopRadius })
+            $zeroCross = $swoopRows | Where-Object {
+                $null -ne $_.SwingAngleDeg -and $_.SwingAngleDeg -ge 0.0
+            } | Select-Object -First 1
+            if ($null -ne $zeroCross) {
+                $bottomToZeroTicks = [int64]$zeroCross.Tick - [int64]$bottomEntry.Tick
+                if ($null -ne $bottomEntryPlaneSpeed -and [Math]::Abs([double]$bottomEntryPlaneSpeed) -gt 0.000001 -and
+                    $null -ne $zeroCross.SwingPlaneSpeed) {
+                    $zeroCrossRetention = [double]$zeroCross.SwingPlaneSpeed / [double]$bottomEntryPlaneSpeed
+                }
+                $swoopExit = $swoopRows | Where-Object {
+                    $_.Tick -ge $zeroCross.Tick -and $_.Phase -eq 'ASCEND' -and
+                    $null -ne $_.SwoopActive -and $_.SwoopActive -eq 0
+                } | Select-Object -First 1
+                if ($null -ne $swoopExit) {
+                    $zeroToExitTicks = [int64]$swoopExit.Tick - [int64]$zeroCross.Tick
+                }
+            }
+
+            $previousPlaneSpeed = $null
+            $largestDropValue = 0.0
+            foreach ($swoopRow in $swoopRows) {
+                if ($null -eq $swoopRow.SwingPlaneSpeed) { continue }
+                if ($null -ne $previousPlaneSpeed) {
+                    $drop = [double]$previousPlaneSpeed - [double]$swoopRow.SwingPlaneSpeed
+                    if ($drop -gt $largestDropValue) { $largestDropValue = $drop }
+                }
+                $previousPlaneSpeed = $swoopRow.SwingPlaneSpeed
+            }
+            $largestPlaneSpeedDrop = $largestDropValue
+
+            $endTick = if ($null -eq $nextBottom) { [int64]::MaxValue } else { [int64]$nextBottom.Tick }
+            $emergencySwoopCount = @($eventRows | Where-Object {
+                (Get-TextValue -Row $_ -Name 'event_type') -eq 'SWOOP_EMERGENCY' -and
+                (Get-NumberValue -Row $_ -Name 'activation_id') -eq $activationId -and
+                (Get-NumberValue -Row $_ -Name 'tick') -ge $bottomEntry.Tick -and
+                (Get-NumberValue -Row $_ -Name 'tick') -lt $endTick
+            }).Count
+        }
+
         $cycles += [pscustomobject][ordered]@{
             capture_cycle_index = [int64]$captureCycleIndex
             activation_id = if ($null -eq $activationId) { 0 } else { [int64]$activationId }
@@ -476,6 +554,22 @@ try {
             reversal_status = $reversalStatus
             reversal_ticks = $reversalTicks
             reversal_seconds = if ($null -eq $reversalTicks) { $null } else { [double]$reversalTicks / $physicsTickRate }
+            assist_energy_at_bottom_entry = if ($null -eq $bottomEntry) { $null } else { $bottomEntry.AssistEnergy }
+            bottom_entry_angle_deg = $bottomEntryAngle
+            bottom_entry_plane_speed = $bottomEntryPlaneSpeed
+            most_negative_angle_deg = $mostNegativeAngle
+            selected_swoop_radius = $selectedSwoopRadius
+            zero_cross_tick = if ($null -eq $zeroCross) { $null } else { [int64]$zeroCross.Tick }
+            zero_cross_plane_speed = if ($null -eq $zeroCross) { $null } else { $zeroCross.SwingPlaneSpeed }
+            zero_cross_horizontal_speed = if ($null -eq $zeroCross) { $null } else { $zeroCross.HorizontalSpeed }
+            zero_cross_retention = $zeroCrossRetention
+            swoop_exit_tick = if ($null -eq $swoopExit) { $null } else { [int64]$swoopExit.Tick }
+            swoop_exit_angle_deg = if ($null -eq $swoopExit) { $null } else { $swoopExit.SwingAngleDeg }
+            swoop_exit_plane_speed = if ($null -eq $swoopExit) { $null } else { $swoopExit.SwingPlaneSpeed }
+            emergency_swoop_count = $emergencySwoopCount
+            largest_single_sample_plane_speed_drop = $largestPlaneSpeedDrop
+            ticks_bottom_entry_to_zero_cross = $bottomToZeroTicks
+            ticks_zero_cross_to_swoop_exit = $zeroToExitTicks
         }
     }
 
@@ -514,7 +608,7 @@ try {
     } else { 'not-recorded' }
 
     $summaryObject = [ordered]@{
-        schema_version = 2
+        schema_version = 3
         capture = [ordered]@{
             capture_id = $captureId
             source_directory = (Resolve-Path -LiteralPath $inputDirectory).Path
@@ -580,6 +674,8 @@ try {
             minimum_clearance = 'minimum valid value across current and ahead terrain-clearance copies'
             bottom_speed = 'mean horizontal speed during BOTTOM samples, falling back to the lowest sampled row'
             reversal = 'ticks from BOTTOM entry, or strongest descending sample when no BOTTOM row exists, to the first positive vertical speed or ASCEND sample within the same capture_cycle_index; null when not observed'
+            swoop = 'swoop metrics begin at this capture cycle bottom entry and may continue into the next controller cycle until active early-ASCEND redirection exits'
+            zero_cross_retention = 'first sampled non-negative swing-plane speed divided by the controller-recorded BOTTOM-entry plane speed'
             standard_deviation = 'population standard deviation across captured cycles'
         }
     }
@@ -627,6 +723,26 @@ try {
     foreach ($phaseName in $phaseNames) {
         $phaseMetric = $phaseMetrics[$phaseName]
         [void]$summaryText.AppendLine(('{0}: {1} samples, {2} s, {3}' -f $phaseName, $phaseMetric.sample_count, (Format-Value $phaseMetric.duration_seconds 3), (Format-Percent $phaseMetric.percent_of_samples)))
+    }
+    [void]$summaryText.AppendLine('')
+    [void]$summaryText.AppendLine('SWOOP TABLE')
+    [void]$summaryText.AppendLine('CaptureCycle | Energy | EntryAngle | EntryPlane | Radius | ZeroTick | ZeroPlane | ZeroHoriz | Retain | ExitAngle | ExitPlane | MinClear | Emerg')
+    [void]$summaryText.AppendLine('-------------|--------|------------|------------|--------|----------|-----------|-----------|--------|-----------|-----------|----------|------')
+    foreach ($cycle in $cycles | Where-Object { $null -ne $_.bottom_entry_angle_deg }) {
+        [void]$summaryText.AppendLine(('{0,12} | {1,6} | {2,10} | {3,10} | {4,6} | {5,8} | {6,9} | {7,9} | {8,6} | {9,9} | {10,9} | {11,8} | {12,5}' -f
+            $cycle.capture_cycle_index,
+            (Format-Value $cycle.assist_energy_at_bottom_entry 2),
+            (Format-Value $cycle.bottom_entry_angle_deg 2),
+            (Format-Value $cycle.bottom_entry_plane_speed 2),
+            (Format-Value $cycle.selected_swoop_radius 2),
+            $(if ($null -eq $cycle.zero_cross_tick) { 'n/a' } else { $cycle.zero_cross_tick }),
+            (Format-Value $cycle.zero_cross_plane_speed 2),
+            (Format-Value $cycle.zero_cross_horizontal_speed 2),
+            (Format-Percent $(if ($null -eq $cycle.zero_cross_retention) { $null } else { 100.0 * $cycle.zero_cross_retention })),
+            (Format-Value $cycle.swoop_exit_angle_deg 2),
+            (Format-Value $cycle.swoop_exit_plane_speed 2),
+            (Format-Value $cycle.minimum_clearance 2),
+            $cycle.emergency_swoop_count))
     }
     [void]$summaryText.AppendLine('')
     [void]$summaryText.AppendLine('CONSISTENCY')
@@ -684,6 +800,12 @@ try {
                 pos_x = $_.PosX; pos_y = $_.PosY; pos_z = $_.PosZ
                 vel_x = $_.VelX; vel_y = $_.VelY; vel_z = $_.VelZ
                 total_speed = $_.TotalSpeed; horizontal_speed = $_.HorizontalSpeed
+                swing_plane_speed = $_.SwingPlaneSpeed; swing_angle_deg = $_.SwingAngleDeg
+                forward_speed_along_intent = $_.ForwardSpeedAlongIntent
+                swoop_active = $_.SwoopActive; swoop_radius = $_.SwoopRadius
+                swoop_entry_plane_speed = $_.SwoopEntryPlaneSpeed
+                swoop_entry_angle_deg = $_.SwoopEntryAngleDeg
+                swoop_emergency_count = $_.SwoopEmergencyCount
                 current_ground_clearance = $_.CurrentClearance
                 ahead_ground_clearance = $_.AheadClearance
                 low_point_y = $_.LowPointY
@@ -691,7 +813,7 @@ try {
             }
         })
         $goldenObject = [ordered]@{
-            schema_version = 2
+            schema_version = 3
             source_capture_id = $captureId
             capture_cycle_index = $GoldenCycle
             cycle = @($cycles | Where-Object { $_.capture_cycle_index -eq $GoldenCycle } | Select-Object -First 1)
