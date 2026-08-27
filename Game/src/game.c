@@ -310,6 +310,16 @@ void parseArgs(int argc,char **argv)
             i += 2;
             continue;
         }
+        if (stricmp(argv[i], "-webswingvisual") == 0 && i + 1 < argc)
+        {
+            int style = atoi(argv[i + 1]);
+            if (style < 0 || style > 3)
+                style = 0;
+            g_cohsourcedev_webswing_visual_selection = style;
+            game_startupTracef("webswingvisual.argument=%d", g_cohsourcedev_webswing_visual_selection);
+            i += 2;
+            continue;
+        }
         if (stricmp(argv[i], "-webswingcapture") == 0)
         {
             // Optional development startup convenience.  Runtime toggling

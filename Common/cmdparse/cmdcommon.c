@@ -39,6 +39,9 @@ S32 g_cohsourcedev_webswing_physics_selection = -1;
 // Client-only manual observability toggle.  It intentionally does not live in
 // control_cmds, so it is never sent to the server as gameplay input.
 S32 g_cohsourcedev_webswing_capture;
+// Client-only WebSwingDev rendering selector.  It intentionally does not live
+// in control_cmds, so style changes never become gameplay or network state.
+S32 g_cohsourcedev_webswing_visual_selection = 0;
 #endif
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
@@ -115,6 +118,8 @@ ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
                             "disables client ragdoll sim" },
         { 0, "webswingcapture", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_capture }},0,
                             "WebSwingDev client manual telemetry capture (1 start, 0 stop)" },
+        { 0, "webswingvisual", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_visual_selection }},0,
+                            "WebSwingDev tether visual style (0 LEGACY, 1 WEB, 2 TECH, 3 MAGIC)" },
         { 0 },
     };
 #endif

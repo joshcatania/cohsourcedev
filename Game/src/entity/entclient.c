@@ -3462,6 +3462,569 @@ void entClientProcessVisibility()
 }
 
 #ifndef TEST_CLIENT
+typedef enum WebSwingVisualStyle
+{
+    WEB_SWING_VISUAL_STYLE_LEGACY = 0,
+    WEB_SWING_VISUAL_STYLE_WEB,
+    WEB_SWING_VISUAL_STYLE_TECH,
+    WEB_SWING_VISUAL_STYLE_MAGIC,
+} WebSwingVisualStyle;
+
+typedef struct WebSwingTetherBasis
+{
+    Vec3 direction;
+    Vec3 u;
+    Vec3 v;
+} WebSwingTetherBasis;
+
+// Keep the prototype palette together so each fantasy can be tuned without
+// scattering unexplained ARGB values through the draw routines.
+static const U32 s_webSwingLegacyOuterColor = 0xffd0a060;
+static const U32 s_webSwingLegacyCoreColor = 0xffffffff;
+static const U32 s_webSwingLegacyLeaderOuterColor = 0xffe8c080;
+
+static const U32 s_webSwingWebOuterColor = 0xa8b9d1da;
+static const U32 s_webSwingWebCoreColor = 0xfff9fcff;
+static const U32 s_webSwingWebFilamentColorA = 0xffdfe9ef;
+static const U32 s_webSwingWebFilamentColorB = 0xffc4d6e0;
+static const U32 s_webSwingWebLeaderColor = 0xffeaf5fb;
+
+static const U32 s_webSwingTechOuterColor = 0x7828c7e8;
+static const U32 s_webSwingTechCoreColor = 0xff5de6ff;
+static const U32 s_webSwingTechFilamentColor = 0xff8aefff;
+static const U32 s_webSwingTechAnchorColor = 0xff50d8f5;
+static const U32 s_webSwingTechInnerColor = 0xff83efff;
+static const U32 s_webSwingTechLeaderColor = 0xff8fefff;
+
+static const U32 s_webSwingMagicOuterColor = 0x995331c6;
+static const U32 s_webSwingMagicCoreColor = 0xffe5ddff;
+static const U32 s_webSwingMagicFilamentColorA = 0xffb28eff;
+static const U32 s_webSwingMagicFilamentColorB = 0xff8264d8;
+static const U32 s_webSwingMagicAnchorColor = 0xff8a6be8;
+static const U32 s_webSwingMagicLeaderColor = 0xffdcd2ff;
+
+#define WEBSWING_WEB_SEGMENTS 15
+#define WEBSWING_TECH_SEGMENTS 8
+#define WEBSWING_MAGIC_SEGMENTS 12
+
+static int entClientWebSwingIsTraveling(WebSwingVisualTetherState state)
+{
+    return state == WEB_SWING_VISUAL_TETHER_EXTENDING ||
+           state == WEB_SWING_VISUAL_TETHER_RETRACTING;
+}
+
+static F32 entClientWebSwingSmoothStep(F32 edge0, F32 edge1, F32 value)
+{
+    F32 t = MINMAX((value - edge0) / (edge1 - edge0), 0.0f, 1.0f);
+    return t * t * (3.0f - 2.0f * t);
+}
+
+static F32 entClientWebSwingAnchorFraction(F32 tether_progress)
+{
+    return entClientWebSwingSmoothStep(0.65f, 1.0f, tether_progress);
+}
+
+static U32 entClientWebSwingScaleAlpha(U32 color, F32 fraction)
+{
+    U32 alpha = (color >> 24) & 0xff;
+    U32 scaled_alpha;
+
+    fraction = MINMAX(fraction, 0.0f, 1.0f);
+    scaled_alpha = (U32)(alpha * fraction + 0.5f);
+    if (scaled_alpha > 0xff)
+        scaled_alpha = 0xff;
+    return (color & 0x00ffffff) | (scaled_alpha << 24);
+}
+
+static int entClientWebSwingBuildTetherBasis(const Vec3 tether_start,
+                                             const Vec3 tether_end,
+                                             WebSwingTetherBasis *basis)
+{
+    Vec3 reference;
+    F32 direction_length;
+
+    if (!basis)
+        return 0;
+
+    subVec3(tether_end, tether_start, basis->direction);
+    if (!validateVec3(basis->direction) ||
+        lengthVec3Squared(basis->direction) < 0.000001f)
+        return 0;
+
+    direction_length = normalVec3(basis->direction);
+    if (!FINITE(direction_length) || direction_length < 0.001f)
+        return 0;
+
+    // World up is well-conditioned for ordinary shots.  Switch to world
+    // right before the tether becomes nearly vertical so the cross product
+    // never collapses into a near-zero basis vector.
+    if (fabs(basis->direction[1]) < 0.9f)
+        setVec3(reference, 0.0f, 1.0f, 0.0f);
+    else
+        setVec3(reference, 1.0f, 0.0f, 0.0f);
+
+    crossVec3(basis->direction, reference, basis->u);
+    if (normalVec3(basis->u) < 0.001f)
+    {
+        setVec3(reference, 0.0f, 0.0f, 1.0f);
+        crossVec3(basis->direction, reference, basis->u);
+        if (normalVec3(basis->u) < 0.001f)
+            return 0;
+    }
+
+    crossVec3(basis->direction, basis->u, basis->v);
+    if (normalVec3(basis->v) < 0.001f)
+        return 0;
+
+    return validateVec3(basis->u) && validateVec3(basis->v);
+}
+
+static void entClientWebSwingPointAlongTether(const Vec3 tether_start,
+                                              const Vec3 tether_end,
+                                              const WebSwingTetherBasis *basis,
+                                              F32 normalized_distance,
+                                              F32 turns,
+                                              F32 phase_offset,
+                                              F32 radius,
+                                              Vec3 point)
+{
+    F32 phase;
+    F32 envelope;
+    F32 cosine;
+    F32 sine;
+    F32 offset;
+
+    if (normalized_distance <= 0.0f)
+    {
+        copyVec3(tether_start, point);
+        return;
+    }
+    if (normalized_distance >= 1.0f)
+    {
+        copyVec3(tether_end, point);
+        return;
+    }
+
+    point[0] = tether_start[0] + (tether_end[0] - tether_start[0]) * normalized_distance;
+    point[1] = tether_start[1] + (tether_end[1] - tether_start[1]) * normalized_distance;
+    point[2] = tether_start[2] + (tether_end[2] - tether_start[2]) * normalized_distance;
+
+    if (!radius || !basis)
+        return;
+
+    phase = phase_offset + turns * TWOPI * normalized_distance;
+    envelope = fsin(PI * normalized_distance);
+    cosine = fcos(phase);
+    sine = fsin(phase);
+    offset = radius * envelope;
+    point[0] += (basis->u[0] * cosine + basis->v[0] * sine) * offset;
+    point[1] += (basis->u[1] * cosine + basis->v[1] * sine) * offset;
+    point[2] += (basis->u[2] * cosine + basis->v[2] * sine) * offset;
+}
+
+static void entClientWebSwingDrawPath(const Vec3 tether_start,
+                                      const Vec3 tether_end,
+                                      const WebSwingTetherBasis *basis,
+                                      int segments,
+                                      F32 turns,
+                                      F32 phase_offset,
+                                      F32 radius,
+                                      U32 color,
+                                      F32 width)
+{
+    Vec3 previous;
+    Vec3 current;
+    int i;
+
+    if (!basis || segments < 1)
+        return;
+
+    entClientWebSwingPointAlongTether(tether_start, tether_end, basis,
+                                      0.0f, turns, phase_offset, radius, previous);
+    for (i = 1; i <= segments; ++i)
+    {
+        entClientWebSwingPointAlongTether(tether_start, tether_end, basis,
+                                          (F32)i / (F32)segments, turns,
+                                          phase_offset, radius, current);
+        drawLine3DWidth(previous, current, color, width);
+        copyVec3(current, previous);
+    }
+}
+
+static void entClientWebSwingPlanePoint(const Vec3 center,
+                                        const WebSwingTetherBasis *basis,
+                                        F32 radius,
+                                        F32 angle,
+                                        Vec3 point)
+{
+    F32 cosine = fcos(angle);
+    F32 sine = fsin(angle);
+
+    point[0] = center[0] + (basis->u[0] * cosine + basis->v[0] * sine) * radius;
+    point[1] = center[1] + (basis->u[1] * cosine + basis->v[1] * sine) * radius;
+    point[2] = center[2] + (basis->u[2] * cosine + basis->v[2] * sine) * radius;
+}
+
+static void entClientWebSwingDrawRing(const Vec3 center,
+                                      const WebSwingTetherBasis *basis,
+                                      F32 radius,
+                                      int segments,
+                                      F32 rotation,
+                                      U32 color,
+                                      F32 width)
+{
+    Vec3 first;
+    Vec3 previous;
+    Vec3 current;
+    F32 step;
+    int i;
+
+    if (!basis || radius <= 0.0f || segments < 3)
+        return;
+
+    step = TWOPI / (F32)segments;
+    entClientWebSwingPlanePoint(center, basis, radius, rotation, first);
+    copyVec3(first, previous);
+    for (i = 1; i < segments; ++i)
+    {
+        entClientWebSwingPlanePoint(center, basis, radius,
+                                    rotation + step * (F32)i, current);
+        drawLine3DWidth(previous, current, color, width);
+        copyVec3(current, previous);
+    }
+    drawLine3DWidth(previous, first, color, width);
+}
+
+static void entClientWebSwingDrawSegmentedRing(const Vec3 center,
+                                               const WebSwingTetherBasis *basis,
+                                               F32 radius,
+                                               int segments,
+                                               F32 gap_fraction,
+                                               F32 rotation,
+                                               U32 color,
+                                               F32 width)
+{
+    F32 step;
+    F32 gap;
+    F32 angle0;
+    F32 angle1;
+    Vec3 point0;
+    Vec3 point1;
+    int i;
+
+    if (!basis || radius <= 0.0f || segments < 3)
+        return;
+
+    step = TWOPI / (F32)segments;
+    gap = MINMAX(gap_fraction, 0.0f, 0.8f) * step;
+    for (i = 0; i < segments; ++i)
+    {
+        angle0 = rotation + step * (F32)i + gap * 0.5f;
+        angle1 = rotation + step * (F32)(i + 1) - gap * 0.5f;
+        entClientWebSwingPlanePoint(center, basis, radius, angle0, point0);
+        entClientWebSwingPlanePoint(center, basis, radius, angle1, point1);
+        drawLine3DWidth(point0, point1, color, width);
+    }
+}
+
+static void entClientWebSwingDrawSpokes(const Vec3 center,
+                                        const WebSwingTetherBasis *basis,
+                                        F32 inner_radius,
+                                        F32 outer_radius,
+                                        int count,
+                                        F32 rotation,
+                                        U32 color,
+                                        F32 width)
+{
+    F32 step;
+    F32 angle;
+    Vec3 inner;
+    Vec3 outer;
+    int i;
+
+    if (!basis || count < 1 || inner_radius < 0.0f || outer_radius <= inner_radius)
+        return;
+
+    step = TWOPI / (F32)count;
+    for (i = 0; i < count; ++i)
+    {
+        angle = rotation + step * (F32)i;
+        entClientWebSwingPlanePoint(center, basis, inner_radius, angle, inner);
+        entClientWebSwingPlanePoint(center, basis, outer_radius, angle, outer);
+        drawLine3DWidth(inner, outer, color, width);
+    }
+}
+
+static void entClientWebSwingPointAtAnchorProgress(const Vec3 tether_start,
+                                                   const Vec3 tether_to_anchor,
+                                                   F32 progress,
+                                                   Vec3 point)
+{
+    Vec3 delta;
+
+    progress = MAX(progress, 0.0f);
+    scaleVec3(tether_to_anchor, progress, delta);
+    addVec3(tether_start, delta, point);
+}
+
+static void entClientDrawWebSwingLegacy(const Vec3 tether_start,
+                                        const Vec3 tether_end,
+                                        const Vec3 tether_to_anchor,
+                                        F32 tether_progress,
+                                        WebSwingVisualTetherState tether_state)
+{
+    Vec3 leader_start;
+    F32 leader_progress;
+
+    // Preserve the original prototype output as the visual control condition.
+    drawLine3DWidth(tether_start, tether_end, s_webSwingLegacyOuterColor, 6.0f);
+    drawLine3DWidth(tether_start, tether_end, s_webSwingLegacyCoreColor, 2.5f);
+    if (entClientWebSwingIsTraveling(tether_state))
+    {
+        leader_progress = MAX(0.0f, tether_progress - 0.16f);
+        entClientWebSwingPointAtAnchorProgress(tether_start, tether_to_anchor,
+                                               leader_progress, leader_start);
+        drawLine3DWidth(leader_start, tether_end,
+                        s_webSwingLegacyLeaderOuterColor, 8.0f);
+        drawLine3DWidth(leader_start, tether_end,
+                        s_webSwingLegacyCoreColor, 3.5f);
+    }
+}
+
+static void entClientDrawWebSwingWebKnot(const Vec3 tether_end,
+                                         const WebSwingTetherBasis *basis,
+                                         F32 tether_progress)
+{
+    F32 knot_radius;
+    F32 angle;
+    Vec3 outer;
+    int i;
+
+    knot_radius = 0.10f * MINMAX(tether_progress * 2.0f, 0.0f, 1.0f);
+    if (!basis || knot_radius <= 0.001f)
+        return;
+
+    for (i = 0; i < 3; ++i)
+    {
+        angle = TWOPI * (F32)i / 3.0f + PI * 0.17f;
+        entClientWebSwingPlanePoint(tether_end, basis, knot_radius, angle, outer);
+        drawLine3DWidth(tether_end, outer, s_webSwingWebCoreColor, 0.65f);
+    }
+}
+
+static void entClientDrawWebSwingOrganicWeb(const Vec3 tether_start,
+                                            const Vec3 tether_end,
+                                            const Vec3 tether_to_anchor,
+                                            F32 tether_progress,
+                                            WebSwingVisualTetherState tether_state,
+                                            const WebSwingTetherBasis *basis)
+{
+    Vec3 leader_start;
+    F32 leader_progress;
+
+    // A narrow silhouette keeps the fibers readable without recreating the
+    // heavy laser-like bar used by the legacy prototype.
+    drawLine3DWidth(tether_start, tether_end, s_webSwingWebOuterColor, 2.4f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_WEB_SEGMENTS, 0.0f, 0.0f, 0.0f,
+                              s_webSwingWebCoreColor, 1.15f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_WEB_SEGMENTS, 1.15f, 0.0f, 0.12f,
+                              s_webSwingWebFilamentColorA, 0.75f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_WEB_SEGMENTS, 1.15f, PI, 0.12f,
+                              s_webSwingWebFilamentColorB, 0.75f);
+
+    if (entClientWebSwingIsTraveling(tether_state))
+    {
+        leader_progress = MAX(0.0f, tether_progress - 0.12f);
+        entClientWebSwingPointAtAnchorProgress(tether_start, tether_to_anchor,
+                                               leader_progress, leader_start);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingWebLeaderColor, 2.0f);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingWebCoreColor, 1.0f);
+    }
+
+    entClientDrawWebSwingWebKnot(tether_end, basis, tether_progress);
+}
+
+static void entClientDrawWebSwingTechAnchor(const Vec3 tether_end,
+                                            const WebSwingTetherBasis *basis,
+                                            F32 anchor_fraction)
+{
+    F32 frame = (F32)global_state.global_frame_count;
+    F32 pulse;
+    F32 rotation;
+    F32 radius;
+    U32 outer_color;
+    U32 inner_color;
+    U32 core_color;
+
+    if (!basis || anchor_fraction <= 0.001f)
+        return;
+
+    pulse = 1.0f + 0.04f * fsin(frame * 0.07f);
+    rotation = frame * 0.035f;
+    radius = 1.0f * anchor_fraction * pulse;
+    outer_color = entClientWebSwingScaleAlpha(s_webSwingTechAnchorColor,
+                                              anchor_fraction * 0.72f);
+    inner_color = entClientWebSwingScaleAlpha(s_webSwingTechInnerColor,
+                                              anchor_fraction * 0.90f);
+    core_color = entClientWebSwingScaleAlpha(s_webSwingWebCoreColor,
+                                             anchor_fraction);
+
+    // The plane normal is the tether direction, so the hard-light point faces
+    // the player without moving the accepted endpoint.
+    entClientWebSwingDrawRing(tether_end, basis, radius, 6, rotation,
+                              outer_color, 1.25f);
+    entClientWebSwingDrawRing(tether_end, basis, radius * 0.52f, 6,
+                              -rotation * 0.65f, inner_color, 0.9f);
+    entClientWebSwingDrawSpokes(tether_end, basis, radius * 0.48f,
+                                radius * 0.82f, 4, rotation + HALFPI * 0.5f,
+                                inner_color, 0.85f);
+    entClientWebSwingDrawRing(tether_end, basis, radius * 0.23f, 4,
+                              rotation + QUARTERPI, core_color, 1.0f);
+}
+
+static void entClientDrawWebSwingTech(const Vec3 tether_start,
+                                      const Vec3 tether_end,
+                                      const Vec3 tether_to_anchor,
+                                      F32 tether_progress,
+                                      WebSwingVisualTetherState tether_state,
+                                      const WebSwingTetherBasis *basis)
+{
+    Vec3 leader_start;
+    F32 leader_progress;
+    F32 phase;
+    F32 anchor_fraction;
+
+    drawLine3DWidth(tether_start, tether_end, s_webSwingTechOuterColor, 2.6f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_TECH_SEGMENTS, 0.0f, 0.0f, 0.0f,
+                              s_webSwingTechCoreColor, 1.35f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_TECH_SEGMENTS, 0.70f, 0.0f, 0.065f,
+                              s_webSwingTechFilamentColor, 0.60f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_TECH_SEGMENTS, 0.70f, PI, 0.065f,
+                              s_webSwingTechFilamentColor, 0.60f);
+
+    if (entClientWebSwingIsTraveling(tether_state))
+    {
+        leader_progress = MAX(0.0f, tether_progress - 0.12f);
+        entClientWebSwingPointAtAnchorProgress(tether_start, tether_to_anchor,
+                                               leader_progress, leader_start);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingTechLeaderColor, 2.8f);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingWebCoreColor, 1.0f);
+    }
+
+    if (tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING)
+    {
+        phase = (F32)global_state.global_frame_count * 0.05f;
+        entClientWebSwingDrawRing(tether_end, basis, 0.15f, 4,
+                                  phase + QUARTERPI, s_webSwingWebCoreColor, 1.0f);
+    }
+
+    anchor_fraction = entClientWebSwingAnchorFraction(tether_progress);
+    entClientDrawWebSwingTechAnchor(tether_end, basis, anchor_fraction);
+}
+
+static void entClientDrawWebSwingMagicAnchor(const Vec3 tether_end,
+                                             const WebSwingTetherBasis *basis,
+                                             F32 anchor_fraction)
+{
+    F32 frame = (F32)global_state.global_frame_count;
+    F32 pulse;
+    F32 outer_rotation;
+    F32 inner_rotation;
+    F32 radius;
+    U32 outer_color;
+    U32 inner_color;
+    U32 core_color;
+
+    if (!basis || anchor_fraction <= 0.001f)
+        return;
+
+    pulse = 1.0f + 0.055f * fsin(frame * 0.05f);
+    outer_rotation = frame * 0.018f;
+    inner_rotation = -frame * 0.025f;
+    radius = 1.15f * anchor_fraction * pulse;
+    outer_color = entClientWebSwingScaleAlpha(s_webSwingMagicAnchorColor,
+                                              anchor_fraction * 0.78f);
+    inner_color = entClientWebSwingScaleAlpha(0xffb28eff,
+                                              anchor_fraction * 0.92f);
+    core_color = entClientWebSwingScaleAlpha(s_webSwingWebCoreColor,
+                                             anchor_fraction);
+
+    entClientWebSwingDrawSegmentedRing(tether_end, basis, radius, 10, 0.22f,
+                                       outer_rotation, outer_color, 1.05f);
+    entClientWebSwingDrawSegmentedRing(tether_end, basis, radius * 0.51f, 6,
+                                       0.12f, inner_rotation, inner_color, 0.85f);
+    entClientWebSwingDrawSpokes(tether_end, basis, radius * 0.46f,
+                                radius * 0.78f, 4,
+                                inner_rotation + QUARTERPI, inner_color, 0.75f);
+    entClientWebSwingDrawRing(tether_end, basis, radius * 0.20f, 4,
+                              inner_rotation + QUARTERPI, core_color, 0.95f);
+}
+
+static void entClientDrawWebSwingMagic(const Vec3 tether_start,
+                                       const Vec3 tether_end,
+                                       const Vec3 tether_to_anchor,
+                                       F32 tether_progress,
+                                       WebSwingVisualTetherState tether_state,
+                                       const WebSwingTetherBasis *basis)
+{
+    Vec3 leader_start;
+    F32 leader_progress;
+    F32 phase;
+    F32 anchor_fraction;
+
+    drawLine3DWidth(tether_start, tether_end, s_webSwingMagicOuterColor, 2.7f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_MAGIC_SEGMENTS, 0.0f, 0.0f, 0.0f,
+                              s_webSwingMagicCoreColor, 1.15f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_MAGIC_SEGMENTS, 0.85f, 0.0f, 0.105f,
+                              s_webSwingMagicFilamentColorA, 0.70f);
+    entClientWebSwingDrawPath(tether_start, tether_end, basis,
+                              WEBSWING_MAGIC_SEGMENTS, 1.10f, HALFPI, 0.09f,
+                              s_webSwingMagicFilamentColorB, 0.65f);
+
+    if (entClientWebSwingIsTraveling(tether_state))
+    {
+        leader_progress = MAX(0.0f, tether_progress - 0.12f);
+        entClientWebSwingPointAtAnchorProgress(tether_start, tether_to_anchor,
+                                               leader_progress, leader_start);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingMagicLeaderColor, 2.3f);
+        drawLine3DWidth(leader_start, tether_end, s_webSwingMagicCoreColor, 1.0f);
+    }
+
+    if (tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING)
+    {
+        phase = (F32)global_state.global_frame_count * 0.04f;
+        entClientWebSwingDrawRing(tether_end, basis, 0.14f, 4,
+                                  phase + QUARTERPI, s_webSwingMagicCoreColor, 0.95f);
+    }
+
+    anchor_fraction = entClientWebSwingAnchorFraction(tether_progress);
+    entClientDrawWebSwingMagicAnchor(tether_end, basis, anchor_fraction);
+}
+
+static WebSwingVisualStyle entClientWebSwingGetVisualStyle(Entity *e)
+{
+    S32 selection;
+
+    // The selector is deliberately local to the controlled player.  Other
+    // entities retain the established legacy tether presentation.
+    if (e != controlledPlayerPtr())
+        return WEB_SWING_VISUAL_STYLE_LEGACY;
+
+    selection = g_cohsourcedev_webswing_visual_selection;
+    if (selection < WEB_SWING_VISUAL_STYLE_LEGACY ||
+        selection > WEB_SWING_VISUAL_STYLE_MAGIC)
+        return WEB_SWING_VISUAL_STYLE_LEGACY;
+    return (WebSwingVisualStyle)selection;
+}
+
 void entClientDrawWebSwingTethers(void)
 {
     static int last_render_frame = -1;
@@ -3482,7 +4045,7 @@ void entClientDrawWebSwingTethers(void)
         Vec3 tether_end;
         Vec3 tether_delta;
         Vec3 tether_to_anchor;
-        Vec3 leader_start;
+        WebSwingTetherBasis tether_basis;
         GfxNode *right_hand = NULL;
         GfxNode *left_hand = NULL;
         int right_hand_id = 0;
@@ -3491,6 +4054,8 @@ void entClientDrawWebSwingTethers(void)
         Mat4 left_hand_mat;
         int hand_origin = 0;
         int mode3_assisted_continuing_swing;
+        int has_tether_basis;
+        WebSwingVisualStyle visual_style;
         F32 tether_progress;
 
         if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
@@ -3574,20 +4139,43 @@ void entClientDrawWebSwingTethers(void)
         scaleVec3(tether_to_anchor, tether_progress, tether_delta);
         addVec3(tether_start, tether_delta, tether_end);
 
-        // A broad blue-white silhouette and bright core keep the web readable
-        // against both daylight sky and dark city geometry.
-        drawLine3DWidth(tether_start, tether_end, 0xffd0a060, 6.0f);
-        drawLine3DWidth(tether_start, tether_end, 0xffffffff, 2.5f);
-        if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING ||
-           e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING)
+        visual_style = entClientWebSwingGetVisualStyle(e);
+        has_tether_basis = visual_style == WEB_SWING_VISUAL_STYLE_LEGACY ||
+                           entClientWebSwingBuildTetherBasis(tether_start,
+                                                             tether_end,
+                                                             &tether_basis);
+        if (!has_tether_basis)
+            visual_style = WEB_SWING_VISUAL_STYLE_LEGACY;
+
+        switch (visual_style)
         {
-            F32 leader_progress = MAX(0.0f, tether_progress - 0.16f);
-            scaleVec3(tether_to_anchor, leader_progress, tether_delta);
-            addVec3(tether_start, tether_delta, leader_start);
-            // A short, brighter traveling head makes extension read as a web
-            // projectile and retraction read as motion back toward the wrist.
-            drawLine3DWidth(leader_start, tether_end, 0xffe8c080, 8.0f);
-            drawLine3DWidth(leader_start, tether_end, 0xffffffff, 3.5f);
+            case WEB_SWING_VISUAL_STYLE_WEB:
+                entClientDrawWebSwingOrganicWeb(
+                    tether_start, tether_end, tether_to_anchor, tether_progress,
+                    (WebSwingVisualTetherState)e->motion->web_swing_visual_tether_state,
+                    &tether_basis);
+                break;
+
+            case WEB_SWING_VISUAL_STYLE_TECH:
+                entClientDrawWebSwingTech(
+                    tether_start, tether_end, tether_to_anchor, tether_progress,
+                    (WebSwingVisualTetherState)e->motion->web_swing_visual_tether_state,
+                    &tether_basis);
+                break;
+
+            case WEB_SWING_VISUAL_STYLE_MAGIC:
+                entClientDrawWebSwingMagic(
+                    tether_start, tether_end, tether_to_anchor, tether_progress,
+                    (WebSwingVisualTetherState)e->motion->web_swing_visual_tether_state,
+                    &tether_basis);
+                break;
+
+            case WEB_SWING_VISUAL_STYLE_LEGACY:
+            default:
+                entClientDrawWebSwingLegacy(
+                    tether_start, tether_end, tether_to_anchor, tether_progress,
+                    (WebSwingVisualTetherState)e->motion->web_swing_visual_tether_state);
+                break;
         }
         ++attached_count;
     }

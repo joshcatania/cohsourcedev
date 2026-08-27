@@ -326,6 +326,7 @@ extern S32 g_cohsourcedev_webswing_anim_selection;
 extern S32 g_cohsourcedev_webswing_physics_selection;
 #ifdef CLIENT
 extern S32 g_cohsourcedev_webswing_capture;
+extern S32 g_cohsourcedev_webswing_visual_selection;
 #endif
 extern ControlId opposite_control_id[CONTROLID_BINARY_MAX];
 
