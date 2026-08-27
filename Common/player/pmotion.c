@@ -1172,14 +1172,23 @@ static WebSwingAnimPhase pmotionStabilizeMode3WebSwingPhase(WebSwingAnimPhase ra
     return raw_phase;
 }
 
+#define WEBSWING_MODE3_CORE_SYNC_ENABLED 0
+
 static const char *pmotionMode3WebSwingMoveName(WebSwingAnimPhase phase)
 {
     switch (phase)
     {
+#if WEBSWING_MODE3_CORE_SYNC_ENABLED
         case WEBSWING_ANIM_PHASE_ATTACHED:
         case WEBSWING_ANIM_PHASE_DESCEND:
         case WEBSWING_ANIM_PHASE_BOTTOM:
         case WEBSWING_ANIM_PHASE_ASCEND:   return "WEBSWING_FULL_CORE";
+#else
+        case WEBSWING_ANIM_PHASE_ATTACHED: return "WEBSWING_FULL_ATTACHED_START";
+        case WEBSWING_ANIM_PHASE_DESCEND:  return "WEBSWING_FULL_DESCEND_START";
+        case WEBSWING_ANIM_PHASE_BOTTOM:   return "WEBSWING_FULL_BOTTOM_START";
+        case WEBSWING_ANIM_PHASE_ASCEND:   return "WEBSWING_FULL_ASCEND_START";
+#endif
         case WEBSWING_ANIM_PHASE_AIRBORNE: return "STOCK_UNATTACHED";
         default:                           return "STOCK";
     }
@@ -1267,12 +1276,13 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         if (!logged_state_resolution)
         {
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d retract=%d ground_launch=%d core_sync=%d\n",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d retract=%d ground_launch=%d core_sync=%d core_sync_enabled=%d\n",
                            state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
                            state_bits[3] >= 0, state_bits[4] >= 0,
                            male_state_bit >= 0, enter_state_bit >= 0, shoot_state_bit >= 0,
                            retract_state_bit >= 0, ground_launch_state_bit >= 0,
-                           core_sync_state_bit >= 0);
+                           core_sync_state_bit >= 0,
+                           WEBSWING_MODE3_CORE_SYNC_ENABLED);
             logged_state_resolution = 1;
         }
     }
@@ -1406,7 +1416,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
             // The private client overlay resolves this bit; normal server
             // sequencers do not. It selects one continuous authored move for
             // the physical lower arc without changing the semantic phase bits.
-            if (is_male && e->motion->input.web_swing_enabled &&
+            if (WEBSWING_MODE3_CORE_SYNC_ENABLED &&
+                is_male && e->motion->input.web_swing_enabled &&
                 e->motion->web_swing_attached &&
                 e->motion->web_swing_active_backend &&
                 phase != WEBSWING_ANIM_PHASE_NONE &&
