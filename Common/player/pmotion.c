@@ -1229,7 +1229,6 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     int web_catching;
     int web_releasing;
     int phase_airborne;
-    int variant_b;
 
     phase = WEBSWING_ANIM_PHASE_NONE;
     raw_phase = WEBSWING_ANIM_PHASE_NONE;
@@ -1321,7 +1320,6 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     web_releasing = e->motion->web_swing_anim_release_ticks > 0 ||
         e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_RETRACTING;
     phase_airborne = e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_GAP;
-    variant_b = (e->motion->web_swing_assist_cycle_id & 1) == 0;
     raw_phase = phase;
     phase_entry = new_segment || phase != e->motion->web_swing_anim_phase;
 
@@ -1418,9 +1416,9 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         {
             // World-space motion remains controller-owned. The visible line
             // lifecycle selects reach/catch/release/airborne performances;
-            // assisted phases select descend/extension/tuck. Alternating
-            // authored variants keeps identical arcs from reading as one
-            // looping Swing Pose.
+            // assisted phases select the continuous core performance. Mode 3
+            // intentionally uses the A lifecycle throughout because the
+            // accepted core clip is authored for that same tether hand.
             if (is_male && ((phase != WEBSWING_ANIM_PHASE_NONE &&
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE) || web_releasing) &&
                 male_state_bit >= 0)
@@ -1437,12 +1435,6 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE &&
                 core_sync_state_bit >= 0)
                 seqSetState(e->seq->state, 1, core_sync_state_bit);
-
-            if (is_male && (phase != WEBSWING_ANIM_PHASE_NONE || web_releasing))
-            {
-                if (variant_b && variant_b_state_bit >= 0)
-                    seqSetState(e->seq->state, 1, variant_b_state_bit);
-            }
 
             if (is_male && visual_lifecycle_can_own_full_body &&
                 (ground_launching || web_catching) && enter_state_bit >= 0)
