@@ -322,6 +322,23 @@ Move WEBSWING_V2_SHOOT_HOLD
 	Flags Cycle
 MEnd
 
+// Mode-3 Sky-Assisted core. Physics phase bits remain available for
+// diagnostics, but this one move owns DESCEND -> BOTTOM -> ASCEND so normal
+// phase changes cannot reset the authored cursor. It contains no sequencer FX;
+// the client sets its frame from physical swing angle after seqStep.
+Move WEBSWING_FULL_CORE
+	Interpolate 4
+	Priority 28
+	Scale 0
+	Type Male
+		Anim MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL 6 39
+	TEnd
+	Member "<WEBSWING_MALE_FULL_CORRECTED>", "<DEATHIRQ>", "<HITIRQ>", "<REACTIRQ>", "<BLOCKIRQ>", "<BLOCK>", "<STUNMOVE>", "<ATTACKIRQ>"
+	Interrupts "<WEBSWING_ANIM>", "<WEBSWING_MALE_FULL_CORRECTED>", "<WEBSWING_V2_PHASED>", "<JUMPS>", "<FALL>", "<GROUNDMOVEALL>"
+	Requires "WEBSWING_AIRBORNE", "WEBSWING_ATTACHED", "WEBSWING_MALE", "WEBSWING_CORE_SYNC"
+	Flags Cycle
+MEnd
+
 Move WEBSWING_FULL_ATTACHED_START
 	Interpolate 5
 	Priority 25

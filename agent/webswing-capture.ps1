@@ -64,6 +64,12 @@ function Get-Maximum {
     return $maximum
 }
 
+function Get-AnimationSyncAngle {
+    param([object]$Row, [bool]$Aligned)
+    if ($Aligned) { return $Row.AnimSyncAngleDeg }
+    return $Row.SwingAngleDeg
+}
+
 function Get-StdDev {
     param([object[]]$Values)
     $items = @($Values | Where-Object { $null -ne $_ })
@@ -296,6 +302,30 @@ try {
         throw 'Telemetry has capture-local identity fields but events.csv does not; refusing an ambiguous package.'
     }
     $captureIdentityAvailable = $telemetryIdentityCount -eq $identityHeaders.Count
+    $animationHeaders = @(
+        'anim_move_name', 'anim_frame', 'anim_first_frame', 'anim_last_frame',
+        'anim_normalized_progress', 'anim_sync_active', 'anim_target_frame',
+        'anim_target_normalized_progress', 'anim_sync_error_frames',
+        'anim_core_restart_count', 'anim_backwards_target_steps'
+    )
+    $animationHeaderCount = @($animationHeaders | Where-Object { $telemetryHeaders -contains $_ }).Count
+    if ($animationHeaderCount -ne 0 -and $animationHeaderCount -ne $animationHeaders.Count) {
+        throw "Telemetry has a partial animation-sync schema; expected all of $($animationHeaders -join ', ')."
+    }
+    $animationSyncAvailable = $animationHeaderCount -eq $animationHeaders.Count
+    $alignedAnimationHeaders = @(
+        'anim_sync_tick', 'anim_sync_physical_phase', 'anim_sync_angle_deg',
+        'anim_sync_plane_speed', 'anim_sync_horizontal_speed'
+    )
+    $alignedAnimationHeaderCount = @($alignedAnimationHeaders | Where-Object {
+        $telemetryHeaders -contains $_
+    }).Count
+    if ($alignedAnimationHeaderCount -ne 0 -and
+        $alignedAnimationHeaderCount -ne $alignedAnimationHeaders.Count) {
+        throw "Telemetry has a partial aligned animation-physics schema; expected all of $($alignedAnimationHeaders -join ', ')."
+    }
+    $alignedAnimationSyncAvailable =
+        $alignedAnimationHeaderCount -eq $alignedAnimationHeaders.Count
 
     $rawRows = @(Import-Csv -LiteralPath $telemetryPath)
     $eventRows = @(Import-Csv -LiteralPath $eventsPath)
@@ -367,6 +397,22 @@ try {
             SwoopEntryPlaneSpeed = Get-NumberValue -Row $raw -Name 'swoop_entry_plane_speed'
             SwoopEntryAngleDeg = Get-NumberValue -Row $raw -Name 'swoop_entry_angle_deg'
             SwoopEmergencyCount = Get-NumberValue -Row $raw -Name 'swoop_emergency_count'
+            AnimMoveName = Get-TextValue -Row $raw -Name 'anim_move_name'
+            AnimFrame = Get-NumberValue -Row $raw -Name 'anim_frame'
+            AnimFirstFrame = Get-NumberValue -Row $raw -Name 'anim_first_frame'
+            AnimLastFrame = Get-NumberValue -Row $raw -Name 'anim_last_frame'
+            AnimNormalizedProgress = Get-NumberValue -Row $raw -Name 'anim_normalized_progress'
+            AnimSyncActive = Get-NumberValue -Row $raw -Name 'anim_sync_active'
+            AnimSyncTick = Get-NumberValue -Row $raw -Name 'anim_sync_tick'
+            AnimSyncPhysicalPhase = Get-TextValue -Row $raw -Name 'anim_sync_physical_phase'
+            AnimSyncAngleDeg = Get-NumberValue -Row $raw -Name 'anim_sync_angle_deg'
+            AnimSyncPlaneSpeed = Get-NumberValue -Row $raw -Name 'anim_sync_plane_speed'
+            AnimSyncHorizontalSpeed = Get-NumberValue -Row $raw -Name 'anim_sync_horizontal_speed'
+            AnimTargetFrame = Get-NumberValue -Row $raw -Name 'anim_target_frame'
+            AnimTargetNormalizedProgress = Get-NumberValue -Row $raw -Name 'anim_target_normalized_progress'
+            AnimSyncErrorFrames = Get-NumberValue -Row $raw -Name 'anim_sync_error_frames'
+            AnimCoreRestartCount = Get-NumberValue -Row $raw -Name 'anim_core_restart_count'
+            AnimBackwardsTargetSteps = Get-NumberValue -Row $raw -Name 'anim_backwards_target_steps'
         })
     }
     $rows = @($normalizedList | Sort-Object Tick, SampleIndex)
@@ -472,6 +518,7 @@ try {
         $bottomToZeroTicks = $null
         $zeroToExitTicks = $null
         $emergencySwoopCount = 0
+        $swoopRows = @()
         if ($null -ne $bottomEntry) {
             $bottomEntryAngle = if ($null -ne $bottomEntry.SwoopEntryAngleDeg) {
                 $bottomEntry.SwoopEntryAngleDeg
@@ -531,6 +578,104 @@ try {
             }).Count
         }
 
+        $animationAngleSamples = @()
+        $animationCoreRows = @()
+        $animationMaxAbsError = $null
+        $animationAverageAbsError = $null
+        $animationCoreRestarts = $null
+        $animationBackwardsTargetSteps = $null
+        $animationLargestBackwardsTargetStep = $null
+        if ($animationSyncAvailable -and $null -ne $bottomEntry -and $null -ne $zeroCross) {
+            # Negative-angle landmarks belong to this capture-local cycle's
+            # DESCEND/BOTTOM interval. Positive landmarks continue from the
+            # same physical zero crossing into the following ASCEND samples.
+            $beforeZero = @($cycleRows | Where-Object {
+                $syncPhase = if ($alignedAnimationSyncAvailable) {
+                    $_.AnimSyncPhysicalPhase
+                } else {
+                    $_.Phase
+                }
+                $syncTickInCycle = -not $alignedAnimationSyncAvailable -or
+                    ($null -ne $_.AnimSyncTick -and $_.AnimSyncTick -ge $cycleFirst.Tick)
+                $_.Tick -le $zeroCross.Tick -and $_.AnimSyncActive -eq 1 -and
+                    $syncTickInCycle -and
+                    $syncPhase -in @('DESCEND', 'BOTTOM')
+            })
+            $afterZero = @($swoopRows | Where-Object {
+                $_.Tick -ge $zeroCross.Tick -and $_.AnimSyncActive -eq 1 -and
+                ($null -eq $swoopExit -or $_.Tick -le $swoopExit.Tick)
+            })
+            $animationCoreRows = @($beforeZero + $afterZero | Sort-Object Tick, SampleIndex -Unique)
+            foreach ($targetAngle in @(-35.0, -15.0, 0.0, 15.0, 30.0)) {
+                $candidates = if ($targetAngle -lt 0.0) {
+                    @($beforeZero)
+                } elseif ($targetAngle -gt 0.0) {
+                    @($afterZero)
+                } else {
+                    @($beforeZero + $afterZero)
+                }
+                $nearest = $candidates | Where-Object {
+                    $null -ne (Get-AnimationSyncAngle -Row $_ -Aligned $alignedAnimationSyncAvailable)
+                } | Sort-Object @{ Expression = {
+                    $syncAngle = Get-AnimationSyncAngle -Row $_ -Aligned $alignedAnimationSyncAvailable
+                    [Math]::Abs([double]$syncAngle - $targetAngle)
+                } }, Tick |
+                    Select-Object -First 1
+                if ($null -ne $nearest) {
+                    $sampleTick = if ($alignedAnimationSyncAvailable) { $nearest.AnimSyncTick } else { $nearest.Tick }
+                    $samplePhase = if ($alignedAnimationSyncAvailable) { $nearest.AnimSyncPhysicalPhase } else { $nearest.Phase }
+                    $sampleAngle = Get-AnimationSyncAngle -Row $nearest -Aligned $alignedAnimationSyncAvailable
+                    $samplePlaneSpeed = if ($alignedAnimationSyncAvailable) { $nearest.AnimSyncPlaneSpeed } else { $nearest.SwingPlaneSpeed }
+                    $sampleHorizontalSpeed = if ($alignedAnimationSyncAvailable) { $nearest.AnimSyncHorizontalSpeed } else { $nearest.HorizontalSpeed }
+                    $animationAngleSamples += [pscustomobject][ordered]@{
+                        target_angle_deg = $targetAngle
+                        tick = [int64]$sampleTick
+                        capture_cycle_index = [int64]$captureCycleIndex
+                        physical_phase = $samplePhase
+                        physical_angle_deg = $sampleAngle
+                        plane_speed = $samplePlaneSpeed
+                        horizontal_speed = $sampleHorizontalSpeed
+                        anim_move_name = $nearest.AnimMoveName
+                        anim_frame = $nearest.AnimFrame
+                        anim_target_frame = $nearest.AnimTargetFrame
+                        anim_normalized_progress = $nearest.AnimNormalizedProgress
+                        anim_target_normalized_progress = $nearest.AnimTargetNormalizedProgress
+                        anim_sync_error_frames = $nearest.AnimSyncErrorFrames
+                    }
+                }
+            }
+
+            $absoluteErrors = @($animationCoreRows | Where-Object {
+                $null -ne $_.AnimSyncErrorFrames
+            } | ForEach-Object { [Math]::Abs([double]$_.AnimSyncErrorFrames) })
+            $animationMaxAbsError = Get-Maximum -Values $absoluteErrors
+            $animationAverageAbsError = Get-Mean -Values $absoluteErrors
+
+            $restartValues = @($animationCoreRows | Where-Object {
+                $null -ne $_.AnimCoreRestartCount
+            } | ForEach-Object { [double]$_.AnimCoreRestartCount })
+            if ($restartValues.Count -gt 0) {
+                $animationCoreRestarts = [int64]((Get-Maximum $restartValues) -
+                                                  (Get-Minimum $restartValues))
+            }
+
+            $animationBackwardsTargetSteps = 0
+            $animationLargestBackwardsTargetStep = 0.0
+            $previousTarget = $null
+            foreach ($animationRow in $animationCoreRows) {
+                if ($null -eq $animationRow.AnimTargetFrame) { continue }
+                if ($null -ne $previousTarget) {
+                    $targetDelta = [double]$animationRow.AnimTargetFrame - [double]$previousTarget
+                    if ($targetDelta -lt -0.01) {
+                        ++$animationBackwardsTargetSteps
+                        $animationLargestBackwardsTargetStep = [Math]::Max(
+                            $animationLargestBackwardsTargetStep, -$targetDelta)
+                    }
+                }
+                $previousTarget = $animationRow.AnimTargetFrame
+            }
+        }
+
         $cycles += [pscustomobject][ordered]@{
             capture_cycle_index = [int64]$captureCycleIndex
             activation_id = if ($null -eq $activationId) { 0 } else { [int64]$activationId }
@@ -570,6 +715,16 @@ try {
             largest_single_sample_plane_speed_drop = $largestPlaneSpeedDrop
             ticks_bottom_entry_to_zero_cross = $bottomToZeroTicks
             ticks_zero_cross_to_swoop_exit = $zeroToExitTicks
+            animation_sync = [ordered]@{
+                available = [bool]($animationSyncAvailable -and $animationCoreRows.Count -gt 0)
+                zero_cross_tick = if ($null -eq $zeroCross) { $null } else { [int64]$zeroCross.Tick }
+                angle_samples = @($animationAngleSamples)
+                max_absolute_error_frames = $animationMaxAbsError
+                average_absolute_error_frames = $animationAverageAbsError
+                core_move_restarts = $animationCoreRestarts
+                backwards_target_steps = $animationBackwardsTargetSteps
+                largest_backwards_target_step_frames = $animationLargestBackwardsTargetStep
+            }
         }
     }
 
@@ -607,8 +762,32 @@ try {
         [string]$metadata.runtime_build_id
     } else { 'not-recorded' }
 
+    $allAnimationCoreRows = @($rows | Where-Object {
+        $_.AnimSyncActive -eq 1 -and $_.AnimMoveName -eq 'WEBSWING_FULL_CORE'
+    })
+    $allAnimationErrors = @($allAnimationCoreRows | Where-Object {
+        $null -ne $_.AnimSyncErrorFrames
+    } | ForEach-Object { [Math]::Abs([double]$_.AnimSyncErrorFrames) })
+    $animationCycleSummaries = @($cycles | Where-Object {
+        $_.animation_sync.available
+    } | ForEach-Object {
+        [pscustomobject][ordered]@{
+            capture_cycle_index = $_.capture_cycle_index
+            activation_id = $_.activation_id
+            controller_cycle_id = $_.controller_cycle_id
+            assist_energy_at_bottom_entry = $_.assist_energy_at_bottom_entry
+            zero_cross_tick = $_.animation_sync.zero_cross_tick
+            angle_samples = @($_.animation_sync.angle_samples)
+            max_absolute_error_frames = $_.animation_sync.max_absolute_error_frames
+            average_absolute_error_frames = $_.animation_sync.average_absolute_error_frames
+            core_move_restarts = $_.animation_sync.core_move_restarts
+            backwards_target_steps = $_.animation_sync.backwards_target_steps
+            largest_backwards_target_step_frames = $_.animation_sync.largest_backwards_target_step_frames
+        }
+    })
+
     $summaryObject = [ordered]@{
-        schema_version = 3
+        schema_version = 4
         capture = [ordered]@{
             capture_id = $captureId
             source_directory = (Resolve-Path -LiteralPath $inputDirectory).Path
@@ -657,6 +836,16 @@ try {
             clearance_source = 'minimum of current_ground_clearance and ahead_ground_clearance when present'
         }
         phase_metrics = $phaseMetrics
+        animation_sync = [ordered]@{
+            available = [bool]$animationSyncAvailable
+            aligned_physics_available = [bool]$alignedAnimationSyncAvailable
+            core_move = 'WEBSWING_FULL_CORE'
+            target_angles_deg = @(-35.0, -15.0, 0.0, 15.0, 30.0)
+            core_sample_count = $allAnimationCoreRows.Count
+            max_absolute_error_frames = Get-Maximum -Values $allAnimationErrors
+            average_absolute_error_frames = Get-Mean -Values $allAnimationErrors
+            cycles = @($animationCycleSummaries)
+        }
         consistency = [ordered]@{
             cycle_duration_stddev = Get-StdDev -Values @($cycles | ForEach-Object { $_.duration_seconds })
             apex_y_stddev = Get-StdDev -Values @($cycles | ForEach-Object { $_.apex_y })
@@ -676,6 +865,7 @@ try {
             reversal = 'ticks from BOTTOM entry, or strongest descending sample when no BOTTOM row exists, to the first positive vertical speed or ASCEND sample within the same capture_cycle_index; null when not observed'
             swoop = 'swoop metrics begin at this capture cycle bottom entry and may continue into the next controller cycle until active early-ASCEND redirection exits'
             zero_cross_retention = 'first sampled non-negative swing-plane speed divided by the controller-recorded BOTTOM-entry plane speed'
+            animation_sync = 'angle samples use the nearest active WEBSWING_FULL_CORE sample on the correct side of each physical zero crossing; error is actual frame minus target frame'
             standard_deviation = 'population standard deviation across captured cycles'
         }
     }
@@ -743,6 +933,40 @@ try {
             (Format-Value $cycle.swoop_exit_plane_speed 2),
             (Format-Value $cycle.minimum_clearance 2),
             $cycle.emergency_swoop_count))
+    }
+    [void]$summaryText.AppendLine('')
+    [void]$summaryText.AppendLine('ANIMATION SYNC')
+    if (-not $animationSyncAvailable) {
+        [void]$summaryText.AppendLine('Animation-sync telemetry is unavailable in this legacy capture.')
+    } else {
+        [void]$summaryText.AppendLine(('Core samples: {0}; max abs error: {1} frames; average abs error: {2} frames' -f
+            $allAnimationCoreRows.Count,
+            (Format-Value $summaryObject.animation_sync.max_absolute_error_frames 3),
+            (Format-Value $summaryObject.animation_sync.average_absolute_error_frames 3)))
+        foreach ($animationCycle in $animationCycleSummaries) {
+            [void]$summaryText.AppendLine(('Capture cycle {0} | energy {1} | zero tick {2} | restarts {3} | backwards {4} | max/avg err {5}/{6}' -f
+                $animationCycle.capture_cycle_index,
+                (Format-Value $animationCycle.assist_energy_at_bottom_entry 2),
+                $animationCycle.zero_cross_tick,
+                $animationCycle.core_move_restarts,
+                $animationCycle.backwards_target_steps,
+                (Format-Value $animationCycle.max_absolute_error_frames 2),
+                (Format-Value $animationCycle.average_absolute_error_frames 2)))
+            [void]$summaryText.AppendLine('  Angle | Tick | Phase | Plane | Move | Frame -> Target | Progress -> Target | Error')
+            foreach ($sample in $animationCycle.angle_samples) {
+                [void]$summaryText.AppendLine(('  {0,5} | {1,4} | {2,-7} | {3,5} | {4} | {5} -> {6} | {7} -> {8} | {9}' -f
+                    (Format-Value $sample.target_angle_deg 0),
+                    $sample.tick,
+                    $sample.physical_phase,
+                    (Format-Value $sample.plane_speed 2),
+                    $sample.anim_move_name,
+                    (Format-Value $sample.anim_frame 2),
+                    (Format-Value $sample.anim_target_frame 2),
+                    (Format-Value $sample.anim_normalized_progress 3),
+                    (Format-Value $sample.anim_target_normalized_progress 3),
+                    (Format-Value $sample.anim_sync_error_frames 2)))
+            }
+        }
     }
     [void]$summaryText.AppendLine('')
     [void]$summaryText.AppendLine('CONSISTENCY')

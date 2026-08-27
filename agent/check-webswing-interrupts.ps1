@@ -8,13 +8,14 @@ $moves = @{}
 $current = $null
 foreach ($line in Get-Content -LiteralPath $IncludePath) {
     if ($line -match '^\s*Move\s+(\S+)\s*$') {
-        $current = [ordered]@{ Name=$Matches[1]; Member=@(); Interrupts=@(); Requires=@(); Flags=@(); NextMove=$null; Interpolate=0; Scale=1.0; Animation=$null; AnimStart=$null; AnimEnd=$null }
+        $current = [ordered]@{ Name=$Matches[1]; Member=@(); Interrupts=@(); Requires=@(); Flags=@(); NextMove=$null; Priority=0; Interpolate=0; Scale=1.0; Animation=$null; AnimStart=$null; AnimEnd=$null }
         $moves[$current.Name] = $current
         continue
     }
     if ($line -match '^\s*MEnd\s*$') { $current = $null; continue }
     if ($null -eq $current) { continue }
-    if ($line -match '^\s*Scale\s+([0-9.]+)\s*$') { $current.Scale = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture) }
+    if ($line -match '^\s*Priority\s+(\d+)\s*$') { $current.Priority = [int]$Matches[1] }
+    elseif ($line -match '^\s*Scale\s+([0-9.]+)\s*$') { $current.Scale = [double]::Parse($Matches[1], [Globalization.CultureInfo]::InvariantCulture) }
     elseif ($line -match '^\s*Interpolate\s+(\d+)\s*$') { $current.Interpolate = [int]$Matches[1] }
     elseif ($line -match '^\s*Anim\s+(\S+)\s+(\d+)\s+(\d+)\s*$') { $current.Animation=$Matches[1]; $current.AnimStart=[int]$Matches[2]; $current.AnimEnd=[int]$Matches[3] }
     elseif ($line -match '^\s*NextMove\s+(\S+)\s*$') { $current.NextMove = $Matches[1] }
@@ -38,6 +39,18 @@ $standardMembers = @('<DEATHIRQ>','<HITIRQ>','<REACTIRQ>','<BLOCKIRQ>','<BLOCK>'
 $standardInterrupts = @('<JUMPS>','<FALL>','<GROUNDMOVEALL>')
 $phasedGroup = '<WEBSWING_V2_PHASED>'
 $correctedGroup = '<WEBSWING_MALE_FULL_CORRECTED>'
+$core = Get-Move 'WEBSWING_FULL_CORE'
+Assert-True 'core uses accepted corrected asset and audited range' ($core.Animation -eq 'MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL' -and $core.AnimStart -eq 6 -and $core.AnimEnd -eq 39)
+Assert-True 'core is frame-scrubbed rather than free-running' ($core.Scale -eq 0)
+Assert-Contains 'core requires private sync gate' $core.Requires 'WEBSWING_CORE_SYNC'
+Assert-Contains 'core requires Sky-Assisted attached presentation state' $core.Requires 'WEBSWING_ATTACHED'
+Assert-Contains 'core remains a cycling move for cursor bounds' $core.Flags 'Cycle'
+Assert-Excludes 'core contains no terminal hold semantics' $core.Flags 'HoldLastFrame'
+Assert-Excludes 'core excludes MOVEIRQ' $core.Member '<MOVEIRQ>'
+Assert-Excludes 'core cannot steal authored shoot' $core.Interrupts '<WEBSWING_V2_SHOOT>'
+Assert-Excludes 'core cannot steal authored retract/release' $core.Interrupts '<WEBSWING_V2_RETRACT>'
+$coreText = Get-Content -Raw -LiteralPath $IncludePath
+Assert-True 'core contains no frame-triggered sequencer FX' ($coreText -match '(?s)Move\s+WEBSWING_FULL_CORE\b(?<body>.*?)MEnd' -and $Matches.body -notmatch '(?m)^\s*Fx\b')
 $launch = Get-Move 'WEBSWING_V2_GROUND_LAUNCH_START'
 Assert-True 'accepted 62-frame first launch remains intact' ($launch.Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2' -and $launch.AnimStart -eq 1 -and $launch.AnimEnd -eq 62)
 Assert-Contains 'ground launch replaces phased choreography' $launch.Interrupts $phasedGroup
@@ -89,6 +102,7 @@ foreach ($name in $phaseMoves) {
 
 Assert-True 'A descend uses progressive catch-to-trail motion' ((Get-Move 'WEBSWING_FULL_DESCEND_START').Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2')
 Assert-True 'B phases use alternate compact performance' (@($phaseMoves | Where-Object { $_.EndsWith('_ALT') -and (Get-Move $_).Animation -ne 'MALE/COHSOURCEDEV_WEBSWING_COMPACT_V2' }).Count -eq 0)
+Assert-True 'core outranks phase moves but yields to lifecycle moves' ($core.Priority -gt 27 -and $core.Priority -lt (Get-Move 'WEBSWING_V2_RETRACT_START').Priority -and $core.Priority -lt (Get-Move 'WEBSWING_V2_SHOOT_START').Priority)
 Assert-True 'release A uses dedicated unwind motion' ((Get-Move 'WEBSWING_V2_RELEASE_A').Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_RELEASE_V2')
 
 $resolvedPath = (Resolve-Path -LiteralPath $IncludePath).Path

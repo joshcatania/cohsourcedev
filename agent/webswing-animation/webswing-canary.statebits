@@ -8,4 +8,5 @@ StateBit WEBSWING_ASCEND_MALE_ENTER Predictable
 StateBit WEBSWING_SHOOT Predictable
 StateBit WEBSWING_RETRACT Predictable
 StateBit WEBSWING_GROUND_LAUNCH Predictable
+StateBit WEBSWING_CORE_SYNC Predictable
 StateBit COHSOURCEDEV_ANIMCANARY Predictable

@@ -92,6 +92,7 @@
 #include "entity/power_customization.h"
 #include "graphics/gfx.h"
 #include "render/thread/rt_shadowmap.h"    // for kShadowCapsuleCull
+#include <string.h>
 
 #ifndef TEST_CLIENT
 #include "edit/edit_cmd.h"
@@ -2786,6 +2787,249 @@ static void addYSpringToCharacterGraphics( SeqInst * seq )
     }
 }
 
+typedef struct WebSwingAngleFramePoint
+{
+    F32 angle_degrees;
+    F32 source_frame;
+} WebSwingAngleFramePoint;
+
+typedef struct WebSwingClientAnimationSyncState
+{
+    Entity *player;
+    int active;
+    int has_target;
+    F32 previous_target_frame;
+    U32 core_restart_count;
+    U32 backwards_target_steps;
+} WebSwingClientAnimationSyncState;
+
+// Frame landmarks come from the accepted 60-frame rest-basis clip audit.
+// Frames 6..39 contain the useful loaded descent, compact reversal, open
+// low-point silhouette, and ascent recovery. Translation remains physics-owned.
+static const WebSwingAngleFramePoint s_web_swing_angle_frame_curve[] =
+{
+    { -50.0f,  6.0f },
+    { -35.0f, 12.0f },
+    { -15.0f, 18.0f },
+    {  -6.0f, 20.0f },
+    {   0.0f, 22.0f },
+    {   8.0f, 25.0f },
+    {  15.0f, 27.0f },
+    {  30.0f, 36.0f },
+    {  36.0f, 39.0f },
+};
+
+static WebSwingClientAnimationSyncState s_web_swing_animation_sync;
+
+static F32 entClientWebSwingFrameForAngle(F32 angle_degrees)
+{
+    int i;
+
+    if (angle_degrees <= s_web_swing_angle_frame_curve[0].angle_degrees)
+        return s_web_swing_angle_frame_curve[0].source_frame;
+
+    for (i = 1; i < ARRAY_SIZE(s_web_swing_angle_frame_curve); ++i)
+    {
+        const WebSwingAngleFramePoint *left = &s_web_swing_angle_frame_curve[i - 1];
+        const WebSwingAngleFramePoint *right = &s_web_swing_angle_frame_curve[i];
+        if (angle_degrees <= right->angle_degrees)
+        {
+            F32 fraction = (angle_degrees - left->angle_degrees) /
+                           (right->angle_degrees - left->angle_degrees);
+            return left->source_frame +
+                   (right->source_frame - left->source_frame) * fraction;
+        }
+    }
+
+    return s_web_swing_angle_frame_curve[
+        ARRAY_SIZE(s_web_swing_angle_frame_curve) - 1].source_frame;
+}
+
+static int entClientWebSwingCoreSyncEligible(Entity *e, const Animation *animation)
+{
+    const char *move_name = animation && animation->move ?
+        animation->move->name : NULL;
+
+    return e && e->motion && e->seq && e == controlledPlayerPtr() &&
+        global_state.webswing_dev &&
+        g_cohsourcedev_webswing_anim_selection == 3 &&
+        e->motion->input.web_swing_enabled &&
+        e->motion->web_swing_attached &&
+        e->motion->web_swing_active_backend &&
+        move_name && !stricmp(move_name, "WEBSWING_FULL_CORE") &&
+        animation->typeGfx && animation->typeGfx->animP &&
+        animation->typeGfx->animP[0];
+}
+
+static const char *entClientWebSwingPhysicalPhaseName(const MotionState *motion)
+{
+    if (!motion)
+        return "NONE";
+
+    switch ((WebSwingAssistPhase)motion->web_swing_assist_phase)
+    {
+        case WEB_SWING_ASSIST_DESCEND: return "DESCEND";
+        case WEB_SWING_ASSIST_BOTTOM:  return "BOTTOM";
+        case WEB_SWING_ASSIST_ASCEND:  return "ASCEND";
+        case WEB_SWING_ASSIST_APEX:    return "APEX";
+        case WEB_SWING_ASSIST_LAUNCH:  return "LAUNCH";
+        default:                       return "NONE";
+    }
+}
+
+static void entClientPublishWebSwingAnimationTelemetry(const Entity *e,
+                                                       const Animation *animation,
+                                                       int sync_active,
+                                                       F32 target_frame,
+                                                       F32 physical_angle_degrees,
+                                                       F32 physical_plane_speed,
+                                                       F32 physical_horizontal_speed)
+{
+    WebSwingAnimationSyncTelemetry telemetry;
+    F32 frame_span = 0.0f;
+
+    memset(&telemetry, 0, sizeof(telemetry));
+    telemetry.sync_active = sync_active;
+    if (sync_active && e && e->motion)
+    {
+        telemetry.physical_tick = e->motion->tickCounter;
+        strcpy_s(telemetry.physical_phase, sizeof(telemetry.physical_phase),
+                 entClientWebSwingPhysicalPhaseName(e->motion));
+        telemetry.physical_angle_degrees = physical_angle_degrees;
+        telemetry.physical_plane_speed = physical_plane_speed;
+        telemetry.physical_horizontal_speed = physical_horizontal_speed;
+    }
+    telemetry.target_frame = target_frame;
+    telemetry.core_restart_count = s_web_swing_animation_sync.core_restart_count;
+    telemetry.backwards_target_steps =
+        s_web_swing_animation_sync.backwards_target_steps;
+
+    if (animation && animation->move && animation->move->name)
+        strcpy_s(telemetry.move_name, sizeof(telemetry.move_name),
+                 animation->move->name);
+    if (animation && animation->typeGfx && animation->typeGfx->animP &&
+        animation->typeGfx->animP[0])
+    {
+        telemetry.frame = animation->frame;
+        telemetry.first_frame = animation->typeGfx->animP[0]->firstFrame;
+        telemetry.last_frame = animation->typeGfx->animP[0]->lastFrame;
+        frame_span = telemetry.last_frame - telemetry.first_frame;
+        if (frame_span > 0.0f)
+        {
+            telemetry.normalized_progress = MINMAX(
+                (telemetry.frame - telemetry.first_frame) / frame_span,
+                0.0f, 1.0f);
+            telemetry.target_normalized_progress = MINMAX(
+                (target_frame - telemetry.first_frame) / frame_span,
+                0.0f, 1.0f);
+        }
+    }
+    telemetry.sync_error_frames = telemetry.frame - telemetry.target_frame;
+#ifndef TEST_CLIENT
+    pmotionWebSwingCaptureSetAnimationSyncTelemetry(&telemetry);
+#endif
+}
+
+// runSequencerMoveUpdate has already selected the move and advanced seqStep.
+// This client-only correction is therefore the final animation clock before
+// downstream pose evaluation. It reads physical velocity but mutates only the
+// authored frame cursor.
+static void entClientDriveWebSwingAnimationFrame(Entity *e, int is_new_move)
+{
+    Animation *animation;
+    F32 horizontal_speed;
+    F32 swing_angle_degrees;
+    F32 target_frame;
+    F32 first_frame;
+    F32 last_frame;
+    F32 error;
+    F32 max_correction;
+    int continuing;
+
+    if (!e || e != controlledPlayerPtr())
+        return;
+
+    animation = e->seq ? &e->seq->animation : NULL;
+    if (s_web_swing_animation_sync.player != e)
+    {
+        memset(&s_web_swing_animation_sync, 0,
+               sizeof(s_web_swing_animation_sync));
+        s_web_swing_animation_sync.player = e;
+    }
+
+    if (!entClientWebSwingCoreSyncEligible(e, animation))
+    {
+        s_web_swing_animation_sync.active = 0;
+        s_web_swing_animation_sync.has_target = 0;
+        entClientPublishWebSwingAnimationTelemetry(e, animation, 0, 0.0f,
+                                                   0.0f, 0.0f, 0.0f);
+        return;
+    }
+
+    first_frame = animation->typeGfx->animP[0]->firstFrame;
+    last_frame = animation->typeGfx->animP[0]->lastFrame;
+    if (last_frame < first_frame)
+    {
+        s_web_swing_animation_sync.active = 0;
+        s_web_swing_animation_sync.has_target = 0;
+        entClientPublishWebSwingAnimationTelemetry(e, animation, 0, 0.0f,
+                                                   0.0f, 0.0f, 0.0f);
+        return;
+    }
+
+    horizontal_speed = sqrt(SQR(e->motion->vel[0]) + SQR(e->motion->vel[2]));
+    swing_angle_degrees = DEG(atan2(e->motion->vel[1],
+        MAX(horizontal_speed, 0.0001f)));
+    target_frame = MINMAX(entClientWebSwingFrameForAngle(swing_angle_degrees),
+                          first_frame, last_frame);
+    continuing = s_web_swing_animation_sync.active &&
+                 s_web_swing_animation_sync.has_target;
+
+    if (continuing && is_new_move)
+    {
+        ++s_web_swing_animation_sync.core_restart_count;
+        filelog_printf("webswing.log",
+                       "WEB_SWING CLIENT anim_core_restart count=%u angle_deg=%.3f frame=%.3f target=%.3f\n",
+                       s_web_swing_animation_sync.core_restart_count,
+                       swing_angle_degrees, animation->frame, target_frame);
+    }
+
+    // Special moves reset this state before the core can re-enter. Within one
+    // uninterrupted core performance, hold the authored destination against
+    // sub-frame physical-angle noise instead of scrubbing visibly backwards.
+    if (continuing &&
+        target_frame < s_web_swing_animation_sync.previous_target_frame)
+    {
+        target_frame = s_web_swing_animation_sync.previous_target_frame;
+    }
+
+    if (!continuing)
+    {
+        animation->frame = target_frame;
+        filelog_printf("webswing.log",
+                       "WEB_SWING CLIENT anim_core_begin move=WEBSWING_FULL_CORE angle_deg=%.3f frame=%.3f first=%.1f last=%.1f\n",
+                       swing_angle_degrees, target_frame,
+                       first_frame, last_frame);
+    }
+    else
+    {
+        error = target_frame - animation->frame;
+        max_correction = fabs(swing_angle_degrees) <= 15.0f ? 4.0f : 2.5f;
+        if (fabs(error) > 6.0f)
+            max_correction = 6.0f;
+        animation->frame += MINMAX(error, -max_correction, max_correction);
+        animation->frame = MINMAX(animation->frame, first_frame, last_frame);
+    }
+
+    s_web_swing_animation_sync.active = 1;
+    s_web_swing_animation_sync.has_target = 1;
+    s_web_swing_animation_sync.previous_target_frame = target_frame;
+    entClientPublishWebSwingAnimationTelemetry(
+        e, animation, 1, target_frame, swing_angle_degrees,
+        sqrt(SQR(horizontal_speed) + SQR(e->motion->vel[1])),
+        horizontal_speed);
+}
+
 static void entClientUpdate(Entity *e)
 {
     SeqInst * seq = e->seq;
@@ -2909,6 +3153,7 @@ PERFINFO_AUTO_STOP_START("Sequencer",1);
 
     needCostumeApply = 0;
     isNewMove = runSequencerMoveUpdate( e, &needCostumeApply ) != NULL ? 1 : 0;
+    entClientDriveWebSwingAnimationFrame(e, isNewMove);
     seq->updated_appearance |= isNewMove;  
 
     /////////// Reset Graphics, and manage fx as needed

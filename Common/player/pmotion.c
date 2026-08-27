@@ -246,6 +246,7 @@ typedef struct WebSwingCaptureFrame
     F32 swoop_entry_plane_speed;
     F32 swoop_entry_angle_deg;
     U32 swoop_emergency_count;
+    WebSwingAnimationSyncTelemetry animation;
 } WebSwingCaptureFrame;
 
 typedef struct WebSwingCaptureState
@@ -275,6 +276,17 @@ typedef struct WebSwingCaptureState
 static WebSwingCaptureState s_web_swing_capture;
 static U32 s_web_swing_capture_serial;
 static int s_web_swing_capture_atexit_registered;
+static WebSwingAnimationSyncTelemetry s_web_swing_animation_sync_telemetry;
+
+void pmotionWebSwingCaptureSetAnimationSyncTelemetry(
+    const WebSwingAnimationSyncTelemetry *telemetry)
+{
+    if (telemetry)
+        s_web_swing_animation_sync_telemetry = *telemetry;
+    else
+        memset(&s_web_swing_animation_sync_telemetry, 0,
+               sizeof(s_web_swing_animation_sync_telemetry));
+}
 
 static const char *pmotionWebSwingCaptureBackendName(const MotionState *motion)
 {
@@ -421,6 +433,7 @@ static void pmotionWebSwingCaptureBuildFrame(Entity *e, WebSwingCaptureFrame *fr
         DEG(motion->web_swing_assist_swoop_entry_angle);
     frame->swoop_emergency_count =
         motion->web_swing_assist_swoop_emergency_count;
+    frame->animation = s_web_swing_animation_sync_telemetry;
 }
 
 static void pmotionWebSwingCaptureAssignIdentity(WebSwingCaptureFrame *frame)
@@ -476,7 +489,7 @@ static void pmotionWebSwingCaptureWriteTelemetryHeader(void)
         return;
 
     if (fprintf(s_web_swing_capture.telemetry,
-                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id,swing_plane_speed,swing_angle_deg,forward_speed_along_intent,swoop_active,swoop_radius,swoop_entry_plane_speed,swoop_entry_angle_deg,swoop_emergency_count\n") < 0)
+                "capture_id,tick,sample_index,elapsed_seconds,backend,swing_enabled,attached,assist_phase,phase,phase_ticks,cycle_id,activation_id,capture_cycle_index,controller_cycle_id,assist_energy,pos_x,pos_y,pos_z,vel_x,vel_y,vel_z,total_speed,horizontal_speed,vertical_speed,current_ground_clearance,ahead_ground_clearance,lookahead_distance,low_point_y,initial_low_point_y,altitude_margin,intent_x,intent_y,intent_z,input_magnitude,anchor_x,anchor_y,anchor_z,visual_tether_state,visual_tether_progress,anim_phase,anim_segment_id,anim_phase_segment_id,swing_plane_speed,swing_angle_deg,forward_speed_along_intent,swoop_active,swoop_radius,swoop_entry_plane_speed,swoop_entry_angle_deg,swoop_emergency_count,anim_move_name,anim_frame,anim_first_frame,anim_last_frame,anim_normalized_progress,anim_sync_active,anim_sync_tick,anim_sync_physical_phase,anim_sync_angle_deg,anim_sync_plane_speed,anim_sync_horizontal_speed,anim_target_frame,anim_target_normalized_progress,anim_sync_error_frames,anim_core_restart_count,anim_backwards_target_steps\n") < 0)
     {
         s_web_swing_capture.telemetry_failed = 1;
         pmotionWebSwingCaptureReportIoFailure("telemetry_header");
@@ -532,7 +545,7 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
     if (s_web_swing_capture.telemetry && !s_web_swing_capture.telemetry_failed)
     {
         if (fprintf(s_web_swing_capture.telemetry,
-                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%u,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u,%.6f,%.6f,%.6f,%d,%.6f,%.6f,%.6f,%u\n",
+                    "%u,%u,%u,%.6f,%s,%d,%d,%s,%s,%u,%u,%u,%u,%u,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%s,%.6f,%s,%u,%u,%.6f,%.6f,%.6f,%d,%.6f,%.6f,%.6f,%u,%s,%.6f,%.6f,%.6f,%.6f,%d,%u,%s,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%u,%u\n",
                     s_web_swing_capture.capture_id, frame->tick, sample_index,
                     elapsed_seconds, frame->backend, frame->swing_enabled,
                     frame->attached, frame->assist_phase, frame->phase,
@@ -554,7 +567,25 @@ static void pmotionWebSwingCaptureWriteSample(const WebSwingCaptureFrame *frame)
                      frame->forward_speed_along_intent, frame->swoop_active,
                      frame->swoop_radius, frame->swoop_entry_plane_speed,
                      frame->swoop_entry_angle_deg,
-                     frame->swoop_emergency_count) < 0)
+                     frame->swoop_emergency_count,
+                     frame->animation.move_name[0] ?
+                         frame->animation.move_name : "none",
+                     frame->animation.frame,
+                     frame->animation.first_frame,
+                     frame->animation.last_frame,
+                     frame->animation.normalized_progress,
+                     frame->animation.sync_active,
+                     frame->animation.physical_tick,
+                     frame->animation.physical_phase[0] ?
+                         frame->animation.physical_phase : "NONE",
+                     frame->animation.physical_angle_degrees,
+                     frame->animation.physical_plane_speed,
+                     frame->animation.physical_horizontal_speed,
+                     frame->animation.target_frame,
+                     frame->animation.target_normalized_progress,
+                     frame->animation.sync_error_frames,
+                     frame->animation.core_restart_count,
+                     frame->animation.backwards_target_steps) < 0)
         {
             s_web_swing_capture.telemetry_failed = 1;
             pmotionWebSwingCaptureReportIoFailure("telemetry_row");
@@ -721,7 +752,7 @@ static void pmotionWebSwingCaptureWriteMetadata(const WebSwingCaptureFrame *fram
 
     if (fprintf(metadata,
                 "{\n"
-                "  \"schema_version\": 3,\n"
+                "  \"schema_version\": 4,\n"
                 "  \"capture_id\": %u,\n"
                 "  \"started_tick\": %u,\n"
                 "  \"started_time\": \"%s\",\n"
@@ -970,6 +1001,13 @@ void pmotionWebSwingCaptureRenderHud(void)
                   "angle: %0.1fdeg  plane: %0.2f  swoop: %s  radius: %0.1f",
                   frame->swing_angle_deg, frame->swing_plane_speed,
                   frame->swoop_active ? "YES" : "NO", frame->swoop_radius);
+    xyprintfcolor(2, 15, 255, 210, 120,
+                  "anim: %s  %0.1f -> %0.1f  err: %+0.1f",
+                  frame->animation.move_name[0] ?
+                      frame->animation.move_name : "none",
+                  frame->animation.frame,
+                  frame->animation.target_frame,
+                  frame->animation.sync_error_frames);
 }
 
 static void pmotionLogWebSwingClientStateBuild(Entity *e, int server_web_swing,
@@ -1138,10 +1176,10 @@ static const char *pmotionMode3WebSwingMoveName(WebSwingAnimPhase phase)
 {
     switch (phase)
     {
-        case WEBSWING_ANIM_PHASE_ATTACHED: return "WEBSWING_FULL_ATTACHED_START";
-        case WEBSWING_ANIM_PHASE_DESCEND:  return "WEBSWING_FULL_DESCEND_START";
-        case WEBSWING_ANIM_PHASE_BOTTOM:   return "WEBSWING_FULL_BOTTOM_START";
-        case WEBSWING_ANIM_PHASE_ASCEND:   return "WEBSWING_FULL_ASCEND_START";
+        case WEBSWING_ANIM_PHASE_ATTACHED:
+        case WEBSWING_ANIM_PHASE_DESCEND:
+        case WEBSWING_ANIM_PHASE_BOTTOM:
+        case WEBSWING_ANIM_PHASE_ASCEND:   return "WEBSWING_FULL_CORE";
         case WEBSWING_ANIM_PHASE_AIRBORNE: return "STOCK_UNATTACHED";
         default:                           return "STOCK";
     }
@@ -1170,6 +1208,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     int shoot_state_bit;
     int retract_state_bit;
     int ground_launch_state_bit;
+    int core_sync_state_bit;
     int is_male = 0;
     int new_segment;
     int phase_entry;
@@ -1206,6 +1245,7 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
     shoot_state_bit = seqGetStateNumberFromName("WEBSWING_SHOOT");
     retract_state_bit = seqGetStateNumberFromName("WEBSWING_RETRACT");
     ground_launch_state_bit = seqGetStateNumberFromName("WEBSWING_GROUND_LAUNCH");
+    core_sync_state_bit = seqGetStateNumberFromName("WEBSWING_CORE_SYNC");
     variant_b_state_bit = seqGetStateNumberFromName("WEBSWING_VARIANT_B");
     if (male_state_bit >= 0)
         seqSetState(e->seq->state, 0, male_state_bit);
@@ -1217,6 +1257,8 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         seqSetState(e->seq->state, 0, retract_state_bit);
     if (ground_launch_state_bit >= 0)
         seqSetState(e->seq->state, 0, ground_launch_state_bit);
+    if (core_sync_state_bit >= 0)
+        seqSetState(e->seq->state, 0, core_sync_state_bit);
     if (variant_b_state_bit >= 0)
         seqSetState(e->seq->state, 0, variant_b_state_bit);
 
@@ -1225,11 +1267,12 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         if (!logged_state_resolution)
         {
             filelog_printf("webswing.log",
-                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d retract=%d ground_launch=%d\n",
+                           "WEBSWING_ANIM runtime_statebits airborne=%d attached=%d descend=%d bottom=%d ascend=%d male=%d enter=%d shoot=%d retract=%d ground_launch=%d core_sync=%d\n",
                            state_bits[0] >= 0, state_bits[1] >= 0, state_bits[2] >= 0,
                            state_bits[3] >= 0, state_bits[4] >= 0,
                            male_state_bit >= 0, enter_state_bit >= 0, shoot_state_bit >= 0,
-                           retract_state_bit >= 0, ground_launch_state_bit >= 0);
+                           retract_state_bit >= 0, ground_launch_state_bit >= 0,
+                           core_sync_state_bit >= 0);
             logged_state_resolution = 1;
         }
     }
@@ -1359,6 +1402,17 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                 phase != WEBSWING_ANIM_PHASE_AIRBORNE) || web_releasing) &&
                 male_state_bit >= 0)
                 seqSetState(e->seq->state, 1, male_state_bit);
+
+            // The private client overlay resolves this bit; normal server
+            // sequencers do not. It selects one continuous authored move for
+            // the physical lower arc without changing the semantic phase bits.
+            if (is_male && e->motion->input.web_swing_enabled &&
+                e->motion->web_swing_attached &&
+                e->motion->web_swing_active_backend &&
+                phase != WEBSWING_ANIM_PHASE_NONE &&
+                phase != WEBSWING_ANIM_PHASE_AIRBORNE &&
+                core_sync_state_bit >= 0)
+                seqSetState(e->seq->state, 1, core_sync_state_bit);
 
             if (is_male && (phase != WEBSWING_ANIM_PHASE_NONE || web_releasing))
             {
