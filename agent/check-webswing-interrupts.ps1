@@ -105,6 +105,17 @@ Assert-True 'B phases use alternate compact performance' (@($phaseMoves | Where-
 Assert-True 'core outranks phase moves but yields to lifecycle moves' ($core.Priority -gt 27 -and $core.Priority -lt (Get-Move 'WEBSWING_V2_RETRACT_START').Priority -and $core.Priority -lt (Get-Move 'WEBSWING_V2_SHOOT_START').Priority)
 Assert-True 'release A uses dedicated unwind motion' ((Get-Move 'WEBSWING_V2_RELEASE_A').Animation -eq 'MALE/COHSOURCEDEV_WEBSWING_RELEASE_V2')
 
+$sourceRoot = Split-Path -Parent $PSScriptRoot
+$entClientPath = Join-Path $sourceRoot 'Game\src\entity\entclient.c'
+if (-not (Test-Path -LiteralPath $entClientPath -PathType Leaf)) { throw "Missing client source: $entClientPath" }
+$entClientText = Get-Content -Raw -LiteralPath $entClientPath
+Assert-True 'mode 3 continuing tether owns the authored left hand' (
+    $entClientText -match '(?s)mode3_assisted_continuing_swing\s*=.*?g_cohsourcedev_webswing_anim_selection\s*==\s*3.*?web_swing_active_backend.*?web_swing_attached.*?web_swing_ground_launch_active')
+Assert-True 'mode 3 tether does not use higher-wrist selection' (
+    $entClientText -match '(?s)if\(mode3_assisted_continuing_swing\).*?web_swing_visual_tether_left_hand\s*=\s*1' -and
+    $entClientText -match '(?s)else if\(e->motion->web_swing_visual_tether_state\s*==\s*WEB_SWING_VISUAL_TETHER_EXTENDING.*?left_hand_mat\[3\]\[1\]\s*>\s*right_hand_mat\[3\]\[1\]')
+Assert-True 'ground launch preserves higher-hand selection' (
+    $entClientText -match '(?s)else if\(e->motion->web_swing_visual_tether_state\s*==\s*WEB_SWING_VISUAL_TETHER_EXTENDING.*?left_hand && \(!right_hand \|\| left_hand_mat\[3\]\[1\] > right_hand_mat\[3\]\[1\]\)')
 $resolvedPath = (Resolve-Path -LiteralPath $IncludePath).Path
 $sha256 = (Get-FileHash -LiteralPath $resolvedPath -Algorithm SHA256).Hash.ToLowerInvariant()
 Write-Host 'WEB SWING PHASE CHOREOGRAPHY CHECK PASS'

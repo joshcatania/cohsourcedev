@@ -3490,6 +3490,7 @@ void entClientDrawWebSwingTethers(void)
         Mat4 right_hand_mat;
         Mat4 left_hand_mat;
         int hand_origin = 0;
+        int mode3_assisted_continuing_swing;
         F32 tether_progress;
 
         if(!(entity_state[i] & ENTITY_IN_USE) || !(e = entities[i]) || !e->motion ||
@@ -3511,11 +3512,28 @@ void entClientDrawWebSwingTethers(void)
             else
                 left_hand = NULL;
 
+            mode3_assisted_continuing_swing =
+                e == controlledPlayerPtr() &&
+                global_state.webswing_dev &&
+                g_cohsourcedev_webswing_anim_selection == 3 &&
+                e->motion->web_swing_active_backend &&
+                e->motion->web_swing_attached &&
+                !e->motion->web_swing_ground_launch_active;
+
             // During the invisible wrist-fire wind-up, select whichever
-            // authored hand is higher. Lock that hand once the web becomes
-            // visible so its origin cannot jump between wrists mid-shot.
-            if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING &&
-               e->motion->web_swing_visual_tether_progress <= 0.001f)
+            // authored hand is higher for the initial ground launch. The
+            // continuing Mode-3 Sky-Assisted choreography explicitly owns
+            // the left wrist instead; keep that choice locked for the shot.
+            if(mode3_assisted_continuing_swing)
+            {
+                if(left_hand)
+                    e->motion->web_swing_visual_tether_left_hand = 1;
+                else if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING &&
+                        e->motion->web_swing_visual_tether_progress <= 0.001f)
+                    e->motion->web_swing_visual_tether_left_hand = 0;
+            }
+            else if(e->motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_EXTENDING &&
+                    e->motion->web_swing_visual_tether_progress <= 0.001f)
             {
                 e->motion->web_swing_visual_tether_left_hand =
                     left_hand && (!right_hand || left_hand_mat[3][1] > right_hand_mat[3][1]);
@@ -3531,9 +3549,14 @@ void entClientDrawWebSwingTethers(void)
                 copyVec3(left_hand_mat[3], tether_start);
                 hand_origin = 1;
             }
-            else if(right_hand || left_hand)
+            else if(left_hand)
             {
-                copyVec3(right_hand ? right_hand_mat[3] : left_hand_mat[3], tether_start);
+                copyVec3(left_hand_mat[3], tether_start);
+                hand_origin = 1;
+            }
+            else if(right_hand)
+            {
+                copyVec3(right_hand_mat[3], tether_start);
                 hand_origin = 1;
             }
             else

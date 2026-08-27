@@ -36,6 +36,51 @@
     },
     {
       "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL_GRIP",
+      "frames": 60,
+      "fps": 30,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL_GRIP.anim",
+      "bytes": 9226,
+      "sha256": "4b2a75af74aadff49256d5ed10a9622f30f291109d69f1ca59902460312a109b",
+      "source": {
+        "fbx": "swinginganimations/Swinging.fbx",
+        "fbxSha256": "75377e4d61856f14d47a7d8f5f353a8a3e476dca6fbf9a4333abd08851d41d40",
+        "baseBlend": "agent/work/issue36-rest-basis-full-20260825/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL.blend",
+        "baseBlendSha256": "3b0141f9b7cdd9c2aa8563ba994cb3991ac6b1b89d554e252a15715a7aef2214",
+        "baseRuntimeAsset": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL",
+        "baseRuntimeSha256": "acc0fc2d0ce4f382ec1cbf6675dfb3f6f96747080ffe24f6cc1c53866dfec840",
+        "action": "Armature|mixamo.com|Layer0",
+        "sourceFingerMap": {
+          "F2_L": "mixamorig:LeftHandRing1",
+          "F1_L": "mixamorig:LeftHandRing2",
+          "T3_L": "mixamorig:LeftHandThumb1",
+          "T2_L": "mixamorig:LeftHandThumb2",
+          "T1_L": "mixamorig:LeftHandThumb3"
+        }
+      },
+      "build": {
+        "script": "agent/animation/build_issue36_rest_basis_grip.ps1",
+        "blenderScript": "agent/animation/create_issue36_rest_basis_grip.py",
+        "exporter": "agent/animation/blender_export_animx.py",
+        "compiler": "Utilities/GetAnimation2/bin/x86/Release/GetAnimation2.exe"
+      },
+      "modification": {
+        "bones": [
+          "F1_L",
+          "F2_L",
+          "T1_L",
+          "T2_L",
+          "T3_L"
+        ],
+        "authoredFrames": "16..30",
+        "closureProfile": "0,0.30,0.60,0.85,1,1,1,1,1,1,1,0.85,0.60,0.30,0",
+        "sourceReference": "left ring/thumb channels from Swinging.fbx, slerped in the accepted runtime-local channel space",
+        "rootTranslationPolicy": "fixed bind translations; zero pose-bone location; unit pose-bone scale",
+        "nonFingerChannels": "unchanged"
+      }
+    },
+    {
+      "type": "MALE",
       "logical": "COHSOURCEDEV_WEBSWING_SHOOT_V2",
       "frames": 26,
       "file": "male/COHSOURCEDEV_WEBSWING_SHOOT_V2.anim",
