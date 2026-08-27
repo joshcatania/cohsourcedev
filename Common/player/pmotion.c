@@ -1335,7 +1335,20 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
         #define WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED 3
         static int last_logged_mode = -1;
         int mode = g_cohsourcedev_webswing_anim_selection;
+        int continuous_assisted_attached;
+        int visual_lifecycle_can_own_full_body;
         if (mode < 0 || mode > 3) mode = WEBSWING_ANIM_MODE_SAFE_NONE;
+
+        // Sky-Assisted physics stays attached while the visible tether cycles
+        // through retract/gap/reach/catch. Keep those cosmetic events from
+        // replacing the physical swing pose, but retain the authored ground
+        // launch choreography.
+        continuous_assisted_attached =
+            mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED && is_male &&
+            e->motion->web_swing_active_backend &&
+            e->motion->web_swing_attached;
+        visual_lifecycle_can_own_full_body =
+            !continuous_assisted_attached || ground_launching;
 
         if (mode == WEBSWING_ANIM_MODE_MALE_FULL_CORRECTED && is_male)
         {
@@ -1431,14 +1444,17 @@ static void pmotionSetWebSwingAnimState(Entity *e, int server_web_swing)
                     seqSetState(e->seq->state, 1, variant_b_state_bit);
             }
 
-            if (is_male && (ground_launching || web_catching) && enter_state_bit >= 0)
+            if (is_male && visual_lifecycle_can_own_full_body &&
+                (ground_launching || web_catching) && enter_state_bit >= 0)
                 seqSetState(e->seq->state, 1, enter_state_bit);
 
-            if (is_male && (ground_launching || web_reaching || phase_airborne) &&
+            if (is_male && visual_lifecycle_can_own_full_body &&
+                (ground_launching || web_reaching || phase_airborne) &&
                 shoot_state_bit >= 0)
                 seqSetState(e->seq->state, 1, shoot_state_bit);
 
-            if (is_male && (web_catching || web_releasing || phase_airborne) &&
+            if (is_male && visual_lifecycle_can_own_full_body &&
+                (web_catching || web_releasing || phase_airborne) &&
                 retract_state_bit >= 0)
                 seqSetState(e->seq->state, 1, retract_state_bit);
 
