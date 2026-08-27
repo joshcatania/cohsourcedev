@@ -337,9 +337,9 @@ static void webSwingSmokeLoop(void)
             updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
 
             /* Let the held travel input reach the authoritative movement
-             * path before enabling Web Swing, so the ground catch auditions
-             * INPUT intent rather than the previous idle/facing fallback. */
-            if (stage_frames == 40)
+             * path before enabling Web Swing, without allowing this ground
+             * activation scenario to run off its known street point first. */
+            if (stage_frames == 2)
                 commAddInput("webswing 1");
 
             if (player->motion->web_swing_attached && !ground_previous_attached)

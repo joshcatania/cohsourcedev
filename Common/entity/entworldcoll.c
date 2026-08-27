@@ -77,15 +77,17 @@
 #define WEB_ASSIST_LAUNCH_UP_SPEED            3.20f
 #define WEB_ASSIST_LAUNCH_FORWARD_SPEED       2.20f
 #define WEB_ASSIST_LAUNCH_ACCEL               0.60f
-#define WEB_ASSIST_ASCEND_GRAVITY_ASSIST      0.012f
-#define WEB_ASSIST_ASCEND_ENERGY_ASSIST       0.006f
+#define WEB_ASSIST_ASCEND_GRAVITY_ASSIST       0.012f
+#define WEB_ASSIST_ASCEND_ENERGY_ASSIST        0.006f
+#define WEB_ASSIST_ASCEND_BUILD_ACCEL          0.240f
+#define WEB_ASSIST_ASCEND_BUILD_TICKS             24
 #define WEB_ASSIST_APEX_DOWN_ACCEL            0.020f
 #define WEB_ASSIST_DESCEND_DOWN_ACCEL         0.040f
 #define WEB_ASSIST_DESCEND_ENERGY_ACCEL       0.008f
-#define WEB_ASSIST_BOTTOM_UP_ACCEL             0.60f
-#define WEB_ASSIST_BOTTOM_ENERGY_ACCEL         0.12f
-#define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        3.10f
-#define WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED    0.70f
+#define WEB_ASSIST_BOTTOM_BASE_UP_ACCEL        0.36f
+#define WEB_ASSIST_BOTTOM_MAX_UP_ACCEL         0.90f
+#define WEB_ASSIST_BOTTOM_EXIT_UP_SPEED        0.70f
+#define WEB_ASSIST_BOTTOM_SURFACE_EXIT_UP_SPEED 0.05f
 #define WEB_ASSIST_BOTTOM_MIN_TICKS            3
 #define WEB_ASSIST_ALTITUDE_ARC_DEPTH          36.0f
 #define WEB_ASSIST_ALTITUDE_TRANSITION_PADDING 2.0f
@@ -107,8 +109,6 @@
 #define WEB_ASSIST_VISUAL_TETHER_EXTEND_RATE    0.25f
 #define WEB_ASSIST_ANIM_CATCH_TICKS             12
 #define WEB_ASSIST_ANIM_RELEASE_TICKS           18
-#define WEB_ASSIST_GROUND_WEB_READY_PROGRESS    0.999f
-#define WEB_ASSIST_GROUND_PREFIRE_MAX_TICKS     90
 #define WEB_ASSIST_HORIZONTAL_MIN_SPEED        1.65f
 #define WEB_ASSIST_ASCEND_SPEED                2.50f
 #define WEB_ASSIST_APEX_SPEED                  2.00f
@@ -177,6 +177,48 @@ static const char *webSwingAssistPhaseName(WebSwingAssistPhase phase)
         case WEB_SWING_ASSIST_BOTTOM:  return "BOTTOM";
         default:                       return "NONE";
     }
+}
+
+static void webSwingLogReleaseState(Entity *e, const char *stage)
+{
+    MotionState *motion = e->motion;
+    F32 horizontal_speed = sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2]));
+    F32 pre_horizontal_speed = sqrt(SQR(motion->web_swing_release_pre_velocity[0]) +
+                                    SQR(motion->web_swing_release_pre_velocity[2]));
+
+    filelog_printf("webswing.log",
+                   "WEB_SWING %s release_state stage=%s tick=%u pos=(%.3f %.3f %.3f) velocity=(%.6f %.6f %.6f) horizontal_speed=%.6f total_speed=%.6f horizontal_retention=%.6f falling=%d on_surf=%d was_on_surf=%d jumping=%d jump_held=%d jump_still_held=%d last_surf_type=%d last_surf_flags=%d last_ground_surf_flags=%d surf_normal=(%.3f %.3f %.3f) last_surf_normal=(%.3f %.3f %.3f)\n",
+                   WEB_SWING_LOG_SIDE,
+                   stage,
+                   motion->tickCounter,
+                   vecParamsXYZ(ENTPOS(e)),
+                   vecParamsXYZ(motion->vel),
+                   horizontal_speed,
+                   lengthVec3(motion->vel),
+                   pre_horizontal_speed > 0.0001f ? horizontal_speed / pre_horizontal_speed : 1.0f,
+                   motion->falling,
+                   motion->on_surf,
+                   motion->was_on_surf,
+                   motion->jumping,
+                   motion->jump_held,
+                   motion->jump_still_held,
+                   motion->last_surf_type,
+                   motion->lastSurfFlags,
+                   motion->lastGroundSurfFlags,
+                   vecParamsXYZ(motion->surf_normal),
+                   vecParamsXYZ(motion->last_surf_normal));
+}
+
+void entWorldWebSwingLogReleasePostWorld(Entity *e)
+{
+    MotionState *motion = e->motion;
+
+    if(motion->web_swing_release_diag_stage != 1 ||
+       motion->web_swing_release_diag_tick != motion->tickCounter)
+        return;
+
+    webSwingLogReleaseState(e, "RELEASE_POST_WORLD");
+    motion->web_swing_release_diag_stage = 2;
 }
 
 static const char *webSwingAnchorContextName(WebSwingAnchorContext context)
@@ -968,7 +1010,6 @@ static void webSwingUpdateAssistedVisualTether(Entity *e, const Vec3 travel_inte
     F32 shoot_windup_time = motion->web_swing_assist_cycle_id > 1 ?
         WEB_ASSIST_VISUAL_TETHER_REPEAT_WINDUP_TIME :
         WEB_ASSIST_VISUAL_TETHER_SHOOT_WINDUP_TIME;
-
     switch((WebSwingVisualTetherState)motion->web_swing_visual_tether_state)
     {
         case WEB_SWING_VISUAL_TETHER_RETRACTING:
@@ -1198,76 +1239,65 @@ static void webSwingApplyAssistedController(Entity *e)
     motion->web_swing_assist_altitude_margin =
         ENTPOSY(e) - motion->web_swing_assist_low_point_y;
 
-    // A street activation first plays the planted aim and visibly completes
-    // the wrist shot. Only then does the existing one-shot up/forward boost
-    // begin the pull. This keeps the web causally ahead of lift-off without
-    // changing the accepted airborne controller or stacking impulses.
+    // Physics starts with the activation while the authored wrist shot and
+    // visible tether extension continue concurrently.  LAUNCH still owns one
+    // boost only; presentation readiness is not a movement gate.
     if(phase == WEB_SWING_ASSIST_LAUNCH)
     {
-        int web_ready =
-            motion->web_swing_visual_tether_state == WEB_SWING_VISUAL_TETHER_ATTACHED &&
-            motion->web_swing_visual_tether_progress >= WEB_ASSIST_GROUND_WEB_READY_PROGRESS;
-        int prefire_timeout =
-            motion->web_swing_assist_phase_ticks >= WEB_ASSIST_GROUND_PREFIRE_MAX_TICKS;
-
-        if(!web_ready && !prefire_timeout)
-        {
-            motion->vel[1] = 0.0f;
-            if(motion->web_swing_assist_phase_ticks == 1)
-            {
-                filelog_printf("webswing.log",
-                               "WEB_SWING %s ground_launch_prefire cycle_id=%u segment_id=%u web_progress=%.3f web_state=%u hold_for_web=1\n",
-                               WEB_SWING_LOG_SIDE,
-                               motion->web_swing_assist_cycle_id,
-                               motion->web_swing_anim_segment_id,
-                               motion->web_swing_visual_tether_progress,
-                               motion->web_swing_visual_tether_state);
-            }
-            return;
-        }
-        else
-        {
-            F32 forward_component = motion->vel[0] * travel_intent[0] +
-                                    motion->vel[2] * travel_intent[2];
-            F32 forward_delta = MAX(0.0f, WEB_ASSIST_LAUNCH_FORWARD_SPEED - forward_component);
-            motion->vel[1] = MAX(motion->vel[1], WEB_ASSIST_LAUNCH_UP_SPEED);
-            motion->vel[0] += travel_intent[0] * forward_delta;
-            motion->vel[2] += travel_intent[2] * forward_delta;
-            filelog_printf("webswing.log",
-                           "WEB_SWING %s ground_boost cycle_id=%u up_speed=%.3f forward_speed=%.3f velocity=(%.3f %.3f %.3f) web_progress=%.3f web_state=%u web_fired_before_boost=%d prefire_ticks=%u fallback=%d one_shot=1\n",
-                           WEB_SWING_LOG_SIDE,
-                           motion->web_swing_assist_cycle_id,
-                           motion->vel[1],
-                           sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
-                           vecParamsXYZ(motion->vel),
-                           motion->web_swing_visual_tether_progress,
-                           motion->web_swing_visual_tether_state,
-                           web_ready,
-                           motion->web_swing_assist_phase_ticks,
-                           prefire_timeout && !web_ready);
-            webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND,
-                                     web_ready ? "WEB_ATTACHED_PULL" : "PREFIRE_TIMEOUT");
-            phase = WEB_SWING_ASSIST_ASCEND;
-        }
+        F32 forward_component = motion->vel[0] * travel_intent[0] +
+                                motion->vel[2] * travel_intent[2];
+        F32 forward_delta = MAX(0.0f, WEB_ASSIST_LAUNCH_FORWARD_SPEED - forward_component);
+        motion->vel[1] = MAX(motion->vel[1], WEB_ASSIST_LAUNCH_UP_SPEED);
+        motion->vel[0] += travel_intent[0] * forward_delta;
+        motion->vel[2] += travel_intent[2] * forward_delta;
+        filelog_printf("webswing.log",
+                       "WEB_SWING %s ground_boost tick=%u cycle_id=%u activation_latency_ticks=0 up_speed=%.3f forward_speed=%.3f velocity=(%.3f %.3f %.3f) web_progress=%.3f web_state=%u presentation_independent=1 one_shot=1\n",
+                       WEB_SWING_LOG_SIDE,
+                       motion->tickCounter,
+                       motion->web_swing_assist_cycle_id,
+                       motion->vel[1],
+                       sqrt(SQR(motion->vel[0]) + SQR(motion->vel[2])),
+                       vecParamsXYZ(motion->vel),
+                       motion->web_swing_visual_tether_progress,
+                       motion->web_swing_visual_tether_state);
+        webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "IMMEDIATE_PHYSICS");
+        phase = WEB_SWING_ASSIST_ASCEND;
     }
     webSwingApplyAssistedHorizontal(e, travel_intent, phase);
 
     switch(phase)
     {
         case WEB_SWING_ASSIST_LAUNCH:
-            // LAUNCH always resolves to ASCEND above, after the web is ready.
+            // LAUNCH always resolves to ASCEND above on its first update.
             break;
 
         case WEB_SWING_ASSIST_ASCEND:
+        {
+            F32 early_ascend_fraction = 0.0f;
+            int early_ascend_building = 0;
+
+            // BOTTOM now owns only the zero crossing.  A short, tapering
+            // early-ASCEND assist builds the next arc progressively, then
+            // expires so ordinary gravity always produces an apex.
+            if(motion->web_swing_assist_cycle_id > 1 &&
+               motion->web_swing_assist_phase_ticks < WEB_ASSIST_ASCEND_BUILD_TICKS)
+            {
+                early_ascend_building = 1;
+                early_ascend_fraction = 1.0f -
+                    (F32)motion->web_swing_assist_phase_ticks /
+                    (F32)WEB_ASSIST_ASCEND_BUILD_TICKS;
+            }
             motion->vel[1] += (WEB_ASSIST_ASCEND_GRAVITY_ASSIST +
-                               motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_ASSIST) *
+                               motion->web_swing_assist_energy * WEB_ASSIST_ASCEND_ENERGY_ASSIST +
+                               early_ascend_fraction * WEB_ASSIST_ASCEND_BUILD_ACCEL) *
                               e->timestep;
-            if(motion->vel[1] <= 0.20f)
+            if(!early_ascend_building && motion->vel[1] <= 0.20f)
             {
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_APEX, "VERTICAL_TURNOVER");
                 webSwingAssistedReleaseVisualTether(e);
             }
             break;
+        }
 
         case WEB_SWING_ASSIST_APEX:
             motion->vel[1] -= WEB_ASSIST_APEX_DOWN_ACCEL * e->timestep;
@@ -1315,30 +1345,52 @@ static void webSwingApplyAssistedController(Entity *e)
             break;
 
         case WEB_SWING_ASSIST_BOTTOM:
-            motion->vel[1] += (WEB_ASSIST_BOTTOM_UP_ACCEL +
-                               motion->web_swing_assist_energy * WEB_ASSIST_BOTTOM_ENERGY_ACCEL) *
-                              e->timestep;
-            phase_vertical_target = WEB_ASSIST_BOTTOM_EXIT_UP_SPEED +
-                                    motion->web_swing_assist_energy *
-                                    WEB_ASSIST_BOTTOM_EXIT_ENERGY_SPEED;
+        {
+            F32 bottom_up_accel = WEB_ASSIST_BOTTOM_BASE_UP_ACCEL;
+            F32 altitude_available = MAX(0.5f,
+                ENTPOSY(e) - motion->web_swing_assist_low_point_y -
+                WEB_ASSIST_ALTITUDE_TRANSITION_PADDING);
+            F32 available_clearance = altitude_available;
+            F32 required_stop_accel;
+
+            downward_speed = MAX(0.0f, -motion->vel[1]);
+            // A real nearby surface remains the hard floor.  A max-range probe
+            // means no ground was found, so the authored altitude band can own
+            // the gentler reversal instead of manufacturing a false emergency.
+            if(clearance >= 0.0f && clearance < WEB_ASSIST_GROUND_PROBE_DISTANCE)
+            {
+                available_clearance = MIN(available_clearance,
+                    MAX(0.5f, clearance - WEB_ASSIST_GROUND_TARGET_CLEARANCE));
+            }
+            required_stop_accel = downward_speed * downward_speed /
+                                  (2.0f * available_clearance);
+            bottom_up_accel = MIN(WEB_ASSIST_BOTTOM_MAX_UP_ACCEL,
+                                  MAX(bottom_up_accel, required_stop_accel));
+            motion->vel[1] += bottom_up_accel * e->timestep;
+            phase_vertical_target = (motion->on_surf || motion->was_on_surf) &&
+                                    fabs(motion->last_surf_normal[1]) >= 0.70f ?
+                                    WEB_ASSIST_BOTTOM_SURFACE_EXIT_UP_SPEED :
+                                    WEB_ASSIST_BOTTOM_EXIT_UP_SPEED;
             if(motion->web_swing_assist_phase_ticks >= WEB_ASSIST_BOTTOM_MIN_TICKS &&
                motion->vel[1] >= phase_vertical_target)
             {
                 ++motion->web_swing_assist_cycle_id;
                 ++motion->web_swing_anim_segment_id;
                 filelog_printf("webswing.log",
-                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
+                               "WEB_SWING %s assisted_cycle cycle_id=%u segment_id=%u energy=%.3f vertical_target=%.3f bottom_accel=%.3f clearance=%.3f pos=(%.2f %.2f %.2f) velocity=(%.3f %.3f %.3f) preserve_horizontal=1\n",
                                WEB_SWING_LOG_SIDE,
                                motion->web_swing_assist_cycle_id,
                                motion->web_swing_anim_segment_id,
                                motion->web_swing_assist_energy,
                                phase_vertical_target,
+                               bottom_up_accel,
                                clearance,
                                vecParamsXYZ(ENTPOS(e)),
                                vecParamsXYZ(motion->vel));
                 webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_ASCEND, "BOTTOM_SWEEP_COMPLETE");
             }
             break;
+        }
 
         default:
             webSwingAssistedSetPhase(e, WEB_SWING_ASSIST_APEX, "INVALID_PHASE_RECOVERY");
@@ -1391,10 +1443,21 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
     int selected_backend = motion->input.web_swing_backend ?
         WEB_SWING_BACKEND_SKY_ASSISTED : WEB_SWING_BACKEND_REAL_ANCHOR;
 
+    if(motion->web_swing_release_diag_stage == 2 &&
+       motion->web_swing_release_diag_tick != motion->tickCounter)
+    {
+        webSwingLogReleaseState(e, "RELEASE_NEXT_TICK");
+        motion->web_swing_release_diag_stage = 0;
+    }
+
     if(!held)
     {
         if(motion->web_swing_attached)
         {
+            copyVec3(motion->vel, motion->web_swing_release_pre_velocity);
+            motion->web_swing_release_diag_tick = motion->tickCounter;
+            motion->web_swing_release_diag_stage = 1;
+            webSwingLogReleaseState(e, "RELEASE_PRE");
             motion->web_swing_anim_release_ticks = WEB_ASSIST_ANIM_RELEASE_TICKS;
             ++motion->web_swing_anim_segment_id;
             printf("WEB_SWING %s detach speed=%.3f backend=%s anchor=(%.2f %.2f %.2f) pos=(%.2f %.2f %.2f) input=(%.2f %.2f %.2f)\n",
@@ -1473,6 +1536,21 @@ void entWorldWebSwingUpdateAttachment(Entity *e, int web_swing_test_no_attach)
         zeroVec3(motion->web_swing_next_anchor);
         motion->web_swing_log_tick = 0;
         webSwingResetConstraintMetrics(motion);
+        if(motion->web_swing_release_diag_stage == 1)
+        {
+            if(motion->web_swing_active_backend == WEB_SWING_BACKEND_SKY_ASSISTED)
+            {
+                // The assisted controller was airborne even if a recent floor
+                // probe left contact flags set.  Do not let that stale surface
+                // classification apply ground friction to the earned release
+                // vector on the handoff frame.
+                motion->on_surf = 0;
+                motion->was_on_surf = 0;
+                motion->falling = 1;
+                motion->jumping = 0;
+            }
+            webSwingLogReleaseState(e, "RELEASE_POST_DETACH");
+        }
         return;
     }
 

@@ -1852,6 +1852,7 @@ static void entWalk(Entity* e, const Mat3 control_mat, int web_swing_test_no_att
     #endif
 
     DoPhysics(e, control_mat);
+    entWorldWebSwingLogReleasePostWorld(e);
 
     //if(0){
     //    static F32 last_fall;
