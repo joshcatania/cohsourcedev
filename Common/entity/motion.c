@@ -1970,7 +1970,8 @@ void entMotion(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach)
     EntType entType = ENTTYPE(e);
     int move_type = e->move_type;
 
-    moving = motion->falling || !velIsZero(motion->vel) || !velIsZero(motion->input.vel);
+    moving = motion->falling || !velIsZero(motion->vel) || !velIsZero(motion->input.vel) ||
+             motion->web_crawl_attached;
 
     motion->tickCounter++; //how many times entMotion has been run.
 

@@ -106,6 +106,7 @@ typedef struct MotionStateInput {
     U32                    jump_released    : 1;
     U32                    web_swing_enabled: 1;
     U32                    web_swing_backend: 1;
+    U32                    web_crawl_enabled: 1;
 } MotionStateInput;
 
 typedef struct MotionState
@@ -146,6 +147,11 @@ typedef struct MotionState
     Vec3                prev_surf_normal;
     S32                    low_traction_steps_remaining;    // # of phys steps to force low traction.
     F32                    hitStumbleTractionLoss;
+
+    U32                    web_crawl_attached : 1;
+    U32                    web_crawl_last_contact_tick;
+    U32                    web_crawl_detach_cooldown_ticks;
+    Vec3                   web_crawl_wall_normal;
 
     U32                    web_swing_attached : 1;
     U32                    web_swing_attach_catch_pending : 1;

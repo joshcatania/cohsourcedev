@@ -1177,6 +1177,32 @@ void setWebSwingTestNoAttach(Entity *e, int enabled)
     }
 }
 
+void setWebCrawl(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+    int enabled_bit = enabled ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_crawl != enabled_bit)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_crawl = enabled_bit;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_crawl = enabled_bit;
+            }
+
+            printf("WEB_CRAWL SERVER enabled=%d\n", enabled_bit);
+            filelog_printf("webcrawl.log", "WEB_CRAWL SERVER enabled=%d\n", enabled_bit);
+        }
+    }
+}
+
 
 void setSpecialMovement(Entity *e, int attrib, int on)
 {

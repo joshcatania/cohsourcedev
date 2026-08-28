@@ -138,6 +138,24 @@
 #define WEB_SWING_LOG_SIDE "CLIENT"
 #endif
 
+// Prototype vertical wall crawl canary. Keep this block isolated from the
+// established Web Swing controller constants and functions.
+#define WEB_CRAWL_MAX_NORMAL_Y                 0.30f
+#define WEB_CRAWL_ATTACH_INPUT_MIN             0.20f
+#define WEB_CRAWL_SPEED                        1.00f
+#define WEB_CRAWL_ADHESION_SPEED               0.12f
+#define WEB_CRAWL_JUMP_OUT_SPEED               1.10f
+#define WEB_CRAWL_REATTACH_COOLDOWN_TICKS      10
+#define WEB_CRAWL_CONTACT_GRACE_TICKS           2
+#define WEB_CRAWL_SAME_WALL_DOT                 0.90f
+#define WEB_CRAWL_GROUND_NORMAL_Y               0.70f
+
+#if SERVER
+#define WEB_CRAWL_LOG_SIDE "SERVER"
+#else
+#define WEB_CRAWL_LOG_SIDE "CLIENT"
+#endif
+
 int coll_is_player; //Unused
 int landed_on_ground; //Anytime in the last DoPhysics did you hit the ground? (if so, do done fall)
 
@@ -2464,6 +2482,295 @@ void entWorldWebSwingApplyConstraint(Entity *e)
     }
 }
 
+static int webCrawlNormalizeVerticalNormal(const Vec3 source, Vec3 normalized)
+{
+    copyVec3(source, normalized);
+
+    if(normalVec3(normalized) < 0.001f)
+        return 0;
+
+    if(fabs(normalized[1]) > WEB_CRAWL_MAX_NORMAL_Y)
+        return 0;
+
+    return validateVec3(normalized);
+}
+
+static void webCrawlRecordWallContact(
+    Entity *e,
+    const Vec3 collision_normal,
+    const Vec3 collision_point,
+    const Vec3 attempted_position)
+{
+    MotionState *motion = e->motion;
+    Vec3 normal;
+    Vec3 to_player;
+    int new_contact_episode;
+
+    if(!motion->input.web_crawl_enabled && !motion->web_crawl_attached)
+        return;
+
+    if(!webCrawlNormalizeVerticalNormal(collision_normal, normal))
+        return;
+
+    subVec3(attempted_position, collision_point, to_player);
+    to_player[1] = 0.0f;
+
+    if(normalVec3(to_player) > 0.001f &&
+       dotVec3(normal, to_player) < 0.0f)
+    {
+        scaleVec3(normal, -1.0f, normal);
+    }
+
+    /* Flat-wall canary only; do not silently turn corners into traversal. */
+    if(motion->web_crawl_attached &&
+       dotVec3(normal, motion->web_crawl_wall_normal) < WEB_CRAWL_SAME_WALL_DOT)
+    {
+        return;
+    }
+
+    new_contact_episode =
+        motion->web_crawl_last_contact_tick == 0 ||
+        motion->tickCounter < motion->web_crawl_last_contact_tick ||
+        motion->tickCounter - motion->web_crawl_last_contact_tick >
+            WEB_CRAWL_CONTACT_GRACE_TICKS;
+
+    copyVec3(normal, motion->web_crawl_wall_normal);
+    motion->web_crawl_last_contact_tick = motion->tickCounter;
+
+    if(new_contact_episode)
+    {
+        filelog_printf(
+            "webcrawl.log",
+            "WEB_CRAWL %s contact tick=%u normal=(%.3f %.3f %.3f) hit=(%.3f %.3f %.3f) attempted=(%.3f %.3f %.3f)\n",
+            WEB_CRAWL_LOG_SIDE,
+            motion->tickCounter,
+            vecParamsXYZ(normal),
+            vecParamsXYZ(collision_point),
+            vecParamsXYZ(attempted_position));
+    }
+}
+
+static int webCrawlHasRecentContact(const MotionState *motion)
+{
+    if(!motion->web_crawl_last_contact_tick)
+        return 0;
+
+    if(motion->tickCounter < motion->web_crawl_last_contact_tick)
+        return 0;
+
+    if(motion->tickCounter - motion->web_crawl_last_contact_tick >
+       WEB_CRAWL_CONTACT_GRACE_TICKS)
+    {
+        return 0;
+    }
+
+    return fabs(motion->web_crawl_wall_normal[1]) <= WEB_CRAWL_MAX_NORMAL_Y &&
+           lengthVec3Squared(motion->web_crawl_wall_normal) > 0.5f;
+}
+
+static int webCrawlBuildBasis(
+    const Vec3 wall_normal,
+    Vec3 wall_up,
+    Vec3 wall_right)
+{
+    Vec3 world_up = {0.0f, 1.0f, 0.0f};
+    Vec3 projected;
+
+    scaleVec3(wall_normal, dotVec3(world_up, wall_normal), projected);
+    subVec3(world_up, projected, wall_up);
+
+    if(normalVec3(wall_up) < 0.001f)
+        return 0;
+
+    /* N x UP is character-right for the player facing -N. */
+    crossVec3(wall_normal, wall_up, wall_right);
+
+    if(normalVec3(wall_right) < 0.001f)
+        return 0;
+
+    return 1;
+}
+
+static void webCrawlDetach(Entity *e, const char *reason, U32 cooldown_ticks)
+{
+    MotionState *motion = e->motion;
+
+    if(motion->web_crawl_attached)
+    {
+        filelog_printf(
+            "webcrawl.log",
+            "WEB_CRAWL %s detach reason=%s tick=%u pos=(%.3f %.3f %.3f) velocity=(%.3f %.3f %.3f) normal=(%.3f %.3f %.3f)\n",
+            WEB_CRAWL_LOG_SIDE,
+            reason,
+            motion->tickCounter,
+            vecParamsXYZ(ENTPOS(e)),
+            vecParamsXYZ(motion->vel),
+            vecParamsXYZ(motion->web_crawl_wall_normal));
+    }
+
+    motion->web_crawl_attached = 0;
+
+    if(cooldown_ticks > motion->web_crawl_detach_cooldown_ticks)
+        motion->web_crawl_detach_cooldown_ticks = cooldown_ticks;
+}
+
+static int webCrawlApplyController(Entity *e)
+{
+    MotionState *motion = e->motion;
+    Vec3 input;
+    Vec3 input_dir;
+    Vec3 wall_up;
+    Vec3 wall_right;
+    Vec3 desired;
+    Vec3 temp;
+    Vec3 adhesion;
+    F32 input_mag;
+    F32 input_scale;
+    F32 climb_input;
+    F32 side_input;
+    F32 desired_mag;
+    int recent_contact;
+
+    if(motion->web_crawl_detach_cooldown_ticks)
+        --motion->web_crawl_detach_cooldown_ticks;
+
+    /* Disable means completely return control to stock physics. */
+    if(!motion->input.web_crawl_enabled)
+    {
+        if(motion->web_crawl_attached)
+            webCrawlDetach(e, "DISABLED", 0);
+
+        motion->web_crawl_last_contact_tick = 0;
+
+        if(!motion->web_crawl_attached)
+            zeroVec3(motion->web_crawl_wall_normal);
+
+        return 0;
+    }
+
+    /* Web Swing wins traversal ownership. */
+    if(motion->web_swing_attached)
+    {
+        if(motion->web_crawl_attached)
+        {
+            webCrawlDetach(
+                e,
+                "WEB_SWING",
+                WEB_CRAWL_REATTACH_COOLDOWN_TICKS);
+        }
+
+        return 0;
+    }
+
+    recent_contact = webCrawlHasRecentContact(motion);
+
+    /* Jump is an explicit outward detach; normal jump handling remains stock. */
+    if(motion->web_crawl_attached && motion->input.vel[1] > 0.001f)
+    {
+        Vec3 normal;
+
+        copyVec3(motion->web_crawl_wall_normal, normal);
+        webCrawlDetach(
+            e,
+            "JUMP",
+            WEB_CRAWL_REATTACH_COOLDOWN_TICKS);
+
+        motion->on_surf = 0;
+        motion->was_on_surf = 0;
+        motion->falling = 1;
+        motion->vel[0] = normal[0] * WEB_CRAWL_JUMP_OUT_SPEED;
+        motion->vel[2] = normal[2] * WEB_CRAWL_JUMP_OUT_SPEED;
+
+        return 0;
+    }
+
+    if(motion->web_crawl_attached && !recent_contact)
+    {
+        webCrawlDetach(e, "CONTACT_LOST", 0);
+        return 0;
+    }
+
+    /* Horizontal user command only; vertical input remains jump/detach. */
+    copyVec3(motion->input.vel, input);
+    input[1] = 0.0f;
+
+    input_mag = lengthVec3(input);
+    input_scale = MIN(input_mag, 1.0f);
+
+    if(input_mag > 0.001f)
+    {
+        scaleVec3(input, 1.0f / input_mag, input_dir);
+    }
+    else
+    {
+        zeroVec3(input_dir);
+    }
+
+    /* Initial acquisition requires native wall contact and input into it. */
+    if(!motion->web_crawl_attached)
+    {
+        F32 into_wall;
+
+        if(motion->web_crawl_detach_cooldown_ticks ||
+           !recent_contact ||
+           motion->input.vel[1] > 0.001f ||
+           input_mag <= 0.001f)
+        {
+            return 0;
+        }
+
+        into_wall = -dotVec3(input_dir, motion->web_crawl_wall_normal) * input_scale;
+        if(into_wall < WEB_CRAWL_ATTACH_INPUT_MIN)
+            return 0;
+
+        motion->web_crawl_attached = 1;
+        filelog_printf(
+            "webcrawl.log",
+            "WEB_CRAWL %s attach tick=%u pos=(%.3f %.3f %.3f) normal=(%.3f %.3f %.3f) into=%.3f\n",
+            WEB_CRAWL_LOG_SIDE,
+            motion->tickCounter,
+            vecParamsXYZ(ENTPOS(e)),
+            vecParamsXYZ(motion->web_crawl_wall_normal),
+            into_wall);
+    }
+
+    if(!webCrawlBuildBasis(motion->web_crawl_wall_normal, wall_up, wall_right))
+    {
+        webCrawlDetach(e, "INVALID_BASIS", 0);
+        return 0;
+    }
+
+    /* W into wall -> +wall_up; S away -> -wall_up; A/D -> wall_right. */
+    climb_input = -dotVec3(input_dir, motion->web_crawl_wall_normal) * input_scale;
+    side_input = dotVec3(input_dir, wall_right) * input_scale;
+
+    /* Ground exit uses actual ground state, not last_surf_type. */
+    if(!motion->falling && motion->surf_normal[1] > WEB_CRAWL_GROUND_NORMAL_Y &&
+       climb_input <= 0.05f)
+    {
+        webCrawlDetach(e, "GROUND", 0);
+        return 0;
+    }
+
+    zeroVec3(desired);
+    scaleVec3(wall_up, climb_input, temp);
+    addVec3(desired, temp, desired);
+    scaleVec3(wall_right, side_input, temp);
+    addVec3(desired, temp, desired);
+
+    desired_mag = lengthVec3(desired);
+    if(desired_mag > 1.0f)
+        scaleVec3(desired, 1.0f / desired_mag, desired);
+
+    scaleVec3(desired, WEB_CRAWL_SPEED, motion->vel);
+
+    /* Inward bias lets the native SlideWall solver retain contact. */
+    scaleVec3(motion->web_crawl_wall_normal, -WEB_CRAWL_ADHESION_SPEED, adhesion);
+    addVec3(motion->vel, adhesion, motion->vel);
+
+    return 1;
+}
+
 F32 HeightAtLoc(const Vec3 vec, F32 radius, F32 dist)
 {
     CollInfo coll;
@@ -2548,6 +2855,7 @@ static int SlideWall(Entity *e,Vec3 top,Vec3 bot,Vec3 pos)
         {
             last_surf = coll;
             e->motion->last_surf_type = SURFTYPE_WALL;
+            webCrawlRecordWallContact(e, coll.mat[1], coll.mat[3], bot);
         }
         subVec3(coll.mat[3],bot,dv);
         dv[1] = 0;
@@ -3075,10 +3383,13 @@ void entWorldCollide(Entity* e, const Mat3 control_mat)
     F32                max_speed;
     F32                friction_scale;
     F32                traction_scale;
+    int                web_crawl_owns_velocity;
 
     PERFINFO_AUTO_START("entWorldCollideTop", 1);
 
     copyVec3(motion->surf_normal, last_slope);
+
+    web_crawl_owns_velocity = webCrawlApplyController(e);
 
     entWorldGetSurface(e, &surf);
     surf_mod = entWorldGetSurfaceModifier(e);
@@ -3153,7 +3464,11 @@ void entWorldCollide(Entity* e, const Mat3 control_mat)
         gravity_vec[1] = -gravity * e->timestep;
     }
     PERFINFO_AUTO_STOP();
-    if(motion->on_surf)
+    if(web_crawl_owns_velocity)
+    {
+        /* Crawl owns motion->vel for this tick; skip stock gravity/friction. */
+    }
+    else if(motion->on_surf)
     {
         Vec3    dv;
         Vec3    inp_vel = {0,0,0};
@@ -3621,7 +3936,7 @@ void entWorldCollide(Entity* e, const Mat3 control_mat)
     }
     #endif
 
-    if(motion->jumping)
+    if(motion->jumping && !web_crawl_owns_velocity)
     {
         motion->vel[1] = motion->input.vel[1];
     }

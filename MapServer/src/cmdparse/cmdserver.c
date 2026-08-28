@@ -1123,6 +1123,8 @@ Cmd server_cmds[] =
                             "Select Web Swing physics: 0 REAL_ANCHOR, 1 SKY_ASSISTED" },
     { 9, "webswing_test_no_attach", SCMD_WEBSWING_TEST_NO_ATTACH, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
                             "TEST ONLY: keep Web Swing launch jump but suppress anchor acquisition" },
+    { 0, "webcrawl",        SCMD_WEBCRAWL, {{ CMDINT(tmp_int) }}, CMDF_HIDEVARS,
+                            "Enable or disable prototype vertical wall crawling" },
     { 9, "missionx",        SCMD_MISSIONX, {{0}}, CMDF_HIDEVARS,
                             "Assign yourself a random mission of a compatible status level. (Level 1-5 == Status Level 1, 6-10 == 2, etc)" },
     { 9, "missionxmap",        SCMD_MISSIONXMAP, {{0}}, CMDF_HIDEVARS,
@@ -5888,6 +5890,11 @@ static void serverExecCmd(Cmd *cmd, ClientLink *client, char *source_str, Entity
             if(e)
             {
                 setWebSwingTestNoAttach(e, tmp_int);
+            }
+        xcase SCMD_WEBCRAWL:
+            if(e)
+            {
+                setWebCrawl(e, tmp_int);
             }
         xcase SCMD_MISSIONX:
         {

@@ -1598,6 +1598,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     motion->input.stunned            = controls->server_state->stun;
     motion->input.web_swing_enabled  = controls->server_state->web_swing;
     motion->input.web_swing_backend  = controls->server_state->web_swing_backend;
+    motion->input.web_crawl_enabled  = controls->server_state->web_crawl;
 
     if (e == controlledPlayerPtr() && g_cohsourcedev_webswing_physics_selection >= 0 &&
         controls->server_state->web_swing_backend != g_cohsourcedev_webswing_physics_selection &&
@@ -2379,6 +2380,7 @@ static void playerReceiveServerControlState(Packet *pak)
         server_state.web_swing =                 pktGetBits(pak, 1);
         server_state.web_swing_backend =         pktGetBits(pak, 1);
         server_state.web_swing_test_no_attach =  pktGetBits(pak, 1);
+        server_state.web_crawl =                 pktGetBits(pak, 1);
 
         if(!oo_packet)
         {
@@ -2431,8 +2433,10 @@ static void playerReceiveServerControlState(Packet *pak)
             scs->web_swing =                     server_state.web_swing;
             scs->web_swing_backend =             server_state.web_swing_backend;
             scs->web_swing_test_no_attach =     server_state.web_swing_test_no_attach;
+            scs->web_crawl =                     server_state.web_crawl;
             motion->input.web_swing_enabled =    server_state.web_swing;
             motion->input.web_swing_backend =    server_state.web_swing_backend;
+            motion->input.web_crawl_enabled =    server_state.web_crawl;
 
             if(motion->input.flying != scs->fly)
             {

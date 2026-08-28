@@ -136,6 +136,7 @@ typedef struct ServerControlState
     // TestClient-only diagnostic state. This is synchronized with the
     // client prediction path and is never set by the player-facing command.
     U32                                web_swing_test_no_attach : 1;
+    U32                                web_crawl                : 1;
 } ServerControlState;
 
 
