@@ -1,0 +1,539 @@
+{
+  "passed": true,
+  "asset": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM",
+  "runtimeAnimation": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM",
+  "baseAnimation": "MALE/SKEL_READY2",
+  "runtimeBoneCount": 68,
+  "runtimeLength": 5,
+  "runtimeMaxSampleFrame": 60,
+  "sourceFrameRange": [
+    18,
+    22
+  ],
+  "authoredFrameMap": [
+    {
+      "authoredFrame": 1,
+      "sourceFrame": 18
+    },
+    {
+      "authoredFrame": 2,
+      "sourceFrame": 19
+    },
+    {
+      "authoredFrame": 3,
+      "sourceFrame": 20
+    },
+    {
+      "authoredFrame": 4,
+      "sourceFrame": 21
+    },
+    {
+      "authoredFrame": 5,
+      "sourceFrame": 22
+    }
+  ],
+  "authoredRuntimeFrames": [
+    1,
+    2,
+    3,
+    4,
+    5
+  ],
+  "missingRuntimeBones": [],
+  "unexpectedRuntimeBones": [],
+  "hierarchyMismatches": [],
+  "failedChecks": [],
+  "angleToleranceDegrees": 0.1,
+  "positionTolerance": 6e-05,
+  "maxBindTranslationError": 0.0,
+  "maxAuthoredTranslationDrift": 0.0,
+  "maxDecodedRuntimeLocalErrorDegrees": 0.0722062729432617,
+  "maxDecodedRuntimeLocalErrorBone": "ULEGL",
+  "maxDecodedRuntimeLocalErrorFrame": 2,
+  "maxAuthoredRotationDeltaDegrees": 30.068999443667703,
+  "maxAuthoredRotationDeltaBone": "HANDR",
+  "maxAuthoredRotationDeltaFramePair": [
+    4,
+    5
+  ],
+  "preExportMaxFullBasisDeltaDegrees": 0.03956468205889273,
+  "preExportMaxRuntimeWorldQuaternionErrorDegrees": 0.03956468205889273,
+  "bones": [
+    {
+      "bone": "BACK",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BELT",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BENDMYSTIC",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BOSOML",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BOSOMR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BROACH",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "BROW",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "CHEEKS",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "CHEST",
+      "maxDecodedLocalErrorDegrees": 0.05947661965882725,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "CHIN",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "COLLAR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "COL_L",
+      "maxDecodedLocalErrorDegrees": 0.04260463801752553,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "COL_R",
+      "maxDecodedLocalErrorDegrees": 0.061241564328134775,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "CRANIUM",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "EMBLEM",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "EYES",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "F1_L",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "F1_R",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "F2_L",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "F2_R",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "FACE",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "FOOTL",
+      "maxDecodedLocalErrorDegrees": 0.045883613156719544,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "FOOTR",
+      "maxDecodedLocalErrorDegrees": 0.0567368114483598,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "HAIR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "HANDL",
+      "maxDecodedLocalErrorDegrees": 0.051364400985655215,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "HANDR",
+      "maxDecodedLocalErrorDegrees": 0.05146527388551166,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "HEAD",
+      "maxDecodedLocalErrorDegrees": 0.0582959098475941,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "HIPS",
+      "maxDecodedLocalErrorDegrees": 0.051613961522550544,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "JAW",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LARML",
+      "maxDecodedLocalErrorDegrees": 0.05765159454861731,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "LARMR",
+      "maxDecodedLocalErrorDegrees": 0.07062580133273112,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "LEG_L_JET1",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LEG_L_JET2",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LEG_R_JET1",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LEG_R_JET2",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LLEGL",
+      "maxDecodedLocalErrorDegrees": 0.047037547390558786,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "LLEGR",
+      "maxDecodedLocalErrorDegrees": 0.04725412683239385,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "LWING1",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LWING2",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "LWING3",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "MYSTIC",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "NECK",
+      "maxDecodedLocalErrorDegrees": 0.043610684369541027,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "NECKLINE",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "NOSE",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "RINGL",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "RINGR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SKIRT",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SLEEVEL",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SLEEVER",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SLEEVES",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SPADL",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "SPADR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T1_L",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T1_R",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T2_L",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T2_R",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T3_L",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "T3_R",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "TOEL",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "TOER",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "TOP",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "UARML",
+      "maxDecodedLocalErrorDegrees": 0.05034417591657758,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "UARMR",
+      "maxDecodedLocalErrorDegrees": 0.05615383794653207,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "ULEGL",
+      "maxDecodedLocalErrorDegrees": 0.0722062729432617,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "ULEGR",
+      "maxDecodedLocalErrorDegrees": 0.05936875155952263,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "WAIST",
+      "maxDecodedLocalErrorDegrees": 0.055568153769287275,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": true
+    },
+    {
+      "bone": "WEPL",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    },
+    {
+      "bone": "WEPR",
+      "maxDecodedLocalErrorDegrees": 0.0,
+      "maxAuthoredTranslationDrift": 0.0,
+      "missingAuthoredFrames": [],
+      "authoredRotationChanged": false
+    }
+  ]
+}

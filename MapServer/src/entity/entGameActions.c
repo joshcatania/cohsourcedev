@@ -1087,6 +1087,122 @@ void setJumppack(Entity *e, int jumppack_on)
     }
 }
 
+void setWebSwing(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+    int enabled_bit = enabled ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_swing != enabled_bit)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_swing = enabled_bit;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_swing = enabled_bit;
+            }
+
+            printf("WEB_SWING SERVER enabled=%d\n", enabled_bit);
+            filelog_printf("webswing.log", "WEB_SWING SERVER enabled=%d\n", enabled_bit);
+            sendChatMsg(e,
+                        enabled_bit ? (stateNow->web_swing_backend ?
+                            "Web Swing enabled (SKY_ASSISTED) - hold Space to swing." :
+                            "Web Swing enabled (REAL_ANCHOR) - hold Space near buildings.") :
+                            "Web Swing disabled.",
+                        INFO_SVR_COM, 0);
+        }
+    }
+}
+
+void setWebSwingBackend(Entity *e, int backend)
+{
+    ClientLink *client = clientFromEnt(e);
+    int selected_backend = backend == 1 ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_swing_backend != selected_backend)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_swing_backend = selected_backend;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_swing_backend = selected_backend;
+            }
+
+            printf("WEB_SWING SERVER backend=%s\n",
+                   selected_backend ? "SKY_ASSISTED" : "REAL_ANCHOR");
+            filelog_printf("webswing.log", "WEB_SWING SERVER backend=%s\n",
+                           selected_backend ? "SKY_ASSISTED" : "REAL_ANCHOR");
+            sendChatMsg(e,
+                        selected_backend ? "Web Swing physics: SKY_ASSISTED."
+                                         : "Web Swing physics: REAL_ANCHOR.",
+                        INFO_SVR_COM, 0);
+        }
+    }
+}
+
+void setWebSwingTestNoAttach(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+    int enabled_bit = enabled ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_swing_test_no_attach != enabled_bit)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_swing_test_no_attach = enabled_bit;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_swing_test_no_attach = enabled_bit;
+            }
+
+            printf("WEB_SWING SERVER test_no_attach=%d\n", enabled_bit);
+            filelog_printf("webswing.log", "WEB_SWING SERVER test_no_attach=%d\n", enabled_bit);
+        }
+    }
+}
+
+void setWebCrawl(Entity *e, int enabled)
+{
+    ClientLink *client = clientFromEnt(e);
+    int enabled_bit = enabled ? 1 : 0;
+
+    if(client)
+    {
+        const ServerControlState *stateNow = getLatestServerControlState(&client->controls);
+
+        if(stateNow->web_crawl != enabled_bit)
+        {
+            ServerControlState *state = getQueuedServerControlState(&client->controls);
+            state->web_crawl = enabled_bit;
+
+            if(e->myMaster)
+            {
+                state = getQueuedServerControlState(&e->myMaster->controls);
+                state->web_crawl = enabled_bit;
+            }
+
+            printf("WEB_CRAWL SERVER enabled=%d\n", enabled_bit);
+            filelog_printf("webcrawl.log", "WEB_CRAWL SERVER enabled=%d\n", enabled_bit);
+        }
+    }
+}
+
 
 void setSpecialMovement(Entity *e, int attrib, int on)
 {

@@ -1,0 +1,24 @@
+Reversible runtime operations
+============================
+
+Packed runtime source:
+  bin/piggs/stage3c.pigg
+  SHA256 521D63B6817A313C5C6C03DCB25348B6D34A537698B69829BBF7F1F9B2BFCE69
+
+Phase A loose install:
+  source geo SHA256 634FB0855B76E7CFDBD16ACD70B1E948CA04AB5761C7C22FC01B6BBAB6F4762D
+  target bin/data/object_library/City_Zones/Elements/Hero_Statues/Male_Statue_Atlas/Male_Statue_Atlas.geo
+
+Final geometry loose install:
+  source geo SHA256 7EA60ED4BEECA0801AE6BA39DDD09FD9B0239E8C67CCD27BE178431FC290EF65
+  target was the same exact path and was guarded against unrelated overwrite.
+
+Restore command:
+  powershell -NoProfile -ExecutionPolicy Bypass -File .\agent\atlas-geometry-pilot.ps1 -Action Restore -ExpectedHash 7EA60ED4BEECA0801AE6BA39DDD09FD9B0239E8C67CCD27BE178431FC290EF65 -PackedSource bin\piggs\stage3c.pigg -PackedHash 521D63B6817A313C5C6C03DCB25348B6D34A537698B69829BBF7F1F9B2BFCE69
+
+Final verified state:
+  geometry pilot status = packed-stock
+  loose geometry target exists = false
+  staged editable .wrl exists = false
+  all 7 manifest-selected texture loose paths exist = false
+  stock-by-default = true

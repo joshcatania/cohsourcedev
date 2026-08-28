@@ -1795,7 +1795,7 @@ static void moveEntity(Entity *e)
     entUpdatePosInterpolated(e, new_pos);
 }
 
-static void entWalk(Entity* e, const Mat3 control_mat)
+static void entWalk(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach)
 {
     MotionState*    motion = e->motion;
     SurfaceParams*    surf_mod;
@@ -1831,6 +1831,8 @@ static void entWalk(Entity* e, const Mat3 control_mat)
         motion->jump_still_held = 0;
     }
     
+    entWorldWebSwingUpdateAttachment(e, web_swing_test_no_attach);
+
     // Check if I'm trying to jump.
 
     checkJump(e, &surf);
@@ -1850,6 +1852,7 @@ static void entWalk(Entity* e, const Mat3 control_mat)
     #endif
 
     DoPhysics(e, control_mat);
+    entWorldWebSwingLogReleasePostWorld(e);
 
     //if(0){
     //    static F32 last_fall;
@@ -1960,14 +1963,15 @@ int velIsNearlyZero(Vec3 vel)
 }
 
 
-void entMotion(Entity* e, const Mat3 control_mat)
+void entMotion(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach)
 {
     MotionState* motion = e->motion;
     int moving;
     EntType entType = ENTTYPE(e);
     int move_type = e->move_type;
 
-    moving = motion->falling || !velIsZero(motion->vel) || !velIsZero(motion->input.vel);
+    moving = motion->falling || !velIsZero(motion->vel) || !velIsZero(motion->input.vel) ||
+             motion->web_crawl_attached;
 
     motion->tickCounter++; //how many times entMotion has been run.
 
@@ -2080,7 +2084,7 @@ void entMotion(Entity* e, const Mat3 control_mat)
             global_motion_state.noDetailCollisions = true;
 #endif
         PERFINFO_AUTO_START("entWalk", 1);
-            entWalk(e, control_mat);
+            entWalk(e, control_mat, web_swing_test_no_attach);
         PERFINFO_AUTO_STOP();
         zeroVec3(motion->input.vel);
 

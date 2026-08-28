@@ -1,0 +1,203 @@
+{
+  "version": 7,
+  "generator": "accepted Issue 36 rest-basis generators -> blender_export_animx.py -> GetAnimation2 -compile-animx",
+  "animations": [
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_POSE_PROOF",
+      "frames": 5,
+      "file": "male/COHSOURCEDEV_RETARGET_POSE_PROOF.anim",
+      "bytes": 2881,
+      "sha256": "0cdf71228cbf3d2349120d4ae1636ec6392131b2d320608bdc1dea0656982aa5"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_SWING_FULL",
+      "frames": 60,
+      "file": "male/COHSOURCEDEV_RETARGET_SWING_FULL.anim",
+      "bytes": 9066,
+      "sha256": "2a674b086d7fa916530002ead55451fdf28fd9780a9efee23205eed4b66d388e"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM",
+      "frames": 5,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM.anim",
+      "bytes": 3251,
+      "sha256": "e1cb732169ba920b03d164ce062ec0a18d80099cba96184f082ba29d3512e9b2"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL",
+      "frames": 60,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL.anim",
+      "bytes": 8476,
+      "sha256": "acc0fc2d0ce4f382ec1cbf6675dfb3f6f96747080ffe24f6cc1c53866dfec840"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL_GRIP",
+      "frames": 60,
+      "fps": 30,
+      "file": "male/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL_GRIP.anim",
+      "bytes": 9226,
+      "sha256": "4b2a75af74aadff49256d5ed10a9622f30f291109d69f1ca59902460312a109b",
+      "source": {
+        "fbx": "swinginganimations/Swinging.fbx",
+        "fbxSha256": "75377e4d61856f14d47a7d8f5f353a8a3e476dca6fbf9a4333abd08851d41d40",
+        "baseBlend": "agent/work/issue36-rest-basis-full-20260825/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL.blend",
+        "baseBlendSha256": "3b0141f9b7cdd9c2aa8563ba994cb3991ac6b1b89d554e252a15715a7aef2214",
+        "baseRuntimeAsset": "MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL",
+        "baseRuntimeSha256": "acc0fc2d0ce4f382ec1cbf6675dfb3f6f96747080ffe24f6cc1c53866dfec840",
+        "action": "Armature|mixamo.com|Layer0",
+        "sourceFingerMap": {
+          "F2_L": "mixamorig:LeftHandRing1",
+          "F1_L": "mixamorig:LeftHandRing2",
+          "T3_L": "mixamorig:LeftHandThumb1",
+          "T2_L": "mixamorig:LeftHandThumb2",
+          "T1_L": "mixamorig:LeftHandThumb3"
+        }
+      },
+      "build": {
+        "script": "agent/animation/build_issue36_rest_basis_grip.ps1",
+        "blenderScript": "agent/animation/create_issue36_rest_basis_grip.py",
+        "exporter": "agent/animation/blender_export_animx.py",
+        "compiler": "Utilities/GetAnimation2/bin/x86/Release/GetAnimation2.exe"
+      },
+      "modification": {
+        "bones": [
+          "F1_L",
+          "F2_L",
+          "T1_L",
+          "T2_L",
+          "T3_L"
+        ],
+        "authoredFrames": "16..30",
+        "closureProfile": "0,0.30,0.60,0.85,1,1,1,1,1,1,1,0.85,0.60,0.30,0",
+        "sourceReference": "left ring/thumb channels from Swinging.fbx, slerped in the accepted runtime-local channel space",
+        "rootTranslationPolicy": "fixed bind translations; zero pose-bone location; unit pose-bone scale",
+        "nonFingerChannels": "unchanged"
+      }
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_SHOOT_V2",
+      "frames": 26,
+      "file": "male/COHSOURCEDEV_WEBSWING_SHOOT_V2.anim",
+      "bytes": 5246,
+      "sha256": "ff7e3ab25ac179ab5a2dd4df5e5d6b2beb903e4da9238dfeb32b270b496668b0"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_RETRACT_V2",
+      "frames": 26,
+      "file": "male/COHSOURCEDEV_WEBSWING_RETRACT_V2.anim",
+      "bytes": 5246,
+      "sha256": "7609818b275243079e9944cca30fb9d68c51e49316f3deaa300caa7dcb3efc24"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2",
+      "frames": 62,
+      "file": "male/COHSOURCEDEV_WEBSWING_GROUND_LAUNCH_V2.anim",
+      "bytes": 8536,
+      "sha256": "31cc2f173751306fb64ec357850cfb0c2312b7a4bb342172b442c24bce40c648"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_COMPACT_V2",
+      "frames": 50,
+      "file": "male/COHSOURCEDEV_WEBSWING_COMPACT_V2.anim",
+      "bytes": 7526,
+      "sha256": "8d184c1c7ff62dd7098bc8fc7d1ab39202a5bf1c895e7d99c7fbe94c48db066f"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_RELEASE_V2",
+      "frames": 22,
+      "file": "male/COHSOURCEDEV_WEBSWING_RELEASE_V2.anim",
+      "bytes": 4866,
+      "sha256": "a8b25c67359ed6b055b8adcebd5b53f79eb62d001ebbed5463c7438ffd520257"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "male/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 18766,
+      "sha256": "6d4f0ab66e592b7e9e95cc78f088043a6adb2f68eb9100b729f1f25ddfad7ec8"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH_V2",
+      "frames": 30,
+      "file": "male/COHSOURCEDEV_WEBSWING_STRETCH_V2.anim",
+      "bytes": 17261,
+      "sha256": "35b6da70ed03466828a38aa31270b22b139384a7a799f8bd8f2b9cbf05ece0e4"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "male/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 15568,
+      "sha256": "8ff76b8f1aa8e63cc21fcaddf1c557fadd03f9a56142b13116aece7180f558fa"
+    },
+    {
+      "type": "MALE",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "male/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 17700,
+      "sha256": "299b7b0e4b1c6d8f61f0e41577158aadbb572ceb879c04671729f7c78a03e838"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "fem/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 16433,
+      "sha256": "e3cf68784c2e5f553bd600b69fb1865f0b302b67b6e5f8c8b56c0557d26cca15"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "fem/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 13817,
+      "sha256": "6849cc4299df8fd69c50d4bcd18e33887b42d056378ecaa351c4c94ceb0f11f7"
+    },
+    {
+      "type": "FEM",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "fem/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 15685,
+      "sha256": "6763d8f5e29de8d8a3fdcd7be026f9c6f10bdbec5fb47fd5140bb292dda84624"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_STRETCH",
+      "frames": 30,
+      "file": "huge/COHSOURCEDEV_WEBSWING_STRETCH.anim",
+      "bytes": 17066,
+      "sha256": "cb0957ffa0eac06af0e82a379a442350d3e555490ac86f9efb71d9bc29b22884"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_TUCK",
+      "frames": 24,
+      "file": "huge/COHSOURCEDEV_WEBSWING_TUCK.anim",
+      "bytes": 14156,
+      "sha256": "e84ee5d0b9154b789b06b3a7f9831050ebe8803c61f73ae7f178266b66100e18"
+    },
+    {
+      "type": "HUGE",
+      "logical": "COHSOURCEDEV_WEBSWING_ASCEND",
+      "frames": 28,
+      "file": "huge/COHSOURCEDEV_WEBSWING_ASCEND.anim",
+      "bytes": 16096,
+      "sha256": "25ee920015e5d9844dd50b40da250ebfd54e4532f00c6627474fcd9a28b09bcb"
+    }
+  ]
+}

@@ -651,6 +651,7 @@ enum
     CMD_TOGGLEFIXEDFUNCTIONFP,
     CMD_TOGGLEFIXEDFUNCTIONVP,
     CMD_COSTUME_DIFF,
+    CMD_CAMYAWOFFSET,
     CMD_CAMTURN,
     CMD_PLAYERTURN,
     CMD_FACE,
@@ -1147,6 +1148,8 @@ Cmd game_cmds[] =
                         "performance testing feature to not draw objects with less than the given number of triangles" },
     { 0, "camreset", CMD_CAMRESET,{{0}},0,
                         "Camreset is bound to the PageDown key (default) to reset the camera behind the player." },
+    { 9, "camyawoffset", CMD_CAMYAWOFFSET, {{ PARSETYPE_FLOAT, &tmp_f32 }},CMDF_HIDEPRINT,
+                        "Orbits the third-person camera around the player by the given yaw in degrees." },
     { 0, "demoplay", CMD_DEMOPLAY, {{ CMDSENTENCE(demo_state.demoname)}},CMDF_HIDEVARS|CMDF_HIDEPRINT,
                         "Name of demo to play back" },
     { 0, "demoloop", 0, {{ CMDINT(demo_state.demo_loop) }},CMDF_HIDEPRINT,
@@ -1314,7 +1317,15 @@ Cmd game_cmds[] =
     { 0, "useCg", CMD_TOGGLE_USECG, {{ CMDINT(tmp_int)}}, CMDF_HIDEPRINT,
                         "Use Cg shaders instead of ARB" },
     { 0, "glslPilot", 0, {{ CMDINT(game_state.glslPilot) }}, CMDF_HIDEPRINT,
-                        "Render BLENDMODE_MODULATE through the native GLSL pilot program (development experiment; set at startup)" },
+                        "Use native GLSL for supported pairings; 0 selects the legacy ARB/Cg fallback" },
+    { 0, "modernPresentation", 0, {{ CMDINT(game_state.modernPresentation) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in filmic presentation curve in native GLSL final passes" },
+    { 0, "modernBloom", 0, {{ CMDINT(game_state.modernBloom) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in soft-knee bloom composite in native GLSL final passes" },
+    { 0, "modernMaterials", 0, {{ CMDINT(game_state.modernMaterials) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in modern material response for native GLSL Bump ColorBlendDual" },
+    { 0, "modernLighting", 0, {{ CMDINT(game_state.modernLighting) }}, CMDF_HIDEPRINT,
+                        "Enable the opt-in modern outdoor sun and sky lighting response" },
     { 0, "dxt5nm_normal_maps", CMD_TOGGLE_DXT5NM, {{ CMDINT(tmp_int) }},CMDF_HIDEPRINT,
                         "1 = Use DXT5nm cvompressed normal maps, 0 = Use DXT5 normal maps (old mode)" },
     { 0, "shaderCache", 0, {{ CMDINT(game_state.shaderCache)}}, CMDF_HIDEPRINT,
@@ -5528,6 +5539,11 @@ int cmdGameParse(char *str, int x, int y)
         xcase CMD_PLAYERTURN:
             control_state.pyr.cur[1] = addAngle(control_state.pyr.cur[1],control_state.cam_pyr_offset[1]);
             control_state.cam_pyr_offset[1] = 0;
+        xcase CMD_CAMYAWOFFSET:
+            // Deterministic-capture aid: orbit the third-person camera around
+            // the player without touching the player's facing.
+            control_state.cam_pyr_offset[1] = RAD(tmp_f32);
+            cam_info.rotate_scale = 1;
         xcase CMD_FACE:
             playerToggleFollowMode();
             playerDoFollowMode();
@@ -6162,6 +6178,21 @@ void gameStateInit()
     game_state.useFBOs = 1;
     
     game_state.useCg = 1;
+    // Native GLSL is the default for supported pairings.  -glslPilot 0
+    // remains the explicit legacy ARB/Cg control and escape hatch.
+    game_state.glslPilot = 1;
+    // Keep the first visual-modernization experiment opt-in. -modernPresentation
+    // 1 or the runtime command modernPresentation 1 enables it explicitly.
+    game_state.modernPresentation = 0;
+    // Keep Modern Bloom v1 opt-in and default-off. The existing presentation
+    // vector carries this as .y through the native GLSL effects mirror.
+    game_state.modernBloom = 0;
+    // Keep the first material-lighting experiment opt-in and scoped to the
+    // native GLSL Bump ColorBlendDual LQ/HQ pilot programs.
+    game_state.modernMaterials = 0;
+    // Keep the outdoor sun/sky response opt-in. The legacy renderer remains
+    // an exact control when glslPilot is disabled.
+    game_state.modernLighting = 0;
     if (game_state.safemode)
     {
         // Disable shader cache in safe mode

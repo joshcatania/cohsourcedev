@@ -349,7 +349,7 @@ static BeaconWalkResult beaconCanWalkBetweenBeacons(Beacon* src, Beacon* dst, Ve
         
         e->timestep = 1;
         
-        entMotion(e, NULL);
+        entMotion(e, NULL, 0);
         
         usedPhysicsSteps++;
         

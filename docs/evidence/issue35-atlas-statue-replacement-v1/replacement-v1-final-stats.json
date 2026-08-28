@@ -1,0 +1,22 @@
+{
+  "body": {
+    "object": "_H_M_Statue_Atlas_Giant_1",
+    "vertices": 8010,
+    "polygons": 8008,
+    "triangles": 16016,
+    "material": "X_Male_Statue_Atlas_01",
+    "uv_layers": 1
+  },
+  "globe": {
+    "object": "_H_M_Statue_Atlas_Giant_0",
+    "vertices": 559,
+    "polygons": 960,
+    "triangles": 960,
+    "material": "X_Male_Statue_Atlas_Globe_01",
+    "uv_layers": 1
+  },
+  "total_triangles": 16976,
+  "blend": "D:\\temp\\cohsourcedev-blender\\issue35\\atlas-replacement-v1-final.blend",
+  "compare": "D:\\temp\\cohsourcedev-blender\\issue35\\neutral-original-vs-replacement-v1-final.png",
+  "construction": "fresh overlapping primitive anatomy, voxel remesh, smooth relax, smart UV unwrap"
+}

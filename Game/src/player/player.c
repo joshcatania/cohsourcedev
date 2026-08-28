@@ -1514,7 +1514,7 @@ static void playerApplyFuturePushes(Entity* e, ControlState* controls)
                         // Run the physics.
                         
                         e->timestep = 1;
-                        entMotion(e, unitmat);
+                        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
                         
                         // Record motion AFTER physics.
                         
@@ -1596,6 +1596,51 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     motion->input.max_speed_scale    = controls->max_speed_scale;
     motion->input.max_jump_height    = pmotionGetMaxJumpHeight(e, controls);
     motion->input.stunned            = controls->server_state->stun;
+    motion->input.web_swing_enabled  = controls->server_state->web_swing;
+    motion->input.web_swing_backend  = controls->server_state->web_swing_backend;
+    motion->input.web_crawl_enabled  = controls->server_state->web_crawl;
+
+    if (e == controlledPlayerPtr() && g_cohsourcedev_webswing_physics_selection >= 0 &&
+        controls->server_state->web_swing_backend != g_cohsourcedev_webswing_physics_selection &&
+        (motion->tickCounter % 30) == 0)
+    {
+        char backendCommand[32];
+        sprintf_s(backendCommand, sizeof(backendCommand), "webswingbackend %d",
+                  g_cohsourcedev_webswing_physics_selection);
+        commAddInput(backendCommand);
+    }
+    if (e == controlledPlayerPtr() && g_cohsourcedev_webswing_physics_selection >= 0 &&
+        !controls->server_state->web_swing && (motion->tickCounter % 30) == 0)
+    {
+        // An explicit handoff physics mode is also an explicit request to use
+        // the prototype. Send the normal server command through prediction's
+        // existing input channel so a fresh client needs no manual setup.
+        commAddInput("webswing 1");
+    }
+
+    if (global_state.webswing_dev && e == controlledPlayerPtr())
+    {
+        static int logged;
+        static int last_server_web_swing = -1;
+        static int last_motion_web_swing_enabled = -1;
+        static Entity *last_player;
+
+        if (!logged || last_player != e ||
+            last_server_web_swing != controls->server_state->web_swing ||
+            last_motion_web_swing_enabled != motion->input.web_swing_enabled)
+        {
+            filelog_printf("webswing.log",
+                           "WEB_SWING CLIENT_PHYSICS player=%s db_id=%d svr_idx=%d webswing_dev=%d server_web_swing=%d motion_web_swing_enabled=%d attached=%d stored_phase=%d\n",
+                           e->namePtr ? e->namePtr : "<unnamed>", e->db_id, e->svr_idx,
+                           global_state.webswing_dev, controls->server_state->web_swing,
+                           motion->input.web_swing_enabled, motion->web_swing_attached,
+                           motion->web_swing_anim_phase);
+            logged = 1;
+            last_player = e;
+            last_server_web_swing = controls->server_state->web_swing;
+            last_motion_web_swing_enabled = motion->input.web_swing_enabled;
+        }
+    }
 
     // Copy the BEFORE data.
 
@@ -1620,7 +1665,7 @@ static void playerRunPhysicsStep(Entity* e, ControlState* controls, Vec3 new_vel
     
     // Run the physics.
 
-    entMotion(e, unitmat);
+    entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
     
     // Record motion AFTER physics.
     
@@ -2023,7 +2068,7 @@ static void playerRunPushCatchup(Entity* e, ControlState* controls)
         
         e->timestep = 1;
         global_motion_state.doNotSetAnimBits = 1;
-        entMotion(e, unitmat);
+        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
         global_motion_state.doNotSetAnimBits = 0;
         
         // Record motion AFTER physics.
@@ -2332,6 +2377,10 @@ static void playerReceiveServerControlState(Packet *pak)
         server_state.no_ent_collision =            pktGetBits(pak,1);
 
         server_state.no_jump_repeat =            pktGetBits(pak, 1);
+        server_state.web_swing =                 pktGetBits(pak, 1);
+        server_state.web_swing_backend =         pktGetBits(pak, 1);
+        server_state.web_swing_test_no_attach =  pktGetBits(pak, 1);
+        server_state.web_crawl =                 pktGetBits(pak, 1);
 
         if(!oo_packet)
         {
@@ -2381,6 +2430,13 @@ static void playerReceiveServerControlState(Packet *pak)
             motion->input.no_ent_collision =    server_state.no_ent_collision;
             scs->no_ent_collision =                server_state.no_ent_collision;
             scs->no_jump_repeat =                server_state.no_jump_repeat;
+            scs->web_swing =                     server_state.web_swing;
+            scs->web_swing_backend =             server_state.web_swing_backend;
+            scs->web_swing_test_no_attach =     server_state.web_swing_test_no_attach;
+            scs->web_crawl =                     server_state.web_crawl;
+            motion->input.web_swing_enabled =    server_state.web_swing;
+            motion->input.web_swing_backend =    server_state.web_swing_backend;
+            motion->input.web_crawl_enabled =    server_state.web_crawl;
 
             if(motion->input.flying != scs->fly)
             {
@@ -2548,7 +2604,7 @@ static void repredictPhysicsSteps(ControlState* controls, ControlStateChange* cs
         
         e->timestep = 1;
         global_motion_state.doNotSetAnimBits = 1;
-        entMotion(e, unitmat);
+        entMotion(e, unitmat, controls->server_state->web_swing_test_no_attach);
         global_motion_state.doNotSetAnimBits = 0;
         
         // Record motion AFTER physics.

@@ -1,0 +1,27 @@
+{
+  "capture": {
+    "target": "AtlasHero_Statue_01",
+    "resolution": [1280, 720],
+    "camera_source": "additive table-driven shot",
+    "warmup_required": true
+  },
+  "full_frame_compare_width": 320,
+  "stock_ultra_vs_current_remaster_26": {
+    "changed_percent": 44.631,
+    "mean_delta": 11.7808,
+    "max_delta": 140
+  },
+  "current_remaster_26_vs_current_remaster_plus_statue": {
+    "changed_percent": 0.5085,
+    "mean_delta": 1.5001,
+    "max_delta": 34,
+    "qualitative_gate": "pass: globe relief and authored map detail are immediately legible at normal screenshot size"
+  },
+  "statue_focus_region_vs_current_remaster_26": {
+    "region_xyxy": [470, 0, 970, 420],
+    "pixel_tolerance": 12,
+    "changed_percent": 1.9195,
+    "mean_delta": 2.3674,
+    "max_delta": 128
+  }
+}

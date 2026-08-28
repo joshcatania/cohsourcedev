@@ -11,6 +11,10 @@ typedef struct DefTracker DefTracker;
 #define NO_BOUNCE 0
 #define DO_BOUNCE 1
 
+// Web Swing mode gives a normal ground jump a stronger launch without
+// changing the ordinary jump when the mode is disabled.
+#define WEB_LAUNCH_JUMP_HEIGHT_SCALE 2.50f
+
 typedef struct GlobalMotionState {
     int        noEntCollisions;
     int        noDynamicCollisions;
@@ -31,6 +35,25 @@ typedef struct SurfaceParams
     F32        gravity;
     F32        max_speed;
 } SurfaceParams;
+
+typedef enum WebSwingAssistPhase
+{
+    WEB_SWING_ASSIST_NONE = 0,
+    WEB_SWING_ASSIST_LAUNCH,
+    WEB_SWING_ASSIST_ASCEND,
+    WEB_SWING_ASSIST_APEX,
+    WEB_SWING_ASSIST_DESCEND,
+    WEB_SWING_ASSIST_BOTTOM,
+} WebSwingAssistPhase;
+
+typedef enum WebSwingVisualTetherState
+{
+    WEB_SWING_VISUAL_TETHER_HIDDEN = 0,
+    WEB_SWING_VISUAL_TETHER_EXTENDING,
+    WEB_SWING_VISUAL_TETHER_ATTACHED,
+    WEB_SWING_VISUAL_TETHER_RETRACTING,
+    WEB_SWING_VISUAL_TETHER_GAP,
+} WebSwingVisualTetherState;
 
 typedef enum SurfParamIndex
 {
@@ -81,6 +104,9 @@ typedef struct MotionStateInput {
     U32                    no_ent_collision: 1;
     U32                    stunned            : 1;
     U32                    jump_released    : 1;
+    U32                    web_swing_enabled: 1;
+    U32                    web_swing_backend: 1;
+    U32                    web_crawl_enabled: 1;
 } MotionStateInput;
 
 typedef struct MotionState
@@ -122,6 +148,83 @@ typedef struct MotionState
     S32                    low_traction_steps_remaining;    // # of phys steps to force low traction.
     F32                    hitStumbleTractionLoss;
 
+    U32                    web_crawl_attached : 1;
+    U32                    web_crawl_last_contact_tick;
+    U32                    web_crawl_detach_cooldown_ticks;
+    Vec3                   web_crawl_wall_normal;
+
+    U32                    web_swing_attached : 1;
+    U32                    web_swing_attach_catch_pending : 1;
+    U32                    web_swing_attach_grounded : 1;
+    U32                    web_swing_attach_falling : 1;
+    U32                    web_swing_attach_jumping : 1;
+    U32                    web_swing_diag_latched : 1;
+    U32                    web_swing_state_diag_latched : 1;
+    U32                    web_swing_chain_armed : 1;
+    U32                    web_swing_chain_ascent_seen : 1;
+    U32                    web_swing_next_anchor_valid : 1;
+    U32                    web_swing_ground_launch_active : 1;
+    U32                    web_swing_active_backend : 1;
+    U32                    web_swing_visual_tether_visible : 1;
+    U32                    web_swing_visual_tether_left_hand : 1;
+    U32                    web_swing_anim_shoot_active : 1;
+    U32                    web_swing_assist_swoop_active : 1;
+    U32                    web_swing_assist_phase;
+    U32                    web_swing_assist_phase_ticks;
+    U32                    web_swing_assist_cycle_id;
+    U32                    web_swing_visual_tether_gap_ticks;
+    U32                    web_swing_visual_tether_shoot_ticks;
+    U32                    web_swing_anim_catch_ticks;
+    U32                    web_swing_anim_release_ticks;
+    U32                    web_swing_release_diag_stage;
+    U32                    web_swing_release_diag_tick;
+    Vec3                   web_swing_release_pre_velocity;
+    U32                    web_swing_visual_tether_state;
+    F32                    web_swing_visual_tether_progress;
+    F32                    web_swing_visual_tether_shoot_time;
+    F32                    web_swing_assist_energy;
+    F32                    web_swing_assist_initial_low_point_y;
+    F32                    web_swing_assist_low_point_y;
+    F32                    web_swing_assist_swoop_entry_plane_speed;
+    F32                    web_swing_assist_swoop_entry_angle;
+    F32                    web_swing_assist_swoop_radius;
+    U32                    web_swing_assist_swoop_emergency_count;
+    U32                    web_swing_anim_phase;
+    U32                    web_swing_anim_segment_id;
+    U32                    web_swing_anim_phase_segment_id;
+    Vec3                   web_swing_anchor;
+    Vec3                   web_swing_previous_anchor;
+    Vec3                   web_swing_next_anchor;
+    F32                    web_swing_next_anchor_retention;
+    U32                    web_swing_chain_search_tick;
+    F32                    web_swing_ground_launch_origin_y;
+    U32                    web_swing_ground_launch_ticks;
+    F32                    web_swing_rope_length;
+    U32                    web_swing_log_tick;
+    U32                    web_swing_constraint_samples;
+    U32                    web_swing_constraint_soft_correction_count;
+    U32                    web_swing_constraint_correction_count;
+    F32                    web_swing_constraint_error_sum;
+    F32                    web_swing_constraint_max_error;
+    F32                    web_swing_constraint_correction_sum;
+    F32                    web_swing_constraint_max_correction;
+    F32                    web_swing_constraint_max_velocity_dir_delta;
+    F32                    web_swing_constraint_velocity_dir_delta_sum;
+    U32                    web_swing_constraint_velocity_dir_delta_large_count;
+    U32                    web_swing_constraint_velocity_dir_delta_large_run;
+    U32                    web_swing_constraint_max_velocity_dir_delta_large_run;
+    U32                    web_swing_constraint_radial_velocity_removed_count;
+    U32                    web_swing_constraint_radial_velocity_large_count;
+    F32                    web_swing_constraint_radial_velocity_removed_sum;
+    F32                    web_swing_constraint_max_radial_velocity_removed;
+
+    // Last terrain values already measured by the Sky-Assisted controller.
+    // These are observation copies, not additional collision queries.
+    F32                    web_swing_assist_current_clearance;
+    F32                    web_swing_assist_ahead_clearance;
+    F32                    web_swing_assist_lookahead_distance;
+    F32                    web_swing_assist_altitude_margin;
+
     EntityCapsule        capsule;
 
     MotionStateInput    input;
@@ -144,7 +247,7 @@ int velIsZero(Vec3 vel);
 int entCanSetPYR( Entity *e );
 int entCanSetInpVel( Entity *e );
 void entMoveNoColl(Entity *e);
-void entMotion(Entity* e, const Mat3 control_mat);
+void entMotion(Entity* e, const Mat3 control_mat, int web_swing_test_no_attach);
 bool isEntCurrentlyCollidable( Entity * e );
 void setNoCollideOnTracker( DefTracker * tracker, int set );
 // End mkproto

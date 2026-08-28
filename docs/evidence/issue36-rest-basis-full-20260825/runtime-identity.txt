@@ -1,0 +1,20 @@
+Controlled runtime audit: 2026-08-25
+Account/character/type: Dummy00009 / Swingv3 / Male
+Client flags: -webswingdev -webswinganim 3 -animcanary 1 -nosharedmemory
+Capture result: four deterministic captures completed; client exit code 0
+
+Representative client log facts (bin/logs/game/webswing.log):
+
+WEB_SWING CLIENT anim_selection_mode=3 custom_move_selection=MALE_FULL_CORRECTED
+WEB_SWING ANIM transition selectedMove=COHSOURCEDEV_CUSTOM_CANARY previousMove=READY
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=COHSOURCEDEV_CUSTOM_CANARY TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=WEBSWING_FULL_ATTACHED_START TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=WEBSWING_FULL_DESCEND_START TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=WEBSWING_FULL_BOTTOM_START TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL
+WEBSWING_ANIM move_compare source=COMPILED_OVERLAY move=WEBSWING_FULL_ASCEND_START TypeGfx=male AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_SWING_FULL
+
+The corresponding HOLD records resolved the same asset. START records had no
+cycle flag and an explicit NextMove; HOLD records had the cycle flag and Scale
+0 in the authored overlay. The client briefly selected FADEIN_RUNOUT/READY at
+login before reselecting COHSOURCEDEV_CUSTOM_CANARY, which explains why three
+of the screenshots caught READY rather than the requested canary pose.

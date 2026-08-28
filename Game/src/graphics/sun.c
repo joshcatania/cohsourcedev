@@ -1576,6 +1576,94 @@ static void sunApplyValues(const SkyWorkingValues IN *sky_work, SunLight IN OUT 
     showLightDebug(sun, fog_final, &fog_out);
 }
 
+// Modern Lighting v1 keeps the existing sky-file sun direction and intensity
+// as the source of truth, but gives the outdoor path a more legible two-lobe
+// response: direct light is slightly warmer and ambient fill is lower and
+// gently derived from the current sky color. This changes the light inputs
+// consumed by world and character materials; it is deliberately not a
+// post-process, texture, shadow, or AO adjustment.
+static void sunApplyModernLighting(SunLight IN OUT *sun)
+{
+    F32 sky_luminance;
+    F32 sky_ratio;
+    F32 sky_fill;
+    F32 direct_energy;
+    F32 direct_tint[3] = { 0.95f, 0.88f, 0.58f };
+    Vec3 sky_source;
+    Vec3 source_ambient;
+    Vec3 source_diffuse;
+    int i;
+
+    copyVec3(sun->ambient, source_ambient);
+    copyVec3(sun->diffuse, source_diffuse);
+    copyVec3(sun->bg_color, sky_source);
+    direct_energy = MAX(source_diffuse[0], MAX(source_diffuse[1], source_diffuse[2]));
+
+    sky_luminance = 0.2126f * sun->bg_color[0] +
+                    0.7152f * sun->bg_color[1] +
+                    0.0722f * sun->bg_color[2];
+    if (sky_luminance < 0.001f)
+    {
+        // Some Atlas sky nodes provide the visible background while the
+        // SunLight background field remains black; the authored ambient is
+        // the correct sky-fill chroma fallback in that case.
+        copyVec3(source_ambient, sky_source);
+        sky_luminance = 0.2126f * sky_source[0] +
+                        0.7152f * sky_source[1] +
+                        0.0722f * sky_source[2];
+    }
+    sky_luminance = MAX(sky_luminance, 0.001f);
+
+    for (i = 0; i < 3; ++i)
+    {
+        // Use the authored sky color only as a restrained chromatic fill
+        // signal; the luminance and scene exposure remain engine-owned.
+        sky_ratio = CLAMP(sky_source[i] / sky_luminance, 0.75f, 1.25f);
+        sky_fill = 0.90f + 0.10f * sky_ratio;
+        sun->ambient[i] = CLAMP(sun->ambient[i] * 0.82f * sky_fill,
+                                 MINIMUM_AMBIENT, MAXIMUM_AMBIENT);
+        // The shipped Atlas sky's direct channel is blue-heavy. Keep its
+        // authored peak as the energy signal, but express sunlight as a
+        // warm direct lobe instead of multiplying that blue cast through.
+        sun->diffuse[i] = CLAMP(direct_energy * direct_tint[i],
+                                 MINIMUM_DIFFUSE, MAXIMUM_DIFFUSE);
+    }
+
+    sun->ambient[3] = 1.0f;
+    sun->diffuse[3] = 1.0f;
+    copyVec4(sun->ambient, sun->ambient_for_players);
+    copyVec4(sun->diffuse, sun->diffuse_for_players);
+    scaleVec3(sun->ambient_for_players, playerAmbientAdjuster, sun->ambient_for_players);
+    scaleVec3(sun->diffuse_for_players, playerDiffuseAdjuster, sun->diffuse_for_players);
+
+    for (i = 0; i < 3; ++i)
+    {
+        sun->ambient_for_players[i] = CLAMP(sun->ambient_for_players[i],
+                                            MINIMUM_PLAYER_AMBIENT, MAXIMUM_PLAYER_AMBIENT);
+        sun->diffuse_for_players[i] = CLAMP(sun->diffuse_for_players[i],
+                                            MINIMUM_PLAYER_DIFFUSE, MAXIMUM_PLAYER_DIFFUSE);
+    }
+
+    addVec3(sun->ambient, sun->diffuse, sun->no_angle_light);
+    sun->no_angle_light[3] = 1.0f;
+}
+
+static void sunApplyValuesWithModernLighting(const SkyWorkingValues IN *sky_work,
+                                              SunLight IN OUT *sun,
+                                              FogVals IN OUT *fog_final)
+{
+    if (game_state.glslPilot && game_state.modernLighting && !isIndoors())
+    {
+        SkyWorkingValues modern_work = *sky_work;
+        sunApplyModernLighting(&modern_work.sun_work);
+        sunApplyValues(&modern_work, sun, fog_final);
+    }
+    else
+    {
+        sunApplyValues(sky_work, sun, fog_final);
+    }
+}
+
 static void sunUpdateGlobals(void)
 {
     //Set the global time to betwen 0 and 24 (do outside this function?)
@@ -1635,13 +1723,13 @@ void sunUpdate(SunLight OUT *sun, int IN init)
         skyFade2 = 0;
     if (skyFade1==skyFade2) {
         collapseSkyNodes(&g_skies[skyFade1]->sky_work.sun_work.sky_node_list);
-        sunApplyValues(&g_skies[skyFade1]->sky_work, sun, &fog_final);
+        sunApplyValuesWithModernLighting(&g_skies[skyFade1]->sky_work, sun, &fog_final);
     } else if (skyFadeWeight == 0.0) {
         collapseSkyNodes(&g_skies[skyFade1]->sky_work.sun_work.sky_node_list);
-        sunApplyValues(&g_skies[skyFade1]->sky_work, sun, &fog_final);
+        sunApplyValuesWithModernLighting(&g_skies[skyFade1]->sky_work, sun, &fog_final);
     } else if (skyFadeWeight== 1.0) {
         collapseSkyNodes(&g_skies[skyFade2]->sky_work.sun_work.sky_node_list);
-        sunApplyValues(&g_skies[skyFade2]->sky_work, sun, &fog_final);
+        sunApplyValuesWithModernLighting(&g_skies[skyFade2]->sky_work, sun, &fog_final);
     } else {
         static SkyWorkingValues result={0}; // Static to reuse sky_node_list.nodes pointer
         // Blend SunLights together (snapping)
@@ -1650,7 +1738,7 @@ void sunUpdate(SunLight OUT *sun, int IN init)
         // Remove redundant info
         collapseSkyNodes(&result.sun_work.sky_node_list);
         // Blend resulting value with current (smooth)
-        sunApplyValues(&result, sun, &fog_final);
+        sunApplyValuesWithModernLighting(&result, sun, &fog_final);
     }
 }
 

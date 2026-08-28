@@ -519,7 +519,7 @@ void sndVolumeControl(int sound_type,F32 volume) {;}
 int editMode() {return 1;}
 int mouse_dx,mouse_dy;
 int inpIsMouseLocked() {return 1;}
-void entMotion(Entity *e, const Mat3 control_mat) {;}
+void entMotion(Entity *e, const Mat3 control_mat, int web_swing_test_no_attach) {;}
 void playerMoveStickyPlayer(void) {;}
 void camSetPos(const Vec3 pos, bool interpolate ) {;}
 

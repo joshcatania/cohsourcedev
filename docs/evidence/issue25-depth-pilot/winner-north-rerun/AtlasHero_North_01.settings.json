@@ -1,0 +1,49 @@
+{
+  "name": "winner-north-rerun",
+  "profile": "issue25-combined-winner",
+  "target": "AtlasHero_North_01",
+  "requestedSettings": {
+    "shadowmode": 4,
+    "shadowmapshader": 3,
+    "shadowmapsize": 1,
+    "shadowmapdistance": 1,
+    "ambientstrength": 3,
+    "ambientresolution": 3,
+    "ambientblur": 5,
+    "graphicsquality": "1.000000",
+    "shaderdetail": 3,
+    "usewater": 2
+  },
+  "observedRuntimeSettings": {
+    "shadowmode": 4,
+    "shadowmapshader": 3,
+    "shadowmapsize": 1,
+    "shadowmapdistance": 1,
+    "ambientstrength": 3,
+    "ambientresolution": 3,
+    "ambientblur": 5,
+    "graphicsquality": "1.000000",
+    "shaderdetail": 3,
+    "usewater": 2
+  },
+  "capturePassed": true,
+  "captureExitCode": 0,
+  "screenshot": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.jpg",
+  "captureResult": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.capture.json",
+  "fps": null,
+  "presentMon": null,
+  "presentMonStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.presentmon.stdout.log",
+  "presentMonStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.presentmon.stderr.log",
+  "performance": {
+    "cpuSampleCount": 0,
+    "gpuSampleCount": 0,
+    "cpuMeanPercentOfMachine": null,
+    "cpuMaxPercentOfMachine": null,
+    "gpuMeanPercent": null,
+    "gpuMaxPercent": null,
+    "presentMon": null
+  },
+  "fpsSamples": [],
+  "runnerStdout": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.runner.stdout.log",
+  "runnerStderr": "D:\\github\\cohsourcedev\\docs\\evidence\\issue25-depth-pilot\\winner-north-rerun\\AtlasHero_North_01.runner.stderr.log"
+}

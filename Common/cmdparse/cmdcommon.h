@@ -321,6 +321,13 @@ typedef struct ControlState
 } ControlState;
 
 extern ControlState control_state;
+extern S32 g_cohsourcedev_anim_canary;
+extern S32 g_cohsourcedev_webswing_anim_selection;
+extern S32 g_cohsourcedev_webswing_physics_selection;
+#ifdef CLIENT
+extern S32 g_cohsourcedev_webswing_capture;
+extern S32 g_cohsourcedev_webswing_visual_selection;
+#endif
 extern ControlId opposite_control_id[CONTROLID_BINARY_MAX];
 
 typedef struct Cmd Cmd;
@@ -343,6 +350,7 @@ typedef struct GlobalState
 
     int        no_file_change_check_cmd_set; //Cmd turning off file change check is set
     int        no_file_change_check;            //above plus Client side per tick data change check
+    int        webswing_dev;                    //WebSwing development overlay/state-bit environment
 
     #if CLIENT
     U32        cur_timeGetTime;    

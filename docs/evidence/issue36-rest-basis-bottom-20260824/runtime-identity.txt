@@ -1,0 +1,55 @@
+Issue 36 corrected rest-basis BOTTOM canary runtime identity
+===============================================================
+
+Account / character
+------------------
+Account: Dummy00009
+Character: Swingv3
+Capture command invariant: -db 127.0.0.1 -authname Dummy00009
+  -capturecharacter Swingv3 -nosharedmemory -webswingdev -animcanary 1
+  -webswinganim 0
+
+The character classifier was recorded by the client as:
+
+  entity_type entity=Swingv3 seq_type=male seq_name=player.txt calculated_type=male is_male=1
+
+in bin/logs/game/webswing.log (latest matching identity record before the
+capture strip: line 646790, 2026-08-24 07:54:49).  The 15 capture result JSON
+files all record accountName=Dummy00009, a Swingv3 capture command, passed=true,
+and exitCode=0.
+
+Canary selection
+----------------
+The current canary overlay is the bounded full BOTTOM proof include:
+
+  selectedMove=COHSOURCEDEV_CUSTOM_CANARY
+  TypeGfx=male
+  AnimP=MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM
+
+The latest capture-strip log records those fields for each test process; the
+final pair is bin/logs/game/webswing.log lines 672110 and 672120 (12:55:17).
+The same log records player=Swingv3 db_id=23 and the `male=1` state bit during
+the strip (for example lines 672114 and 672115).
+
+The staged include SHA-256 is:
+
+  23923B6E4EC338AA6B4DC2C250237BEE74236D1292865FD3FBA6041C57EDC67B
+
+The canary runtime asset SHA-256 is:
+
+  MALE/COHSOURCEDEV_RETARGET_RESTBASIS_BOTTOM.anim
+  E1CB732169BA920B03D164CE062EC0A18D80099CBA96184F082BA29D3512E9B2
+
+Capture results
+---------------
+All 15 captures passed with a clean client exit:
+
+  Source frame 18: front, three-quarter, side
+  Source frame 19: front, three-quarter, side
+  Source frame 20: front, three-quarter, side
+  Source frame 21: front, three-quarter, side
+  Source frame 22: front, three-quarter, side
+
+The per-capture result JSON files remain in the ignored agent/logs/ directory;
+the committed actual-skin images and enlarged contact sheet are the review
+artifacts in this evidence directory.

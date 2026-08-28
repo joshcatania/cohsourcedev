@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "configSha256": {
+    "Full": "ded2dc026df28b91d49716c92336a315a5c721952e163fbb67054978db0f1d1f",
+    "FastDev": "c6250c0c1e6d11b31a3570d562c35440a48378f004c8ddeaeb734a08796f08c0"
+  },
+  "loadBalanceSha256": {
+    "Full": "83478d869411323bde85b6aba04aab3ab0c8628d558912912f879f23fc8c6f89",
+    "FastDev": "6c79660b2474912c4d3572ec60fac55faa76069e5c1a7e0538e68f3d77d887a0"
+  },
+  "loadBalanceTextFixes": [
+    {
+      "full": "        Command \"MissionServer.exe\" ",
+      "fastDev": "        Command \"MissionServer.exe\""
+    }
+  ]
+}

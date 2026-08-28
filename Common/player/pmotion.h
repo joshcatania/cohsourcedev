@@ -43,6 +43,29 @@ extern GlobalPlayerMotionState global_pmotion_state;
 extern StashTable g_htAttackVolumes;
 #ifdef CLIENT
 extern char *g_activeMaterialTrackerName;
+typedef struct WebSwingAnimationSyncTelemetry
+{
+    char move_name[64];
+    F32 frame;
+    F32 first_frame;
+    F32 last_frame;
+    F32 normalized_progress;
+    int sync_active;
+    U32 physical_tick;
+    char physical_phase[16];
+    F32 physical_angle_degrees;
+    F32 physical_plane_speed;
+    F32 physical_horizontal_speed;
+    F32 target_frame;
+    F32 target_normalized_progress;
+    F32 sync_error_frames;
+    U32 core_restart_count;
+    U32 backwards_target_steps;
+} WebSwingAnimationSyncTelemetry;
+
+void pmotionWebSwingCaptureSetAnimationSyncTelemetry(
+    const WebSwingAnimationSyncTelemetry *telemetry);
+void pmotionWebSwingCaptureRenderHud(void);
 #endif
 
 #define entMode(e,mode_num) ( (e)->state.mode & ( 1 << (mode_num) ) )

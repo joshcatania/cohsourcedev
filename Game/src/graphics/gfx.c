@@ -719,6 +719,11 @@ static void gfxSetupStuffToDraw(ViewportInfo *viewport)//int force_render_world,
         {
             gfxTreeDrawNode(gfx_tree_root,cam_info.viewmat);
         }
+        if((gfx_state.mainViewport || viewport->renderPass == RENDERPASS_IMAGECAPTURE) &&
+           viewport->renderCharacters && viewport->renderLines)
+        {
+            entClientDrawWebSwingTethers();
+        }
         PERFINFO_AUTO_STOP();
     }
 
@@ -907,6 +912,7 @@ void gfxDraw2DStuffPost3D(int show2D, int headShot)
         failTextDisplay();
         PERFINFO_AUTO_STOP_START("displayDebugUI",1);
         displayDebugInterface2D();
+        pmotionWebSwingCaptureRenderHud();
 
         // this renders the direct xyprintf text
         PERFINFO_AUTO_STOP_START("fontRenderEditor", 1);

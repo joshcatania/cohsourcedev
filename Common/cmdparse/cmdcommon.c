@@ -28,6 +28,21 @@
 
 
 ControlState control_state;
+S32 g_cohsourcedev_anim_canary;
+// Issue 36 forensic safe baseline: custom Web Swing move selection stays off
+// during normal gameplay unless explicitly re-enabled for gated canary work.
+S32 g_cohsourcedev_webswing_anim_selection;
+// -1 leaves the authoritative backend unchanged; 0/1 requests the matching
+// Web Swing backend after the controlled player reaches a map.
+S32 g_cohsourcedev_webswing_physics_selection = -1;
+#if CLIENT
+// Client-only manual observability toggle.  It intentionally does not live in
+// control_cmds, so it is never sent to the server as gameplay input.
+S32 g_cohsourcedev_webswing_capture;
+// Client-only WebSwingDev rendering selector.  It intentionally does not live
+// in control_cmds, so style changes never become gameplay or network state.
+S32 g_cohsourcedev_webswing_visual_selection = 0;
+#endif
 
 ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
 {
@@ -101,6 +116,10 @@ ControlId opposite_control_id[CONTROLID_BINARY_MAX] =
                             "Toggles autorun." },
         { 9, "no_ragdoll", 0, {{ PARSETYPE_S32, &control_state.no_ragdoll }},0,
                             "disables client ragdoll sim" },
+        { 0, "webswingcapture", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_capture }},0,
+                            "WebSwingDev client manual telemetry capture (1 start, 0 stop)" },
+        { 0, "webswingvisual", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_visual_selection }},0,
+                            "WebSwingDev tether visual style (0 LEGACY, 1 WEB, 2 TECH, 3 MAGIC)" },
         { 0 },
     };
 #endif
@@ -149,6 +168,12 @@ Cmd control_cmds[] =
                         "anim test flag" },
     { 9, "atest9", 0, {{ PARSETYPE_S32, &control_state.anim_test[9] }},0,
                         "anim test flag" },
+    { 9, "animcanary", 0, {{ PARSETYPE_S32, &g_cohsourcedev_anim_canary }},0,
+                        "WebSwingDev-only authored animation canary" },
+    { 9, "webswinganim", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_anim_selection }},0,
+                        "WebSwingDev custom Web Swing move selection (forensic safe baseline default: 0)" },
+    { 9, "webswingphysics", 0, {{ PARSETYPE_S32, &g_cohsourcedev_webswing_physics_selection }},0,
+                        "WebSwingDev Web Swing physics backend (0 REAL_ANCHOR, 1 SKY_ASSISTED)" },
     { 1, "predict", 0, {{ PARSETYPE_S32, &control_state.predict }},0,
                         "turn client side prediction on/off" },
     { 9, "notimeout", CONCMD_NOTIMEOUT, {{ PARSETYPE_S32, &control_state.notimeout }}, 0,

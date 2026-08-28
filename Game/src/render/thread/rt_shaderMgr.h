@@ -6,6 +6,7 @@
 // tables of gl/cg generated gpu program names (ids)
 extern int shaderMgrVertexPrograms[];            // Index: DrawModeType enum type. DRAWMODE_SPRITE, etc.
 extern int shaderMgrVertexProgramsHQ[];          // Index: DrawModeType enum type. DRAWMODE_SPRITE, etc.
+extern int g_shaderMgrFragmentProgramVariants[][BMB_VARIANT_COUNT];
 
 typedef enum
 {

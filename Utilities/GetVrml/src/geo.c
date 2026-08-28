@@ -23,6 +23,11 @@
 #include "seq/AutoLOD.h"
 
 extern int do_meshMend;
+#ifdef GETVRML
+extern int atlas_roundtrip;
+#else
+#define atlas_roundtrip 0
+#endif
 
 ModelLODInfo *getPlayerLibraryDefaultLODs(void)
 {
@@ -1137,6 +1142,16 @@ static void addgrid(Node *node)
 {
     for(; node; node = node->next)
     {
+        if (atlas_roundtrip)
+        {
+            // The normal object-library path rebuilds a pooled spatial grid
+            // here.  That is useful for authored VRML, but it also changes
+            // the packed vertex identity during an untouched round trip.
+            gridPolys(&node->mesh.grid, &node->mesh);
+            if (node->child)
+                addgrid(node->child);
+            continue;
+        }
         int usageBits = USE_NORMALS;
         if( strstri(node->name, "__prquad") != NULL )
             usageBits |= USE_NOMERGE; // dont merge verts
@@ -1564,7 +1579,8 @@ void geoAddFile(char *fname, char *geo_fname, int merge_nodes, int whattoditch, 
 
     crazyNormalTrick(root);  //does both "_N" trick and "_SN" trick
 
-    reorderTrisByTex(root); // JE: reoders triangles
+    if (!atlas_roundtrip)
+        reorderTrisByTex(root); // JE: reoders triangles
     centerNode(root,unitmat); //doesn't seem to center node anymore, but does get vis sphere
 
     root = ditchUnneededStuff(root, whattoditch);
@@ -1585,7 +1601,7 @@ void geoAddFile(char *fname, char *geo_fname, int merge_nodes, int whattoditch, 
             list = treeArray(root,&count);
             for (i = 0; i < count; i++)
             {
-                if (gmeshMarkDegenerateTris(&list[i]->mesh))
+                if (!atlas_roundtrip && gmeshMarkDegenerateTris(&list[i]->mesh))
                     gmeshUpdateGrid(&list[i]->mesh, 0);
             }
         }
@@ -1606,7 +1622,7 @@ void geoAddFile(char *fname, char *geo_fname, int merge_nodes, int whattoditch, 
         {
             for (i = 0; i < count; i++)
             {
-                if (gmeshMarkDegenerateTris(&list[i]->mesh))
+                if (!atlas_roundtrip && gmeshMarkDegenerateTris(&list[i]->mesh))
                     gmeshUpdateGrid(&list[i]->mesh, 0);
             }
         }
@@ -1670,7 +1686,24 @@ void geoAddFile(char *fname, char *geo_fname, int merge_nodes, int whattoditch, 
 
             loadstart_printf("creating reduce instructions.. ");
             for (i = 0; i < count; i++)
-                list[i]->reductions = makeGMeshReductions(&list[i]->mesh, list[i]->lod_distances, list[i]->min, list[i]->max, 1, 1, !is_object_library);
+            {
+                if (atlas_roundtrip)
+                {
+                    GMesh reduction_mesh = {0};
+
+                    // Keep the authored mesh untouched, but give the
+                    // derived reducer its normal degenerate-triangle
+                    // hygiene.  This preserves Phase A array identity while
+                    // avoiding malformed runtime LOD streams.
+                    gmeshCopy(&reduction_mesh, &list[i]->mesh, 0);
+                    if (gmeshMarkDegenerateTris(&reduction_mesh))
+                        gmeshUpdateGrid(&reduction_mesh, 0);
+                    list[i]->reductions = makeGMeshReductions(&reduction_mesh, list[i]->lod_distances, list[i]->min, list[i]->max, 1, 1, !is_object_library);
+                    gmeshFreeData(&reduction_mesh);
+                }
+                else
+                    list[i]->reductions = makeGMeshReductions(&list[i]->mesh, list[i]->lod_distances, list[i]->min, list[i]->max, 1, 1, !is_object_library);
+            }
             loadend_printf("done");
 
             if (is_player_library)
@@ -1703,7 +1736,7 @@ void geoAddFile(char *fname, char *geo_fname, int merge_nodes, int whattoditch, 
             loadstart_printf("Removing degenerate triangles.. ");
             for (i = 0; i < count; i++)
             {
-                if (gmeshMarkDegenerateTris(&list[i]->mesh))
+                if (!atlas_roundtrip && gmeshMarkDegenerateTris(&list[i]->mesh))
                     gmeshUpdateGrid(&list[i]->mesh, 0);
             }
             loadend_printf("done.");

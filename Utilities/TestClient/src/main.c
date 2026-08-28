@@ -33,6 +33,7 @@
 #include <time.h>
 #include <process.h>
 #include "entity/character_base.h"
+#include "entity/powers.h"
 #include "entity/entclient.h"
 #include "entity/entVarUpdate.h"
 #include "gameComm/itemselect.h"
@@ -211,6 +212,908 @@ bool dontpause = false;
 int g_direct_db_mode = 0;
 int g_agent_smoke_map_connected = 0;
 char g_agent_smoke_status_path[MAX_PATH] = {0};
+int g_web_swing_smoke = 0;
+int g_web_swing_sky_assisted = 0;
+int g_web_swing_smoke_complete = 0;
+int g_web_swing_jump_smoke = 0;
+int g_web_swing_jump_smoke_complete = 0;
+F32 g_web_swing_jump_off_height = 0.0f;
+F32 g_web_swing_jump_on_height = 0.0f;
+int g_web_swing_ground_attach_observed = 0;
+int g_web_swing_ground_attach_transitions = 0;
+F32 g_web_swing_ground_attach_vertical_speed = 0.0f;
+F32 g_web_swing_ground_attach_forward_speed = 0.0f;
+F32 g_web_swing_ground_altitude_gain = 0.0f;
+F32 g_web_swing_ground_forward_displacement = 0.0f;
+F32 g_web_swing_forward_displacement = 0.0f;
+F32 g_web_swing_forward_peak_displacement = 0.0f;
+F32 g_web_swing_forward_peak_speed = 0.0f;
+F32 g_web_swing_forward_detach_speed = 0.0f;
+int g_web_swing_forward_attach_observed = 0;
+int g_swing_test_prep = 0;
+int g_swing_test_prep_complete = 0;
+char g_swing_test_prep_target[256] = {0};
+int g_swing_test_prep_level = 0;
+int g_swing_test_prep_xp_level = 0;
+int g_swing_test_prep_fly_owned = 0;
+int g_swing_test_prep_fly_fallback = 0;
+char g_swing_test_prep_power[128] = {0};
+char g_swing_test_prep_fly_fallback_reason[256] = {0};
+static void agentSmokeWriteStatus(int exit_code);
+
+static void webSwingSmokeLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+    static Vec3 ground_start_pos = {0};
+    static Vec3 ground_intent = {0};
+    static Vec3 ground_attach_pos = {0};
+    static F32 ground_peak_y = 0.0f;
+    static int ground_had_attached = 0;
+    static int ground_previous_attached = 0;
+    static Vec3 forward_start_pos = {0};
+    static Vec3 forward_measure_start_pos = {0};
+    static Vec3 forward_intent = {0};
+    static Vec3 forward_final_pos = {0};
+    static F32 forward_peak_speed = 0.0f;
+    static F32 forward_peak_displacement = 0.0f;
+    static int forward_measure_active = 0;
+    static Entity *player;
+    static int intent45_attach_reported = 0;
+    static int intent90_attach_reported = 0;
+    Vec3 displacement;
+
+    if (!g_web_swing_smoke || !commConnected() || do_map_xfer ||
+        !control_state.mapserver_responding || !(player = playerPtr()))
+        return;
+
+    if (stage < 0)
+    {
+        stage = 20;
+        stage_frames = 0;
+        commAddInput(g_web_swing_sky_assisted ? "webswingbackend 1" : "webswingbackend 0");
+        printf("WEB_SWING_SMOKE begin backend=%s\n",
+               g_web_swing_sky_assisted ? "SKY_ASSISTED" : "REAL_ANCHOR");
+    }
+
+    switch (stage)
+    {
+        case 20:
+            if (stage_frames == 0)
+            {
+                printf("WEB_SWING_SMOKE scenario=ground_attach position=(-4668.25 0.50 1585.13) yaw=0.0000 no_jump=1\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("powexec_toggleoff Pool.Flight.Fly");
+                commAddInput("webswing 0");
+                commAddInput("setpospyr -4668.25 0.50 1585.13 0.0000 0.0000 0.0000");
+                g_web_swing_ground_attach_observed = 0;
+                g_web_swing_ground_attach_transitions = 0;
+                g_web_swing_ground_attach_vertical_speed = 0.0f;
+                g_web_swing_ground_attach_forward_speed = 0.0f;
+                g_web_swing_ground_altitude_gain = 0.0f;
+                g_web_swing_ground_forward_displacement = 0.0f;
+                ground_had_attached = 0;
+                ground_previous_attached = 0;
+            }
+            /* Zone-specific test coordinates can begin above their nearest
+             * surface.  Wait for a real grounded state so this scenario
+             * continues to prove ground activation rather than accidentally
+             * exercising airborne reattach. */
+            if ((stage_frames >= 30 && !player->motion->falling &&
+                 !player->motion->jumping && player->motion->on_surf) ||
+                stage_frames >= 240)
+            {
+                printf("WEB_SWING_SMOKE phase=ground_attach_hold_up_forward\n");
+                stage = 21;
+                stage_frames = 0;
+            }
+            else
+            {
+                /* setpospyr does not clear an inherited horizontal velocity.
+                 * Reassert the known street point while waiting so an
+                 * airborne prior scenario cannot drift off the pavement
+                 * before the ground-activation check begins. */
+                if (stage_frames > 0 && (stage_frames % 30) == 0)
+                    commAddInput("setpospyr -4668.25 0.50 1585.13 0.0000 0.0000 0.0000");
+                ++stage_frames;
+            }
+            break;
+
+        case 21:
+            if (stage_frames == 0)
+            {
+                copyVec3(ENTPOS(player), ground_start_pos);
+                copyVec3(ENTMAT(player)[2], ground_intent);
+                ground_intent[1] = 0.0f;
+                normalVec3(ground_intent);
+                ground_peak_y = ENTPOSY(player);
+            }
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+
+            /* Let the held travel input reach the authoritative movement
+             * path before enabling Web Swing, without allowing this ground
+             * activation scenario to run off its known street point first. */
+            if (stage_frames == 2)
+                commAddInput("webswing 1");
+
+            if (player->motion->web_swing_attached && !ground_previous_attached)
+            {
+                ++g_web_swing_ground_attach_transitions;
+                if (!ground_had_attached)
+                {
+                    ground_had_attached = 1;
+                    g_web_swing_ground_attach_observed = 1;
+                    copyVec3(ENTPOS(player), ground_attach_pos);
+                    g_web_swing_ground_attach_vertical_speed = player->motion->vel[1];
+                    g_web_swing_ground_attach_forward_speed = dotVec3(player->motion->vel, ground_intent);
+                }
+            }
+            ground_previous_attached = player->motion->web_swing_attached;
+            if (stage_frames >= 10 && ENTPOSY(player) > ground_peak_y)
+                ground_peak_y = ENTPOSY(player);
+
+            if (stage_frames++ >= 75)
+            {
+                copyVec3(ENTPOS(player), displacement);
+                copyVec3(displacement, forward_final_pos);
+                subVec3(displacement, ground_start_pos, displacement);
+                displacement[1] = 0.0f;
+                g_web_swing_ground_forward_displacement = dotVec3(displacement, ground_intent);
+                g_web_swing_ground_altitude_gain = ground_peak_y - ground_start_pos[1];
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 22;
+                stage_frames = 0;
+            }
+            break;
+
+        case 22:
+            if (stage_frames++ >= 15)
+            {
+                printf("WEB_SWING_SMOKE ground_result observed=%d transitions=%d vertical_speed=%.3f forward_speed=%.3f altitude_gain=%.3f forward_displacement=%.3f\n",
+                       g_web_swing_ground_attach_observed,
+                       g_web_swing_ground_attach_transitions,
+                       g_web_swing_ground_attach_vertical_speed,
+                       g_web_swing_ground_attach_forward_speed,
+                       g_web_swing_ground_altitude_gain,
+                       g_web_swing_ground_forward_displacement);
+                stage = 23;
+                stage_frames = 0;
+            }
+            break;
+
+        case 23:
+            if (stage_frames == 0)
+            {
+                printf("WEB_SWING_SMOKE scenario=forward_travel position=(100.00 120.00 -650.00) yaw=0.0000 no_jump=0\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                g_web_swing_forward_attach_observed = 0;
+                g_web_swing_forward_displacement = 0.0f;
+                g_web_swing_forward_peak_displacement = 0.0f;
+                g_web_swing_forward_peak_speed = 0.0f;
+                g_web_swing_forward_detach_speed = 0.0f;
+                forward_measure_active = 0;
+                forward_peak_displacement = 0.0f;
+            }
+            if (stage_frames++ >= 30)
+            {
+                stage = 24;
+                stage_frames = 0;
+            }
+            break;
+
+        case 24:
+            if (stage_frames == 0)
+            {
+                copyVec3(ENTPOS(player), forward_start_pos);
+                copyVec3(ENTMAT(player)[2], forward_intent);
+                forward_intent[1] = 0.0f;
+                normalVec3(forward_intent);
+                forward_peak_speed = 0.0f;
+                copyVec3(ENTPOS(player), forward_measure_start_pos);
+                forward_measure_active = 1;
+                doJump();
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            }
+            else
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            }
+            if (stage_frames == 2)
+            {
+                commAddInput("webswing 1");
+            }
+            if (forward_measure_active)
+            {
+                subVec3(ENTPOS(player), forward_measure_start_pos, displacement);
+                displacement[1] = 0.0f;
+                forward_peak_displacement = MAX(forward_peak_displacement,
+                                                dotVec3(displacement, forward_intent));
+            }
+            forward_peak_speed = MAX(forward_peak_speed, lengthVec3(player->motion->vel));
+            if (player->motion->web_swing_attached)
+            {
+                g_web_swing_forward_attach_observed = 1;
+            }
+            /* Measure the initial travel phase before the pendulum returns
+             * to its acquisition point; input remains held throughout. */
+            if (stage_frames++ >= 60)
+            {
+                copyVec3(ENTPOS(player), forward_final_pos);
+                subVec3(forward_final_pos, forward_start_pos, displacement);
+                displacement[1] = 0.0f;
+                g_web_swing_forward_displacement = MAX(dotVec3(displacement, forward_intent),
+                                                        forward_peak_displacement);
+                g_web_swing_forward_peak_displacement = forward_peak_displacement;
+                g_web_swing_forward_peak_speed = forward_peak_speed;
+                g_web_swing_forward_detach_speed = lengthVec3(player->motion->vel);
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 25;
+                stage_frames = 0;
+            }
+            break;
+
+        case 25:
+            if (stage_frames++ >= 15)
+            {
+                printf("WEB_SWING_SMOKE forward_result attached=%d displacement=%.3f peak_speed=%.3f detach_speed=%.3f\n",
+                       g_web_swing_forward_attach_observed,
+                       g_web_swing_forward_displacement,
+                       g_web_swing_forward_peak_speed,
+                       g_web_swing_forward_detach_speed);
+                stage = 0;
+                stage_frames = 0;
+            }
+            break;
+
+        case 0:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=A position=(100.00 120.00 -650.00) yaw=0.0000\n");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                commAddInput("powexec_toggleoff Pool.Flight.Fly");
+                commAddInput("webswing 0");
+            }
+            if (stage_frames == 2)
+            {
+                printf("WEB_SWING_SMOKE phase=ground_jump\n");
+                doJump();
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+                commAddInput("webswing 1");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_a_airborne_attach\n");
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 130 || stage_frames >= 190, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 130 && stage_frames < 160, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 160 && stage_frames < 190, timeGetTime());
+            /* Re-emit W after the attach command so the steering audit sees
+             * a fresh forward control transition while already attached. */
+            if (stage_frames == 20)
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 200)
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 250)
+            {
+                printf("WEB_SWING_SMOKE phase=release\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames++ >= 12)
+            {
+                printf("WEB_SWING_SMOKE phase=reattach\n");
+                doJump();
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 130 || stage_frames >= 190, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 130 && stage_frames < 160, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 160 && stage_frames < 190, timeGetTime());
+            if (stage_frames == 0)
+                doJump();
+            if (stage_frames++ >= 90)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=B position=(110.00 120.00 -650.00) yaw=0.0000\n");
+                commAddInput("setpospyr 110.00 120.00 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_b_airborne_attach\n");
+                stage = 5;
+                stage_frames = 0;
+            }
+            break;
+
+        case 5:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (stage_frames == 0)
+            {
+                doJump();
+                commAddInput("webswing 1");
+            }
+            if (stage_frames++ >= 60)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_b_release\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 6;
+                stage_frames = 0;
+            }
+            break;
+
+        case 6:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=C position=(100.00 120.00 -650.00) yaw=1.5708\n");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 1.5708 0.0000");
+                commAddInput("yaw 1.5708");
+                commAddInput("webswing 0");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_c_yaw90_steering\n");
+                stage = 7;
+                stage_frames = 0;
+            }
+            break;
+
+        case 7:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD,
+                               stage_frames < 130 || stage_frames >= 190, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 130 && stage_frames < 160, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 160 && stage_frames < 190, timeGetTime());
+            if (stage_frames == 20)
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 200)
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 0)
+            {
+                doJump();
+                commAddInput("webswing 1");
+            }
+            if (stage_frames++ >= 250)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                stage = 8;
+                stage_frames = 0;
+            }
+            break;
+
+        case 8:
+            if (stage_frames++ == 0)
+                commAddInput("webswing 0");
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE pose=D between_buildings_diagonal position=(116.00 118.00 -662.00) yaw=0.7854\n");
+                commAddInput("setpospyr 116.00 118.00 -662.00 0.2800 0.7854 0.0000");
+                stage = 9;
+                stage_frames = 0;
+            }
+            break;
+
+        case 9:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 18 && stage_frames < 42, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 42 && stage_frames < 66, timeGetTime());
+            if (stage_frames == 0)
+            {
+                doJump();
+                commAddInput("webswing 1");
+            }
+            if (stage_frames++ >= 70)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 10;
+                stage_frames = 0;
+            }
+            break;
+
+        case 10:
+            if (stage_frames++ == 0)
+            {
+                printf("WEB_SWING_SMOKE pose=E elevated_gap_entry position=(88.00 135.00 -635.00) yaw=-0.4500\n");
+                commAddInput("setpospyr 88.00 135.00 -635.00 0.1600 -0.4500 0.0000");
+                commAddInput("webswing 0");
+            }
+            if (stage_frames >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_e_elevated_gap_attach\n");
+                stage = 11;
+                stage_frames = 0;
+            }
+            break;
+
+        case 11:
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames < 18 || stage_frames >= 62, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, stage_frames >= 18 && stage_frames < 40, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames >= 40 && stage_frames < 62, timeGetTime());
+            if (stage_frames == 0)
+            {
+                doJump();
+                commAddInput("webswing 1");
+            }
+            if (stage_frames++ >= 70)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 12;
+                stage_frames = 0;
+            }
+            break;
+
+        case 12:
+            if (stage_frames++ >= 30)
+            {
+                printf("WEB_SWING_SMOKE pose=F facing_travel_45 yaw_setup=0.0000 input=right_then_yaw45\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                commAddInput("yaw 0.0000");
+                stage = 13;
+                stage_frames = 0;
+            }
+            break;
+
+        case 13:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_f_establish_diagonal_momentum\n");
+                intent45_attach_reported = 0;
+                stage = 14;
+                stage_frames = 0;
+            }
+            break;
+
+        case 14:
+            if (stage_frames == 0)
+                doJump();
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            /* Build diagonal momentum first, then make a clean intent change.
+             * One frame separates the authoritative INPUT transition from
+             * Web Swing enablement while preserving stale momentum. */
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 60, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames >= 0 && stage_frames < 200, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 60)
+            {
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=60 release=RIGHT apply=FORWARD\n");
+            }
+            if (stage_frames == 61)
+            {
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=61 enable=WEBSWING\n");
+                commAddInput("webswing 1");
+            }
+            if (player->motion->web_swing_attached && !intent45_attach_reported)
+            {
+                intent45_attach_reported = 1;
+                printf("WEB_SWING_SMOKE pose=F stage=14 frame=%d attachment=observed\n", stage_frames);
+            }
+            if (stage_frames >= 160)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 15;
+                stage_frames = 0;
+            }
+            else
+                ++stage_frames;
+            break;
+
+        case 15:
+            if (stage_frames++ >= 30)
+            {
+                printf("WEB_SWING_SMOKE pose=G facing_travel_90 yaw_setup=0.0000 input=right\n");
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                commAddInput("setpospyr 100.00 120.00 -650.00 0.2000 0.0000 0.0000");
+                commAddInput("yaw 0.0000");
+                stage = 16;
+                stage_frames = 0;
+            }
+            break;
+
+        case 16:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE phase=pose_g_establish_strafe_momentum\n");
+                intent90_attach_reported = 0;
+                stage = 17;
+                stage_frames = 0;
+            }
+            break;
+
+        case 17:
+            if (stage_frames == 0)
+                doJump();
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, stage_frames < 60, timeGetTime());
+            updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, stage_frames >= 60 && stage_frames < 200, timeGetTime());
+            updateControlState(CONTROLID_LEFT, MOVE_INPUT_CMD, 0, timeGetTime());
+            if (stage_frames == 60)
+            {
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=60 release=RIGHT apply=FORWARD\n");
+            }
+            if (stage_frames == 61)
+            {
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=61 enable=WEBSWING\n");
+                commAddInput("webswing 1");
+            }
+            if (player->motion->web_swing_attached && !intent90_attach_reported)
+            {
+                intent90_attach_reported = 1;
+                printf("WEB_SWING_SMOKE pose=G stage=17 frame=%d attachment=observed\n", stage_frames);
+            }
+            if (stage_frames >= 160)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_RIGHT, MOVE_INPUT_CMD, 0, timeGetTime());
+                updateControlState(CONTROLID_FORWARD, MOVE_INPUT_CMD, 0, timeGetTime());
+                commAddInput("webswing 0");
+                stage = 18;
+                stage_frames = 0;
+            }
+            else
+                ++stage_frames;
+            break;
+
+        case 18:
+            if (stage_frames++ >= 8)
+            {
+                printf("WEB_SWING_SMOKE complete\n");
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                g_web_swing_smoke_complete = 1;
+                agentSmokeWriteStatus(0);
+                logShutdownAndWait();
+                exit(0);
+            }
+            break;
+    }
+}
+
+static void webSwingJumpSmokeLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+    static F32 start_y = 0.0f;
+    static F32 peak_y = 0.0f;
+    Entity *player;
+
+    if (!g_web_swing_jump_smoke || !commConnected() || do_map_xfer || !(player = playerPtr()))
+        return;
+
+    if (stage < 0)
+    {
+        stage = 0;
+        stage_frames = 0;
+        printf("WEB_SWING_JUMP_SMOKE begin\n");
+    }
+
+    ++stage_frames;
+    switch (stage)
+    {
+        case 0:
+            if (stage_frames == 1)
+            {
+                // Keep a real Fly power owned by the character, but make the
+                // two jump measurements ground-jump measurements.
+                commAddInput("powexec_toggleoff Pool.Flight.Fly");
+                commAddInput("webswing 0");
+                commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 30)
+            {
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            if (stage_frames == 1)
+            {
+                start_y = peak_y = ENTPOSY(player);
+                doJump();
+            }
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (ENTPOSY(player) > peak_y)
+                peak_y = ENTPOSY(player);
+            if (stage_frames >= 90)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                g_web_swing_jump_off_height = peak_y - start_y;
+                printf("WEB_SWING_JUMP_SMOKE result=off start_y=%.3f peak_y=%.3f height=%.3f\n",
+                       start_y, peak_y, g_web_swing_jump_off_height);
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames == 1)
+            {
+                // Test-only synchronized state keeps the real Web Swing jump
+                // cap while suppressing anchor search on both simulations.
+                commAddInput("webswing 1");
+                commAddInput("webswing_test_no_attach 1");
+                commAddInput("setpospyr 100.00 0.50 -650.00 0.2000 0.0000 0.0000");
+            }
+            if (stage_frames >= 30)
+            {
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            if (stage_frames == 1)
+            {
+                start_y = peak_y = ENTPOSY(player);
+                doJump();
+            }
+            updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 1, timeGetTime());
+            if (ENTPOSY(player) > peak_y)
+                peak_y = ENTPOSY(player);
+            if (stage_frames >= 90)
+            {
+                updateControlState(CONTROLID_UP, MOVE_INPUT_CMD, 0, timeGetTime());
+                g_web_swing_jump_on_height = peak_y - start_y;
+                printf("WEB_SWING_JUMP_SMOKE result=on start_y=%.3f peak_y=%.3f height=%.3f\n",
+                       start_y, peak_y, g_web_swing_jump_on_height);
+                commAddInput("webswing_test_no_attach 0");
+                commAddInput("webswing 0");
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames >= 10)
+            {
+                printf("WEB_SWING_JUMP_SMOKE complete off_height=%.3f on_height=%.3f\n",
+                       g_web_swing_jump_off_height, g_web_swing_jump_on_height);
+                g_web_swing_jump_smoke_complete = 1;
+                agentSmokeWriteStatus(0);
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                logShutdownAndWait();
+                exit(0);
+            }
+            break;
+    }
+}
+
+static void swingTestPrepLoop(void)
+{
+    static int stage = -1;
+    static int stage_frames = 0;
+
+    if (!g_swing_test_prep || !commConnected() || do_map_xfer || !playerPtr())
+        return;
+
+    if (stage < 0)
+    {
+        stage = 0;
+        stage_frames = 0;
+        printf("SWING_TEST_PREP begin target=%s\n", g_swing_test_prep_target);
+    }
+
+    ++stage_frames;
+    switch (stage)
+    {
+        case 0:
+            if (stage_frames == 1)
+            {
+                // The direct-DB local shard accepts this development-only
+                // elevation, which unlocks the existing prep commands.
+                printf("SWING_TEST_PREP command=accesslevel 9\n");
+                commAddInput("accesslevel 9");
+            }
+            if (stage_frames >= 15)
+            {
+                stage = 1;
+                stage_frames = 0;
+            }
+            break;
+
+        case 1:
+            if (stage_frames == 1)
+            {
+                char command[512];
+
+                if (stricmp(playerPtr()->name, g_swing_test_prep_target) != 0)
+                {
+                    printf("SWING_TEST_PREP command=playerrename old=%s new=%s\n",
+                           playerPtr()->name, g_swing_test_prep_target);
+                    sprintf(command, "playerrename \"%s\" \"%s\"",
+                            playerPtr()->name, g_swing_test_prep_target);
+                    commAddInput(command);
+                }
+                else
+                {
+                    printf("SWING_TEST_PREP rename=already_named\n");
+                }
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 2;
+                stage_frames = 0;
+            }
+            break;
+
+        case 2:
+            if (stage_frames == 1)
+            {
+                printf("SWING_TEST_PREP command=levelup_xp 50\n");
+                commAddInput("levelup_xp 50");
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 3;
+                stage_frames = 0;
+            }
+            break;
+
+        case 3:
+            if (stage_frames == 1)
+            {
+                const char *category = "Pool";
+                const char *set = "Flight";
+                const char *power = "Fly";
+                const BasePower *fly_base = powerdict_GetBasePowerByNameEx(
+                    &g_PowerDictionary, category, set, power, false);
+
+                // Resolve the normal player Flight pool from the loaded
+                // dictionary before using the existing CSR buy path. The
+                // Mission Maker path is retained only when this snapshot
+                // genuinely lacks Pool.Flight.Fly.
+                if (fly_base)
+                {
+                    strcpy(g_swing_test_prep_power, "Pool.Flight.Fly");
+                    printf("SWING_TEST_PREP resolve normal=Pool.Flight.Fly available=1\n");
+                }
+                else
+                {
+                    g_swing_test_prep_fly_fallback = 1;
+                    strcpy(g_swing_test_prep_power, "Mission_Maker_Movement.Flight.Fly");
+                    strcpy(g_swing_test_prep_fly_fallback_reason,
+                           "Loaded power dictionary has no Pool.Flight.Fly BasePower; using explicit local-dev Mission_Maker_Movement fallback.");
+                    category = "Mission_Maker_Movement";
+                    printf("SWING_TEST_PREP resolve normal=Pool.Flight.Fly available=0 fallback=Mission_Maker_Movement.Flight.Fly reason=%s\n",
+                           g_swing_test_prep_fly_fallback_reason);
+                }
+
+                printf("SWING_TEST_PREP command=powers_buypower_dev %s %s %s\n", category, set, power);
+                {
+                    char command[256];
+                    sprintf(command, "powers_buypower_dev %s %s %s", category, set, power);
+                    commAddInput(command);
+                }
+            }
+            if (stage_frames >= 25)
+            {
+                stage = 4;
+                stage_frames = 0;
+            }
+            break;
+
+        case 4:
+            if (stage_frames == 1)
+            {
+                printf("SWING_TEST_PREP command=powers_info\n");
+                commAddInput("powers_info");
+            }
+            if (stage_frames >= 20)
+            {
+                stage = 5;
+                stage_frames = 0;
+            }
+            break;
+
+        case 5:
+            if (stage_frames >= 10)
+            {
+                const char *power_full_name = g_swing_test_prep_power[0] ?
+                    g_swing_test_prep_power : "Pool.Flight.Fly";
+                const BasePower *fly_base = powerdict_GetBasePowerByFullNameEx(
+                    &g_PowerDictionary, power_full_name, false);
+
+                g_swing_test_prep_level = playerPtr()->pchar ?
+                    character_CalcExperienceLevel(playerPtr()->pchar) + 1 : 0;
+                g_swing_test_prep_xp_level = g_swing_test_prep_level;
+                g_swing_test_prep_fly_owned = playerPtr()->pchar && fly_base &&
+                    character_OwnsPower(playerPtr()->pchar, fly_base) != NULL;
+                printf("SWING_TEST_PREP complete character=%s target=%s\n",
+                       playerPtr()->name, g_swing_test_prep_target);
+                printf("SWING_TEST_PREP verify level=%d xp_level=%d fly_owned=%d full_name=%s fallback=%d\n",
+                       g_swing_test_prep_level, g_swing_test_prep_xp_level,
+                       g_swing_test_prep_fly_owned, power_full_name,
+                       g_swing_test_prep_fly_fallback);
+                g_swing_test_prep_complete = 1;
+                agentSmokeWriteStatus(0);
+                commSendQuitGame(0);
+                sendMessageToLauncher("QuitNow:");
+                logShutdownAndWait();
+                exit(0);
+            }
+            break;
+    }
+}
 
 static void agentSmokeWriteStatus(int exit_code)
 {
@@ -227,6 +1130,32 @@ static void agentSmokeWriteStatus(int exit_code)
     fprintf(status_file, "map_connected=%d\n", g_agent_smoke_map_connected);
     fprintf(status_file, "error=%d\n", err);
     fprintf(status_file, "exit_code=%d\n", exit_code);
+    fprintf(status_file, "webswing_smoke_complete=%d\n", g_web_swing_smoke_complete);
+    fprintf(status_file, "webswing_jump_smoke_complete=%d\n", g_web_swing_jump_smoke_complete);
+    fprintf(status_file, "webswing_jump_off_height=%.3f\n", g_web_swing_jump_off_height);
+    fprintf(status_file, "webswing_jump_on_height=%.3f\n", g_web_swing_jump_on_height);
+    fprintf(status_file, "webswing_ground_attach_observed=%d\n", g_web_swing_ground_attach_observed);
+    fprintf(status_file, "webswing_ground_attach_transitions=%d\n", g_web_swing_ground_attach_transitions);
+    fprintf(status_file, "webswing_ground_attach_vertical_speed=%.3f\n", g_web_swing_ground_attach_vertical_speed);
+    fprintf(status_file, "webswing_ground_attach_forward_speed=%.3f\n", g_web_swing_ground_attach_forward_speed);
+    fprintf(status_file, "webswing_ground_altitude_gain=%.3f\n", g_web_swing_ground_altitude_gain);
+    fprintf(status_file, "webswing_ground_forward_displacement=%.3f\n", g_web_swing_ground_forward_displacement);
+    fprintf(status_file, "webswing_forward_attach_observed=%d\n", g_web_swing_forward_attach_observed);
+    fprintf(status_file, "webswing_forward_displacement=%.3f\n", g_web_swing_forward_displacement);
+    fprintf(status_file, "webswing_forward_peak_displacement=%.3f\n", g_web_swing_forward_peak_displacement);
+    fprintf(status_file, "webswing_forward_peak_speed=%.3f\n", g_web_swing_forward_peak_speed);
+    fprintf(status_file, "webswing_forward_detach_speed=%.3f\n", g_web_swing_forward_detach_speed);
+    fprintf(status_file, "swing_test_prep_complete=%d\n", g_swing_test_prep_complete);
+    fprintf(status_file, "swing_test_prep_level=%d\n", g_swing_test_prep_level);
+    fprintf(status_file, "swing_test_prep_xp_level=%d\n", g_swing_test_prep_xp_level);
+    fprintf(status_file, "swing_test_prep_fly_owned=%d\n", g_swing_test_prep_fly_owned);
+    if (g_swing_test_prep_power[0])
+        fprintf(status_file, "swing_test_prep_power=%s\n", g_swing_test_prep_power);
+    fprintf(status_file, "swing_test_prep_fly_fallback=%d\n", g_swing_test_prep_fly_fallback);
+    if (g_swing_test_prep_fly_fallback_reason[0])
+        fprintf(status_file, "swing_test_prep_fly_fallback_reason=%s\n", g_swing_test_prep_fly_fallback_reason);
+    if (g_swing_test_prep_target[0])
+        fprintf(status_file, "swing_test_prep_target=%s\n", g_swing_test_prep_target);
     if (playerPtr())
         fprintf(status_file, "character=%s\n", playerPtr()->name);
     fclose(status_file);
@@ -471,6 +1400,20 @@ void checkArgs(int argc, char **argv) {
             i++;
             strncpy(g_agent_smoke_status_path, argv[i], sizeof(g_agent_smoke_status_path) - 1);
             g_agent_smoke_status_path[sizeof(g_agent_smoke_status_path) - 1] = 0;
+        } else if (CMDEQ("-webswing-smoke")) {
+            g_web_swing_smoke = 1;
+        } else if (CMDEQ("-webswing-sky-assisted")) {
+            g_web_swing_sky_assisted = 1;
+        } else if (CMDEQ("-webswing-jump-smoke")) {
+            g_web_swing_jump_smoke = 1;
+        } else if (CMDEQ("-swing-test-prep")) {
+            i++;
+            strncpy(g_swing_test_prep_target, argv[i], sizeof(g_swing_test_prep_target) - 1);
+            g_swing_test_prep_target[sizeof(g_swing_test_prep_target) - 1] = 0;
+            g_swing_test_prep = 1;
+            g_testMode = TEST_RESUME_CHAR | TEST_CREATE_CHAR | TEST_STAY_CONNECTED;
+            g_testMode2 = 0;
+            printf("Swing test prep enabled for %s; selecting an existing target when supplied.\n", g_swing_test_prep_target);
         } else if (CMDEQ("-auth")) {
             i++;
             strcpy(game_state.auth_address, argv[i]);
@@ -1043,6 +1986,9 @@ void mainloop() {
         }
 
         doMoverLoop();
+        webSwingJumpSmokeLoop();
+        webSwingSmokeLoop();
+        swingTestPrepLoop();
         if (g_testMode & TEST_CHAT) {
             chatterLoop();
         }

@@ -1,0 +1,74 @@
+{
+  "targets": {
+    "AtlasHero_CityHall_01": {
+      "description": "City Hall approach / plaza paving",
+      "stock_mean_rgb": 104.55286502184153,
+      "pilot_mean_rgb": 103.92251636588819,
+      "mean_absolute_rgb_delta": 7.221041300607658,
+      "changed_percent_threshold_3": 60.83237242843546,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasHero_East_01": {
+      "description": "East wall / bridge / plaza paving",
+      "stock_mean_rgb": 101.45172406166874,
+      "pilot_mean_rgb": 100.90370245808624,
+      "mean_absolute_rgb_delta": 16.881311467408548,
+      "changed_percent_threshold_3": 80.63124588183615,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasHero_North_01": {
+      "description": "North wall / plaza paving",
+      "stock_mean_rgb": 110.44356208970886,
+      "pilot_mean_rgb": 109.28741084937892,
+      "mean_absolute_rgb_delta": 9.701794222978744,
+      "changed_percent_threshold_3": 65.79361593088807,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    },
+    "AtlasHero_West_01": {
+      "description": "West plaza / City Hall facade",
+      "stock_mean_rgb": 111.47203614222613,
+      "pilot_mean_rgb": 110.2698438300754,
+      "mean_absolute_rgb_delta": 6.327419573785294,
+      "changed_percent_threshold_3": 54.898441503770414,
+      "stock_size": [
+        1256,
+        696
+      ],
+      "pilot_size": [
+        1256,
+        696
+      ]
+    }
+  },
+  "selected_groups": [
+    "plaza-concrete-trims02",
+    "atlas-asphalt-01",
+    "cityhall-border-01",
+    "cityhall-tiles-01",
+    "deco03-concrete-01"
+  ],
+  "entry_count": 13,
+  "capture_camera": "500.00 0.25 -800.00 (fixed in-zone position after ground placement)",
+  "capture_mode": "-glslPilot 1 -modernMaterials 1 -modernPresentation 0 -modernBloom 0"
+}

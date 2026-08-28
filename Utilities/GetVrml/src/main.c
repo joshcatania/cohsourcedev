@@ -49,6 +49,8 @@ typedef struct _VrmlList
 int no_check_out, no_lods = 0, g_force_rebuild;
 char g_output_dir[MAX_PATH];
 int do_meshMend = 1, no_scan = 0;
+int atlas_roundtrip = 0;
+static int atlas_offline = 0;
 int force_ReLOD_Always = 1; // per jay, always answers yes so just force it
 
 #define MAX_FNAMES 10000
@@ -898,6 +900,436 @@ static void fillGlobalsFromGeo(GeoLoadData * gld)
     }
 }
 
+// The command-line helper is declared below with the rest of GetVrml's
+// argument helpers.  Keep the declaration here because the offline geometry
+// authoring commands intentionally live next to their serialization code.
+static int checkForArg(int argc, char **argv, char * str);
+
+static void atlasWriteJsonString(FILE *file, const char *value)
+{
+    const unsigned char *cursor = (const unsigned char *)(value ? value : "");
+
+    fputc('"', file);
+    for (; *cursor; cursor++)
+    {
+        switch (*cursor)
+        {
+            case '\\': fputc('\\', file); fputc('\\', file); break;
+            case '"':  fputc('\\', file); fputc('"', file); break;
+            case '\n': fputc('\\', file); fputc('n', file); break;
+            case '\r': fputc('\\', file); fputc('r', file); break;
+            case '\t': fputc('\\', file); fputc('t', file); break;
+            default:   fputc(*cursor, file); break;
+        }
+    }
+    fputc('"', file);
+}
+
+static U32 atlasHashBytes(U32 hash, const void *data, size_t size)
+{
+    const U8 *bytes = (const U8 *)data;
+    size_t i;
+
+    for (i = 0; i < size; i++)
+    {
+        hash ^= bytes[i];
+        hash *= 16777619U;
+    }
+    return hash;
+}
+
+static const char *atlasTextureName(const GeoLoadData *gld, int tex_id)
+{
+    if (tex_id >= 0 && tex_id < gld->texnames.count && gld->texnames.strings[tex_id])
+        return gld->texnames.strings[tex_id];
+    return "white";
+}
+
+static void atlasWriteVec3(FILE *file, const Vec3 value, int mirror_x)
+{
+    fprintf(file, "          %.9g %.9g %.9g,\n",
+        mirror_x ? -value[0] : value[0], value[1], value[2]);
+}
+
+static void atlasWriteVec2(FILE *file, const Vec2 value)
+{
+    fprintf(file, "          %.9g %.9g,\n", value[0], value[1]);
+}
+
+static int atlasWriteGeoVrml(const GeoLoadData *gld, const char *wrl_path)
+{
+    FILE *file;
+    int model_index;
+
+    file = fopen(wrl_path, "wt");
+    if (!file)
+    {
+        printf("Unable to write extracted VRML %s\n", wrl_path);
+        return 0;
+    }
+
+    fprintf(file,
+        "#VRML V2.0 utf8\n"
+        "# COH_ATLAS_GEO2WRL v1\n"
+        "# Packed model names, arrays, triangle winding and material runs are emitted verbatim.\n\n");
+
+    for (model_index = 0; model_index < gld->modelheader.model_count; model_index++)
+    {
+        const Model *model = gld->modelheader.models[model_index];
+        U32 *tris = 0;
+        Vec3 *positions = 0;
+        Vec3 *normals = 0;
+        Vec2 *texcoords = 0;
+        int run_index;
+        int tri_start = 0;
+
+        if (model->tri_count)
+            tris = calloc(model->tri_count * 3, sizeof(*tris));
+        if (model->vert_count)
+        {
+            positions = calloc(model->vert_count, sizeof(*positions));
+            normals = calloc(model->vert_count, sizeof(*normals));
+            texcoords = calloc(model->vert_count, sizeof(*texcoords));
+        }
+
+        if (model->tri_count)
+            modelGetTris(tris, (Model *)model);
+        if (model->vert_count)
+        {
+            modelGetVerts(positions, (Model *)model);
+            if (model->pack.norms.unpacksize)
+                modelGetNorms(normals, (Model *)model);
+            if (model->pack.sts.unpacksize)
+                modelGetSts(texcoords, (Model *)model);
+        }
+
+        fprintf(file,
+            "DEF %s Transform {\n"
+            "  translation 0 0 0\n"
+            "  scale %.9g %.9g %.9g\n"
+            "  children [\n",
+            model->name,
+            model->scale[0], model->scale[1], model->scale[2]);
+
+        for (run_index = 0; run_index < model->tex_count; run_index++)
+        {
+            const TexID *run = &model->tex_idx[run_index];
+            int tri_count = run->count;
+            int tri_index;
+
+            if (tri_count <= 0)
+                continue;
+
+            fprintf(file,
+                "    Shape {\n"
+                "      appearance Appearance {\n"
+                "        material Material { diffuseColor 1 1 1 }\n"
+                "        texture ImageTexture { url ");
+            atlasWriteJsonString(file, atlasTextureName(gld, run->id));
+            fprintf(file,
+                " }\n"
+                "      }\n"
+                "      geometry DEF %s-FACES-%d IndexedFaceSet {\n"
+                "        ccw FALSE\n"
+                "        solid TRUE\n"
+                "        coord DEF %s-COORD-%d Coordinate { point [\n",
+                model->name, run_index, model->name, run_index);
+
+            for (tri_index = 0; tri_index < model->vert_count; tri_index++)
+                atlasWriteVec3(file, positions[tri_index], 1);
+            fprintf(file, "          ] }\n");
+
+            fprintf(file, "        normal Normal { vector [\n");
+            for (tri_index = 0; tri_index < model->vert_count; tri_index++)
+                atlasWriteVec3(file, normals[tri_index], 1);
+            fprintf(file, "          ] }\n");
+
+            fprintf(file,
+                "        normalPerVertex TRUE\n"
+                "        texCoord DEF %s-TEXCOORD-%d TextureCoordinate { point [\n",
+                model->name, run_index);
+            for (tri_index = 0; tri_index < model->vert_count; tri_index++)
+                atlasWriteVec2(file, texcoords[tri_index]);
+            fprintf(file, "          ] }\n");
+
+            fprintf(file, "        coordIndex [\n");
+            for (tri_index = 0; tri_index < tri_count; tri_index++)
+            {
+                int source_tri = tri_start + tri_index;
+                fprintf(file, "          %u, %u, %u, -1,\n",
+                    tris[source_tri * 3 + 0],
+                    tris[source_tri * 3 + 1],
+                    tris[source_tri * 3 + 2]);
+            }
+            fprintf(file, "          ]\n        texCoordIndex [\n");
+            for (tri_index = 0; tri_index < tri_count; tri_index++)
+            {
+                int source_tri = tri_start + tri_index;
+                fprintf(file, "          %u, %u, %u, -1,\n",
+                    tris[source_tri * 3 + 0],
+                    tris[source_tri * 3 + 1],
+                    tris[source_tri * 3 + 2]);
+            }
+            fprintf(file, "          ]\n        normalIndex [\n");
+            for (tri_index = 0; tri_index < tri_count; tri_index++)
+            {
+                int source_tri = tri_start + tri_index;
+                fprintf(file, "          %u, %u, %u, -1,\n",
+                    tris[source_tri * 3 + 0],
+                    tris[source_tri * 3 + 1],
+                    tris[source_tri * 3 + 2]);
+            }
+            fprintf(file,
+                "          ]\n"
+                "      }\n"
+                "    }\n");
+
+            tri_start += tri_count;
+        }
+
+        fprintf(file, "  ]\n}\n\n");
+        free(tris);
+        free(positions);
+        free(normals);
+        free(texcoords);
+    }
+
+    fclose(file);
+    return 1;
+}
+
+static void atlasWriteJsonVec3(FILE *file, const Vec3 value)
+{
+    fprintf(file, "[%.9g, %.9g, %.9g]", value[0], value[1], value[2]);
+}
+
+static int atlasWriteGeoFacts(const GeoLoadData *gld, const char *facts_path)
+{
+    FILE *file;
+    int model_index;
+
+    file = fopen(facts_path, "wt");
+    if (!file)
+    {
+        printf("Unable to write geometry facts %s\n", facts_path);
+        return 0;
+    }
+
+    fprintf(file, "{\n  \"schema\": \"coh.atlas-geo-facts.v1\",\n  \"headerName\": ");
+    atlasWriteJsonString(file, gld->modelheader.name);
+    fprintf(file, ",\n  \"modelCount\": %d,\n  \"textures\": [", gld->modelheader.model_count);
+    for (model_index = 0; model_index < gld->texnames.count; model_index++)
+    {
+        if (model_index)
+            fprintf(file, ", ");
+        atlasWriteJsonString(file, gld->texnames.strings[model_index]);
+    }
+    fprintf(file, "],\n  \"models\": [\n");
+
+    for (model_index = 0; model_index < gld->modelheader.model_count; model_index++)
+    {
+        const Model *model = gld->modelheader.models[model_index];
+        U32 *tris = 0;
+        Vec3 *positions = 0;
+        Vec3 *normals = 0;
+        Vec2 *texcoords = 0;
+        Vec3 computed_min = { 1e30f, 1e30f, 1e30f };
+        Vec3 computed_max = { -1e30f, -1e30f, -1e30f };
+        F32 uv_min[2] = { 1e30f, 1e30f };
+        F32 uv_max[2] = { -1e30f, -1e30f };
+        F32 normal_min = 1e30f;
+        F32 normal_max = 0.0f;
+        int zero_normals = 0;
+        int i;
+        U32 position_hash = 2166136261U;
+        U32 normal_hash = 2166136261U;
+        U32 uv_hash = 2166136261U;
+        U32 tri_hash = 2166136261U;
+
+        if (model->tri_count)
+            tris = calloc(model->tri_count * 3, sizeof(*tris));
+        if (model->vert_count)
+        {
+            positions = calloc(model->vert_count, sizeof(*positions));
+            normals = calloc(model->vert_count, sizeof(*normals));
+            texcoords = calloc(model->vert_count, sizeof(*texcoords));
+        }
+        if (model->tri_count)
+        {
+            modelGetTris(tris, (Model *)model);
+            tri_hash = atlasHashBytes(tri_hash, tris, model->tri_count * 3 * sizeof(*tris));
+        }
+        if (model->vert_count)
+        {
+            modelGetVerts(positions, (Model *)model);
+            position_hash = atlasHashBytes(position_hash, positions, model->vert_count * sizeof(*positions));
+            if (model->pack.norms.unpacksize)
+            {
+                modelGetNorms(normals, (Model *)model);
+                normal_hash = atlasHashBytes(normal_hash, normals, model->vert_count * sizeof(*normals));
+            }
+            if (model->pack.sts.unpacksize)
+            {
+                modelGetSts(texcoords, (Model *)model);
+                uv_hash = atlasHashBytes(uv_hash, texcoords, model->vert_count * sizeof(*texcoords));
+            }
+        }
+
+        for (i = 0; i < model->vert_count; i++)
+        {
+            F32 normal_length = lengthVec3(normals[i]);
+            int axis;
+
+            for (axis = 0; axis < 3; axis++)
+            {
+                if (positions[i][axis] < computed_min[axis])
+                    computed_min[axis] = positions[i][axis];
+                if (positions[i][axis] > computed_max[axis])
+                    computed_max[axis] = positions[i][axis];
+            }
+            if (texcoords[i][0] < uv_min[0]) uv_min[0] = texcoords[i][0];
+            if (texcoords[i][1] < uv_min[1]) uv_min[1] = texcoords[i][1];
+            if (texcoords[i][0] > uv_max[0]) uv_max[0] = texcoords[i][0];
+            if (texcoords[i][1] > uv_max[1]) uv_max[1] = texcoords[i][1];
+            if (normal_length < 0.00001f)
+                zero_normals++;
+            if (normal_length < normal_min) normal_min = normal_length;
+            if (normal_length > normal_max) normal_max = normal_length;
+        }
+
+        if (!model->vert_count)
+        {
+            setVec3(computed_min, 0, 0, 0);
+            setVec3(computed_max, 0, 0, 0);
+            uv_min[0] = uv_min[1] = uv_max[0] = uv_max[1] = 0.0f;
+            normal_min = normal_max = 0.0f;
+        }
+
+        if (model_index)
+            fprintf(file, ",\n");
+        fprintf(file, "    {\n      \"name\": ");
+        atlasWriteJsonString(file, model->name);
+        fprintf(file, ",\n      \"filename\": ");
+        atlasWriteJsonString(file, model->filename);
+        fprintf(file,
+            ",\n      \"verts\": %d,\n      \"tris\": %d,\n      \"texCount\": %d,\n"
+            "      \"radius\": %.9g,\n      \"boundsMin\": ",
+            model->vert_count, model->tri_count, model->tex_count, model->radius);
+        atlasWriteJsonVec3(file, model->min);
+        fprintf(file, ",\n      \"boundsMax\": ");
+        atlasWriteJsonVec3(file, model->max);
+        fprintf(file, ",\n      \"computedMin\": ");
+        atlasWriteJsonVec3(file, computed_min);
+        fprintf(file, ",\n      \"computedMax\": ");
+        atlasWriteJsonVec3(file, computed_max);
+        fprintf(file,
+            ",\n      \"uvMin\": [%.9g, %.9g],\n      \"uvMax\": [%.9g, %.9g],\n"
+            "      \"normalLengthMin\": %.9g,\n      \"normalLengthMax\": %.9g,\n"
+            "      \"zeroNormals\": %d,\n      \"positionHash\": \"%08X\",\n"
+            "      \"normalHash\": \"%08X\",\n      \"uvHash\": \"%08X\",\n"
+            "      \"triangleHash\": \"%08X\",\n      \"materials\": [",
+            uv_min[0], uv_min[1], uv_max[0], uv_max[1],
+            normal_min, normal_max, zero_normals,
+            position_hash, normal_hash, uv_hash, tri_hash);
+
+        {
+            int run_index;
+            for (run_index = 0; run_index < model->tex_count; run_index++)
+            {
+                if (run_index)
+                    fprintf(file, ", ");
+                fprintf(file, "{\"name\": ");
+                atlasWriteJsonString(file, atlasTextureName(gld, model->tex_idx[run_index].id));
+                fprintf(file, ", \"triangles\": %d}", model->tex_idx[run_index].count);
+            }
+        }
+        fprintf(file,
+            "],\n      \"metadata\": {\"flags\": %u, \"scale\": ",
+            model->flags);
+        atlasWriteJsonVec3(file, model->scale);
+        fprintf(file,
+            ", \"pack\": {\"tris\": %u, \"verts\": %u, \"norms\": %u, "
+            "\"sts\": %u, \"sts3\": %u, \"weights\": %u, \"matidxs\": %u, "
+            "\"grid\": %u, \"reductions\": %u, \"reflectionQuads\": %u}}\n    }",
+            model->pack.tris.unpacksize,
+            model->pack.verts.unpacksize,
+            model->pack.norms.unpacksize,
+            model->pack.sts.unpacksize,
+            model->pack.sts3.unpacksize,
+            model->pack.weights.unpacksize,
+            model->pack.matidxs.unpacksize,
+            model->pack.grid.unpacksize,
+            model->pack.reductions.unpacksize,
+            model->pack.reflection_quads.unpacksize);
+
+        free(tris);
+        free(positions);
+        free(normals);
+        free(texcoords);
+    }
+
+    fprintf(file, "\n  ]\n}\n");
+    fclose(file);
+    return 1;
+}
+
+static int atlasRunGeoTool(int argc, char **argv, int geo_index)
+{
+    const char *geo_path;
+    const char *wrl_path = 0;
+    const char *facts_path = 0;
+    GeoLoadData *gld;
+    int arg_index;
+    int result = 0;
+
+    if (geo_index <= 0 || geo_index >= argc)
+    {
+        printf("-geo2wrl/-geofacts requires a source .geo path.\n");
+        return 2;
+    }
+    geo_path = argv[geo_index];
+
+    arg_index = checkForArg(argc, argv, "-wrlout");
+    if (arg_index > 0 && arg_index < argc)
+        wrl_path = argv[arg_index];
+    arg_index = checkForArg(argc, argv, "-factsout");
+    if (arg_index > 0 && arg_index < argc)
+        facts_path = argv[arg_index];
+
+    if (!wrl_path && !facts_path)
+    {
+        printf("-geo2wrl/-geofacts requires -wrlout and/or -factsout.\n");
+        return 2;
+    }
+
+    initBackgroundLoader();
+    printf("Atlas geo tool: loading %s\n", geo_path);
+    // This path needs packed position/normal/UV/index arrays.  The historical
+    // GEO_GETVRML_FASTLOAD flag intentionally turns LOAD_NOW into header-only
+    // loading for the legacy info printer, so it must not be used here.
+    gld = geoLoad(geo_path, LOAD_NOW, GEO_USED_BY_WORLD);
+    printf("Atlas geo tool: loaded=%p\n", (void *)gld);
+    if (!gld)
+    {
+        printf("Unable to load source geometry %s\n", geo_path);
+        return 3;
+    }
+
+    if (wrl_path)
+    {
+        result |= !atlasWriteGeoVrml(gld, wrl_path);
+    }
+    if (facts_path)
+    {
+        result |= !atlasWriteGeoFacts(gld, facts_path);
+    }
+
+    printf("Atlas geo tool: source=%s models=%d wrl=%s facts=%s\n",
+        geo_path, gld->modelheader.model_count,
+        wrl_path ? wrl_path : "(none)", facts_path ? facts_path : "(none)");
+    return result ? 4 : 0;
+}
+
 static int geoHasSts3(GeoLoadData *gld)
 {
     int i;
@@ -1178,6 +1610,8 @@ int main(int argc,char **argv)
         printf("    'getvrml <geometry folder>' = all vrml in folder to object library\n");
         printf("    'getvrml <player geometry folder> -g' = all vrml in folder to player library\n");
         printf("    'getvrml <anims/male.geo>' = all vrml in cwd to this .geo file  \n");
+        printf("    'getvrml -geo2wrl <source.geo> -wrlout <target.wrl>' = deterministic editable VRML export\n");
+        printf("    'getvrml -geofacts <source.geo> -factsout <target.json>' = deterministic geometry facts export\n");
         printf("   Command line options:\n");
         printf("\t-f = force rebuild\n");
         printf("\t-nocheckout = don't check anything out. used for testing changes to getvrml\n");
@@ -1188,6 +1622,7 @@ int main(int argc,char **argv)
         printf("\t-nolod = don't create lods\n");
         printf("\t-noscan = don't scan all files at startup\n");
         printf("\t-nomeshmend = don't run meshmender (fixes invalid tangent space by duplicating vertices, on by default)\n");
+        printf("\t-atlasoffline = process a single filesystem VRML without checkout or directory scanning\n");
         printf("\t-outputdir <folder to write output> = force output to a directory\n");
         printf("\t-filelist <file_list.txt> = list of wrl files to force process (can't mix player and object library)\n");
         printf("\t-g = process player geometry (all output goes to single directory instead of keeping source parent folder hierarchy)\n");
@@ -1197,6 +1632,8 @@ int main(int argc,char **argv)
 
     if(checkForArg(argc, argv, "-nocheckout") || checkForArg(argc, argv, "-noperforce"))
         { no_check_out = 1; no_scan = 1; } // force no_scan otherwise reprocesses every file since cant check owner
+    if(checkForArg(argc, argv, "-atlasoffline"))
+        { no_check_out = 1; no_scan = 0; atlas_offline = atlas_roundtrip = 1; }
     if(checkForArg(argc, argv, "-monitor"))
         monitor = 1;
     if(checkForArg(argc, argv, "-noscan"))
@@ -1230,6 +1667,20 @@ int main(int argc,char **argv)
     fileAutoDataDir(no_check_out == 0);
 
     ErrorfSetCallback(errorPrint);
+
+    // These bounded offline commands must run before the legacy .geo info
+    // scan, which otherwise treats the source argument as an inspection-only
+    // request.  fileAutoDataDir() has already selected the requested pig/file
+    // cache mode before the geometry is loaded.
+    {
+        int geo2wrl_index = checkForArg(argc, argv, "-geo2wrl");
+        int geofacts_index = checkForArg(argc, argv, "-geofacts");
+        if (geo2wrl_index || geofacts_index)
+        {
+            int geo_index = geo2wrl_index ? geo2wrl_index : geofacts_index;
+            return atlasRunGeoTool(argc, argv, geo_index);
+        }
+    }
 
     bFoundOne = false;
     for (i=0; i<argc; i++) {
@@ -1291,7 +1742,11 @@ int main(int argc,char **argv)
         force_rebuild = 1;
     }
 
-    if( !geonames )
+    // Filesystem-only authoring is also used for the deliberate loose
+    // round-trip staging area, which is allowed to live outside the active
+    // data directory.  Keep the legacy same-root guard for normal pig-backed
+    // processing.
+    if( !geonames && !checkForArg(argc, argv, "-nopig") )
         checkDataDirOutputDirConsistency(argv[1]);
 
     texLoadAll();
@@ -1427,7 +1882,8 @@ int main(int argc,char **argv)
         
         if(!no_scan)
         {
-            waitForGetvrmlLock();
+            if (!atlas_offline)
+                waitForGetvrmlLock();
             for(i=start_at;i<geocnt;i++)
             {
                 if (i==end_at)
@@ -1435,7 +1891,8 @@ int main(int argc,char **argv)
                 printf("\nProcessing file %d of %d\n", i+1, geocnt);
                 processVrml(geonames[i],force_rebuild, OBJECT_LIBRARY);
             }
-            releaseGetvrmlLock();
+            if (!atlas_offline)
+                releaseGetvrmlLock();
         }
 
         printf("\r%-200c\r", ' ');

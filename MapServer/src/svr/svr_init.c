@@ -28,6 +28,7 @@
 #include "utils/debugUtils.h"
 #include "ai/entscript.h"
 #include "cmdparse/entcon.h"
+#include "cmdparse/cmdcommon.h"
 #include <utilitieslib/UtilsNew/profiler.h>
 #include "dbcomm/dbquery.h"
 #include "gridcoll/gridcoll.h"
@@ -572,10 +573,90 @@ static void parseArgs0(int argc,char **argv)
     }
 }
 
+static const char *mapServerWebSwingAnimSelectionName(int mode)
+{
+    switch (mode)
+    {
+        case 1: return "ALL_EXPERIMENTAL";
+        case 2: return "MALE_BOTTOM_ONLY";
+        case 3: return "MALE_FULL_CORRECTED";
+        default: return "SAFE_NONE";
+    }
+}
+
+static void mapServerSetWebSwingAnimSelection(int mode)
+{
+    if (mode < 0 || mode > 3)
+        mode = 0;
+
+    g_cohsourcedev_webswing_anim_selection = mode;
+}
+
+static void mapServerEnableWebSwingDevEnvironment(void)
+{
+    // The animation mode and the WebSwingDev environment are separate
+    // controls.  A mode of SAFE_NONE still needs the private overlay and
+    // state-bit universe loaded so the server can prove that it selected no
+    // custom move.  This is a dev-only startup switch; it does not change any
+    // network or MotionState representation.
+    global_state.webswing_dev = 1;
+}
+
+static int mapServerReadWebSwingAnimConfig(void)
+{
+    static const char *paths[] = {
+        "webswinganim.cfg",
+        "data/webswinganim.cfg",
+        "bin/webswinganim.cfg",
+        "bin/data/webswinganim.cfg",
+    };
+    FILE *f = NULL;
+    int path_index;
+    char line[32];
+    int mode;
+
+    // This helper is called once during startup, never from a motion or tick
+    // path.  The file is an ephemeral local-development fallback for
+    // MapServer instances spawned by ServerMonitor, which has no convenient
+    // per-child argv hook in the normal FastDev launcher.
+    for (path_index = 0; path_index < ARRAY_SIZE(paths) && !f; ++path_index)
+        f = fopen(paths[path_index], "r");
+
+    if (!f)
+        return 0;
+
+    mode = 0;
+    if (fgets(line, sizeof(line), f) &&
+        sscanf(line, "%d", &mode) == 1 &&
+        mode >= 0 && mode <= 3)
+    {
+        fclose(f);
+        mapServerSetWebSwingAnimSelection(mode);
+        mapServerEnableWebSwingDevEnvironment();
+        return 1;
+    }
+
+    fclose(f);
+    return 0;
+}
+
+static int s_web_swing_anim_argument_seen;
+
+static void mapServerLogWebSwingAnimSelection(void)
+{
+    int mode = g_cohsourcedev_webswing_anim_selection;
+
+    if (mode < 0 || mode > 3)
+        mode = 0;
+
+    filelog_printf("webswing.log",
+                   "WEB_SWING SERVER anim_selection_mode=%d custom_move_selection=%s\n",
+                   mode, mapServerWebSwingAnimSelectionName(mode));
+}
+
 static void parseArgs1(int argc,char **argv)
 {
     int        i;
-
     for(i=1;i<argc;i++)
     {
         int handled = 1;
@@ -745,6 +826,14 @@ static void parseArgs1(int argc,char **argv)
         {
             serverErrorfSetForceShowDialog();
         }
+        else if (stricmp(argv[i], "-webswinganim")==0 && i+1 < argc)
+        {
+            int mode;
+            s_web_swing_anim_argument_seen = 1;
+            mode = atoi(argv[++i]);
+            mapServerSetWebSwingAnimSelection(mode);
+            mapServerEnableWebSwingDevEnvironment();
+        }
         else
         {
             handled = 0;
@@ -760,6 +849,7 @@ static void parseArgs1(int argc,char **argv)
             }
         }
     }
+
 }
 
 void parseArgs2(int argc,char **argv)
@@ -1442,6 +1532,12 @@ static void serverStateInit(int argc,char **argv)
     server_state.maintenance_idle = 20;        // idle minutes after which to do periodic maintenance (0 disables)
     serverSetSkyFade(0, 1, 0.0);
 
+    // parseArgs1() must remain disk-free.  Apply the one-time local fallback
+    // at the first clean startup point after it; an explicit argv value,
+    // including zero, remains authoritative.
+    if (!s_web_swing_anim_argument_seen)
+        mapServerReadWebSwingAnimConfig();
+
     if(!beaconizerIsStarting())
     {
         cmdOldCommonInit(); // Need to be before serverStateLoad(), were these after parseArgs for a reason?
@@ -1468,6 +1564,7 @@ static void serverStateInit(int argc,char **argv)
     }
     
     parseArgs2(argc,argv);
+    mapServerLogWebSwingAnimSelection();
 
     if(db_state.local_server)
         server_state.lock_doors = 1;

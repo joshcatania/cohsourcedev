@@ -190,6 +190,7 @@
     <ClCompile Include="..\..\src\process_animx.c" />
     <ClCompile Include="..\..\src\process_skelx.c" />
     <ClCompile Include="..\..\src\process_vrml.c" />
+    <ClCompile Include="..\..\src\runtimeanim.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\..\Common\seq\animtrack.h" />
@@ -202,6 +203,7 @@
     <ClInclude Include="..\..\src\process_animx.h" />
     <ClInclude Include="..\..\src\process_skelx.h" />
     <ClInclude Include="..\..\src\process_vrml.h" />
+    <ClInclude Include="..\..\src\runtimeanim.h" />
     <ClInclude Include="..\..\src\Resource.h" />
   </ItemGroup>
   <ItemGroup>

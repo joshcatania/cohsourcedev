@@ -134,6 +134,51 @@ For a disposable local development shard only:
 
 The forced path now includes the known ServerMonitor children (`LogServer`, `BeaconServer`, and `BeaconClient`) and performs a bounded post-shutdown rescan so late-spawned children and exit races are reported accurately. Prefer replacing it with a verified graceful ServerMonitor control path once discovered.
 
+### 8. Normal fast-development loop and restart scope
+
+The normal local development profile is `FastDev`, and the first metric for any
+startup change is cold start to successful character/MapServer entry, not the
+time until ServerMonitor appears. `PLAY-COH.cmd` keeps a healthy compatible shard
+warm and launches only the client. If a direct-DB mode or shard-profile change is
+needed while the disposable shard is running, `agent/play-local.ps1` stops it with
+the verified forced-dev path, restarts it, waits for application readiness, and
+continues to the client automatically.
+
+Use the guarded profile switch when changing scope explicitly:
+
+```powershell
+.\agent\set-shard-profile.ps1 -Profile FastDev
+.\agent\set-shard-profile.ps1 -Profile Full
+.\agent\set-shard-profile.ps1 -Status
+```
+
+`FastDev` disables the optional Account, Auction, Arena, Mission, Raid, Stat,
+Turnstile, and LogServer launch blocks, disables stats/log/beacon/TSR startup,
+and retains ChatServer plus the normal MapServer. `Full` restores the original
+local configuration byte-for-byte. The switch is idempotent, does not edit
+piggs, and records guarded hashes under the ignored `agent/work/` directory;
+unexpected manual edits refuse a profile overwrite.
+
+Classify the work before choosing a restart:
+
+- Client-only or loose data changes (shaders, renderer, textures, UI, client FX,
+  and reloadable sequencer/animation data): keep the shard warm and rebuild or
+  relaunch only Ouroboros as needed.
+- Common, MapServer, or gameplay changes: rebuild and restart the FastDev shard
+  only when the changed binaries require it.
+- DB, server configuration, or infrastructure changes: cold-restart FastDev.
+- Full integration validation: select `Full` and cold-start the full profile.
+
+`REBUILD-AND-PLAY-COH.cmd` is restart-scope aware: its default is the client-only
+path, `REBUILD-AND-PLAY-COH.cmd --fast-shard` rebuilds and restarts FastDev, and
+`REBUILD-AND-PLAY-COH.cmd --full` rebuilds and runs the Full profile. Use
+`PLAY-COH.cmd --full` for a full-profile launch without rebuilding.
+
+Use `agent/benchmark-shard-startup.ps1` for comparable cold-start measurements;
+its `-Profile FastDev`/`-Profile Full` results end only when
+`smoke.ps1 -ExerciseCharacter` proves MapServer entry. `-TsrMode On|Off` and
+`-DisableChatServer` are available for bounded profile experiments.
+
 ## Current milestone status
 
 Phase 0 (local development loop), Phase 1 (deterministic graphical capture), and Phase 2 (multi-scene capture + regression harness) are all complete and verified on 2026-08-15:
@@ -152,20 +197,24 @@ Known operational constraints:
 - The world clock runs at `DAY_TIMESCALE` 48 by default; without the freeze, images taken minutes apart differ by in-game hours of lighting.
 - The first capture(s) on a fresh mapserver generation catch the sky/sun systems mid-transition to the frozen clock (a fresh shard may need more than the one discarded warmup before the sky settles); `agent/capture-regression.ps1` runs a discarded warmup capture to absorb this. Run the regression suite (not bare `capture.ps1`) when comparing against baselines, and re-verify a single-suite "regression" with a follow-up capture before treating it as real.
 - Weather is per-shard-environment state and evolves on ~10-minute scales during storms (sun glare blooming/fading behind the overcast; measured up to ~9% drift on sky-heavy shots), while clear weather is stable all day. When the weather differs from the committed baselines (~30%+ uniform drift), re-adopt baselines with one suite run and run the comparison suite immediately after (same-window A/B). A systematic shader failure flags all shots; weather noise shows as 2-5% sky-region drift on a subset. The war walls (translucent alpha-pass map-edge barriers, visible in the East/West shots) are stable game content rendered identically by both paths and are not a comparison risk.
+- Day-shot captures freeze the eye adaptation mid-convergence: the capture time freeze collapses `TIMESTEP` (frame_time_30 ~0.45 -> ~0.015), locking a random ~70%-converged exposure into each screenshot. This shows as a uniform per-shot integer RGB offset: meanDelta 1.3-4.4 on pure-ARB control pairs in the same window. For effects-chain regressions, changedPercent is the discriminating metric (GLSL-vs-ARB passes at 0.02-0.76%); treat meanDelta marginality under ~5 as noise unless it reproduces consistently.
 - Shots framing the player character up close vary with the idle-animation phase; `AtlasPlaza_Closeup_01` is therefore excluded from the default regression suite (available via `-Targets`).
+- Capture shots can live on any static map: the shot table in `Game/src/game.c` has a `mapId` field, and the capture state machine sends `mapmove <id>` (access level 1) then waits for readiness on the target map (~3 s per hop; verified across nine zones). A loose `bin/capture_override.txt` (not committed) can override the camera position (line 1: `x y z pitch yaw roll`) and the map (line 2: `map <id>`) for zone probing without a rebuild.
+- Water/multitex coverage depends on the client's file-backed shadow registry (`bin/registry-keys/hkey_current_user/software/cryptic/coh/` — NOT the real Windows registry): on every clean exit the client persists `shaderDetail` derived from the run's feature bits, so one run that lost `GFXF_MULTITEX` poisons `shaderdetail=0`/`usewater=0` permanently (every later run re-applies and re-saves it). With `shaderdetail=3` + `usewater>=1` the Founders Falls canals bind the fancy-water material (fragment 116) and multi9 (fragments 120+) deterministically; `agent/capture.ps1` pins both values before each launch. FEATTRACE startup diagnostics print the feature-bit lifecycle (registry load, gfxApplySettings, rdrSetChipOptions, InitFPs/InitVPs) and `disableVariantFeature` strips are never silent.
 
-Shader-path findings (2026-08-15, evidence in `docs/agent-status.md`):
+Shader-path findings (2026-08-15; hybrid policy promoted by issue #12, evidence in `docs/agent-status.md`):
 
-- The default and only verified full-scene shader path is Cg compiling to ARB assembly (`useCg 1`). `useCg 0` uses precompiled ARB programs without Cg.
+- The normal renderer policy is hybrid: native GLSL is default-on for supported fragment/vertex pairings, with synchronized Cg->ARB fallback (`useCg 1`) for intentional declines. `-glslPilot 0` is the legacy-only control/escape hatch; `-glslPilot 1` remains accepted for compatibility. `useCg 0` uses precompiled ARB programs without Cg.
 - `useCg 2` (Cg->GLSL) is **broken** with the shipped shader sources: the custom `TIE(ENVn)` constant-bind semantics crash the Cg 2.2 `glslf`/`glslv` compiler backends (reproduced offline with `3rdparty/cg/bin/cgc.exe`), and even with those guarded out the engine pushes constants to `program.env[]` registers that GLSL cannot read. Do not default to it.
-- A **native GLSL pilot** renders `BLENDMODE_MODULATE`, `BLENDMODE_MULTIPLY`, and `BLENDMODE_COLORBLEND_DUAL` (the costume-tint material) through hand-written GLSL 1.20 compatibility-profile programs (`Game/src/render/thread/rt_glslpilot.{c,h}`), enabled with `-glslPilot 1` (or `agent/capture.ps1 -ExtraClientArgs "-glslPilot 1"`; `agent/capture-regression.ps1` forwards the same parameter for whole-suite runs). It is harness-verified visually equivalent to the ARB path day and night: the full 4-shot suite is green with all active materials confirmed in the client log. The materials share one replicated `vp_master_vp.cg` vertex shader and differ only in fragment math; mirrored engine constants cover `g_ReflectionParamVP`, `g_Env0FP`/`g_Env1FP` (constColor0/1), and `g_GlowParamFP`. `BLENDMODE_ADDGLOW` and `BLENDMODE_ALPHADETAIL` are ported and registered but **unverified: no available Atlas Park view ever binds them** (night shots included — the capture shot table gained `timeHour` and Night* labels to prove that). They idle as safe no-ops until a covered scene exists (needs the map-transfer path). With the pilot on, a per-process coverage diagnostic logs every unported fragment program id bound during a capture.
+- The native GLSL path renders `BLENDMODE_MODULATE`, `BLENDMODE_MULTIPLY`, `BLENDMODE_COLORBLEND_DUAL`, `BLENDMODE_ADDGLOW`, `BLENDMODE_ALPHADETAIL`, `BLENDMODE_BUMPMAP_COLORBLEND_DUAL` (default and high-quality variants), `BLENDMODE_BUMPMAP_MULTIPLY`, the four registered water fragment variants, Multi9 targets, and the verified effects/post-processing set through hand-written GLSL 1.20 compatibility-profile programs (`Game/src/render/thread/rt_glslpilot.{c,h}`). The issue #11 audit is the authoritative support and fallback inventory: its bounded suite found no bucket-A blocker, and the remaining ARB/Cg draws are intentional synchronized fallback pairings or non-blocking/uncharacterized families. The canonical water pilot vertex family is static `bump_dual_multi` LQ (`kPilotBumpMultiKindMask`); Multi9 Full HQ and Single HQ remain implemented but unverified in the intended static HQ pairing. The effects/post chain uses fixed-function pbuffer and sprite-dualtex pairings. The pilot-gated coverage diagnostic logs every distinct unhandled fragment/vertex pairing once per process while native GLSL is enabled.
 - The legacy fixed-function/ATI/NV-combiner branches (`R200`, `NV1X/NV2X`, `TEX_ENV_COMBINE`) cannot execute on modern drivers (extensions no longer exist) and are candidates for later deletion.
 
 The next priorities are:
 
-1. renderer material ports in small, harness-verified steps (modulate, multiply, colorBlendDual verified; addGlow and alphaDetail ported but unverified — no Atlas Park coverage, per the coverage diagnostic). The remaining Atlas-Park-covered families are the bumpmapped set (needs tangent-space interpolants and more engine constants) and the effects/ post-processing set; the map-transfer capture path is the gate for verifying the uncovered materials
-2. dead-path deletion (`shadersATI.c`, `shadersTexEnv.c`, and their `rt_state.c`/`wcw_statemgmt.c` branches) as bounded hygiene once a renderer change justifies touching those files
-3. idle-animation phase determinism if close-up captures are needed for future shader work
+1. Keep the hybrid default-on policy covered by same-window default-vs-`-glslPilot 0` comparisons; treat the issue #11 34-row fallback inventory as the authoritative migration baseline.
+2. Characterize Sunflare and the intentionally unverified Multi9 static HQ pairing only if normal-gameplay telemetry makes them a migration priority; do not port them as part of the promotion.
+3. Delete legacy dead paths (`shadersATI.c`, `shadersTexEnv.c`, and their `rt_state.c`/`wcw_statemgmt.c` branches) later as bounded hygiene, independently of default-on promotion.
+4. Preserve idle-animation phase determinism as separate future work if close-up captures are needed.
 
 Prefer TestClient over GUI automation of `Ouroboros.exe`.
 

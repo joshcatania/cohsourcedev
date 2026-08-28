@@ -749,7 +749,7 @@ static void entUpdate(Entity *e,ControlState *controls,EntType entType)
         )
     {
         PERFINFO_AUTO_START("entMotion", 1);
-            entMotion(e, NULL);
+            entMotion(e, NULL, 0);
         PERFINFO_AUTO_STOP();
 
 
